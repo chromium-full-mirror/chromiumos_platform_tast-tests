@@ -85,9 +85,11 @@ function randomSeek() {
   });
 }
 
+let video_is_in_fullscreen = false;
+
 // Only affects the first (top left) video in the grid if there are multiple.
 window.addEventListener("keydown", function (event) {
   let video = document.getElementsByClassName(videoClass)[0];
   if (event.key == 'f')
-    video.requestFullscreen();
+    video.requestFullscreen().then(() => { video_is_in_fullscreen = true; });
 });
