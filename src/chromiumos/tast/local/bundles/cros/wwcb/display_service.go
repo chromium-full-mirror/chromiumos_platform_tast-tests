@@ -479,7 +479,6 @@ func (ds *DisplayService) VerifyAfterLidClose(ctx context.Context, req *empty.Em
 	if err := power.SetDisplayPower(ctx, power.DisplayPowerInternalOffExternalOn); err != nil {
 		return nil, errors.Wrap(err, "failed to set display power")
 	}
-	defer power.SetDisplayPower(cleanupCtx, power.DisplayPowerAllOn)
 
 	// Poll is required as display response and window jump.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -507,6 +506,27 @@ func (ds *DisplayService) VerifyAfterLidClose(ctx context.Context, req *empty.Em
 		return nil
 	}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
 		return nil, errors.Wrap(err, "failed to verify window and display resolution")
+	}
+
+	if err := power.SetDisplayPower(cleanupCtx, power.DisplayPowerAllOn); err != nil {
+		return nil, errors.Wrap(err, "failed to turn on all display power")
+	}
+
+	// Expect the app moves back to the internal display when powering on again.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+			return strings.HasPrefix(w.Title, filesapp.FilesTitlePrefix)
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to find filesapp window")
+		}
+
+		if w.DisplayID != before.ID {
+			return errors.Errorf("window shows on wrong display, got: %s, want: %s", w.DisplayID, before.ID)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
+		return nil, errors.Wrap(err, "failed to verify window show on internal display")
 	}
 
 	return &empty.Empty{}, nil
