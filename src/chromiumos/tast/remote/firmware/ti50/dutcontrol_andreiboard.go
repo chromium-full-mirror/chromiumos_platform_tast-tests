@@ -6,6 +6,7 @@ package ti50
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"regexp"
 	"strconv"
@@ -119,8 +120,17 @@ func (a *DUTControlAndreiboard) PlainCommand(ctx context.Context, cmd string, ar
 }
 
 // OpenTitanToolCommand runs an arbitrary OpenTitan tool command (without up-/downloading any files).
-func (a *DUTControlAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output []byte, err error) {
-	return a.PlainCommand(ctx, cmd, args...)
+func (a *DUTControlAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output map[string]interface{}, err error) {
+	data, err := a.PlainCommand(ctx, cmd, args...)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) == 0 {
+		return make(map[string]interface{}), nil
+	}
+	var val map[string]interface{}
+	err = json.Unmarshal(data, &val)
+	return val, err
 }
 
 // Reset the chip by asking opentitantool to toggle the reset pin.

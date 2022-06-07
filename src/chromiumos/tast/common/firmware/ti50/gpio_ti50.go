@@ -21,12 +21,29 @@ func (f FormFactorStrap) StrapName() string {
 	return string(f)
 }
 
+// TpmBusStrap enumerates the two different TPM busses supported: SPI and I2C
+type TpmBusStrap string
+
+const (
+	// TpmSpi boots ti50 image for TPM communication via SPI bus
+	TpmSpi TpmBusStrap = "TI50_TPM_SPI"
+	// TpmI2c boots ti50 image for TPM communication via I2C bus
+	TpmI2c TpmBusStrap = "TI50_TPM_I2C"
+)
+
+// StrapName returns the string the Open Titan Tool uses to interact with the gpio strap
+func (f TpmBusStrap) StrapName() string {
+	return string(f)
+}
+
 // GpioTi50 enumerates Ti50 FW GPIOs that can either be read or written to
 type GpioTi50 string
 
 const (
 	// GpioTi50ResetL is reset pin to GSC (active low)
 	GpioTi50ResetL GpioTi50 = "RESET"
+	// GpioTi50PltRstL is the PLT reset signal to GSC (active low)
+	GpioTi50PltRstL GpioTi50 = "PLT_RST_L"
 	// GpioTi50PowerBtnL is the power signal to GSC (active low)
 	GpioTi50PowerBtnL GpioTi50 = "PWR_BTN_L"
 	// GpioTi50EcPowerBtnL is the power signal from GSC to EC (active low)
