@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mapui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/testing"
@@ -118,7 +119,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	defer accManager.CleanUp(cleanupCtx)
 
 	// Open Account Manager page in OS Settings and click Add Google Account button.
-	addAccountButton := nodewith.Name("Add Google Account").Role(role.Button)
+	addAccountButton := mapui.OSSettingsAddGoogleAccountButton
 	if err := uiauto.Combine("Click Add Google Account button",
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
 		ui.LeftClickUntil(addAccountButton, ui.Exists(accountmanager.AddAccountDialog())),

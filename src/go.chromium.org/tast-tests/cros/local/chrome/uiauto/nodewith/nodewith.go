@@ -296,6 +296,13 @@ func (f *Finder) generateSubQuery(multipleNodes bool) (string, error) {
 	return out, nil
 }
 
+// Empty creates an empty Finder.
+// This finder matches every node.
+func Empty() *Finder {
+	f := newFinder()
+	return f
+}
+
 // Ancestor creates a Finder with the specified ancestor.
 func Ancestor(a *Finder) *Finder {
 	f := newFinder()

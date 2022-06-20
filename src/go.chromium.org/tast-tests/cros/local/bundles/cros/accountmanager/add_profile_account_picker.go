@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mapui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
@@ -81,7 +82,7 @@ func AddProfileAccountPicker(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(accountmanager.DefaultUITimeout)
 
-	addAccountButton := nodewith.Name("Add Google Account").Role(role.Button)
+	addAccountButton := mapui.OSSettingsAddGoogleAccountButton
 	moreActionsButton := nodewith.Name("More actions, " + username).Role(role.Button)
 	if err := uiauto.Combine("add a secondary account in OS Settings",
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
@@ -96,7 +97,7 @@ func AddProfileAccountPicker(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add an account: ", err)
 	}
 
-	// Open a new tab
+	// Open a new tab.
 	conn, err := cs.NewConn(ctx, "chrome://version/")
 	if err != nil {
 		s.Fatal("Failed to open a new tab in Lacros browser: ", err)
@@ -104,21 +105,21 @@ func AddProfileAccountPicker(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 
 	// Browser controls to open a profile:
-	profileToolbarButton := nodewith.ClassName("AvatarToolbarButton").Role(role.Button).Focusable()
-	profileMenu := nodewith.NameStartingWith("Accounts and sync").Role(role.Menu)
-	addProfileButton := nodewith.Name("Add").Role(role.Button).Focusable().Ancestor(profileMenu)
+	profileToolbarButton := mapui.BrowserProfileToolbarButton.Focusable()
+	profileMenu := mapui.BrowserProfileMenu
+	addProfileButton := mapui.BrowserProfileAddButton.Focusable().Ancestor(profileMenu)
 
 	// Nodes in the profile addition dialog:
-	accountPicker := nodewith.Name("Choose an account").Role(role.RootWebArea)
-	addProfileRoot := nodewith.Name("Set up your new Chrome profile").Role(role.RootWebArea)
-	nextButton := nodewith.Name("Sign in").Role(role.Button).ClassName("action-button").Focusable().Ancestor(addProfileRoot)
+	accountPicker := mapui.BrowserChooseAccountRoot
+	addProfileRoot := mapui.BrowserAddProfileRoot
+	nextButton := mapui.BrowserAddProfileSigninButton.Focusable().Ancestor(addProfileRoot)
 	accountEntry := nodewith.NameContaining(username).Role(role.Button).Focusable().Ancestor(accountPicker)
 	// Profile chooser screen:
-	chooseProfileRoot := nodewith.Name("Choose a profile").Role(role.RootWebArea)
-	addButton := nodewith.Name("Add").Role(role.Button).Focusable().Ancestor(chooseProfileRoot)
+	chooseProfileRoot := mapui.BrowserChooseProfileRoot
+	addButton := mapui.BrowserProfileChooserAddButton.Focusable().Ancestor(chooseProfileRoot)
 	// Nodes on the last screen of the profile addition dialog:
-	syncProfileRoot := nodewith.Name(accountmanager.ChromeSyncConsentScreenTitle).Role(role.RootWebArea)
-	yesButton := nodewith.Name("Yes, I'm in").Role(role.Button).Focusable().Ancestor(syncProfileRoot)
+	syncProfileRoot := mapui.BrowserSyncProfileRoot
+	yesButton := mapui.BrowserSyncProfileYesButton.Focusable().Ancestor(syncProfileRoot)
 
 	if err := uiauto.Combine("add a profile",
 		uiauto.Combine("click a button to add a profile",
@@ -157,13 +158,13 @@ func AddProfileAccountPicker(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find new Chrome window: ", err)
 	}
 
-	// Make sure that a new profile was added for the correct account
+	// Make sure that a new profile was added for the correct account.
 	if err := uiauto.Combine("check that the new profile belongs to the correct account",
 		ui.WaitUntilExists(newProfileWindow),
 		ui.WaitUntilExists(profileToolbarButton.Ancestor(newProfileWindow)),
 		ui.DoDefault(profileToolbarButton.Ancestor(newProfileWindow)),
 		// The menu should contain the username of the secondary account.
-		ui.WaitUntilExists(nodewith.NameStartingWith("Accounts and sync").NameContaining(username).Role(role.Menu)),
+		ui.WaitUntilExists(nodewith.NameContaining(username).Role(role.Menu)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new profile for secondary account: ", err)
 	}
