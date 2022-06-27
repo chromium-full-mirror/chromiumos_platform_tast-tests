@@ -6,6 +6,8 @@ package crostini
 
 import (
 	"context"
+	"io/ioutil"
+	"regexp"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -28,9 +30,10 @@ const (
 	oomAnomalyEventServiceInterface   = "org.chromium.AnomalyEventServiceInterface"
 	oomAnomalyGuestOOMEventSignalName = "GuestOomEvent"
 	crosEventHistogram                = "Platform.CrOSEvent"
+	sigRegexp                         = "sig=guest-oom-event-.*tail.*"
+	logRegexp                         = ".* Out of memory: Killed process .*tail.*"
 	oomEventHistogramEnum             = 34
-
-	killCode = 9
+	killCode                          = 9
 )
 
 func init() {
@@ -89,7 +92,7 @@ func OOMEvent(ctx context.Context, s *testing.State) {
 	cont := pre.Cont
 	tconn := pre.Tconn
 
-	// Use a shortened context for the test to reserver time for cleanup.
+	// Use a shortened context for the test to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -104,6 +107,27 @@ func OOMEvent(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	s.Log("Restarting anomaly-detector with --testonly-send-all flag")
+	if err := crash.RestartAnomalyDetectorWithSendAll(ctx, true); err != nil {
+		s.Fatal("Could not restart anomaly-detector: ", err)
+	}
+	// Restart anomaly-detector upon test end to flush --testonly-send-all state
+	defer func(ctx context.Context) {
+		if err := crash.RestartAnomalyDetector(ctx); err != nil {
+			s.Error("Could not restart anomaly-detector: ", err)
+		}
+	}(cleanupCtx)
+
+	s.Log("Opting in to AppsSync")
+	if err := crash.CreatePerUserAppSyncOptin(ctx, true); err != nil {
+		s.Fatal("Failed to create per-user AppSync optin: ", err)
+	}
+	defer func() {
+		if err := crash.RemovePerUserAppSyncOptin(ctx); err != nil {
+			s.Error("Failed to clean up per-user AppSync optin: ", err)
+		}
+	}()
+
 	s.Log("Getting baseline metrics histogram")
 	histogram, err := metrics.GetHistogram(ctx, tconn, crosEventHistogram)
 	if err != nil {
@@ -115,13 +139,71 @@ func OOMEvent(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := checkDbusSignal(ctx, cont, s); err != nil {
+	if err := checkDbusSignal(ctx, cont); err != nil {
 		s.Fatal("Didn't get an error signal for OOM process: ", err)
 	}
 
 	if err := checkOOMHistogram(ctx, tconn, histogram); err != nil {
 		s.Fatal("Could not get updated histogram: ", err)
 	}
+
+	if err := checkCrashReport(ctx, s.OutDir()); err != nil {
+		s.Fatal("Could not find crash report: ", err)
+	}
+}
+
+func checkCrashReport(ctx context.Context, outDir string) error {
+	testing.ContextLog(ctx, "Checking for expected crash reports")
+
+	daemonStorePaths, err := crash.GetDaemonStoreCrashDirs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get daemon store crash dir")
+	}
+
+	const metaFilePattern = `guest_oom_event.*\.meta`
+	const logFilePattern = `guest_oom_event.*\.log`
+
+	files, err := crash.WaitForCrashFiles(ctx, daemonStorePaths,
+		[]string{metaFilePattern, logFilePattern})
+	if err != nil {
+		return errors.Wrap(err, "couldn't find expected files")
+	}
+
+	metaFiles := files[metaFilePattern]
+	logFiles := files[logFilePattern]
+
+	testing.ContextLog(ctx, "Checking for expected metadata signature")
+
+	fileNamesToRegexps := map[string]string{
+		metaFiles[0]: sigRegexp,
+		logFiles[0]:  logRegexp,
+	}
+
+	for fileName, fileRegexp := range fileNamesToRegexps {
+		fileData, err := ioutil.ReadFile(fileName)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read the file %v", fileName)
+		}
+		if re := regexp.MustCompile(fileRegexp); !re.Match(fileData) {
+			// To ease debugging in automated environments, save files to a convenient-to-debug
+			// location if we don't find the expected content.
+			if err := crash.MoveFilesToOut(ctx, outDir, append(logFiles, metaFiles...)...); err != nil {
+				testing.ContextLogf(ctx, "Failed to move crash files to out directory: %q", err)
+			}
+			return errors.Errorf("did not find expected line in file %v, expected: %q", fileName, fileRegexp)
+		}
+	}
+
+	// If the crash report files were as expected, delete
+	// them. This stops them from being uploaded to the crash
+	// server and polluting the data with fake crashes.
+	//
+	// Don't die on error, because this is just a cleanup step.
+	if err = crash.RemoveAllFiles(ctx, files); err != nil {
+		testing.ContextLogf(ctx, "Failed to clean up generated crash files: %q", err)
+	}
+
+	return nil
 }
 
 func checkOOMHistogram(ctx context.Context, tconn *chrome.TestConn, histogram *metrics.Histogram) error {
@@ -151,10 +233,12 @@ func checkOOMHistogram(ctx context.Context, tconn *chrome.TestConn, histogram *m
 		return errors.Wrap(err, "failed polling on metrics.GetHistogram")
 	}
 
+	testing.ContextLog(ctx, "Found the expected histogram")
+
 	return nil
 }
 
-func checkDbusSignal(ctx context.Context, container *vm.Container, s *testing.State) (resultError error) {
+func checkDbusSignal(ctx context.Context, container *vm.Container) (resultError error) {
 	match := dbusutil.MatchSpec{
 		Type:      "signal",
 		Path:      oomAnomalyEventServicePath,
@@ -175,7 +259,7 @@ func checkDbusSignal(ctx context.Context, container *vm.Container, s *testing.St
 		}
 	}()
 
-	s.Log("Starting tail process")
+	testing.ContextLog(ctx, "Starting tail process")
 	// tail will buffer input in-memory until it reaches a newline, so it can
 	// print at least one line at a time. Since /dev/zero by definition has no
 	// newlines, the memory of the process should expand until eventually the
@@ -183,10 +267,10 @@ func checkDbusSignal(ctx context.Context, container *vm.Container, s *testing.St
 	cmd := container.VM.Command(ctx, "tail", "/dev/zero")
 	code, extracted := testexec.ExitCode(cmd.Run())
 	if !extracted {
-		s.Fatal("Failed to extract exit code from running tail ")
+		return errors.New("failed to extract exit code from running tail")
 	}
 	if code != killCode {
-		s.Fatalf("Failed to fail correctly, expected process to exit with code %v, exited with %v instead", killCode, code)
+		return errors.Errorf("process did not end with the proper exit code: got: %v; expected: %v", code, killCode)
 	}
 
 	testing.ContextLog(ctx, "Waiting for signal from anomaly_detector")

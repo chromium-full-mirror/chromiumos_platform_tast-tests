@@ -44,6 +44,9 @@ const (
 	// daemonStoreConsentName is the name of file in daemon-store that
 	// gives per-user consent state.
 	daemonStoreConsentName = "consent-enabled"
+	// daemonStoreOptinName is the name of the file in deamon-store that
+	// gives per-user AppSync opt-in.
+	daemonStoreOptinName = "opted-in"
 )
 
 // ConsentType is to be used for parameters to tests, to allow them to determine
@@ -298,6 +301,9 @@ func SetUpCrashTest(ctx context.Context, opts ...Option) error {
 	if err := RemovePerUserConsent(ctx); err != nil {
 		return errors.Wrap(err, "failed to clean up per-user consent")
 	}
+	if err := RemovePerUserAppSyncOptin(ctx); err != nil {
+		return errors.Wrap(err, "failed to clean up per-user appsync opt-in")
+	}
 
 	// Reinitialize crash_reporter in case previous tests have left bad state
 	// in core_pattern, etc.
@@ -385,6 +391,46 @@ func RemovePerUserConsent(ctx context.Context) error {
 			testing.ContextLogf(ctx, "Error removing consent-enabled file %s: %v", f, err)
 			if firstErr == nil {
 				firstErr = errors.Wrapf(err, "failed removing consent-enabled file %s", f)
+			}
+		}
+	}
+	return firstErr
+}
+
+// CreatePerUserAppSyncOptin creates the per-user AppSync opt-in file with the specified state.
+func CreatePerUserAppSyncOptin(ctx context.Context, enable bool) error {
+	dirs, err := GetDaemonStoreAppSyncOptinDirs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get daemon store appsync opt-in dirs")
+	}
+	// Set opt-in for all active dirs.
+	for _, d := range dirs {
+		f := filepath.Join(d, daemonStoreOptinName)
+		contents := "0"
+		if enable {
+			contents = "1"
+		}
+		if err := os.WriteFile(f, []byte(contents), 0644); err != nil {
+			return errors.Wrapf(err, "failed writing appsync opted-in file %s", f)
+		}
+	}
+	return nil
+}
+
+// RemovePerUserAppSyncOptin deletes the per-user AppSync opt-in files to effectively remove opt-in.
+func RemovePerUserAppSyncOptin(ctx context.Context) error {
+	dirs, err := GetDaemonStoreAppSyncOptinDirs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get daemon store appsync opt-in dirs")
+	}
+	// Clear per-user opt-in for all active dirs.
+	var firstErr error
+	for _, d := range dirs {
+		f := filepath.Join(d, daemonStoreOptinName)
+		if err := os.Remove(f); err != nil && !os.IsNotExist(err) {
+			testing.ContextLogf(ctx, "Error removing appsync opted-in file %s: %v", f, err)
+			if firstErr == nil {
+				firstErr = errors.Wrapf(err, "failed removing appsync opted-in file %s", f)
 			}
 		}
 	}

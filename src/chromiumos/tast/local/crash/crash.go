@@ -283,6 +283,35 @@ func VerifyMetaFileRefs(metaPath string) error {
 	return nil
 }
 
+// GetDaemonStoreAppSyncOptinDirs gives the paths to the daemon store opt-in directories for the currently active sessions.
+func GetDaemonStoreAppSyncOptinDirs(ctx context.Context) ([]string, error) {
+	// Need to wait until the UI job is running and has stablized in order to ensure
+	// that daemon-store could be available - will not actually be present until a
+	// user logs in.
+	if err := upstart.EnsureJobRunning(ctx, "ui"); err != nil {
+		return []string{}, errors.Wrap(err, "failed to ensure ui job is running")
+	}
+
+	sessionManager, err := session.NewSessionManager(ctx)
+	if err != nil {
+		return []string{}, errors.Wrap(err, "couldn't start session manager")
+	}
+
+	sessions, err := sessionManager.RetrieveActiveSessions(ctx)
+	if err != nil {
+		return []string{}, errors.Wrap(err, "couldn't retrieve active sessions")
+	}
+
+	var ret []string
+	for k := range sessions {
+		userhash := sessions[k]
+		ret = append(ret, fmt.Sprintf("/home/root/%s/appsync-optin", userhash))
+	}
+	// If no one is logged in, that's okay -- just return an empty list and don't fail.
+	// (Many tests are run when no user is logged in.)
+	return ret, nil
+}
+
 // RegexesNotFound is an error type, used to indicate that
 // WaitForCrashFiles didn't find matches for all of the regexs.
 type RegexesNotFound struct {
