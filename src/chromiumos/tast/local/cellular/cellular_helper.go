@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
@@ -562,14 +563,21 @@ func initProperty(ctx context.Context, properties *shill.PropertyHolder, prop st
 
 }
 
-// ResetShill restarts shill and clears all profiles.
-func (h *Helper) ResetShill(ctx context.Context) []error {
+// resetShill overrides default profile based on given path and restarts shill.
+func (h *Helper) resetShill(ctx context.Context, path string) []error {
 	var errs []error
 	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		errs = append(errs, errors.Wrap(err, "failed to stop shill"))
 	}
-	if err := os.Remove(shillconst.DefaultProfilePath); err != nil && !os.IsNotExist(err) {
-		errs = append(errs, errors.Wrap(err, "failed to remove default profile"))
+	if path == "" {
+		if err := os.Remove(shillconst.DefaultProfilePath); err != nil && !os.IsNotExist(err) {
+			errs = append(errs, errors.Wrap(err, "failed to remove default profile"))
+		}
+	} else {
+		// Write path content to default.profile, to sideload default.profile.
+		if err := fsutil.CopyFile(path, shillconst.DefaultProfilePath); err != nil {
+			return append(errs, errors.Wrap(err, "failed to copy default profile file"))
+		}
 	}
 	if err := upstart.RestartJob(ctx, shill.JobName, GetShillUpstartArgsForVerboseLogging()...); err != nil {
 		// No more can be done if shill doesn't start
@@ -596,6 +604,16 @@ func (h *Helper) ResetShill(ctx context.Context) []error {
 	}
 
 	return errs
+}
+
+// ResetShill removes default profile and restarts shill.
+func (h *Helper) ResetShill(ctx context.Context) []error {
+	return h.resetShill(ctx, "")
+}
+
+// ResetShillAndSetProfile replaces the default profile with path and restarts shill.
+func (h *Helper) ResetShillAndSetProfile(ctx context.Context, path string) []error {
+	return h.resetShill(ctx, path)
 }
 
 // CaptureDBusLogs - Capture DBus system logs

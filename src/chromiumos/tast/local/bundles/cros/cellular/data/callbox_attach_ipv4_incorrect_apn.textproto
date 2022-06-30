@@ -1,0 +1,21 @@
+# Test networks added to test the software stack.
+mno {
+  data {
+    uuid : "test-network"
+    country : "us"
+    localized_name {
+      name : "Test Network"
+    }
+    mccmnc : "00101"
+    mobile_apn {
+      apn : "callbox-incorrect-ipv4"
+      ip_type: IPV4
+      is_attach_apn: true
+      username: "username1"
+      password: "password1"
+      localized_name {
+        name : "Test Network Incorrect APN"
+      }
+    }
+  }
+}
