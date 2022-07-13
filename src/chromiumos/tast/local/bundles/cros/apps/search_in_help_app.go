@@ -102,13 +102,8 @@ func SearchInHelpApp(ctx context.Context, s *testing.State) {
 				const toString16 = (s) => ({
 					data: Array.from(s, c => c.charCodeAt())
 				});
-				// Check ash namespace and fallback to chromeos if unavailable, for renaming.
-				// TODO(crbug.com/1164001): Remove the fallback once the renaming is completed.
-				let has_ash_mojom = typeof ash !== "undefined" &&
-					typeof ash.localSearchService !== "undefined";
-				const indexRemote = has_ash_mojom
-					? ash.localSearchService.mojom.Index.getRemote()
-					: chromeos.localSearchService.mojom.Index.getRemote();
+				const indexRemote = ash.localSearchService
+					.mojom.Index.getRemote();
 				const res = await indexRemote.find(toString16('%s'));
 				return {
 					status: res.status,
