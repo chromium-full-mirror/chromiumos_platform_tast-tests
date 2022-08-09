@@ -1,0 +1,37 @@
+{
+    "Name": "HP ENVY Inspire 7900 series [FF78C7]",
+    "RegularSettings": {
+        "Dropdowns": {
+            "Layout": {
+                "Values": ["Portrait", "Landscape"]
+            },
+            "Color": {
+                "Values": ["Black and white", "Color"]
+            },
+            "Paper size": {
+                "Values": ["4 x 6 in", "4 x 12 in", "5 x 5 in", "5 x 7 in", "5 x 8 in", "100 x 150 mm", "8x10.borderless (8 x 10 in)", "A 4.borderless (210 x 297 mm)", "A 5.borderless (148 x 210 mm)", "A 6.borderless (105 x 148 mm)", "B 5.borderless (182 x 257 mm)", "Double Postcard Rotated.borderless (148 x 200 mm)", "Envelope #10", "Envelope A2", "Envelope B5", "Envelope C5", "Envelope C6", "Envelope Chou 3", "Envelope DL", "Envelope Monarch", "Envelope Personal", "Executive", "Foolscap", "Hagaki Postcard", "Legal", "Letter", "Statement"]
+            },
+            "Pages per sheet": {
+                "Values": ["1", "2", "4", "6", "9", "16"]
+            },
+            "Margins": {
+                "Values": ["Default", "None", "Minimum", "Custom"],
+                "Dependencies": {
+                    "Pages per sheet": "1"
+                }
+            }
+        },
+        "Checkboxes": {
+            "Print on both sides": {},
+            "Headers and footers": {},
+            "Background graphics": {}
+        }
+    },
+    "AdvancedSettings": {
+        "Input Tray": ["Primary Tray", "Photo Tray", "Auto"],
+        "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
+        "Output bin": ["Face up"],
+        "Page delivery": ["reverse-order", "same-order"],
+        "Print quality": ["Draft", "Normal", "High"]
+    }
+}

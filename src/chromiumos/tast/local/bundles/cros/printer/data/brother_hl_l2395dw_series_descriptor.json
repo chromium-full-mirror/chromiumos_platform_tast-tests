@@ -1,0 +1,37 @@
+{
+    "Name": "Brother HL-L2395DW series",
+    "RegularSettings": {
+        "Dropdowns": {
+            "Layout": {
+                "Values": ["Portrait", "Landscape"]
+            },
+            "Paper size": {
+                "Values": ["4 x 6 in", "184 x 260 mm", "195 x 270 mm", "A4", "A5", "A6", "Custom 1 (209.9 x 297.04 mm)", "Double Postcard Rotated (200.03 x 148.17 mm)", "Envelope #10", "Envelope B5", "Envelope B6", "Envelope C5", "Envelope DL", "Envelope Monarch", "Envelope You 4", "Executive", "Foolscap", "Hagaki Postcard", "JIS B5", "JIS B6", "Legal", "Letter", "ROC 16K"]
+            },
+            "Pages per sheet": {
+                "Values": ["1", "2", "4", "6", "9", "16"]
+            },
+            "Margins": {
+                "Values": ["Default", "None", "Minimum", "Custom"],
+                "Dependencies": {
+                    "Pages per sheet": "1"
+                }
+            },
+            "Quality": {
+				"Values": ["300 dpi", "600 dpi", "2,400x600 dpi", "1,200 dpi"]
+            }
+        },
+        "Checkboxes": {
+            "Print on both sides": {},
+            "Headers and footers": {},
+            "Background graphics": {}
+        }
+    },
+    "AdvancedSettings": {
+        "Input Tray": ["Manual Slot", "Tray 1"],
+        "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
+        "Output bin": ["Face down"],
+        "Page delivery": ["reverse-order", "same-order"],
+        "Print quality": ["Normal"]
+    }
+}
