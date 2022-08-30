@@ -190,3 +190,26 @@ func Connect(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.
 		return nil, nil, errors.Errorf("unrecognized Chrome type %s", string(bt))
 	}
 }
+
+// ConnectAndOwn is like Connect but the returned closure also closes the browser (just like SetUp's).
+func ConnectAndOwn(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Browser, func(ctx context.Context), error) {
+	switch bt {
+	case browser.TypeAsh:
+		return cr.Browser(), func(context.Context) {}, nil
+	case browser.TypeLacros:
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to connect to ash-chrome test API")
+		}
+		l, err := lacros.Connect(ctx, tconn)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to connect to lacros-chrome")
+		}
+		brClose := func(ctx context.Context) {
+			l.Close(ctx) // Ignore error.
+		}
+		return l.Browser(), brClose, nil
+	default:
+		return nil, nil, errors.Errorf("unrecognized Chrome type %s", string(bt))
+	}
+}
