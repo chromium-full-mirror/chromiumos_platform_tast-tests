@@ -96,7 +96,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, scenario CitrixScenario, p *Tes
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		return scenario.Run(ctx, tconn, kb, citrix, p)
 	}); err != nil {
-		return errors.Wrap(err, "failed to run the clinician workstation cuj")
+		return errors.Wrap(err, "failed to run the enterprise cuj")
 	}
 
 	if p.TestMode == cx.RecordMode {

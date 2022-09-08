@@ -78,6 +78,7 @@ type Citrix struct {
 	tconn        *chrome.TestConn
 	ui           *uiauto.Context
 	ud           *uidetection.Context
+	udi          *uidetection.Context
 	kb           *input.KeyboardEventWriter
 	dataPath     func(string) string
 	desktopTitle string
@@ -93,10 +94,12 @@ type Citrix struct {
 
 // NewCitrix creates an instance of Citrix.
 func NewCitrix(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, dataPath func(string) string, desktopTitle string, tabletMode bool, testMode TestMode) *Citrix {
+	ud := uidetection.NewDefault(tconn)
 	return &Citrix{
 		tconn:        tconn,
 		ui:           uiauto.New(tconn),
-		ud:           uidetection.NewDefault(tconn),
+		ud:           ud,
+		udi:          ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot),
 		kb:           kb,
 		dataPath:     dataPath,
 		desktopTitle: desktopTitle,
@@ -281,6 +284,15 @@ func (c *Citrix) OpenChromeWithURLs(urls []string) action.Action {
 	}
 }
 
+// Navigate navigates page to url.
+func (c *Citrix) Navigate(url string) action.Action {
+	return uiauto.NamedCombine("navigate to "+url,
+		c.kb.AccelAction("Ctrl+l"),
+		c.kb.TypeAction(url),
+		c.kb.AccelAction("Enter"),
+	)
+}
+
 // searchToOpenApplication searchs and open the application in the remote desktop.
 func (c *Citrix) searchToOpenApplication(appName WindowsApp) action.Action {
 	uiCtx := uiContext("searchToOpenApplication")
@@ -401,6 +413,55 @@ func (c *Citrix) DeletePhoto() action.Action {
 	)
 }
 
+// OpenZoom opens the zoom website, log in and enter the room.
+func (c *Citrix) OpenZoom(room, account string) action.Action {
+	uiCtx := uiContext("OpenZoom")
+	clickJoinFromBrowser := func(ctx context.Context) error {
+		// uidetection.TextBlockFromSentence get the center point of the whole text line.
+		// But need to click the link on the right, so correct the coordinates to click on the target link.
+		downloadNowText := uidetection.TextBlockFromSentence("Download Now").First()
+		joinFromBrowserButton := uidetection.TextBlockFromSentence("Join from Your Browser").Below(downloadNowText)
+		l, err := c.ud.Location(ctx, joinFromBrowserButton)
+		if err != nil {
+			return err
+		}
+		expectedlocation := coords.Point{X: l.Right() - 5, Y: l.CenterY()}
+		return c.ui.MouseClickAtLocation(0, expectedlocation)(ctx)
+	}
+	clickCancelButton := func(ctx context.Context) error {
+		yourBroswerText := uidetection.TextBlockFromSentence("your browser").First()
+		cancelButton := uidetection.Word("Cancel").Above(yourBroswerText)
+		return c.ud.LeftClick(cancelButton)(ctx)
+	}
+	clicklaunchMeetingButton := func(ctx context.Context) error {
+		termsOfServicesText := uidetection.TextBlockFromSentence("Terms of Services").First()
+		launchMeetingButton := uidetection.TextBlockFromSentence("Launch Meeting").Below(termsOfServicesText)
+		return c.ud.LeftClick(launchMeetingButton)(ctx)
+	}
+	openCamera := func(ctx context.Context) error {
+		startVideoButton := uidetection.TextBlockFromSentence("Start Video").First()
+		stopVideoButton := uidetection.TextBlockFromSentence("Stop Video").First()
+		return uiauto.NamedCombine("open camera",
+			uiauto.IfSuccessThen(c.udi.WithTimeout(shortUITimeout).WaitUntilExists(startVideoButton), c.udi.LeftClick(startVideoButton)),
+			c.udi.WaitUntilExists(stopVideoButton))(ctx)
+	}
+	joinButton := c.customIcon(IconZoomJoin)
+	joinMeeting := uiauto.NamedCombine("join meeting",
+		clickCancelButton,
+		clicklaunchMeetingButton,
+		clickCancelButton,
+		clickJoinFromBrowser,
+		openCamera,
+		c.udi.LeftClick(joinButton))
+	return uiauto.NamedCombine("open zoom web",
+		c.NewTab(cuj.ZoomSignInURL, true),
+		c.clickText(uiCtx, account),
+		c.waitText(uiCtx, "Schedule"),
+		c.Navigate(room),
+		joinMeeting,
+	)
+}
+
 // CloseApplication closes application by task mangaer in the remote desktop.
 func (c *Citrix) CloseApplication(appName WindowsApp) action.Action {
 	uiCtx := uiContext("CloseApplication")
@@ -420,7 +481,7 @@ func (c *Citrix) CloseAllChromeBrowsers() action.Action {
 		uiauto.NamedCombine("close chrome browser",
 			uiauto.IfSuccessThen(c.ud.Exists(cancelButton), c.ud.LeftClick(cancelButton)),
 			c.ud.RightClick(chromeActiveIcon),
-			uiauto.Sleep(time.Second), // Sleep to wait for the menu to pop up.
+			uiauto.Sleep(2*time.Second), // Sleep to wait for the menu to pop up.
 			c.kb.AccelAction("Up"),
 			uiauto.Sleep(time.Second), // Sleep to wait to focus on closing option.
 			c.kb.AccelAction("Enter"),

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Package citrix contains all the icon paths used by Citrix Workspace app.
 package citrix
 
 const (
@@ -39,4 +40,9 @@ const (
 	IconPhotosDownload = "citrix/photos_download.png"
 	// IconPhotosDelete specifies the delete icon in Google photo website.
 	IconPhotosDelete = "citrix/photos_delete.png"
+
+	// Uses in Zoom website.
+
+	// IconZoomJoin specifies the join icon in Zoom website.
+	IconZoomJoin = "citrix/zoom_join.png"
 )
