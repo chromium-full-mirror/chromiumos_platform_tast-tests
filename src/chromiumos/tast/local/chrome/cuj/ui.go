@@ -374,3 +374,25 @@ func GenerateADF(ctx context.Context, tconn *chrome.TestConn, isTablet bool) err
 	}
 	return nil
 }
+
+// EnableTabletMode enables tablet mode if the test case variable "tabletVariable" is set as "tablet", and disables tablet mode if other values are set.
+// If the variable is not set, it will use ash.TabletModeEnabled to get the tablet mode enabled status.
+func EnableTabletMode(ctx context.Context, tconn *chrome.TestConn, testCaseVar func(string) (string, bool), tabletVariable string) (tabletMode bool, cleanup action.Action, err error) {
+	cleanup = func(ctx context.Context) error { return nil }
+
+	if mode, ok := testCaseVar(tabletVariable); ok {
+		tabletMode = mode == "tablet"
+		cleanup, err = ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
+		if err != nil {
+			return tabletMode, cleanup, errors.Wrapf(err, "failed to enable tablet mode to %v", tabletMode)
+		}
+	} else {
+		testing.ContextLog(ctx, "Screen mode is not given, running with the default mode of the DUT")
+		tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
+		if err != nil {
+			return tabletMode, cleanup, errors.Wrap(err, "failed to get tablet mode")
+		}
+	}
+	testing.ContextLog(ctx, "Running test with tablet mode: ", tabletMode)
+	return tabletMode, cleanup, nil
+}

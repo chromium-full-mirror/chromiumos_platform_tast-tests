@@ -13,7 +13,6 @@ import (
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/spera/multitaskingapp"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/cuj/bluetooth"
@@ -175,22 +174,12 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	var tabletMode bool
-	if mode, ok := s.Var("spera.cuj_mode"); ok {
-		tabletMode = mode == "tablet"
-		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-		if err != nil {
-			s.Fatalf("Failed to enable tablet mode to %v: %v", tabletMode, err)
-		}
-		defer cleanup(cleanupCtx)
-	} else {
-		// Use default screen mode of the DUT.
-		tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to get DUT default screen mode: ", err)
-		}
+	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.Var, "spera.cuj_mode")
+	if err != nil {
+		s.Fatal("Failed to enable tablet mode: ", err)
 	}
-	s.Log("Running test with tablet mode: ", tabletMode)
+	defer resetTabletMode(cleanupCtx)
+
 	if tabletMode {
 		cleanup, err := display.RotateToLandscape(ctx, tconn)
 		if err != nil {

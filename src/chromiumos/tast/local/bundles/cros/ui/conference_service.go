@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/ui/conference"
 	"chromiumos/tast/local/bundles/cros/ui/conference/zoomserver"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
@@ -170,25 +169,16 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 			return errors.Wrap(err, "failed to initialize keyboard input")
 		}
 		defer kb.Close()
-		var tabletMode bool
+
 		cleanupCtx := ctx
 		ctx, cancelTablet := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancelTablet()
-		if mode, ok := s.s.Var("ui.cuj_mode"); ok {
-			tabletMode = mode == "tablet"
-			cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-			if err != nil {
-				return errors.Wrapf(err, "failed to enable tablet mode to %v", tabletMode)
-			}
-			defer cleanup(cleanupCtx)
-		} else {
-			// Use default screen mode of the DUT.
-			tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
-			if err != nil {
-				return errors.Wrap(err, "failed to get DUT default screen mode")
-			}
+		tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.s.Var, "ui.cuj_mode")
+		if err != nil {
+			return errors.Wrap(err, "failed to enable tablet mode")
 		}
-		testing.ContextLog(ctx, "Running test with tablet mode: ", tabletMode)
+		defer resetTabletMode(cleanupCtx)
+
 		var uiHandler cuj.UIActionHandler
 		if tabletMode {
 			cleanup, err := display.RotateToLandscape(ctx, tconn)
@@ -388,24 +378,15 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 		return nil, errors.Wrap(err, "failed to initialize keyboard input")
 	}
 	defer kb.Close()
-	var tabletMode bool
+
 	cleanupCtx := ctx
 	ctx, cancelTablet := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancelTablet()
-	if mode, ok := s.s.Var("ui.cuj_mode"); ok {
-		tabletMode = mode == "tablet"
-		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to enable tablet mode to %v", tabletMode)
-		}
-		defer cleanup(cleanupCtx)
-	} else {
-		// Use default screen mode of the DUT.
-		tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get DUT default screen mode")
-		}
+	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.s.Var, "ui.cuj_mode")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to enable tablet mode")
 	}
+	defer resetTabletMode(cleanupCtx)
 
 	var uiHandler cuj.UIActionHandler
 	if tabletMode {

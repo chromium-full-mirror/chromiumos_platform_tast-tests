@@ -17,7 +17,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
@@ -98,22 +97,12 @@ func CastToClass(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	var tabletMode bool
-	if mode, ok := s.Var("spera.cuj_mode"); ok {
-		tabletMode = mode == "tablet"
-		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-		if err != nil {
-			s.Fatalf("Failed to enable tablet mode to %v: %v", tabletMode, err)
-		}
-		defer cleanup(cleanupCtx)
-	} else {
-		// Use default screen mode of the DUT.
-		tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to get DUT default screen mode: ", err)
-		}
+	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.Var, "spera.cuj_mode")
+	if err != nil {
+		s.Fatal("Failed to enable tablet mode: ", err)
 	}
-	s.Log("Running test with tablet mode: ", tabletMode)
+	defer resetTabletMode(cleanupCtx)
+
 	var uiHandler cuj.UIActionHandler
 	if tabletMode {
 		cleanup, err := display.RotateToLandscape(ctx, tconn)
