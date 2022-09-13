@@ -38,11 +38,9 @@ const (
 	GoogleChrome WindowsApp = "Google Chrome"
 	// TaskManager defines name of Task Manager.
 	TaskManager WindowsApp = "Task Manager"
+	// Adobe defines name of Adobe Acrobat DC.
+	Adobe WindowsApp = "Adobe Acrobat"
 )
-
-var iconInTaskManager = map[WindowsApp]string{
-	GoogleChrome: IconChromeTaskManager,
-}
 
 // TestMode indicates whether to run in normal/record/replay mode.
 type TestMode string
@@ -61,6 +59,8 @@ const (
 	shortUITimeout = 5 * time.Second
 	// defaultUITimeout is the default timeout for UI interactions.
 	defaultUITimeout = 15 * time.Second
+	// longUITimeout is the longer timeout for UI interactions.
+	longUITimeout = time.Minute
 	// viewingTime used to view the effect after clicking application.
 	viewingTime = 2 * time.Second
 	// uiWaitTimeFactor used in replay mode, the record waiting time for UI is divided by this number
@@ -475,14 +475,82 @@ func (c *Citrix) OpenZoom(room, account, password string) action.Action {
 	)
 }
 
-// CloseApplication closes application by task mangaer in the remote desktop.
-func (c *Citrix) CloseApplication(appName WindowsApp) action.Action {
-	uiCtx := uiContext("CloseApplication")
-	return uiauto.NamedCombine("close windows application by task mangaer",
-		c.searchToOpenApplication(TaskManager),
-		c.clickIcon(uiCtx, iconInTaskManager[appName]),
-		c.clickIcon(uiCtx, IconEndTask),
-		c.kb.AccelAction("Esc"))
+// PresentWindowFromZoom presents a window from zoom web.
+func (c *Citrix) PresentWindowFromZoom() action.Action {
+	shareScreenButton := uidetection.TextBlockFromSentence("Share Screen").First()
+	windowWord := uidetection.Word("Window").First()
+	photosWord := uidetection.Word("Photos").First()
+	shareButton := uidetection.Word("Share").Below(photosWord)
+	stopSharingButton := uidetection.TextBlockFromSentence("Stop sharing").First()
+	return uiauto.NamedCombine("share window",
+		c.udi.LeftClick(shareScreenButton),
+		c.udi.LeftClick(windowWord),
+		c.udi.LeftClick(photosWord),
+		c.udi.LeftClick(shareButton),
+		c.udi.WaitUntilExists(stopSharingButton),
+	)
+}
+
+// StopSharing stops sharing from zoom web.
+func (c *Citrix) StopSharing() action.Action {
+	stopSharingButton := uidetection.TextBlockFromSentence("Stop sharing").First()
+	return uiauto.NamedAction("stop sharing", c.udi.LeftClick(stopSharingButton))
+}
+
+// OpenPDF opens Adobe app and the welcome PDF.
+func (c *Citrix) OpenPDF() action.Action {
+	uiCtx := uiContext("OpenPDF")
+	nameWord := uidetection.Word("NAME").First()
+	welcomeWord := uidetection.Word("Welcome").Below(nameWord).First()
+	return uiauto.NamedCombine("open PDF",
+		c.searchToOpenApplication(Adobe),
+		c.clickFinder(uiCtx+"Welcome", welcomeWord),
+		c.waitText(uiCtx, "Remove From Recent"),
+		c.kb.AccelAction("Enter"),
+		c.waitText(uiCtx, "Welcome to"),
+	)
+}
+
+// ShowTheDesktop minimizes all windows.
+func (c *Citrix) ShowTheDesktop() action.Action {
+	uiCtx := uiContext("ShowTheDesktop")
+	toolBar := c.customIcon(IconToolbar)
+	return uiauto.NamedCombine("minimize and redisplay all browser windows",
+		c.ud.RightClick(toolBar),
+		c.clickText(uiCtx, "Show the desktop"),
+		c.ud.RightClick(toolBar),
+		c.clickText(uiCtx, "Show open windows"),
+	)
+}
+
+// CloseApplications closes applications by task mangaer in the remote desktop.
+func (c *Citrix) CloseApplications(appNames []WindowsApp) action.Action {
+	closeApp := func(appName string) action.Action {
+		appText := uidetection.Word("Apps").First()
+		appNameFinder := uidetection.TextBlockFromSentence(appName).Below(appText).First()
+		endTask := uidetection.TextBlockFromSentence("End Task").First()
+		return uiauto.IfSuccessThen(
+			c.udi.WithTimeout(defaultUITimeout).WaitUntilExists(appNameFinder),
+			uiauto.NamedCombine("close app "+appName,
+				c.udi.WithTimeout(defaultUITimeout).LeftClick(appNameFinder),
+				c.udi.WithTimeout(shortUITimeout).LeftClick(endTask)))
+	}
+	closeApps := func(ctx context.Context) error {
+		for _, appName := range appNames {
+			if err := closeApp(string(appName))(ctx); err != nil {
+				return errors.Wrap(err, "failed to close app")
+			}
+		}
+		return nil
+	}
+	desktop := c.customIcon(IconDesktop)
+	appsCount := uidetection.TextBlockFromSentence("Apps (1)").First()
+	return uiauto.IfSuccessThen(c.ud.Gone(desktop),
+		uiauto.NamedCombine("close applications by task mangaer",
+			c.searchToOpenApplication(TaskManager),
+			c.ui.WithTimeout(longUITimeout).RetryUntil(closeApps, c.udi.WithTimeout(shortUITimeout).WaitUntilExists(appsCount)),
+			c.kb.AccelAction("Esc"),
+		))
 }
 
 // CloseAllChromeBrowsers closes all chrome browsers in the remote desktop.

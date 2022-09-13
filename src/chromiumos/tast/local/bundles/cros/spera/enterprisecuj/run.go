@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/errors"
 	cx "chromiumos/tast/local/bundles/cros/spera/enterprisecuj/citrix"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -34,6 +35,8 @@ type TestParams struct {
 	TestMode        cx.TestMode
 	DataPath        func(string) string
 	UIHandler       cuj.UIActionHandler
+	Cr              *chrome.Chrome
+	Br              *browser.Browser
 }
 
 // Run runs the enterprisecuj test.
@@ -73,6 +76,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, scenario CitrixScenario, p *Tes
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
+	p.Cr = cr
+	p.Br = cr.Browser()
+
 	options := cujrecorder.NewPerformanceCUJOptions()
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, options)
 	if err != nil {
@@ -93,6 +99,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, scenario CitrixScenario, p *Tes
 	}
 	defer citrix.Close(ctx)
 
+	// Close all notifications to prevent ui from being covered.
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to close notifications")
+	}
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		return scenario.Run(ctx, tconn, kb, citrix, p)
 	}); err != nil {
