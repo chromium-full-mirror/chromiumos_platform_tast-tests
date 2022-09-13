@@ -24,6 +24,14 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// Since the resolution of each DUT may be different, each coordinate file must be recorded separately.
+// Now only recording is made for the hatch device. If replaying on other machines, the case may fail due to wrong coordinates.
+// TODO(b/243053294): Since these file may change frequently, it's better the test download the files based on a var.
+const (
+	contactCenterCoordinatesFile = "citrix/contact_center_coordinates.json"
+	contactCenterUIWaitFile      = "citrix/contact_center_uiwait.json"
+)
+
 // ContactCenterData lists all icon data used in the contact center cuj.
 var ContactCenterData = []string{
 	// The following are icons used by uidetection in the contact center cuj.
@@ -34,6 +42,9 @@ var ContactCenterData = []string{
 	cx.IconChromeTaskManager,
 	cx.IconChromeActive,
 	cx.IconZoomJoin,
+	// The following are files used in replay mode.
+	contactCenterCoordinatesFile,
+	contactCenterUIWaitFile,
 }
 
 // Test scenario for ContactCenter CUJ:
@@ -171,6 +182,11 @@ func (c *ContactCenterScenario) Run(ctx context.Context, tconn *chrome.TestConn,
 		return params.UIHandler.SwitchToAppWindow(nodeInfo.Name)(ctx)
 	}
 	apps := []cx.WindowsApp{cx.Adobe, cx.GoogleChrome}
+	if params.TestMode == cx.ReplayMode {
+		if err := citrix.LoadRecordFile(contactCenterCoordinatesFile, contactCenterUIWaitFile); err != nil {
+			return err
+		}
+	}
 	return uiauto.NamedCombine("run the contact center cuj scenario",
 		citrix.ConnectRemoteDesktop(params.DesktopName),
 		citrix.FullscreenDesktop(),

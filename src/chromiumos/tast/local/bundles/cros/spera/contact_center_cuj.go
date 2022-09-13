@@ -56,6 +56,25 @@ func init() {
 				Timeout: 20 * time.Minute,
 				Val:     cx.NormalMode,
 			},
+			{
+				// plus_record is a subcase for recording contact center CUJ.
+				// When executed, it will record the coordinates and waiting time of all pictures and text
+				// detected by uidetection, and will read these data in replay mode.
+				Name:    "plus_record",
+				Fixture: "enrolledLoggedInToCUJUser",
+				Timeout: 20 * time.Minute,
+				Val:     cx.RecordMode,
+			},
+			{
+				// plus_replay is a subcase for replaying contact center CUJ.
+				// When executed, the coordinates and waiting time of the picture/text recorded in the record
+				// mode will be loaded. Use this coordinate data to perform ui click, and reduce this waiting
+				// time data to wait for ui. This can greatly reduce the execution time of the case
+				Name:    "plus_replay",
+				Fixture: "enrolledLoggedInToCUJUser",
+				Timeout: 20 * time.Minute,
+				Val:     cx.ReplayMode,
+			},
 		},
 		Data: enterprisecuj.ContactCenterData,
 	})
