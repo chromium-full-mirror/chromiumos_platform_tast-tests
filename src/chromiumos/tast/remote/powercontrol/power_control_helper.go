@@ -270,3 +270,18 @@ func PlugUnplugCharger(ctx context.Context, h *firmware.Helper, isPowerPlugged b
 		return nil
 	}, &getChargerPollOptions)
 }
+
+// PerformPowerdbusSuspend peforms DUT suspend with powerd_dbus_suspend command.
+func PerformPowerdbusSuspend(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
+	powerOffCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if err := dut.Conn().CommandContext(powerOffCtx, "powerd_dbus_suspend").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		return errors.Wrap(err, "failed to suspend DUT with powerd_dbus_suspend command")
+	}
+	sdCtx, cancel := context.WithTimeout(ctx, 40*time.Second)
+	defer cancel()
+	if err := dut.WaitUnreachable(sdCtx); err != nil {
+		return errors.Wrap(err, "failed to wait for unreachable")
+	}
+	return nil
+}
