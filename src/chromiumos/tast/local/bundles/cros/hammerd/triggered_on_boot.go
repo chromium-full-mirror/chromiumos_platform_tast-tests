@@ -26,7 +26,9 @@ func init() {
 		BugComponent: "b:167114",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"hammerd"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureDetachableBase()),
+		// TODO(b/219382040): Remove "wormdingler" after the issue is fixed.
+		// TODO(b/218640176): Remove "mrbland" after the issue is fixed.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureDetachableBase(), hwdep.SkipOnModel("wormdingler", "mrbland")),
 		Timeout:      1 * time.Minute,
 	})
 }
