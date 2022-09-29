@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
+	"chromiumos/tast/local/starfish"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -59,6 +60,7 @@ func init() {
 type cellularFixture struct {
 	modemfwdStopped bool
 	useFakeDMS      bool
+	sf              *starfish.Starfish
 }
 
 // FixtData holds information made available to tests that specify this fixture.
@@ -82,6 +84,21 @@ const shillJobName = "shill"
 const uptimeBeforeTest = 2 * time.Minute
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	sfish, err := starfish.NewStarfish(ctx)
+	if err != nil {
+		s.Fatal("Failed to setup starfish module on supported setup: ", err)
+	}
+	f.sf = sfish
+	if sfish != nil {
+		helper, err := cellular.NewHelper(ctx)
+		if err != nil {
+			s.Fatal("Failed to create cellular.Helper: ", err)
+		}
+		// ResetModem needed to detect SIM.
+		if _, err := helper.ResetModem(ctx); err != nil {
+			s.Log("Failed to reset modem: ", err)
+		}
+	}
 	var fdms *fakedms.FakeDMS
 	if f.useFakeDMS {
 		var ok bool
@@ -96,14 +113,16 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to wait for system uptime: ", err)
 	}
 
-	var err error
-	if f.modemfwdStopped, err = stopJob(ctx, modemfwdJobName); err != nil {
-		s.Fatalf("Failed to stop job: %q, %s", modemfwdJobName, err)
-	}
-	if f.modemfwdStopped {
-		s.Logf("Stopped %q", modemfwdJobName)
-	} else {
-		s.Logf("%q not running", modemfwdJobName)
+	if f.sf == nil {
+		var err error
+		if f.modemfwdStopped, err = stopJob(ctx, modemfwdJobName); err != nil {
+			s.Fatalf("Failed to stop job: %q, %s", modemfwdJobName, err)
+		}
+		if f.modemfwdStopped {
+			s.Logf("Stopped %q", modemfwdJobName)
+		} else {
+			s.Logf("%q not running", modemfwdJobName)
+		}
 	}
 	if !upstart.JobExists(ctx, hermesJobName) {
 		return &FixtData{fdms}
@@ -183,6 +202,11 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Fatalf("Failed to start %q: %s", modemfwdJobName, err)
 		}
 		s.Logf("Started %q", modemfwdJobName)
+	}
+	if f.sf != nil {
+		if err := f.sf.Teardown(ctx); err != nil {
+			s.Fatalf("Failed to teardown starfish: %s", err)
+		}
 	}
 }
 
