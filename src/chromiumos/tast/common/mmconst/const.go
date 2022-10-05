@@ -21,6 +21,7 @@ const (
 	ModemPropertySim                 = "Sim"
 	ModemPropertySimSlots            = "SimSlots"
 	ModemPropertyState               = "State"
+	ModemPropertyMessages            = "Messages"
 )
 
 // ModemManager1.Modem.Modem3gpp properties
@@ -140,6 +141,11 @@ const (
 	ModemSARSetPowerLevel = "SetPowerLevel"
 	ModemSARState         = "State"
 	ModemSARPowerLevel    = "PowerLevel"
+)
+
+// Modem Messages DBus methods
+const (
+	MessagesDelete = "Delete"
 )
 
 // Default SIM pin
