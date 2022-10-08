@@ -12,20 +12,20 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrivacyIndicators,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if the privacy indicators view show up when entering Google Meet",
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org"},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
@@ -35,7 +35,15 @@ func init() {
 			"ui.PrivacyIndicators.meet_code",
 		},
 		Timeout: 3 * time.Minute,
-		Fixture: "chromeLoggedInWithCalendarEvents",
+		Params: []testing.Param{{
+			Fixture: "chromeLoggedInWithCalendarEvents",
+			Val:     browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "lacrosLoggedInWithCalendarEvents",
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 
@@ -46,6 +54,12 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to open the browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to the test API connection: ", err)
@@ -55,7 +69,17 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	meetConn, err := cr.NewConn(ctx, "https://meet.google.com/"+meetingCode, browser.WithNewWindow())
+	// Grant mic, camera and notification to Meet to suppress prompts during testing.
+	if err = br.GrantPermissions(ctx, []string{"*://meet.google.com/*"},
+		browser.CameraContentSetting,
+		browser.MicrophoneContentSetting,
+		browser.NotificationsContentSetting,
+	); err != nil {
+		s.Fatal("Failed to grant permissions for mic, camera and notification: ", err)
+	}
+
+	url := "https://meet.google.com/" + meetingCode
+	meetConn, err := br.NewConn(ctx, url, browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to open the hangout meet website: ", err)
 	}
@@ -85,24 +109,23 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	}
 	defer pc.Close(ctx)
 
-	uiWait := ui.WithTimeout(10 * time.Second)
-	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
-	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
-
-	// Check and grant permissions.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Long wait for permission bubble and break poll loop when it times out.
-		if err := uiWait.WaitUntilExists(bubble)(ctx); err != nil {
-			return nil
+	// Check if the account has been added to the Meet page.
+	// There might be a timing issue that the account has been added to Lacros profile but not yet propagated to the web page
+	// due to different ways of looking up the credentials. Browser uses OAuth, the web reads cookies instead.
+	// If this happens, it fails to load the app page with the account. See crbug.com/1322246 for the details.
+	// To get around it for recovery it gives a retry by reloading the page to the web page URL.
+	account := nodewith.Role(role.StaticText).NameContaining(`@gmail.com`)
+	if err = ui.WithTimeout(time.Second).WaitUntilExists(account)(ctx); err != nil {
+		s.Log("Reload page to sign in")
+		if err := br.ReloadActiveTab(ctx); err != nil {
+			s.Fatal("Failed to reload page: ", err)
 		}
-
-		if err := pc.Click(allow)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the allow button")
+		if err := meetConn.Navigate(ctx, url); err != nil {
+			s.Fatal("Failed to navigate page: ", err)
 		}
-
-		return errors.New("granting permissions")
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
-		s.Fatal("Failed to grant permissions: ", err)
+		if err = ui.WaitUntilExists(account)(ctx); err != nil {
+			s.Fatal("Failed to sign in to the Meet window: ", err)
+		}
 	}
 
 	if err := meetWindow.ActivateWindow(ctx, tconn); err != nil {
@@ -110,7 +133,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	}
 
 	privacyIndicators := nodewith.ClassName("PrivacyIndicatorsTrayItemView").First()
-	if err := uiWait.WaitUntilExists(privacyIndicators)(ctx); err != nil {
+	if err := ui.WaitUntilExists(privacyIndicators)(ctx); err != nil {
 		s.Fatal("Privacy indicators view does not show up as expected: ", err)
 	}
 
@@ -118,7 +141,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	if err := meetWindow.CloseWindow(cleanupCtx, tconn); err != nil {
 		s.Error("Failed to close the meeting: ", err)
 	}
-	if err := uiWait.WaitUntilGone(privacyIndicators)(ctx); err != nil {
+	if err := ui.WaitUntilGone(privacyIndicators)(ctx); err != nil {
 		s.Fatal("Privacy indicators view does not disappear as expected: ", err)
 	}
 }

@@ -258,4 +258,19 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	// lacrosLoggedInWithCalendarEvents is similar chromeLoggedInWithCalendarEvents but with Lacros enabled.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosLoggedInWithCalendarEvents",
+		Desc:     "Lacros Chrome with Gaia user where there are events set up to join Hangout meetings",
+		Contacts: []string{"cros-status-area-eng@google.com", "leandre@google.com", "jiamingc@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return NewConfig(ChromeOptions(
+				chrome.GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")),
+				chrome.EnableFeatures("PrivacyIndicators"))).Opts()
+		}),
+		Vars:            []string{"calendar.googleCalendarAccountPool"},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
