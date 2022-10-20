@@ -34,7 +34,6 @@ var ClinicianWorkstationData = []string{
 	cx.IconChromeTaskManager,
 	cx.IconChromeActive,
 	cx.IconChromeWikiSearch,
-	cx.IconChromeGoogleSearch,
 	cx.IconPhotosUpload,
 	cx.IconPhotosUploadSmall,
 	cx.IconPhotosComputer,

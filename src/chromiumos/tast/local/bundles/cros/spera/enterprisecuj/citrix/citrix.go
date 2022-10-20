@@ -58,7 +58,9 @@ const (
 
 const (
 	// shortUITimeout used for situations where UI response might be faster.
-	shortUITimeout = 3 * time.Second
+	shortUITimeout = 5 * time.Second
+	// defaultUITimeout is the default timeout for UI interactions.
+	defaultUITimeout = 15 * time.Second
 	// viewingTime used to view the effect after clicking application.
 	viewingTime = 2 * time.Second
 	// uiWaitTimeFactor used in replay mode, the record waiting time for UI is divided by this number
@@ -67,6 +69,8 @@ const (
 	// uiVerifyInterval is used in replay mode, the real ud.WaitUntilExist is called when the number
 	// of executions of Fake UI Detects reaches uiVerifyInterval.
 	uiVerifyInterval = 5
+	// retryTimes is the maximum number of times the action will be retried.
+	retryTimes = 3
 )
 
 // Citrix defines the struct related to Citrix Workspace app.
@@ -136,13 +140,13 @@ func (c *Citrix) AppStartTime() int64 {
 // Login logs in to Citrix Workspace app.
 func (c *Citrix) Login(serverURL, userName, password string) action.Action {
 	searchWorkspace := nodewith.Name("Search Workspace").HasClass("citrix-ui__button").Role(role.Button)
-	logOnAreaFinder := nodewith.Ancestor(nodewith.HasClass("logon-area").Role(role.LayoutTable))
-	editField := logOnAreaFinder.State(state.Editable, true).Role(role.GenericContainer)
-	serverURLField := logOnAreaFinder.Name("Store URL or Email address").Role(role.TextField)
-	userNameField := logOnAreaFinder.Name("User name:").Role(role.TextField)
-	passwordField := logOnAreaFinder.Name("Password:").Role(role.TextField)
-	connectBtn := logOnAreaFinder.Name("Connect").HasClass("button").Role(role.Link)
-	logOnBtn := logOnAreaFinder.Name("Log On").HasClass("button").Role(role.Link)
+	logOnAreaFinder := nodewith.HasClass("logon-area").Role(role.LayoutTable)
+	editField := nodewith.State(state.Editable, true).Role(role.GenericContainer).Ancestor(logOnAreaFinder)
+	serverURLField := nodewith.Name("Store URL or Email address").Role(role.TextField).Ancestor(logOnAreaFinder)
+	userNameField := editField.Name("User name:").Role(role.TextField)
+	passwordField := editField.Name("Password:").Role(role.TextField)
+	connectBtn := nodewith.Name("Connect").HasClass("button").Role(role.Link).Ancestor(logOnAreaFinder)
+	logOnBtn := nodewith.Name("Log On").HasClass("button").Role(role.Link).Ancestor(logOnAreaFinder)
 	connectServer := uiauto.NamedCombine("connect to Citrix server",
 		c.ui.LeftClick(editField.Ancestor(serverURLField)),
 		c.kb.TypeAction(serverURL),
@@ -150,9 +154,9 @@ func (c *Citrix) Login(serverURL, userName, password string) action.Action {
 	return uiauto.IfFailThen(c.ui.WithTimeout(shortUITimeout).WaitUntilExists(searchWorkspace),
 		uiauto.NamedCombine("login to Citrix",
 			uiauto.IfSuccessThen(c.ui.WithTimeout(shortUITimeout).WaitUntilExists(serverURLField), connectServer),
-			c.ui.LeftClick(editField.Ancestor(userNameField)),
+			c.ui.LeftClickUntil(userNameField, c.ui.Exists(userNameField.Focused())),
 			c.kb.TypeAction(userName),
-			c.ui.LeftClick(editField.Ancestor(passwordField)),
+			c.ui.LeftClickUntil(passwordField, c.ui.Exists(passwordField.Focused())),
 			c.kb.TypeAction(password),
 			c.ui.DoDefault(logOnBtn),
 			c.ui.WaitUntilExists(searchWorkspace),
@@ -300,9 +304,9 @@ func (c *Citrix) SearchFromWiki(text string) action.Action {
 
 // SearchFromGoogle searchs from Google.
 func (c *Citrix) SearchFromGoogle(text string) action.Action {
-	uiCtx := uiContext("SearchFromGoogle")
+	googleSearchText := uidetection.TextBlockFromSentence("Google Search").First()
 	return uiauto.NamedCombine("search '"+text+"' from Google",
-		c.waitIcon(uiCtx, IconChromeGoogleSearch),
+		c.ud.WaitUntilExists(googleSearchText),
 		c.kb.TypeAction(text),
 		c.kb.AccelAction("Enter"),
 		uiauto.Sleep(viewingTime),
@@ -339,13 +343,12 @@ func (c *Citrix) CreateGoogleKeepNote(text string) action.Action {
 
 // DeleteGoogleKeepNote deletes note from Google keep.
 func (c *Citrix) DeleteGoogleKeepNote(text string) action.Action {
-	const retryTimes = 3
 	noteText := uidetection.TextBlockFromSentence(text).First()
 	return uiauto.Retry(retryTimes,
 		uiauto.NamedCombine("delete note from google keep",
 			c.kb.TypeAction("k"),        // Select note.
 			c.kb.AccelAction("Shift+3"), // Delete note.
-			c.ud.WithTimeout(5*time.Second).WaitUntilGone(noteText),
+			c.ud.WithTimeout(shortUITimeout).WaitUntilGone(noteText),
 		))
 }
 
@@ -355,9 +358,18 @@ func (c *Citrix) UploadPhoto(filename string) action.Action {
 	uploadButton := c.customIcon(IconPhotosUpload)
 	downloadButton := c.customIcon(IconPhotosDownload)
 	fileFinder := uidetection.Word(filename).Above(uidetection.Word("Cancel"))
+
 	verifiedAndMeasureUploadTime := func(ctx context.Context) error {
+		itemUploadedText := uidetection.TextBlockFromSentence("1 item uploaded")
+		storageText := uidetection.TextBlockFromSentence("Storage").First()
+		addToAlbumText := uidetection.TextBlockFromSentence("Add to album").First()
+		if err := c.ud.WithTimeout(shortUITimeout).WaitUntilExists(storageText)(ctx); err == nil {
+			itemUploadedText = itemUploadedText.Below(storageText)
+		} else {
+			itemUploadedText = itemUploadedText.Above(addToAlbumText)
+		}
 		startTime := time.Now()
-		if err := c.waitText(uiCtx, "1 item uploaded")(ctx); err != nil {
+		if err := c.ud.WaitUntilExists(itemUploadedText)(ctx); err != nil {
 			return err
 		}
 		uploadTime := time.Now().Sub(startTime)
@@ -372,7 +384,7 @@ func (c *Citrix) UploadPhoto(filename string) action.Action {
 		c.clickIcon(uiCtx, IconPhotosComputer),
 		uiauto.IfSuccessThen(c.ud.WithTimeout(shortUITimeout).WaitUntilExists(downloadButton),
 			c.clickIcon(uiCtx, IconPhotosDownload)),
-		c.clickFinder(uiCtx+filename, fileFinder),
+		c.ud.LeftClick(fileFinder),
 		c.kb.AccelAction("Enter"),
 		verifiedAndMeasureUploadTime,
 	)
@@ -403,15 +415,17 @@ func (c *Citrix) CloseApplication(appName WindowsApp) action.Action {
 func (c *Citrix) CloseAllChromeBrowsers() action.Action {
 	desktop := c.customIcon(IconDesktop)
 	chromeActiveIcon := c.customIcon(IconChromeActive)
-	return uiauto.IfSuccessThen(c.ud.Gone(desktop),
+	cancelButton := uidetection.Word("Cancel").First()
+	return uiauto.Retry(retryTimes, uiauto.IfSuccessThen(c.ud.Gone(desktop),
 		uiauto.NamedCombine("close chrome browser",
+			uiauto.IfSuccessThen(c.ud.Exists(cancelButton), c.ud.LeftClick(cancelButton)),
 			c.ud.RightClick(chromeActiveIcon),
 			uiauto.Sleep(time.Second), // Sleep to wait for the menu to pop up.
 			c.kb.AccelAction("Up"),
 			uiauto.Sleep(time.Second), // Sleep to wait to focus on closing option.
 			c.kb.AccelAction("Enter"),
-			uiauto.Sleep(viewingTime),
-		))
+			c.ud.WithTimeout(defaultUITimeout).WaitUntilExists(desktop),
+		)))
 }
 
 // Close closes Citrix app and remote desktop.

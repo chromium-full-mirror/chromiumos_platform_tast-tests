@@ -26,8 +26,6 @@ const (
 	IconChromeActive = "citrix/chrome_active.png"
 	// IconChromeWikiSearch specifies the search icon in wiki website.
 	IconChromeWikiSearch = "citrix/chrome_wiki_search.png"
-	// IconChromeGoogleSearch specifies the search icon in Google website.
-	IconChromeGoogleSearch = "citrix/chrome_google_search.png"
 
 	// Used in Google Photo website.
 
