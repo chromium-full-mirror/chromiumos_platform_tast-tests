@@ -19,6 +19,7 @@ const holdingSpaceItemChipViewClassName = "HoldingSpaceItemChipView"
 const holdingSpaceItemScreenCaptureViewClassName = "HoldingSpaceItemScreenCaptureView"
 const holdingSpaceTrayClassName = "HoldingSpaceTray"
 const menuItemViewClassName = "MenuItemView"
+const pinnedFilesBubbleClassName = "PinnedFilesBubble"
 const pinnedFilesSectionClassName = "PinnedFilesSection"
 const screenCapturesSectionClassName = "ScreenCapturesSection"
 
@@ -45,6 +46,11 @@ func FindDownloadChip() *nodewith.Finder {
 func FindPinnedFileChip() *nodewith.Finder {
 	return nodewith.Ancestor(nodewith.ClassName(pinnedFilesSectionClassName)).
 		ClassName(holdingSpaceItemChipViewClassName)
+}
+
+// FindPinnedFilesBubble returns a finder which locates the pinned files bubble node.
+func FindPinnedFilesBubble() *nodewith.Finder {
+	return nodewith.ClassName(pinnedFilesBubbleClassName)
 }
 
 // FindPinnedFilesSectionFilesAppChip returns a finder which locates the holding
