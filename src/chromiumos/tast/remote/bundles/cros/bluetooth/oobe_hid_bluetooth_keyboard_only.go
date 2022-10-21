@@ -13,6 +13,7 @@ import (
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bluetooth"
+	util "chromiumos/tast/remote/bundles/cros/bluetooth/bluetoothutil"
 	crui "chromiumos/tast/remote/cros/ui"
 	oobeui "chromiumos/tast/remote/cros/ui/oobeui"
 	"chromiumos/tast/services/cros/ui"
@@ -22,13 +23,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeHidBluetoothMouseOnly,
+		Func:         OobeHidBluetoothKeyboardOnly,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that a bluetooth mouse is connected to in OOBE",
+		Desc:         "Checks that a bluetooth keyboard can be used to complete OOBE",
 		Contacts: []string{
-			"tjohnsonkanu@google.com",
 			"cros-connectivity@google.com",
+			"tjohnsonkanu@google.com",
 		},
+		VarDeps:      []string{"servo"},
+		BugComponent: "b:1131776",
 		Attr: []string{
 			"group:bluetooth",
 			"bluetooth_btpeers_1",
@@ -45,8 +48,8 @@ func init() {
 	})
 }
 
-// OobeHidBluetoothMouseOnly tests that a single Bluetooth mouse is connected to during OOBE.
-func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
+// OobeHidBluetoothKeyboardOnly tests that a single Blueooth keyboard is connected to during OOBE.
+func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
 	// Shorten deadline to leave time for cleanup
@@ -66,54 +69,43 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Verify pointer device is not found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName); err != nil {
+	util.TurnOffServoKeyboardIfOn(ctx, s)
+
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Discover btPeer as a mouse.
-	mouseDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
-		DeviceType: cbt.DeviceTypeMouse,
+	// Discover btPeer as a keyboard.
+	keyboardDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
+		DeviceType: cbt.DeviceTypeKeyboard,
 	})
 	if err != nil {
-		s.Fatalf("Failed to configure btpeer as a %s device: %s", mouseDevice.DeviceType(), err)
+		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
 	}
 
-	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
-		s.Fatal("Failed to power on btPeer adapter: ", err)
-	}
-
-	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName); err != nil {
+	// Verify keyboard device is pairing.
+	// TODO(b/254524000): use approraite authentication method.
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Turn off mouse device and check that DUT is searching for mouse.
-	if result, err := mouseDevice.RPC().AdapterPowerOff(ctx); err != nil || !result {
+	if _, err := keyboardDevice.RPC().AdapterPowerOff(ctx); err != nil {
 		s.Fatal("Failed to turn of btPeer adapter: ", err)
 	}
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Turn on mouse device and check that mouse device is paired to.
-	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
+	// Turn on keyboard device and check that keyboard device is paired to.
+	if _, err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
 		s.Fatal("Failed to power on btPeer adapter: ", err)
 	}
 
-	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName); err != nil {
+	// Verify keyboard device is pairing.
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	// Navigate to welcome screen.
-	if _, err := uiautoSvc.LeftClick(
-		ctx, &ui.LeftClickRequest{Finder: oobeui.ContinueButtonFinder}); err != nil {
-		s.Fatal("Failed to click continue button: ", err)
-	}
-
-	if _, err := crUISvc.WaitForWelcomeScreen(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to enter welcome page")
-	}
+	// TODO(b/254524000): Navigate to welcome screen.
 }

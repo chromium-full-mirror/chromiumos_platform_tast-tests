@@ -349,8 +349,11 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}); err != nil {
 		s.Fatal("Failed to log into chrome on DUT: ", err)
 	}
-	if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to close notifications: ", err)
+
+	if tf.features.LoginMode != chromeService.LoginMode_LOGIN_MODE_NO_LOGIN {
+		if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to close notifications: ", err)
+		}
 	}
 
 	// Start capturing incoming and outgoing bluez and floss D-Bus messages.
@@ -396,9 +399,13 @@ func (tf *fixture) Reset(ctx context.Context) (retErr error) {
 	if err := tf.resetBTPeers(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset all btpeers")
 	}
-	if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to close notifications")
+
+	if tf.features.LoginMode != chromeService.LoginMode_LOGIN_MODE_NO_LOGIN {
+		if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to close notifications")
+		}
 	}
+
 	if tf.features.BluetoothAdapterEnabled {
 		if err := tf.clearDutBluetoothDevices(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear DUT bluetooth devices")
@@ -446,9 +453,12 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	// Clear notifications and devices, and then turn bluetooth adapter back off.
-	if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
-		s.Error("Failed to close notifications: ", err)
+	if tf.features.LoginMode != chromeService.LoginMode_LOGIN_MODE_NO_LOGIN {
+		if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to close notifications: ", err)
+		}
 	}
+
 	if tf.features.BluetoothAdapterEnabled {
 		if err := tf.clearDutBluetoothDevices(ctx); err != nil {
 			s.Error("Failed to clear DUT bluetooth devices: ", err)
