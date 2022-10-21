@@ -152,10 +152,12 @@ const (
 	ServicePropertyCellularNetworkTechnology = "Cellular.NetworkTechnology"
 	ServicePropertyCellularRoamingState      = "Cellular.RoamingState"
 	ServicePropertyCellularServingOperator   = "Cellular.ServingOperator"
+	ServicePropertyCellularUserAPNList       = "Cellular.UserAPNList"
 
 	// Keys into the dictionaries exposed as properties for LastAttachAPN and LastGoodAPN
 	DevicePropertyCellularAPNInfoApnName           = "apn"
 	DevicePropertyCellularAPNInfoApnSource         = "apn_source"
+	DevicePropertyCellularAPNInfoApnTypes          = "apn_types"
 	DevicePropertyCellularAPNInfoApnAttach         = "attach"
 	DevicePropertyCellularAPNInfoApnIPType         = "ip_type"
 	DevicePropertyCellularAPNInfoApnAuthentication = "authentication"
@@ -169,6 +171,8 @@ const (
 	DevicePropertyCellularAPNInfoApnAttachTrue         = "attach"
 	DevicePropertyCellularAPNInfoApnAuthenticationChap = "chap"
 	DevicePropertyCellularAPNInfoApnAuthenticationPap  = "pap"
+	DevicePropertyCellularAPNInfoApnTypeDefault        = "DEFAULT"
+	DevicePropertyCellularAPNInfoApnTypeIA             = "IA"
 
 	// WiFi service property names.
 	ServicePropertyPassphrase          = "Passphrase"

@@ -34,6 +34,11 @@ func NewPropertyHolder(ctx context.Context, service, iface string, path dbus.Obj
 	return &PropertyHolder{PropertyHolder: ph}, nil
 }
 
+// ClearProperty calls ClearProperty method of shill to clear a property of the object.
+func (h *PropertyHolder) ClearProperty(ctx context.Context, prop string) error {
+	return h.Call(ctx, "ClearProperty", prop).Err
+}
+
 // GetProperties calls GetProperties method of shill and return properties of the object.
 func (h *PropertyHolder) GetProperties(ctx context.Context) (*dbusutil.Properties, error) {
 	var props map[string]interface{}
