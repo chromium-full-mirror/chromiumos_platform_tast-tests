@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/mtbf/corruptedAudio_20221207.mp3",
+  "size": 184549,
+  "sha256sum": "801001adabae28210963e2ffe47fb7f6e03bf559dcdc775663cef9c65885725a"
+}

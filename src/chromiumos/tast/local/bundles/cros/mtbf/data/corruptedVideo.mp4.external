@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/mtbf/corruptedVideo_20221207.mp4",
+  "size": 15176,
+  "sha256sum": "9b88605b0c952fb1ea570f4fa0fd6676132ca27d2b5101cc83e6878708811655"
+}
