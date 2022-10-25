@@ -14,8 +14,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/apps/galleryapp"
 	"chromiumos/tast/local/bundles/cros/apps/fixture"
-	"chromiumos/tast/local/bundles/cros/apps/galleryapp"
 	"chromiumos/tast/local/bundles/cros/apps/pre"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
