@@ -680,3 +680,26 @@ func (d *Device) GrantPermission(ctx context.Context, pkg, permission string) er
 func (d *Device) SetSystemProperty(ctx context.Context, propertyName, propertyValue string) error {
 	return d.ShellCommand(ctx, "setprop", propertyName, propertyValue).Run()
 }
+
+// DumpSurfaceFlingerList dumps surfaces list.
+func (d *Device) DumpSurfaceFlingerList(ctx context.Context) (string, error) {
+	output, err := d.ShellCommand(ctx, "dumpsys", "SurfaceFlinger", "--list").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// GetSurfaceLatency gets some information about the last 127 frames displayed in that window.
+func (d *Device) GetSurfaceLatency(ctx context.Context, surface string) (string, error) {
+	output, err := d.ShellCommand(ctx, "dumpsys", "SurfaceFlinger", "--latency", surface).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// ClearState clears the previous session stats.
+func (d *Device) ClearState(ctx context.Context, surface string) error {
+	return d.ShellCommand(ctx, "dumpsys", "SurfaceFlinger", "--latency-clear", surface).Run(testexec.DumpLogOnError)
+}
