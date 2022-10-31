@@ -100,8 +100,8 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 }
 
 // UninstallApp uninstalls the specified Chrome app from the Chrome Web Store.
-func UninstallApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, app App) error {
-	cws, err := cr.NewConn(ctx, app.URL)
+func UninstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App) error {
+	cws, err := br.NewConn(ctx, app.URL)
 	if err != nil {
 		return err
 	}
