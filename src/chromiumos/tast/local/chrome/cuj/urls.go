@@ -166,4 +166,15 @@ const (
 	WebMDURL = "https://www.webmd.com/"
 	// GoogleKeepURL specifies the URL for Google Keep.
 	GoogleKeepURL = "https://keep.google.com/"
+
+	// URLs used by WebRTCProxyCUJ
+
+	// VideoCallURL specifies the URL for WebRTCProxyCUJ.
+	VideoCallURL = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html"
+	// VideoCallHighURL specifies the URL with 720p 30fps camera streams for WebRTCProxyCUJ.
+	VideoCallHighURL = VideoCallURL + "?preset=high"
+	// VideoCallUltraURL specifies the URL with 1080p 30fps camera streams for WebRTCProxyCUJ.
+	VideoCallUltraURL = VideoCallURL + "?preset=ultra"
+	// VideoCallDocsURL specifies the URL for WebRTCProxyCUJ.
+	VideoCallDocsURL = "http://crospower.page.link/power_VideoCall_doc"
 )
