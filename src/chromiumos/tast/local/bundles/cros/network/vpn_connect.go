@@ -37,10 +37,31 @@ func init() {
 		Fixture:      "vpnShillResetWithChromeLoggedIn",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name: "ikev2_psk",
+			Name: "ikev2_psk_ipv4",
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:     vpn.TypeIKEv2,
+					IPType:   vpn.IPTypeIPv4,
+					AuthType: vpn.AuthTypePSK,
+				},
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name: "ikev2_psk_ipv6",
+			Val: vpnTestParams{
+				config: vpn.Config{
+					Type:     vpn.TypeIKEv2,
+					IPType:   vpn.IPTypeIPv6,
+					AuthType: vpn.AuthTypePSK,
+				},
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name: "ikev2_psk_ipv4_ipv6",
+			Val: vpnTestParams{
+				config: vpn.Config{
+					Type:     vpn.TypeIKEv2,
+					IPType:   vpn.IPTypeIPv4AndIPv6,
 					AuthType: vpn.AuthTypePSK,
 				},
 			},
@@ -50,6 +71,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:     vpn.TypeIKEv2,
+					IPType:   vpn.IPTypeIPv4,
 					AuthType: vpn.AuthTypeCert,
 				},
 			},
@@ -59,6 +81,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:     vpn.TypeIKEv2,
+					IPType:   vpn.IPTypeIPv4,
 					AuthType: vpn.AuthTypeEAP,
 				},
 			},

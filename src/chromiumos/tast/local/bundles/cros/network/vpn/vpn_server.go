@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
@@ -29,11 +30,15 @@ const (
 	chapSecret            = "chapsecret"
 	ikeClientIdentity     = "client-id"
 	ikeServerIdentity     = "C=US, ST=California, L=Mountain View, CN=chromelab-wifi-testbed-server.mtv.google.com"
-	ikev2ClientIP         = "192.168.1.128"
-	ikev2ServerIP         = "192.168.1.99"
+	ikev2ClientIPv4       = "192.168.1.128"
+	ikev2ClientIPv6       = "fd00::1"
+	ikev2ServerIPv4       = "192.168.1.99"
+	ikev2ServerIPv6       = "fd00::2"
 	ikev2InterfaceID      = "2"
 	ipsecPresharedKey     = "preshared-key"
 	makeIPsecDir          = "mkdir -p /run/ipsec"
+	poolIPv4              = "ikev2-vip-ipv4-pools"
+	poolIPv6              = "ikev2-vip-ipv6-pools"
 	pppdPidFile           = "run/ppp0.pid"
 	swanctlCommand        = "/usr/sbin/swanctl"
 	viciSocketFile        = "run/ipsec/charon.vici"
@@ -120,7 +125,7 @@ var (
 			"" +
 			"  ikev2-test {\n" +
 			"    version = 2\n" +
-			"    pools = ikev2-vip-pools\n" +
+			"    pools = {{.pools}}\n" +
 			"    {{if .preshared_key}}" +
 			"      local-psk {\n" +
 			"        auth = psk\n" +
@@ -151,10 +156,8 @@ var (
 			"    {{end}}" +
 			"    children {\n" +
 			"      ikev2 {\n" +
-			"        local_ts = 0.0.0.0/0\n" +
-			"        {{if .client_vip}}" +
-			"        remote_ts = {{.client_vip}}/32\n" +
-			"        {{end}}" +
+			"        local_ts = 0.0.0.0/0,::/0\n" +
+			"        remote_ts = {{.remote_ts}}\n" +
 			"        {{if .if_id}}" +
 			"        if_id_in = {{.if_id}}\n" +
 			"        if_id_out = {{.if_id}}\n" +
@@ -185,9 +188,14 @@ var (
 			"  {{end}}" +
 			"}\n" +
 			"pools {\n" +
-			"  {{if .client_vip}}" +
-			"  ikev2-vip-pools {\n" +
-			"    addrs = {{.client_vip}}/32\n" +
+			"  {{if .client_vip_ipv4}}" +
+			"  ikev2-vip-ipv4-pools {\n" +
+			"    addrs = {{.client_vip_ipv4}}/32\n" +
+			"  }\n" +
+			"  {{end}}" +
+			"  {{if .client_vip_ipv6}}" +
+			"  ikev2-vip-ipv6-pools {\n" +
+			"    addrs = {{.client_vip_ipv6}}/128\n" +
 			"  }\n" +
 			"  {{end}}" +
 			"}\n",
@@ -415,6 +423,9 @@ func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType string, ip
 		configValues["xauth_password"] = xauthPassword
 	}
 
+	configValues["pools"] = poolIPv4
+	configValues["remote_ts"] = ikev2ClientIPv4 + "/32"
+
 	// For running strongSwan VPN with flag --with-piddir=/run/ipsec. We
 	// want to use /run/ipsec for strongSwan runtime data dir instead of
 	// /run, and the cmdline flag applies to both client and server
@@ -450,7 +461,7 @@ func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType string, ip
 }
 
 // StartIKEv2Server starts an IKEv2 server.
-func StartIKEv2Server(ctx context.Context, env *env.Env, authType string) (*Server, error) {
+func StartIKEv2Server(ctx context.Context, env *env.Env, authType string, ipType IPType) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,
@@ -466,7 +477,6 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType string) (*Serv
 		"chap_user":      chapUser,
 		"chap_secret":    chapSecret,
 		"charon_logfile": charonLogFile,
-		"client_vip":     ikev2ClientIP,
 		"if_id":          ikev2InterfaceID,
 		"push_dns":       true,
 	}
@@ -487,6 +497,21 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType string) (*Serv
 		return nil, errors.Errorf("IKEv2 type %s is not defined", authType)
 	}
 
+	var poolsArray []string
+	var remoteTsArray []string
+	if ipType == IPTypeIPv4 || ipType == IPTypeIPv4AndIPv6 {
+		configValues["client_vip_ipv4"] = ikev2ClientIPv4
+		poolsArray = append(poolsArray, poolIPv4)
+		remoteTsArray = append(remoteTsArray, ikev2ClientIPv4+"/32")
+	}
+	if ipType == IPTypeIPv6 || ipType == IPTypeIPv4AndIPv6 {
+		configValues["client_vip_ipv6"] = ikev2ClientIPv6
+		poolsArray = append(poolsArray, poolIPv6)
+		remoteTsArray = append(remoteTsArray, ikev2ClientIPv6+"/128")
+	}
+	configValues["pools"] = strings.Join(poolsArray, ",")
+	configValues["remote_ts"] = strings.Join(remoteTsArray, ",")
+
 	runner.AddConfigValues(configValues)
 
 	// For running strongSwan VPN with flag --with-piddir=/run/ipsec. We
@@ -495,7 +520,8 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType string) (*Serv
 	runner.AddStartupCommand(makeIPsecDir)
 	runner.AddStartupCommand(fmt.Sprintf("%s &", charonCommand))
 	runner.AddStartupCommand("ip link add xfrm1 type xfrm dev lo if_id " + ikev2InterfaceID)
-	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIP + "/24")
+	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIPv4 + "/24")
+	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIPv6 + "/64")
 	runner.AddStartupCommand("ip link set dev xfrm1 up")
 
 	underlayIP, err := runner.Startup(ctx)
@@ -513,7 +539,12 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType string) (*Serv
 	}
 
 	server.UnderlayIP = underlayIP
-	server.OverlayIPv4 = ikev2ServerIP
+	if ipType == IPTypeIPv4 || ipType == IPTypeIPv4AndIPv6 {
+		server.OverlayIPv4 = ikev2ServerIPv4
+	}
+	if ipType == IPTypeIPv6 || ipType == IPTypeIPv4AndIPv6 {
+		server.OverlayIPv6 = ikev2ServerIPv6
+	}
 
 	return server, nil
 }
