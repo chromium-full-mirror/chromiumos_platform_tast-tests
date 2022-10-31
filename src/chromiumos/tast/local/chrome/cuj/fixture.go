@@ -53,6 +53,8 @@ const (
 
 	webRTCEventLogCommandFlag = "--webrtc-event-logging=/tmp"
 	webRTCEventLogFilePattern = "/tmp/event_log_*.log"
+
+	fakeCameraFileName = "1080p_camera_video.mjpeg"
 )
 
 // isLocalVar is a runtime variable that specifies whether to skip
@@ -156,6 +158,21 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateWithFakeCamera",
+		Desc: "The CUJ test fixture which keeps login state and uses fake camera",
+		Contacts: []string{
+			"jane.yang@cienet.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data:            []string{fakeCameraFileName},
+		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeAsh, fakeCamera: true},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserLacros",
 		Desc: "Fixture used for lacros variation of UI CUJ tests",
 		Contacts: []string{
@@ -185,6 +202,21 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateLacrosWithFakeCamera",
+		Desc: "Fixture keeping login status, used fake camera for lacros variation of CUJ tests",
+		Contacts: []string{
+			"jane.yang@cienet.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data:            []string{fakeCameraFileName},
+		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeLacros, fakeCamera: true},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -389,6 +421,7 @@ type loggedInToCUJUserFixture struct {
 	// bt describes what type of browser this fixture should use
 	bt                browser.Type
 	useEnterprisePool bool
+	fakeCamera        bool
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -416,6 +449,17 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			if err != nil {
 				s.Fatal("Failed to get lacros options: ", err)
 			}
+		}
+		if f.fakeCamera {
+			fakeCameraOpts := []string{
+				// See https://webrtc.github.io/webrtc-org/testing/.
+				// Feed a test pattern to getUserMedia() instead of live camera input.
+				// The default fps of fake device is 20.
+				"--use-fake-device-for-media-stream",
+				// Feed a Y4M/MJPEG test file to getUserMedia() instead of live camera input.
+				"--use-file-for-fake-video-capture=" + s.DataPath(fakeCameraFileName),
+			}
+			opts = append(opts, chrome.ExtraArgs(fakeCameraOpts...))
 		}
 		cr, err = chrome.New(ctx, opts...)
 
