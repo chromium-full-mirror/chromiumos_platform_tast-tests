@@ -15,6 +15,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/graphics/expectations"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
@@ -134,46 +135,6 @@ func getValidDir(paths []string) (string, error) {
 	return "", errors.Errorf("none of %v exist", paths)
 }
 
-// getValidKernelDriverDebugFile search the open nodes in /sys/kernel/debug/dri with a list of files, and returns the first path which exists.
-func getValidKernelDriverDebugFile(ctx context.Context, relPaths []string) (string, error) {
-	resultErr := errors.Errorf("failed to find %v", relPaths)
-	for _, relPath := range relPaths {
-		p, err := getKernelDriverDebugFile(ctx, relPath)
-		if err != nil {
-			resultErr = errors.Wrap(err, resultErr.Error())
-			continue
-		}
-		return p, nil
-	}
-	return "", resultErr
-}
-
-// getKernelDriverDebugFile search the open nodes in /sys/kernel/debug/dri and returns the a valid path.
-func getKernelDriverDebugFile(ctx context.Context, relPath string) (string, error) {
-	sysPath := "/sys/kernel/debug/dri/"
-	paths, err := filepath.Glob(filepath.Join(sysPath, "*", relPath))
-	if err != nil || paths == nil {
-		return "", errors.Wrap(err, "failed to glob")
-	}
-	for _, path := range paths {
-		name, err := os.ReadFile(strings.Replace(path, relPath, "name", -1))
-		if err != nil {
-			return "", errors.Wrap(err, "failed to read driver name")
-		}
-		// Skipping virtual gem object.
-		if strings.HasPrefix(string(name), "vgem") {
-			continue
-		}
-		// Try read the content, sometimes the file exist but device is not.
-		if _, err := os.ReadFile(path); err != nil {
-			return "", errors.Wrap(err, "file exist but not readable")
-		}
-		testing.ContextLogf(ctx, "File %v under driver (%v) found", relPath, string(name))
-		return path, nil
-	}
-	return "", errors.Errorf("can't find any %v in kernel", relPath)
-}
-
 // getValidPath search the list of paths and return the path which exists.
 func getValidPath(paths []string) (string, error) {
 	for _, path := range paths {
@@ -272,7 +233,7 @@ func dvfs(ctx context.Context) error {
 
 // fbc checks that we can get into FBC.
 func fbc(ctx context.Context) error {
-	fbcPath, err := getValidKernelDriverDebugFile(ctx, []string{
+	fbcPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_fbc_status",
 	})
 	if err != nil {
@@ -299,7 +260,7 @@ func fbc(ctx context.Context) error {
 
 // psr checks that we can get into PSR.
 func psr(ctx context.Context) error {
-	psrPath, err := getValidKernelDriverDebugFile(ctx, []string{
+	psrPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_edp_psr_status",
 	})
 	if err != nil {
@@ -362,11 +323,11 @@ func gemIdle(ctx context.Context) error {
 	}
 
 	perProcessCheck := false
-	gemPath, err := getValidKernelDriverDebugFile(ctx, []string{
+	gemPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_gem_active",
 	})
 	if err != nil {
-		gemPath, err = getValidKernelDriverDebugFile(ctx, []string{
+		gemPath, err = graphics.GetValidKernelDriverDebugFile(ctx, []string{
 			"i915_gem_objects",
 		})
 		if err != nil {
@@ -414,7 +375,7 @@ func gemIdle(ctx context.Context) error {
 
 // i915MinClock checks that we get into the lowest clock frequency.
 func i915MinClock(ctx context.Context) error {
-	clockPath, err := getValidKernelDriverDebugFile(ctx, []string{
+	clockPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_frequency_info",
 		// TODO(marcheu): remove if this is not available/used anymore.
 		"i915_cur_delayinfo",
@@ -468,7 +429,7 @@ func i915MinClock(ctx context.Context) error {
 
 // rc6 checks that we are able to get into rc6.
 func rc6(ctx context.Context) error {
-	rc6Path, err := getValidKernelDriverDebugFile(ctx, []string{
+	rc6Path, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_drpc_info",
 		"gt/drpc",
 	})

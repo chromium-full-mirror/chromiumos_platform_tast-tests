@@ -36,6 +36,148 @@ const (
 	hangCheckPeriodPath = "/sys/kernel/debug/dri/*/hangcheck_period_ms"
 )
 
+var (
+	labels     = []string{"objects", "bytes"}
+	amdRegex   = "(?P<bytes>\\d*) byte  GTT CPU_ACCESS_REQUIRED CPU_GTT_USWC"
+	intelRegex = "(?P<objects>\\d*) shrinkable.*objects, (?P<bytes>\\d*) bytes"
+)
+
+// contains checks if an element of type string exists in a slice of strings.
+func contains(elems []string, v string) bool {
+	for _, s := range elems {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// parseMemory matches the regex pattern groups with the sysfs file contents
+func parseMemory(ctx context.Context, file []byte, memRegexp string) (map[string]int, error) {
+	results := make(map[string]int)
+	memoryRe := regexp.MustCompile(memRegexp)
+	matches := memoryRe.FindAllStringSubmatch(string(file), -1)
+	if len(matches) == 0 {
+		return nil, errors.New("failed to find matches in sysfs memory file")
+	}
+	groupNames := memoryRe.SubexpNames()
+	// the 0th index has the whole string so skip it.
+	for index := 1; index < len(matches[0]); index++ {
+		value, err := strconv.Atoi(matches[0][index])
+		if err != nil {
+			return nil, errors.Wrapf(err, " unable to convert value %s to int ", matches[0][index])
+		}
+		results[groupNames[index]] = value
+	}
+	return results, nil
+}
+
+// GetValidKernelDriverDebugFile search the open nodes in /sys/kernel/debug/dri with a list of files, and returns the first path which exists.
+func GetValidKernelDriverDebugFile(ctx context.Context, relPaths []string) (string, error) {
+	resultErr := errors.Errorf("failed to find %v", relPaths)
+	for _, relPath := range relPaths {
+		p, err := getKernelDriverDebugFile(ctx, relPath)
+		if err != nil {
+			resultErr = errors.Wrap(err, resultErr.Error())
+			continue
+		}
+		return p, nil
+	}
+	return "", resultErr
+}
+
+// getKernelDriverDebugFile search the open nodes in /sys/kernel/debug/dri and returns the a valid path.
+func getKernelDriverDebugFile(ctx context.Context, relPath string) (string, error) {
+	sysPath := "/sys/kernel/debug/dri/"
+	paths, err := filepath.Glob(filepath.Join(sysPath, "*", relPath))
+	if err != nil || paths == nil {
+		return "", errors.Wrap(err, "failed to glob")
+	}
+	for _, path := range paths {
+		name, err := os.ReadFile(strings.Replace(path, relPath, "name", -1))
+		if err != nil {
+			return "", errors.Wrap(err, "failed to read driver name")
+		}
+		// Skipping virtual gem object.
+		if strings.HasPrefix(string(name), "vgem") {
+			continue
+		}
+		// Try read the content, sometimes the file exist but device is not.
+		if _, err := os.ReadFile(path); err != nil {
+			return "", errors.Wrap(err, "file exist but not readable")
+		}
+		testing.ContextLogf(ctx, "File %v under driver (%v) found", relPath, string(name))
+		return path, nil
+	}
+	return "", errors.Errorf("can't find any %v in kernel", relPath)
+}
+
+// processLabels find the label of interest in the sysfs file
+func processLabels(ctx context.Context, file []byte) (map[string]int, error) {
+	results := make(map[string]int)
+	// When a label has been found, the previous word should be the value. e.g. "3200 bytes"
+	var prevWord string
+	for _, line := range strings.Split(string(file), "\n") {
+		lineWords := strings.Split(strings.Replace(line, ",", "", -1), " ")
+		for _, word := range lineWords {
+			if _, exists := results[word]; exists {
+				testing.ContextLogf(ctx, "%v is already recorded while parsing sysfs memory", word)
+				continue
+			}
+			if contains(labels, word) && len(prevWord) > 0 {
+				value, err := strconv.Atoi(prevWord)
+				if err != nil {
+					return nil, errors.Wrapf(err, " unable to convert value %s to int ", prevWord)
+				}
+				results[word] = value
+			}
+			prevWord = word
+			if len(results) == len(labels) {
+				return results, nil
+			}
+		}
+	}
+	return results, nil
+}
+
+// parseSysfsMemory parses output of graphics memory sysfs to determine the number of buffer objects and bytes.
+func parseSysfsMemory(ctx context.Context, file string) (map[string]int, error) {
+	output, err := os.ReadFile(file)
+	if err != nil {
+		return nil, errors.Wrapf(err, " error encountered while reading file %s ", file)
+	}
+	soc, err := CPUFamily(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Machine CPU family is not supported")
+	}
+	if soc == "intel" {
+		return parseMemory(ctx, output, intelRegex)
+	} else if soc == "amd" {
+		return parseMemory(ctx, output, amdRegex)
+	} else {
+		return processLabels(ctx, output)
+	}
+}
+
+// GetSysfsMemory returns gpu memory usage
+func GetSysfsMemory(ctx context.Context) (int, error) {
+	var errMsg string
+	file, err := GetValidKernelDriverDebugFile(ctx, []string{
+		"i915_gem_objects",
+	})
+	parsedResults, err := parseSysfsMemory(ctx, file)
+	if err != nil {
+		return 0, err
+	}
+	bytes, exists := parsedResults["bytes"]
+	if exists && bytes == 0 {
+		errMsg = strings.Join([]string{errMsg, string(file), "reported 0 bytes"}, " ")
+		return 0, errors.New(errMsg)
+	}
+	return bytes, nil
+
+}
+
 // APIType identifies a graphics API that can be tested by DEQP.
 type APIType int
 
