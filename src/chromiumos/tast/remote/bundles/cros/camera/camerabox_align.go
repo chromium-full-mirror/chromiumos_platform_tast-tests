@@ -23,8 +23,8 @@ func init() {
 		Func:         CameraboxAlign,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifying alignment of chart tablet screen and target facing camera FOV in camerabox setup",
-		Data:         []string{"camerabox_align.svg", "camerabox_align.html", "camerabox_align.css", "camerabox_align.js"},
-		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		Data:         []string{"camerabox_align.svg", "camerabox_align.html", "camerabox_align.css", "camerabox_align.js", "camerabox_align.png", "pattern_checker.js", "opencv.js"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.AlignmentService"},
@@ -88,6 +88,9 @@ func CameraboxAlign(ctx context.Context, s *testing.State) {
 			s.DataPath("camerabox_align.html"): filepath.Join(dataPath, "camerabox_align.html"),
 			s.DataPath("camerabox_align.css"):  filepath.Join(dataPath, "camerabox_align.css"),
 			s.DataPath("camerabox_align.js"):   filepath.Join(dataPath, "camerabox_align.js"),
+			s.DataPath("camerabox_align.png"):  filepath.Join(dataPath, "camerabox_align.png"),
+			s.DataPath("pattern_checker.js"):   filepath.Join(dataPath, "pattern_checker.js"),
+			s.DataPath("opencv.js"):            filepath.Join(dataPath, "opencv.js"),
 		},
 		linuxssh.DereferenceSymlinks); err != nil {
 		s.Fatalf("Failed to send data to remote data path %v: %v", dataPath, err)

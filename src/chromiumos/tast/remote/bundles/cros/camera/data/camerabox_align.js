@@ -28,7 +28,7 @@ function getAspectRatioName(aspectRatio) {
   }
   return '16x9';
 }
-
+let cvIsReady = false;
 class Preview {
   constructor() {
     /**
@@ -141,7 +141,16 @@ window.Tast = class Tast {
     }
     return window.Tast.preview_instance_;
   }
-
+  /**
+   * @return {!PatternChecker}
+   * @private
+   */
+     static get patternChecker_() {
+      if (!window.Tast.patternCheckerInstance) {
+        window.Tast.patternCheckerInstance = new PatternChecker();
+      }
+      return window.Tast.patternCheckerInstance;
+    }
   /**
    * @param {!Facing} facing
    * @param {!AspectRatio} aspectRatio
@@ -170,9 +179,35 @@ window.Tast = class Tast {
    * @return {!Promise<boolean>}
    * @private
    */
-  static async checkAlign_(facing, aspectRatio) {
+   static async checkAlign_(facing, aspectRatio) {
     const frame = await Tast.getPreviewFrame_(facing, aspectRatio);
+    if (!cvIsReady){
+      cv = await cv;
+      cvIsReady = true;
+    }
+    const ctx =
+    /** @type {!CanvasRenderingContext2D} */ (frame.getContext('2d'));
+    const imageData = ctx.getImageData(0, 0, frame.width, frame.height);
+    document.getElementById("debug").innerHTML = "Debug"
+    let result =
+        Tast.patternChecker_.checkAlign(patternImg,imageData,
+          /* canvas_debug = */ debugImg,
+          /* proportion = */ 0.4);
+    return result;
+   }
 
+  /**
+   * Checks the |aspectRatio| camera FOV of |facing| camera is aligned with
+   * pattern shown on chart tablet by capturing a frame from camera and
+   * verifying all pixels on the frame boundary lying in green area of chart
+   * pattern.
+   * @param {!Facing} facing
+   * @param {!AspectRatio} aspectRatio
+   * @return {!Promise<boolean>}
+   * @private
+   */
+  static async checkAlign_legacy(facing, aspectRatio) {
+    const frame = await Tast.getPreviewFrame_(facing, aspectRatio);
     const getHue = (r, g, b) => {
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
@@ -303,6 +338,8 @@ window.Tast = class Tast {
       }
       break;
     }
+    Tast.patternChecker_.destructor();
+    delete Tast.patternChecker_;
   }
 
   /**
@@ -313,6 +350,8 @@ window.Tast = class Tast {
     await Tast.waitForPassAlignN_(facing, AspectRatio.AR4X3, 5000, 15000);
     await Tast.waitForPassAlignN_(facing, AspectRatio.AR16X9, 5000, 15000);
     Tast.feedbackAlign_(true, 'All passed');
+    Tast.patternChecker_.destructor();
+    delete Tast.patternChecker_;
   }
 
   /**
