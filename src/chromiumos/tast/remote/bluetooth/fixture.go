@@ -7,6 +7,8 @@ package bluetooth
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,6 +18,8 @@ import (
 	btc "chromiumos/tast/common/bluetooth"
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/dbus"
+	"chromiumos/tast/remote/wificell/fileutil"
 	"chromiumos/tast/rpc"
 	bts "chromiumos/tast/services/cros/bluetooth"
 	chromeService "chromiumos/tast/services/cros/ui"
@@ -43,9 +47,15 @@ const (
 )
 
 const (
+	dbusServiceBluetoothBluez = "org.bluez"
+	dbusServiceBluetoothFloss = "org.chromium.bluetooth"
+)
+
+const (
 	setUpTimeout    = 80 * time.Second
 	resetTimeout    = 65 * time.Second
 	tearDownTimeout = 70 * time.Second
+	postTestTimeout = 1 * time.Second
 
 	// btpeerTimeoutBuffer is added to fixture per btpeer expected to give
 	// additional time to manage each btpeer.
@@ -69,6 +79,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -89,6 +100,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerTimeoutBuffer,
+		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -109,6 +121,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout + 2*btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerTimeoutBuffer,
 		TearDownTimeout: tearDownTimeout + 2*btpeerTimeoutBuffer,
+		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -129,6 +142,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout + 3*btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + 3*btpeerTimeoutBuffer,
 		TearDownTimeout: tearDownTimeout + 3*btpeerTimeoutBuffer,
+		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -149,6 +163,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout + 4*btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + 4*btpeerTimeoutBuffer,
 		TearDownTimeout: tearDownTimeout + 4*btpeerTimeoutBuffer,
+		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -170,6 +185,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerTimeoutBuffer,
+		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
 }
@@ -219,8 +235,9 @@ type FixtValue struct {
 }
 
 type fixture struct {
-	features *fixtureFeatures
-	fv       *FixtValue
+	features                     *fixtureFeatures
+	fv                           *FixtValue
+	dbusMonitorBluetoothServices *dbus.Monitor
 }
 
 func newFixture(features *fixtureFeatures) *fixture {
@@ -277,6 +294,21 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		s.Fatal("Failed to log into chrome on DUT: ", err)
 	}
 
+	// Start capturing incoming and outgoing bluez and floss D-Bus messages.
+	dbusMonitorBluetoothServices, err := dbus.StartMonitor(
+		ctx,
+		s.DUT().Conn(),
+		"--system",
+		fmt.Sprintf("sender='%s'", dbusServiceBluetoothBluez),
+		fmt.Sprintf("sender='%s'", dbusServiceBluetoothFloss),
+		fmt.Sprintf("destination='%s'", dbusServiceBluetoothBluez),
+		fmt.Sprintf("destination='%s'", dbusServiceBluetoothFloss),
+	)
+	if err != nil {
+		s.Fatal("Failed to start dbus-monitor listening to bluez and floss service messages: ", err)
+	}
+	tf.dbusMonitorBluetoothServices = dbusMonitorBluetoothServices
+
 	// Enable bluetooth adapter and clear devices.
 	if tf.features.BluetoothAdapterEnabled {
 		if _, err := tf.fv.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
@@ -285,6 +317,11 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		if err := tf.clearDutBluetoothDevices(ctx); err != nil {
 			s.Error("Failed to clear DUT bluetooth devices: ", err)
 		}
+	}
+
+	// Save collected bluez D-Bus messages collected thus far.
+	if err := tf.logDBusMonitorBluetoothMessages(ctx, "SetUp"); err != nil {
+		s.Fatal("Failed to collect dbus-monitor bluez logs: ", err)
 	}
 	return tf.fv
 }
@@ -305,6 +342,9 @@ func (tf *fixture) Reset(ctx context.Context) (retErr error) {
 	if err := tf.resetBTPeers(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset all btpeers")
 	}
+	if err := tf.logDBusMonitorBluetoothMessages(ctx, "Reset"); err != nil {
+		return errors.Wrap(err, "failed to collect dbus-monitor bluez logs")
+	}
 	return nil
 }
 
@@ -321,7 +361,10 @@ func (tf *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// No-op.
+	// Save any new dbus logs that occurred during the test.
+	if err := tf.logDBusMonitorBluetoothMessages(ctx, "PostTest"); err != nil {
+		s.Fatal("Failed to collect dbus-monitor bluez logs: ", err)
+	}
 }
 
 // TearDown is called by the framework to tear down the environment SetUp set
@@ -352,6 +395,14 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	// Reset btpeers to original state.
 	if err := tf.resetBTPeers(ctx); err != nil {
 		s.Error("Failed to reset all btpeers: ", err)
+	}
+
+	// Stop dbus-monitor.
+	if err := tf.logDBusMonitorBluetoothMessages(ctx, "TearDown"); err != nil {
+		s.Error("Failed to collect dbus-monitor bluez logs: ", err)
+	}
+	if err := tf.dbusMonitorBluetoothServices.Close(); err != nil {
+		s.Error("Failed to close dbus-monitor: ", err)
 	}
 }
 
@@ -444,6 +495,43 @@ func (tf *fixture) resetBTPeer(ctx context.Context, btpeerIndex int, btpeer cham
 		return errors.Wrapf(err, "failed to reset bluetooth stack on btpeer[%d] at %q", btpeerIndex, btpeer.Host())
 	}
 	return nil
+}
+
+func (tf *fixture) logDBusMonitorBluetoothMessages(ctx context.Context, logName string) error {
+	ctx, st := timing.Start(ctx, "logDBusMonitorBluetoothMessages")
+	defer st.End()
+	// Prepare output file.
+	dstLogFilename := tf.buildLogFilename(logName)
+	dstFilePath := filepath.Join("dbus_monitor_bluetooth", dstLogFilename)
+	f, err := fileutil.PrepareOutDirFile(ctx, dstFilePath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to prepare output dir file %q", dstFilePath)
+	}
+	// Dump buffer of collected logs to file.
+	if err := tf.dbusMonitorBluetoothServices.Dump(f); err != nil {
+		return errors.Wrapf(err, "failed to dump dbus-monitor logs to %q", dstFilePath)
+	}
+	return nil
+}
+
+// buildLogFilename builds a log filename with a minimal timestamp prefix, all
+// the name parts in the middle delimited by "_" with non-word characters
+// replaced with underscores, and a ".log" file extension.
+//
+// This not only communicates the time of the log to users, but keeps similar
+// files in chronological order within the same directory when displayed sorted
+// by name (alphanumerical order) by most programs.
+//
+// Example result: "20220523-122753_dbus_bluetooth_PostTest"
+func (tf *fixture) buildLogFilename(nameParts ...string) string {
+	// Build timestamp prefix.
+	timestamp := time.Now().Format("20060102-150405")
+	// Join and sanitize name parts.
+	name := strings.Join(nameParts, "_")
+	name = regexp.MustCompile("\\W").ReplaceAllString(name, "_")
+	name = regexp.MustCompile("_+").ReplaceAllString(name, "_")
+	// Combine timestamp, name, and extension.
+	return fmt.Sprintf("%s_%s.log", timestamp, name)
 }
 
 // clearDutBluetoothDevices disconnects the DUT from any connected bluetooth
