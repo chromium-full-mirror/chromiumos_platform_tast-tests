@@ -92,14 +92,27 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		testing.ContextLog(ctx, "WARNING: The rootfs is writable")
 	}
 
-	t.daemonState, err = stopDaemons(ctx, t.UpstartService(), []string{
+	// Get upstart service client instance.
+	upstartService, err := t.UpstartService(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get upstart client instance")
+	}
+
+	t.daemonState, err = stopDaemons(ctx, upstartService, []string{
 		biodUpstartJobName,
 	})
 	// Start daemons when this function is going to return an error.
 	defer func() {
 		if initError != nil {
 			testing.ContextLog(ctx, "NewFirmwareTest failed, restore daemon state")
-			if err := restoreDaemons(ctx, t.UpstartService(), t.daemonState); err != nil {
+
+			// Get upstart service client instance and restore daemons.
+			upstartService, err := t.UpstartService(ctx)
+			if err == nil {
+				err = restoreDaemons(ctx, upstartService, t.daemonState)
+			}
+
+			if err != nil {
 				testing.ContextLog(ctx, "Failed to restart daemons: ", err)
 			}
 		}
@@ -129,14 +142,21 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		// Disable biod upstart job so that it doesn't interfere with the test when
 		// we reboot.
 		testing.ContextLogf(ctx, "Disabling %s job", biodUpstartJobName)
-		if _, err := t.UpstartService().DisableJob(ctx, &platform.DisableJobRequest{JobName: biodUpstartJobName}); err != nil {
+		if _, err := upstartService.DisableJob(ctx, &platform.DisableJobRequest{JobName: biodUpstartJobName}); err != nil {
 			return nil, errors.Wrap(err, "failed to disable biod upstart job")
 		}
 		// Enable biod service when this function is going to return an error.
 		defer func() {
 			if initError != nil {
 				testing.ContextLog(ctx, "NewFirmwareTest failed, let's re-enable biod upstart job")
-				if _, err := t.UpstartService().EnableJob(ctx, &platform.EnableJobRequest{JobName: biodUpstartJobName}); err != nil {
+
+				// Get upstart service client instance and enable biod service.
+				upstartService, err := t.UpstartService(ctx)
+				if err == nil {
+					_, err = upstartService.EnableJob(ctx, &platform.EnableJobRequest{JobName: biodUpstartJobName})
+				}
+
+				if err != nil {
 					testing.ContextLog(ctx, "Failed to re-enable biod upstart job: ", err)
 				}
 			}
@@ -219,16 +239,24 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 		firstErr = err
 	}
 
+	// Get upstart service client instance.
+	upstartService, err := t.UpstartService(ctx)
+	if err != nil && firstErr == nil {
+		firstErr = err
+	}
+
 	if t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp) {
-		// If biod upstart job disabled, re-enable it
-		resp, err := t.UpstartService().IsJobEnabled(ctx, &platform.IsJobEnabledRequest{JobName: biodUpstartJobName})
-		if err == nil && !resp.Enabled {
-			testing.ContextLogf(ctx, "Enabling %s job", biodUpstartJobName)
-			if _, err := t.UpstartService().EnableJob(ctx, &platform.EnableJobRequest{JobName: biodUpstartJobName}); err != nil && firstErr == nil {
+		if upstartService != nil {
+			// If biod upstart job disabled, re-enable it
+			resp, err := upstartService.IsJobEnabled(ctx, &platform.IsJobEnabledRequest{JobName: biodUpstartJobName})
+			if err == nil && !resp.Enabled {
+				testing.ContextLogf(ctx, "Enabling %s job", biodUpstartJobName)
+				if _, err := upstartService.EnableJob(ctx, &platform.EnableJobRequest{JobName: biodUpstartJobName}); err != nil && firstErr == nil {
+					firstErr = err
+				}
+			} else if err != nil && firstErr == nil {
 				firstErr = err
 			}
-		} else if err != nil && firstErr == nil {
-			firstErr = err
 		}
 
 		// If FP updater disabled, re-enable it
@@ -253,8 +281,10 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 		}
 	}
 
-	if err := restoreDaemons(ctx, t.UpstartService(), t.daemonState); err != nil && firstErr == nil {
-		firstErr = err
+	if upstartService != nil {
+		if err := restoreDaemons(ctx, upstartService, t.daemonState); err != nil && firstErr == nil {
+			firstErr = err
+		}
 	}
 
 	return firstErr
@@ -276,8 +306,11 @@ func (t *FirmwareTest) RPCClient() *rpc.Client {
 }
 
 // UpstartService gets the upstart service client.
-func (t *FirmwareTest) UpstartService() platform.UpstartServiceClient {
-	return platform.NewUpstartServiceClient(t.RPCClient().Conn)
+func (t *FirmwareTest) UpstartService(ctx context.Context) (platform.UpstartServiceClient, error) {
+	if !t.d.RPCConnected(ctx) {
+		return nil, errors.New("RPC connection is not available")
+	}
+	return platform.NewUpstartServiceClient(t.RPCClient().Conn), nil
 }
 
 // FirmwareFile gets the firmware file.
@@ -394,6 +427,10 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 
 // IsFPUpdaterEnabled returns true if the fingerprint updater is enabled.
 func IsFPUpdaterEnabled(ctx context.Context, d *rpcdut.RPCDUT) (bool, error) {
+	if !d.RPCConnected(ctx) {
+		return false, errors.New("RPC connection is not available")
+	}
+
 	fs := dutfs.NewClient(d.RPC().Conn)
 	disabled, err := fs.Exists(ctx, filepath.Join(fp.FirmwareFilePath, disableFpUpdaterFile))
 	return !disabled, err
@@ -401,6 +438,10 @@ func IsFPUpdaterEnabled(ctx context.Context, d *rpcdut.RPCDUT) (bool, error) {
 
 // EnableFPUpdater enables the fingerprint updater if it is disabled.
 func EnableFPUpdater(ctx context.Context, d *rpcdut.RPCDUT) error {
+	if !d.RPCConnected(ctx) {
+		return errors.New("RPC connection is not available")
+	}
+
 	fs := dutfs.NewClient(d.RPC().Conn)
 	testing.ContextLog(ctx, "Enabling the fingerprint updater")
 	disableFpUpdaterPath := filepath.Join(fp.FirmwareFilePath, disableFpUpdaterFile)
@@ -416,6 +457,10 @@ func EnableFPUpdater(ctx context.Context, d *rpcdut.RPCDUT) error {
 
 // DisableFPUpdater disables the fingerprint updater if it is enabled.
 func DisableFPUpdater(ctx context.Context, d *rpcdut.RPCDUT) error {
+	if !d.RPCConnected(ctx) {
+		return errors.New("RPC connection is not available")
+	}
+
 	fs := dutfs.NewClient(d.RPC().Conn)
 	testing.ContextLog(ctx, "Disabling the fingerprint updater")
 	disableFpUpdaterPath := filepath.Join(fp.FirmwareFilePath, disableFpUpdaterFile)
