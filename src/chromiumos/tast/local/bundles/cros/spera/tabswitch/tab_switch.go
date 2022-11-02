@@ -55,46 +55,6 @@ func pageLoadingTimeout(isRecordMode bool) time.Duration {
 	return replayPageLoadingTimeout
 }
 
-// webType define all web site is involved in this test case
-type webType string
-
-const (
-	wikipedia    webType = "Wikipedia"
-	reddit       webType = "Reddit"
-	medium       webType = "Medium"
-	yahooNews    webType = "YahooNews"
-	yahooFinance webType = "YahooFinance"
-	cnn          webType = "CNN"
-	espn         webType = "ESPN"
-	hulu         webType = "Hulu"
-	pinterest    webType = "Pinterest"
-	youtube      webType = "Youtube"
-	netflix      webType = "Netflix"
-)
-
-// webPageInfo records a Chrome page's information, including the current browsing page
-// and url links (in patterns) for page navigation.
-type webPageInfo struct {
-	tier    cuj.Tier // the test tier of this link will be used for. Only used for generating targets
-	webName webType  // current page's website name
-	// contentPatterns holds the patterns of the url links embedded in the web page. During
-	// tab switch, we find the url of the given pattern in the current page and click it.
-	// Links can be clicked back and forth in case multiple rounds of tab switch are executed.
-	contentPatterns []string
-}
-
-func newPageInfo(tier cuj.Tier, web webType, patterns ...string) *webPageInfo {
-	if len(patterns) < 2 {
-		panic("Invalid configuration of webPageInfo")
-	}
-
-	return &webPageInfo{
-		tier:            tier,
-		webName:         web,
-		contentPatterns: patterns,
-	}
-}
-
 // chromeTab holds the information of a Chrome browser tab.
 type chromeTab struct {
 	conn           *chrome.Conn
@@ -306,61 +266,8 @@ type chromeWindow struct {
 	tabs []*chromeTab
 }
 
-var allTargets = []struct {
-	url  string
-	info *webPageInfo
-}{
-	{cuj.WikipediaMainURL, newPageInfo(cuj.Essential, wikipedia, `/Main_Page`, `/Wikipedia:Contents`)},
-	{cuj.WikipediaCurrentEventsURL, newPageInfo(cuj.Essential, wikipedia, `/Portal:Current_events`, `/Special:Random`)},
-	{cuj.WikipediaAboutURL, newPageInfo(cuj.Essential, wikipedia, `/Wikipedia:About`, `/Wikipedia:Contact_us`)},
-	{cuj.WikipediaHelpURL, newPageInfo(cuj.Advanced, wikipedia, `/Help:Contents`, `/Help:Introduction`)},
-	{cuj.WikipediaCommunityURL, newPageInfo(cuj.Advanced, wikipedia, `/Wikipedia:Community_portal`, `/Special:RecentChanges`)},
-	{cuj.WikipediaContributionURL, newPageInfo(cuj.Advanced, wikipedia, `/Help:User_contributions`, `/Wikipedia`)},
-
-	{cuj.RedditWallstreetURL, newPageInfo(cuj.Essential, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
-	{cuj.RedditTechNewsURL, newPageInfo(cuj.Essential, reddit, `/r/technews/hot/`, `/r/technews/new/`)},
-	{cuj.RedditOlympicsURL, newPageInfo(cuj.Essential, reddit, `/r/olympics/hot/`, `/r/olympics/new/`)},
-	{cuj.RedditProgrammingURL, newPageInfo(cuj.Advanced, reddit, `/r/programming/hot/`, `/r/programming/new/`)},
-	{cuj.RedditAppleURL, newPageInfo(cuj.Advanced, reddit, `/r/apple/hot/`, `/r/apple/new/`)},
-	{cuj.RedditBrooklynURL, newPageInfo(cuj.Advanced, reddit, `/r/brooklynninenine/hot/`, `/r/brooklynninenine/new/`)},
-
-	// Since "Medium" sites change content frequently, add an alternate tag link pattern.
-	{cuj.MediumBusinessURL, newPageInfo(cuj.Essential, medium, `/business`, `/economy`, `/money`, `/marketing`)},
-	{cuj.MediumStartupURL, newPageInfo(cuj.Essential, medium, `/startup`, `/leadership`, `/marketing`, `/business`)},
-	{cuj.MediumWorkURL, newPageInfo(cuj.Advanced, medium, `/work`, `/productivity`, `/careers`, `/business`)},
-	{cuj.MediumSoftwareURL, newPageInfo(cuj.Advanced, medium, `/software-engineering`, `/programming`, `/coding`, `/technology`)},
-	{cuj.MediumAIURL, newPageInfo(cuj.Advanced, medium, `/artificial-intelligence`, `/data-science`, `/software-engineering`, `/programming`)},
-
-	// Since "Yahoo" sites change content frequently, add an alternate tag link pattern.
-	{cuj.YahooUsURL, newPageInfo(cuj.Essential, yahooNews, `/us/`, `/politics/`, `/world/`)},
-	{cuj.YahooWorldURL, newPageInfo(cuj.Essential, yahooNews, `/world/`, `/coronavirus/`, `/health/`)},
-	{cuj.YahooScienceURL, newPageInfo(cuj.Advanced, yahooNews, `/science/`, `/originals/`, `/us/`)},
-	{cuj.YahooFinanaceWatchlistURL, newPageInfo(cuj.Advanced, yahooFinance, `/watchlists/`, `/news/`)},
-
-	{cuj.CnnWorldURL, newPageInfo(cuj.Advanced, cnn, `/world`, `/africa`)},
-	{cuj.CnnAmericasURL, newPageInfo(cuj.Advanced, cnn, `/americas`, `/asia`)},
-	{cuj.CnnAustraliaURL, newPageInfo(cuj.Advanced, cnn, `/australia`, `/china`)},
-	{cuj.CnnEuropeURL, newPageInfo(cuj.Advanced, cnn, `/europe`, `/india`)},
-	{cuj.CnnMiddleEastURL, newPageInfo(cuj.Advanced, cnn, `/middle-east`, `/uk`)},
-
-	{cuj.EspnNflURL, newPageInfo(cuj.Advanced, espn, `/nfl/scoreboard`, `/nfl/schedule`)},
-	{cuj.EspnNbaURL, newPageInfo(cuj.Advanced, espn, `/nba/scoreboard`, `/nba/schedule`)},
-	{cuj.EspnCollegeBasketballURL, newPageInfo(cuj.Advanced, espn, `/mens-college-basketball/scoreboard`, `/mens-college-basketball/schedule`)},
-	{cuj.EspnTennisURL, newPageInfo(cuj.Advanced, espn, `/tennis/dailyResults`, `/tennis/schedule`)},
-	{cuj.EspnSoccerURL, newPageInfo(cuj.Advanced, espn, `/soccer/scoreboard`, `/soccer/schedule`)},
-
-	{cuj.HuluMoviesURL, newPageInfo(cuj.Advanced, hulu, `/hub/movies`, `/hub/originals`)},
-	{cuj.HuluKidsURL, newPageInfo(cuj.Advanced, hulu, `/hub/kids`, `/hub/networks`)},
-
-	{cuj.PinterestURL, newPageInfo(cuj.Advanced, pinterest, `/ideas/`, `/ideas/holidays/910319220330/`)},
-
-	{cuj.NetflixURL, newPageInfo(cuj.Advanced, netflix, `/en`, `/en/legal/termsofuse`)},
-
-	{cuj.YoutubeURL, newPageInfo(cuj.Advanced, youtube, `/`, `/feed/explore`)},
-}
-
 // generateTabSwitchTargets sets all web targets according to the input tier.
-func generateTabSwitchTargets(tier cuj.Tier) ([]*chromeWindow, error) {
+func generateTabSwitchTargets(tier cuj.Tier, webSource string) ([]*chromeWindow, error) {
 	winNum := 1
 	tabNum := 0
 	switch tier {
@@ -372,14 +279,10 @@ func generateTabSwitchTargets(tier cuj.Tier) ([]*chromeWindow, error) {
 		tabNum = 9
 	}
 
-	var targets []struct {
-		url  string
-		info *webPageInfo
-	}
-
-	for _, tgt := range allTargets {
-		if tgt.info.tier <= tier {
-			targets = append(targets, tgt)
+	var targets []tabTarget
+	for _, tabTarget := range tabTargetsMap[webSource] {
+		if tabTarget.info.tier <= tier {
+			targets = append(targets, tabTarget)
 		}
 	}
 	if len(targets) < winNum*tabNum {
@@ -389,29 +292,6 @@ func generateTabSwitchTargets(tier cuj.Tier) ([]*chromeWindow, error) {
 	rand := rand.New(rand.NewSource(1))
 	rand.Shuffle(len(targets), func(i, j int) { targets[i], targets[j] = targets[j], targets[i] })
 
-	// If even-numbered tabs are Wikipedia or Yahoo tabs, swap to odd-numbered tabs.
-	j := 0
-	isOddTab := func(idx int) bool {
-		return (idx%tabNum)%2 == 0
-	}
-	for i := range targets {
-		if !isOddTab(i) && (targets[i].info.webName == wikipedia || targets[i].info.webName == yahooNews) {
-			for {
-				if j >= len(targets) {
-					break
-				}
-				if isOddTab(j) {
-					webName := targets[j].info.webName
-					if webName != wikipedia && webName != yahooNews {
-						targets[i], targets[j] = targets[j], targets[i]
-						j++
-						break
-					}
-				}
-				j++
-			}
-		}
-	}
 	idx := 0
 	windows := make([]*chromeWindow, winNum)
 	for i := range windows {
@@ -461,7 +341,17 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 	}
 	defer cleanupSetting(cleanupSettingsCtx)
 
-	windows, err := generateTabSwitchTargets(tier)
+	// The default web source is the external websites.
+	webSource := "external"
+	if ws, ok := s.Var("spera.web_source"); ok {
+		ws = strings.ToLower(ws)
+		if _, ok := tabTargetsMap[ws]; ok {
+			webSource = ws
+		} else {
+			s.Fatal("Unknown web source: ", webSource)
+		}
+	}
+	windows, err := generateTabSwitchTargets(tier, webSource)
 	if err != nil {
 		s.Fatal("Failed to generate tab targets: ", err)
 	}
@@ -635,7 +525,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			testing.ContextLogf(ctx, "Switching tab to window %d, tab %d", idx+1, tabIdx+1)
 
 			tab := window.tabs[tabIdx]
-			if tab.pageInfo.webName == reddit || tab.pageInfo.webName == youtube {
+			if tab.pageInfo.webName == youtube {
 				notificationsDialog := nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
 				allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
 				if err := uiauto.IfSuccessThen(
@@ -687,7 +577,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 
 			// To reduce total execution time of this test case,
 			// these specific websites has been chosen to do scroll actions as per requirement.
-			if tab.pageInfo.webName == wikipedia || tab.pageInfo.webName == hulu || tab.pageInfo.webName == youtube {
+			if tab.pageInfo.webName == googleWorkspace || tab.pageInfo.webName == googleHelp || tab.pageInfo.webName == googleStore {
 				for _, act := range scrollActions {
 					if err := act(ctx); err != nil {
 						return errors.Wrap(err, "failed to execute action")

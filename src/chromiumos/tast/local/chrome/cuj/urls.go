@@ -80,6 +80,75 @@ const (
 	// YoutubeURL specifies the URL for YouTube's home page.
 	YoutubeURL = "https://www.youtube.com"
 
+	// GoogleFinanceURL specifies the URL for Google Finance's home page.
+	GoogleFinanceURL = "https://www.google.com/finance/"
+	// GoogleFinanceIndexesURL specifies the URL for Google Finance's indexes page.
+	GoogleFinanceIndexesURL = "https://www.google.com/finance/markets/indexes"
+	// GoogleFinanceMostActiveURL specifies the URL for Google Finance's most active page.
+	GoogleFinanceMostActiveURL = "https://www.google.com/finance/markets/most-active"
+	// GoogleFinanceGainersURL specifies the URL for Google Finance's gainers page.
+	GoogleFinanceGainersURL = "https://www.google.com/finance/markets/gainers"
+	// GoogleFinanceLosersURL specifies the URL for Google Finance's losers page.
+	GoogleFinanceLosersURL = "https://www.google.com/finance/markets/losers"
+	// GoogleHelpChromeURL specifies the URL for Google Help's Chrome page.
+	GoogleHelpChromeURL = "https://support.google.com/chrome/?hl=en"
+	// GoogleHelpMailURL specifies the URL for Google Help's Mail page.
+	GoogleHelpMailURL = "https://support.google.com/mail/?hl=en"
+	// GoogleHelpGooglePlayURL specifies the URL for Google Help's Google Play page.
+	GoogleHelpGooglePlayURL = "https://support.google.com/googleplay/?hl=en"
+	// GoogleHelpMapURL specifies the URL for Google Help's Maps page.
+	GoogleHelpMapURL = "https://support.google.com/maps/?hl=en"
+	// GoogleHelpYoutubeURL specifies the URL for Google Help's Youtube page.
+	GoogleHelpYoutubeURL = "https://support.google.com/youtube/?hl=en"
+	// GoogleNewsForYouURL specifies the URL for Google News's for you page.
+	GoogleNewsForYouURL = "https://news.google.com/foryou?hl=en-US&gl=US&ceid=US%3Aen"
+	// GoogleNonprofitsURL specifies the URL for Google Nonprofits' home page.
+	GoogleNonprofitsURL = "https://www.google.com/intl/en-US/nonprofits/"
+	// GoogleNonprofitsEligibilityURL specifies the URL for Google Nonprofits' eligibility page.
+	GoogleNonprofitsEligibilityURL = "https://www.google.com/intl/en-US/nonprofits/eligibility"
+	// GoogleNonprofitsProductHelpURL specifies the URL for Google Nonprofits' product help page.
+	GoogleNonprofitsProductHelpURL = "https://www.google.com/intl/en-US/nonprofits/resources/product-help"
+	// GoogleNonprofitsSucessStoriesURL specifies the URL for Google Nonprofits' success stories page.
+	GoogleNonprofitsSucessStoriesURL = "https://www.google.com/intl/en-US/nonprofits/success-stories"
+	// GooglePlayAppsURL specifies the URL for Google Play's apps page.
+	GooglePlayAppsURL = "https://play.google.com/store/apps"
+	// GooglePlayBooksURL specifies the URL for Google Play's books page.
+	GooglePlayBooksURL = "https://play.google.com/store/books"
+	// GooglePlayGameURL specifies the URL for Google Play's game page.
+	GooglePlayGameURL = "https://play.google.com/store/games"
+	// GooglePlayKidsURL specifies the URL for Google Play's kids page.
+	GooglePlayKidsURL = "https://play.google.com/store/apps/category/FAMILY"
+	// GooglePlayMoviesURL specifies the URL for Google Play's movies page.
+	GooglePlayMoviesURL = "https://play.google.com/store/movies"
+	// GooglePolicyURL specifies the URL for Google Policy's home page.
+	GooglePolicyURL = "https://policies.google.com/"
+	// GooglePolicyPrivacyURL specifies the URL for Google Policy's privacy page.
+	GooglePolicyPrivacyURL = "https://policies.google.com/privacy"
+	// GoogleStoreURL specifies the URL for Google Store's home page.
+	GoogleStoreURL = "https://store.google.com/us/"
+	// GoogleStoreInstallationURL specifies the URL for Google Store's installation page.
+	GoogleStoreInstallationURL = "https://store.google.com/us/magazine/installation"
+	// GoogleStoreOrderHistoryURL specifies the URL for Google Store's order history page.
+	GoogleStoreOrderHistoryURL = "https://store.google.com/us/orderhistory"
+	// GoogleStorePhonesURL specifies the URL for Google Store's phones page.
+	GoogleStorePhonesURL = "https://store.google.com/us/category/phones"
+	// GoogleStoreSmartHomeURL specifies the URL for Google Store's Smart Home page.
+	GoogleStoreSmartHomeURL = "https://store.google.com/us/category/connected_home"
+	// GoogleStoreSubscriptionsURL specifies the URL for Google Store's subscriptions page.
+	GoogleStoreSubscriptionsURL = "https://store.google.com/us/category/subscriptions"
+	// GoogleWorkspaceBusinessURL specifies the URL for Google Workspace's business page.
+	GoogleWorkspaceBusinessURL = "https://workspace.google.com/intl/en/business"
+	// GoogleWorkspaceFAQURL specifies the URL for Google Workspace's FAQ page.
+	GoogleWorkspaceFAQURL = "https://workspace.google.com/intl/en/faq"
+	// GoogleWorkspaceFeaturesURL specifies the URL for Google Workspace's features page.
+	GoogleWorkspaceFeaturesURL = "https://workspace.google.com/intl/en/features"
+	// GoogleWorkspacePricingURL specifies the URL for Google Workspace's pricing page.
+	GoogleWorkspacePricingURL = "https://workspace.google.com/intl/en/pricing"
+	// GoogleWorkspaceResourcesURL specifies the URL for Google Workspace's resources page.
+	GoogleWorkspaceResourcesURL = "https://workspace.google.com/intl/en/resources"
+	// GoogleWorkspaceSecurityURL specifies the URL for Google Workspace's security page.
+	GoogleWorkspaceSecurityURL = "https://workspace.google.com/intl/en/security"
+
 	// URLs used by QuickCheckCUJ2.
 
 	// GoogleNewsURL specifies the URL for Google News.
