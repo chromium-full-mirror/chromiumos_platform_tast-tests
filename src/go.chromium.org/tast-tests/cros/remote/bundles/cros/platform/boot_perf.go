@@ -17,7 +17,10 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
@@ -39,6 +42,15 @@ var (
 	defaultManualReboot    = false // If set to true, don't reboot the device and collect the timing of the current boot. This is used in collecting boot performance with manual reboots.
 )
 
+type bootPerfTestCase int
+
+const (
+	bootPerfWarmReboot bootPerfTestCase = iota
+	bootPerfEcReboot
+	bootPerfFromG3
+	bootPerfFromS5
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: BootPerf,
@@ -51,13 +63,39 @@ func init() {
 			"briannorris@chromium.org",
 		},
 		BugComponent: "b:167279", // ChromeOS > Platform > System > Performance
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check", "crosbolt_release_gates"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},
 		// Deps of "chrome" is used to ensure the test doesn't boot to the OOBE screen.
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"platform.BootPerf.iterations", "platform.BootPerf.skipRootfsCheck", "platform.BootPerf.manualReboot"},
 		// This test collects boot timing for |iterations| times and requires a longer timeout.
 		Timeout: 25 * time.Minute,
+		Params: []testing.Param{
+			{
+				// This used to be the only test case, so keep the name as just
+				// platform.BootPerf for continuity in crosbolt.
+				Name:      "",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check", "crosbolt_release_gates"},
+				Val:       bootPerfWarmReboot,
+			},
+			{
+				Name:      "ec_reboot",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
+				Fixture:   fixture.NormalMode,
+				Val:       bootPerfEcReboot,
+			},
+			{
+				Name:      "from_g3",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
+				Fixture:   fixture.NormalMode,
+				Val:       bootPerfFromG3,
+			},
+			{
+				Name:      "from_s5",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
+				Fixture:   fixture.NormalMode,
+				Val:       bootPerfFromS5,
+			},
+		},
 
 		// List of requirements this test satisfies.
 		Requirements: []string{tdreq.BootPerfKernel, tdreq.BootPerfLogin},
@@ -126,6 +164,63 @@ func preReboot(ctx context.Context, s *testing.State) {
 	}
 }
 
+func warmReboot(ctx context.Context, s *testing.State) {
+	s.Log("Rebooting")
+	if err := s.DUT().Reboot(ctx); err != nil {
+		s.Fatal("Failed to reboot: ", err)
+	}
+}
+
+func ecReboot(ctx context.Context, s *testing.State) {
+	s.Log("Rebooting EC")
+	if err := s.DUT().Conn().CommandContext(ctx, "ectool", "reboot_ec", "cold", "at-shutdown").Run(); err != nil {
+		s.Fatal("Failed to run ectool reboot_ec: ", err)
+	}
+	if err := s.DUT().Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
+		s.Fatal("Failed to power DUT off: ", err)
+	}
+}
+
+func rebootFromG3(ctx context.Context, s *testing.State) {
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	s.Log("Power DUT off")
+	if err := s.DUT().Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
+		s.Fatal("Failed to power DUT off: ", err)
+	}
+
+	s.Log("Wait for G3 power state")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
+		"G3"); err != nil {
+		s.Fatal("Failed to reach G3 power state: ", err)
+	}
+
+	s.Log("Press power button to power DUT back on")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+		s.Fatal("Failed to power DUT on with power button: ", err)
+	}
+}
+
+func rebootFromS5(ctx context.Context, s *testing.State) {
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	s.Log("Power DUT off")
+	if err := s.DUT().Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
+		s.Fatal("Failed to power DUT off: ", err)
+	}
+
+	s.Log("Wait for S5 power state")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
+		"S5"); err != nil {
+		s.Fatal("Failed to reach S5 power state: ", err)
+	}
+
+	s.Log("Press power button to power DUT back on")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+		s.Fatal("Failed to power DUT on with power button: ", err)
+	}
+}
+
 // bootPerfOnce runs one iteration of the boot perf test.
 func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *perf.Values, manualReboot bool) {
 	s.Logf("Running iteration %d/%d", i+1, iterations)
@@ -134,13 +229,26 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 	if !manualReboot {
 		preReboot(ctx, s)
 
-		if err := d.Reboot(ctx); err != nil {
-			s.Fatal("Failed to reboot DUT: ", err)
+		testCase := s.Param().(bootPerfTestCase)
+		switch testCase {
+		case bootPerfWarmReboot:
+			warmReboot(ctx, s)
+		case bootPerfEcReboot:
+			ecReboot(ctx, s)
+		case bootPerfFromG3:
+			rebootFromG3(ctx, s)
+		case bootPerfFromS5:
+			rebootFromS5(ctx, s)
 		}
 
 		// GoBigSleepLint: Wait for |reconnectDelay| duration before reconnecting to the DUT to avoid interfere with early boot stages.
 		if err := testing.Sleep(ctx, reconnectDelay); err != nil {
 			s.Log("Warning: failed in sleep before redialing RPC: ", err)
+		}
+
+		s.Log("Reconnecting to DUT")
+		if err := d.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ")
 		}
 	}
 
