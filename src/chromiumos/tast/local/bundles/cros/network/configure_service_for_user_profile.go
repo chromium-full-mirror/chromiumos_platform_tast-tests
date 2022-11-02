@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/godbus/dbus/v5"
-
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network"
@@ -80,34 +78,10 @@ func ConfigureServiceForUserProfile(ctx context.Context, s *testing.State) {
 
 	// Ensure we got the right global + user profile set up on login. Because shill profiles are pushed
 	// asynchronously from login, we wait.
-	profilePath := func(ctx context.Context) dbus.ObjectPath {
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		defer cancel()
-
-		watcher, err := m.CreateWatcher(ctx)
-		if err != nil {
-			s.Fatal("Failed to create watcher: ", err)
-		}
-		defer watcher.Close(ctx)
-
-		for {
-			paths, err := m.ProfilePaths(ctx)
-			if err != nil {
-				s.Fatal("Failed to get profile paths: ", err)
-			}
-			if len(paths) > 2 {
-				s.Fatalf("Too many profiles: got %d, want 2", len(paths))
-			}
-			if len(paths) == 2 {
-				// Last profile is the user profile.
-				return paths[len(paths)-1]
-			}
-			// Fewer than 2? We may still be pushing the user profile; let's wait.
-			if _, err := watcher.WaitAll(ctx, shillconst.ManagerPropertyProfiles); err != nil {
-				s.Fatal("Failed to wait for user profile: ", err)
-			}
-		}
-	}(ctx)
+	profilePath, err := m.WaitForUserProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to get user profile: ", err)
+	}
 
 	if err := removeMatchingService(ctx, m, expectProps); err != nil {
 		s.Fatal("Failed to remove pre-existing WiFi service: ", err)

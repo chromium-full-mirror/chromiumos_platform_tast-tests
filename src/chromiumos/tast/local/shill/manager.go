@@ -731,3 +731,26 @@ func (m *Manager) GetPortalDetection(ctx context.Context) (string, error) {
 		return list, nil
 	}
 }
+
+// WaitForUserProfile waits until shill got the right global and user profile and returns the user profile.
+func (m *Manager) WaitForUserProfile(ctx context.Context) (dbus.ObjectPath, error) {
+	var path dbus.ObjectPath
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		paths, err := m.ProfilePaths(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get profile paths"))
+		}
+		if len(paths) > 2 {
+			return testing.PollBreak(errors.Errorf("too many profiles: got %d, want 2", len(paths)))
+		}
+		if len(paths) == 2 {
+			// Last profile is the user profile.
+			path = paths[len(paths)-1]
+			return nil
+		}
+		return errors.New("failed to wait for user profile")
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+		return "", err
+	}
+	return path, nil
+}
