@@ -21,6 +21,7 @@ const holdingSpaceTrayClassName = "HoldingSpaceTray"
 const menuItemViewClassName = "MenuItemView"
 const pinnedFilesBubbleClassName = "PinnedFilesBubble"
 const pinnedFilesSectionClassName = "PinnedFilesSection"
+const recentFilesBubbleClassName = "RecentFilesBubble"
 const screenCapturesSectionClassName = "ScreenCapturesSection"
 
 // FindChip returns a finder which locates a holding space chip node.
@@ -67,6 +68,12 @@ func FindPinnedFilesSectionFilesAppPrompt() *nodewith.Finder {
 		Name("You can pin your important files here. Open Files app to get started.")
 }
 
+// FindRecentFilesBubble returns a finder which locates the recent files bubble
+// node.
+func FindRecentFilesBubble() *nodewith.Finder {
+	return nodewith.HasClass(recentFilesBubbleClassName)
+}
+
 // FindScreenCaptureView returns a finder which locates a holding space screen
 // capture view node.
 func FindScreenCaptureView() *nodewith.Finder {
@@ -84,8 +91,8 @@ type ResetHoldingSpaceOptions struct {
 	MarkTimeOfFirstAdd bool `json:"markTimeOfFirstAdd"`
 }
 
-// ResetHoldingSpace calls autotestPrivate to remove all items in the holding space model
-// and resets all holding space prefs.
+// ResetHoldingSpace calls autotestPrivate to remove all items in the holding
+// space model and resets all holding space prefs.
 func ResetHoldingSpace(ctx context.Context, tconn *chrome.TestConn,
 	options ResetHoldingSpaceOptions) error {
 	if err := tconn.Call(ctx, nil,
