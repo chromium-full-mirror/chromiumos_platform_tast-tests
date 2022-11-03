@@ -28,6 +28,8 @@ import (
 
 type testParam struct {
 	vmEnabled bool
+	// Android package name.
+	androidPackage string
 	// if set, collected data will be upload to cloud.
 	upload bool
 	// if set, this verifies others uploads and creates pin to version if needed.
@@ -52,6 +54,7 @@ const (
 
 type dataUploader struct {
 	ctx             context.Context
+	androidPackage  string
 	androidVersion  string
 	shouldUpload    bool
 	buildDescriptor *version.BuildDescriptor
@@ -68,7 +71,7 @@ func (du *dataUploader) needUpload(bucket string) bool {
 		return false
 	}
 
-	gsURL := du.remoteURL(bucket, du.androidVersion)
+	gsURL := du.remoteURL(bucket, du.androidPackage, du.androidVersion)
 	// gsutil stat would return 1 for a non-existent object.
 	if err := exec.Command(gsUtil, "stat", gsURL).Run(); err != nil {
 		return true
@@ -79,12 +82,12 @@ func (du *dataUploader) needUpload(bucket string) bool {
 	return false
 }
 
-func (du *dataUploader) remoteURL(bucket, version string) string {
-	return fmt.Sprintf("%s/%s_%s.tar", runtimeArtifactsRoot, bucket, version)
+func (du *dataUploader) remoteURL(bucket, androidPackage, androidVersion string) string {
+	return fmt.Sprintf("%s/%s/%s_%s.tar", runtimeArtifactsRoot, androidPackage, bucket, androidVersion)
 }
 
 func (du *dataUploader) upload(src, bucket string) error {
-	gsURL := du.remoteURL(bucket, du.androidVersion)
+	gsURL := du.remoteURL(bucket, du.androidPackage, du.androidVersion)
 
 	// Use gsutil command to upload the file to the server.
 	testing.ContextLogf(du.ctx, "Uploading %q to the server", gsURL)
@@ -137,38 +140,42 @@ func init() {
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val: testParam{
-				vmEnabled:   false,
-				upload:      true,
-				uprevBranch: false,
-				dataDir:     "",
+				vmEnabled:      false,
+				androidPackage: "android-container-pi",
+				upload:         true,
+				uprevBranch:    false,
+				dataDir:        "",
 			},
 		}, {
-			Name:              "vm",
+			Name:              "vm_r",
 			ExtraAttr:         []string{"group:arc-data-collector"},
-			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraSoftwareDeps: []string{"android_vm_r"},
 			Val: testParam{
-				vmEnabled:   true,
-				upload:      true,
-				uprevBranch: false,
-				dataDir:     "",
+				vmEnabled:      true,
+				androidPackage: "android-vm-rvc",
+				upload:         true,
+				uprevBranch:    false,
+				dataDir:        "",
 			},
 		}, {
 			Name:              "local",
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val: testParam{
-				vmEnabled:   false,
-				upload:      false,
-				uprevBranch: false,
-				dataDir:     "/tmp/data_collector",
+				vmEnabled:      false,
+				androidPackage: "android-container-pi",
+				upload:         false,
+				uprevBranch:    false,
+				dataDir:        "/tmp/data_collector",
 			},
 		}, {
-			Name:              "vm_local",
-			ExtraSoftwareDeps: []string{"android_vm"},
+			Name:              "vm_r_local",
+			ExtraSoftwareDeps: []string{"android_vm_r"},
 			Val: testParam{
-				vmEnabled:   true,
-				upload:      false,
-				uprevBranch: false,
-				dataDir:     "/tmp/data_collector",
+				vmEnabled:      true,
+				androidPackage: "android-vm-rvc",
+				upload:         false,
+				uprevBranch:    false,
+				dataDir:        "/tmp/data_collector",
 			},
 		}, {
 			// branch_uprev versions are designed to provide caches uprev functionality
@@ -196,13 +203,14 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("caroline", "asuka", "morphius", "careena", "krane", "kevin")),
 			Val: testParam{
 				vmEnabled:                     false,
+				androidPackage:                "android-container-pi",
 				upload:                        true,
 				uprevBranch:                   true,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
 			},
 		}, {
-			Name:              "r_vm_branch_uprev",
+			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
 			// Follow the policy 2 models per ARCH of different boards.
@@ -211,9 +219,10 @@ func init() {
 			// arm64 ARC: gimble(herobrine), steelix(corsola)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "steelix")),
 			Val: testParam{
-				vmEnabled:   true,
-				upload:      true,
-				uprevBranch: true,
+				vmEnabled:      true,
+				androidPackage: "android-vm-rvc",
+				upload:         true,
+				uprevBranch:    true,
 				// ARCVM does not have arm64 on branch.
 				// TODO(b/252805449): Include arm64 once we have first ARM device branched.
 				requiredCPUAbisForBranchUprev: []string{"x86_64"},
@@ -295,12 +304,14 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 	du := dataUploader{
 		ctx:             ctx,
+		androidPackage:  param.androidPackage,
 		androidVersion:  v,
 		shouldUpload:    param.upload,
 		buildDescriptor: desc,
 	}
 	duUreadahead := dataUploader{
 		ctx:             ctx,
+		androidPackage:  param.androidPackage,
 		androidVersion:  vUreadahead,
 		shouldUpload:    param.upload,
 		buildDescriptor: desc,
@@ -482,7 +493,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	}
 
 	if param.uprevBranch {
-		if err = maybeUprevBranch(ctx, desc, s.OutDir(), param.requiredCPUAbisForBranchUprev); err != nil {
+		if err = maybeUprevBranch(ctx, desc, du.androidPackage, s.OutDir(), param.requiredCPUAbisForBranchUprev); err != nil {
 			s.Fatal("Failed to uprev branch: ", err)
 		}
 	}
@@ -527,7 +538,7 @@ func genTTSCache(ctx context.Context, s *testing.State, cl *rpc.Client, targetDi
 	return nil
 }
 
-func maybeUprevBranch(ctx context.Context, desc *version.BuildDescriptor, outDir string, requiredCPUAbis []string) error {
+func maybeUprevBranch(ctx context.Context, desc *version.BuildDescriptor, androidPackage, outDir string, requiredCPUAbis []string) error {
 	testing.ContextLog(ctx, "Trying to uprev branch")
 
 	if !desc.Official {
@@ -535,21 +546,10 @@ func maybeUprevBranch(ctx context.Context, desc *version.BuildDescriptor, outDir
 		return nil
 	}
 
-	androidBranch := ""
-	switch desc.VersionRelease {
-	case 9:
-		androidBranch = "pi"
-	case 11:
-		androidBranch = "rvc"
-	default:
-		testing.ContextLogf(ctx, "Android branch %d is not supported. Branch is not uprev-ed", desc.VersionRelease)
-		return nil
-	}
-
 	// Read existing pin if possible.
-	pinName := fmt.Sprintf("git_%s-arc-m%d_pin_version", androidBranch, desc.Milestone)
+	pinName := fmt.Sprintf("M%d_pin_version", desc.Milestone)
 	// Note, this is URL and not file path.
-	pinURL := fmt.Sprintf("%s/%s", runtimeArtifactsRoot, pinName)
+	pinURL := fmt.Sprintf("%s/%s/%s", runtimeArtifactsRoot, androidPackage, pinName)
 	existingPinVersion := 0
 
 	// gsutil stat would return 1 for a non-existent object.
@@ -581,7 +581,7 @@ func maybeUprevBranch(ctx context.Context, desc *version.BuildDescriptor, outDir
 
 	// Make sure all caches are available for uprev.
 	for _, abi := range requiredCPUAbis {
-		gmsCoreURL := fmt.Sprintf("%s/gms_core_cache_%s_user_%d.tar", runtimeArtifactsRoot, abi, desc.BuildVersion)
+		gmsCoreURL := fmt.Sprintf("%s/%s/gms_core_cache_%s_user_%d.tar", runtimeArtifactsRoot, androidPackage, abi, desc.BuildVersion)
 		if err := exec.Command(gsUtil, "stat", gmsCoreURL).Run(); err != nil {
 			testing.ContextLogf(ctx, "Required cache %q does not exist. Branch is not yet ready for uprev", gmsCoreURL)
 			return nil
