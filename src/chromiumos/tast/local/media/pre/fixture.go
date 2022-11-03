@@ -137,6 +137,24 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	// TODO(b/248528896): Remove once out-of-process video encoding is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithOOPVE",
+		Desc:     "Similar to chromeVideo fixture but enabling out-of-process video encoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoLacrosOOPVD",
 		Desc:     "Logged into a user session with logging and out-of-process video decoding enabled (lacros)",

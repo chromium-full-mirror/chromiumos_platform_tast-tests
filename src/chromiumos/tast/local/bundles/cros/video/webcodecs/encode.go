@@ -12,11 +12,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/chromeproc"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/devtools"
 	"chromiumos/tast/local/media/encoding"
@@ -36,12 +38,19 @@ type TestEncodeArgs struct {
 	BitrateMode string
 	// Acceleration denotes which encoder is used, hardware or software.
 	Acceleration HardwareAcceleration
+	// VerifyOutOfProcessVideoEncodingIsUsed denotes if we should verify
+	// that a utility encoder process was started.
+	VerifyOutOfProcessVideoEncodingIsUsed bool
 	// BrowserType indicates the type of Chrome browser to be used,
 	// Ash Chrome or Lacros Chrome.
 	BrowserType browser.Type
+	// NumOfEncoders is the number of WebCodecs encoders created in
+	// RunEncodeTest().
+	NumOfEncoders int
 }
 
 const encodeHTML = "webcodecs_encode.html"
+const videoEncoderUtilSubType = "media.mojom.VideoEncodeAcceleratorProviderFactory"
 
 // EncodeDataFiles returns the HTML and JS files used in RunEncodeTest.
 func EncodeDataFiles() []string {
@@ -155,8 +164,18 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 
 	bitrate := config.width * config.height * config.framerate / 10
 	if err := conn.Call(ctx, nil, "EncodeAndSave", codec, testArgs.Acceleration, config.width, config.height,
-		bitrate, config.framerate, testArgs.ScalabilityMode, testArgs.BitrateMode); err != nil {
+		bitrate, config.framerate, testArgs.ScalabilityMode, testArgs.BitrateMode, testArgs.NumOfEncoders); err != nil {
 		return outputJSLogAndError(cleanupCtx, conn, errors.Wrap(err, "failed executing EncodeAndSave"))
+	}
+
+	if testArgs.VerifyOutOfProcessVideoEncodingIsUsed {
+		if err := verifyOneUtilityEncoderProcessWasStarted(); err != nil {
+			return errors.Wrap(err, "verifyOneUtilityEncoderProcessWasStarted failed")
+		}
+	}
+
+	if err := conn.Call(ctx, nil, "CloseEncoders"); err != nil {
+		return outputJSLogAndError(cleanupCtx, conn, errors.Wrap(err, "failed executing CloseEncoders"))
 	}
 
 	var success bool
@@ -165,6 +184,7 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 	}
 
 	// Check if a preferred encoder is used.
+	// TODO(b/248540169): Figure out the effects multiple encoders has on this.
 	isPlatform, name, err := devtools.GetVideoEncoder(ctx, observer, server.URL+"/"+encodeHTML)
 	if err != nil {
 		return errors.Wrap(err, "failed getting encoder type")
@@ -173,6 +193,11 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 		return errors.Errorf("video is encoded by a software encoder, %s", name)
 	} else if testArgs.Acceleration == PreferSoftware && isPlatform {
 		return errors.Errorf("video is encoded by a hardware encoder, %s", name)
+	}
+
+	// TODO(b/248540169): Make this work with multiple encoders.
+	if testArgs.NumOfEncoders != 1 {
+		return nil
 	}
 
 	// We can get the bitstream at once because the expected bitstream size, 0.34MB (= bitrate * config.numFrames / config.framerate),
@@ -255,6 +280,45 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 	}
 
 	// TODO: Save bitstream always, if SSIM or PSNR is bad or never?
+	return nil
+}
+
+// verifyOneUtilityEncoderProcessWasStarted checks that only one utility
+// process is opened, regardless of the number of encoders opened.
+func verifyOneUtilityEncoderProcessWasStarted() error {
+	procs, err := chromeproc.GetUtilityProcesses()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to GetUtilityProcesses()")
+	}
+
+	re := regexp.MustCompile(` --?utility-sub-type=([\w\.]+)(?: |$)`)
+	numUtilProcs := 0
+
+	for _, proc := range procs {
+		cmdline, err := proc.Cmdline()
+		if err != nil {
+			return errors.Wrap(err, "failed to get cmdline")
+		}
+
+		matches := re.FindStringSubmatch(cmdline)
+		if len(matches) < 2 {
+			continue
+		}
+
+		procName := matches[1]
+		if procName == videoEncoderUtilSubType {
+			numUtilProcs++
+		}
+	}
+
+	// numUtilProcs should be two here because the video encoder sandbox
+	// opens a broker process with the same --utility-sub-type as the
+	// utility process.
+	if numUtilProcs != 2 {
+		return errors.Errorf("expected 2 processes (broker + utility) but got %d", numUtilProcs)
+	}
+
 	return nil
 }
 
