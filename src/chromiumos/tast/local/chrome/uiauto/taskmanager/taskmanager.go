@@ -162,6 +162,6 @@ func (tm *TaskManager) SelectProcess(nameInTaskManager string) uiauto.Action {
 func (tm *TaskManager) TerminateProcess(nameInTaskManager string) uiauto.Action {
 	return uiauto.Combine("end process",
 		tm.SelectProcess(nameInTaskManager),
-		tm.ui.LeftClick(EndProcessFinder),
+		tm.ui.DoDefault(EndProcessFinder), // The end process button on the lower right of the maximized task manager window might be hidden by the notifications. Use DoDefault to trigger the button.
 	)
 }

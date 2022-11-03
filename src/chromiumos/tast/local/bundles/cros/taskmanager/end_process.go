@@ -6,8 +6,16 @@ package taskmanager
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"regexp"
+	"strings"
 	"time"
+
+	"github.com/mafredri/cdp/protocol/target"
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -39,6 +47,7 @@ func init() {
 }
 
 type endProcessTestResources struct {
+	cr          *chrome.Chrome
 	tconn       *chrome.TestConn
 	ui          *uiauto.Context
 	kb          *input.KeyboardEventWriter
@@ -61,15 +70,22 @@ func EndProcess(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	resources := &endProcessTestResources{
+		cr:          cr,
 		tconn:       tconn,
 		ui:          uiauto.New(tconn),
 		kb:          kb,
 		taskManager: taskmanager.New(tconn, kb),
 	}
 
+	pluginTest, cleanupPluginTest, err := newPluginTest()
+	if err != nil {
+		s.Fatal("Failed to initialize plugin test: ", err)
+	}
+	defer cleanupPluginTest()
+
 	for _, test := range []endProcessTest{
 		newNonPluginTest(),
-		newPluginTest(),
+		pluginTest,
 		newGroupedTabsTest(),
 	} {
 		f := func(ctx context.Context, s *testing.State) {
@@ -85,10 +101,8 @@ func EndProcess(ctx context.Context, s *testing.State) {
 				defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, test.getDescription()+"_before_closing_tab")
 
 				if tab, ok := process.(*pluginTab); ok {
-					// Under some slow network connections or DUTs, the plugin node might not be loaded instantly.
-					// Therefore, give some time to wait until the target node exists.
-					if err := resources.ui.WithTimeout(time.Minute).WaitUntilExists(tab.pluginNode)(ctx); err != nil {
-						s.Fatal("Failed to find the plugin node: ", err)
+					if err := tab.waitUntilPluginStable(ctx, resources); err != nil {
+						s.Fatal("Failed to wait until plugin to be stable: ", err)
 					}
 				}
 			}
@@ -149,23 +163,51 @@ func (npt *nonPluginTest) getProcesses() []taskmanager.Process {
 	return npt.processes
 }
 
-type pluginTab struct {
-	*taskmanager.ChromeTab
-	pluginName string
-	pluginNode *nodewith.Finder
+type plugin struct {
+	// name is the plugin name displayed in task manager.
+	name string
+	// nodeFinder is the plugin node finder on the website.
+	nodeFinder *nodewith.Finder
+	// source is the plugin source url which would be used to filter the expected Chrome target.
+	source string
+	// targets is the expected Chrome targets.
+	// It is not initialized until using the filter to filter the expected Chrome targets.
+	targets []*chrome.Target
 }
 
-func newPluginTab(url, pluginName string, pluginNode *nodewith.Finder) *pluginTab {
-	return &pluginTab{
-		ChromeTab:  taskmanager.NewChromeTabProcess(url),
-		pluginName: pluginName,
-		pluginNode: pluginNode,
-	}
+type pluginTab struct {
+	*taskmanager.ChromeTab
+	plugin *plugin
 }
 
 func (pTab *pluginTab) NameInTaskManager(ctx context.Context, tconn *chrome.TestConn) (string, error) {
 	// Plugin name is not changed dynamically. Just return its name directly.
-	return "Subframe: " + pTab.pluginName, nil
+	return "Subframe: " + pTab.plugin.name, nil
+}
+
+func (pTab *pluginTab) waitUntilPluginStable(ctx context.Context, res *endProcessTestResources) error {
+	// Under some slow network connections or DUTs, the plugin node might not be loaded instantly.
+	// Therefore, give some time to wait until the target node exists.
+	if err := res.ui.WithTimeout(time.Minute).WaitUntilExists(pTab.plugin.nodeFinder)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find the plugin node")
+	}
+
+	ts, err := res.cr.FindTargets(ctx, func(t *target.Info) bool {
+		// If the network or the plugin source website is down,
+		// the plugin target could still be found.
+		return strings.Contains(t.URL, pTab.plugin.source)
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain the targets")
+	}
+	if len(ts) == 0 {
+		return errors.New("failed to find the plugin targets")
+	}
+
+	// One plugin might be the combination of multiple chrome targets.
+	// Store all of them, and check if they all are terminated in the end.
+	pTab.plugin.targets = ts
+	return nil
 }
 
 type pluginTest struct {
@@ -173,17 +215,51 @@ type pluginTest struct {
 	processes   []taskmanager.Process
 }
 
-func newPluginTest() *pluginTest {
-	processes := []taskmanager.Process{
-		newPluginTab("https://twitter.com/i/flow/signup",
-			"https://accounts.google.com/", nodewith.Name("Sign up with Google").Role(role.Button),
-		),
-		newPluginTab("https://www.oreilly.com",
-			"https://driftt.com/", nodewith.NameStartingWith("Chat message from O'Reilly Bot:").Role(role.Button),
-		),
+// newPluginTest starts a local http test server to serve the html file with iframe plugin.
+// This function returns an instance of pluginTest, a cleanup function to close http test server
+// and an error if exists.
+func newPluginTest() (*pluginTest, func(), error) {
+	tabs := map[string]*pluginTab{
+		"youtube": {
+			plugin: &plugin{
+				name:       "https://youtube.com/",
+				nodeFinder: nodewith.NameRegex(regexp.MustCompile(`^"Go Beyond" 4K Ultra HD Time Lapse.*YouTube`)).Role(role.RootWebArea),
+				source:     "https://www.youtube.com/embed/suWsd372pQE",
+			},
+		},
+		"googlemap": {
+			plugin: &plugin{
+				name:       "https://google.com/",
+				nodeFinder: nodewith.Name("Map").Role(role.Region).First(),
+				source:     "https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1sMountain+View,+CA,+USA!6i13",
+			},
+		},
 	}
 
-	return &pluginTest{"plugin_test", processes}
+	mux := http.NewServeMux()
+	handleFunc := func(source string) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Content-Type", "text/html")
+			fmt.Fprintf(w, `<iframe src="%s" width="640" height="360" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`, source)
+		}
+	}
+	for path, tab := range tabs {
+		mux.HandleFunc(fmt.Sprintf("/%s", path), handleFunc(tab.plugin.source))
+	}
+
+	httpServer := httptest.NewServer(mux)
+
+	var processes []taskmanager.Process
+	for path, tab := range tabs {
+		url, err := url.JoinPath(httpServer.URL, path)
+		if err != nil {
+			return nil, nil, err
+		}
+		tab.ChromeTab = taskmanager.NewChromeTabProcess(url)
+		processes = append(processes, tab)
+	}
+
+	return &pluginTest{"plugin_test", processes}, httpServer.Close, nil
 }
 
 func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTestResources) error {
@@ -204,11 +280,18 @@ func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTes
 		return errors.Wrap(err, "failed to verify 'End process' button works")
 	}
 
-	if err := res.tconn.Call(ctx, nil, "async (id) => tast.promisify(chrome.tabs.update)(id, {active: true})", tab.ID); err != nil {
-		return errors.Wrap(err, "failed to focus on the target tab")
-	}
-
-	return res.ui.WaitUntilGone(tab.pluginNode)(ctx)
+	// Removing the targets might need some time.
+	// Therefore, using poll to recheck until all the plugin targets are removed.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		for _, t := range tab.plugin.targets {
+			if ts, err := res.cr.FindTargets(ctx, chrome.MatchTargetID(t.TargetID)); err != nil {
+				return testing.PollBreak(err)
+			} else if len(ts) > 0 {
+				return errors.New("failed to terminate the plugin")
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second})
 }
 
 func (pt *pluginTest) getDescription() string {
