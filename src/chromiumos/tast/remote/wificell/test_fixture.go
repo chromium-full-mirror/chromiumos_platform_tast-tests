@@ -350,9 +350,9 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		capturers: make(map[*APIface]*pcap.Capturer),
 		aps:       make(map[*APIface]struct{}),
 		// Set the router's default router type.
-		routerType: support.LegacyT,
+		routerType: support.UnknownT,
 		// Set the pcap capture device's default router type.
-		pcapType: support.LegacyT,
+		pcapType: support.UnknownT,
 		// Set the debug values on the DUT by default.
 		setLogging: true,
 		// Default log level used in WiFi tests.
@@ -433,7 +433,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		}
 		rt.host = routerHost
 		routerObj, err := newRouter(ctx, daemonCtx, rt.host,
-			strings.ReplaceAll(rt.target, ":", "_"), tf.routerType)
+			strings.ReplaceAll(rt.target, ":", "_"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create a router object")
 		}
@@ -496,7 +496,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 				return nil, errors.Wrap(err, "failed to connect to pcap")
 			}
 		} else {
-			tf.pcap, err = newRouter(ctx, daemonCtx, tf.pcapHost, "pcap", tf.pcapType)
+			tf.pcap, err = newRouter(ctx, daemonCtx, tf.pcapHost, "pcap")
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to create a router object for pcap")
 			}
@@ -766,7 +766,7 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	}
 	rd.host = routerHost
 	testing.ContextLogf(ctx, "Reconnected to %s", routerMsgName)
-	routerObject, err := newRouter(ctx, ctx, rd.host, routerName, routerType)
+	routerObject, err := newRouter(ctx, ctx, rd.host, routerName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to recreate %s", routerMsgName)
 	}
@@ -1564,21 +1564,15 @@ func (tf *TestFixture) SetWakeOnWifi(ctx context.Context, ops ...SetWakeOnWifiOp
 // method and daemonCtx is for the spawned background daemons.
 // After getting a Server instance, d, the caller should call r.Close() at the end, and use the
 // shortened ctx (provided by d.ReserveForClose()) before r.Close() to reserve time for it to run.
-func newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string, rtype support.RouterType) (router.Base, error) {
+func newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (router.Base, error) {
 	ctx, st := timing.Start(ctx, "NewRouter")
 	defer st.End()
 
-	if rtype == support.UnknownT {
-		if resolvedType, err := resolveRouterTypeFromHost(ctx, host); err != nil {
-			return nil, errors.Wrap(err, "failed to resolve router type from host")
-		} else if resolvedType == support.UnknownT {
-			rtype = support.LegacyT
-			testing.ContextLogf(ctx, "Unable to resolve specific router type from host, defaulting to %q", rtype.String())
-		} else {
-			rtype = resolvedType
-			testing.ContextLogf(ctx, "Resolved host router type to be %q", rtype.String())
-		}
+	rtype, err := resolveRouterTypeFromHost(ctx, host)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to resolve router type from host")
 	}
+	testing.ContextLogf(ctx, "Resolved host router type to be %q", rtype)
 
 	switch rtype {
 	case support.LegacyT:
@@ -1587,6 +1581,8 @@ func newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string, rtyp
 		return ax.NewRouter(ctx, daemonCtx, host, name)
 	case support.OpenWrtT:
 		return openwrt.NewRouter(ctx, daemonCtx, host, name)
+	case support.UnknownT:
+		return nil, errors.New("unable to resolve specific router type from host")
 	default:
 		return nil, errors.Errorf("unexpected routerType, got %v", rtype)
 	}
