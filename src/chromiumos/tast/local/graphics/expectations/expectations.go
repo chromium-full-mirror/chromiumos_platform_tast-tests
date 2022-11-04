@@ -103,23 +103,23 @@ var overrideChipset = testing.RegisterVarString(
 	"",
 	"Set to override the detected chipset. Example: --var=expectations.overrideChipset=baz")
 
-// fileType contains the DUT attribute that is matched when opening a test
+// FileType contains the DUT attribute that is matched when opening a test
 // expectations file. Each type has a different naming convention.
-type fileType string
+type FileType string
 
 const (
-	// modelFile files have the format "model-<DUT model>.yml"
-	modelFile fileType = "model"
-	// buildBoardFile files have the format "buildboard-<DUT build>.yml"
-	buildBoardFile fileType = "buildboard"
-	// boardFile files have the format "board-<DUT board>.yml". board is derived
+	// ModelFile files have the format "model-<DUT model>.yml"
+	ModelFile FileType = "model"
+	// BuildBoardFile files have the format "buildboard-<DUT build>.yml"
+	BuildBoardFile FileType = "buildboard"
+	// BoardFile files have the format "board-<DUT board>.yml". board is derived
 	// from the DUT build variant and omits suffixes like "-kernelnext" or "64"
-	boardFile fileType = "board"
-	// gpuChipsetFile files have the format "chipset-<DUT GPU chipset>.yml"
+	BoardFile FileType = "board"
+	// GpuChipsetFile files have the format "chipset-<DUT GPU chipset>.yml"
 	// where the chipset is determined by /usr/local/graphics/hardware_probe
-	gpuChipsetFile fileType = "chipset"
-	// all files will match for any DUT regardless of type.
-	allDevicesFile fileType = "all"
+	GpuChipsetFile FileType = "chipset"
+	// AllDevicesFile files will match for any DUT regardless of type.
+	AllDevicesFile FileType = "all"
 )
 
 const expectationsFileExtension = "yml"
@@ -228,22 +228,22 @@ func getDeviceChipset(ctx context.Context) (string, error) {
 	return gpu[0], nil
 }
 
-// getDeviceIdentifier returns an identifier for the running device based on fileType.
-func (ft *fileType) getDeviceIdentifier(ctx context.Context) (string, error) {
-	if *ft == allDevicesFile {
+// GetDeviceIdentifier returns an identifier for the running device based on FileType.
+func (ft *FileType) GetDeviceIdentifier(ctx context.Context) (string, error) {
+	if *ft == AllDevicesFile {
 		return string(*ft), nil
 	}
 
 	var id string
 	var err error
 	switch *ft {
-	case modelFile:
+	case ModelFile:
 		id, err = getDeviceModel(ctx)
-	case buildBoardFile:
+	case BuildBoardFile:
 		id, err = getDeviceBuildBoard(ctx)
-	case boardFile:
+	case BoardFile:
 		id, err = getDeviceBuild(ctx)
-	case gpuChipsetFile:
+	case GpuChipsetFile:
 		id, err = getDeviceChipset(ctx)
 	default:
 		return "", errors.Errorf("invalid identifier type: %s", *ft)
@@ -256,10 +256,10 @@ func (ft *fileType) getDeviceIdentifier(ctx context.Context) (string, error) {
 // for loading expectations files.
 func logDeviceIdentity(ctx context.Context) {
 	var err error
-	fileTypes := []fileType{modelFile, buildBoardFile, boardFile, gpuChipsetFile}
+	fileTypes := []FileType{ModelFile, BuildBoardFile, BoardFile, GpuChipsetFile}
 	identifiers := make([]string, len(fileTypes))
 	for idx, ft := range fileTypes {
-		identifiers[idx], err = ft.getDeviceIdentifier(ctx)
+		identifiers[idx], err = ft.GetDeviceIdentifier(ctx)
 		if err != nil {
 			identifiers[idx] = fmt.Sprintf("%s-unknown", ft)
 		}
@@ -269,10 +269,10 @@ func logDeviceIdentity(ctx context.Context) {
 }
 
 // generateTestExpectationsFilename generates a test expectations file name
-// using the specified directory location. Depending on the fileType, this may
+// using the specified directory location. Depending on the file type, this may
 // probe the device model, board, or gpu chipset to generate the file name.
-func generateTestExpectationsFilename(ctx context.Context, testExpectationDirectory string, ft fileType) (string, error) {
-	identifier, err := ft.getDeviceIdentifier(ctx)
+func generateTestExpectationsFilename(ctx context.Context, testExpectationDirectory string, ft FileType) (string, error) {
+	identifier, err := ft.GetDeviceIdentifier(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -384,7 +384,7 @@ func GetTestExpectationFromDirectory(ctx context.Context, testName, testExpectat
 	// 5. base_directory/all.yml
 	// The contents of the first of these files will be returned. If more
 	// than one matching file exists, only the first will be used.
-	for _, ft := range []fileType{modelFile, buildBoardFile, boardFile, gpuChipsetFile, allDevicesFile} {
+	for _, ft := range []FileType{ModelFile, BuildBoardFile, BoardFile, GpuChipsetFile, AllDevicesFile} {
 		filename, err := generateTestExpectationsFilename(ctx, testExpectationsDirectory, ft)
 		if err != nil {
 			return expectPass(ctx), errors.Wrap(err, "failed to generate test expectations file name")
