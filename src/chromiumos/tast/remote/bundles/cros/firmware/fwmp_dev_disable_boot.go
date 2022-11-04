@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
@@ -30,7 +31,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/235742217): This test might be leaving broken DUTS that can't be auto-repaired. Add attr firmware_unstable when fixed.
 		Attr:         []string{"group:firmware"},
-		Timeout:      15 * time.Minute,
+		Timeout:      25 * time.Minute,
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Vboot2()),
 	})
@@ -79,15 +80,15 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			}
 
 			currentFlagVal = reOwnerPassword.FindSubmatch(out)
+			if currentFlagVal == nil {
+				return errors.Errorf("no match found with regex %q in the following output: %s", reOwnerPassword, out)
+			}
 			if string(currentFlagVal[1]) != flags {
 				return errors.Wrapf(err, "flags haven't been set correctly: expected flags to be %q but got the following output: %s", flags, string(out))
 			}
 
 			return nil
 		}, &testing.PollOptions{Timeout: 25 * time.Second, Interval: 3 * time.Second}); err != nil {
-			if string(currentFlagVal[1]) == "1" {
-				return errors.Wrap(err, "dev mode is disabled by FWMP flags=0x1, please run 'cryptohome --action=set_firmware_management_parameters --flags=0x0' to recover DUTs")
-			}
 			return err
 		}
 
@@ -101,16 +102,34 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	}
 	reOwnerPassword := regexp.MustCompile(`is_owner_password_present: (\S*)`)
 	ownerPasswordState := reOwnerPassword.FindSubmatch(out)
+	if ownerPasswordState == nil {
+		s.Fatalf("No match found with regex %q in the following output: %s", reOwnerPassword, out)
+	}
 	if string(ownerPasswordState[1]) != "true" {
 		s.Fatal("TPM owner password is not present, and received output: ", string(out))
 	}
 
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to create mode switcher: ", err)
+	}
+
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
 
 	// Set DUT in "dev mode enable" state by setting TPM flags to "0x0" at the end of the test.
 	defer func(cleanupCtx context.Context) {
+		s.Log("Verifying DUT is reachable")
+		if !h.DUT.Connected(cleanupCtx) {
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+				s.Fatal("Failed to set power_state to reset: ", err)
+			}
+			if err := ms.FwScreenToNormalMode(ctx); err != nil {
+				s.Fatal("Failed while moving from firmware screen to normal mode: ", err)
+			}
+		}
+
 		s.Log("Reverting the 'dev mode disable' state on DUT at the end of test")
 		if err := setFWMP(cleanupCtx, "0"); err != nil {
 			s.Fatal("Failed while taking ownership and setting flags at the end of test: ", err)
@@ -120,11 +139,6 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	// Set DUT in "dev mode disable" state by setting TPM flags to "0x1".
 	if err := setFWMP(ctx, "1"); err != nil {
 		s.Fatal("Failed while taking ownership and setting flags: ", err)
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to create mode switcher: ", err)
 	}
 
 	ownershipData, err := s.DUT().Conn().CommandContext(ctx, "hwsec-ownership-id", "id").Output(ssh.DumpLogOnError)

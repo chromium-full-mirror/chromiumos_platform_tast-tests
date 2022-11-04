@@ -94,10 +94,10 @@ const (
 	// systen cannot boot due to a corrupted firmware.
 	SkipWaitConnect ModeSwitchOption = iota
 
-	// AssumeRecoveryMode cause skip checking current boot mode and assume that recovery is current boot mode
+	// AssumeRecoveryMode cause skip checking current boot mode and assume that recovery is current boot mode.
 	AssumeRecoveryMode ModeSwitchOption = iota
 
-	// ExpectDevModeAfterReboot expect developer mode after reboot from recovery
+	// ExpectDevModeAfterReboot expect developer mode after reboot from recovery.
 	ExpectDevModeAfterReboot ModeSwitchOption = iota
 
 	// CheckToNoGoodScreen checks that DUT will not boot from an invalid USB,
@@ -219,7 +219,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			return err
 		}
 		if fromMode != fwCommon.BootModeNormal {
-			if err := ms.fwScreenToNormalMode(ctx, opts...); err != nil {
+			if err := ms.FwScreenToNormalMode(ctx, opts...); err != nil {
 				return errors.Wrap(err, "moving from firmware screen to normal mode")
 			}
 			if msOptsContain(opts, CheckToNormConfirmed) {
@@ -669,10 +669,10 @@ func (ms *ModeSwitcher) devModeFWScreenBypass(ctx context.Context) error {
 	return nil
 }
 
-// fwScreenToNormalMode moves the DUT from the firmware bootup screen to Normal mode.
+// FwScreenToNormalMode moves the DUT from the firmware bootup screen to Normal mode.
 // This should be called immediately after powering on.
 // The actual behavior depends on the ModeSwitcherType.
-func (ms *ModeSwitcher) fwScreenToNormalMode(ctx context.Context, opts ...ModeSwitchOption) error {
+func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -753,7 +753,7 @@ func (ms *ModeSwitcher) fwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 				return nil
 			}
 		default:
-			return errors.Errorf("unsupported ModeSwitcherType %s for fwScreenToNormalMode", h.Config.ModeSwitcherType)
+			return errors.Errorf("unsupported ModeSwitcherType %s for FwScreenToNormalMode", h.Config.ModeSwitcherType)
 		}
 		ctx, cancel := context.WithTimeout(ctx, connectTimeout)
 		defer cancel()
