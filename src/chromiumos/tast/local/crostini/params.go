@@ -144,6 +144,10 @@ type Param struct {
 	// pre-installed.
 	UseLargeContainer bool
 
+	// TakeSnapshot controls whether to use a fixture
+	// which takes and restore snapshot before and after tests.
+	TakeSnapshot bool
+
 	// OnlyStableBoards controls whether to only use the stable
 	// board variants and exclude all the unstable variants.
 	OnlyStableBoards bool
@@ -346,6 +350,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 						suffix = "Tablet"
 					} else if testCase.DeviceMode == devicemode.ClamshellMode {
 						suffix = "Clamshell"
+					}
+					if testCase.TakeSnapshot {
+						suffix += "WithSnapshot"
 					}
 					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", strings.Title(string(i.debianVersion)), suffix)
 				} else if testCase.UseGaiaLogin {
