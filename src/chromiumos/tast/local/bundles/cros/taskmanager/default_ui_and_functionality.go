@@ -12,6 +12,8 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -25,24 +27,34 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DefaultUIAndFunctionality,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify Task Manager default UI and functionality",
 		Contacts: []string{
-			"sun.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
+			"cienet-development@googlegroups.com",
+			"sun.tsai@cienet.com",
 		},
+		// ChromeOS > Software > Task Manager
+		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
-		Timeout:      5 * time.Minute,
+		Params: []testing.Param{
+			{
+				Fixture: "chromeLoggedIn",
+				Val:     browser.TypeAsh,
+			}, {
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           "lacros",
+				Val:               browser.TypeLacros,
+			},
+		},
+		Timeout: 5 * time.Minute,
 	})
 }
 
 type taskManagerDefaultTestResources struct {
-	tconn       *chrome.TestConn
 	ui          *uiauto.Context
-	kb          *input.KeyboardEventWriter
 	taskManager *taskmanager.TaskManager
 	processes   []taskmanager.Process
 }
@@ -62,26 +74,31 @@ func DefaultUIAndFunctionality(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	resources := &taskManagerDefaultTestResources{
-		tconn:       tconn,
-		ui:          uiauto.New(tconn),
-		kb:          kb,
-		taskManager: taskmanager.New(tconn, kb),
-		processes: []taskmanager.Process{
-			taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news"),
-			taskmanager.NewChromeTabProcess("https://translate.google.com/?hl=en"),
-			taskmanager.NewChromeTabProcess("https://help.netflix.com/en"),
-			taskmanager.NewChromeTabProcess("http://lite.cnn.com/en"),
-			taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news"),
-		},
-	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	browserType := s.Param().(browser.Type)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
+	resources := &taskManagerDefaultTestResources{
+		ui:          uiauto.New(tconn),
+		taskManager: taskmanager.New(tconn, kb),
+		processes: []taskmanager.Process{
+			taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news", browserType),
+			taskmanager.NewChromeTabProcess("https://translate.google.com/?hl=en", browserType),
+			taskmanager.NewChromeTabProcess("https://help.netflix.com/en", browserType),
+			taskmanager.NewChromeTabProcess("http://lite.cnn.com/en", browserType),
+			taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news", browserType),
+		},
+	}
+
 	for _, process := range resources.processes {
-		if err := process.Open(ctx, cr, tconn, kb); err != nil {
+		if err := process.Open(ctx, br); err != nil {
 			s.Fatal("Failed to open process: ", err)
 		}
 		defer process.Close(cleanupCtx)
@@ -155,7 +172,7 @@ func (f *processExistsVerifier) verify(ctx context.Context) error {
 	}
 
 	for _, process := range f.processes {
-		name, err := process.NameInTaskManager(ctx, f.tconn)
+		name, err := process.NameInTaskManager(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to obtain the process name in task manager")
 		}
@@ -232,13 +249,13 @@ func (f *terminateProcessVerifier) verify(ctx context.Context) error {
 	rand.Seed(time.Now().UnixNano())
 	p := f.processes[rand.Intn(len(f.processes))]
 
-	if status, err := p.Status(ctx, f.tconn); err != nil {
+	if status, err := p.Status(ctx); err != nil {
 		return err
 	} else if status != taskmanager.ProcessAlive {
 		return errors.Errorf("expecting the tab process to be alive, but got %q", status)
 	}
 
-	name, err := p.NameInTaskManager(ctx, f.tconn)
+	name, err := p.NameInTaskManager(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain the process name in task manager")
 	}
@@ -248,7 +265,7 @@ func (f *terminateProcessVerifier) verify(ctx context.Context) error {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if status, err := p.Status(ctx, f.tconn); err != nil {
+		if status, err := p.Status(ctx); err != nil {
 			return err
 		} else if status != taskmanager.ProcessDead {
 			return errors.Errorf("expecting the tab process to be dead, but got %q", status)

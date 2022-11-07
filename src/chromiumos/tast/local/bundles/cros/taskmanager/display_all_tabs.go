@@ -6,6 +6,8 @@ package taskmanager
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -13,6 +15,8 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/cws"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -26,17 +30,30 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisplayAllTabs,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test that all tabs should be displayed in the task manager",
 		Contacts: []string{
-			"sun.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
+			"cienet-development@googlegroups.com",
+			"sun.tsai@cienet.com",
 		},
+		// ChromeOS > Software > Task Manager
+		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		// GAIA is required to install an app from Chrome Webstore.
-		Fixture: "chromeLoggedInWithGaia",
+		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		Params: []testing.Param{
+			{
+				// GAIA is required to install an app from Chrome Webstore.
+				Fixture: "chromeLoggedInWithGaia",
+				Val:     browser.TypeAsh,
+			}, {
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           "lacrosGaiaLogin",
+				Val:               browser.TypeLacros,
+			},
+		},
 	})
 }
 
@@ -55,39 +72,46 @@ func DisplayAllTabs(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	browserType := s.Param().(browser.Type)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
 	ui := uiauto.New(tconn)
 
 	// Expecting 3 windows, 2 tabs on the first window, 4 tabs on the second and the third window.
 	browserTabs := [][]taskmanager.Process{
 		{
-			newChromeTabInNewWindow("https://www.facebook.com/"),
-			newChromeExtension(chrome.BlankURL, "Speedtest"),
+			newChromeTabInNewWindow("https://www.facebook.com/", browserType),
+			newChromeExtension(ui, chrome.BlankURL, "Speedtest", browserType),
 		}, {
-			newChromeTabInNewWindow("https://www.amazon.com/"),
-			taskmanager.NewChromeTabProcess("https://www.apple.com/"),
-			newYoutubeTab("https://www.youtube.com/"),
-			taskmanager.NewChromeTabProcess("https://www.instagram.com/"),
+			newChromeTabInNewWindow("https://www.amazon.com/", browserType),
+			taskmanager.NewChromeTabProcess("https://www.apple.com/", browserType),
+			newYoutubeTab(tconn, "https://www.youtube.com/", browserType),
+			taskmanager.NewChromeTabProcess("https://www.instagram.com/", browserType),
 		}, {
-			newChromeTabInNewWindow("https://en.wikipedia.org/wiki/Main_Page"),
-			taskmanager.NewChromeTabProcess("https://news.google.com/"),
-			taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news"),
-			taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news"),
+			newChromeTabInNewWindow("https://en.wikipedia.org/wiki/Main_Page", browserType),
+			taskmanager.NewChromeTabProcess("https://news.google.com/", browserType),
+			taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news", browserType),
+			taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news", browserType),
 		},
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
 	cwsApp := cws.App{Name: cwsAppName, URL: cwsAppURL}
-	if err := cws.InstallApp(ctx, cr.Browser(), tconn, cwsApp); err != nil {
+	if err := cws.InstallApp(ctx, br, tconn, cwsApp); err != nil {
 		s.Fatal("Failed to install CWS app: ", err)
 	}
-	defer cws.UninstallApp(cleanupCtx, cr.Browser(), tconn, cwsApp)
+	defer cws.UninstallApp(cleanupCtx, br, tconn, cwsApp)
 
 	for _, browserWindow := range browserTabs {
 		for _, process := range browserWindow {
-			if err := process.Open(ctx, cr, tconn, kb); err != nil {
+			if err := process.Open(ctx, br); err != nil {
 				s.Fatal("Failed to open browser tab: ", err)
 			}
 			defer process.Close(cleanupCtx)
@@ -103,7 +127,7 @@ func DisplayAllTabs(ctx context.Context, s *testing.State) {
 
 	for _, browserWindow := range browserTabs {
 		for _, process := range browserWindow {
-			name, err := process.NameInTaskManager(ctx, tconn)
+			name, err := process.NameInTaskManager(ctx)
 			if err != nil {
 				s.Fatal("Failed to obtain the process name in task manager: ", err)
 			}
@@ -122,8 +146,8 @@ const (
 	cwsAppName = "Speedtest by Ookla"
 )
 
-func newChromeTabInNewWindow(url string) *taskmanager.ChromeTab {
-	tab := taskmanager.NewChromeTabProcess(url)
+func newChromeTabInNewWindow(url string, browserType browser.Type) *taskmanager.ChromeTab {
+	tab := taskmanager.NewChromeTabProcess(url, browserType)
 	tab.SetOpenInNewWindow()
 	return tab
 }
@@ -132,57 +156,69 @@ func newChromeTabInNewWindow(url string) *taskmanager.ChromeTab {
 // It has a few different behaviors than a ChromeTab, how to open it and its name in the task manager for instance.
 type chromeExtension struct {
 	*taskmanager.ChromeTab
+	ui   *uiauto.Context
 	name string
 }
 
-func newChromeExtension(url, name string) *chromeExtension {
+func newChromeExtension(ui *uiauto.Context, url, name string, browserType browser.Type) *chromeExtension {
 	return &chromeExtension{
-		ChromeTab: taskmanager.NewChromeTabProcess(url),
+		ChromeTab: taskmanager.NewChromeTabProcess(url, browserType),
+		ui:        ui,
 		name:      name,
 	}
 }
 
 // Open opens the installed chrome extension.
-func (extension *chromeExtension) Open(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
-	if err := extension.ChromeTab.Open(ctx, cr, tconn, kb); err != nil {
+func (extension *chromeExtension) Open(ctx context.Context, br *browser.Browser) error {
+	if err := extension.ChromeTab.Open(ctx, br); err != nil {
 		return err
 	}
 
-	ui := uiauto.New(tconn)
 	browserFrame := nodewith.HasClass("BrowserFrame").Role(role.Window)
+	if extension.BrowserType() == browser.TypeLacros {
+		classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
+		browserFrame = nodewith.Role(role.Window).NameStartingWith(extension.ChromeTab.Title).ClassNameRegex(classNameRegexp)
+	}
+
 	extensionMenu := nodewith.HasClass("ExtensionsMenuView").Role(role.Window)
 
 	return uiauto.Combine("open the extension",
-		ui.LeftClick(nodewith.Name("Extensions").Role(role.PopUpButton).Ancestor(browserFrame)),
-		ui.LeftClick(nodewith.NameStartingWith(extension.name).HasClass("ExtensionsMenuButton").Ancestor(extensionMenu)),
-		ui.WaitUntilExists(nodewith.Name(extension.name).Role(role.RootWebArea)),
+		extension.ui.LeftClick(nodewith.Name("Extensions").Role(role.PopUpButton).Ancestor(browserFrame)),
+		extension.ui.LeftClick(nodewith.NameStartingWith(extension.name).HasClass("ExtensionsMenuButton").Ancestor(extensionMenu)),
+		extension.ui.WaitUntilExists(nodewith.Name(extension.name).Role(role.RootWebArea)),
 	)(ctx)
 }
 
-func (extension *chromeExtension) NameInTaskManager(ctx context.Context, tconn *chrome.TestConn) (string, error) {
-	// Extension name is not changed dynamically. Just return its name directly.
-	return "Extension: " + extension.name, nil
+func (extension *chromeExtension) NameInTaskManager(ctx context.Context) (string, error) {
+	name := "Extension: " + extension.name
+	if extension.ChromeTab.BrowserType() == browser.TypeLacros {
+		name = fmt.Sprintf("Lacros: %s", name)
+	}
+
+	return name, nil
 }
 
 type youtubeTab struct {
 	*taskmanager.ChromeTab
+	tconn           *chrome.TestConn
 	cwsAppInstalled bool
 }
 
-func newYoutubeTab(url string) *youtubeTab {
+func newYoutubeTab(tconn *chrome.TestConn, url string, browserType browser.Type) *youtubeTab {
 	return &youtubeTab{
-		ChromeTab: taskmanager.NewChromeTabProcess(url),
+		ChromeTab: taskmanager.NewChromeTabProcess(url, browserType),
+		tconn:     tconn,
 	}
 }
 
-func (tab *youtubeTab) Open(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
-	if err := tab.ChromeTab.Open(ctx, cr, tconn, kb); err != nil {
+func (tab *youtubeTab) Open(ctx context.Context, br *browser.Browser) error {
+	if err := tab.ChromeTab.Open(ctx, br); err != nil {
 		return err
 	}
 
 	// If the YouTube app from Chrome Web Store is installed, it will be used to open the YouTube link by default.
 	// The displayed name in the task manager will be different.
-	cwsAppInstalled, err := ash.ChromeAppInstalled(ctx, tconn, apps.YouTubeCWS.ID)
+	cwsAppInstalled, err := ash.ChromeAppInstalled(ctx, tab.tconn, apps.YouTubeCWS.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to get Chrome Apps list")
 	}
@@ -191,15 +227,16 @@ func (tab *youtubeTab) Open(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 	return nil
 }
 
-func (tab *youtubeTab) NameInTaskManager(ctx context.Context, tconn *chrome.TestConn) (string, error) {
+func (tab *youtubeTab) NameInTaskManager(ctx context.Context) (string, error) {
 	// Tab name might dynamically change.
 	// Update the tab information to ensure the latest title returned.
-	if err := tab.UpdateInfo(ctx, tconn); err != nil {
+	if err := tab.UpdateInfo(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to update tab information")
 	}
 
 	if tab.cwsAppInstalled {
 		return "App: " + tab.Title, nil
 	}
-	return "Tab: " + tab.Title, nil
+
+	return tab.ChromeTab.NameInTaskManager(ctx)
 }

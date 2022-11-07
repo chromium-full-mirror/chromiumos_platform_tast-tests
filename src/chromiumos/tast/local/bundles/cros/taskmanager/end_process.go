@@ -20,6 +20,8 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -32,25 +34,36 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EndProcess,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify the 'End process' button works on plugin, non-plugin and grouped tabs",
 		Contacts: []string{
-			"sun.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
+			"cienet-development@googlegroups.com",
+			"sun.tsai@cienet.com",
 		},
+		// ChromeOS > Software > Task Manager
+		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
-		Timeout:      10 * time.Minute,
+		Params: []testing.Param{
+			{
+				Fixture: "chromeLoggedIn",
+				Val:     browser.TypeAsh,
+			}, {
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           "lacros",
+				Val:               browser.TypeLacros,
+			},
+		},
+		Timeout: 10 * time.Minute,
 	})
 }
 
 type endProcessTestResources struct {
 	cr          *chrome.Chrome
-	tconn       *chrome.TestConn
+	br          *browser.Browser
 	ui          *uiauto.Context
-	kb          *input.KeyboardEventWriter
 	taskManager *taskmanager.TaskManager
 }
 
@@ -71,30 +84,44 @@ func EndProcess(ctx context.Context, s *testing.State) {
 
 	resources := &endProcessTestResources{
 		cr:          cr,
-		tconn:       tconn,
 		ui:          uiauto.New(tconn),
-		kb:          kb,
 		taskManager: taskmanager.New(tconn, kb),
 	}
 
-	pluginTest, cleanupPluginTest, err := newPluginTest()
+	browserType := s.Param().(browser.Type)
+	pluginTest, cleanupPluginTest, err := newPluginTest(browserType)
 	if err != nil {
 		s.Fatal("Failed to initialize plugin test: ", err)
 	}
 	defer cleanupPluginTest()
 
 	for _, test := range []endProcessTest{
-		newNonPluginTest(),
+		newNonPluginTest(browserType),
 		pluginTest,
-		newGroupedTabsTest(),
+		newGroupedTabsTest(browserType),
 	} {
 		f := func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
 
+			// browserfixt.SetUp sets up the lacros by bringing up the window (with one empty tab),
+			// but no window will be brought up for ash-Chrome.
+			// browserfixt.SetUpWithURL is used to bring up the browser window uniformly
+			// to make tab amount to be consistent between ash/lacros variants.
+			conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.BlankURL)
+			if err != nil {
+				s.Fatal("Failed to set up browser: ", err)
+			}
+			defer func(ctx context.Context) {
+				conn.CloseTarget(ctx)
+				conn.Close()
+				closeBrowser(ctx)
+			}(cleanupCtx)
+			resources.br = br
+
 			for _, process := range test.getProcesses() {
-				if err := process.Open(ctx, cr, tconn, kb); err != nil {
+				if err := process.Open(ctx, br); err != nil {
 					s.Fatal("Failed to open the process: ", err)
 				}
 				defer process.Close(cleanupCtx)
@@ -105,6 +132,11 @@ func EndProcess(ctx context.Context, s *testing.State) {
 						s.Fatal("Failed to wait until plugin to be stable: ", err)
 					}
 				}
+			}
+
+			// Close the blank tab after all processes are opened.
+			if err := br.CloseWithURL(ctx, chrome.BlankURL); err != nil {
+				s.Fatal("Failed to close blank tab: ", err)
 			}
 
 			if err := resources.taskManager.Open(ctx); err != nil {
@@ -139,13 +171,13 @@ type nonPluginTest struct {
 	processes   []taskmanager.Process
 }
 
-func newNonPluginTest() *nonPluginTest {
+func newNonPluginTest(browserType browser.Type) *nonPluginTest {
 	processes := []taskmanager.Process{
-		taskmanager.NewChromeTabProcess("https://translate.google.com/?hl=en"),
-		taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news"),
-		taskmanager.NewChromeTabProcess("http://lite.cnn.com/en"),
-		taskmanager.NewChromeTabProcess("https://help.netflix.com/en"),
-		taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news"),
+		taskmanager.NewChromeTabProcess("https://translate.google.com/?hl=en", browserType),
+		taskmanager.NewChromeTabProcess("https://news.ycombinator.com/news", browserType),
+		taskmanager.NewChromeTabProcess("http://lite.cnn.com/en", browserType),
+		taskmanager.NewChromeTabProcess("https://help.netflix.com/en", browserType),
+		taskmanager.NewChromeTabProcess("https://www.cbc.ca/lite/trending-news", browserType),
 	}
 
 	return &nonPluginTest{"non_plugin_test", processes}
@@ -180,9 +212,13 @@ type pluginTab struct {
 	plugin *plugin
 }
 
-func (pTab *pluginTab) NameInTaskManager(ctx context.Context, tconn *chrome.TestConn) (string, error) {
-	// Plugin name is not changed dynamically. Just return its name directly.
-	return "Subframe: " + pTab.plugin.name, nil
+func (pTab *pluginTab) NameInTaskManager(ctx context.Context) (string, error) {
+	name := "Subframe: " + pTab.plugin.name
+	if pTab.BrowserType() == browser.TypeLacros {
+		name = fmt.Sprintf("Lacros: %s", name)
+	}
+
+	return name, nil
 }
 
 func (pTab *pluginTab) waitUntilPluginStable(ctx context.Context, res *endProcessTestResources) error {
@@ -192,7 +228,7 @@ func (pTab *pluginTab) waitUntilPluginStable(ctx context.Context, res *endProces
 		return errors.Wrap(err, "failed to find the plugin node")
 	}
 
-	ts, err := res.cr.FindTargets(ctx, func(t *target.Info) bool {
+	ts, err := res.br.FindTargets(ctx, func(t *target.Info) bool {
 		// If the network or the plugin source website is down,
 		// the plugin target could still be found.
 		return strings.Contains(t.URL, pTab.plugin.source)
@@ -218,7 +254,7 @@ type pluginTest struct {
 // newPluginTest starts a local http test server to serve the html file with iframe plugin.
 // This function returns an instance of pluginTest, a cleanup function to close http test server
 // and an error if exists.
-func newPluginTest() (*pluginTest, func(), error) {
+func newPluginTest(browserType browser.Type) (*pluginTest, func(), error) {
 	tabs := map[string]*pluginTab{
 		"youtube": {
 			plugin: &plugin{
@@ -255,7 +291,7 @@ func newPluginTest() (*pluginTest, func(), error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		tab.ChromeTab = taskmanager.NewChromeTabProcess(url)
+		tab.ChromeTab = taskmanager.NewChromeTabProcess(url, browserType)
 		processes = append(processes, tab)
 	}
 
@@ -271,7 +307,7 @@ func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTes
 		return errors.New("unexpected process")
 	}
 
-	name, err := p.NameInTaskManager(ctx, res.tconn)
+	name, err := p.NameInTaskManager(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain the process name in task manager")
 	}
@@ -284,7 +320,7 @@ func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTes
 	// Therefore, using poll to recheck until all the plugin targets are removed.
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		for _, t := range tab.plugin.targets {
-			if ts, err := res.cr.FindTargets(ctx, chrome.MatchTargetID(t.TargetID)); err != nil {
+			if ts, err := res.br.FindTargets(ctx, chrome.MatchTargetID(t.TargetID)); err != nil {
 				return testing.PollBreak(err)
 			} else if len(ts) > 0 {
 				return errors.New("failed to terminate the plugin")
@@ -307,12 +343,12 @@ type groupedTabsTest struct {
 	processes   []taskmanager.Process
 }
 
-func newGroupedTabsTest() *groupedTabsTest {
+func newGroupedTabsTest(browserType browser.Type) *groupedTabsTest {
 	var processes []taskmanager.Process
 	const groupedTabsAmount = 5
 
 	for i := 0; i < groupedTabsAmount; i++ {
-		tab := taskmanager.NewChromeTabProcess(chrome.NewTabURL)
+		tab := taskmanager.NewChromeTabProcess(chrome.NewTabURL, browserType)
 		processes = append(processes, tab)
 	}
 
@@ -349,14 +385,14 @@ func terminateAndVerify(ctx context.Context, test endProcessTest, res *endProces
 	}
 
 	for _, process := range processesToBeVerified {
-		if status, err := process.Status(ctx, res.tconn); err != nil {
+		if status, err := process.Status(ctx); err != nil {
 			return err
 		} else if status != taskmanager.ProcessAlive {
 			return errors.Errorf("expecting the tab process to be alive, but got %q", status)
 		}
 	}
 
-	name, err := p.NameInTaskManager(ctx, res.tconn)
+	name, err := p.NameInTaskManager(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain the process name in task manager")
 	}
@@ -367,7 +403,7 @@ func terminateAndVerify(ctx context.Context, test endProcessTest, res *endProces
 
 	for _, process := range processesToBeVerified {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if status, err := process.Status(ctx, res.tconn); err != nil {
+			if status, err := process.Status(ctx); err != nil {
 				return err
 			} else if status != taskmanager.ProcessDead {
 				return errors.Errorf("expecting the tab process to be dead, but got %q", status)

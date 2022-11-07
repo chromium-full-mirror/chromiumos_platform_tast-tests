@@ -234,6 +234,21 @@ func init() {
 
 	// lacrosGaiaLogin is used to test Lacros with a gaia user login.
 	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosGaiaLogin",
+		Desc:     "Lacros Chrome logged into a Gaia user session",
+		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
+		Vars:     []string{"ui.gaiaPoolDefault"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return NewConfig(ChromeOptions(
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	// lacrosEduGaiaLogin is used to test Lacros with a gaia edu user login.
+	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosEduGaiaLogin",
 		Desc:     "Lacros with Edu User Gaia Login",
 		Contacts: []string{"yjt@google.com", "lacros-team@google.com"},

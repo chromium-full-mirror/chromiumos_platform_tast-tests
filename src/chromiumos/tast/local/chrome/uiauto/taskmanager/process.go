@@ -6,13 +6,13 @@ package taskmanager
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/webutil"
-	"chromiumos/tast/local/input"
 )
 
 // ProcessStatus defines the status of the process.
@@ -30,13 +30,13 @@ const (
 // Process defines the interface for the process.
 type Process interface {
 	// Open opens the process.
-	Open(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error
+	Open(ctx context.Context, br *browser.Browser) error
 	// Close closes the process.
 	Close(ctx context.Context) error
 	// Status returns the status of the process, e.g., alive, dead, and etc.
-	Status(ctx context.Context, tconn *chrome.TestConn) (ProcessStatus, error)
+	Status(ctx context.Context) (ProcessStatus, error)
 	// NameInTaskManager returns the process name displayed in the task manager.
-	NameInTaskManager(ctx context.Context, tconn *chrome.TestConn) (string, error)
+	NameInTaskManager(ctx context.Context) (string, error)
 }
 
 // ChromeTab defines the struct for chrome tab.
@@ -55,14 +55,20 @@ type ChromeTab struct {
 	// This field needs to be set before opening the tab to open the tab in a new window.
 	openInNewWindow bool
 
+	// browserType is the browser type of the tab.
+	browserType browser.Type
+	// bTconn is Test API connection for browser.
+	bTconn *chrome.TestConn
+
 	// conn is the connection to the chrome tab.
 	conn *chrome.Conn
 }
 
 // NewChromeTabProcess returns an instance of ChromeTab.
-func NewChromeTabProcess(url string) *ChromeTab {
+func NewChromeTabProcess(url string, browserType browser.Type) *ChromeTab {
 	return &ChromeTab{
-		URL: url,
+		URL:         url,
+		browserType: browserType,
 	}
 }
 
@@ -71,8 +77,13 @@ func (tab *ChromeTab) SetOpenInNewWindow() {
 	tab.openInNewWindow = true
 }
 
+// BrowserType returns browser type of the tab.
+func (tab *ChromeTab) BrowserType() browser.Type {
+	return tab.browserType
+}
+
 // Open opens a new chrome tab in a single browser window.
-func (tab *ChromeTab) Open(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) (retErr error) {
+func (tab *ChromeTab) Open(ctx context.Context, br *browser.Browser) (retErr error) {
 	if tab.conn != nil {
 		return errors.New("the tab is already opened")
 	}
@@ -83,7 +94,7 @@ func (tab *ChromeTab) Open(ctx context.Context, cr *chrome.Chrome, tconn *chrome
 	}
 
 	var err error
-	if tab.conn, err = cr.NewConn(ctx, tab.URL, opts...); err != nil {
+	if tab.conn, err = br.NewConn(ctx, tab.URL, opts...); err != nil {
 		return errors.Wrapf(err, "failed to open %s", tab.URL)
 	}
 
@@ -105,7 +116,12 @@ func (tab *ChromeTab) Open(ctx context.Context, cr *chrome.Chrome, tconn *chrome
 	    return tabs[0]
 	   }`
 
-	if err := tconn.Call(ctx, &tab, expr); err != nil {
+	tab.bTconn, err = br.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get Test API connection for %v browser", tab.browserType)
+	}
+
+	if err := tab.bTconn.Call(ctx, &tab, expr); err != nil {
 		return errors.Wrap(err, "failed to get current tab")
 	}
 
@@ -141,8 +157,8 @@ const (
 )
 
 // Status returns the ProcessStatus of the chrome tab process.
-func (tab *ChromeTab) Status(ctx context.Context, tconn *chrome.TestConn) (ProcessStatus, error) {
-	if err := tab.UpdateInfo(ctx, tconn); err != nil {
+func (tab *ChromeTab) Status(ctx context.Context) (ProcessStatus, error) {
+	if err := tab.UpdateInfo(ctx); err != nil {
 		return ProcessUnknownStatus, err
 	}
 
@@ -157,12 +173,12 @@ func (tab *ChromeTab) Status(ctx context.Context, tconn *chrome.TestConn) (Proce
 }
 
 // UpdateInfo updates the title and TabStatus of the chrome tab.
-func (tab *ChromeTab) UpdateInfo(ctx context.Context, tconn *chrome.TestConn) error {
+func (tab *ChromeTab) UpdateInfo(ctx context.Context) error {
 	expr := `async (id) => {
 	    const tab = tast.promisify(chrome.tabs.get)(id);
 	    return tab
 	   }`
-	if err := tconn.Call(ctx, &tab, expr, tab.ID); err != nil {
+	if err := tab.bTconn.Call(ctx, &tab, expr, tab.ID); err != nil {
 		return errors.Wrap(err, "failed to query tab")
 	}
 
@@ -170,11 +186,17 @@ func (tab *ChromeTab) UpdateInfo(ctx context.Context, tconn *chrome.TestConn) er
 }
 
 // NameInTaskManager returns the process name displayed in the task manager.
-func (tab *ChromeTab) NameInTaskManager(ctx context.Context, tconn *chrome.TestConn) (string, error) {
+func (tab *ChromeTab) NameInTaskManager(ctx context.Context) (string, error) {
 	// Tab name might dynamically change.
 	// Update the tab information to ensure the latest title returned.
-	if err := tab.UpdateInfo(ctx, tconn); err != nil {
+	if err := tab.UpdateInfo(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to update tab information")
 	}
-	return "Tab: " + tab.Title, nil
+
+	name := "Tab: " + tab.Title
+	if tab.browserType == browser.TypeLacros {
+		name = fmt.Sprintf("Lacros: %s", name)
+	}
+
+	return name, nil
 }
