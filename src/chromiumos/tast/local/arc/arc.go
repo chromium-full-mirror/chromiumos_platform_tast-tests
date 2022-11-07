@@ -438,7 +438,11 @@ func (a *ARC) WaitIntentHelper(ctx context.Context) error {
 var androidDeps = []string{
 	"android_vm",
 	"android_vm_r",
+	"android_vm_t",
+	"android_container",
+	"android_container_r",
 	"android_p",
+	"android_r",
 	"arc",
 }
 
@@ -638,6 +642,7 @@ func WaitAndroidInit(ctx context.Context, reader *syslog.Reader) error {
 		}
 		return errors.Wrapf(err, "%s property is not set which shows that Android init did not come up", prop)
 	}
+
 	return nil
 }
 
