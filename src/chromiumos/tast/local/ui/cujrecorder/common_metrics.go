@@ -75,7 +75,7 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Browser.Tabs.TotalSwitchDuration.NoSavedFrames_NotLoaded", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Tabs.TotalSwitchDuration.NoSavedFrames_Loaded", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Tabs.TotalSwitchDuration.WithSavedFrames", "ms", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Browser.Tabs.TabSwitchResult2", "ms", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Browser.Tabs.TabSwitchResult2", "result", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Tabs.TabSwitchResult2.NoSavedFrames_NotLoaded", "result", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Tabs.TabSwitchResult2.NoSavedFrames_Loaded", "result", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Tabs.TabSwitchResult2.WithSavedFrames", "result", perf.SmallerIsBetter),
