@@ -14,7 +14,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bluetooth"
 	"chromiumos/tast/local/bluetooth/bluez"
+	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 )
@@ -22,7 +28,10 @@ import (
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			pb.RegisterBTTestServiceServer(srv, &BTTestService{s: s})
+			pb.RegisterBTTestServiceServer(srv, &BTTestService{
+				s:            s,
+				sharedObject: common.SharedObjectsForServiceSingleton,
+			})
 		},
 	})
 }
@@ -31,11 +40,13 @@ func init() {
 type BTTestService struct {
 	s            *testing.ServiceState
 	bluezAdapter *bluez.Adapter
+	sharedObject *common.SharedObjectsForService
 }
 
 // EnableBluetoothAdapter powers on the bluetooth adapter and waits for it to
 // be enabled.
 func (bts *BTTestService) EnableBluetoothAdapter(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	testing.ContextLog(ctx, "Enabling bluetooth adapter")
 	if err := bluez.Enable(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to enable bluetooth adapter")
 	}
@@ -52,6 +63,7 @@ func (bts *BTTestService) EnableBluetoothAdapter(ctx context.Context, empty *emp
 
 // DisableBluetoothAdapter powers off the bluetooth adapter.
 func (bts *BTTestService) DisableBluetoothAdapter(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	testing.ContextLog(ctx, "Disabling bluetooth adapter")
 	if err := bluez.Disable(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to disable bluetooth adapter")
 	}
@@ -64,6 +76,7 @@ func (bts *BTTestService) DisableBluetoothAdapter(ctx context.Context, empty *em
 
 // DisconnectAllDevices disconnects all connected bluetooth devices.
 func (bts *BTTestService) DisconnectAllDevices(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	testing.ContextLog(ctx, "Disconnecting all bluetooth devices from DUT")
 	if err := bluez.DisconnectAllDevices(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to disconnect all bluetooth devices")
 	}
@@ -173,6 +186,7 @@ func (bts *BTTestService) discoverDevices(ctx context.Context) ([]*pb.Device, er
 
 // RemoveAllDevices removes all bluetooth devices.
 func (bts *BTTestService) RemoveAllDevices(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	testing.ContextLog(ctx, "Removing all bluetooth devices from DUT")
 	devices, err := bluez.Devices(ctx)
 	if err != nil {
 		return nil, err
@@ -293,5 +307,140 @@ func (bts *BTTestService) PairAndConnectDevice(ctx context.Context, request *pb.
 		}
 	}
 
+	return &emptypb.Empty{}, nil
+}
+
+// DeviceStatus checks for a given device and returns whether it has been
+// discovered by and paired to the DUT.
+func (bts *BTTestService) DeviceStatus(ctx context.Context, request *pb.DeviceStatusRequest) (*pb.DeviceStatusResponse, error) {
+	if request.Device == nil || request.Device.MacAddress == "" || request.Device.AdvertisedName == "" {
+		return nil, errors.New("incomplete DeviceStatus request")
+	}
+
+	// Find the first device that matches the address.
+	devices, err := bluez.Devices(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get device list")
+	}
+	var matchingDevice *bluez.Device
+	for _, d := range devices {
+		ad, err := d.Address(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get device address property")
+		}
+		if ad == request.Device.MacAddress {
+			matchingDevice = d
+			break
+		}
+	}
+	if matchingDevice == nil {
+		// No matching device found.
+		return &pb.DeviceStatusResponse{
+			IsDiscovered: false,
+			IsPaired:     false,
+		}, nil
+	}
+
+	// Validate the name of the device matches too.
+	deviceName, err := matchingDevice.Name(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get device name property")
+	}
+	if deviceName != request.Device.AdvertisedName {
+		return nil, errors.Errorf("found a matching device with address %q, but its name, %q, does not match the expected name %q", request.Device.MacAddress, deviceName, request.Device.AdvertisedName)
+	}
+
+	// Check pairing status.
+	isPaired, err := matchingDevice.Paired(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to check if device is paired")
+	}
+
+	return &pb.DeviceStatusResponse{
+		IsDiscovered: true,
+		IsPaired:     isPaired,
+	}, nil
+}
+
+// PairWithFastPairNotification will attempt to pair a fast pair device with
+// the fast pair notification.
+func (bts *BTTestService) PairWithFastPairNotification(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	cr := bts.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+	tConn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+	}
+
+	// Wait for the discovery notification.
+	testing.ContextLog(ctx, "Waiting for fast pair discovery notification")
+	_, err = ash.WaitForNotification(
+		ctx,
+		tConn,
+		30*time.Second,
+		ash.WaitIDContains(bluetooth.NotificationIDFastPairDiscoveryUser),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for fast pair discovery notification to appear")
+	}
+
+	// Click the connect button on the notification.
+	testing.ContextLog(ctx, "Starting fast pair pairing process")
+	connectBtn := nodewith.Role(role.Button).Name("Connect")
+	ac := uiauto.New(tConn)
+	if err := ac.DoDefault(connectBtn)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to click connect button on fast pair discovery notification")
+	}
+
+	// Wait for pairing notification to appear and disappear.
+	_, err = ash.WaitForNotification(
+		ctx,
+		tConn,
+		1*time.Minute,
+		ash.WaitIDContains(bluetooth.NotificationIDFastPairPairing),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for fast pair pairing notification to appear")
+	}
+	if err := ash.WaitUntilNotificationGone(
+		ctx,
+		tConn,
+		1*time.Minute,
+		ash.WaitIDContains(bluetooth.NotificationIDFastPairPairing),
+	); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for fast pair pairing notification to disappear")
+	}
+
+	// Check to make sure error notification does not appear.
+	fastPairErrorNotification, err := ash.WaitForNotification(
+		ctx,
+		tConn,
+		2*time.Second,
+		ash.WaitIDContains(bluetooth.NotificationIDFastPairError),
+	)
+	if err == nil {
+		return nil, errors.Errorf("fast pair pairing error notification found: title=%q, message=%q", fastPairErrorNotification.Title, fastPairErrorNotification.Message)
+	}
+
+	testing.ContextLog(ctx, "Completed fast pair pairing process")
+	return &emptypb.Empty{}, nil
+}
+
+// CloseNotifications closes all open notifications.
+func (bts *BTTestService) CloseNotifications(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	testing.ContextLog(ctx, "Closing all notifications on DUT")
+	cr := bts.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+	tConn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+	}
+	if err := ash.CloseNotifications(ctx, tConn); err != nil {
+		return nil, errors.Wrap(err, "failed to close all notifications")
+	}
 	return &emptypb.Empty{}, nil
 }

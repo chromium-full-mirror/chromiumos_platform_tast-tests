@@ -27,18 +27,24 @@ import (
 	"chromiumos/tast/timing"
 )
 
-// fixtureVarBTPeers is the name of the tast var that specifies a
-// comma-separated list of btpeer host addresses.
-//
-// This is an optional override to the usual btpeer addresses which are normally
-// resolved based on the DUT hostname.
-const fixtureVarBTPeers = "btpeers"
+// Fixture variable keys.
+const (
+	// fixtureVarBTPeers is the name of the tast var that specifies a
+	// comma-separated list of btpeer host addresses.
+	//
+	// This is an optional override to the usual btpeer addresses which are normally
+	// resolved based on the DUT hostname.
+	fixtureVarBTPeers = "btpeers"
 
-const fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
+	fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
+
+	fixtureVarChromeUsername = "chrome_username"
+	fixtureVarChromePassword = "chrome_password"
+)
 
 const (
-	defaultUsername = "testuser@gmail.com"
-	defaultPassword = "testpass"
+	defaultChromeUsername = "testuser@gmail.com"
+	defaultChromePassword = "testpass"
 )
 
 const (
@@ -188,6 +194,32 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
+		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, and connects to 1 btpeer",
+		Contacts: []string{
+			"jaredbennett@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			BTPeerCount:             1,
+			BluetoothAdapterEnabled: true,
+			EnableFeatures:          []string{"FastPair"},
+			DisableFeatures:         []string{},
+			LoginMode:               chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
+			RequireChromeUserVars:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarChromeUsername,
+			fixtureVarChromePassword,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
+		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerTimeoutBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+	})
 }
 
 type fixtureFeatures struct {
@@ -212,6 +244,10 @@ type fixtureFeatures struct {
 
 	// EnableHidScreenOnOobe enables HID detection screen when in OOBE.
 	EnableHidScreenOnOobe bool
+
+	// RequireChromeUserVars enables retrieving chrome user credentials from
+	// fixture vars, and requires that they are provided.
+	RequireChromeUserVars bool
 }
 
 // FixtValue is the value of the test fixture accessible within a test. All
@@ -280,18 +316,29 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 
 	// Start Chrome with the features and login mode provided by the test fixture.
+	var chromeUsername, chromePassword string
+	if tf.features.RequireChromeUserVars {
+		chromeUsername = s.RequiredVar(fixtureVarChromeUsername)
+		chromePassword = s.RequiredVar(fixtureVarChromePassword)
+	} else {
+		chromeUsername = defaultChromeUsername
+		chromePassword = defaultChromePassword
+	}
 	if _, err := tf.fv.ChromeService.New(ctx, &chromeService.NewRequest{
 		LoginMode:       tf.features.LoginMode,
 		EnableFeatures:  tf.features.EnableFeatures,
 		DisableFeatures: tf.features.DisableFeatures,
 		Credentials: &chromeService.NewRequest_Credentials{
-			Username: defaultUsername,
-			Password: defaultPassword,
+			Username: chromeUsername,
+			Password: chromePassword,
 		},
 		EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
 		SigninProfileTestExtensionId: signinProfileTestExtensionID,
 	}); err != nil {
 		s.Fatal("Failed to log into chrome on DUT: ", err)
+	}
+	if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to close notifications: ", err)
 	}
 
 	// Start capturing incoming and outgoing bluez and floss D-Bus messages.
@@ -309,7 +356,10 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 	tf.dbusMonitorBluetoothServices = dbusMonitorBluetoothServices
 
-	// Enable bluetooth adapter and clear devices.
+	// Enable a fresh bluetooth adapter and clear devices.
+	if _, err := tf.fv.BTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
+		s.Fatal("Failed to disable bluetooth adapter on DUT: ", err)
+	}
 	if tf.features.BluetoothAdapterEnabled {
 		if _, err := tf.fv.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
 			s.Fatal("Failed to enable bluetooth adapter on DUT: ", err)
@@ -331,16 +381,22 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) Reset(ctx context.Context) (retErr error) {
+	if err := tf.resetBTPeers(ctx); err != nil {
+		return errors.Wrap(err, "failed to reset all btpeers")
+	}
+	if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to close notifications")
+	}
 	if tf.features.BluetoothAdapterEnabled {
-		if _, err := tf.fv.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to enable bluetooth adapter on DUT")
-		}
 		if err := tf.clearDutBluetoothDevices(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear DUT bluetooth devices")
 		}
-	}
-	if err := tf.resetBTPeers(ctx); err != nil {
-		return errors.Wrap(err, "failed to reset all btpeers")
+		if _, err := tf.fv.BTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to disable bluetooth adapter on DUT")
+		}
+		if _, err := tf.fv.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to enable bluetooth adapter on DUT")
+		}
 	}
 	if err := tf.logDBusMonitorBluetoothMessages(ctx, "Reset"); err != nil {
 		return errors.Wrap(err, "failed to collect dbus-monitor bluez logs")
@@ -372,7 +428,15 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Turn bluetooth adapter back off.
+	// Reset btpeers to original state.
+	if err := tf.resetBTPeers(ctx); err != nil {
+		s.Error("Failed to reset all btpeers: ", err)
+	}
+
+	// Clear notifications and devices, and then turn bluetooth adapter back off.
+	if _, err := tf.fv.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+		s.Error("Failed to close notifications: ", err)
+	}
 	if tf.features.BluetoothAdapterEnabled {
 		if err := tf.clearDutBluetoothDevices(ctx); err != nil {
 			s.Error("Failed to clear DUT bluetooth devices: ", err)
@@ -390,11 +454,6 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	// Close gRPC connection to DUT.
 	if err := tf.fv.DUTRPCClient.Close(ctx); err != nil {
 		s.Error("Failed to close gRPC connection to DUT: ", err)
-	}
-
-	// Reset btpeers to original state.
-	if err := tf.resetBTPeers(ctx); err != nil {
-		s.Error("Failed to reset all btpeers: ", err)
 	}
 
 	// Stop dbus-monitor.
@@ -537,11 +596,9 @@ func (tf *fixture) buildLogFilename(nameParts ...string) string {
 // clearDutBluetoothDevices disconnects the DUT from any connected bluetooth
 // devices and also removes all known bluetooth devices from the DUT.
 func (tf *fixture) clearDutBluetoothDevices(ctx context.Context) error {
-	testing.ContextLog(ctx, "Disconnecting all bluetooth devices from DUT")
 	if _, err := tf.fv.BTS.DisconnectAllDevices(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to disconnected all bluetooth devices")
 	}
-	testing.ContextLog(ctx, "Removing all bluetooth devices from DUT")
 	if _, err := tf.fv.BTS.RemoveAllDevices(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to remove all bluetooth devices")
 	}

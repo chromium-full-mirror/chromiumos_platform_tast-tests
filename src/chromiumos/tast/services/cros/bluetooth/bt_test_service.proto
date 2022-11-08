@@ -32,6 +32,17 @@ service BTTestService {
 
   // PairAndConnectDevice pairs and connects to the specified Device.
   rpc PairAndConnectDevice(PairAndConnectDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // DeviceStatus checks for a given device and returns whether it has been
+  // discovered by and paired to the DUT.
+  rpc DeviceStatus(DeviceStatusRequest) returns (DeviceStatusResponse) {}
+
+  // PairWithFastPairNotification will attempt to pair a fast pair device with
+  // the fast pair notification.
+  rpc PairWithFastPairNotification(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // CloseNotifications closes all open notifications.
+  rpc CloseNotifications(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message Device {
@@ -57,4 +68,14 @@ message PairAndConnectDeviceRequest {
   // When true and the device is found to already be connected, the device is
   // first disconnected and then a new connection is established.
   bool forceNewConnect = 3;
+}
+
+message DeviceStatusRequest {
+  // The device to check for status.
+  Device device = 1;
+}
+
+message DeviceStatusResponse {
+  bool is_discovered = 1;
+  bool is_paired = 2;
 }
