@@ -166,7 +166,7 @@ func searchDetail(st settingsSearchType) []settingsSearchDetail {
 		return []settingsSearchDetail{
 			{
 				keyword:            "wifi",
-				expectedResult:     `Wi-Fi networks`,
+				expectedResult:     `Wi-Fi (networks|Sync)`,
 				expectedResultRole: role.GenericContainer,
 				subpageLabel:       "Known networks",
 			},
@@ -203,9 +203,8 @@ func searchDetail(st settingsSearchType) []settingsSearchDetail {
 				expectedMismatch:   true,
 			}, {
 				keyword:            "wallpaper",
-				expectedResult:     `No search results found`,
+				expectedResult:     `Change wallpaper`,
 				expectedResultRole: role.StaticText,
-				expectedMismatch:   true,
 			}, {
 				keyword:            "Drive",
 				expectedResult:     `.*Drive.*`,
