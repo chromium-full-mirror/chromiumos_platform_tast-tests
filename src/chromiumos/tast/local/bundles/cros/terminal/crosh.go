@@ -41,7 +41,7 @@ func Crosh(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("TerminalAlternativeEmulator"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator"))
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}
@@ -80,7 +80,7 @@ func Crosh(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(nodewith.Name("crosh>").Role(role.StaticText).First()),
 		kb.TypeAction("shell"),
 		kb.AccelAction("Enter"),
-		ui.WaitUntilExists(nodewith.Name("chronos@localhost").Role(role.StaticText).First()),
+		ui.WaitUntilExists(nodewith.Name("chronos@localhost / $").Role(role.StaticText).First()),
 		kb.TypeAction("exit"),
 		kb.AccelAction("Enter"),
 		kb.TypeAction("exit"),
