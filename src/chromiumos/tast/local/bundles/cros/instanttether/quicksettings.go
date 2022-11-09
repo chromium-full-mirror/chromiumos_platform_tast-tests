@@ -1,0 +1,122 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package instanttether
+
+import (
+	"context"
+	"regexp"
+	"strings"
+	"time"
+
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome/crossdevice"
+	"chromiumos/tast/local/chrome/crossdevice/instanttether"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+	"chromiumos/tast/local/shill"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         Quicksettings,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks enabling Instant Tether through Quick Settings",
+		Contacts: []string{
+			"polner@chromium.org",
+			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+		},
+		Attr:         []string{"group:cross-device", "cross-device_instanttether", "cross-device_cellular"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "crossdeviceOnboardedAllFeatures",
+		Timeout:      3 * time.Minute,
+	})
+}
+
+func Quicksettings(ctx context.Context, s *testing.State) {
+	tconn := s.FixtValue().(*crossdevice.FixtData).TestConn
+	cr := s.FixtValue().(*crossdevice.FixtData).Chrome
+	ui := uiauto.New(tconn)
+
+	cleanupCtx := ctx
+
+	ctx, cancel := ctxutil.Shorten(ctx, 2*shill.EnableWaitTime+10*time.Second)
+	defer cancel()
+
+	// Open Quick Settings network menu.
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, true); err != nil {
+		s.Fatal("Failed to open Network Quick Settings menu: ", err)
+	}
+
+	// Determine the device's name to find it in the Quick Settings panel.
+	deviceInfo, err := s.FixtValue().(*crossdevice.FixtData).AndroidDevice.GetAndroidAttributes(ctx)
+	if err != nil {
+		s.Fatal("Failed to retrieve information about paired phone")
+	}
+
+	// Model name is provided with "_" instead of spaces, so replace to match the UI label.
+	deviceName := strings.Replace(deviceInfo.ModelName, "_", " ", -1)
+	mobileNetworkView := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)connect to .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedViewRevamp)
+
+	// Click on the button to connect to the mobile device.
+	if err := ui.LeftClick(mobileNetworkView)(ctx); err != nil {
+		s.Fatal("Failed to click on the instant tether device in Quick Settings menu: ", err)
+	}
+
+	// Ensure a connection has been established.
+	detailsBtn := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)open settings for .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedViewRevamp)
+
+	// Since the test has no exposure to the contents of the NetworkListNetworkItemView, we check that the button's label has
+	// changed to indicate that it has intiated a network connection.
+	if err := ui.WaitUntilExists(detailsBtn)(ctx); err != nil {
+		s.Fatal("Failed to find network detail button confirming Instant Tethering is connected: ", err)
+	}
+
+	// Because Quick Settings does not show when the connection is established, and we don't
+	// want to wait an arbitrary time, we'll check OS Settings for tethering confirmation.
+	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, instanttether.TetherURL, func(context.Context) error { return nil })
+
+	// Ensure the CrOS UI updates to reflect the tethered network's status.
+	if err := settings.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`(?i)instant tethering network, signal strength \d+%`)))(ctx); err != nil {
+		s.Fatal("Failed to find text confirming Instant Tethering is connected: ", err)
+	}
+
+	// CrOS is currently connected to ethernet, WiFi, and has access to Android's mobile data.
+	// To test that the tethered network can actually be used to access the internet on CrOS,
+	// disable all other sources of internet by turning off the ethernet adapter and disconnecting
+	// from the available WiFi network. Then tethering will be the only active network source,
+	// and we can ensure CrOS still has internet access.
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed creating shill manager proxy: ", err)
+	}
+	ethEnableFunc, err := manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
+	if err != nil {
+		s.Fatal("Unable to disable ethernet: ", err)
+	}
+	defer ethEnableFunc(cleanupCtx)
+
+	// Just disconnect from the WiFi network instead of disabling it via shill (like we did for ethernet),
+	// since the wifi adapter still needs to be on to use tethering.
+	if err := crossdevice.DisconnectFromWifi(ctx); err != nil {
+		s.Fatal("Failed to disconnect wifi: ", err)
+	}
+	defer crossdevice.ConnectToWifi(cleanupCtx)
+
+	// See if we have internet access over the tethered connection.
+	if err := testing.Poll(ctx, func(context.Context) error {
+		if err := instanttether.NetworkAvailable(ctx, tconn, cr); err != nil {
+			return errors.Wrap(err, "still waiting for network to be available")
+		}
+		return nil
+
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		s.Fatal("Network not available after connecting with Instant Tethering")
+	}
+}
