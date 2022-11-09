@@ -12,15 +12,15 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/localstate"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/testing"
 )
 
-// BackwardRun migrates user profile from Lacros to Ash and waits until migration is marked as completed by Ash.
+// BackwardRun starts Chrome and waits until Lacros to Ash migration is marked as completed by Ash.
 // Once the migration is completed, it will relaunch Ash Chrome and return the new `chrome.Chrome` instance.
-func BackwardRun(ctx context.Context, opts []lacrosfixt.Option) (*chrome.Chrome, error) {
+// Callers are expected to add the Chrome options and set up the environment to trigger backward migration.
+func BackwardRun(ctx context.Context, chromeOpts []chrome.Option) (*chrome.Chrome, error) {
 	// TODO(chromium:1290297): This is a hack.
 	// chrome.New doesn't really support profile migration because it
 	// doesn't anticipate the additional Chrome restart that profile
@@ -31,12 +31,11 @@ func BackwardRun(ctx context.Context, opts []lacrosfixt.Option) (*chrome.Chrome,
 	// In order to obtain a valid *Chrome value for the test to continue
 	// with, we restart Chrome once more after profile migration.
 	testing.ContextLog(ctx, "Restarting for profile migration")
-	chromeOpts := []chrome.Option{
+	chromeOpts = append(chromeOpts,
 		chrome.KeepState(),
 		chrome.RemoveNotification(false),
-		chrome.EnableFeatures("LacrosProfileBackwardMigration"),
 		chrome.DisableFeatures("LacrosSupport"),
-	}
+	)
 
 	crDoNotUse, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
@@ -48,11 +47,11 @@ func BackwardRun(ctx context.Context, opts []lacrosfixt.Option) (*chrome.Chrome,
 		}
 	}()
 
-	testing.ContextLog(ctx, "Waiting for backward profile migration to complete")
-	userHash, err := cryptohome.UserHash(ctx, chrome.DefaultUser)
+	userHash, err := cryptohome.UserHash(ctx, crDoNotUse.Creds().User)
 	if err != nil {
 		return nil, err
 	}
+	testing.ContextLog(ctx, "Waiting for backward profile migration to complete for ", userHash)
 	pref := "lacros.profile_data_backward_migration_completed_for_user." + userHash
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		completedVal, err := localstate.UnmarshalPref(browser.TypeAsh, pref)
