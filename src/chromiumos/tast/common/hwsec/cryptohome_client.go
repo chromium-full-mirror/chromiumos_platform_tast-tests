@@ -1117,10 +1117,20 @@ func (u *CryptohomeClient) AuthenticateRecoveryAuthFactor(ctx context.Context, a
 }
 
 // AuthenticateSmartCardAuthFactor authenticates an AuthSession with a given authSessionID via smart card.
-func (u *CryptohomeClient) AuthenticateSmartCardAuthFactor(ctx context.Context, authSessionID, label string, authConfig *AuthConfig) error {
+func (u *CryptohomeClient) AuthenticateSmartCardAuthFactor(ctx context.Context, authSessionID, label string, authConfig *AuthConfig) (*uda.AuthenticateAuthFactorReply, error) {
 	extraFlags := authConfigToExtraFlags(authConfig)
-	_, err := u.binary.authenticateSmartCardAuthFactor(ctx, authSessionID, label, extraFlags)
-	return err
+	binaryMsg, err := u.binary.authenticateSmartCardAuthFactor(ctx, authSessionID, label, extraFlags)
+
+	// Unmarshal proto first, even if there was an error.
+	reply := &uda.AuthenticateAuthFactorReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthFactor reply")
+	}
+	if err != nil {
+		return reply, errors.Wrap(err, "AuthenticateAuthFactor failed")
+	}
+
+	return reply, nil
 }
 
 // AddCredentialsWithAuthSession creates the credentials for the user with given password.

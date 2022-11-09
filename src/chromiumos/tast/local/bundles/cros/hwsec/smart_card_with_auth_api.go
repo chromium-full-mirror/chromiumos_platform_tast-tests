@@ -13,6 +13,7 @@ import (
 
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
+	cryptohomecommon "chromiumos/tast/common/cryptohome"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -26,7 +27,7 @@ import (
 // between the types of backing store.
 type smartCardWithAuthAPIParam struct {
 	// Specifies whether to use user secret stash.
-	useUserSecretStash bool
+	useUserSecretStash hwsec.UserSecretStashStatus
 	// Specifies whether to use AuthFactor or AuthSession based API's.
 	useAuthFactor bool
 	// Specifies which group of encryption the smart card supports.
@@ -46,7 +47,7 @@ func init() {
 		Params: []testing.Param{{
 			Name: "smart_card_with_auth_factor_with_no_uss_rsassa_sha1",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash: false,
+				useUserSecretStash: hwsec.NotEnabled,
 				useAuthFactor:      true,
 				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
@@ -55,14 +56,14 @@ func init() {
 		}, {
 			Name: "smart_card_with_auth_factor_with_no_uss_rsassa_all",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash:  false,
+				useUserSecretStash:  hwsec.NotEnabled,
 				useAuthFactor:       true,
 				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
 			},
 		}, {
 			Name: "smart_card_with_auth_session_rsassa_sha1",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash: false,
+				useUserSecretStash: hwsec.NotEnabled,
 				useAuthFactor:      false,
 				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
@@ -71,14 +72,14 @@ func init() {
 		}, {
 			Name: "smart_card_with_auth_session_rsassa_all",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash:  false,
+				useUserSecretStash:  hwsec.NotEnabled,
 				useAuthFactor:       false,
 				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
 			},
 		}, {
 			Name: "smart_card_with_auth_factor_with_uss_rsassa_sha1",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash: true,
+				useUserSecretStash: hwsec.Enabled,
 				useAuthFactor:      true,
 				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
@@ -87,7 +88,14 @@ func init() {
 		}, {
 			Name: "smart_card_with_auth_factor_with_uss_rsassa_all",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash:  true,
+				useUserSecretStash:  hwsec.Enabled,
+				useAuthFactor:       true,
+				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
+			},
+		}, {
+			Name: "smart_card_with_auth_factor_with_uss_rollback",
+			Val: smartCardWithAuthAPIParam{
+				useUserSecretStash:  hwsec.Rolledback,
 				useAuthFactor:       true,
 				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
 			},
@@ -132,7 +140,7 @@ func SmartCardWithAuthAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	if userParam.useUserSecretStash {
+	if userParam.useUserSecretStash != hwsec.NotEnabled {
 		// Enable the UserSecretStash experiment for the duration of the test by
 		// creating a flag file that's checked by cryptohomed.
 		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
@@ -186,11 +194,21 @@ func SmartCardWithAuthAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmount vaults for preparation: ", err)
 	}
 
+	// Rollback USS to VaultKeyset if flagged so and continue the test.
+	if userParam.useUserSecretStash == hwsec.Rolledback {
+		// Disable UserSecretStash.
+		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
+		if err != nil {
+			s.Fatal("Failed to disable UserSecretStash: ", err)
+		}
+		defer cleanupUSSDisabled(ctx)
+	}
+
 	// Remount the specific vault, remount should succeed.
 	// Ensure we can reauthenticate with correct Smart Card.
-	authSessionID, err := authenticateWithSmartCard(ctx, testUser, userParam, authConfig)
+	authSessionID, err := authenticateWithSmartCard(ctx, testUser, userParam, authConfig, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
-		s.Fatal("Failed to run authenticateWithCorrectSmartCard with error: ", err)
+		s.Fatal("Failed to run authenticateWithSmartCard with error: ", err)
 	}
 
 	if err := client.PreparePersistentVault(ctx, authSessionID, false); err != nil {
@@ -202,15 +220,40 @@ func SmartCardWithAuthAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read back test file: ", err)
 	}
 
+	// Invalidate AuthSession.
+	if err := client.InvalidateAuthSession(ctx, authSessionID); err != nil {
+		s.Fatal("Failed to invalidate AuthSession: ", authSessionID)
+	}
+
+	// Reauthenticate success using the lightweight in-session key check.
+	authSessionID, err = authenticateWithSmartCard(ctx, testUser, userParam, authConfig, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY)
+	if err != nil {
+		s.Fatal("Failed to run authenticateWithSmartCard with error: ", err)
+	}
+
+	// Invalidate AuthSession.
+	if err := client.InvalidateAuthSession(ctx, authSessionID); err != nil {
+		s.Fatal("Failed to invalidate AuthSession: ", authSessionID)
+	}
+
+	// Reauthenticate failure using the lightweight in-session key check.
+	authSessionID, err = authenticateWithSmartCard(ctx, "corrupted_user", userParam, authConfig, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY)
+	if err == nil {
+		s.Fatal("authenticateWithSmartCard succeeded with wrong credentials: ", err)
+	}
+
+	// Invalidate AuthSession.
+	if err := client.InvalidateAuthSession(ctx, authSessionID); err != nil {
+		s.Fatal("Failed to invalidate AuthSession: ", authSessionID)
+	}
 	// Clear AuthSession and unmount previously mounted vault.
-	client.InvalidateAuthSession(ctx, authSessionID)
 	if err := client.UnmountAll(ctx); err != nil {
 		s.Fatal("Failed to unmount vaults for preparation: ", err)
 	}
 
 	// Remount should fail.
 	// Failure occurs because of manually "corrputed_user".
-	if _, err = authenticateWithSmartCard(ctx, "corrputed_user", userParam, authConfig); err == nil {
+	if _, err = authenticateWithSmartCard(ctx, "corrupted_user", userParam, authConfig, uda.AuthIntent_AUTH_INTENT_DECRYPT); err == nil {
 		s.Fatal("Authentication with wrong credentials is expected to fail but succeeded: ", err)
 	}
 
@@ -274,22 +317,31 @@ func setupUserWithSmartCard(ctx context.Context, testUser string, isEphemeral bo
 }
 
 // authenticateWithSmartCard authenticates a given user with the correct Smart Card.
-func authenticateWithSmartCard(ctx context.Context, testUser string, userParam smartCardWithAuthAPIParam, authConfig *hwsec.AuthConfig) (string, error) {
+func authenticateWithSmartCard(ctx context.Context, testUser string, userParam smartCardWithAuthAPIParam, authConfig *hwsec.AuthConfig, authIntent uda.AuthIntent) (string, error) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
 	// Authenticate a new auth session via the new added Smart Card auth factor.
-	_, authSessionID, err := cryptohome.StartAuthSession(ctx, testUser /*isEphemeral=*/, false, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	_, authSessionID, err := cryptohome.StartAuthSession(ctx, testUser /*isEphemeral=*/, false, authIntent)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to start auth session for Smart Card authentication")
 	}
 
 	if userParam.useAuthFactor {
-		if err := cryptohome.AuthenticateSmartCardAuthFactor(ctx, authSessionID, smartCardLabel, authConfig); err != nil {
-			return "", errors.Wrap(err, "failed to authenticate with AuthFactor")
+		reply, err := cryptohome.AuthenticateSmartCardAuthFactor(ctx, authSessionID, smartCardLabel, authConfig)
+		if err != nil {
+			return authSessionID, errors.Wrap(err, "failed to authenticate with AuthFactor")
+		}
+		// Check that reply matches with correct AuthIntent.
+		var setOfExpectedIntents = []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY}
+		if authIntent == uda.AuthIntent_AUTH_INTENT_DECRYPT {
+			setOfExpectedIntents = append(setOfExpectedIntents, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+		}
+		if err = cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, setOfExpectedIntents); err != nil {
+			return authSessionID, errors.Wrap(err, "unexpected AuthSession authorized intents")
 		}
 	} else {
 		if err = cryptohome.AuthenticateChallengeCredentialWithAuthSession(ctx, authSessionID, smartCardLabel, authConfig); err != nil {
-			return "", errors.Wrap(err, "failed to authenticate with AuthSession")
+			return authSessionID, errors.Wrap(err, "failed to authenticate with AuthSession")
 		}
 	}
 	return authSessionID, nil

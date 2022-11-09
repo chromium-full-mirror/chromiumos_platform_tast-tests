@@ -331,7 +331,7 @@ func (c *cryptohomeBinary) authenticateRecoveryAuthFactor(ctx context.Context, a
 
 // authenticateSmartCardAuthFactor calls "cryptohome --action=authenticate_auth_factor --challenge_response_algo=<algorithm>".
 func (c *cryptohomeBinary) authenticateSmartCardAuthFactor(ctx context.Context, authSessionID, label string, extraFlags []string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label}
+	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label}
 	args = append(args, extraFlags...)
 	return c.call(ctx, args...)
 }
