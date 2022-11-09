@@ -191,6 +191,7 @@ var oldAppTests = []string{
 	"app_gedit.go",
 	"app_gedit_filesharing.go",
 	"app_gedit_unshare_folder.go",
+	"app_vscode_from_file_manager.go",
 	"app_vscode.go",
 	"restart_app.go",
 }
