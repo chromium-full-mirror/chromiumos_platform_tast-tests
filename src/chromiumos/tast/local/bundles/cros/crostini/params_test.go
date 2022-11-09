@@ -181,11 +181,13 @@ func TestRestartParams(t *testing.T) {
 	}
 }
 
-var appTests = []string{
+// These tests do not include the container version in the full test name for
+// buster. TODO(b/234390590): move these to appTests.
+// Do not add new tests here.
+var oldAppTests = []string{
 	"app_android_studio.go",
 	"app_eclipse.go",
 	"app_emacs.go",
-	"app_firefox_install.go",
 	"app_gedit.go",
 	"app_gedit_filesharing.go",
 	"app_gedit_unshare_folder.go",
@@ -193,8 +195,8 @@ var appTests = []string{
 	"restart_app.go",
 }
 
-func TestAppTestParams(t *testing.T) {
-	for _, filename := range appTests {
+func TestOldAppTestParams(t *testing.T) {
+	for _, filename := range oldAppTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
 				Timeout:               15 * time.Minute,
@@ -215,6 +217,34 @@ func TestAppTestParams(t *testing.T) {
 				DeviceMode:            devicemode.ClamshellMode,
 				NoBusterInTestName:    true,
 				BullseyeInformational: true,
+			}})
+		genparams.Ensure(t, filename, params)
+	}
+}
+
+var appTests = []string{
+	"app_audacity.go",
+	"app_firefox_install.go",
+}
+
+func TestAppTestParams(t *testing.T) {
+	for _, filename := range appTests {
+		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
+			{
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.TabletMode,
+			},
+			{
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.ClamshellMode,
 			}})
 		genparams.Ensure(t, filename, params)
 	}
