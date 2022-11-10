@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/bundles/cros/spera/videoeditingcuj"
+	"chromiumos/tast/local/bundles/cros/spera/videoeditingapp"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -20,7 +20,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EDUVideoEditingCUJ,
+		Func:         VideoEditingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of editing video on the web",
 		Contacts:     []string{"xliu@cienet.com", "jane.yang@cienet.com"},
@@ -33,13 +33,13 @@ func init() {
 		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Name:    "advanced_wevideo",
+				Name:    "advanced",
 				Fixture: "enrolledLoggedInToCUJUser",
 				Timeout: 5 * time.Minute,
 				Val:     browser.TypeAsh,
 			},
 			{
-				Name:              "advanced_lacros_wevideo",
+				Name:              "advanced_lacros",
 				Timeout:           5 * time.Minute,
 				Fixture:           "enrolledLoggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
@@ -49,7 +49,7 @@ func init() {
 	})
 }
 
-func EDUVideoEditingCUJ(ctx context.Context, s *testing.State) {
+func VideoEditingApp(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
@@ -88,7 +88,7 @@ func EDUVideoEditingCUJ(ctx context.Context, s *testing.State) {
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	if err := videoeditingcuj.Run(ctx, s.OutDir(), traceConfigPath, cr, tabletMode, s.Param().(browser.Type)); err != nil {
-		s.Fatal("Failed to run the video editing on the web cuj: ", err)
+	if err := videoeditingapp.Run(ctx, s.OutDir(), traceConfigPath, cr, tabletMode, s.Param().(browser.Type)); err != nil {
+		s.Fatal("Failed to run the video editing on the web test: ", err)
 	}
 }

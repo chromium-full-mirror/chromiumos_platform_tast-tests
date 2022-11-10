@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package videoeditingcuj contains the test code for VideoEditingOnTheWeb CUJ.
-package videoeditingcuj
+// Package videoeditingapp contains the test code for VideoEditingApp.
+package videoeditingapp
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/spera/videoeditingcuj/wevideo"
+	"chromiumos/tast/local/bundles/cros/spera/videoeditingapp/wevideo"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -40,7 +40,7 @@ const (
 	docParagraph    = "The Little Prince's story follows a young prince who visits various planets in space, including Earth, and addresses themes of loneliness, friendship, love, and loss."
 )
 
-// Run runs the EDUVideoEditingCUJ test.
+// Run runs the VideoEditingApp test.
 func Run(ctx context.Context, outDir, traceConfigPath string, cr *chrome.Chrome, tabletMode bool, bt browser.Type) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
