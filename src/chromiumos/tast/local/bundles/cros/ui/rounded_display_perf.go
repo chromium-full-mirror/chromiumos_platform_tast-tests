@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
@@ -19,10 +20,16 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
+	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
+
+type TestParam struct {
+	RoundedDisplay    bool
+	BackgroundWindows bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -34,10 +41,19 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{Name: "rounded_display_on", Val: true},
-			{Name: "rounded_display_off", Val: false},
-		},
+		Params: []testing.Param{{
+			Name: "rounded_display_on",
+			Val:  TestParam{RoundedDisplay: true, BackgroundWindows: true},
+		}, {
+			Name: "rounded_display_off",
+			Val:  TestParam{RoundedDisplay: false, BackgroundWindows: true},
+		}, {
+			Name: "rounded_display_on_no_background_windows",
+			Val:  TestParam{RoundedDisplay: true, BackgroundWindows: false},
+		}, {
+			Name: "rounded_display_off_no_background_windows",
+			Val:  TestParam{RoundedDisplay: false, BackgroundWindows: false},
+		}},
 	})
 }
 
@@ -49,8 +65,9 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	param := s.Param().(TestParam)
 	var opts []chrome.Option
-	if s.Param().(bool) {
+	if param.RoundedDisplay {
 		opts = append(opts, chrome.EnableFeatures("kRoundedDisplay"))
 	}
 	cr, err := chrome.New(ctx, opts...)
@@ -88,6 +105,45 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close()
 
+	displayInfo, err := display.GetInternalInfo(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get display info: ", err)
+	}
+	workArea := displayInfo.WorkArea
+	displayBounds := displayInfo.Bounds
+	s.Log("Display bounds: ", displayBounds)
+
+	if param.BackgroundWindows {
+		// Open 4 app windows to cover the whole screen.
+		for i := 0; i < 4; i++ {
+			if err := apps.Launch(ctx, tconn, apps.Gallery.ID); err != nil {
+				s.Fatal("Failed to launch: ", err)
+			}
+		}
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to get the window list: ", err)
+		}
+		if len(ws) != 4 {
+			s.Fatalf("Unexpected number of windows: got %d; want 4", len(ws))
+		}
+		windowBounds := []coords.Rect{
+			// First two windows are overlapped.
+			coords.NewRectLTRB(workArea.Right()*1/4, workArea.Top, workArea.Right()*3/4, workArea.CenterY()),
+			coords.NewRectLTRB(workArea.CenterX(), workArea.Top, workArea.Right(), workArea.CenterY()),
+			coords.NewRectLTRB(workArea.Left, workArea.Bottom()*3/4, workArea.Right()/4, workArea.Bottom()),
+			coords.NewRectLTRB(workArea.CenterX(), workArea.CenterY(), workArea.Right(), workArea.Bottom()),
+		}
+		for i, bound := range windowBounds {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, ws[i].ID, ash.WindowStateNormal); err != nil {
+				s.Fatal("Failed to set window state normal: ", err)
+			}
+			if _, _, err := ash.SetWindowBounds(ctx, tconn, ws[i].ID, bound, displayInfo.ID); err != nil {
+				s.Fatal("Failed to set window bounds: ", err)
+			}
+		}
+	}
+
 	// Open a Files window.
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
@@ -101,23 +157,13 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	}
 	startDragPt := titleBar.Location.CenterPoint()
 
-	// Verify that there is only one window, and get its ID.
-	ws, err := ash.GetAllWindows(ctx, tconn)
+	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		return w.Title == "Files - My files"
+	})
 	if err != nil {
-		s.Fatal("Failed to get the windows: ", err)
+		s.Fatal("Failed to get Files windows: ", err)
 	}
-	if len(ws) != 1 {
-		s.Fatalf("Unexpected number of windows: got %d; want 1", len(ws))
-	}
-	wID := ws[0].ID
-
-	// Get display info.
-	displayInfo, err := display.GetInternalInfo(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to obtain internal display info: ", err)
-	}
-	displayBounds := displayInfo.Bounds
-	s.Log("Display bounds: ", displayBounds)
+	wID := w.ID
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
