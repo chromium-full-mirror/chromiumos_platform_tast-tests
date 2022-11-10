@@ -33,7 +33,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EDUCastToClass,
+		Func:         CastToClass,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure the performance of casting to a screen connected to ADT-3. Additional chromecast hardware needs to be prepared before running this test",
 		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com"},
@@ -82,8 +82,8 @@ var videoSrc = youtube.VideoSrc{
 	Quality: targetResolution,
 }
 
-// EDUCastToClass measures the system performance by casting to a screen connected to ADT-3.
-func EDUCastToClass(ctx context.Context, s *testing.State) {
+// CastToClass measures the system performance by casting to a screen connected to ADT-3.
+func CastToClass(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	bt := s.Param().(browser.Type)
 	outDir := s.OutDir()
