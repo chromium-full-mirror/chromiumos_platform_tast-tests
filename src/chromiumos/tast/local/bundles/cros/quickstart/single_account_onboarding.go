@@ -50,4 +50,8 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('quick-start')", nil); err != nil {
 		s.Fatal("Failed to activate Quick Start onboarding: ", err)
 	}
+	s.Log("Calling accept fast pair half sheet")
+	if err := androidDevice.AcceptFastPairHalfsheet(ctx); err != nil {
+		s.Fatal("Failed to accept fast pair half sheet: ", err)
+	}
 }

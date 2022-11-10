@@ -482,3 +482,34 @@ func (c *AndroidDevice) AcceptTetherNotification(ctx context.Context) error {
 	}
 	return nil
 }
+
+// AcceptFastPairHalfsheet automates halfsheet verify and click using the UI.
+func (c *AndroidDevice) AcceptFastPairHalfsheet(ctx context.Context) error {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	// Close the wallpaper editing overlay on the phone. ui.KEYCODE_MENU can cause various tap+hold triggered menus to appear.
+	if err := c.Device.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_BACK))); err != nil {
+		return errors.Wrap(err, "failed to close wallpaper overlay on phone")
+	}
+
+	// Verify that the Halfsheet showed up on the phone.
+	card := d.Object(ui.ResourceID("com.google.android.gms:id/card"))
+	if err := card.WaitForExists(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find a card displaying the Halfsheet")
+	}
+	pairingPic := d.Object(ui.ResourceID("com.google.android.gms:id/pairing_pic"))
+	if err = pairingPic.WaitForExists(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find a Fast Pair Halfsheet with a pairing pic")
+	}
+
+	// Click on the Connect button after verifying the pair.
+	connectBtn := d.Object(ui.ResourceID("com.google.android.gms:id/connect_btn"))
+	if err = connectBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on the Connect button for Fast Pair")
+	}
+	return nil
+}

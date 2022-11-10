@@ -286,6 +286,7 @@ func ConfigureDevice(ctx context.Context, d *adb.Device, rooted bool) error {
 	}
 
 	// Prepare the device for Nearby Sharing by waking+unlocking the screen, enabling bluetooth, and extending the screen-off timeout.
+	// This was originally intended for Nearby Sharing but is useful for all cross device tests.
 	if err := d.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_WAKEUP))); err != nil {
 		return errors.Wrap(err, "failed to wake screen")
 	}
