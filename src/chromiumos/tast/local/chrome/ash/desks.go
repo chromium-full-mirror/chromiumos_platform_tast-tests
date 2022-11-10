@@ -44,9 +44,10 @@ const (
 // DesksInfo holds overall desks information.
 // https://cs.chromium.org/chromium/src/chrome/common/extensions/api/autotest_private.idl
 type DesksInfo struct {
-	ActiveDeskIndex int  `json:"activeDeskIndex"`
-	NumDesks        int  `json:"numDesks"`
-	IsAnimating     bool `json:"isAnimating"`
+	ActiveDeskIndex int      `json:"activeDeskIndex"`
+	NumDesks        int      `json:"numDesks"`
+	IsAnimating     bool     `json:"isAnimating"`
+	DeskContainers  []string `json:"deskContainers"`
 }
 
 // CreateNewDesk requests Ash to create a new Virtual Desk which would fail if

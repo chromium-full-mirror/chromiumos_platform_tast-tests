@@ -54,8 +54,17 @@ func init() {
 	})
 }
 
-// deskContainsWindow returns true if a window whose name is windowName was found as a child of the desk container whose name is deskContainerName.
-func deskContainsWindow(ctx context.Context, tconn *chrome.TestConn, deskContainerName string, finder *nodewith.Finder) (bool, error) {
+// deskContainsWindow returns true if a window whose name is windowName was found as a child of the desk identified by deskIndex.
+func deskContainsWindow(ctx context.Context, tconn *chrome.TestConn, deskIndex int, finder *nodewith.Finder) (bool, error) {
+	desksInfo, err := ash.GetDesksInfo(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "GetDesksInfoFailed failed")
+	}
+	if deskIndex >= len(desksInfo.DeskContainers) {
+		return false, errors.Errorf("Desk index %d is out of range (%d desks)", deskIndex, len(desksInfo.DeskContainers))
+	}
+	deskContainerName := desksInfo.DeskContainers[deskIndex]
+
 	// Find the given desk container first.
 	deskContainer := nodewith.HasClass(deskContainerName)
 	ui := uiauto.New(tconn)
@@ -140,22 +149,22 @@ func VirtualDesks(ctx context.Context, s *testing.State) {
 	// The settings window should exist on the second desk, while the browser window
 	// should be on the first desk.
 	for _, tc := range []struct {
-		desk   string
+		desk   int
 		finder *nodewith.Finder
 		want   bool
 	}{
 		{
-			desk:   "Desk_Container_B",
+			desk:   1,
 			finder: windowFinder,
 			want:   true,
 		},
 		{
-			desk:   "Desk_Container_A",
+			desk:   0,
 			finder: nodewith.NameContaining("about:blank").First(),
 			want:   true,
 		},
 		{
-			desk:   "Desk_Container_A",
+			desk:   0,
 			finder: windowFinder,
 			want:   false,
 		},
@@ -164,9 +173,9 @@ func VirtualDesks(ctx context.Context, s *testing.State) {
 			s.Error("deskContainsWindow Failed: ", err)
 		} else if found != tc.want {
 			if tc.want {
-				s.Errorf("Failed to find %s under %s", tc.finder.Pretty(), tc.desk)
+				s.Errorf("Failed to find %s under %d", tc.finder.Pretty(), tc.desk)
 			} else {
-				s.Errorf("%s should not be under %s", tc.finder.Pretty(), tc.desk)
+				s.Errorf("%s should not be under %d", tc.finder.Pretty(), tc.desk)
 			}
 		}
 	}
