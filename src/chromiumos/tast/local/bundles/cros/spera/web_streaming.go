@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/bundles/cros/spera/videoproxycuj"
+	"chromiumos/tast/local/bundles/cros/spera/webstreaming"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -20,9 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoProxyCUJ,
+		Func:         WebStreaming,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "A test case that simulates the Online Gaming Platform testing",
+		Desc:         "A test case that simulates the web streaming testing",
 		Contacts:     []string{"xliu@cienet.com", "jane.yang@cienet.com"},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
@@ -32,144 +32,144 @@ func init() {
 		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Name:    "essential_h264",
+				Name:    "h264_essential",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.H264DASH1080P60FPS,
+					VideoOption: webstreaming.H264DASH1080P60FPS,
 				},
 			},
 			{
-				Name:    "essential_vp9",
+				Name:    "h264_advanced",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.VP9DASH1080P60FPS,
+					VideoOption: webstreaming.H264DASH4K60FPS,
 				},
 			},
 			{
-				Name:    "essential_hevc",
+				Name:    "h265_essential",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.HEVC1080P60FPS,
+					VideoOption: webstreaming.HEVC1080P60FPS,
 				},
 			},
 			{
-				Name:    "advanced_h264",
+				Name:    "h265_advanced",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.H264DASH4K60FPS,
+					VideoOption: webstreaming.HEVC4K60FPS,
 				},
 			},
 			{
-				Name:    "advanced_av1",
+				Name:    "vp9_essential",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.AV1DASH60FPS,
+					VideoOption: webstreaming.VP9DASH1080P60FPS,
 				},
 			},
 			{
-				Name:    "advanced_vp9",
+				Name:    "vp9_advanced",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.VP9DASH4K60FPS,
+					VideoOption: webstreaming.VP9DASH4K60FPS,
 				},
 			},
 			{
-				Name:    "advanced_hevc",
+				Name:    "av1_advanced",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 20 * time.Minute,
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
-					VideoOption: videoproxycuj.HEVC4K60FPS,
+					VideoOption: webstreaming.AV1DASH60FPS,
 				},
 			},
 			{
-				Name:              "essential_lacros_h264",
+				Name:              "h264_essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.H264DASH1080P60FPS,
+					VideoOption: webstreaming.H264DASH1080P60FPS,
 				},
 			},
 			{
-				Name:              "essential_lacros_vp9",
+				Name:              "h264_advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.VP9DASH1080P60FPS,
+					VideoOption: webstreaming.H264DASH4K60FPS,
 				},
 			},
 			{
-				Name:              "essential_lacros_hevc",
+				Name:              "h265_essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.HEVC1080P60FPS,
+					VideoOption: webstreaming.HEVC1080P60FPS,
 				},
 			},
 			{
-				Name:              "advanced_lacros_h264",
+				Name:              "h265_advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.H264DASH4K60FPS,
+					VideoOption: webstreaming.HEVC4K60FPS,
 				},
 			},
 			{
-				Name:              "advanced_lacros_vp9",
+				Name:              "vp9_essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.VP9DASH4K60FPS,
+					VideoOption: webstreaming.VP9DASH1080P60FPS,
 				},
 			},
 			{
-				Name:              "advanced_lacros_av1",
+				Name:              "vp9_advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.AV1DASH60FPS,
+					VideoOption: webstreaming.VP9DASH4K60FPS,
 				},
 			},
 			{
-				Name:              "advanced_lacros_hevc",
+				Name:              "av1_advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoproxycuj.TestParams{
+				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
-					VideoOption: videoproxycuj.HEVC4K60FPS,
+					VideoOption: webstreaming.AV1DASH60FPS,
 				},
 			},
 		},
 	})
 }
 
-func VideoProxyCUJ(ctx context.Context, s *testing.State) {
-	p := s.Param().(videoproxycuj.TestParams)
+func WebStreaming(ctx context.Context, s *testing.State) {
+	p := s.Param().(webstreaming.TestParams)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
@@ -209,7 +209,7 @@ func VideoProxyCUJ(ctx context.Context, s *testing.State) {
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	if err := videoproxycuj.Run(ctx, cr, s.OutDir(), traceConfigPath, tabletMode, p.BrowserType, p.VideoOption); err != nil {
-		s.Fatal("Failed to run video proxy cuj: ", err)
+	if err := webstreaming.Run(ctx, cr, s.OutDir(), traceConfigPath, tabletMode, p.BrowserType, p.VideoOption); err != nil {
+		s.Fatal("Failed to run web streaming test: ", err)
 	}
 }
