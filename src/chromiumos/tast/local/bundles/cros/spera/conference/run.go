@@ -101,7 +101,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 		recorder.EnableTracing(outDir, traceConfigPath)
 	}
 	isNoRoom := roomType == NoRoom
-	isPlus := tier == cuj.Plus || (tier == cuj.Advanced && roomType == ClassRoomSizeForSperaV2)
+	isPlus := tier == cuj.Plus || (tier == cuj.Advanced && roomType == ClassRoomSize)
 	isPremium := tier == cuj.Premium || (tier == cuj.Advanced && roomType == LargeRoomSize)
 	meetTimeout := 50 * time.Second
 	if isNoRoom {

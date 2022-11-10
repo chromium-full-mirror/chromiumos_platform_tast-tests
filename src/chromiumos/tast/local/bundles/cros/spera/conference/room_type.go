@@ -16,20 +16,17 @@ const (
 	SmallRoomSize
 	// LargeRoomSize creates a conference room with 16 participants.
 	LargeRoomSize
-	// ClassRoomSizeForSperaV2 creates a conference room with 35 participants.
-	ClassRoomSizeForSperaV2
-	// ClassRoomSize creates a conference room with 38/49 participants.
+	// ClassRoomSize creates a conference room with 35/49 participants.
 	ClassRoomSize
 )
 
 // GoogleMeetRoomParticipants defines room size for Google meet cuj.
 var GoogleMeetRoomParticipants = map[RoomType]int{
-	NoRoom:                  0,
-	TwoRoomSize:             2,
-	SmallRoomSize:           6,
-	LargeRoomSize:           16,
-	ClassRoomSizeForSperaV2: 35,
-	ClassRoomSize:           49,
+	NoRoom:        0,
+	TwoRoomSize:   2,
+	SmallRoomSize: 6,
+	LargeRoomSize: 16,
+	ClassRoomSize: 35,
 }
 
 // ZoomRoomParticipants defines room size for Zoom cuj.
