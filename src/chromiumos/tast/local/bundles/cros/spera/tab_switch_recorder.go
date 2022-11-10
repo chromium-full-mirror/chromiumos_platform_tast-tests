@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/local/bundles/cros/spera/tabswitchcuj"
+	"chromiumos/tast/local/bundles/cros/spera/tabswitch"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/wpr"
@@ -17,9 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabSwitchCUJRecorder2,
+		Func:         TabSwitchRecorder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run tab-switching CUJ test in chromewpr recording mode",
+		Desc:         "Run tab-switching test in chromewpr recording mode",
 		Contacts:     []string{"abergman@google.com", "tclaiborne@chromium.org", "xliu@cienet.com", "alfredyu@cienet.com"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      30 * time.Minute,
@@ -45,7 +45,7 @@ func init() {
 	})
 }
 
-// TabSwitchCUJRecorder2 runs tab-switching CUJ test in chrome wpr recording mode. It will
+// TabSwitchRecorder runs tab switching test in chrome wpr recording mode. It will
 // record the premium scenario, which can be used for basic and plus testing as well.
 //
 // The test can either do recording on a DUT local WPR server, or a remote WPR server.
@@ -55,7 +55,7 @@ func init() {
 //  2. Run this test.
 //  3. Manually terminate wpr to output a record file on remote server.
 //  4. Check remote wpr configureation to find the record file
-func TabSwitchCUJRecorder2(ctx context.Context, s *testing.State) {
+func TabSwitchRecorder(ctx context.Context, s *testing.State) {
 	cr, ok := s.PreValue().(*chrome.Chrome)
 	if !ok {
 		s.Fatal("Failed to connect to Chrome")
@@ -63,5 +63,5 @@ func TabSwitchCUJRecorder2(ctx context.Context, s *testing.State) {
 	// is the dut tablet or not shouldn't affect to recording web content
 	// Currently recorder is supported for ash-Chrome only. We call Run2() with lFixtVal as nil.
 	// If support of lacros is needed, we need to enhance the test to pass lacrosFixtValue.
-	tabswitchcuj.Run2(ctx, s, cr, tabswitchcuj.Record, false, browser.TypeAsh)
+	tabswitch.Run(ctx, s, cr, tabswitch.Record, false, browser.TypeAsh)
 }

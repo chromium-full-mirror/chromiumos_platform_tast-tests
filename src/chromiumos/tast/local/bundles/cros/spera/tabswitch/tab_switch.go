@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package tabswitchcuj contains the test code for TabSwitchCUJ. The test is
-// extracted into this package to be shared between TabSwitchCUJRecorder and
-// TabSwitchCUJ.
-package tabswitchcuj
+// Package tabswitch contains the test code for TabSwitch. The test is
+// extracted into this package to be shared between TabSwitchRecorder and
+// TabSwitch.
+package tabswitch
 
 import (
 	"context"
@@ -468,10 +468,10 @@ func closeAllTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 	return cuj.CloseChrome(ctx, tconn)
 }
 
-// Run2 runs the TabSwitchCUJ test. It is invoked by TabSwitchCujRecorder2 to
-// record web contents via WPR and invoked by TabSwitchCUJ2 to execute the tests
+// Run runs the TabSwitch test. It is invoked by TabSwitchRecorder to
+// record web contents via WPR and invoked by TabSwitch to execute the tests
 // from the recorded contents. Additional actions will be executed in each tab.
-func Run2(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Level, isTablet bool, bt browser.Type) {
+func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Level, isTablet bool, bt browser.Type) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API, error: ", err)
