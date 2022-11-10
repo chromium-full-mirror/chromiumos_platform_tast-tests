@@ -94,6 +94,11 @@ func HidWake(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable servo keyboard wake capability: ", err)
 	}
 
+	// Set the servo keyboard's persist property
+	if err := fs.WriteFile(ctx, filepath.Join(dir, "power/persist"), []byte("1"), 0644); err != nil {
+		s.Fatal("Failed to set servo keyboard persist to 1: ", err)
+	}
+
 	// Suspend/Resume the DUT and check the wake source
 	if err := attemptSuspendAndWake(ctx, d, firstSuspendDuration, otherWakeSourceRegex, pxy); err != nil {
 		s.Fatal("Failed during first suspend: ", err)
