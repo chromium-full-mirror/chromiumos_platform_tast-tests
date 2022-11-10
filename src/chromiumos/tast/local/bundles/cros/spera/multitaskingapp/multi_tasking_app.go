@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package everydaymultitaskingcuj contains the test code for Everyday MultiTasking CUJ.
-package everydaymultitaskingcuj
+// Package multitaskingapp contains the test code for spera.MultiTaskingApp test.
+package multitaskingapp
 
 import (
 	"context"
@@ -87,7 +87,7 @@ type runResources struct {
 	browserApp apps.App
 }
 
-// Run runs the EverydayMultitaskingCUJ test.
+// Run runs the MultitaskingApp test.
 func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, params *RunParams) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
