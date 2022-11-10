@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/cros/ui/setup"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -25,7 +24,7 @@ import (
 
 const youtubeApkName = "youtube_1531188672.apk"
 
-type videoCUJParam struct {
+type videoStreamingAppParam struct {
 	tier        cuj.Tier
 	app         string
 	browserType browser.Type
@@ -33,7 +32,7 @@ type videoCUJParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoCUJ2,
+		Func:         VideoStreamingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the smoothess of switch between full screen YouTube video and another browser window",
 		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com", "cienet-development@googlegroups.com"},
@@ -48,131 +47,53 @@ func init() {
 		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Name:    "basic_youtube_web",
-				Fixture: "loggedInAndKeepState",
-				Timeout: 12 * time.Minute,
-				Val: videoCUJParam{
-					tier: cuj.Basic,
-					app:  youtube.YoutubeWeb,
-				},
-			}, {
-				Name:              "basic_lacros_youtube_web",
-				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           12 * time.Minute,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoCUJParam{
-					tier:        cuj.Basic,
-					app:         youtube.YoutubeWeb,
-					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "basic_youtube_web_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: videoCUJParam{
-					tier: cuj.Basic,
-					app:  youtube.YoutubeWeb,
-				},
-			}, {
-				Name:    "premium_youtube_web",
-				Fixture: "loggedInAndKeepState",
-				Timeout: 12 * time.Minute,
-				Val: videoCUJParam{
-					tier: cuj.Premium,
-					app:  youtube.YoutubeWeb,
-				},
-			}, {
-				Name:              "premium_lacros_youtube_web",
-				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           12 * time.Minute,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: videoCUJParam{
-					tier:        cuj.Premium,
-					app:         youtube.YoutubeWeb,
-					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "plus_youtube_web_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				Val: videoCUJParam{
-					tier: cuj.Plus,
-					app:  youtube.YoutubeWeb,
-				},
-			}, {
-				Name:      "essential_youtube_app",
+				Name:      "essential",
 				Fixture:   "loggedInAndKeepState",
 				Timeout:   10 * time.Minute,
 				ExtraData: []string{youtubeApkName},
-				Val: videoCUJParam{
+				Val: videoStreamingAppParam{
 					tier: cuj.Essential,
 					app:  youtube.YoutubeApp,
 				},
 			}, {
-				Name:              "essential_lacros_youtube_app",
+				Name:              "essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           10 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{youtubeApkName},
-				Val: videoCUJParam{
+				Val: videoStreamingAppParam{
 					tier:        cuj.Essential,
 					app:         youtube.YoutubeApp,
 					browserType: browser.TypeLacros,
 				},
 			}, {
-				Name:              "basic_youtube_app_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				ExtraData:         []string{youtubeApkName},
-				Val: videoCUJParam{
-					tier: cuj.Basic,
-					app:  youtube.YoutubeApp,
-				},
-			}, {
-				Name:      "advanced_youtube_app",
+				Name:      "advanced",
 				Fixture:   "loggedInAndKeepState",
 				Timeout:   10 * time.Minute,
 				ExtraData: []string{youtubeApkName},
-				Val: videoCUJParam{
+				Val: videoStreamingAppParam{
 					tier: cuj.Advanced,
 					app:  youtube.YoutubeApp,
 				},
 			}, {
-				Name:              "advanced_lacros_youtube_app",
+				Name:              "advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           10 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{youtubeApkName},
-				Val: videoCUJParam{
+				Val: videoStreamingAppParam{
 					tier:        cuj.Advanced,
 					app:         youtube.YoutubeApp,
 					browserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "plus_youtube_app_crosbolt",
-				Fixture:           "loggedInAndKeepState",
-				Timeout:           10 * time.Minute,
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				ExtraData:         []string{youtubeApkName},
-				Val: videoCUJParam{
-					tier: cuj.Plus,
-					app:  youtube.YoutubeApp,
 				},
 			},
 		},
 	})
 }
 
-// VideoCUJ2 performs the video cases including youtube web, and youtube app.
-func VideoCUJ2(ctx context.Context, s *testing.State) {
-	p := s.Param().(videoCUJParam)
+// VideoStreamingApp performs the video test on youtube app.
+func VideoStreamingApp(ctx context.Context, s *testing.State) {
+	videoStreamingAppParams := s.Param().(videoStreamingAppParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	a := s.FixtValue().(cuj.FixtureData).ARC
 
@@ -191,8 +112,7 @@ func VideoCUJ2(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	videoCUJParams := s.Param().(videoCUJParam)
-	app := videoCUJParams.app
+	app := videoStreamingAppParams.app
 	youtubeApkPath := ""
 	if app == youtube.YoutubeApp {
 		if v, ok := s.Var("spera.install_apk"); ok {
@@ -253,13 +173,13 @@ func VideoCUJ2(ctx context.Context, s *testing.State) {
 	testResources := youtube.TestResources{
 		Cr:        cr,
 		Tconn:     tconn,
-		Bt:        p.browserType,
+		Bt:        videoStreamingAppParams.browserType,
 		A:         a,
 		Kb:        kb,
 		UIHandler: uiHandler,
 	}
 	testParams := youtube.TestParams{
-		Tier:            videoCUJParams.tier,
+		Tier:            videoStreamingAppParams.tier,
 		App:             app,
 		OutDir:          s.OutDir(),
 		TabletMode:      tabletMode,
