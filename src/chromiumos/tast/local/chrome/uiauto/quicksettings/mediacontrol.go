@@ -18,7 +18,7 @@ import (
 var MediaControlsPod = nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(RootFinder)
 
 // MediaControlsDetailView is the detailed Media controls view within the Quick Settings.
-var MediaControlsDetailView = nodewith.HasClass("TrayDetailedView")
+var MediaControlsDetailView = nodewith.HasClass("UnifiedMediaControlsDetailedView")
 
 // PinnedMediaControls is the pinned 'Media controls' widget in shelf.
 var PinnedMediaControls = nodewith.Role(role.Button).Name("Control your music, videos, and more").Ancestor(StatusAreaWidget)

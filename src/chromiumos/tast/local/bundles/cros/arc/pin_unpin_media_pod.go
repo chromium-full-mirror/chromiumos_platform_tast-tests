@@ -9,6 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/apputil"
 	"chromiumos/tast/local/arc/apputil/youtube"
@@ -21,9 +25,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -63,24 +64,29 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to create the keyboard: ", err)
-	}
-	defer kb.Close(ctx)
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to create the keyboard: ", err)
+	}
+	defer kb.Close(cleanupCtx)
+
 	// This test plays music from two ARC++ apps to verify that there are two music display in media control.
-	// The media control will be dismissed once another fullscreen app has launched.
+	// The media control will be dismissed once another full-screen app has launched.
 	// Therefore, this test can only be conducted under clamshell mode.
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure in tablet mode: ", err)
 	}
 	defer cleanup(cleanupCtx)
+
+	// The attempt to play media needed to be separated from launching the app since
+	// the app window could be in full-screen state (ash.WindowStateFullscreen) by default,
+	// which any full-screen window will cause all other medias to be paused automatically and the media controls will be gone.
+	var playMediaActions []uiauto.Action
 
 	var currentMediaName string
 	for appName, media := range map[string]*apputil.Media{
@@ -115,19 +121,34 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 		}
 		defer app.Close(cleanupCtx, cr, s.HasError, filepath.Join(s.OutDir(), appName))
 
-		// The media control will be dismissed once another fullscreen app has launched.
+		// The media control will be dismissed once another full-screen app has launched.
 		// Therefore, set window state to normal state is essential.
 		if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, appPkgName, ash.WindowStateNormal); err != nil {
 			s.Fatalf("Failed to set %s window state to normal: %v", appPkgName, err)
 		}
 
-		if err := app.Play(ctx, media); err != nil {
+		// Dismiss mobile prompt before another app launched. Otherwise, there will be two identical UI nodes might fail to be dismissed.
+		if err := apputil.DismissMobilePrompt(ctx, tconn); err != nil {
+			s.Fatal("Failed to dismiss mobile prompt: ", err)
+		}
+
+		// Attempt to play the media after all apps are launched and set as normal state (ash.WindowStateNormal).
+		playMediaActions = append(playMediaActions, focusOnAppWindowAndPlay(tconn, appPkgName, app, media))
+	}
+
+	for _, action := range playMediaActions {
+		if err := action(ctx); err != nil {
 			s.Fatal("Failed to play media: ", err)
 		}
 	}
 
-	// Media controls pod is pinned by default, unpin it for the test.
-	if err := quicksettings.UnpinMediaControlsPod(tconn)(ctx); err != nil {
+	ui := uiauto.New(tconn)
+
+	// Unpin media pod if it is pinned by default.
+	if err := uiauto.IfSuccessThen(
+		ui.WaitUntilExists(quicksettings.PinnedMediaControls),
+		quicksettings.UnpinMediaControlsPod(tconn),
+	)(ctx); err != nil {
 		s.Fatal("Failed to ensure media controls pod is unpinned: ", err)
 	}
 
@@ -136,8 +157,6 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 	}
 	defer quicksettings.Hide(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_quicksettings")
-
-	ui := uiauto.New(tconn)
 
 	// currentMediaName is used to enter the media control pod detail view,
 	// where the pin button and all media control panels are located.
@@ -151,6 +170,26 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 
 	if err := pinAndVerify(ui, tconn, currentMediaName)(ctx); err != nil {
 		s.Fatal("Failed to pin again and verify: ", err)
+	}
+}
+
+// focusOnAppWindowAndPlay returns an action that plays the media after focusing on the app.
+func focusOnAppWindowAndPlay(tconn *chrome.TestConn, pkgName string, player apputil.ARCMediaPlayer, media *apputil.Media) uiauto.Action {
+	return func(ctx context.Context) error {
+		window, err := ash.GetARCAppWindowInfo(ctx, tconn, pkgName)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get window %s", pkgName)
+		}
+
+		if err := window.ActivateWindow(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to activate window")
+		}
+
+		if err := player.Play(ctx, media); err != nil {
+			return errors.Wrapf(err, "failed to play app %s", pkgName)
+		}
+
+		return nil
 	}
 }
 
