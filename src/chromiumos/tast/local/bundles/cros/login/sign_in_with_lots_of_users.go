@@ -40,14 +40,16 @@ func init() {
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{
 			{
-				Name:    "10_users",
-				Val:     10,
-				Timeout: 5 * time.Minute,
+				Name: "10_users",
+				Val:  10,
+				// Each user pod takes up to 45 seconds to finish creating on low-end DUT, and login / verify also needs almost the same, which is about a minute and half for each user.
+				Timeout: 10 * 1.5 * time.Minute,
 			},
 			{
-				Name:    "20_users",
-				Val:     20,
-				Timeout: 10 * time.Minute,
+				Name: "20_users",
+				Val:  20,
+				// Each user pod takes up to 45 seconds to finish creating on low-end DUT, and login / verify also needs almost the same, which is about a minute and half for each user.
+				Timeout: 20 * 1.5 * time.Minute,
 			},
 		},
 	})
@@ -62,7 +64,8 @@ func SignInWithLotsOfUsers(ctx context.Context, s *testing.State) {
 
 	userCount := s.Param().(int)
 	testCreds := []chrome.Creds{deviceOwner}
-	for i := 0; i < userCount; i++ {
+	// Minus the device owner.
+	for i := 0; i < userCount-1; i++ {
 		userCreds := chrome.Creds{User: fmt.Sprintf("test_user%d@gmail.com", i), Pass: "test0000"}
 		s.Log("Creating new user pod: ", userCreds.User)
 		if err := userutil.CreateUser(ctx, userCreds.User, userCreds.Pass, chrome.KeepState()); err != nil {
