@@ -700,3 +700,28 @@ func (vkbCtx *VirtualKeyboardContext) GlideTyping(keys []string, validateResultF
 		)(ctx)
 	}
 }
+
+// TapAccentKey returns a user action to simulate typing an accent key on virtual keyboard.
+func (vkbCtx *VirtualKeyboardContext) TapAccentKey(baseKey, accentKey string) uiauto.Action {
+	accentContainerFinder := nodewith.HasClass("accent-container")
+	keyFinder := KeyByNameIgnoringCase(baseKey)
+	accentKeyFinder := nodewith.Ancestor(accentContainerFinder).Name(accentKey).Role(role.StaticText)
+
+	return uiauto.Combine("input accent letter with virtual keyboard",
+		vkbCtx.ui.MouseMoveTo(keyFinder, 10*time.Millisecond),
+		mouse.Press(vkbCtx.tconn, mouse.LeftButton),
+		vkbCtx.ui.WithInterval(time.Second).RetrySilently(10, vkbCtx.ui.WaitForLocation(accentContainerFinder)),
+		vkbCtx.ui.MouseMoveTo(accentKeyFinder, 500*time.Millisecond),
+		mouse.Release(vkbCtx.tconn, mouse.LeftButton),
+	)
+}
+
+// TapScreenTriggerVK returns an action that simulates tapping screen to trigger a virtual keyboard.
+func (vkbCtx *VirtualKeyboardContext) TapScreenTriggerVK(touchCtx *touch.Context, tconn *chrome.TestConn, contentArea *nodewith.Finder) uiauto.Action {
+	return uiauto.NamedCombine("tap screen to trigger vk",
+		vkbCtx.ui.WaitUntilExists(contentArea),
+		touchCtx.Tap(contentArea),
+		touchCtx.Tap(contentArea),
+		vkbCtx.ui.WaitForLocation(vkRootFinder),
+	)
+}

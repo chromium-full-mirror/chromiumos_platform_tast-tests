@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -57,4 +58,25 @@ func waitForFieldTextToBe(tconn *chrome.TestConn, finder *nodewith.Finder, expec
 			}
 			return nil
 		})
+}
+
+// DeleteDocsOrSlidesContent used for clean the test environment
+func DeleteDocsOrSlidesContent(ctx context.Context, tconn *chrome.TestConn, appType string) error {
+	var webArea = nodewith.NameContaining(appType).Role(role.RootWebArea)
+	ui := uiauto.New(tconn)
+	application := nodewith.Role(role.Application).Ancestor(webArea)
+	menu := nodewith.Role(role.Menu).Ancestor(application)
+	editButton := nodewith.Name("Edit").Role(role.MenuItem).Ancestor(application)
+	selectAllMenuItem := nodewith.NameContaining("Select all").Role(role.MenuItem)
+	delete := nodewith.NameContaining("Delete").Role(role.MenuItem)
+
+	if err := uiauto.NamedCombine("delete all content",
+		cuj.ExpandMenu(tconn, editButton, menu, 200),
+		ui.DoDefaultUntil(selectAllMenuItem, ui.WithTimeout(shortUITimeout).WaitUntilGone(selectAllMenuItem)),
+		cuj.ExpandMenu(tconn, editButton, menu, 200),
+		ui.DoDefaultUntil(delete, ui.WithTimeout(shortUITimeout).WaitUntilGone(delete)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to delete all the content")
+	}
+	return nil
 }

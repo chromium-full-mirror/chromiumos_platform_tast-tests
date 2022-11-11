@@ -1,0 +1,60 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package googleapps
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/common/action"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
+)
+
+// sheetsName represents the name of the Google Sheets web area.
+const sheetsName = "Google Sheets"
+
+var sheetsWebArea = nodewith.NameContaining(sheetsName).Role(role.RootWebArea)
+
+// DeleteSheets returns an action to delete the document.
+func DeleteSheets(tconn *chrome.TestConn) action.Action {
+	ui := uiauto.New(tconn)
+
+	application := nodewith.Role(role.Application).Ancestor(sheetsWebArea) // Google Sheets application node.
+	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(application).Onscreen()
+	menu := nodewith.Role(role.Menu).Ancestor(application)
+	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
+	goToSheetsHome := nodewith.Name("Go to Sheets home screen").Role(role.Button)
+
+	return uiauto.NamedCombine("delete document",
+		cuj.ExpandMenu(tconn, fileButton, menu, 400),
+		ui.DoDefault(moveToTrash),
+		ui.DoDefault(goToSheetsHome),
+	)
+}
+
+// DeleteCellValue used for clean the content value in the cell.
+func DeleteCellValue(ctx context.Context, tconn *chrome.TestConn) error {
+	var webArea = nodewith.NameContaining("Sheets").Role(role.RootWebArea)
+	ui := uiauto.New(tconn)
+	application := nodewith.Role(role.Application).Ancestor(webArea)
+	menu := nodewith.Role(role.Menu).Ancestor(application)
+	editButton := nodewith.Name("Edit").Role(role.MenuItem).Ancestor(application).Onscreen()
+	delete := nodewith.NameContaining("Delete").Role(role.MenuItem)
+	values := nodewith.NameContaining("Values").Role(role.MenuItem)
+
+	if err := uiauto.NamedCombine("delete cell value",
+		cuj.ExpandMenu(tconn, editButton, menu, 200),
+		ui.DoDefaultUntil(delete, ui.WithTimeout(5*time.Second).WaitUntilExists(values)),
+		ui.DoDefaultUntil(values, ui.WithTimeout(5*time.Second).WaitUntilGone(values)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to delete cell value")
+	}
+	return nil
+}

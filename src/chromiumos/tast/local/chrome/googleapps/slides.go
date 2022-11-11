@@ -197,3 +197,12 @@ func maybeShowTheSlideMenu(tconn *chrome.TestConn) action.Action {
 	return uiauto.IfSuccessThen(ui.Exists(showTheMenusButton),
 		ui.LeftClickUntil(showTheMenusButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(hideTheMenusButton)))
 }
+
+// ActivateTitleField makes slide title field editable
+func ActivateTitleField(tconn *chrome.TestConn) action.Action {
+	ui := uiauto.New(tconn)
+	webArea := nodewith.NameContaining("Slides").Role(role.RootWebArea)
+	application := nodewith.Role(role.Application).Ancestor(webArea)
+	titleNode := nodewith.Name("title").Role(role.StaticText).Ancestor(application)
+	return ui.LeftClick(titleNode)
+}
