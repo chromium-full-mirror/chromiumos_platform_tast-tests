@@ -20,9 +20,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Goofy,
-		Desc:         "Setup factory toolkit and exercise Goofy with custom TestList",
-		Contacts:     []string{"lschyi@google.com", "chromeos-factory-eng@google.com"},
+		Func:     Goofy,
+		Desc:     "Setup factory toolkit and exercise Goofy with custom TestList",
+		Contacts: []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
+		// ChromeOS > Platform > Enablement > Factory
+		BugComponent: "b:167224",
 		SoftwareDeps: []string{"factory_flow"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      3 * time.Minute,
