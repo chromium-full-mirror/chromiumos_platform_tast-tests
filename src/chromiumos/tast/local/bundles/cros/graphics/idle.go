@@ -28,45 +28,51 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Log into Chrome, request nothing to be on the desktop, wait, verify there are moments where the GPU has nothing to do. If the GPU stays continuously busy system power usage will be unacceptably high",
 		// TODO(pwang): Add to CQ once it is green and stable.
-		Attr:         []string{"group:graphics", "graphics_nightly"},
+		Attr:         []string{"group:graphics", "graphics_nightly", "group:mainline"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"pwang@chromium.org",
 		},
 		Timeout:      chrome.LoginTimeout + 3*time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "no_qemu"},
 		// This test needs to restart Chrome and log in each time it runs to get a clean instance. It also needs to close open browser windows to hide the Google doodle and other possible active graphic content.
 		Params: []testing.Param{{
 			Name:              "dvfs",
 			Val:               dvfs,
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportDVFS()),
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "dvfs_arc",
 			Val:               dvfs,
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportDVFS()),
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			// TODO(pwang): Not all platform has fbc enabled. Add SoftwareDeps/HardwareDeps once we got some results on stainless.
 			Name:              "fbc",
 			Val:               fbc,
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.IntelSOC()),
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "fbc_arc",
 			Val:               fbc,
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.IntelSOC()),
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "psr",
 			Val:               psr,
 			ExtraHardwareDeps: hwdep.D(hwdep.IntelSOC()),
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "psr_arc",
 			Val:               psr,
 			ExtraHardwareDeps: hwdep.D(hwdep.IntelSOC()),
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "gem_idle",
