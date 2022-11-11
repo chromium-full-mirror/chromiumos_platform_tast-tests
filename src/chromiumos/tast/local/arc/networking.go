@@ -10,8 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/action"
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
 )
 
@@ -93,4 +96,53 @@ func ExpectPingSuccess(ctx context.Context, a *ARC, network, addr string) error 
 	}
 
 	return nil
+}
+
+// HideUnusedEthernet finds all Ethernet devices that's not being used and hide them
+// from shill (thus patchpanel, and ARC) by Manager ClaimInterface API. This helps to
+// workaround the current limitation of ARCVM that at most two ethernet devices can
+// be supported. Returns a cleanup function to undo the changes.
+func HideUnusedEthernet(ctx context.Context, manager *shill.Manager) (action.Action, error) {
+	devices, err := manager.Devices(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var toBeHidden []string
+	for _, device := range devices {
+		p, err := device.GetProperties(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if tech, err := p.GetString(shillconst.DevicePropertyType); err != nil {
+			return nil, err
+		} else if tech != shillconst.TypeEthernet {
+			continue
+		}
+		if linkUp, err := p.GetBool(shillconst.DevicePropertyEthernetLinkUp); err != nil {
+			return nil, err
+		} else if linkUp {
+			// Do not hide up device to avoid breaking SSH to DUT
+			continue
+		}
+		ifname, err := p.GetString(shillconst.DevicePropertyName)
+		toBeHidden = append(toBeHidden, ifname)
+	}
+
+	for _, ifname := range toBeHidden {
+		if err := manager.ClaimInterface(ctx, "tast", ifname); err != nil {
+			return nil, errors.Wrapf(err, "failed to claim interface %s", ifname)
+		}
+		testing.ContextLogf(ctx, "Claimed interface %s from shill", ifname)
+	}
+
+	return func(ctx context.Context) error {
+		for _, ifname := range toBeHidden {
+			if err := manager.ReleaseInterface(ctx, "tast", ifname); err != nil {
+				return errors.Wrapf(err, "failed to release interface %s", ifname)
+			}
+			testing.ContextLogf(ctx, "Released interface %s to shill", ifname)
+		}
+		return nil
+	}, nil
 }
