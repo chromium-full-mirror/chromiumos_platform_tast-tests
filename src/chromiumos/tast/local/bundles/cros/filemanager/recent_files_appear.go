@@ -105,17 +105,17 @@ func RecentFilesAppear(ctx context.Context, s *testing.State) {
 			}
 
 			testing.ContextLog(ctx, "Refresh until file exists in Recent")
-			if err := ui.RetryUntil(
+			if err := ui.WithTimeout(30*time.Second).RetryUntil(
 				refreshRecent(files),
-				files.FileExists(testImage),
+				files.WithTimeout(5*time.Second).WaitForFile(testImage),
 			)(ctx); err != nil {
 				s.Fatal("Failed to find file in recent: ", err)
 			}
 
 			testing.ContextLog(ctx, "Refresh until file exists in Recent Images")
-			if err := ui.RetryUntil(
+			if err := ui.WithTimeout(30*time.Second).RetryUntil(
 				goToRecentImages(files),
-				files.FileExists(testImage),
+				files.WithTimeout(5*time.Second).WaitForFile(testImage),
 			)(ctx); err != nil {
 				s.Fatal("Failed to find file in recent images: ", err)
 			}
