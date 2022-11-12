@@ -96,3 +96,43 @@ func VerifyTestESimProfile(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	return nil
 }
+
+// VerifyNetworkIsActive verifies that the network with |activeIccid| is the primary active network.
+func VerifyNetworkIsActive(ctx context.Context, tconn *chrome.TestConn, activeIccid string) error {
+	ui := uiauto.New(tconn).WithTimeout(90 * time.Second)
+
+	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until refresh profile complete")
+	}
+
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(ActiveCellularBtn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find active cellular network")
+	}
+
+	activeCellularRowNodes, err := ui.NodesInfo(ctx, ActiveCellularRows)
+	if err != nil {
+		return errors.Wrap(err, "failed to find node info of active cellular network")
+	}
+	if len(activeCellularRowNodes) > 1 {
+		return errors.Wrap(err, "more than one active network displayed as active")
+	}
+
+	if err := ui.LeftClick(ActiveCellularBtn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click into active cellular networks detail view")
+	}
+
+	if err := uiauto.IfFailThen(ui.WithTimeout(10*time.Second).WaitUntilExists(ConnectedStatus), ui.WithTimeout(10*time.Second).WaitUntilExists(SignInToNetwork))(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify active cellular network in details settings page")
+	}
+
+	displayedIccid := nodewith.NameContaining(activeIccid).Role(role.StaticText)
+	if err := uiauto.Combine("Verify network connected",
+		ui.WithTimeout(30*time.Second).LeftClick(CellularAdvanced),
+		ui.WithTimeout(30*time.Second).WaitUntilExists(displayedIccid),
+		ui.LeftClick(BackArrowBtn),
+		ui.WaitUntilExists(ActiveCellularBtn),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify network iccid in network details setting page")
+	}
+	return nil
+}
