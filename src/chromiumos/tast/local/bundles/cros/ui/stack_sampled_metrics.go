@@ -51,7 +51,9 @@ func init() {
 			"iby@chromium.org",
 			"cros-telemetry@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		// Test temporarily disabled because the feature it's testing is temporarily
+		// deactivated due to b/257675336.
+		// TODO(b/214117401): Reenable when the feature is relaunched.
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},
 		Params: []testing.Param{{
 			Name:    "ash",
