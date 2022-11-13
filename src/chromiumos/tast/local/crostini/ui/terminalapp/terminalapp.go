@@ -206,9 +206,13 @@ func (ta *TerminalApp) ClickShelfMenuItem(itemNameRegexp string) uiauto.Action {
 			defer revert(ctx)
 		}
 
+		menuItem := nodewith.NameRegex(regexp.MustCompile(itemNameRegexp)).Role(role.MenuItem)
 		return uiauto.Combine("click menu item on the Shelf",
-			ta.ui.RightClick(nodewith.Name("Terminal").Role(role.Button).First()),
-			ta.ui.LeftClick(nodewith.NameRegex(regexp.MustCompile(itemNameRegexp)).Role(role.MenuItem)))(ctx)
+			ta.ui.RightClickUntil(
+				nodewith.Name("Terminal").Role(role.Button).First(),
+				ta.ui.WithTimeout(time.Second).WaitUntilExists(menuItem)),
+			ta.ui.LeftClick(menuItem),
+		)(ctx)
 	}
 }
 
