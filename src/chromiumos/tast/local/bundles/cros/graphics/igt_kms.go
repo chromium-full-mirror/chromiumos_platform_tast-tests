@@ -20,7 +20,7 @@ var subtestResultRegex = regexp.MustCompile("^Subtest (.*): ([A-Z]+)")
 
 var gpuAmd = []string{"zork", "grunt"}
 var gpuQcom = []string{"strongbad", "trogdor"}
-var gpuMtk = []string{"kukui", "jacuzzi"}
+var gpuMtk = []string{"kukui", "jacuzzi", "asurada", "cherry", "corsola", "geralt"}
 
 func init() {
 	testing.AddTest(&testing.Test{
