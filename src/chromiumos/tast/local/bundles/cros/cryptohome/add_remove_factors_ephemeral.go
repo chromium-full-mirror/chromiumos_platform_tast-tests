@@ -108,7 +108,11 @@ func AddRemoveFactorsEphemeral(ctx context.Context, s *testing.State) {
 	}
 	if err := cryptohomecommon.ExpectAuthFactorTypes(
 		listFactorsAtStartReply.SupportedAuthFactors,
-		[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD}); err != nil {
+		[]uda.AuthFactorType{
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_LEGACY_FINGERPRINT},
+	); err != nil {
 		s.Fatal("Mismatch in supported auth factors before adding factors (-got, +want): ", err)
 	}
 
@@ -134,7 +138,11 @@ func AddRemoveFactorsEphemeral(ctx context.Context, s *testing.State) {
 	}
 	if err := cryptohomecommon.ExpectAuthFactorTypes(
 		listFactorsAfterAddPasswordReply.SupportedAuthFactors,
-		[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD}); err != nil {
+		[]uda.AuthFactorType{
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
+			uda.AuthFactorType_AUTH_FACTOR_TYPE_LEGACY_FINGERPRINT},
+	); err != nil {
 		s.Fatal("Mismatch in supported auth factors after adding password (-got, +want): ", err)
 	}
 
