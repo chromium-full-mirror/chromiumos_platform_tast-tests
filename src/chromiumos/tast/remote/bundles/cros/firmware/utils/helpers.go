@@ -8,6 +8,8 @@ package utils
 
 import (
 	"context"
+	"io"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -17,6 +19,50 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/testing"
+)
+
+const (
+	// CCDPassword is a temporary Cr50 password to be set for testing purposes
+	CCDPassword = "robot"
+	// CCDWrongPassword is a constant with wrong Cr50 password that is tried to be set during the tests
+	CCDWrongPassword = "wrongpass"
+	// CCDClearPasswordPrefix is a prefix that has to be used before password to clear it with gsctool
+	CCDClearPasswordPrefix = "clear:"
+	// WaitAfterCCDSettingChange is a period of time to wait after changing a CCD setting because of rate limit
+	WaitAfterCCDSettingChange = 3 * time.Second
+)
+
+// GSCBehavior contains behaviors of gsctool that can be passed to VerifyGsctoolCommand() function
+type GSCBehavior string
+
+// gsctool behaviors list
+const (
+	OpenGSC          GSCBehavior = "open"
+	LockGSC          GSCBehavior = "lock"
+	UnlockGSC        GSCBehavior = "unlock"
+	SetGSCPassword   GSCBehavior = "setPassword"
+	ClearGSCPassword GSCBehavior = "clearPassword"
+)
+
+// List of gsctool command options that are supported by VerifyGsctoolCommand() function
+const (
+	GsctoolOptOpen             = "-o"
+	GsctoolOptLock             = "-k"
+	GsctoolOptUnlock           = "-U"
+	GsctoolOptSetClearPassword = "-P"
+)
+
+// List of CCD states
+const (
+	CCDOpened   = "Opened"
+	CCDLocked   = "Locked"
+	CCDUnlocked = "Unlocked"
+)
+
+// List of CCD password states
+const (
+	CCDPasswordSet  = "set"
+	CCDPasswordNone = "none"
 )
 
 // ChangeFWVariant checks if current FW variant (A/B) is equal to the fwVar, if not it switches to the fwVar
@@ -114,4 +160,193 @@ func CheckCrossystemWPSW(ctx context.Context, h *firmware.Helper, expectedWPSW i
 		return errors.Errorf("expected WP state to %v, is actually %v", expectedWPSW, currWPSW)
 	}
 	return nil
+}
+
+// VerifyCr50Command runs a command in Cr50 console and checks CCD state afterwards.
+func VerifyCr50Command(ctx context.Context, h *firmware.Helper, cmd, expectCCDState, expectCCDPasswdState string, expectReboot bool) error {
+	bootID, err := h.Reporter.BootID(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get boot id")
+	}
+	err = h.Servo.RunCR50Command(ctx, cmd)
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute %q", cmd)
+	}
+	if expectReboot {
+		if err := WaitForDUTReboot(ctx, h, bootID); err != nil {
+			return errors.Wrap(err, "reboot failed")
+		}
+	} else {
+		if !h.DUT.Connected(ctx) {
+			if err := WaitForDUTReboot(ctx, h, bootID); err != nil {
+				return errors.Wrap(err, "unexpected reboot failed")
+			}
+			return errors.New("DUT rebooted unexpectedly")
+		}
+		testing.Sleep(ctx, WaitAfterCCDSettingChange)
+	}
+	if err = CheckExpectedCCDState(ctx, h, expectCCDState, expectCCDPasswdState); err != nil {
+		return errors.Wrap(err, "checkExpectedCCDState() failed")
+	}
+	return nil
+}
+
+// VerifyGsctoolCommand runs a gsctool command in developer console and checks CCD state afterwards.
+func VerifyGsctoolCommand(ctx context.Context, h *firmware.Helper, behavior GSCBehavior, expectCCDState, expectCCDPasswdState string, expectReboot, expectFail, useWrongPassword bool) error {
+	options := map[GSCBehavior]string{
+		OpenGSC:          GsctoolOptOpen,
+		LockGSC:          GsctoolOptLock,
+		UnlockGSC:        GsctoolOptUnlock,
+		SetGSCPassword:   GsctoolOptSetClearPassword,
+		ClearGSCPassword: GsctoolOptSetClearPassword,
+	}
+	passwordIsSet := false
+	_, ccdPasswdState, err := GetCCDStatePasswd(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "GetCCDStatePasswd() failed")
+	}
+	if ccdPasswdState != CCDPasswordNone {
+		passwordIsSet = true
+	}
+
+	bootID, err := h.Reporter.BootID(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get boot id")
+	}
+	if _, ok := options[behavior]; !ok {
+		return errors.Errorf("unknown behavior %q, supported: %+q", behavior, reflect.ValueOf(options).MapKeys())
+	}
+	cmd := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", options[behavior])
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return errors.Wrap(err, "StdinPipe() failed")
+	}
+	defer cmd.Wait()
+	testing.ContextLog(ctx, "Starting gsctool")
+	if err := cmd.Start(); err != nil {
+		return errors.Wrap(err, "Start() failed")
+	}
+
+	ccdPasswd := CCDPassword
+	if useWrongPassword {
+		ccdPasswd = CCDWrongPassword
+	}
+	if behavior == ClearGSCPassword {
+		ccdPasswd = CCDClearPasswordPrefix + ccdPasswd
+	}
+
+	if behavior == SetGSCPassword || behavior == ClearGSCPassword || passwordIsSet {
+		testing.ContextLog(ctx, "Entering password")
+		// Enter password twice
+		if _, err := io.WriteString(stdin, ccdPasswd+"\n"+ccdPasswd+"\n"); err != nil {
+			return errors.Wrap(err, "WriteString() failed")
+		}
+	}
+	err = cmd.Wait()
+	if err != nil && !expectFail {
+		return errors.Wrap(err, "gsctool failed")
+	}
+	if err == nil && expectFail {
+		return errors.Wrap(err, "gsctool did not fail as expected")
+	}
+	if expectReboot {
+		if err := WaitForDUTReboot(ctx, h, bootID); err != nil {
+			return errors.Wrap(err, "reboot failed")
+		}
+	} else {
+		if !h.DUT.Connected(ctx) {
+			if err := WaitForDUTReboot(ctx, h, bootID); err != nil {
+				return errors.Wrap(err, "unexpected reboot failed")
+			}
+			return errors.New("DUT rebooted unexpectedly")
+		}
+		testing.Sleep(ctx, WaitAfterCCDSettingChange)
+	}
+
+	if err = CheckExpectedCCDState(ctx, h, expectCCDState, expectCCDPasswdState); err != nil {
+		return errors.Wrap(err, "checkExpectedCCDState() failed")
+	}
+	return nil
+}
+
+// WaitForDUTReboot checks if the DUT has been rebooted as expected.
+func WaitForDUTReboot(ctx context.Context, h *firmware.Helper, bootID string) error {
+	testing.ContextLog(ctx, "Waiting for connection to DUT")
+	reconnectTimeout := 3 * time.Minute
+	connectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
+	defer cancel()
+	if err := h.WaitConnect(connectCtx); err != nil {
+		return errors.Wrap(err, "failed to connect to DUT")
+	}
+	newBootID, err := h.Reporter.BootID(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get new boot id")
+	}
+	if newBootID == bootID {
+		return errors.Wrap(err, "unexpectedly got same boot id over reboot")
+	}
+	return nil
+}
+
+// GetCCDStatePasswd gets values of State and Password fields from ccd command.
+func GetCCDStatePasswd(ctx context.Context, h *firmware.Helper) (string, string, error) {
+	out, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd", []string{`State:\s*(\S+)\s*\n\s*Password:\s*(\S+)`})
+	if err != nil {
+		return "", "", errors.Wrap(err, "function RunCR50CommandGetOutput() returned an error")
+	}
+	return out[0][1], out[0][2], nil
+}
+
+// CheckExpectedCCDState verifies if values of State and Password fields from ccd command are the expected ones.
+func CheckExpectedCCDState(ctx context.Context, h *firmware.Helper, expectCCDState, expectCCDPasswdState string) error {
+	ccdState, ccdPasswdState, err := GetCCDStatePasswd(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "GetCCDStatePasswd() failed")
+	}
+	if ccdState != expectCCDState {
+		err = errors.Errorf("expected CCD state: %q, got %q", expectCCDState, ccdState)
+		if ccdPasswdState != expectCCDPasswdState {
+			err = errors.Errorf("%s; expected CCD password state: %q, got %q", err, expectCCDPasswdState, ccdPasswdState)
+		}
+	} else if ccdPasswdState != expectCCDPasswdState {
+		err = errors.Errorf("expected CCD password state: %q, got %q", expectCCDPasswdState, ccdPasswdState)
+	}
+	if err != nil {
+		return errors.Wrap(err, "unexpected CCD state")
+	}
+	testing.ContextLog(ctx, "CCD state as expected")
+	return nil
+}
+
+// Cr50Cleanup ensures that the test leaves CCD opened and with no password set.
+func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
+	testing.ContextLog(ctx, "Cleanup after test")
+	passwordIsSet := false
+
+	ccdState, ccdPasswd, err := GetCCDStatePasswd(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "GetCCDStatePasswd() failed")
+	}
+	if ccdPasswd != CCDPasswordNone {
+		passwordIsSet = true
+	}
+	if ccdState != CCDOpened {
+		if passwordIsSet {
+			testing.ContextLog(ctx, "Open CCD with password")
+			if err := VerifyCr50Command(ctx, h, "ccd open "+CCDPassword, CCDOpened, CCDPasswordSet, false); err != nil {
+				return errors.Wrap(err, "VerifyCr50Command failed")
+			}
+		} else {
+			testing.ContextLog(ctx, "Open CCD")
+			if err := VerifyCr50Command(ctx, h, "ccd open", CCDOpened, CCDPasswordNone, false); err != nil {
+				return errors.Wrap(err, "VerifyCr50Command failed")
+			}
+		}
+		testing.Sleep(ctx, WaitAfterCCDSettingChange)
+	}
+	testing.ContextLog(ctx, "Reset CCD")
+	if _, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset", []string{`Resetting\s+all\s+settings`}); err != nil {
+		return errors.Wrap(err, "ccd reset failed")
+	}
+	return err
 }
