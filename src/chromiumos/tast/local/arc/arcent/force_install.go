@@ -45,6 +45,9 @@ const PlayStoreModeBlockList = "BLACKLIST"
 // PlayStoreModeAllowList is the Play Store mode that allows only allowlisted and force-installed apps.
 const PlayStoreModeAllowList = "WHITELIST"
 
+// UIAutomatorPackages is a list of packages installed by UIAutomator.
+var UIAutomatorPackages = []string{"com.github.uiautomator.test", "com.github.uiautomator"}
+
 // SetupPolicyServerWithArcApps sets up a fake policy server with ARC enabled and a list of packages with the corresponding install type
 func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string, packages []string, installType string) (fdms *fakedms.FakeDMS, retErr error) {
 	arcPolicy := CreateArcPolicyWithApps(packages, installType)
@@ -118,6 +121,15 @@ func CreateArcPolicyWithApps(packages []string, installType string) *policy.ArcP
 			InstallType: installType,
 		})
 	}
+
+	// Make UIAutomator packages always available otherwise they will be removed by ARC DPC.
+	for _, packageName := range UIAutomatorPackages {
+		appsInPolicy = append(appsInPolicy, policy.Application{
+			PackageName: packageName,
+			InstallType: InstallTypeAvailable,
+		})
+	}
+
 	arcPolicy := &policy.ArcPolicy{
 		Val: &policy.ArcPolicyValue{
 			Applications:              appsInPolicy,

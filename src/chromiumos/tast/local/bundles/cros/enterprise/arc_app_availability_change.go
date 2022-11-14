@@ -149,13 +149,6 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 		}
 
 		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) error {
-			// UIAutomator connection breaks due to policy change causing automator to be uninstalled.
-			d, err := a.NewUIDevice(ctx)
-			if err != nil {
-				return testing.PollBreak(err)
-			}
-			defer d.Close(ctx)
-
 			if err := arcent.WaitForAppUnavailableMessage(ctx, d, time.Minute); err == nil {
 				return nil
 			}
