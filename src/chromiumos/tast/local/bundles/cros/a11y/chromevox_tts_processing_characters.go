@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
 		Desc:         "A test that verifies the way ChromeVox processes some characters for speech",
 		Contacts: []string{
+			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
-			"chromeos-a11y-eng@google.com", // Backup mailing list
 		},
+		BugComponent: "b:1272895",
 		// TODO(https://crbug.com/1159107): Investigate failures and re-enable this test.
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),

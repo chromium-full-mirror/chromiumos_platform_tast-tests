@@ -24,9 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded, // TODO(crbug.com/1358282): Migrate when Chromevox options page opens in Lacros.
 		Desc:         "Verifies ChromeVox honors its setting to read numbers as words or as digits",
 		Contacts: []string{
+			"chromeos-a11y-eng@google.com", // Mailing list
 			"josiahk@chromium.org",         // Test author
-			"chromeos-a11y-eng@google.com", // Backup mailing list
 		},
+		BugComponent: "b:1272895",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromePolicyLoggedIn",

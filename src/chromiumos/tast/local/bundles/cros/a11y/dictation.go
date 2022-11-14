@@ -27,9 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
 		Desc:         "Tests that the Dictation feature can be used to input text using voice",
 		Contacts: []string{
+			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
-			"chromeos-a11y-eng@google.com", // Backup mailing list
 		},
+		BugComponent: "b:1272896",
 		// TODO(https://crbug.com/1159107): Investigate failures and re-enable this test.
 		// Load audio file used for Dictation.
 		Data:         []string{"voice_en_hello.wav"},

@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
 		Desc:         "A test that invokes Select-to-Speak and verifies the correct speech is given by the Google TTS engine",
 		Contacts: []string{
+			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
-			"chromeos-a11y-eng@google.com", // Backup mailing list
 		},
+		BugComponent: "b:1272897",
 		// TODO(https://crbug.com/1267448): Investigate failures and re-enable this test.
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),

@@ -25,9 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "A test that verifies the way ChromeVox can be used to edit text in plain text fields",
 		Contacts: []string{
+			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
-			"chromeos-a11y-eng@google.com", // Backup mailing list
 		},
+		BugComponent: "b:1272895",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
