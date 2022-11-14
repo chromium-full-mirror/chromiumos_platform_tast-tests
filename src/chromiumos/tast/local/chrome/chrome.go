@@ -390,25 +390,15 @@ func (c *Chrome) Close(ctx context.Context) error {
 	}
 	c.agg.Close()
 
-	// As the chronos home directory is cleared during chrome.New(), we
-	// should manually move these crashes from the user crash directory to
-	// the system crash directory.
-	var firstErr error
-	if err := moveUserCrashDumps(); err != nil {
-		firstErr = err
-	}
-
 	if outDir, ok := testing.ContextOutDir(ctx); ok {
 		if err := c.logMarker.Save(filepath.Join(outDir, filepath.Base(c.logFilename))); err != nil {
 			testing.ContextLog(ctx, "Failed to save the entire log: ", err)
-			if firstErr == nil {
-				firstErr = err
-			}
+			return err
 		}
 	} else {
 		testing.ContextLog(ctx, "No output directory exists, not saving log file")
 	}
-	return firstErr
+	return nil
 }
 
 // shouldCloseOnReset filters out targets should be closed in resetting Chrome state.

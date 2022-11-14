@@ -9,12 +9,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome/internal/config"
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/session"
@@ -261,6 +264,11 @@ func restartSession(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 
+	// Move crash dumps out of /home/chronos so they don't get lost when deleting stuff in the next step.
+	if err := moveUserCrashDumps(); err != nil {
+		return err
+	}
+
 	if err := clearUserData(ctx, cfg); err != nil {
 		return err
 	}
@@ -269,6 +277,63 @@ func restartSession(ctx context.Context, cfg *config.Config) error {
 
 	testing.ContextLog(ctx, "Starting ui job")
 	return upstart.EnsureJobRunning(ctx, "ui")
+}
+
+// moveUserCrashDumps moves the contents of the user crash directory to the
+// system crash directory.
+func moveUserCrashDumps() error {
+	// Normally user crashes are written to /home/user/(hash)/crash as they
+	// contain PII, but for test images they are written to /home/chronos/crash.
+	// https://crrev.com/c/1986701
+	const (
+		userCrashDir   = "/home/chronos/crash"
+		systemCrashDir = "/var/spool/crash"
+		crashGroup     = "crash-access"
+	)
+
+	g, err := user.LookupGroup(crashGroup)
+	if err != nil {
+		return err
+	}
+	gid, err := strconv.ParseInt(g.Gid, 10, 32)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse gid %q", g.Gid)
+	}
+
+	if err := os.MkdirAll(systemCrashDir, 02770); err != nil {
+		return err
+	}
+
+	if err := os.Chown(systemCrashDir, 0, int(gid)); err != nil {
+		return err
+	}
+
+	fis, err := ioutil.ReadDir(userCrashDir)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	for _, fi := range fis {
+		if !fi.Mode().IsRegular() {
+			continue
+		}
+
+		// As they are in different partitions, os.Rename() doesn't work.
+		src := filepath.Join(userCrashDir, fi.Name())
+		dst := filepath.Join(systemCrashDir, fi.Name())
+		if err := fsutil.MoveFile(src, dst); err != nil {
+			return err
+		}
+
+		if err := os.Chown(dst, 0, int(gid)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func clearUserData(ctx context.Context, cfg *config.Config) error {
