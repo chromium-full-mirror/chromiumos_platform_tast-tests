@@ -104,7 +104,7 @@ func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 			return errors.Wrap(err, "failed to instruct device to stay on YouTube web")
 		}
 
-		if err := clearNotificationPrompts(ctx, y.ui); err != nil {
+		if err := y.clearNotificationPrompts(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear notification prompts")
 		}
 
@@ -118,7 +118,7 @@ func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 		}
 
 		// Sometimes prompts to grant permission appears after opening a video for a while.
-		if err := clearNotificationPrompts(ctx, y.ui); err != nil {
+		if err := y.clearNotificationPrompts(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear notification prompts")
 		}
 
@@ -216,7 +216,7 @@ func (y *YtWeb) EnterFullScreen(ctx context.Context) error {
 	}
 
 	// Notification prompts are sometimes shown in fullscreen.
-	if err := clearNotificationPrompts(ctx, y.ui); err != nil {
+	if err := y.clearNotificationPrompts(ctx); err != nil {
 		return errors.Wrap(err, "failed to clear notification prompts")
 	}
 
@@ -245,7 +245,7 @@ func (y *YtWeb) ExitFullScreen(ctx context.Context) error {
 		return nil
 	}
 
-	if err := clearNotificationPrompts(ctx, y.ui); err != nil {
+	if err := y.clearNotificationPrompts(ctx); err != nil {
 		return errors.Wrap(err, "failed to clear notification prompts")
 	}
 
@@ -354,6 +354,7 @@ func (y *YtWeb) RestoreWindow(ctx context.Context) error {
 // PauseAndPlayVideo verifies video playback on youtube web.
 func (y *YtWeb) PauseAndPlayVideo(ctx context.Context) error {
 	return uiauto.NamedCombine("pause and play video",
+		y.clearNotificationPrompts,
 		y.SkipAd(),
 		// The video should be playing at this point. However, we'll double check to make sure
 		// as we have seen a few cases where the video became paused automatically.
@@ -496,9 +497,9 @@ func (y *YtWeb) Close(ctx context.Context) {
 }
 
 // clearNotificationPrompts finds and clears some youtube web prompts.
-func clearNotificationPrompts(ctx context.Context, ui *uiauto.Context) error {
+func (y *YtWeb) clearNotificationPrompts(ctx context.Context) error {
 	tartgetPrompts := nodewith.NameRegex(regexp.MustCompile("(Allow|Never|NO THANKS)")).Role(role.Button)
-	nodes, err := ui.NodesInfo(ctx, tartgetPrompts)
+	nodes, err := y.ui.NodesInfo(ctx, tartgetPrompts)
 	if err != nil {
 		return err
 	}
@@ -511,8 +512,8 @@ func clearNotificationPrompts(ctx context.Context, ui *uiauto.Context) error {
 	for _, name := range prompts {
 		tartgetPrompt := nodewith.Name(name).Role(role.Button)
 		if err := uiauto.IfSuccessThen(
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(tartgetPrompt),
-			ui.DoDefaultUntil(tartgetPrompt, ui.WithTimeout(shortUITimeout).WaitUntilGone(tartgetPrompt)),
+			y.ui.WithTimeout(shortUITimeout).WaitUntilExists(tartgetPrompt),
+			y.ui.DoDefaultUntil(tartgetPrompt, y.ui.WithTimeout(shortUITimeout).WaitUntilGone(tartgetPrompt)),
 		)(ctx); err != nil {
 			testing.ContextLogf(ctx, "Failed to clear prompt %q", name)
 			return err
