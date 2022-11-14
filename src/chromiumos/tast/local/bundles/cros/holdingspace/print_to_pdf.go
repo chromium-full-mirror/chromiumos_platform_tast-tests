@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -99,17 +100,21 @@ func PrintToPDF(ctx context.Context, s *testing.State) {
 	}
 
 	// Defer cleanup of the downloaded PDF file.
+	var fileName string
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user's Download path: ", err)
 	}
-	const fileName = "download.pdf"
-	downloadLocation := filepath.Join(downloadsPath, fileName)
-	defer os.Remove(downloadLocation)
+	defer func() {
+		if fileName != "" {
+			downloadLocation := filepath.Join(downloadsPath, fileName)
+			os.Remove(downloadLocation)
+		}
+	}()
 
 	ui := uiauto.New(tconn)
 	kb, err := input.Keyboard(ctx)
-	if err := uiauto.Combine("Save as PDF and verify presence in holding space",
+	if err := uiauto.Combine("Save file as PDF and verify presence in holding space",
 		// Open print preview using the Ctrl+P shortcut.
 		kb.AccelAction("Ctrl+P"),
 		printpreview.WaitForPrintPreview(tconn),
@@ -123,17 +128,37 @@ func PrintToPDF(ctx context.Context, s *testing.State) {
 		// Click the "Save" button.
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 
-		// Download file window will popup, enter a filename for the PDF and click "Save".
-		ui.EnsureFocused(nodewith.Name("File name").Role(role.TextField)),
-		kb.AccelAction("Ctrl+A"),
-		kb.TypeAction(fileName),
+		// Download file window will popup.
+		// Wait for the input field to load with a default file name.
+		ui.RetrySilently(8, func(ctx context.Context) error {
+			nodeInfo, err := ui.Info(ctx, nodewith.Name("File name").Role(role.TextField))
+			if err != nil {
+				return err
+			}
+
+			if !(filepath.Ext(nodeInfo.Value) == ".pdf") {
+				return errors.Errorf("file name %q should contain .pdf", nodeInfo.Value)
+			}
+
+			// Use the default file name of the PDF file we're about to save.
+			// We do this rather than typing one as we were seeing different file names on different devices in the Files app.
+			// e.g. some devices had an additional ".pdf" appended on to whatever was typed, even if we cleared the field first.
+			fileName = nodeInfo.Value
+			return nil
+		}),
+
 		ui.LeftClick(nodewith.Name("Save").
 			Role(role.Button).
 			Ancestor(nodewith.Name("Save file as").Role(role.Window))),
 
-		// Left click the tray to open the bubble.
+		// Left click the tray to open the holding space bubble.
 		ui.LeftClick(holdingspace.FindTray()),
-		ui.WaitUntilExists(holdingspace.FindChip().Name(fileName)),
+
+		// Check the downloaded PDF is there.
+		// Wrapping the action `ui.WaitUntilExists` in another action so that `fileName` isn't evaluated until runtime.
+		func(ctx context.Context) error {
+			return ui.WaitUntilExists(holdingspace.FindChip().Name(fileName))(ctx)
+		},
 	)(ctx); err != nil {
 		s.Fatal("Failed to save as PDF and verify presence in holding space: ", err)
 	}
