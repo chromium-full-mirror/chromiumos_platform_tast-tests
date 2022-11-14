@@ -44,6 +44,7 @@ service ConnService {
 
 message NewConnRequest {
   string url = 1;
+  bool call_on_lacros = 2;
 }
 
 message NewConnResponse {
@@ -52,6 +53,7 @@ message NewConnResponse {
 
 message NewConnForTargetRequest {
   string url = 1;
+  bool call_on_lacros = 2;
 }
 
 message CloseRequest {

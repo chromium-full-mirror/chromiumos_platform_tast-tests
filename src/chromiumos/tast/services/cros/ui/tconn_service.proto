@@ -32,15 +32,18 @@ service TconnService {
 
 message EvalRequest {
   string expr = 1;
+  bool call_on_lacros = 2;
 }
 
 message CallRequest {
   string fn = 1;
   repeated google.protobuf.Value args = 2;
+  bool call_on_lacros = 3;
 }
 
 message WaitForExprRequest {
   string expr = 1;
   uint32 timeout_secs = 2;
   bool fail_on_err = 3;
+  bool call_on_lacros = 4;
 }

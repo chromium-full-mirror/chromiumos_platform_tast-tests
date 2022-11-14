@@ -35,7 +35,7 @@ type TconnService struct {
 
 // Eval calls tconn.Eval.
 func (svc *TconnService) Eval(ctx context.Context, req *pb.EvalRequest) (*structpb.Value, error) {
-	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*structpb.Value, error) {
+	return common.UseTconnMaybeLacros(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*structpb.Value, error) {
 		var out interface{}
 		if err := tconn.Eval(ctx, req.Expr, &out); err != nil {
 			if err == chrome.ErrTestConnUndefinedOut {
@@ -44,12 +44,12 @@ func (svc *TconnService) Eval(ctx context.Context, req *pb.EvalRequest) (*struct
 			return nil, err
 		}
 		return structpb.NewValue(out)
-	})
+	}, req.CallOnLacros)
 }
 
 // Call calls tconn.Call.
 func (svc *TconnService) Call(ctx context.Context, req *pb.CallRequest) (*structpb.Value, error) {
-	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*structpb.Value, error) {
+	return common.UseTconnMaybeLacros(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*structpb.Value, error) {
 		var out interface{}
 		var args []interface{}
 		for _, arg := range req.Args {
@@ -62,17 +62,17 @@ func (svc *TconnService) Call(ctx context.Context, req *pb.CallRequest) (*struct
 			return nil, err
 		}
 		return structpb.NewValue(out)
-	})
+	}, req.CallOnLacros)
 }
 
 // WaitForExpr calls tconn.Eval.
 func (svc *TconnService) WaitForExpr(ctx context.Context, req *pb.WaitForExprRequest) (*empty.Empty, error) {
-	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
+	return common.UseTconnMaybeLacros(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
 		if req.FailOnErr {
 			return &empty.Empty{}, tconn.WaitForExprFailOnErrWithTimeout(ctx, req.Expr, time.Second*time.Duration(req.TimeoutSecs))
 		}
 		return &empty.Empty{}, tconn.WaitForExprWithTimeout(ctx, req.Expr, time.Second*time.Duration(req.TimeoutSecs))
-	})
+	}, req.CallOnLacros)
 }
 
 // ResetAutomation calls tconn.ResetAutomation.

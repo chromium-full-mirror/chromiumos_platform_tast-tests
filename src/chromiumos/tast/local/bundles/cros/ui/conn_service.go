@@ -31,6 +31,7 @@ func init() {
 }
 
 // ConnService implements tast.cros.ui.ConnService.
+// A client of the service can create Conn instances for both browser context for Ash and Lacros.
 // TODO(crbug.com/1378851): Implement a way to automatically release stale conns.
 type ConnService struct {
 	sharedObject *common.SharedObjectsForService
@@ -50,7 +51,13 @@ func incrementer() func() uint32 {
 // NewConn opens a new tab with the provided url and creates a new Conn for it.
 // Conns created should be deleted with a call to Close|CloseAll.
 func (svc *ConnService) NewConn(ctx context.Context, req *pb.NewConnRequest) (*pb.NewConnResponse, error) {
-	conn, err := svc.sharedObject.Chrome.NewConn(ctx, req.Url)
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+	br, err := svc.sharedObject.Browser(req.CallOnLacros)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := br.NewConn(ctx, req.Url)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +73,13 @@ func (svc *ConnService) NewConn(ctx context.Context, req *pb.NewConnRequest) (*p
 // NewConnForTarget creates a new Conn for an existing tab matching the url provided.
 // Conns created should be deleted with a call to Close|CloseAll.
 func (svc *ConnService) NewConnForTarget(ctx context.Context, req *pb.NewConnForTargetRequest) (*pb.NewConnResponse, error) {
-	conn, err := svc.sharedObject.Chrome.NewConnForTarget(ctx, chrome.MatchTargetURL(req.Url))
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+	br, err := svc.sharedObject.Browser(req.CallOnLacros)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(req.Url))
 	if err != nil {
 		return nil, err
 	}
