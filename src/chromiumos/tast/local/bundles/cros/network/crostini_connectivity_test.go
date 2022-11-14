@@ -18,10 +18,21 @@ import (
 )
 
 func TestCrostiniConnectivityParams(t *testing.T) {
-	params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-		Timeout:       10 * time.Minute,
-		IsNotMainline: true,
-		UseFixture:    true,
-	}})
+	params := crostini.MakeTestParamsFromList(t, []crostini.Param{
+		{
+			Name:          "dualstack",
+			Timeout:       10 * time.Minute,
+			IsNotMainline: true,
+			UseFixture:    true,
+			Val:           "crostiniConnectivityTestParams{}",
+		},
+		{
+			Name:          "v6only",
+			Timeout:       10 * time.Minute,
+			IsNotMainline: true,
+			UseFixture:    true,
+			Val:           "crostiniConnectivityTestParams{v6Only: true}",
+		},
+	})
 	genparams.Ensure(t, "crostini_connectivity.go", params)
 }
