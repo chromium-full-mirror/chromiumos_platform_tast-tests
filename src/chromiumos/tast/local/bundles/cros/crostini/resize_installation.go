@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -76,7 +77,12 @@ func ResizeInstallation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	iOptions := crostini.GetInstallerOptions(s, vm.DebianBuster, false /*largeContainer*/, cr.NormalizedUser())
+	debianVersion := vm.DebianBuster
+	if strings.Contains(s.TestName(), "bullseye") {
+		debianVersion = vm.DebianBullseye
+	}
+
+	iOptions := crostini.GetInstallerOptions(s, debianVersion, false /*largeContainer*/, cr.NormalizedUser())
 	iOptions.MinDiskSize = 16 * settings.SizeGB
 	iOptions.IsSoftMinimum = true
 

@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -77,7 +78,12 @@ func TwoUsersInstall(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to login Chrome and get test API for user 1: %s", err)
 	}
 
-	iOptionsUser1 := crostini.GetInstallerOptions(s, vm.DebianBuster, false /*largeContainer*/, firstCr.NormalizedUser())
+	debianVersion := vm.DebianBuster
+	if strings.Contains(s.TestName(), "bullseye") {
+		debianVersion = vm.DebianBullseye
+	}
+
+	iOptionsUser1 := crostini.GetInstallerOptions(s, debianVersion, false /*largeContainer*/, firstCr.NormalizedUser())
 	// Cleanup for the first user.
 	defer func() {
 		if err := cleanup(ctx, optsUser1...); err != nil {
@@ -99,7 +105,7 @@ func TwoUsersInstall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login Chrome and get test API for testuser: ", err)
 	}
 
-	iOptionsUser2 := crostini.GetInstallerOptions(s, vm.DebianBuster, false /*largeContainer*/, secondCr.NormalizedUser())
+	iOptionsUser2 := crostini.GetInstallerOptions(s, debianVersion, false /*largeContainer*/, secondCr.NormalizedUser())
 	// Cleanup for the second user.
 	defer func() {
 		if err := cleanup(ctx, optsUser2); err != nil {
