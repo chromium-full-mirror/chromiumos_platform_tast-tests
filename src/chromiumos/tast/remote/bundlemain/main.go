@@ -148,12 +148,13 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 				s.Error("Failed to check TPM state: ", err)
 			}
 
-			// Get /var/log/messages from all DUTs.
+			// Get /var/log/messages from DUTs.
 			if err := downloadVarLogMessages(ctx, dir, dut); err != nil {
 				s.Log("Download /var/log/messages failed from DUT (primary): ", err)
 			}
 		}
 
+		// Get log files from companion DUTs
 		for _, role := range s.CompanionDUTRoles() {
 			cdut := s.CompanionDUT(role)
 			if cdut == nil {
@@ -163,6 +164,10 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 			outputDir := filepath.Join(dir, dirName)
 			if err := downloadVarLogMessages(ctx, outputDir, cdut); err != nil {
 				s.Logf("Download /var/log/messages failed from DUT (%v): %v", role, err)
+			}
+
+			if err := downloadChromeLog(ctx, outputDir, cdut); err != nil {
+				s.Logf("Download /var/log/chrome/chrome failed from DUT (%v): %v", role, err)
 			}
 		}
 
@@ -236,6 +241,29 @@ func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT)
 	// Transfer messages file from DUT to host machine.
 	if err := linuxssh.GetFile(ctx, dut.Conn(), "/var/log/messages", dst, linuxssh.PreserveSymlinks); err != nil {
 		return errors.Wrapf(err, "failed to download /var/log/messages from DUT (%v) to %v at local host", dut.HostName(), dst)
+	}
+
+	return nil
+}
+
+// downloadChromeLog downloads /var/log/chrome/chrome from a DUT.
+func downloadChromeLog(ctx context.Context, outputDir string, dut *dut.DUT) error {
+	const ChromeLogFile = "/var/log/chrome/chrome"
+	if !dut.Connected(ctx) {
+		if err := dut.WaitConnect(ctx); err != nil {
+			return errors.Wrapf(err, "failed to connect to the DUT (%v)", dut.HostName())
+		}
+	}
+
+	dst := filepath.Join(outputDir, "chrome")
+
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return errors.Errorf("failed to create directory %q to store %v for DUT (%v)", outputDir, ChromeLogFile, dut.HostName())
+	}
+
+	// Transfer messages file from DUT to host machine.
+	if err := linuxssh.GetFile(ctx, dut.Conn(), ChromeLogFile, dst, linuxssh.DereferenceSymlinks); err != nil {
+		return errors.Wrapf(err, "failed to download %v from DUT (%v) to %v at local host", ChromeLogFile, dut.HostName(), dst)
 	}
 
 	return nil
