@@ -43,6 +43,12 @@ const (
 	// event log files into a gzip archive in the test output directory.
 	webRTCLogsGatherTimeout = 15 * time.Second
 
+	// arcLogsGatherTimeout is the time allowed for gathering ARC logs.
+	arcLogsGatherTimeout = 15 * time.Second
+
+	// postTestTimeout is the time allowed for gather various logs if needed.
+	postTestTimeout = webRTCLogsGatherTimeout + arcLogsGatherTimeout
+
 	resetTimeout = 30 * time.Second
 
 	webRTCEventLogCommandFlag = "--webrtc-event-logging=/tmp"
@@ -67,8 +73,9 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Impl:           &prepareCUJFixture{},
-		PreTestTimeout: CPUStablizationTimeout,
+		Impl:            &prepareCUJFixture{},
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cpuIdleForCUJ",
@@ -77,8 +84,9 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Impl:           &cpuIdleForCUJFixture{},
-		PreTestTimeout: CPUIdleTimeout + 5*time.Second,
+		Impl:            &cpuIdleForCUJFixture{},
+		PreTestTimeout:  CPUIdleTimeout + 5*time.Second,
+		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cpuIdleForEnrolledCUJ",
@@ -88,11 +96,11 @@ func init() {
 			"chromeos-perfmetrics-eng@google.com",
 		},
 		Impl:            &cpuIdleForCUJFixture{},
-		PreTestTimeout:  CPUIdleTimeout + 5*time.Second,
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		PostTestTimeout: 15 * time.Second,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Parent:          fixture.Enrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -107,6 +115,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -125,7 +135,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PostTestTimeout: webRTCLogsGatherTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujEnterpriseAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -140,6 +151,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -154,6 +167,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -168,6 +183,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -182,6 +199,8 @@ func init() {
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars: []string{
 			"ui.cujAccountPool",
 		},
@@ -198,6 +217,8 @@ func init() {
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars: []string{
 			"ui.cujAccountPool",
 		},
@@ -217,7 +238,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PostTestTimeout: webRTCLogsGatherTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -235,7 +257,8 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PostTestTimeout: webRTCLogsGatherTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 }
