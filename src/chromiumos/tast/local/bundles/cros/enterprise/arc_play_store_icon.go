@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package enterprise
 
 import (
 	"context"
@@ -25,9 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ArcEnabled,
+		Func:         ARCPlayStoreIcon,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of ArcEnabled policy, checking whether ARC is enabled after setting the policy",
+		Desc:         "Ensures ARC policy controls the visibility of Play Store icon",
 		Contacts: []string{
 			"yaohuali@google.com",
 			"arc-commercial@google.com",
@@ -47,8 +47,8 @@ func init() {
 	})
 }
 
-// ArcEnabled tests the ArcEnabled policy.
-func ArcEnabled(ctx context.Context, s *testing.State) {
+// ARCPlayStoreIcon verifies that the ArcEnabled policy shows/hides the Play Store icon.
+func ARCPlayStoreIcon(ctx context.Context, s *testing.State) {
 	// Start FakeDMS.
 	fdms, err := fakedms.New(ctx, s.OutDir())
 	if err != nil {
@@ -64,7 +64,7 @@ func ArcEnabled(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.ExtraArgs("--arc-availability=officially-supported"),
+		chrome.ARCSupported(),
 		chrome.DeferLogin(),
 	)
 	if err != nil {

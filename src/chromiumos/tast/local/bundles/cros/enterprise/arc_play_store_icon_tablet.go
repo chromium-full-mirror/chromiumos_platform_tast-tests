@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package enterprise
 
 import (
 	"context"
@@ -26,9 +26,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ArcEnabledOnTablet,
+		Func:         ARCPlayStoreIconTablet,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of ArcEnabled policy on tablet form factor, checking whether ARC is enabled after setting the policy",
+		Desc:         "Tests the visibility of Play Store icon on tablet form factor w.r.t. ArcPolicy",
 		Contacts: []string{
 			"yaohuali@google.com", // Test author
 			"arc-commercial@google.com",
@@ -50,9 +50,9 @@ func init() {
 	})
 }
 
-// ArcEnabledOnTablet tests the ArcEnabled policy on tablet form factor.
+// ARCPlayStoreIconTablet tests the visibility of Play Store icon w.r.t ArcEnabled policy on tablet form factor.
 // On tablet only, when ARC is disabled by policy, Play Store icon still appears on shelf.
-func ArcEnabledOnTablet(ctx context.Context, s *testing.State) {
+func ARCPlayStoreIconTablet(ctx context.Context, s *testing.State) {
 	// Start FakeDMS.
 	fdms, err := fakedms.New(ctx, s.OutDir())
 	if err != nil {
@@ -68,7 +68,7 @@ func ArcEnabledOnTablet(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.ExtraArgs("--arc-availability=officially-supported"),
+		chrome.ARCSupported(),
 	)
 	if err != nil {
 		s.Fatal("Chrome startup failed: ", err)
