@@ -70,6 +70,7 @@ type TestParams struct {
 	LaunchTests      []TestCase
 	CommonTests      []TestCase
 	ReleaseTests     []TestCase
+	SmokeTests       []TestCase
 	TopAppTests      []TestCase
 	AppSpecificTests []TestCase
 }
@@ -223,6 +224,9 @@ func RunTestCases(ctx context.Context, s *testing.State, appPkgName, appActivity
 		AllTests = append(AllTests, curTest)
 	}
 	for _, curTest := range testCases.CommonTests {
+		AllTests = append(AllTests, curTest)
+	}
+	for _, curTest := range testCases.SmokeTests {
 		AllTests = append(AllTests, curTest)
 	}
 	for _, curTest := range testCases.ReleaseTests {

@@ -88,7 +88,7 @@ func init() {
 			Name: "clamshell_mode_smoke",
 			Val: testutil.TestParams{
 				LaunchTests: clamshellLaunchForGmail,
-				CommonTests: testutil.ClamshellSmokeTests,
+				SmokeTests:  testutil.ClamshellSmokeTests,
 			},
 			ExtraAttr:         []string{"appcompat_smoke"},
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -100,7 +100,7 @@ func init() {
 			Name: "tablet_mode_smoke",
 			Val: testutil.TestParams{
 				LaunchTests: touchviewLaunchForGmail,
-				CommonTests: testutil.TouchviewSmokeTests,
+				SmokeTests:  testutil.TouchviewSmokeTests,
 			},
 			ExtraAttr:         []string{"appcompat_smoke"},
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -112,7 +112,7 @@ func init() {
 			Name: "vm_clamshell_mode_smoke",
 			Val: testutil.TestParams{
 				LaunchTests: clamshellLaunchForGmail,
-				CommonTests: testutil.ClamshellSmokeTests,
+				SmokeTests:  testutil.ClamshellSmokeTests,
 			},
 			ExtraAttr:         []string{"appcompat_smoke"},
 			ExtraSoftwareDeps: []string{"android_vm"},
@@ -124,7 +124,7 @@ func init() {
 			Name: "vm_tablet_mode_smoke",
 			Val: testutil.TestParams{
 				LaunchTests: touchviewLaunchForGmail,
-				CommonTests: testutil.TouchviewSmokeTests,
+				SmokeTests:  testutil.TouchviewSmokeTests,
 			},
 			ExtraAttr:         []string{"appcompat_smoke"},
 			ExtraSoftwareDeps: []string{"android_vm"},

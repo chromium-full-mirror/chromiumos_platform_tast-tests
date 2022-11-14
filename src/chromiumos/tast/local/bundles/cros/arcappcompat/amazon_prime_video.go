@@ -107,7 +107,7 @@ func init() {
 				Name: "clamshell_mode_smoke",
 				Val: testutil.TestParams{
 					LaunchTests:      clamshellLaunchForAmazonPrimeVideo,
-					CommonTests:      testutil.ClamshellSmokeTests,
+					SmokeTests:       testutil.ClamshellSmokeTests,
 					AppSpecificTests: clamshellAppSpecificTestsForAmazonPrimeVideo,
 				},
 				ExtraAttr:         []string{"appcompat_smoke"},
@@ -120,7 +120,7 @@ func init() {
 				Name: "tablet_mode_smoke",
 				Val: testutil.TestParams{
 					LaunchTests:      touchviewLaunchForAmazonPrimeVideo,
-					CommonTests:      testutil.TouchviewSmokeTests,
+					SmokeTests:       testutil.TouchviewSmokeTests,
 					AppSpecificTests: touchviewAppSpecificTestsForAmazonPrimeVideo,
 				},
 				ExtraAttr:         []string{"appcompat_smoke"},
@@ -133,7 +133,7 @@ func init() {
 				Name: "vm_clamshell_mode_smoke",
 				Val: testutil.TestParams{
 					LaunchTests:      clamshellLaunchForAmazonPrimeVideo,
-					CommonTests:      testutil.ClamshellSmokeTests,
+					SmokeTests:       testutil.ClamshellSmokeTests,
 					AppSpecificTests: clamshellAppSpecificTestsForAmazonPrimeVideo,
 				},
 				ExtraAttr:         []string{"appcompat_smoke"},
@@ -146,7 +146,7 @@ func init() {
 				Name: "vm_tablet_mode_smoke",
 				Val: testutil.TestParams{
 					LaunchTests:      touchviewLaunchForAmazonPrimeVideo,
-					CommonTests:      testutil.TouchviewSmokeTests,
+					SmokeTests:       testutil.TouchviewSmokeTests,
 					AppSpecificTests: touchviewAppSpecificTestsForAmazonPrimeVideo,
 				},
 				ExtraAttr:         []string{"appcompat_smoke"},
