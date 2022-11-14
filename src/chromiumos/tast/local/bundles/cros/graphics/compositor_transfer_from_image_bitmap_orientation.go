@@ -38,9 +38,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies that transferFromImageBitmap is oriented correctly",
 		Contacts: []string{
-			"aswolfers@chromium.org",
 			"chromeos-gfx-compositor@google.com",
+			"aswolfers@chromium.org",
 		},
+		BugComponent: "b:1021073",
 		Attr:         []string{"group:graphics", "graphics_nightly"},
 		Data:         []string{"transfer-from-image-bitmap.html"},
 		SoftwareDeps: []string{"chrome"},
