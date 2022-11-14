@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/services/cros/arc"
 	"chromiumos/tast/services/cros/platform"
 	"chromiumos/tast/services/cros/security"
+	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 )
 
@@ -178,6 +179,29 @@ func ensureChromeLogin(ctx context.Context, s *testing.State, cl *rpc.Client) er
 	return nil
 }
 
+// collectExtraDebugInfo copies extra debug info from the DUT.
+// It collects backup of the ureadahead pack file and the ftrace buffer for debugging why the ureadahead pack file is corrupted.
+// Returns true if extra debug info is collected or false if the DUT doesn't have extra debug info, or this function fails to collect the debug info.
+func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) {
+	d := s.DUT()
+	if err := d.Conn().CommandContext(ctx, "/usr/bin/test", "-e", "/var/lib/ureadhead/pack.corrupt").Run(); err == nil {
+		return false, nil
+	}
+
+	extraDebugInfo := filepath.Join(s.OutDir(), "extra_debug_info")
+	if err := os.Mkdir(extraDebugInfo, 0755); err != nil {
+		return false, errors.Wrap(err, "failed to create the extra_debug directory")
+	}
+
+	for _, f := range []string{"pack.corrupt", "trace.corrupt"} {
+		if err := linuxssh.GetFile(ctx, d.Conn(), filepath.Join("/var/lib/ureadahead", f), filepath.Join(extraDebugInfo, f), linuxssh.DereferenceSymlinks); err != nil {
+			return false, errors.Wrap(err, "failed to collect debug info")
+		}
+
+	}
+	return true, nil
+}
+
 // BootPerf is the function that reboots the client and collect boot perf data.
 func BootPerf(ctx context.Context, s *testing.State) {
 	d := s.DUT()
@@ -256,6 +280,19 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	for i := 0; i < iterations; i++ {
 		// Run the boot test once.
 		bootPerfOnce(ctx, s, i, iterations, pv)
+	}
+	collected, err := collectExtraDebugInfo(ctx, s)
+	if err != nil {
+		s.Error("Failed saving extra debug info: ", err)
+	}
+	if collected {
+		// This isn't a real metric. The value indicates that extra debug info is collected and needs dev's attention.
+		pv.Set(perf.Metric{
+			Name:      "extra_debug_info",
+			Unit:      "None",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false,
+		}, 1.0)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
