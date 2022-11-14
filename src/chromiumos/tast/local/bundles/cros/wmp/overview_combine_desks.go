@@ -33,11 +33,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that desks can be combined",
 		Contacts: []string{
+			"chromeos-wms@google.com",
 			"benbecker@chromium.org",
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
