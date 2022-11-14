@@ -31,15 +31,17 @@ func init() {
 		Desc:         "Enterprise connector test for downloading files",
 		Timeout:      30 * time.Minute,
 		Contacts: []string{
-			"sseckler@google.com",
 			"cros-enterprise-connectors@google.com",
+			"sseckler@google.com",
 			"webprotect-eng@google.com",
 		},
+		BugComponent: "TBA",
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
 		},
 		Attr: []string{
+			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
 		},
