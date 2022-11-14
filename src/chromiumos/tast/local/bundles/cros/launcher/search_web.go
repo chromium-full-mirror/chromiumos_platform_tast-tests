@@ -7,10 +7,11 @@ package launcher
 import (
 	"context"
 	"fmt"
-	"regexp"
+	"net/url"
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -37,16 +38,10 @@ func init() {
 		SoftwareDeps: []string{"chrome", "drivefs", "chrome_internal"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name: "stable_clamshell",
+			Name: "clamshell",
 			Val:  launcher.TestCase{TabletMode: false},
 		}, {
-			Name: "stable_tablet",
-			Val:  launcher.TestCase{TabletMode: true},
-		}, {
-			Name: "unstable_clamshell",
-			Val:  launcher.TestCase{TabletMode: false},
-		}, {
-			Name: "unstable_tablet",
+			Name: "tablet",
 			Val:  launcher.TestCase{TabletMode: true},
 		}},
 	})
@@ -105,9 +100,37 @@ func SearchWeb(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "launched_result_ui_dump")
 
 	browserRootFinder := nodewith.Role(role.Window).HasClass("BrowserRootView")
-	verifyNode := browserRootFinder.NameRegex(regexp.MustCompile(fmt.Sprintf("^%s - Google .* - Google Chrome - .*", query)))
+	addressBar := nodewith.Name("Address and search bar").Role(role.TextField).Ancestor(browserRootFinder)
 
-	if err := uiauto.New(tconn).WaitUntilExists(verifyNode)(ctx); err != nil {
-		s.Fatal("Failed to verify search result: ", err)
+	addressBarInfo, err := ui.Info(ctx, addressBar)
+	if err != nil {
+		s.Fatal("Failed to get address bar view info: ", err)
 	}
+
+	queryFromURL, err := extractSearchQuery(addressBarInfo.Value)
+	if err != nil {
+		s.Fatal("Unable to extract search query from browser's address bar: ", err)
+	}
+	if queryFromURL != query {
+		s.Fatalf("Unexpected search query in browser's address bar; got %q, want %q", queryFromURL, query)
+	}
+}
+
+// extractSearchQuery extracts query parameter `q` from a raw URL (supports captcha redirects).
+func extractSearchQuery(rawURL string) (string, error) {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to parse URL %q", rawURL)
+	}
+
+	queryParams, err := url.ParseQuery(parsedURL.RawQuery)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to parse URL query params %q", parsedURL.RawQuery)
+	}
+
+	if queryParams.Has("continue") {
+		return extractSearchQuery(queryParams.Get("continue"))
+	}
+
+	return queryParams.Get("q"), nil
 }
