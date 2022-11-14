@@ -19,10 +19,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchManagedGuestSession,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test chrome.login.launchManagedGuestSession Extension API",
 		Contacts: []string{
-			"hendrich@chromium.com",
+			"mpetrisor@chromium.org",
 			"chromeos-commercial-identity@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},

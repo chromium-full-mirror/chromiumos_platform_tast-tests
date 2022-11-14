@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test chrome.loginScreenUi Extension API",
 		Contacts: []string{
-			"hendrich@chromium.com",
+			"mpetrisor@chromium.org",
 			"chromeos-commercial-identity@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},

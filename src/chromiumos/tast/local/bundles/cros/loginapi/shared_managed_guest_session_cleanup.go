@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test chrome.login.endSharedSession Extension API properly performs cleanup",
 		Contacts: []string{
-			"hendrich@chromium.com",
+			"mpetrisor@chromium.org",
 			"chromeos-commercial-identity@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
