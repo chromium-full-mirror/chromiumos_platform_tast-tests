@@ -316,7 +316,14 @@ func (vkbCtx *VirtualKeyboardContext) ShowAccessPoints() uiauto.Action {
 			// "err == nil" means the access points panel is shown.
 			return nil
 		}
-		return vkbCtx.ui.LeftClick(KeyFinder.Name("Show access points"))(ctx)
+		if err := (vkbCtx.ui.WithTimeout(time.Second).WaitUntilExists(KeyFinder.Name("Show access points")))(ctx); err == nil {
+			// In Atlas mode, there is no need to schow access points.
+			// (err==nil means that the show button does exist so we are in non-Atlas case.
+			// Otherwise, we don't actually need to do anything.
+			return vkbCtx.ui.LeftClick(KeyFinder.Name("Show access points"))(ctx)
+
+		}
+		return nil
 	}
 }
 
