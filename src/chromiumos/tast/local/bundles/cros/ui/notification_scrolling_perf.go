@@ -182,7 +182,7 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(atconn)
 	statusArea := nodewith.ClassName("ash/StatusAreaWidgetDelegate")
-	messageCenter := nodewith.ClassName("UnifiedMessageCenterView")
+	messageCenter := nodewith.ClassName("NotificationCenterView")
 
 	// Note that ash-chrome (cr and atconn) is passed in to take traces and metrics from ash-chrome.
 	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(atconn, func(ctx context.Context) error {
