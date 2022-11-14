@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -37,7 +38,9 @@ func init() {
 			"jamescook@chromium.org",
 			"tbarzic@chromium.org",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWith100FakeAppsNoAppSort",
 	})

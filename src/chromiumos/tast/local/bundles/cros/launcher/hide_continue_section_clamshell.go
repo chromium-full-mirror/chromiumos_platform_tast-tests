@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -28,7 +29,9 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"jamescook@chromium.org",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 	})
 }

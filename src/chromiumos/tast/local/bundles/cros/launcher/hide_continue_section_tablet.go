@@ -30,6 +30,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"jamescook@chromium.org",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
