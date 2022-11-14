@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package util
+// Package u2fd contains functionality shared by WebAuthn/U2F tests.
+package u2fd
 
 import (
 	"context"
@@ -17,6 +18,16 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
+)
+
+// WebAuthnIoButtonType is the type of buttons in webauthn.io.
+type WebAuthnIoButtonType int8
+
+const (
+	// WebAuthnIoRegisterButton is the "Register" button.
+	WebAuthnIoRegisterButton WebAuthnIoButtonType = 0
+	// WebAuthnIoAuthenticateButton is the "Authenticate" button.
+	WebAuthnIoAuthenticateButton WebAuthnIoButtonType = 1
 )
 
 // WebAuthnInWebAuthnIo performs the WebAuthn procedure in the external site webauthn.io.
@@ -42,17 +53,13 @@ func WebAuthnInWebAuthnIo(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 
 	// Enter username
 	name := randomUsername()
-	testing.ContextLogf(ctx, "Username: %s", name)
-	// Use a random username because webauthn.io keeps state for each username for a period of time.
-	err = conn.Eval(ctx, fmt.Sprintf(`document.getElementById('input-email')._x_model.set("%s")`, name), nil)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute JS expression to set username")
+	if err = SetUsernameInWebAuthnIo(ctx, conn, name); err != nil {
+		return err
 	}
 
 	// Press "Register" button.
-	err = conn.Eval(ctx, `document.getElementById('register-button').click()`, nil)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute JS expression to press register button")
+	if err = PressButtonInWebAuthnIo(ctx, conn, WebAuthnIoRegisterButton); err != nil {
+		return err
 	}
 
 	ui := uiauto.New(tconn)
@@ -83,9 +90,8 @@ func WebAuthnInWebAuthnIo(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	// Perform GetAssertion on the test website.
 
 	// Press "Login" button.
-	err = conn.Eval(ctx, `document.getElementById('login-button').click()`, nil)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute JS expression to press login button")
+	if err = PressButtonInWebAuthnIo(ctx, conn, WebAuthnIoAuthenticateButton); err != nil {
+		return err
 	}
 
 	// Wait for ChromeOS WebAuthn dialog.
@@ -113,6 +119,41 @@ func randomUsername() string {
 	}
 
 	return string(ret)
+}
+
+// SetUsernameInWebAuthnIo sets the username field in webauthn.io.
+func SetUsernameInWebAuthnIo(ctx context.Context, conn *chrome.Conn, name string) error {
+	testing.ContextLogf(ctx, "Username: %s", name)
+	// Use a random username because webauthn.io keeps state for each username for a period of time.
+	err := conn.Eval(ctx, fmt.Sprintf(`document.getElementById('input-email')._x_model.set("%s")`, name), nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute JS expression to set username")
+	}
+	return nil
+}
+
+// PressButtonInWebAuthnIo reliably presses the register/authenticate button in webauthn.io.
+func PressButtonInWebAuthnIo(ctx context.Context, conn *chrome.Conn, buttonType WebAuthnIoButtonType) error {
+	var buttonName string
+	if buttonType == WebAuthnIoRegisterButton {
+		buttonName = "register-button"
+	} else if buttonType == WebAuthnIoAuthenticateButton {
+		buttonName = "login-button"
+	} else {
+		return errors.Errorf("invalid button type %v", buttonType)
+	}
+	testing.Poll(ctx, func(context.Context) error {
+		err := conn.Eval(ctx, fmt.Sprintf("document.getElementById('%s').click()", buttonName), nil)
+		if err != nil {
+			return errors.Wrapf(err, "failed to execute JS expression to press %s", buttonName)
+		}
+		err = conn.WaitForExprWithTimeout(ctx, `document.getElementsByClassName("alert").length > 0`, time.Second)
+		if err == nil {
+			return errors.Errorf("failed to click %s successfully", buttonName)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond})
+	return nil
 }
 
 // CheckMakeCredentialSuccessInWebAuthnIo checks Make Credential succeeded by polling js attributes on webauthn.io.

@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/u2fd/util"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -22,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/services/cros/hwsec"
 	"chromiumos/tast/testing"
@@ -143,10 +143,8 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *hwsec.St
 		return nil, errors.Wrap(err, "failed to get test API connection")
 	}
 
-	testing.ContextLogf(ctx, "Username: %s", req.GetUsername())
-	err = c.conn.Eval(ctx, fmt.Sprintf(`document.getElementById('input-email')._x_model.set("%s")`, req.GetUsername()), nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute JS expression to set username")
+	if err = u2fd.SetUsernameInWebAuthnIo(ctx, c.conn, req.GetUsername()); err != nil {
+		return nil, err
 	}
 
 	ui := uiauto.New(tconn)
@@ -162,9 +160,8 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *hwsec.St
 	}
 
 	// Press "Register" button.
-	err = c.conn.Eval(ctx, `document.getElementById('register-button').click()`, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute JS expression to press register button")
+	if err = u2fd.PressButtonInWebAuthnIo(ctx, c.conn, u2fd.WebAuthnIoRegisterButton); err != nil {
+		return nil, err
 	}
 
 	// If authenticator type is "Platform", there's only platform option so we don't have to manually click "This device".
@@ -195,7 +192,7 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *hwsec.St
 }
 
 func (c *WebauthnService) CheckMakeCredential(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if err := util.CheckMakeCredentialSuccessInWebAuthnIo(ctx, c.conn); err != nil {
+	if err := u2fd.CheckMakeCredentialSuccessInWebAuthnIo(ctx, c.conn); err != nil {
 		return nil, errors.Wrap(err, "failed to perform MakeCredential")
 	}
 	return &empty.Empty{}, nil
@@ -227,9 +224,8 @@ func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.Star
 	}
 
 	// Press "Login" button.
-	err = c.conn.Eval(ctx, `document.getElementById('login-button').click()`, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute JS expression to press login button")
+	if err = u2fd.PressButtonInWebAuthnIo(ctx, c.conn, u2fd.WebAuthnIoAuthenticateButton); err != nil {
+		return nil, err
 	}
 
 	if c.cfg.hasDialog {
@@ -248,7 +244,7 @@ func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.Star
 }
 
 func (c *WebauthnService) CheckGetAssertion(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if err := util.CheckGetAssertionSuccessInWebAuthnIo(ctx, c.conn); err != nil {
+	if err := u2fd.CheckGetAssertionSuccessInWebAuthnIo(ctx, c.conn); err != nil {
 		return nil, errors.Wrap(err, "failed to perform GetAssertion")
 	}
 	return &empty.Empty{}, nil

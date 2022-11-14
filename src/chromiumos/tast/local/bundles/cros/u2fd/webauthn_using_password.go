@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/u2fd/util"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -106,7 +106,7 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(b/210418148): Use an internal site for testing to prevent flakiness.
-	if err := util.WebAuthnInWebAuthnIo(ctx, cr, br, authCallback); err != nil {
+	if err := u2fd.WebAuthnInWebAuthnIo(ctx, cr, br, authCallback); err != nil {
 		s.Fatal("Failed to perform WebAuthn: ", err)
 	}
 }

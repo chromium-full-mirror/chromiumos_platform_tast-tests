@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
+	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -128,7 +129,7 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(b/210418148): Use an internal site for testing to prevent flakiness.
-	if err := util.WebAuthnInWebAuthnIo(ctx, cr, br, authCallback); err != nil {
+	if err := u2fd.WebAuthnInWebAuthnIo(ctx, cr, br, authCallback); err != nil {
 		s.Fatal("Failed to perform WebAuthn: ", err)
 	}
 }

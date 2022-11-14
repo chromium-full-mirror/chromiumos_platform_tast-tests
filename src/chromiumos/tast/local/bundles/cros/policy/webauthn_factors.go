@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
+	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -316,17 +316,12 @@ func verifyInSessionAuthDialog(ctx context.Context, cr *chrome.Chrome, tconn *ch
 	}
 
 	name := randomUsername()
-	testing.ContextLogf(ctx, "Username: %s", name)
-	// Use a random username because webauthn.io keeps state for each username for a period of time.
-	err = conn.Eval(ctx, fmt.Sprintf(`document.getElementById('input-email')._x_model.set("%s")`, name), nil)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute JS expression to set username")
+	if err = u2fd.SetUsernameInWebAuthnIo(ctx, conn, name); err != nil {
+		return err
 	}
 
-	// Press "Register" button.
-	err = conn.Eval(ctx, `document.getElementById('register-button').click()`, nil)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute JS expression to press register button")
+	if err = u2fd.PressButtonInWebAuthnIo(ctx, conn, u2fd.WebAuthnIoRegisterButton); err != nil {
+		return err
 	}
 
 	ui := uiauto.New(tconn)
