@@ -24,11 +24,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     UCMSequences,
-		Desc:     "Exercise UCM config enable/disable sequences",
-		Contacts: []string{"aaronyu@google.com", "chromeos-audio-bugs@google.com"},
-		Attr:     []string{"group:mainline"},
-		Timeout:  1 * time.Minute,
+		Func:         UCMSequences,
+		Desc:         "Exercise UCM config enable/disable sequences",
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent: "b:875484",
+		Attr:         []string{"group:mainline"},
+		Timeout:      1 * time.Minute,
 		HardwareDeps: hwdep.D(
 			// TODO(b/231276793): eve hotword broken.
 			hwdep.SkipOnModel("eve"),

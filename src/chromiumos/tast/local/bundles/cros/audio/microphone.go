@@ -26,9 +26,10 @@ func init() {
 		Func: Microphone,
 		Desc: "Verifies microphone works correctly",
 		Contacts: []string{
-			"cychiang@chromium.org", // Media team
-			"hidehiko@chromium.org", // Tast port author
+			"chromeos-audio-bugs@google.com",
+			"cychiang@chromium.org",
 		},
+		BugComponent: "b:875484",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"audio_stable"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),

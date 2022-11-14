@@ -29,7 +29,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasRecordQuality,
 		Desc:         "Verifies recorded samples from CRAS are correct",
-		Contacts:     []string{"yuhsuan@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
+		BugComponent: "b:875484",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Timeout:      3 * time.Minute,

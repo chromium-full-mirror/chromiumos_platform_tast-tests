@@ -17,9 +17,10 @@ func init() {
 		Func: DeviceRecord,
 		Desc: "Checks that sound devices for recording are recognized",
 		Contacts: []string{
-			"cychiang@chromium.org", // Media team
-			"nya@chromium.org",      // Tast port author
+			"chromeos-audio-bugs@google.com",
+			"cychiang@chromium.org",
 		},
+		BugComponent: "b:875484",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

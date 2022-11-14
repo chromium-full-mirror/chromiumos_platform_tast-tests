@@ -21,7 +21,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasPlay,
 		Desc:         "Verifies CRAS playback function works correctly",
-		Contacts:     []string{"yuhsuan@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
+		BugComponent: "b:875484",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

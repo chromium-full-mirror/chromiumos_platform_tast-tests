@@ -23,10 +23,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests to ensure that the dedicated keyboard key for microphone mute toggle properly mutes/unmutes the microphone",
 		Contacts: []string{
-			"chromeos-audio-sw@google.com",
+			"chromeos-audio-bugs@google.com",
 			"chromeos-sw-engprod@google.com",
 			"rtinkoff@chromium.org",
 		},
+		BugComponent: "b:875484",
 		// TODO(https://crbug.com/1266507): Remove "informational" once stable.
 		// TODO(https://crbug.com/1271209): Add a formal HW dependency for devices with KEY_MICMUTE.
 		Attr:         []string{"group:mainline", "informational"},

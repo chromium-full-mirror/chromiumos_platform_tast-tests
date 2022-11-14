@@ -21,7 +21,8 @@ func init() {
 		Func:         FileOwnershipMigration,
 		Desc:         "Check files are migrated on boot",
 		SoftwareDeps: []string{"cras", "reboot"},
-		Contacts:     []string{"aaronyu@google.com", "chromeos-audio-sw@google.com"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent: "b:875484",
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
 	})

@@ -21,7 +21,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasRecord,
 		Desc:         "Verifies CRAS record function works correctly",
-		Contacts:     []string{"yuhsuan@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
+		BugComponent: "b:875484",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
