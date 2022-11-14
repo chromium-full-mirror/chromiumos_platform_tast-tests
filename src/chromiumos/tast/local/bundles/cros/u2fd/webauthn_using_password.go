@@ -70,6 +70,7 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	bt := s.Param().(browser.Type)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
 
 	if err := upstart.CheckJob(ctx, "u2fd"); err != nil {
 		s.Fatal("u2fd isn't started: ", err)
@@ -80,12 +81,6 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to open the %v browser: %v", bt, err)
 	}
 	defer closeBrowser(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get test API connection: ", err)
-	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {

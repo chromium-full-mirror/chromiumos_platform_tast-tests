@@ -62,6 +62,7 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	bt := s.Param().(browser.Type)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
 
 	if err := upstart.CheckJob(ctx, "u2fd"); err != nil {
 		s.Fatal("u2fd isn't started: ", err)
@@ -100,11 +101,9 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close()
 
-	tconn, err := util.SetUpUserPIN(ctx, cr, keyboard, PIN, password, autosubmit)
-	if err != nil {
+	if _, err = util.SetUpUserPIN(ctx, cr, keyboard, PIN, password, autosubmit); err != nil {
 		s.Fatal("Failed to set up PIN: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
 		// Check if the UI is correct.
