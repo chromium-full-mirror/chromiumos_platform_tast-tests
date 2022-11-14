@@ -84,3 +84,14 @@ func ClickHidScreenNextButton(ctx context.Context, oobeConn *chrome.Conn, tconn 
 
 	return nil
 }
+
+// IsHidDetectionMouseDetected checks if there is no keyboard detected in
+// the OOBE HID Detection page.
+func IsHidDetectionMouseDetected(ctx context.Context, oobeConn *chrome.Conn, tconn *chrome.TestConn) error {
+	var mouseDetectedText string
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.HIDDetectionScreen.mouseDetected()", &mouseDetectedText); err != nil {
+		return err
+	}
+	mouseDetectedTextNode := nodewith.Role(role.StaticText).Name(mouseDetectedText)
+	return uiauto.New(tconn).WaitUntilExists(mouseDetectedTextNode)(ctx)
+}

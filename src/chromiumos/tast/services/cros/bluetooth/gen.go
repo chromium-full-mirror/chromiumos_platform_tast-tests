@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. bt_test_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../.. oobe_hid_bluetooth_service.proto
 
 package bluetooth
 
