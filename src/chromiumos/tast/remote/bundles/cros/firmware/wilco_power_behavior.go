@@ -15,11 +15,19 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// wilcoPowerBehaviorTestParams defines the params of interest.
+// checkCharger denotes whether the test requires plugging/unplugging charger.
+// checkLidState denotes whether the test requires opening/closing the dut's lid.
+type wilcoPowerBehaviorTestParams struct {
+	checkCharger  bool
+	checkLidState bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WilcoPowerBehavior,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify Wilco devices can wake from pressing power, but not from connecting AC",
+		Desc:         "Verify Wilco power behavior based on AC and lid states",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",
@@ -28,10 +36,24 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
+		Timeout:      10 * time.Minute,
+		Params: []testing.Param{{
+			// Verify that Wilco doesn't turn on from S5 (off) by opening the lid.
+			Name: "lid_close_open",
+			Val: wilcoPowerBehaviorTestParams{
+				checkLidState: true,
+			},
+		}, {
+			// Verify that Wilco wakes from pressing power, but not from AC.
+			Val: wilcoPowerBehaviorTestParams{
+				checkCharger: true,
+			},
+		}},
 	})
 }
 
 func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
+	tc := s.Param().(wilcoPowerBehaviorTestParams)
 	h := s.FixtValue().(*fixture.Value).Helper
 	d := s.DUT()
 
@@ -43,13 +65,29 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	s.Log("Removing charger")
-	if err := h.SetDUTPower(ctx, false); err != nil {
-		s.Fatal("Unable to remove charger: ", err)
+	// For debugging purposes, log servo type.
+	servoType, err := h.Servo.GetServoType(ctx)
+	if err != nil {
+		s.Fatal("Failed to find servo type: ", err)
 	}
+	s.Logf("Servo type: %s", servoType)
 
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
-		s.Fatal("Failed to remove watchdog main: ", err)
+	if tc.checkCharger {
+		s.Log("Removing charger")
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Unable to remove charger: ", err)
+		}
+		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
+			s.Fatal("Failed to remove watchdog main: ", err)
+		}
+	}
+	if tc.checkLidState {
+		// Lid emulations are only possible via servo micro.
+		if hasMicroOrC2D2, err := h.Servo.PreferDebugHeader(ctx); err != nil {
+			s.Fatal("PreferDebugHeader: ", err)
+		} else if !hasMicroOrC2D2 {
+			s.Fatal("No servo micro found for lid emulations")
+		}
 	}
 
 	s.Logf("Pressing power button for %s to put DUT in deep sleep", h.Config.HoldPwrButtonPowerOff)
@@ -65,42 +103,62 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("DUT did not power down: ", err)
 	}
 
-	// Increase timeout in getting response from cr50 uart.
-	if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "10"); err != nil {
-		s.Fatal("Failed to set cr50 uart timeout: ", err)
-	}
-	defer func() {
-		s.Log("Restoring cr50 uart timeout to the default value of 3 seconds")
-		if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "3"); err != nil {
-			s.Fatal("Failed to restore default cr50 uart timeout: ", err)
+	if tc.checkCharger {
+		// Increase timeout in getting response from cr50 uart.
+		if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "10"); err != nil {
+			s.Fatal("Failed to set cr50 uart timeout: ", err)
 		}
-	}()
+		defer func() {
+			s.Log("Restoring cr50 uart timeout to the default value of 3 seconds")
+			if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "3"); err != nil {
+				s.Fatal("Failed to restore default cr50 uart timeout: ", err)
+			}
+		}()
 
-	s.Log("Verifying DUT's AP is off")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		apState, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
-		if err != nil {
-			return errors.Wrap(err, "failed to run cr50 command")
+		s.Log("Verifying DUT's AP is off")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			apState, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
+			if err != nil {
+				return errors.Wrap(err, "failed to run cr50 command")
+			}
+
+			if strings.TrimSpace(apState[0][1]) != "off" {
+				return errors.Wrapf(err, "unexpected AP state: %s", strings.TrimSpace(apState[0][1]))
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+			s.Fatal("Failed to verify DUT's AP is off: ", err)
 		}
 
-		if strings.TrimSpace(apState[0][1]) != "off" {
-			return errors.Wrapf(err, "unexpected AP state: %s", strings.TrimSpace(apState[0][1]))
+		s.Log("Connecting charger")
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Unable to connect charger: ", err)
 		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		s.Fatal("Failed to verify DUT's AP is off: ", err)
+	}
+	if tc.checkLidState {
+		// Close and then open DUT's lid.
+		for _, expState := range []string{"no", "yes"} {
+			s.Logf("Setting lid open to %s and checking for lid state", expState)
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				if err := h.Servo.SetStringAndCheck(ctx, servo.LidOpen, expState); err != nil {
+					s.Fatalf("Failed to set lid open to %s: %v", expState, err)
+				}
+				return nil
+			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+				s.Fatal("While setting and checking for the lid state: ", err)
+			}
+			if err := testing.Sleep(ctx, time.Second); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+		}
 	}
 
-	s.Log("Connecting charger")
-	if err := h.SetDUTPower(ctx, true); err != nil {
-		s.Fatal("Unable to connect charger: ", err)
-	}
-
-	// Connecting charger would not wake Wilco devices from deep sleep.
+	// Check that when Wilco devices are in deep sleep, or at the off state,
+	// waking it would not be possible either by AC, or by opening lid.
 	// Expect a timeout in waiting for DUT to reconnect.
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancelWaitConnect()
-	err := d.WaitConnect(waitConnectCtx)
+	err = d.WaitConnect(waitConnectCtx)
 	switch err.(type) {
 	case nil:
 		s.Fatal("DUT woke up unexpectedly")
