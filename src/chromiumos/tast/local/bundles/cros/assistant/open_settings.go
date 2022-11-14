@@ -28,7 +28,21 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Fixture:      "assistant",
+		Params: []testing.Param{
+			{
+				Name:              "libassistant_dlc",
+				Fixture:           "assistantWithDlc",
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Name:              "libassistant_v2",
+				Fixture:           "assistantWithLibassistantV2",
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Fixture: "assistant",
+			},
+		},
 	})
 }
 
