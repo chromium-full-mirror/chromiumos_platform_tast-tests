@@ -25,7 +25,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting online wallpapers in the new wallpaper app for a child user",
 		Contacts: []string{
-			"tobyhuang@chromium.org",
 			"thuongphan@google.com",
 			"cros-families-eng+test@google.com",
 			"chromeos-sw-engprod@google.com",
