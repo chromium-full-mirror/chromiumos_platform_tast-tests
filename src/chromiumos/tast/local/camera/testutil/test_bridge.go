@@ -34,7 +34,7 @@ const (
 	jsonConfigPath = "/var/cache/camera/test_config.json"
 )
 
-// TestBridge is used to comminicate with CCA for test specific logic, such as test environment set-up/tear-down flow, performance/error monitoring.
+// TestBridge is used to communicate with CCA for test specific logic, such as test environment set-up/tear-down flow, performance/error monitoring.
 type TestBridge struct {
 	cr       *chrome.Chrome
 	pageConn *chrome.Conn
