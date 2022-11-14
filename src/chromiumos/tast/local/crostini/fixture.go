@@ -434,6 +434,10 @@ func (f *crostiniFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (f *crostiniFixture) Reset(ctx context.Context) error {
+	resetSucceeds := false
+	defer func() {
+		f.preData.startedOK = resetSucceeds
+	}()
 	// TODO(b/235294264): implement a more time-efficient way to reset crostini environment.
 	// Check container.
 	// It returns error in the following situations:
@@ -454,6 +458,7 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 		return errors.Wrap(err, "failed to check basic commands in the existing container")
 	}
 
+	resetSucceeds = true
 	return nil
 }
 
