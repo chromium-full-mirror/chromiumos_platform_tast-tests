@@ -22,7 +22,7 @@ func init() {
 		Func:         DS4,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the DS4 mappings are what we expect",
-		Contacts:     []string{"jtguitar@google.com", "chromeos-tango@google.com", "hcutts@chromium.org", "ricardoq@chromium.org"},
+		Contacts:     []string{"jtguitar@google.com", "chromeos-tango@google.com", "ricardoq@chromium.org"},
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"ds4.hid", "replay.html"},

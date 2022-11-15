@@ -20,7 +20,7 @@ func init() {
 		Func:         DS3,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the DS3 mappings are what we expect",
-		Contacts:     []string{"jtguitar@google.com", "chromeos-tango@google.com", "hcutts@chromium.org", "ricardoq@chromium.org"},
+		Contacts:     []string{"jtguitar@google.com", "chromeos-tango@google.com", "ricardoq@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"ds3.hid", "replay.html"},
