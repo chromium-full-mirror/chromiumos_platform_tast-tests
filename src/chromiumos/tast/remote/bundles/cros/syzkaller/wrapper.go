@@ -325,6 +325,23 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Running syz-manager failed: ", err)
 	}
 
+	defer func() {
+		// Copy the syzkaller stdout/stderr logfile and the working directory
+		// as part of the tast results directory. Set this action as deferred so
+		// that it is performed even if the test fails with a call to s.Fatal().
+		tastResultsDir := s.OutDir()
+		s.Log("Copying syzkaller workdir to tast results directory")
+		cmd = exec.Command("cp", "-r", syzkallerWorkdir, tastResultsDir)
+		if err := cmd.Run(); err != nil {
+			s.Fatal("Failed to copy syzkaller workdir: ", err)
+		}
+		s.Log("Copying syzkaller logfile to tast results directory")
+		cmd = exec.Command("cp", logFile.Name(), tastResultsDir)
+		if err := cmd.Run(); err != nil {
+			s.Fatal("Failed to copy syzkaller logfile: ", err)
+		}
+	}()
+
 	done := make(chan bool)
 	if pCmd != nil {
 		go runPeriodic(ctx, d, done, pCmd)
@@ -373,19 +390,6 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Unsupported enabled syscall[s] found: ", unknown)
 	}
 
-	// Copy the syzkaller stdout/stderr logfile and the working directory
-	// as part of the tast results directory.
-	tastResultsDir := s.OutDir()
-	s.Log("Copying syzkaller workdir to tast results directory")
-	cmd = exec.Command("cp", "-r", syzkallerWorkdir, tastResultsDir)
-	if err := cmd.Run(); err != nil {
-		s.Fatal("Failed to copy syzkaller workdir: ", err)
-	}
-	s.Log("Copying syzkaller logfile to tast results directory")
-	cmd = exec.Command("cp", logFile.Name(), tastResultsDir)
-	if err := cmd.Run(); err != nil {
-		s.Fatal("Failed to copy syzkaller logfile: ", err)
-	}
 	if !runLocal {
 		if err := saveCorpus(
 			ctx,
