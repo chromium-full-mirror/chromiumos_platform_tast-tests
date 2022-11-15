@@ -22,9 +22,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Gaia calls credentials passing API properly",
 		Contacts: []string{
-			"cros-oobe@google.com",
-			"rsorokin@google.com",
 			"cros-oac@google.com",
+			"bohdanty@google.com",
+			"dkuzmin@google.com",
+			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
@@ -33,6 +34,7 @@ func init() {
 			"chrome_internal",
 		},
 		Attr: []string{
+			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
 		},
