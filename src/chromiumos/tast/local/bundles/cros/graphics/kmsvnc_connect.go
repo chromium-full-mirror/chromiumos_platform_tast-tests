@@ -22,7 +22,8 @@ func init() {
 		Func:         KmsvncConnect,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Connects to kmsvnc server and verifies server parameters",
-		Contacts:     []string{"shaochuan@chromium.org", "uekawa@chromium.org"},
+		Contacts:     []string{"chromeos-velocity@google.com", "shaochuan@chromium.org", "uekawa@chromium.org"},
+		BugComponent: "b:633439",  // ChromeOS > Software > Eng Velocity
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
