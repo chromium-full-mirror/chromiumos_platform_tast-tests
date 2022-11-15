@@ -23,7 +23,9 @@ func init() {
 		Func:         InputOverlayDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test for gaming input overlay menu correctness",
-		Contacts:     []string{"pjlee@google.com", "cuicuiruan@google.com", "arc-app-dev@google.com"},
+		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Gaming
+		BugComponent: "b:767470",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"input-overlay-menu-close.png", "input-overlay-menu-switch.png", "input-overlay-menu.png"},

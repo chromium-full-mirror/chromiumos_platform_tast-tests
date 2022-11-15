@@ -20,7 +20,9 @@ func init() {
 		Func:         InputOverlayLaunch,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs the GIO test application and checks for launch correctness",
-		Contacts:     []string{"pjlee@google.com", "cuicuiruan@google.com", "arc-app-dev@google.com"},
+		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Gaming
+		BugComponent: "b:767470",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithInputOverlay",
