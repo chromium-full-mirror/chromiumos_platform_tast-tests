@@ -221,6 +221,9 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 	var got []usbutil.Device
 	for _, d := range devs {
 		udIn := d.BusInfo.USBBusInfo
+		if udIn.Version == "Unknown" {
+			return errors.New("unknown USB version")
+		}
 		// TODO:(b/199683963): Validation of types.BusDevice.DeviceClass is skipped.
 		udOut := usbutil.Device{
 			VendorID:    fmt.Sprintf("%04x", udIn.VendorID),
@@ -230,6 +233,7 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 			Class:       fmt.Sprintf("%02x", udIn.ClassID),
 			SubClass:    fmt.Sprintf("%02x", udIn.SubClassID),
 			Protocol:    fmt.Sprintf("%02x", udIn.ProtocolID),
+			SpecSpeed:   udIn.SpecSpeed,
 		}
 		for _, ifc := range udIn.Interfaces {
 			udOut.Interfaces = append(udOut.Interfaces, usbutil.Interface{

@@ -39,6 +39,8 @@ type USBBusInfo struct {
 	ProductID                uint16                    `json:"product_id"`
 	Interfaces               []USBInterfaceInfo        `json:"interfaces"`
 	FwupdFirmwareVersionInfo *FwupdFirmwareVersionInfo `json:"fwupd_firmware_version_info"`
+	Version                  string                    `json:"version"`
+	SpecSpeed                string                    `json:"spec_speed"`
 }
 
 // USBInterfaceInfo represents the UsbInterfaceInfo in cros-healthd mojo

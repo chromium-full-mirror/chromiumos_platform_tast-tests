@@ -258,6 +258,7 @@ func TestAttachedDevices(t *testing.T) {
 			Class:       "00",
 			SubClass:    "00",
 			Protocol:    "00",
+			SpecSpeed:   "480",
 			Interfaces: []Interface{
 				Interface{
 					InterfaceNumber: 0,
@@ -276,6 +277,7 @@ func TestAttachedDevices(t *testing.T) {
 			Class:       "00",
 			SubClass:    "00",
 			Protocol:    "00",
+			SpecSpeed:   "5000",
 			Interfaces: []Interface{
 				Interface{
 					InterfaceNumber: 0,
@@ -294,6 +296,7 @@ func TestAttachedDevices(t *testing.T) {
 			Class:       "09",
 			SubClass:    "00",
 			Protocol:    "03",
+			SpecSpeed:   "10000",
 			Interfaces: []Interface{
 				Interface{
 					InterfaceNumber: 0,
@@ -312,6 +315,7 @@ func TestAttachedDevices(t *testing.T) {
 			Class:       "09",
 			SubClass:    "00",
 			Protocol:    "03",
+			SpecSpeed:   "10000",
 			Interfaces: []Interface{
 				Interface{
 					InterfaceNumber: 0,
@@ -330,6 +334,7 @@ func TestAttachedDevices(t *testing.T) {
 			Class:       "ef",
 			SubClass:    "02",
 			Protocol:    "01",
+			SpecSpeed:   "480",
 			Interfaces: []Interface{
 				Interface{
 					InterfaceNumber: 0,
@@ -362,6 +367,7 @@ func TestAttachedDevices(t *testing.T) {
 			Class:       "00",
 			SubClass:    "00",
 			Protocol:    "00",
+			SpecSpeed:   "12",
 			Interfaces: []Interface{
 				Interface{
 					InterfaceNumber: 0,

@@ -34,6 +34,7 @@ type Device struct {
 	Class                    string
 	SubClass                 string
 	Protocol                 string
+	SpecSpeed                string
 	Interfaces               []Interface
 	FwupdFirmwareVersionInfo *FwupdFirmwareVersionInfo
 }
@@ -261,7 +262,8 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 	// Reference: https://www.kernel.org/doc/html/v4.12/driver-api/usb/usb.html#sys-kernel-debug-usb-devices-output-format
 
 	// E.g. T:  Bus=02 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=10000 MxCh= 4
-	reT := regexp.MustCompile(`Bus=([0-9]{1,3}).* Dev#=\s*([0-9]{1,3})`)
+	// Spd value could be "Unknown", integer value or "1.5".
+	reT := regexp.MustCompile(`Bus=([0-9]{1,3}).* Dev#=\s*([0-9]{1,3}).* Spd=(Unknown|[0-9]+[\.]?[0-9]?)`)
 	// E.g. D:  Ver= 2.00 Cls=09(hub  ) Sub=00 Prot=01 MxPS=64 #Cfgs=  1
 	reD := regexp.MustCompile(`Cls=([0-9a-f]{2}).* Sub=([0-9a-f]{2}) Prot=([0-9a-f]{2})`)
 	// E.g. P:  Vendor=1d6b ProdID=0002 Rev=05.04
@@ -288,6 +290,7 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 					return nil, errors.Errorf("cannot parse usb-devices T: %v", line)
 				}
 				busNumber, devNumber = m[1], m[2]
+				r.SpecSpeed = m[3]
 			case 'D':
 				m := reD.FindStringSubmatch(line)
 				if m == nil {
