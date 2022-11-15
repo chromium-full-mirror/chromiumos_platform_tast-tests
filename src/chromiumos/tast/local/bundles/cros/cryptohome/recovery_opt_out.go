@@ -171,7 +171,7 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	}
 
 	err = authenticateWithRecoveryFactor(ctx, authSessionID, recoveryLabel)
-	if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_KEY_NOT_FOUND); err != nil {
-		s.Fatal("Failed to get the correct error code for auth factor removal: ", err)
+	if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_AUTHORIZATION_KEY_FAILED); err != nil {
+		s.Fatal("Failed to get the correct error code after auth factor removal: ", err)
 	}
 }
