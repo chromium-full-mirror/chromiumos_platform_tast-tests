@@ -121,7 +121,7 @@ func ReorderDesk(ctx context.Context, s *testing.State) {
 	if len(deskMiniViewsInfo) == 0 {
 		// Change the first desk'name.
 		zeroStateDefaultDeskButton := nodewith.ClassName("ZeroStateDefaultDeskButton")
-		firstDeskNameView := nodewith.ClassName("DeskNameView").Name("Desk 1")
+		firstDeskNameView := nodewith.ClassName("DeskNameView")
 		if err := uiauto.Combine(
 			"change the first desk's name",
 			ui.LeftClick(zeroStateDefaultDeskButton),
