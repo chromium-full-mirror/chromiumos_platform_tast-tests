@@ -25,44 +25,57 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(webcodecs.DecodeDataFiles(), webcodecs.MP4DemuxerDataFiles()...),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-		Fixture:      "chromeWebCodecs",
 		Params: []testing.Param{{
 			Name:      "av1_sw",
 			Val:       webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.av1.mp4", Acceleration: webcodecs.PreferSoftware},
 			ExtraData: []string{"bear-320x240.av1.mp4", "bear-320x240.av1.mp4.json"},
+			Fixture:   "chromeWebCodecs",
 		}, {
 			Name:              "av1_hw",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.av1.mp4", Acceleration: webcodecs.PreferHardware},
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 			ExtraData:         []string{"bear-320x240.av1.mp4", "bear-320x240.av1.mp4.json"},
+			Fixture:           "chromeWebCodecs",
 		}, {
 			Name:              "h264_sw",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferSoftware},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
+			Fixture:           "chromeWebCodecs",
 		}, {
 			Name:              "h264_hw",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferHardware},
 			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
 			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
+			Fixture:           "chromeWebCodecs",
+		}, {
+			Name:              "h264_hw_oopvd",
+			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferHardware},
+			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
+			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
+			Fixture:           "chromeWebCodecsOOPVD",
 		}, {
 			Name:      "vp8_sw",
 			Val:       webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp8.mp4", Acceleration: webcodecs.PreferSoftware},
 			ExtraData: []string{"bear-320x240.vp8.mp4", "bear-320x240.vp8.mp4.json"},
+			Fixture:   "chromeWebCodecs",
 		}, {
 			Name:              "vp8_hw",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp8.mp4", Acceleration: webcodecs.PreferHardware},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			ExtraData:         []string{"bear-320x240.vp8.mp4", "bear-320x240.vp8.mp4.json"},
+			Fixture:           "chromeWebCodecs",
 		}, {
 			Name:      "vp9_sw",
 			Val:       webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp9.mp4", Acceleration: webcodecs.PreferSoftware},
 			ExtraData: []string{"bear-320x240.vp9.mp4", "bear-320x240.vp9.mp4.json"},
+			Fixture:   "chromeWebCodecs",
 		}, {
 			Name:              "vp9_hw",
 			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp9.mp4", Acceleration: webcodecs.PreferHardware},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraData:         []string{"bear-320x240.vp9.mp4", "bear-320x240.vp9.mp4.json"},
+			Fixture:           "chromeWebCodecs",
 		}},
 	})
 }

@@ -53,6 +53,14 @@ func init() {
 			Fixture:           "chromeVideoWithGuestLogin",
 			Timeout:           10 * time.Minute,
 		}, {
+			Name:              "h264_hw_oopvd",
+			Val:               memCheckParams{fileName: "720_h264.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
+			ExtraData:         []string{"720_h264.mp4"},
+			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoOOPVDWithGuestLogin",
+			Timeout:           10 * time.Minute,
+		}, {
 			Name:              "hevc_hw",
 			Val:               memCheckParams{fileName: "720_hevc.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},

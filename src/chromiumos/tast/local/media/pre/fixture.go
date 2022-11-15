@@ -134,6 +134,23 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoOOPVDWithGuestLogin",
+		Desc:     "Like chromeVideoWithGuestLogin but with out-of-process video decoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.GuestLogin(),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	// TODO(crbug.com/958166): Use simply ChromeVideo() when HDR is launched.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithHDRScreen",
@@ -216,6 +233,23 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoOOPVDWithFakeWebcam",
+		Desc:     "Like chromeVideoWithFakeWebcam but with out-of-process video decoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the alternative video decoder",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -259,6 +293,24 @@ func init() {
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs("--enable-blink-features=RTCSvcScalabilityMode"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoOOPVDWithFakeWebcamAndSVCEnabled",
+		Desc:     "Like chromeVideoWithFakeWebcamAndSVCEnabled but with out-of-process video decoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs("--enable-blink-features=RTCSvcScalabilityMode"),
+				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -555,6 +607,24 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoOOPVDWithDistinctiveIdentifier",
+		Desc:     "Like chromeVideoWithDistinctiveIdentifier but with out-of-process video decoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
+				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeWebCodecs",
 		Desc:     "Similar to chromeVideo fixture but enabling using WebCodecs API",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -562,6 +632,23 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeWebCodecsArgs...),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeWebCodecsOOPVD",
+		Desc:     "Like chromeWebCodecs but with out-of-process video decoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeWebCodecsArgs...),
+				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",

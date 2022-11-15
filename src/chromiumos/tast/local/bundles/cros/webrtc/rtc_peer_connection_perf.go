@@ -119,6 +119,12 @@ func init() {
 			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "vp8_hw_multi_vp9_3x3_oopvd",
+			Val:               peerconnection.MakeHWTestParamsWithVideoGrid("VP8", 1280, 720, 3, "tulip2-320x180.vp9.webm"),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWDecodeVP8, caps.HWEncodeVP8},
+			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
+			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+		}, {
 			Name:              "vp8_hw_multi_vp9_4x4",
 			Val:               peerconnection.MakeHWTestParamsWithVideoGrid("VP8", 1280, 720, 4, "tulip2-320x180.vp9.webm"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWDecodeVP8, caps.HWEncodeVP8},

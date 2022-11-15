@@ -279,6 +279,19 @@ func init() {
 			ExtraSoftwareDeps: []string{"video_decoder_direct", caps.HWDecodeVP9_2},
 			Fixture:           "chromeVideo",
 		}, {
+			Name: "vp9_2_hw_oopvd",
+			Val: playParams{
+				fileName:    "bear-320x240.vp9.2.webm",
+				videoType:   play.NormalVideo,
+				verifyMode:  play.VerifyHWAcceleratorUsed,
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr: []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData: []string{"bear-320x240.vp9.2.webm"},
+			// VP9 Profile 2 is only supported by the direct Video Decoder.
+			ExtraSoftwareDeps: []string{"video_decoder_direct", caps.HWDecodeVP9_2},
+			Fixture:           "chromeVideoOOPVD",
+		}, {
 			Name: "vp9_hw_hdr",
 			Val: playParams{
 				fileName:    "peru.8k.cut.hdr.vp9.webm",

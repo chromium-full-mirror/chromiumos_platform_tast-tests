@@ -47,6 +47,31 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
+			Name: "h264_360p_hw_oopvd",
+			Val: contentsParams{
+				fileName:    "still-colors-360p.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoOOPVD",
+		}, {
+			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
+			Name: "h264_360p_hw_lacros_oopvd",
+			Val: contentsParams{
+				fileName:    "still-colors-360p.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosOOPVD",
+		}, {
 			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
 			Name: "h264_360p_exotic_crop_hw",
 			Val: contentsParams{

@@ -49,6 +49,16 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
+			Name: "h264_360p_hw_oopvd",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-360p.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoOOPVD",
+		}, {
 			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
 			Name: "h264_360p_exotic_crop_hw",
 			Val: drawOnCanvasParams{

@@ -195,6 +195,21 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
 		}, {
+			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
+			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
+			Name: "vp9_dec_svc_l3t3_key_oopvd",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Svc:               "L3T3_KEY",
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
+			Fixture:           "chromeVideoOOPVDWithFakeWebcamAndSVCEnabled",
+		}, {
 			Name: "h264_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
