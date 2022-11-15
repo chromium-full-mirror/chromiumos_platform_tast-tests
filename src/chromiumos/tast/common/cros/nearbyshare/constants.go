@@ -166,3 +166,8 @@ const (
 	DeviceNameValidationResultErrorTooLong
 	DeviceNameValidationResultErrorNotValidUtf8
 )
+
+// NearbyShareStaticIDCmd is used to get a unique static ID for use with Nearby Share for each lab device.
+// This will prevent the build-up of certificates. The static ID needs to be 10 chars long (upper case or numeric).
+// Format we will use is mac address with colons removed truncated to 10 chars.
+const NearbyShareStaticIDCmd = `ifconfig eth0 | awk '/ether/{print $2}' | sed s/://g | cut -c1-10 | tr [:lower:] [:upper:]`

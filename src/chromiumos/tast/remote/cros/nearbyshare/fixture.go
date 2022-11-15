@@ -348,6 +348,20 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		keepState = b
 	}
 
+	// Get nearby static IDs for the two devices.
+	nearbyStaticIDSender, err := d1.Conn().CommandContext(ctx, "sh", "-c", nearbycommon.NearbyShareStaticIDCmd).Output()
+	if err != nil {
+		s.Fatal("Failed to generate nearby static ID on sender: ", err)
+	}
+	nearbyStaticIDSenderStr := strings.TrimSpace(string(nearbyStaticIDSender))
+	s.Logf("Nearby Static ID of Sender: %s", nearbyStaticIDSenderStr)
+	nearbyStaticIDReceiver, err := d2.Conn().CommandContext(ctx, "sh", "-c", nearbycommon.NearbyShareStaticIDCmd).Output()
+	if err != nil {
+		s.Fatal("Failed to generate nearby static ID on receiver: ", err)
+	}
+	nearbyStaticIDReceiverStr := strings.TrimSpace(string(nearbyStaticIDReceiver))
+	s.Logf("Nearby Static ID of Receiver: %s", nearbyStaticIDReceiverStr)
+
 	// Login and setup Nearby Share on DUT 1 (Sender).
 	cl1, err := rpc.Dial(s.FixtContext(), d1, s.RPCHint())
 	if err != nil {
@@ -359,7 +373,7 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	s.Log("Enabling Nearby Share on DUT1 (Sender). Name: ", senderDisplayName)
 	senderUsername := s.RequiredVar("nearbyshare.cros_username")
 	senderPassword := s.RequiredVar("nearbyshare.cros_password")
-	sender, err := f.enableNearbyShare(ctx, s, cl1, senderDisplayName, senderUsername, senderPassword, "", keepState /*skipOnboarding=*/, true, f.enabledFeatures, f.disabledFeatures)
+	sender, err := f.enableNearbyShare(ctx, s, cl1, senderDisplayName, senderUsername, senderPassword, "", nearbyStaticIDSenderStr, keepState /*skipOnboarding=*/, true, f.enabledFeatures, f.disabledFeatures)
 	if err != nil {
 		s.Fatal("Failed to enable Nearby Share on DUT1 (Sender): ", err)
 	}
@@ -376,7 +390,7 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	receiverUsername := s.RequiredVar("nearbyshare.cros2_username")
 	receiverPassword := s.RequiredVar("nearbyshare.cros2_password")
 	s.Log("skipReceiverOnboarding = ", f.skipReceiverOnboarding)
-	receiver, err := f.enableNearbyShare(ctx, s, cl2, receiverDisplayName, receiverUsername, receiverPassword, senderUsername, keepState, f.skipReceiverOnboarding, f.enabledFeatures, f.disabledFeatures)
+	receiver, err := f.enableNearbyShare(ctx, s, cl2, receiverDisplayName, receiverUsername, receiverPassword, senderUsername, nearbyStaticIDReceiverStr, keepState, f.skipReceiverOnboarding, f.enabledFeatures, f.disabledFeatures)
 	if err != nil {
 		s.Fatal("Failed to enable Nearby Share on DUT2 (Receiver): ", err)
 	}
@@ -423,12 +437,12 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 // senderUsername is only used when the device visibility is "Some contacts".
 // keepState is used to optionally preserve user accounts on the DUT.
 // Sender devices should pass an empty string since the visibility setting is only relevant to receivers.
-func (f *nearbyShareFixture) enableNearbyShare(ctx context.Context, s *testing.FixtState, cl *rpc.Client, deviceName, username, password, senderUsername string, keepState, skipOnboarding bool, enabledFeatures, disabledFeatures []string) (nearbyservice.NearbyShareServiceClient, error) {
+func (f *nearbyShareFixture) enableNearbyShare(ctx context.Context, s *testing.FixtState, cl *rpc.Client, deviceName, username, password, senderUsername, nearbyStaticID string, keepState, skipOnboarding bool, enabledFeatures, disabledFeatures []string) (nearbyservice.NearbyShareServiceClient, error) {
 	// Connect to the Nearby Share Service so we can execute local code on the DUT.
 	ns := nearbyservice.NewNearbyShareServiceClient(cl.Conn)
 	testing.ContextLog(ctx, "Logging into ChromeOS")
 
-	loginReq := &nearbyservice.CrOSLoginRequest{Username: username, Password: password, KeepState: keepState, EnabledFlags: enabledFeatures, DisabledFlags: disabledFeatures}
+	loginReq := &nearbyservice.CrOSLoginRequest{Username: username, Password: password, NearbyStaticId: nearbyStaticID, KeepState: keepState, EnabledFlags: enabledFeatures, DisabledFlags: disabledFeatures}
 	if _, err := ns.NewChromeLogin(ctx, loginReq); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

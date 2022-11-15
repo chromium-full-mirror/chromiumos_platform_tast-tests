@@ -98,6 +98,7 @@ message CrOSLoginRequest {
   bool keep_state = 3;
   repeated string enabled_flags = 4;
   repeated string disabled_flags = 5;
+  string nearby_static_id = 6;
 }
 
 // CrOSAcceptFastInitiationNotificationRequest is a request to accept a

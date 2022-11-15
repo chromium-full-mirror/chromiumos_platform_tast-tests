@@ -7,6 +7,7 @@ package nearbyshare
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -74,6 +75,9 @@ func (n *NearbyService) NewChromeLogin(ctx context.Context, req *nearbyservice.C
 	}
 	if req.KeepState {
 		nearbyOpts = append(nearbyOpts, chrome.KeepState())
+	}
+	if req.NearbyStaticId != "" {
+		nearbyOpts = append(nearbyOpts, chrome.ExtraArgs(fmt.Sprintf("--nearby-share-device-id=%s", req.NearbyStaticId)))
 	}
 
 	testing.ContextLog(ctx, req.EnabledFlags)

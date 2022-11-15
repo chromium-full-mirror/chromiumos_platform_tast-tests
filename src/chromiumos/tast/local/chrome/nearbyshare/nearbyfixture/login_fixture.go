@@ -6,10 +6,13 @@ package nearbyfixture
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -409,6 +412,15 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 			f.opts = append(f.opts, chrome.KeepState())
 		}
 	}
+
+	// Add the unique nearby static ID for this lab device.
+	nearbystaticID, err := testexec.CommandContext(ctx, "sh", "-c", nearbycommon.NearbyShareStaticIDCmd).Output(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatal("Failed to generate Nearby Static ID: ", err)
+	}
+	nearbystaticIDStr := strings.TrimSpace(string(nearbystaticID))
+	s.Logf("Nearby Static ID for this device is: %s", nearbystaticIDStr)
+	f.opts = append(f.opts, chrome.ExtraArgs(fmt.Sprintf("--nearby-share-device-id=%s", nearbystaticIDStr)))
 
 	cr, err := chrome.New(
 		ctx,
