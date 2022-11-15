@@ -27,7 +27,7 @@ func init() {
 		// TODO: This test does not have to be specific to AMD cpus, but is
 		// failing and/or untested on other platforms.
 		SoftwareDeps: []string{"tpm2", "protected_content", "amd_cpu"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      6 * time.Minute,
 	})
 }
