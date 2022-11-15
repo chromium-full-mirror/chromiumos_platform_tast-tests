@@ -30,10 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can complete Shimless RMA successfully. Disable HWWP with Battery Disconnection",
 		Contacts: []string{
-			"yanghenry@google.com",
-			"chromeos-engprod-syd@google.com",
+			"chromeos-shimless-eng@google.com",
+			"chenghan@google.com",
 		},
-		Attr: []string{"group:shimless_rma"},
+		BugComponent: "b:240206289",
+		Attr:         []string{"group:shimless_rma"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},

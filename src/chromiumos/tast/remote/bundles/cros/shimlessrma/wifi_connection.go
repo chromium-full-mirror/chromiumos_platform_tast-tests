@@ -26,11 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test wifi connection will be forgotten after Shimless RMA",
 		Contacts: []string{
-			"yanghenry@google.com",
-			"chromeos-engprod-syd@google.com",
+			"chromeos-shimless-eng@google.com",
+			"chenghan@google.com",
 		},
-		Attr: []string{"group:shimless_rma", "shimless_rma_experimental"},
-		Vars: []string{"router"},
+		BugComponent: "b:240206289",
+		Attr:         []string{"group:shimless_rma", "shimless_rma_experimental"},
+		Vars:         []string{"router"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
