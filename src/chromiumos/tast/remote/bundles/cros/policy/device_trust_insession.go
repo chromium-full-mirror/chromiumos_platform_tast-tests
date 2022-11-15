@@ -30,9 +30,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Device Trust is working insession with a fake IdP",
 		Contacts: []string{
+			"cbe-device-trust-eng@google.com",
 			"lmasopust@google.com",
 			"rodmartin@google.com",
-			"cbe-device-trust-eng@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -64,7 +64,8 @@ func init() {
 				loginPossible: false,
 			},
 		}},
-		Timeout: 7 * time.Minute,
+		Timeout:      7 * time.Minute,
+		BugComponent: "b:1163683",
 	})
 }
 
