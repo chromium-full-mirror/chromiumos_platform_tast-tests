@@ -193,7 +193,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 			// Sometimes, due to transient issues, the website might not
 			// fully quiesce, but the page is loaded enough to continue.
 			if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-				s.Log("Failed to wait for the tab to quiesce")
+				s.Logf("Failed to wait for the tab %s to quiesce", chromiumURL)
 			}
 
 			// uiauto.Combine combines a series of actions into a
@@ -246,7 +246,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-				return errors.Wrap(err, "failed to wait for the tab to quiesce")
+				s.Logf("Failed to wait for the tab %s to quiesce", issueTrackerURL)
 			}
 
 			// Since the Chromium bug tracker is a scrollable page,
