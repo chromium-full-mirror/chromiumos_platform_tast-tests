@@ -11,13 +11,13 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/local/bundles/cros/wmp/wmputils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/saveddesks"
 	"chromiumos/tast/testing"
 )
 
@@ -101,7 +101,7 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 
 	// Open Chrome and Files.
 	appsList := []apps.App{apps.Chrome, apps.FilesSWA}
-	if err := wmputils.OpenApps(ctx, tconn, ac, appsList); err != nil {
+	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
 	}
 
@@ -127,7 +127,7 @@ func DeskTemplatesDelete(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify window count.
-	if err := wmputils.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
+	if err := saveddesks.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
 		s.Fatal("Failed to verify window count: ", err)
 	}
 

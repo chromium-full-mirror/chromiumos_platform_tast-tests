@@ -6,8 +6,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -22,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/saveddesks"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
@@ -116,15 +115,9 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open PlayStore, Chrome and Files.
-		appsList := []apps.App{apps.PlayStore, apps.Chrome, apps.FilesSWA}
-		for _, app := range appsList {
-			if err := apps.Launch(ctx, tconn, app.ID); err != nil {
-				return errors.Wrapf(err, "failed to open %s", app.Name)
-			}
-		}
-
-		if err := waitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
-			return errors.Wrap(err, "failed to wait for apps to launch")
+		appsList := []apps.App{apps.Chrome, apps.FilesSWA, apps.PlayStore}
+		if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
+			return errors.Wrap(err, "failed to open apps")
 		}
 
 		// Enter overview mode.
@@ -136,17 +129,14 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 		}
 		defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
-		// Find the "save desk as a template" button.
-		saveDeskButton := nodewith.ClassName("SavedDeskSaveDeskButton").First()
-		desksTemplatesGridView := nodewith.ClassName("SavedDeskLibraryView").First()
+		// Save current desk as `Template 1` of type `Template`.
+		if err := ash.SaveCurrentDesk(ctx, ac, ash.Template, "Template 1"); err != nil {
+			return errors.Wrap(err, "failed to save current desk as 'Template 1' of type 'Template'")
+		}
 
-		if err := uiauto.Combine(
-			"save a desk template",
-			ac.DoDefault(saveDeskButton),
-			// Wait for the desk templates grid shows up.
-			ac.WaitUntilExists(desksTemplatesGridView),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "error in saving a desk template")
+		// Verify saved desk.
+		if err := ash.VerifySavedDesk(ctx, ac, []string{"Template 1"}); err != nil {
+			return errors.Wrap(err, "failed to verify saved desk")
 		}
 
 		// Exit overview mode.
@@ -179,15 +169,9 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to wait for overview animation to be completed")
 		}
 
-		// Show saved desk template.
-		libraryButton := nodewith.Name("Library")
-		if err := uiauto.Combine(
-			"show the saved desks template",
-			ac.DoDefault(libraryButton),
-			// Wait for the desks templates grid shows up.
-			ac.WaitUntilExists(desksTemplatesGridView),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "unable to show saved desks templates")
+		// Enter library page.
+		if err := ash.EnterLibraryPage(ctx, ac); err != nil {
+			return errors.Wrap(err, "failed to enter library page")
 		}
 
 		// Confirm there is one desk template.
@@ -199,29 +183,9 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 			return errors.Errorf("got %v desk template(s), there should be one desk template", len(deskTemplatesInfo))
 		}
 
-		// Find the the first desk template.
-		firstDeskTemplate := nodewith.ClassName("SavedDeskItemView")
-		newDeskMiniView :=
-			nodewith.ClassName("DeskMiniView").Name(fmt.Sprintf("Desk: %s", "Desk 1 (1)"))
-
-		// Launch the saved desk template.
-		if err := uiauto.Combine(
-			"launch the saved desk template",
-			ac.DoDefault(firstDeskTemplate),
-			// Wait for the new desk to appear.
-			ac.WaitUntilExists(newDeskMiniView),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "unable to launch a desk template")
-		}
-
-		// Wait for apps to launch.
-		if err := waitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
-			return errors.Wrap(err, "failed to wait for apps to launch")
-		}
-
-		// Wait for apps to be visible.
-		if err := waitforAppsToBeVisible(ctx, tconn, ac, appsList); err != nil {
-			return errors.Wrap(err, "failed to wait for apps to be visible")
+		// Launch saved desk `Template 1` of type `Template`.
+		if err := ash.LaunchSavedDesk(ctx, ac, "Template 1", 0); err != nil {
+			return errors.Wrap(err, "failed to launch saved desk 'Template 1' of type 'Template'")
 		}
 
 		// Exit overview mode.
@@ -230,16 +194,6 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 		}
 		if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for overview animation to be completed")
-		}
-
-		// Verify that there are the app windows.
-		ws, err := ash.GetAllWindows(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "unable to get all open windows")
-		}
-
-		if len(ws) != len(appsList) {
-			return errors.Errorf("got %v window(s), should have %v windows", len(ws), len(appsList))
 		}
 
 		return nil
@@ -254,36 +208,4 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the perf data: ", err)
 	}
-}
-
-// waitforAppsToLaunch waits for the given apps to launch.
-func waitforAppsToLaunch(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, appsList []apps.App) error {
-	for _, app := range appsList {
-		if err := ash.WaitForApp(ctx, tconn, app.ID, 90*time.Second); err != nil {
-			return errors.Wrapf(err, "%s did not appear in shelf after launch", app.Name)
-		}
-
-		// Some apps may take a long time to load such as Play Store. Wait for launch event to be completed.
-		if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for the app launch event to be completed")
-		}
-	}
-	return nil
-}
-
-// waitforAppsToBeVisible waits for the windows of the given apps to be visible.
-func waitforAppsToBeVisible(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, appsList []apps.App) error {
-	for _, app := range appsList {
-		// Wait for the launched app window to become visible.
-		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-			if !w.IsVisible {
-				return false
-			}
-			return strings.Contains(w.Title, app.Name)
-		}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-			return errors.Wrapf(err, "%s app window not visible after launching", app.Name)
-		}
-	}
-
-	return nil
 }

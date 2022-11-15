@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
-	"chromiumos/tast/local/bundles/cros/wmp/wmputils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -22,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/saveddesks"
 	"chromiumos/tast/testing"
 )
 
@@ -113,7 +113,7 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find the primary browser app info: ", err)
 	}
 	appsList := []apps.App{apps.PlayStore, browserApp, apps.FilesSWA}
-	if err := wmputils.OpenApps(ctx, tconn, ac, appsList); err != nil {
+	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
 	}
 
@@ -145,7 +145,7 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify window count.
-	if err := wmputils.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
+	if err := saveddesks.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
 		s.Fatal("Failed to verify window count: ", err)
 	}
 
@@ -181,7 +181,7 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify window count.
-	if err := wmputils.VerifyWindowCount(ctx, tconn, 0); err != nil {
+	if err := saveddesks.VerifyWindowCount(ctx, tconn, 0); err != nil {
 		s.Fatal("Failed to verify window count: ", err)
 	}
 
@@ -204,12 +204,12 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for apps to launch.
-	if err := wmputils.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
+	if err := saveddesks.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to wait for apps to launch: ", err)
 	}
 
 	// Wait for apps to be visible.
-	if err := wmputils.WaitforAppsToBeVisible(ctx, tconn, ac, appsList); err != nil {
+	if err := saveddesks.WaitforAppsToBeVisible(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to wait for apps to be visible: ", err)
 	}
 
@@ -260,7 +260,7 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for apps to launch.
-	if err := wmputils.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
+	if err := saveddesks.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to wait for app to launch: ", err)
 	}
 

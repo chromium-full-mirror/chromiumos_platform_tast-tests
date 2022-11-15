@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/local/bundles/cros/wmp/wmputils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -24,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/externaldata"
+	"chromiumos/tast/local/saveddesks"
 	"chromiumos/tast/testing"
 )
 
@@ -159,11 +159,11 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 			appsList := []apps.App{browserApp, browserApp}
 
 			// Wait for apps to launch.
-			if err := wmputils.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
+			if err := saveddesks.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
 				s.Fatal("Failed to wait for apps to launch: ", err)
 			}
 			// Wait for apps to be visible.
-			if err := wmputils.WaitforAppsToBeVisible(ctx, tconn, ac, appsList); err != nil {
+			if err := saveddesks.WaitforAppsToBeVisible(ctx, tconn, ac, appsList); err != nil {
 				s.Fatal("Failed to wait for apps to be visible: ", err)
 			}
 
