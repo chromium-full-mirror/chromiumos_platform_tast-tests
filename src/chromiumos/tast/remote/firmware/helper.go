@@ -39,23 +39,26 @@ import (
 // Helper tracks several firmware-related objects. The recommended way to initialize the helper is to use firmware.fixture:
 //
 // import (
+//
 //	...
 //	"chromiumos/tast/remote/firmware/fixture"
+//
 // )
 //
-// func init() {
-//	testing.AddTest(&testing.Test{
-//		...
-//              Fixture: fixture.NormalMode,
-//	})
-// }
+//	func init() {
+//		testing.AddTest(&testing.Test{
+//			...
+//	             Fixture: fixture.NormalMode,
+//		})
+//	}
 //
-// func MyTest(ctx context.Context, s *testing.State) {
-// 	h := s.FixtValue().(*fixture.Value).Helper
+//	func MyTest(ctx context.Context, s *testing.State) {
+//		h := s.FixtValue().(*fixture.Value).Helper
 //
-// 	if err := h.RequireServo(ctx); err != nil {
-// 		s.Fatal("Failed to init servo: ", err)
-// 	}
+//		if err := h.RequireServo(ctx); err != nil {
+//			s.Fatal("Failed to init servo: ", err)
+//		}
+//
 // ...
 // }
 type Helper struct {
@@ -516,6 +519,8 @@ func (h *Helper) SyncTastFilesToDUT(ctx context.Context) error {
 // It checks the setup of USB disk and a valid ChromeOS test image inside.
 // Downloads the test image if the image isn't the right version.
 // Will break the DUT if it is currently booted off the USB drive in recovery mode.
+//
+// CAUTION: You must set ephemeraldevserver='false' in your control file in order to flash usb drives.
 func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudStorage) (retErr error) {
 	usbdev, err := h.CheckUSBOnServoHost(ctx)
 	if err != nil {
@@ -626,6 +631,9 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	defer cancel()
 	// If it did have tast files, it won't shortly.
 	h.dutUsbHasTastFiles = false
+	if err = h.ServoProxy.RunCommand(ctx, true, "wget", "-nv", "--method=HEAD", dataURL.String()); err != nil {
+		return errors.Wrapf(err, "failed to download image from %s (%s)", dataURL.String(), testImageURL)
+	}
 	// On my computer with a servo v4, this takes 7 minutes.
 	if err = h.ServoProxy.RunCommand(ctx, true, "sh", "-c", fmt.Sprintf("wget -nv -O - %s | tar -JxOf - | dd of=%s bs=1M iflag=fullblock conv=nocreat,fsync", shutil.Escape(dataURL.String()), shutil.Escape(usbdev))); err != nil {
 		if err := h.validateUSBConn(ctx); err != nil {
@@ -819,9 +827,10 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 // When testlab is disabled, OpenCCDNoTestlab would be called,
 // which might take up to 8 minutes.
 // Args:
-// 	 ensureTestlab: If true, this will ensure testlab enabled after CCD is open.
-//	 resetCCD: If true, reset ccd to factory mode after open.
-//	 ccdLevel: Should contain the current ccd level as returned by GetCCDLevel().
+//
+//	ensureTestlab: If true, this will ensure testlab enabled after CCD is open.
+//	resetCCD: If true, reset ccd to factory mode after open.
+//	ccdLevel: Should contain the current ccd level as returned by GetCCDLevel().
 func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) error {
 	// Get CCD current status.
 	ccdLevel, err := h.GetCCDLevel(ctx)
