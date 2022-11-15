@@ -33,7 +33,7 @@ func init() {
 		Func:         FPS,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Measure frames per second and check it is close to expected fps",
-		Contacts:     []string{"drinkcat@chromium.org", "chromeos-gfx@google.com"},
+		Contacts:     []string{"chromeos-gfx@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
