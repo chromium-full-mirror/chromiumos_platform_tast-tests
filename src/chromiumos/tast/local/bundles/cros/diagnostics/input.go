@@ -6,7 +6,6 @@ package diagnostics
 
 import (
 	"context"
-	"time"
 
 	"chromiumos/tast/local/bundles/cros/diagnostics/utils"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -44,16 +43,17 @@ func Input(ctx context.Context, s *testing.State) {
 	}
 	defer vkb.Close()
 
+	if err := da.OpenInputPage(ctx, tconn); err != nil {
+		s.Fatal("Could not click the menu button: ", err)
+	}
+
 	// Find the Input navigation item and the keyboard list heading.
-	const timeout = 10 * time.Second
-	pollOpts := testing.PollOptions{Interval: time.Second, Timeout: timeout}
 	ui := uiauto.New(tconn)
 	inputTab := da.DxInput.Ancestor(da.DxRootNode)
 	keyboardListHeading := da.DxKeyboardHeading.Ancestor(da.DxRootNode)
 	if err := uiauto.Combine("find the keyboard list heading",
-		ui.WithTimeout(timeout).WaitUntilExists(inputTab),
-		ui.WithPollOpts(pollOpts).LeftClick(inputTab),
-		ui.WithTimeout(timeout).WaitUntilExists(keyboardListHeading),
+		ui.WaitUntilExists(inputTab),
+		ui.WaitUntilExists(keyboardListHeading),
 	)(ctx); err != nil {
 		s.Fatal("Failed to find the keyboard list heading: ", err)
 	}

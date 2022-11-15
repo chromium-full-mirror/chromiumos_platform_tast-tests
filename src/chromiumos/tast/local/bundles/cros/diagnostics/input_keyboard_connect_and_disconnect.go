@@ -47,12 +47,13 @@ func InputKeyboardConnectAndDisconnect(ctx context.Context, s *testing.State) {
 	}
 	defer vkb.Close()
 
+	if err := da.OpenInputPage(ctx, tconn); err != nil {
+		s.Fatal("Could open the input page: ", err)
+	}
+
 	ui := uiauto.New(tconn)
-	inputTab := da.DxInput.Ancestor(da.DxRootNode)
-	virtualKeyboard := da.DxVirtualKeyboardHeading
 	if err := uiauto.Combine("check no virtual keyboard exists in input device list",
-		ui.LeftClick(inputTab),
-		ui.Gone(virtualKeyboard),
+		ui.Gone(da.DxVirtualKeyboardHeading),
 	)(ctx); err != nil {
 		s.Fatal("Failed to check virtual keyboard: ", err)
 	}
@@ -64,9 +65,9 @@ func InputKeyboardConnectAndDisconnect(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("verify virtual keyboard appears and disappears in the device list",
-		ui.WaitUntilExists(virtualKeyboard),
+		ui.WaitUntilExists(da.DxVirtualKeyboardHeading),
 		disconnectKeyboard(),
-		ui.WaitUntilGone(virtualKeyboard),
+		ui.WaitUntilGone(da.DxVirtualKeyboardHeading),
 	)(ctx); err != nil {
 		s.Fatal("Failed to execute keyboard test: ", err)
 	}

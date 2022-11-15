@@ -49,6 +49,11 @@ func InputTopRowDisrupting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to obtain the top-row layout: ", err)
 	}
 
+	// Open keyboard tester.
+	if err := da.OpenKeyboardTester(ctx, tconn); err != nil {
+		s.Fatal("Could not open keyboard tester: ", err)
+	}
+
 	ui := uiauto.New(tconn)
 	inoccuousKey := "x"
 	clickDisruptiveKey := func(topRowKey, keyNodeName string) action.Action {
@@ -64,10 +69,7 @@ func InputTopRowDisrupting(ctx context.Context, s *testing.State) {
 		))
 	}
 
-	inputTab := da.DxInput.Ancestor(da.DxRootNode)
 	if err := uiauto.Combine("verify disruptive keys don't disrupt the test and won't affect other key state",
-		ui.LeftClick(inputTab),
-		ui.LeftClick(da.DxInternalKeyboardTestButton),
 		// Pressing and releasing an inoccuous key and check it's shown as pressed in the diagram.
 		kb.AccelAction(inoccuousKey),
 		ui.WaitUntilExists(da.KeyNodeFinder(inoccuousKey, da.KeyTested).First()),
@@ -76,7 +78,6 @@ func InputTopRowDisrupting(ctx context.Context, s *testing.State) {
 		clickDisruptiveKey(topRow.BrowserRefresh, "Refresh"),
 		clickDisruptiveKey(topRow.ZoomToggle, "Fullscreen"),
 		clickDisruptiveKey(topRow.SelectTask, "Overview"),
-		clickDisruptiveKey(topRow.Screenshot, "Screenshot"),
 		clickDisruptiveKey(topRow.BrightnessDown, "Display brightness down"),
 		clickDisruptiveKey(topRow.BrightnessUp, "Display brightness up"),
 		clickDisruptiveKey(topRow.VolumeMute, "Mute"),

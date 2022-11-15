@@ -8,11 +8,11 @@ import (
 	"context"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/bundles/cros/diagnostics/utils"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	da "chromiumos/tast/local/chrome/uiauto/diagnosticsapp"
-	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -47,8 +47,12 @@ func InputCheckDefocusing(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	// Lock diagnostics window to right side of the screen
-	kb.AccelAction("alt+]")(ctx)
+	// Wait until diagnostics window is open and lock to left side of the screen.
+	diagnosticsWindow, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, apps.Diagnostics.Name)
+	if err != nil {
+		s.Fatal("Failed to find diagnostics window: ", err)
+	}
+	ash.SetWindowStateAndWait(ctx, tconn, diagnosticsWindow.ID, ash.WindowStateLeftSnapped)
 
 	conn, err := cr.NewConn(ctx, "https://www.google.com")
 	if err != nil {
@@ -56,28 +60,29 @@ func InputCheckDefocusing(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
-	ui := uiauto.New(tconn)
 
-	// Lock chrome window to left side of the screen
-	kb.AccelAction("alt+[")(ctx)
+	chromeWindow, err := ash.WaitForAnyWindowWithoutTitle(ctx, tconn, apps.Diagnostics.Name)
+	if err != nil {
+		s.Fatal("Failed to find browser window: ", err)
+	}
+	ash.SetWindowStateAndWait(ctx, tconn, chromeWindow.ID, ash.WindowStateRightSnapped)
 
 	// Finds the browser window and shifts focus to it
-	focusBrowserWindow := func() action.Action {
-		return func(ctx context.Context) error {
-			window, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool {
-				return w.WindowType == ash.WindowTypeBrowser
-			})
-
-			if err != nil {
-				return err
-			}
-			return window.ActivateWindow(ctx, tconn)
-		}
+	focusBrowserWindow := func(ctx context.Context) error {
+		return chromeWindow.ActivateWindow(ctx, tconn)
 	}
 
-	mc := pointer.NewMouse(tconn)
-	defer mc.Close()
+	// Finds the browser window and shifts focus to it
+	focusDiagnosticsWindow := func(ctx context.Context) error {
+		return diagnosticsWindow.ActivateWindow(ctx, tconn)
+	}
 
+	// Open keyboard tester.
+	if err := da.OpenKeyboardTester(ctx, tconn); err != nil {
+		s.Fatal("Could not open keyboard tester: ", err)
+	}
+
+	ui := uiauto.New(tconn)
 	verifyKeyStateUnaffected := func(keyName string) action.Action {
 		actionName := "verify " + keyName + " key states when input page isn't focused"
 		return uiauto.NamedAction(actionName,
@@ -90,22 +95,19 @@ func InputCheckDefocusing(ctx context.Context, s *testing.State) {
 			))
 	}
 
-	inputTab := da.DxInput.Ancestor(da.DxRootNode)
 	if err := uiauto.Combine("verify pressing and releasing key won't affect key states",
-		ui.LeftClick(inputTab),
-		ui.LeftClick(da.DxInternalKeyboardTestButton),
 		// Pressing and releasing an inoccuous key and check it's shown as tested.
 		kb.AccelAction("x"),
 		ui.WaitUntilExists(da.KeyNodeFinder("x", da.KeyTested).First()),
 		// Switch focus to a different window and check a pops up message when losing the focus.
-		focusBrowserWindow(),
+		focusBrowserWindow,
 		ui.WaitUntilExists(da.DxDefocusingMsg),
 		// Pressing and releasing a few keys, each time checking keys are not reflected.
 		verifyKeyStateUnaffected("shift"),
 		verifyKeyStateUnaffected("1"),
 		verifyKeyStateUnaffected("q"),
 		// Switching focus back to the Diagnostics window and check pops up message is gone.
-		kb.AccelAction("Alt+Tab"),
+		focusDiagnosticsWindow,
 		ui.WaitUntilGone(da.DxDefocusingMsg),
 		// Checking an inoccuous key still shown as tested.
 		ui.WaitUntilExists(da.KeyNodeFinder("x", da.KeyTested).First()),

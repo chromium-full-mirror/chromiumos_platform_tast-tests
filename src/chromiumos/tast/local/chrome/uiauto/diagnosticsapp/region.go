@@ -20,13 +20,13 @@ var regionalKeys = map[string][]string{
 // DxInternalKeyboardTestButtons defines test button for internal keyboard which specified by region.
 var DxInternalKeyboardTestButtons = map[string]*nodewith.Finder{
 	"us": DxInternalKeyboardTestButton,
-	"jp": nodewith.Name("テスト").Role(role.Button).First(),
-	"fr": nodewith.Name("Tester").Role(role.Button).First(),
+	"jp": nodewith.NameStartingWith("テスト").Role(role.Button).Nth(1),
+	"fr": nodewith.NameContaining("Tester").Role(role.Button).First(),
 }
 
 // DxInputButtons defines input tab button which specified by region.
 var DxInputButtons = map[string]*nodewith.Finder{
 	"us": DxInput,
-	"jp": nodewith.Name("入力").Role(role.GenericContainer),
-	"fr": nodewith.Name("Entrée").Role(role.GenericContainer),
+	"jp": nodewith.NameContaining("入力").Role(role.GenericContainer),
+	"fr": nodewith.NameContaining("Entrée").Role(role.GenericContainer),
 }

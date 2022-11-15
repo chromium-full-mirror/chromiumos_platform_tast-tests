@@ -45,6 +45,11 @@ func InputCheckKeyState(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
+	// Open keyboard tester.
+	if err := da.OpenKeyboardTester(ctx, tconn); err != nil {
+		s.Fatal("Could not open keyboard tester: ", err)
+	}
+
 	ui := uiauto.New(tconn)
 	verifyKeyState := func(keyName string) action.Action {
 		actionName := "verify " + keyName + " key states right after pressing and releasing the key"
@@ -58,10 +63,7 @@ func InputCheckKeyState(ctx context.Context, s *testing.State) {
 			))
 	}
 
-	inputTab := da.DxInput.Ancestor(da.DxRootNode)
 	if err := uiauto.Combine("verify the specific keys' states after pressing and releasing the key",
-		ui.LeftClick(inputTab),
-		ui.LeftClick(da.DxInternalKeyboardTestButton),
 		verifyKeyState("backspace"),
 		verifyKeyState("tab"),
 		verifyKeyState("shift"),

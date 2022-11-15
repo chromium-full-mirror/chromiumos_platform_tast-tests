@@ -80,10 +80,10 @@ var (
 	DxNetworkList = nodewith.ClassName("diagnostics-network-list-container").Role(role.GenericContainer)
 
 	// DxInput export is used to find the Input navigation item.
-	DxInput = nodewith.Name("Input").Role(role.GenericContainer)
+	DxInput = nodewith.NameContaining("Input").Role(role.GenericContainer)
 
 	// DxInternalKeyboardTestButton used to find the internal keyboard test button on the input page.
-	DxInternalKeyboardTestButton = nodewith.Name("Test").Role(role.Button).First()
+	DxInternalKeyboardTestButton = nodewith.NameContaining("Test").Role(role.Button).First()
 
 	// DxKeyboardHeading export is used to find the keyboard heading on the input page.
 	DxKeyboardHeading = nodewith.Name("Keyboard").Role(role.StaticText)
@@ -188,5 +188,34 @@ func ClickNavigationMenuButton(ctx context.Context, tconn *chrome.TestConn) erro
 		ui.WithPollOpts(defaultPolling).LeftClick(menuButton))(ctx); err != nil {
 		return errors.Wrap(err, "menu click failed")
 	}
+	return nil
+}
+
+// OpenInputPage will click through the diagnostics app to get to the Input page.
+func OpenInputPage(ctx context.Context, tconn *chrome.TestConn) error {
+	ClickNavigationMenuButton(ctx, tconn)
+
+	ui := uiauto.New(tconn)
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(DxInput),
+		ui.WithPollOpts(defaultPolling).LeftClick(DxInput))(ctx); err != nil {
+		return errors.Wrap(err, "input tab click failed")
+	}
+
+	return nil
+}
+
+// OpenKeyboardTester will click through the diagnostics app to open the first keyboard tester.
+func OpenKeyboardTester(ctx context.Context, tconn *chrome.TestConn) error {
+	err := OpenInputPage(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to open input page")
+	}
+
+	ui := uiauto.New(tconn)
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(DxInternalKeyboardTestButton),
+		ui.WithPollOpts(defaultPolling).LeftClick(DxInternalKeyboardTestButton))(ctx); err != nil {
+		return errors.Wrap(err, "test keyboard button click failed")
+	}
+
 	return nil
 }

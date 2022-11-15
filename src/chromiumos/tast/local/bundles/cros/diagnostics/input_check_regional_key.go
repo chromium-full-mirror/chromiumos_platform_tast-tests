@@ -69,6 +69,11 @@ func InputCheckRegionalKey(ctx context.Context, s *testing.State) {
 	defer da.Close(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
+	// Open navigation if device is narrow view.
+	if err := da.ClickNavigationMenuButton(ctx, tconn); err != nil {
+		s.Fatal("Could not click the menu button: ", err)
+	}
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
