@@ -69,7 +69,7 @@ func RoutingConnectionPinning(ctx context.Context, s *testing.State) {
 		{l4server.UDP4, 10002},
 		{l4server.UDP6, 10003},
 	} {
-		server := l4server.New(serverConf.fam, serverConf.port, msgLen, l4server.Reflector())
+		server := l4server.New(serverConf.fam, serverConf.port, msgLen, l4server.Reflector(), "")
 		if err := testEnv.BaseServer.StartServer(ctx, server.String(), server); err != nil {
 			s.Fatalf("Failed to start %s server: %v", server.String(), err)
 		}

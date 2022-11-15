@@ -375,11 +375,6 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 		return nil, errors.Wrapf(err, "failed to wait for %s service", fam)
 	}
 
-	port := unusedOrRandomPort(ctx, fam)
-	udp := l4server.New(fam, port, 512, l4server.Reflector())
-	if err := rt.StartServer(ctx, fam.String(), udp); err != nil {
-		return nil, errors.Wrapf(err, "failed to start %s server", fam)
-	}
 	addrs, err := rt.WaitForVethInAddrs(ctx, fam == l4server.UDP4, fam == l4server.UDP6)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get %s router addrs: ", fam)
@@ -389,6 +384,11 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 		addr = addrs.IPv6Addrs[0]
 	} else {
 		addr = addrs.IPv4Addr
+	}
+	port := unusedOrRandomPort(ctx, fam)
+	udp := l4server.New(fam, port, 512, l4server.Reflector(), addr.String())
+	if err := rt.StartServer(ctx, fam.String(), udp); err != nil {
+		return nil, errors.Wrapf(err, "failed to start %s server", fam)
 	}
 	svr := &server{
 		rt:   rt,

@@ -18,14 +18,16 @@ import (
 
 // New creates a new TCP/UDP server. The returned object should be passed to
 // Env.StartServer; its lifetime will be managed by the environment. msgLen is
-// the size (in bytes) of the internal receive buffer. Note that the TCP server
-// can only accept one connection at most now.
-func New(fam Family, port, msgLen int, handler MsgHandler) *server {
+// the size (in bytes) of the internal receive buffer. The server will be
+// listening on addr if it's not empty, all IP addresses otherwise. Note that
+// the TCP server can only accept one connection at most now.
+func New(fam Family, port, msgLen int, handler MsgHandler, addr string) *server {
 	return &server{
 		fam:     fam,
 		port:    port,
 		msgLen:  msgLen,
 		handler: handler,
+		addr:    addr,
 	}
 }
 
@@ -74,6 +76,7 @@ type server struct {
 	msgLen  int
 	conns   []closeHandler
 	handler MsgHandler
+	addr    string
 	run     bool
 }
 
@@ -81,11 +84,25 @@ func (s *server) String() string {
 	return fmt.Sprintf("%s:%d", s.fam, s.port)
 }
 
+func (s *server) addrPort() string {
+	switch s.fam {
+	case TCP4, UDP4:
+		return fmt.Sprintf("%s:%d", s.addr, s.port)
+	case TCP6, UDP6:
+		return fmt.Sprintf("[%s]:%d", s.addr, s.port)
+	default:
+		return fmt.Sprintf(":%d", s.port)
+	}
+}
+
 // Start enters the netns of the virtualnet environment, starts listening on the desired port,
 // and runs the handling loop until Stop is called.
 func (s *server) Start(ctx context.Context, env *env.Env) error {
 	if s.run {
 		return errors.Errorf("%s server already running", s)
+	}
+	if (s.fam == TCP || s.fam == UDP) && len(s.addr) > 0 {
+		return errors.New("cannot specify binding addr without IP family")
 	}
 	s.run = true
 	ec := make(chan error)
@@ -114,7 +131,7 @@ func (s *server) Start(ctx context.Context, env *env.Env) error {
 }
 
 func (s *server) handleTCP(ctx context.Context, ec chan error) {
-	addr, err := net.ResolveTCPAddr(s.fam.String(), fmt.Sprintf(":%d", s.port))
+	addr, err := net.ResolveTCPAddr(s.fam.String(), s.addrPort())
 	if err != nil {
 		ec <- errors.Wrapf(err, "failed to resolve %s addr", s)
 		return
@@ -159,7 +176,7 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 }
 
 func (s *server) handleUDP(ctx context.Context, ec chan<- error) {
-	addr, err := net.ResolveUDPAddr(s.fam.String(), fmt.Sprintf(":%d", s.port))
+	addr, err := net.ResolveUDPAddr(s.fam.String(), s.addrPort())
 	if err != nil {
 		ec <- errors.Wrapf(err, "failed to resolve %s addr", s)
 		return
