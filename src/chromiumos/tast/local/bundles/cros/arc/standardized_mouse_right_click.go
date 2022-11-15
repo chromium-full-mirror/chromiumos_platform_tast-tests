@@ -21,7 +21,7 @@ func init() {
 		Func:         StandardizedMouseRightClick,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test that installs an app and tests standard mouse right click functionality. Tests are only performed in clamshell mode as tablets don't allow mice",
-		Contacts:     []string{"davidwelling@google.com", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,

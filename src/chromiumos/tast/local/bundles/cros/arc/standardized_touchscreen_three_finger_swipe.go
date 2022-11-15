@@ -20,7 +20,9 @@ func init() {
 		Func:         StandardizedTouchscreenThreeFingerSwipe,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test that installs an app and tests that a standard touchscreen three finger swipe works",
-		Contacts:     []string{"davidwelling@google.com", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,

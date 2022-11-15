@@ -21,7 +21,9 @@ func init() {
 		Func:         StandardizedKeyboardCopyPaste,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test that installs an app and tests standard keyboard copy/paste functionality. Test are performed in clamshell and touchview mode. This does not test the virtual, on-screen keyboard",
-		Contacts:     []string{"davidwelling@google.com", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,
