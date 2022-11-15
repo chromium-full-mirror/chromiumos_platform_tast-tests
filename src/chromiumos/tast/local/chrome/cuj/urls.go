@@ -126,8 +126,8 @@ const (
 	GoogleSlidesURL = "http://docs.google.com/slides"
 	// GoogleSheetsURL specifies the URL for Google Sheets.
 	GoogleSheetsURL = "http://docs.google.com/spreadsheets"
-	// MicrosoftOfficeURL specifies the URL of Microsoft Office Home.
-	MicrosoftOfficeURL = "https://www.office.com/"
+	// Microsoft365URL specifies the URL of Microsoft 365 Home.
+	Microsoft365URL = "https://www.microsoft365.com/"
 
 	// URLs used by FrontlineWorkerCUJ.
 
