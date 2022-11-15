@@ -310,16 +310,6 @@ func (f *prepareCUJFixture) Reset(ctx context.Context) error {
 }
 
 func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// Ensure display on to record ui performance correctly. Keep trying for 2 min
-	// since it could take 2 min for `powerd` dbus service to be accessible via
-	// dbus from tast. See b/244752048.
-	if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
-		Interval: 10 * time.Second,
-		Timeout:  2 * time.Minute,
-	}); err != nil {
-		s.Fatal("Failed to turn on display: ", err)
-	}
-
 	if strings.ToLower(isLocalVar.Value()) == "true" {
 		s.Log("Skipping CPU cooldown because local testing variable is set")
 		return
@@ -333,6 +323,18 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		// Log the cpu stabilizing wait failure instead of make it fatal.
 		// TODO(b/213238698): Include the error as part of test data.
 		s.Log("Failed to wait for CPU to become idle: ", err)
+	}
+
+	// Ensure display on to record UI performance correctly. Keep trying for 2 min
+	// since it could take 2 min for `powerd` dbus service to be accessible via
+	// dbus from tast. See b/244752048. Also, ensure the display is on after
+	// waiting for the CPU to idle, because idling could take up to 10 minutes,
+	// and the display will turn off in 7.5 minutes.
+	if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
+		Interval: 10 * time.Second,
+		Timeout:  2 * time.Minute,
+	}); err != nil {
+		s.Fatal("Failed to turn on display: ", err)
 	}
 }
 
