@@ -20,14 +20,32 @@ func init() {
 		Desc:         "Enable/disable Google Assistant service multiple times and checks the running status",
 		Contacts:     []string{"wutao@google.com", "xiaohuic@chromium.org", "assistive-eng@google.com", "chromeos-sw-engprod@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
-		Pre:          assistant.VerboseLoggingEnabled(),
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name:              "libassistant_dlc",
+				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantDlc")},
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Name:              "libassistant_v2",
+				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantV2")},
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Val: []chrome.Option{},
+			},
+		},
 	})
 }
 
 func EnableAndDisableMultipleTimes(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	opts := s.Param().([]chrome.Option)
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
 
 	// Create test API connection.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -49,6 +67,11 @@ func EnableAndDisableMultipleTimes(ctx context.Context, s *testing.State) {
 		if err := assistant.Disable(ctx, tconn); err != nil {
 			s.Fatal("Failed to disable Assistant: ", err)
 		}
+	}
+
+	// Make sure the Assistant can be enabled after the above operations.
+	if err := assistant.EnableAndWaitForReady(ctx, tconn); err != nil {
+		s.Fatal("Failed to enable Assistant: ", err)
 	}
 	defer func() {
 		if err := assistant.Cleanup(ctx, s.HasError, cr, tconn); err != nil {

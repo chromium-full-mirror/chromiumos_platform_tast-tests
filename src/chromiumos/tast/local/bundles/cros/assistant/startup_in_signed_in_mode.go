@@ -23,18 +23,38 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		VarDeps:      []string{"assistant.username", "assistant.password"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
+		Params: []testing.Param{
+			{
+				Name:              "libassistant_dlc",
+				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantDlc")},
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Name:              "libassistant_v2",
+				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantV2")},
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Val: []chrome.Option{},
+			},
+		},
 	})
 }
 
 func StartupInSignedInMode(ctx context.Context, s *testing.State) {
-	// Start Chrome browser and log in using a test account.
-	cr, err := chrome.New(
-		ctx,
+	paramOpts := s.Param().([]chrome.Option)
+	opts := append([]chrome.Option{
 		chrome.GAIALogin(chrome.Creds{
 			User: s.RequiredVar("assistant.username"),
 			Pass: s.RequiredVar("assistant.password"),
 		}),
-		assistant.VerboseLogging(),
+		assistant.VerboseLogging()},
+		paramOpts...)
+
+	// Start Chrome browser and log in using a test account.
+	cr, err := chrome.New(
+		ctx,
+		opts...,
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
