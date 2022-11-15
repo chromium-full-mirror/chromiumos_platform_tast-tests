@@ -349,7 +349,10 @@ func Wrapper(ctx context.Context, s *testing.State) {
 
 	// Gracefully shut down syzkaller.
 	func() {
-		defer managerCmd.Wait()
+		defer func() {
+			managerCmd.Process.Signal(os.Interrupt)
+			managerCmd.Wait()
+		}()
 
 		if err := testing.Sleep(ctx, syzkallerRunDuration); err != nil {
 			managerCmd.Kill()
@@ -368,8 +371,6 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		); err != nil {
 			s.Fatal("Failed to upload coverage info: ", err)
 		}
-
-		managerCmd.Process.Signal(os.Interrupt)
 	}()
 
 	if pCmd != nil {
