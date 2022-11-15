@@ -46,7 +46,9 @@ func init() {
 		Func:         Hbomax,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test for Hbomax that install, launch the app and check that the main page is open, also checks Hbomax correctly changes the window state in both clamshell and touchview mode",
-		Contacts:     []string{"mthiyagarajan@chromium.org", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com"},
+		// ChromeOS > Software > ARC++ > Apps Testing
+		// componentid:1122984
 		Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/254308076): Remove the skipped models once the solution is found for the issue.

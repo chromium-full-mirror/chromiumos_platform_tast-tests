@@ -36,7 +36,9 @@ func init() {
 		Func:         Bloxels,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test for Bloxels that installs the app also verifies if the main page is open, checks Bloxels correctly changes the window state in both clamshell and touchview mode",
-		Contacts:     []string{"mthiyagarajan@google.com", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com"},
+		// ChromeOS > Software > ARC++ > Apps Testing
+		// componentid:1122984
 		Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"bloxels-got-it-button.png", "bloxels-play-now-button.png"},
