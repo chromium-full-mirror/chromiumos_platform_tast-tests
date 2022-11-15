@@ -60,10 +60,10 @@ var SliderParamMap = map[SliderType]*nodewith.Finder{
 }
 
 // BrightnessSlider is the finder for the Quick Settings brightness slider.
-var BrightnessSlider = nodewith.Name("Brightness").ClassName("Slider").Role(role.Slider)
+var BrightnessSlider = nodewith.Name("Brightness").ClassName("QuickSettingsSlider").Role(role.Slider)
 
 // VolumeSlider is the finder for the Quick Settings volume slider.
-var VolumeSlider = nodewith.Name("Volume").ClassName("Slider").Role(role.Slider)
+var VolumeSlider = nodewith.Name("Volume").ClassName("QuickSettingsSlider").Role(role.Slider)
 
 // VolumeToggle is the finder for the button that toggles the volume's mute status.
 var VolumeToggle = nodewith.Role(role.ToggleButton).NameStartingWith("Toggle Volume")
@@ -71,7 +71,7 @@ var VolumeToggle = nodewith.Role(role.ToggleButton).NameStartingWith("Toggle Vol
 // MicGainSlider is the finder for the Quick Settings mic gain slider.
 // The Finder is identical to the volume slider, but it's located on a different
 // page of Quick Settings.
-var MicGainSlider = nodewith.Name("Volume").ClassName("Slider").Role(role.Slider)
+var MicGainSlider = nodewith.Name("Volume").ClassName("QuickSettingsSlider").Role(role.Slider)
 
 // MicToggle is the finder for the button that toggles the microphone's mute status.
 var MicToggle = nodewith.Role(role.ToggleButton).Attribute("name", regexp.MustCompile("Toggle Mic"))

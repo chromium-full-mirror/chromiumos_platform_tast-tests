@@ -536,6 +536,10 @@ func changeSlider(ctx context.Context, tconn *chrome.TestConn, kb *input.Keyboar
 		return nil
 	}
 
+	// testing.Poll() is flaky for quicksettings.Brightness/VolumeSlider that sometimes it cannot get the correct value.
+	// Sleeps for 10 seconds before entering the polling to ensure SliderValue() returns the updated value.
+	testing.Sleep(ctx, time.Second*10)
+
 	// The value changes smoothly as the slider animates, so wait for it to finish before returning the final value.
 	previous := initial
 	slidingDone := func(ctx context.Context) error {
