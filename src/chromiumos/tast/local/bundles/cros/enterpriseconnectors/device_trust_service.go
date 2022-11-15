@@ -6,7 +6,6 @@ package enterpriseconnectors
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -17,7 +16,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/screenshot"
 	pb "chromiumos/tast/services/cros/enterpriseconnectors"
 	"chromiumos/tast/testing"
 )
@@ -126,64 +124,24 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 	return &pb.FakeIdPResponse{Succesful: loginPossible}, nil
 }
 
-// activateDeviceTrustViaSettings changes the settings of the fake IdP server, so that it expects a Device Trust attestation flow to happen before it allows the user to pass through to the actual login screen.
-func activateDeviceTrustViaSettings(ctx context.Context, ui *uiauto.Context) error {
-	root := nodewith.Name("IdP Settings").Role(role.RootWebArea)
-
-	radioButtonYes := nodewith.Role(role.RadioButton).Ancestor(root).Nth(1)
-	if err := uiauto.Combine("Click on yes",
-		ui.WaitUntilExists(radioButtonYes),
-		ui.LeftClick(radioButtonYes),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on yes in the IdP settings")
-	}
-
-	// make sure, that prior communications with the server are not affecting the current login flow.
-	invalidateCheckbox := nodewith.Role(role.CheckBox).Ancestor(root).Focusable()
-	if err := uiauto.Combine("Click on Invalidate",
-		ui.WaitUntilExists(invalidateCheckbox),
-		ui.LeftClick(invalidateCheckbox),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on Invalidate in the IdP settings")
-	}
-
-	saveButton := nodewith.Name("Save").Role(role.Button).Ancestor(root).Focusable()
-	if err := uiauto.Combine("Click on Save",
-		ui.WaitUntilExists(saveButton),
-		ui.LeftClick(saveButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on Save in the IdP settings")
-	}
-
-	homeLink := nodewith.Name("Home").Role(role.Link).Ancestor(root).Focusable()
-	if err := uiauto.Combine("Click on Home",
-		ui.WaitUntilExists(homeLink),
-		ui.LeftClick(homeLink),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on Home in the IdP settings")
-	}
-
-	return nil
-}
-
 func loginPossible(ctx context.Context, ui *uiauto.Context) (bool, error) {
 	root := nodewith.Name("Sample Login page").Role(role.RootWebArea)
-	loginButton := nodewith.Name("Login").Role(role.Button).Ancestor(root).Focusable()
-	unsuccesfulText := nodewith.Name("Please login from a trusted device.").Role(role.StaticText).Ancestor(root)
+	signalText := nodewith.Name("Server Signals:").Role(role.StaticText).Ancestor(root)
+	errorMessage := nodewith.Name("Device Trust failed with error:").Role(role.StaticText).Ancestor(root)
 
 	result := false
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		err := ui.Exists(loginButton)(ctx)
+		err := ui.Exists(signalText)(ctx)
 		if err == nil {
 			result = true
 			return nil
 		}
-		err = ui.Exists(unsuccesfulText)(ctx)
+		err = ui.Exists(errorMessage)(ctx)
 		if err == nil {
 			result = false
 			return nil
 		}
-		return errors.Wrap(err, " found neither the login button nor the text \"Please login from a trusted device\"")
+		return errors.Wrap(err, " found neither the signal list nor the error message")
 	}, &testing.PollOptions{Interval: 300 * time.Millisecond,
 		Timeout: defaultUITimeout})
 
@@ -196,26 +154,14 @@ func loginPossible(ctx context.Context, ui *uiauto.Context) (bool, error) {
 
 func testFakeIdP(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
 	ui := uiauto.New(tconn).WithTimeout(defaultUITimeout)
-	root := nodewith.Name("Enterprise NTP").Role(role.RootWebArea)
+	root := nodewith.Name("Device Trust IdP").Role(role.RootWebArea)
 
-	// Activate device trust requirement.
-	settingsButton := nodewith.Name("Login Settings").Role(role.Link).Ancestor(root).Focusable()
-	if err := uiauto.Combine("Go to settings",
-		ui.WaitUntilExists(settingsButton),
-		ui.LeftClick(settingsButton),
+	startButton := nodewith.Name("Start Device Trust Attestation(using VAv2)").Role(role.Link).Ancestor(root).Focusable()
+	if err := uiauto.Combine("Click on start button and proceed",
+		ui.WaitUntilExists(startButton),
+		ui.LeftClick(startButton),
 	)(ctx); err != nil {
-		return false, errors.Wrap(err, "failed to go to settings")
-	}
-	if err := activateDeviceTrustViaSettings(ctx, ui); err != nil {
-		return false, errors.Wrap(err, " failed to set settings")
-	}
-
-	testButton := nodewith.Name("App 1").Role(role.Link).Ancestor(root).Focusable()
-	if err := uiauto.Combine("Click on OK and proceed",
-		ui.WaitUntilExists(testButton),
-		ui.LeftClick(testButton),
-	)(ctx); err != nil {
-		return false, errors.Wrap(err, "failed to click OK. Is Account addition dialog open?")
+		return false, errors.Wrap(err, "failed to start the Device Trust attestation. Fake IdP not loaded correctly")
 	}
 
 	loginPossible, err := loginPossible(ctx, ui)
@@ -224,15 +170,4 @@ func testFakeIdP(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
 	}
 
 	return loginPossible, nil
-}
-
-func takeScreenshotOnError(ctx context.Context, cr *chrome.Chrome, hasError func() bool, filePrefix string) {
-	if !hasError() {
-		return
-	}
-
-	testOutDir, _ := testing.ContextOutDir(ctx)
-	if err := screenshot.CaptureChromeWithSigninProfile(ctx, cr, filepath.Join(testOutDir, filePrefix+".png")); err != nil {
-		testing.ContextLog(ctx, "Failed to make a screenshot: ", err)
-	}
 }
