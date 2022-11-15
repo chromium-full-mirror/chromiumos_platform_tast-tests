@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vdi/fixtures"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 type desktopData struct {
@@ -35,13 +34,9 @@ func init() {
 			"kamilszarek@google.com", // Test author
 			"cros-engprod-muc@google.com",
 		},
-		// TODO(b/211600718): Create a separate group not to run tests in parallel.
 		// TODO(crbug.com/1293793): Add cleanup for kiosk and add its params.
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		// For now limit execution to few models.
-		// TODO (b/238736164): Crete dedicated suite.
-		HardwareDeps: hwdep.D(hwdep.Model("foob360", "helios", "eve", "kohaku", "morphius")),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -51,7 +46,7 @@ func init() {
 					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 				},
-				ExtraAttr: []string{"group:mainline", "informational"},
+				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
 				Name:    "vmware",
