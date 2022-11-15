@@ -6,13 +6,7 @@ package spera
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"math"
-	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -22,6 +16,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/spera/conference"
+	"chromiumos/tast/local/bundles/cros/spera/conference/zoomserver"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -343,42 +338,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 }
 
 func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetScenarioRequest) (*empty.Empty, error) {
-	type responseData struct {
-		URL    string `json:"url"`
-		RoomID string `json:"room_id"`
-		Err    string `json:"err"`
-	}
 	roomType := conference.RoomType(req.RoomType)
-	runConferenceAPI := func(ctx context.Context, sessionToken, host, api, parameterString string) (*responseData, error) {
-		reqURL := fmt.Sprintf("%s/api/room/zoom/%s%s&iszoomcase=true", host, api, parameterString)
-		testing.ContextLog(ctx, "Requesting a zoom room from the zoom bot server with request URL: ", reqURL)
-		httpReq, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
-		if err != nil {
-			return nil, err
-		}
-		httpReq.Header.Set("Authorization", "Bearer "+sessionToken)
-		resp, err := http.DefaultClient.Do(httpReq)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("failed to get zoom conference invite link with status %d and body %s", resp.StatusCode, body)
-		}
-
-		var data *responseData
-		if err := json.Unmarshal([]byte(body), &data); err != nil {
-			return nil, err
-		}
-		if data.Err != "" {
-			return data, errors.New(data.Err)
-		}
-		return data, nil
-	}
 
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
@@ -456,54 +416,12 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 			return nil, errors.Wrap(err, "failed to create clamshell action handler")
 		}
 	}
-	// Creates a Zoom conference instance which implements conference.Conference methods.
-	// which provides conference operations.
 	zmcli := conference.NewZoomConference(cr, tconn, kb, uiHandler, tabletMode, roomType, account, outDir)
 	defer zmcli.End(cleanupCtx)
-	// Sends a http request that ask for creating a Zoom conferece with
-	// specified participants and also return clean up method for closing
-	// opened conference.
-	//
-	// Assume there's a Zoom proxy which can receive http request for
-	// creating/closing Zoom conference. When Zoom proxy receives "createaio"
-	// request, it would create a Zoom conference on specified remote server
-	// with participants via Chrome Devtools Protocols. And "endaio" means close
-	// the conference which opened by "createaio".
+
+	roomSize := conference.ZoomRoomParticipants[roomType] - 1
 	prepare := func(ctx context.Context) (string, conference.Cleanup, error) {
-		var data *responseData
-		roomSize := conference.ZoomRoomParticipants[roomType] - 1
-		// Create a Zoom conference on remote server dynamically and get conference room
-		// link. Retry three times until it successfully gets a conference room link.
-		const retryCount = 3
-		for i := 0; i < retryCount; i++ {
-			testing.ContextLogf(ctx, "Attempt #%d to get conference room API", i+1)
-			// Use the remaining time of the case to set the existence time of the room.
-			deadline, _ := ctx.Deadline()
-			maxDuration := math.Ceil(deadline.Sub(time.Now()).Minutes())
-			parameterString := fmt.Sprintf("?count=%d&max_duration=%v", roomSize, maxDuration)
-			testing.ContextLogf(ctx, "Create a %d-person zoom room that can exist for %v minutes", roomSize, maxDuration)
-			if data, err = runConferenceAPI(ctx, sessionToken, host, "createaio", parameterString); err == nil {
-				break
-			}
-			testing.ContextLog(ctx, "Failed to get conference room: ", err)
-		}
-		if err != nil {
-			return "", nil, errors.Wrap(err, "failed to create multiple participants room")
-		}
-
-		// We expect the returned body is a valid url that can be used to issue chatroom request.
-		// Check the format.
-		room := strings.TrimSpace(string(data.URL))
-		if _, err := url.ParseRequestURI(room); err != nil {
-			return "", nil, errors.Errorf("returned zoom conference invite link %s is not a valid url", room)
-		}
-
-		cleanup := func(ctx context.Context) (err error) {
-			_, err = runConferenceAPI(ctx, sessionToken, host, "endaio", "?room_id="+data.RoomID)
-			return
-		}
-
-		return room, cleanup, nil
+		return zoomserver.CreateConference(ctx, roomSize, sessionToken, host)
 	}
 	// Shorten context a bit to allow for cleanup if Run fails.
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
