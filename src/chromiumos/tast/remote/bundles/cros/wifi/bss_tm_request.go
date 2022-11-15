@@ -11,6 +11,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/common/wifi/security"
+	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/wifi"
@@ -25,6 +27,19 @@ const (
 	bssTMReassocBuffer = 5 * time.Second
 )
 
+type bssTMReqTestCase struct {
+	// requestParams defines the parameters for the BSS Transition Management Request.
+	requestParams hostapd.BSSTMReqParams
+	// secConfFac0 is the security configuration factory for the first AP.
+	secConfFac0 security.ConfigFactory
+	// secConfFac1 is the security configuration factory for the second AP.
+	secConfFac1 security.ConfigFactory
+	// pmfRequiredAP0 indicates whether AP 0 should enable the Hostapd config |PMFRequired|.
+	pmfRequiredAP0 bool
+	// pmfRequiredAP1 indicates whether AP 1 should enable the Hostapd config |PMFRequired|.
+	pmfRequiredAP1 bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: BSSTMRequest,
@@ -37,21 +52,45 @@ func init() {
 		Fixture:     "wificellFixtWithCapture",
 		Params: []testing.Param{
 			{
-				Val: hostapd.BSSTMReqParams{},
+				Val: bssTMReqTestCase{},
 			},
 			{
 				Name:              "disassoc_imminent",
 				ExtraSoftwareDeps: []string{"mbo"},
-				Val: hostapd.BSSTMReqParams{
-					DisassocImminent: true,
-					DisassocTimer:    bssTMRoamTimeout,
-					ReassocDelay:     bssTMReassocDelay,
+				Val: bssTMReqTestCase{
+					requestParams: hostapd.BSSTMReqParams{
+						DisassocImminent: true,
+						DisassocTimer:    bssTMRoamTimeout,
+						ReassocDelay:     bssTMReassocDelay,
+					},
 				},
 			},
 			{
 				Name: "bss_term",
-				Val: hostapd.BSSTMReqParams{
-					BSSTerm: 1 * time.Minute,
+				Val: bssTMReqTestCase{
+					requestParams: hostapd.BSSTMReqParams{
+						BSSTerm: 1 * time.Minute,
+					},
+				},
+			},
+			{
+				// Verifies that DUT can roam from a BSS with PSK key management to a BSS with SAE key management and back.
+				Name:      "psk_to_sae",
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: bssTMReqTestCase{
+					secConfFac0:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					pmfRequiredAP1: true,
+				},
+			},
+			{
+				// Verifies that DUT can roam from a BSS with SAE key management to a BSS with PSK key management and back.
+				Name:      "sae_to_psk",
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: bssTMReqTestCase{
+					secConfFac0:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
+					pmfRequiredAP0: true,
 				},
 			},
 		},
@@ -70,23 +109,24 @@ func init() {
 	1- Disallow roaming from locally requested scans and turn off background
 		scans to ensure that the only roams that happen are those triggered by the
 		BSSTM Request
-	2- Set up an AP "AP0" and connect to it.
-	3- Set up another AP "AP1".
-	4- Add the BSSID at AP0 into the DUT's ignorelist.
-	5- Send a BSSTM request from AP0.
-	6- Assert that the Shill property RoamState transitions from configuration
+	2- Set up an AP "AP0" using security configs from |secConfFac0| if present.
+	3- Connect to AP0.
+	4- Set up another AP "AP1" using security configs from |secConfFac1| if present.
+	5- Add the BSSID at AP0 into the DUT's ignorelist.
+	6- Send a BSSTM request from AP0.
+	7- Assert that the Shill property RoamState transitions from configuration
 		-> ready -> idle, which indicates a roam has occurred.
-	7- Assert that the BSSID property in Shill is equal to the BSSID from AP1.
-	8- Conduct a ping test to ensure we are connected to AP1.
-	9- If "disassoc_imminent" is enabled, send another BSSTM Request from AP1,
+	8- Assert that the BSSID property in Shill is equal to the BSSID from AP1.
+	9- Conduct a ping test to ensure we are connected to AP1.
+	10- If "disassoc_imminent" is enabled, send another BSSTM Request from AP1,
 		but this time assert that the roam fails due to the reassociation
 		delay.
-	10- Send a BSSTM Request from AP1 without dissasoc imminent.
-	11- Assert that the Shill property RoamState transitions from configuration
+	11- Send a BSSTM Request from AP1 without dissasoc imminent.
+	12- Assert that the Shill property RoamState transitions from configuration
 		-> ready -> idle, which indicates a roam has occurred.
-	12- Assert that the BSSID property in Shill is equal to the BSSID from AP0.
-	13- Conduct a ping test to ensure we are connected to AP0.
-	14. Clean up state and revert the steps from (1).
+	13- Assert that the BSSID property in Shill is equal to the BSSID from AP0.
+	14- Conduct a ping test to ensure we are connected to AP0.
+	15- Clean up state and revert the steps from (1).
 */
 
 func BSSTMRequest(ctx context.Context, s *testing.State) {
@@ -135,15 +175,23 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		testSSID := hostapd.RandomSSID("BSS_TM_")
 		apOpts0 := []hostapd.Option{hostapd.SSID(testSSID), hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1), hostapd.BSSID(fromBSSID)}
 		apOpts1 := []hostapd.Option{hostapd.SSID(testSSID), hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48), hostapd.BSSID(roamBSSID)}
-		params := s.Param().(hostapd.BSSTMReqParams)
-		if params.DisassocImminent {
+		params := s.Param().(bssTMReqTestCase)
+		requestParams := params.requestParams
+		if requestParams.DisassocImminent {
 			apOpts0 = append(apOpts0, hostapd.MBO())
 			apOpts1 = append(apOpts1, hostapd.MBO())
 		}
 
+		if params.pmfRequiredAP0 {
+			apOpts0 = append(apOpts0, hostapd.PMF(hostapd.PMFRequired))
+		}
+		if params.pmfRequiredAP1 {
+			apOpts1 = append(apOpts1, hostapd.PMF(hostapd.PMFRequired))
+		}
+
 		// Configure the first AP.
 		s.Log("Configuring AP 0")
-		ap0, err := tf.ConfigureAP(ctx, apOpts0, nil)
+		ap0, err := tf.ConfigureAP(ctx, apOpts0, params.secConfFac0)
 		if err != nil {
 			s.Fatal("Failed to configure AP 0: ", err)
 		}
@@ -177,7 +225,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 
 		// Set up a second AP with the same SSID.
 		s.Log("Configuring AP 1")
-		ap1, err := tf.ConfigureAP(ctx, apOpts1, nil)
+		ap1, err := tf.ConfigureAP(ctx, apOpts1, params.secConfFac1)
 		if err != nil {
 			s.Fatal("Failed to configure AP 1: ", err)
 		}
@@ -278,7 +326,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		req := params
+		req := requestParams
 		req.Neighbors = []string{roamBSSID}
 		err = tf.ClearBSSIDIgnoreDUT(ctx, wificell.DefaultDUT)
 		if err != nil {
@@ -320,7 +368,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to clear wpa BSSID_IGNORE: ", err)
 		}
 
-		if params.DisassocImminent {
+		if requestParams.DisassocImminent {
 			// Test that the reassoc delay works as expected, and we
 			// fail to reassoc to the original AP, and then sleep
 			// until we are sure the delay has expired.
@@ -329,7 +377,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			// connection fails. Otherwise, the reassoc delay will
 			// disable the current AP as well and trigger a deauth.
 			sendReqAndWaitConnected(roamBSSID, fromBSSID, ap1, ap0, hostapd.BSSTMReqParams{Neighbors: []string{fromBSSID}}, true)
-			if sleepDur := params.ReassocDelay + bssTMReassocBuffer - time.Now().Sub(t); sleepDur > 0 {
+			if sleepDur := requestParams.ReassocDelay + bssTMReassocBuffer - time.Now().Sub(t); sleepDur > 0 {
 				s.Log("Sleeping for ", sleepDur)
 				if err := testing.Sleep(ctx, sleepDur); err != nil {
 					s.Fatal("Failed to sleep: ", err)
