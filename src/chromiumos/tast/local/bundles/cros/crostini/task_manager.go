@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/local/chrome/uiauto"
@@ -62,12 +63,15 @@ func TaskManager(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(ctx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+
 	tastkManager := nodewith.Name("Task Manager").ClassName("TaskManagerView").First()
 	crostiniEntry := nodewith.Name("Linux Virtual Machine: termina").Ancestor(tastkManager).First()
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("open Task Manager and look for Crostini",
 		// Press Search + Esc to launch task manager
-		keyboard.AccelAction("Search+Esc"),
+		ui.WithInterval(time.Second).RetryUntil(keyboard.AccelAction("Search+Esc"), ui.WaitUntilExists(tastkManager)),
 
 		// Click the task manager.
 		ui.LeftClick(tastkManager),
