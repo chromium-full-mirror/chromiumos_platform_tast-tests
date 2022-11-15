@@ -22,10 +22,11 @@ func init() {
 		Func:         CCAUIA11y,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Chromevox reads Chrome Camera App elements as expected",
-		Contacts:     []string{"dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
+		BugComponent: "b:978428",
 	})
 }
 

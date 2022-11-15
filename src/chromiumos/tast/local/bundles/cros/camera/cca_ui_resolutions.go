@@ -26,13 +26,14 @@ func init() {
 		Func:         CCAUIResolutions,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies video recording related use cases",
-		Contacts:     []string{"kamchonlathorn@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaTestBridgeReady",
 		// Default timeout (i.e. 2 minutes) is not enough for some devices to
 		// exercise all resolutions on all cameras.
-		Timeout: 5 * time.Minute,
+		Timeout:      5 * time.Minute,
+		BugComponent: "b:978428",
 	})
 }
 

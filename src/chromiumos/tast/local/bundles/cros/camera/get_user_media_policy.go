@@ -26,7 +26,7 @@ func init() {
 		Func:         GetUserMediaPolicy,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that admin policy can successfully ban getUserMedia",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
 		Data:         append(getusermedia.DataFiles(), "getusermedia.html"),
@@ -43,6 +43,7 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
+		BugComponent: "b:978428",
 	})
 }
 

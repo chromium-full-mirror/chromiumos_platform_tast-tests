@@ -50,10 +50,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         []string{cameraAppApk},
 		Desc:         "Checks basic Android camera functionalities work under ARC",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcBootedRestricted",
+		BugComponent: "b:978428",
 	})
 }
 

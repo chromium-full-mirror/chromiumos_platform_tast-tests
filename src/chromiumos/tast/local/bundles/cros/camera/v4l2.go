@@ -27,12 +27,8 @@ func init() {
 		Func:         V4L2,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies required V4L2 operations on USB camera devices",
-		Contacts: []string{
-			"kamesan@chromium.org",
-			"shik@chromium.org",
-			"chromeos-camera-eng@google.com",
-		},
-		Timeout: 10 * time.Minute,
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "shik@chromium.org"},
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
 				ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
@@ -45,6 +41,7 @@ func init() {
 				Val:       true,
 			},
 		},
+		BugComponent: "b:167281",
 	})
 }
 

@@ -31,14 +31,12 @@ func init() {
 		Func:         CCAUIAssistant,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests opening Camera app using an Assistant query",
-		Contacts: []string{
-			"pihsun@chromium.org",
-			"chromeos-camera-eng@google.com",
-		},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "camera_app", caps.BuiltinOrVividCamera},
 		Data:         []string{"cca_ui.js"},
 		Fixture:      "ccaTestBridgeReady",
+		BugComponent: "b:978428",
 	})
 }
 

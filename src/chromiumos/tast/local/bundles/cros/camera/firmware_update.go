@@ -18,14 +18,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: FirmwareUpdate,
-		Desc: "Exercises firmware update on USB camera",
-		Contacts: []string{
-			"kamesan@chromium.org",
-			"chromeos-camera-eng@google.com",
-		},
-		Attr: []string{"group:camera-usb-qual"},
-		Vars: []string{"config"},
+		Func:         FirmwareUpdate,
+		Desc:         "Exercises firmware update on USB camera",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		Attr:         []string{"group:camera-usb-qual"},
+		Vars:         []string{"config"},
+		BugComponent: "b:167281",
 	})
 }
 

@@ -19,10 +19,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HDRnetProcessorBenchmark,
 		Desc:         "Runs the HDRnet processor benchmark and reports the measurements",
-		Contacts:     []string{"jcliang@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_feature_hdrnet"},
 		Timeout:      5 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

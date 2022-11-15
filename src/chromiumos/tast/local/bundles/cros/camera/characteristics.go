@@ -17,13 +17,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Characteristics,
-		Desc: "Verifies the format of camera characteristics file",
-		Contacts: []string{
-			"kamesan@chromium.org",
-			"chromeos-camera-eng@google.com",
-		},
-		Attr: []string{"group:mainline", "group:camera-libcamera"},
+		Func:         Characteristics,
+		Desc:         "Verifies the format of camera characteristics file",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera"},
+		BugComponent: "b:167281",
 	})
 }
 

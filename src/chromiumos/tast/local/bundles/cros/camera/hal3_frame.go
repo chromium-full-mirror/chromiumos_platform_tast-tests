@@ -19,7 +19,7 @@ func init() {
 		Func:         HAL3Frame,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera frame function with HAL3 interface",
-		Contacts:     []string{"hywu@chromium.org", "shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "hywu@chromium.org", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Pre:          chrome.LoggedIn(),
@@ -27,7 +27,8 @@ func init() {
 		// exercise all resolutions on all cameras. Currently the device that
 		// needs longest timeout is Krane, which supports many resolutions
 		// up to 3264x2448 as well private/YUV reprocessing.
-		Timeout: 15 * time.Minute,
+		Timeout:      15 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

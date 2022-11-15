@@ -26,7 +26,7 @@ func init() {
 		Func:         CCAUISettings,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Opens CCA and verifies the settings menu behavior",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Params: []testing.Param{{
@@ -36,6 +36,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           "ccaTestBridgeReadyLacros",
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

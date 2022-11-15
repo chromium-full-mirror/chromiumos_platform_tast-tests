@@ -24,7 +24,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Func:         FaceAutoExposure,
 		Desc:         "Verifies face auto exposure",
-		Contacts:     []string{"beckerh@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinUSBCamera},
 		Data:         []string{"te273_mia_20211228.jpg"},
@@ -42,6 +42,7 @@ func init() {
 				Val:       pb.Facing_FACING_FRONT,
 			},
 		},
+		BugComponent: "b:167281",
 	})
 }
 

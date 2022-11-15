@@ -30,11 +30,12 @@ func init() {
 		Func:         HAL3AUE,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that camera HAL3 will still function after its device auto-update-expiration date",
-		Contacts:     []string{"yerlandinata@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Pre:          chrome.LoggedIn(),
 		Timeout:      4 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

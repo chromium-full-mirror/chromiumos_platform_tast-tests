@@ -25,7 +25,7 @@ func init() {
 		Func:         CCAUIRecordVideo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies video recording related use cases",
-		Contacts:     []string{"kamchonlathorn@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      5 * time.Minute,
@@ -36,6 +36,7 @@ func init() {
 			Name: "multi_stream",
 			Val:  true,
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

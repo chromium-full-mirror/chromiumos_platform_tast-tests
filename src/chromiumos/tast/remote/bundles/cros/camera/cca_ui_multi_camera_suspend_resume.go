@@ -25,7 +25,7 @@ func init() {
 		Func:         CCAUIMultiCameraSuspendResume,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functionality of multi-camera after suspend-resume scenario",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"cca_ui.js"},
@@ -49,6 +49,7 @@ func init() {
 				Val:  &camera.CameraTestRequest{Mode: camera.CameraMode_VIDEO, Facing: camera.Facing_FACING_BACK},
 			},
 		},
+		BugComponent: "b:978428",
 	})
 }
 

@@ -24,11 +24,12 @@ func init() {
 		Func:         CCAUIVolumeShutter,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify CCA volume button shutter related use cases",
-		Contacts:     []string{"pihsun@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs", caps.BuiltinOrVividCamera},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "ccaLaunched",
+		BugComponent: "b:978428",
 	})
 }
 

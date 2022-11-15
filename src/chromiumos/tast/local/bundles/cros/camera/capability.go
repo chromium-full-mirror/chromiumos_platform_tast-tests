@@ -14,10 +14,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Capability,
-		Desc:     "Compare capabilities defined in autocaps package with ones detected by platform camera tools",
-		Contacts: []string{"kamesan@chromium.org", "chromeos-camera-eng@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func:         Capability,
+		Desc:         "Compare capabilities defined in autocaps package with ones detected by platform camera tools",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
+		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:167281",
 	})
 }
 

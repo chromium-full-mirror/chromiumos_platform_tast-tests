@@ -17,10 +17,11 @@ func init() {
 		Func:         CCAUIMojo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the private Mojo APIs CCA relies on work as expected",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
+		BugComponent: "b:978428",
 	})
 }
 

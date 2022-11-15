@@ -23,10 +23,11 @@ func init() {
 		Func:         CCAUIGalleryButton,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that gallery button related logic works expectedly in CCA",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
+		BugComponent: "b:978428",
 	})
 }
 

@@ -22,14 +22,15 @@ func init() {
 		Func:         CCAUIPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and measures the UI performance including CPU and power usage",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"cca_ui.js"},
 		// Three subtests each have 200s timeout and one subtest have 300s timeout.
 		// 200s * 3 + 300s = 15 minutes
-		Timeout: 15 * time.Minute,
-		Fixture: "ccaTestBridgeReady",
+		Timeout:      15 * time.Minute,
+		Fixture:      "ccaTestBridgeReady",
+		BugComponent: "b:978428",
 	})
 }
 

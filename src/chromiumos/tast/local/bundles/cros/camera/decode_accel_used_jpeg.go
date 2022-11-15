@@ -19,13 +19,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks HW decoding is used for MJPEG in GetUserMedia()",
 		Contacts: []string{
+			"chromeos-camera-eng@google.com",
 			"kamesan@chromium.org",
 			"mcasas@chromium.org", // Test author.
-			"chromeos-camera-eng@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", "camera_legacy", caps.HWDecodeJPEG},
 		Data:         []string{"get_user_media.html", "crowd720_25frames.mjpeg"},
+		BugComponent: "b:167281",
 	})
 }
 

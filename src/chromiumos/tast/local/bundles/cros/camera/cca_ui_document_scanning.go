@@ -26,7 +26,7 @@ func init() {
 		Func:         CCAUIDocumentScanning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that CCA can take a photo for document and generate the document file via file VCD",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:ml_service", "ml_service_ondevice_document_scanner"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
 		Data:         []string{"document_3264x2448.mjpeg"},
@@ -90,6 +90,7 @@ func init() {
 				},
 			},
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

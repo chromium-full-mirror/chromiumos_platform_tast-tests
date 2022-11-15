@@ -24,7 +24,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifying alignment of chart tablet screen and target facing camera FOV in camerabox setup",
 		Data:         []string{"camerabox_align.svg", "camerabox_align.html", "camerabox_align.css", "camerabox_align.js"},
-		Contacts:     []string{"beckerh@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.AlignmentService"},
@@ -50,6 +50,7 @@ func init() {
 				Val:       pb.Facing_FACING_BACK,
 			},
 		},
+		BugComponent: "b:167281",
 	})
 }
 

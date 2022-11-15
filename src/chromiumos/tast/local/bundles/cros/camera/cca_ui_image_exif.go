@@ -22,11 +22,13 @@ type walker struct{}
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIImageExif,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies captured imaging metadata information on EXIF, using userfacing camera",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
+		BugComponent: "b:978428",
 	})
 }
 

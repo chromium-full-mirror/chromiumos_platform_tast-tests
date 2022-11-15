@@ -14,10 +14,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     SWPrivacySwitch,
-		Desc:     "Runs sw_privacy_switch_test to verify SWPrivacySwitchStreamManipulator works",
-		Contacts: []string{"okuji@chromium.org", "chromeos-camera-eng@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func:         SWPrivacySwitch,
+		Desc:         "Runs sw_privacy_switch_test to verify SWPrivacySwitchStreamManipulator works",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "okuji@chromium.org"},
+		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:167281",
 	})
 }
 

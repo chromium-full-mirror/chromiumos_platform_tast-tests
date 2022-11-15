@@ -33,7 +33,7 @@ func init() {
 		Func:         HDRnetPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the HDRnet performance tests",
-		Contacts:     []string{"jcliang@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_feature_hdrnet", "chrome", caps.BuiltinMIPICamera},
 		Data:         []string{"camera_page.html", "camera_page.js"},
@@ -47,7 +47,8 @@ func init() {
 			// Comma separated list of profilers to run (cpu, gpu, perf_record, top).
 			"profilers",
 		},
-		Timeout: 60 * time.Minute,
+		Timeout:      60 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

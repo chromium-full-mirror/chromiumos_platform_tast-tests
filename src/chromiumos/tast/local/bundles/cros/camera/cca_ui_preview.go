@@ -18,10 +18,11 @@ func init() {
 		Func:         CCAUIPreview,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA and verifies the preview functions",
-		Contacts:     []string{"chuhsuan@chromium.org", "shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
+		BugComponent: "b:978428",
 	})
 }
 

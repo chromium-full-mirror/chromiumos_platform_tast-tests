@@ -56,7 +56,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunchedInCameraBox",
 		Desc:            "Launched CCA in a Camera Box",
-		Contacts:        []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{launchCCAInCameraBox: true, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
@@ -69,7 +69,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunched",
 		Desc:            "Launched CCA",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
@@ -82,7 +82,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunchedGuest",
 		Desc:            "Launched CCA",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{guestMode: true, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
@@ -95,7 +95,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunchedWithFakeCamera",
 		Desc:            "Launched CCA with fake camera input",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{fakeCamera: true, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
@@ -108,7 +108,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReady",
 		Desc:            "Set up test bridge for CCA",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{},
 		SetUpTimeout:    setUpTimeout,
@@ -119,7 +119,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyLacros",
 		Desc:            "Set up test bridge for CCA",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{lacros: true},
 		SetUpTimeout:    setUpTimeout,
@@ -131,7 +131,7 @@ func init() {
 		Name: "ccaTestBridgeReadyWithFakeCamera",
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{fakeCamera: true, fakeScene: true},
 		SetUpTimeout:    setUpTimeout,
@@ -143,7 +143,7 @@ func init() {
 		Name: "ccaTestBridgeReadyWithFakeCameraLacros",
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{fakeCamera: true, fakeScene: true, lacros: true},
 		SetUpTimeout:    setUpTimeout,
@@ -154,7 +154,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyBypassPermissionClamshell",
 		Desc:            "Set up test bridge for CCA with bypassPermission on clamshell mode on",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{bypassPermission: true, forceClamshell: true},
 		SetUpTimeout:    setUpTimeout,
@@ -165,7 +165,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithArc",
 		Desc:            "Set up test bridge for CCA with ARC enabled",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{arcBooted: true},
 		SetUpTimeout:    setUpTimeout + arc.BootTimeout + ui.StartTimeout,
@@ -177,7 +177,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithMultiPageDocScan",
 		Desc:            "Set up test bridge for CCA and chrome for testing multi-page document scanning",
-		Contacts:        []string{"chuhsuan@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{fakeCamera: true, fakeScene: true, enableFeatures: []feature{multiPageDocScan}},
 		SetUpTimeout:    setUpTimeout,
@@ -189,7 +189,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithMultiPageDocScanDisabled",
 		Desc:            "Set up test bridge for CCA and chrome for testing single-page document scanning",
-		Contacts:        []string{"wtlee@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{fakeCamera: true, fakeScene: true, disableFeatures: []feature{multiPageDocScan}},
 		SetUpTimeout:    setUpTimeout,
@@ -200,7 +200,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithAutoFramingForceEnabled",
 		Desc:            "Set up test bridge for CCA with Auto Framing force enabled",
-		Contacts:        []string{"kamesan@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{forceEnableAutoFraming: true},
 		SetUpTimeout:    setUpTimeout,

@@ -21,10 +21,11 @@ func init() {
 		Func:         CCAUILauncher,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the behaviors of launching camera app via launcher",
-		Contacts:     []string{"wtlee@google.com", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@google.com"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "chromeLoggedIn",
+		BugComponent: "b:978428",
 	})
 }
 

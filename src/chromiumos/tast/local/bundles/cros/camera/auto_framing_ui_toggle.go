@@ -24,11 +24,12 @@ func init() {
 		Func:         AutoFramingUIToggle,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks toggling Auto-framing from UI works",
-		Contacts:     []string{"kamesan@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_feature_auto_framing", "chrome", caps.BuiltinCamera},
 		Fixture:      "ccaTestBridgeReadyWithAutoFramingForceEnabled",
 		Timeout:      7 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

@@ -26,7 +26,7 @@ func init() {
 		Func:         CCAUISmoke,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for Chrome Camera App",
-		Contacts:     []string{"pihsun@chromium.org", "shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Params: []testing.Param{{
@@ -56,6 +56,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Val:               videoRecoridng,
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

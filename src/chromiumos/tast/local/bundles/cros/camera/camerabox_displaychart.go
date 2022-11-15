@@ -18,10 +18,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     CameraboxDisplaychart,
-		Desc:     "Verifies whether display chart script working normally",
-		Contacts: []string{"beckerh@chromium.org", "chromeos-camera-eng@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func:         CameraboxDisplaychart,
+		Desc:         "Verifies whether display chart script working normally",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
+		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:167281",
 	})
 }
 

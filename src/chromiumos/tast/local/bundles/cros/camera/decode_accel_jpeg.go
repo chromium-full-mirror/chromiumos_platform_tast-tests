@@ -22,10 +22,11 @@ func init() {
 		Func:         DecodeAccelJPEG,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run Chrome jpeg_decode_accelerator_unittest",
-		Contacts:     []string{"kamesan@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.HWDecodeJPEG},
 		Data:         []string{decodeAccelJpegTestFile},
+		BugComponent: "b:167281",
 	})
 }
 

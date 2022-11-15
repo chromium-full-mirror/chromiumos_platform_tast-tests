@@ -24,11 +24,12 @@ func init() {
 		Func:         CCAUICoexistence,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies CCA can coexist with web page with camera open",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"camera_page.html", "camera_page.js", "cca_ui.js"},
 		Fixture:      "ccaTestBridgeReadyBypassPermissionClamshell",
+		BugComponent: "b:978428",
 	})
 }
 

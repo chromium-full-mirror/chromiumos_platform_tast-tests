@@ -17,7 +17,7 @@ func init() {
 		Func:         CCAUICameraBoxPortraitMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that CCA can take portrait mode photo via CameraBox",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"testing_rsa", "human_face_scene.jpg"},
@@ -32,6 +32,7 @@ func init() {
 			ExtraAttr: []string{"camerabox_facing_front"},
 			Val:       cca.FacingFront,
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

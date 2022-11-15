@@ -19,11 +19,12 @@ func init() {
 		Func:         HAL3StillCaptureZSL,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera still capture with ZSL function with HAL3 interface",
-		Contacts:     []string{"hywu@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "hywu@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Pre:          chrome.LoggedIn(),
 		Timeout:      3 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

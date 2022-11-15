@@ -22,12 +22,10 @@ func init() {
 		Func:         Connector,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the camera service connector library works",
-		Contacts: []string{
-			"shik@chromium.org",
-			"chromeos-camera-eng@google.com",
-		},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinOrVividCamera},
+		BugComponent: "b:167281",
 	})
 }
 

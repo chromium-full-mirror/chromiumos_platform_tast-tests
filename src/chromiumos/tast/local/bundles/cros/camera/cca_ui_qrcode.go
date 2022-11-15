@@ -30,7 +30,7 @@ func init() {
 		Func:         CCAUIQRCode,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks QR code detection in CCA",
-		Contacts:     []string{"shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "chrome_internal"},
 		Data:         []string{"qrcode_1280x960.mjpeg", "qrcode_text_1280x960.mjpeg"},
@@ -41,6 +41,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           "ccaTestBridgeReadyWithFakeCameraLacros",
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

@@ -23,7 +23,7 @@ func init() {
 		Func:         GetUserMedia,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that getUserMedia captures video",
-		Contacts:     []string{"shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(getusermedia.DataFiles(), "getusermedia.html"),
@@ -56,6 +56,7 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
+		BugComponent: "b:978428",
 	})
 }
 

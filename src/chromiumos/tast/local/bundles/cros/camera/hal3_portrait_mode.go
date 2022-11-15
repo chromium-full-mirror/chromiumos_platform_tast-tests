@@ -19,7 +19,7 @@ func init() {
 		Func:         HAL3PortraitMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera portrait mode function with HAL3 interface",
-		Contacts:     []string{"hywu@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "hywu@chromium.org"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "camera_feature_portrait_mode", "chrome", caps.BuiltinCamera},
 		Data:         []string{portraitModeTestFile},
 		Pre:          chrome.LoggedIn(),
@@ -33,6 +33,7 @@ func init() {
 			Val:       true, // generatePerfLog
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}},
+		BugComponent: "b:167281",
 	})
 }
 

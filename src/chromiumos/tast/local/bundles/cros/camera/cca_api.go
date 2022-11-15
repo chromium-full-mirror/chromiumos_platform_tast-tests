@@ -17,10 +17,11 @@ func init() {
 		Func:         CCAAPI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the private JavaScript APIs CCA relies on work as expected",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Pre:          chrome.LoggedIn(),
+		BugComponent: "b:978428",
 	})
 }
 

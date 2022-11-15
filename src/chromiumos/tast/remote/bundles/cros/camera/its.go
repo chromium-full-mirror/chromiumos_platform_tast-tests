@@ -55,7 +55,7 @@ func init() {
 		Func:         ITS,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera HAL3 interface function on remote DUT",
-		Contacts:     []string{"beckerh@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		Data:         []string{"adb", pre.SetupITSRepoScript, pre.ITSPy3Patch},
 		Vars:         []string{"chart"},
@@ -75,6 +75,7 @@ func init() {
 			}
 			*/
 		},
+		BugComponent: "b:167281",
 	})
 }
 

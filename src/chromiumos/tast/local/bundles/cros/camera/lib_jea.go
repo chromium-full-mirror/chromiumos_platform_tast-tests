@@ -21,13 +21,11 @@ func init() {
 		Func:         LibJEA,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs cros-camera-libjea_test to make sure jea works on ChromeOS side",
-		Contacts: []string{
-			"wtlee@chromium.org",
-			"chromeos-camera-eng@google.com",
-		},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.HWEncodeJPEG},
 		Data:         []string{"bali_640x368_P420.yuv", "lake_4096x3072_P420.yuv"},
+		BugComponent: "b:167281",
 	})
 }
 

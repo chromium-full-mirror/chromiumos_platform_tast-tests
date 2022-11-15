@@ -19,7 +19,7 @@ func init() {
 		Func:         CCAUICameraBoxDocumentScanning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that CCA can scan document on preview via CameraBox",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
 		Data:         []string{"testing_rsa", "document_scene.jpg"},
@@ -34,6 +34,7 @@ func init() {
 			ExtraAttr: []string{"camerabox_facing_front"},
 			Val:       cca.FacingFront,
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

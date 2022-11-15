@@ -26,11 +26,7 @@ func init() {
 		Func:         PowerCameraRecordingPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the battery drain during camera recording at 30 FPS",
-		Contacts: []string{
-			"wtlee@chromium.org",
-			"chromeos-camera-eng@google.com",
-			"arcvm-eng@google.com",
-		},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org", "arcvm-eng@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcBootedWithDisableSyncFlags",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
@@ -54,7 +50,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 			Val:               setup.NoBatteryDischarge,
 		}},
-		Timeout: 10 * time.Minute,
+		Timeout:      10 * time.Minute,
+		BugComponent: "b:978428",
 	})
 
 	// TODO(b/153129376): Extend test to record with 30 and 60 FPS.

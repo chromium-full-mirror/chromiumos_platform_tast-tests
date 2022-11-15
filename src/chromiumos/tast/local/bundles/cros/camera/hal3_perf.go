@@ -19,11 +19,12 @@ func init() {
 		Func:         HAL3Perf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures camera HAL3 performance",
-		Contacts:     []string{"hywu@chromium.org", "shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "hywu@chromium.org", "shik@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Pre:          chrome.LoggedIn(),
 		Timeout:      4 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 

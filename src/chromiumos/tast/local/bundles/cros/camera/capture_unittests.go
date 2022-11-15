@@ -30,11 +30,12 @@ func init() {
 		Func:         CaptureUnittests,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs Chrome capture_unittests to exercise Chrome's video capture stack",
-		Contacts:     []string{"shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		// TODO(b/187020361): removed from group:camera-postsubmit.
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"bear.mjpeg"},
+		BugComponent: "b:978428",
 	})
 }
 

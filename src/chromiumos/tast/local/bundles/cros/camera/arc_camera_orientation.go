@@ -21,7 +21,7 @@ func init() {
 		Func:         ArcCameraOrientation,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that camera orientation compatibility solution works as expected",
-		Contacts:     []string{"shik@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Pre:          arc.Booted(),
@@ -33,6 +33,7 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
+		BugComponent: "b:978428",
 	})
 }
 

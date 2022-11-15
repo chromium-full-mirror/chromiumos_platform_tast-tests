@@ -32,7 +32,7 @@ func init() {
 		Func:         EncodeAccelJPEGPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures jpeg_encode_accelerator_unittest performance",
-		Contacts:     []string{"wtlee@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", caps.HWEncodeJPEG},
 		Data:         []string{"coast_3840x2160_P420.yuv"},
@@ -41,6 +41,7 @@ func init() {
 			Name: "dmabuf",
 			Val:  "JpegEncodeAcceleratorTest.SimpleDmaEncode",
 		}},
+		BugComponent: "b:167281",
 	})
 }
 

@@ -25,11 +25,7 @@ func init() {
 		Func:         CameraPerfExtraMetrics,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures extra camera metrics such as open/close time and snapshot time",
-		Contacts: []string{
-			"wtlee@chromium.org",
-			"chromeos-camera-eng@google.com",
-			"arcvm-eng@google.com",
-		},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org", "arcvm-eng@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcBootedRestricted",
 		Params: []testing.Param{{
@@ -56,7 +52,8 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 			Val:               setup.NoBatteryDischarge,
 		}},
-		Timeout: 10 * time.Minute,
+		Timeout:      10 * time.Minute,
+		BugComponent: "b:978428",
 	})
 }
 

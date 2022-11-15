@@ -22,11 +22,12 @@ func init() {
 		Func:         HDRnetE2E,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the HDRnet end-to-end integration test",
-		Contacts:     []string{"jcliang@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"camera_app", "camera_feature_hdrnet", "chrome", caps.BuiltinMIPICamera},
 		Fixture:      "ccaTestBridgeReady",
 		Timeout:      6 * time.Minute,
+		BugComponent: "b:167281",
 	})
 }
 
