@@ -20,9 +20,10 @@ func init() {
 		Func: TPMContest,
 		Desc: "Concurrently tasks the TPM",
 		Contacts: []string{
-			"markhas@google.com",       // Test author
-			"cros-proj-amd@google.com", // Backup mailing list
+			"cros-proj-amd@google.com",
+			"markhas@google.com",
 		},
+		BugComponent: "b:169878",
 		// TODO: This test does not have to be specific to AMD cpus, but is
 		// failing and/or untested on other platforms.
 		SoftwareDeps: []string{"tpm2", "protected_content", "amd_cpu"},
