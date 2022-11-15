@@ -84,6 +84,7 @@ var PreparedArchives = []string{
 	"b1238564.gz",
 }
 
+// WithMountedArchiveDo performs some tests with a mounted archive.
 func WithMountedArchiveDo(ctx context.Context, cd *crosdisks.CrosDisks, archivePath string, options []string, f func(ctx context.Context, mountPath string) error) error {
 	return WithMountDo(ctx, cd, archivePath, filepath.Ext(archivePath), options, func(ctx context.Context, mountPath string, readOnly bool) error {
 		if !readOnly {
@@ -94,6 +95,7 @@ func WithMountedArchiveDo(ctx context.Context, cd *crosdisks.CrosDisks, archiveP
 	})
 }
 
+// VerifyArchiveContent checks the contents of a mounted archive.
 func VerifyArchiveContent(ctx context.Context, cd *crosdisks.CrosDisks, archivePath string, options []string, expectedContent DirectoryContents) error {
 	return WithMountedArchiveDo(ctx, cd, archivePath, options, func(ctx context.Context, mountPath string) error {
 		return verifyDirectoryContents(ctx, mountPath, expectedContent)
@@ -128,9 +130,8 @@ func testInvalidArchives(ctx context.Context, s *testing.State, cd *crosdisks.Cr
 	}
 
 	for _, f := range []string{
-		// TODO(b/258344222) Find out why this freezes cros-disks.
-		// "Not There.rar",
-		// "Not There.zip",
+		"Not There.rar",
+		"Not There.zip",
 	} {
 		if err := verifyMountStatus(ctx, cd, filepath.Join(dataDir, f), filepath.Ext(f), nil, crosdisks.MountErrorInvalidPath); err != nil {
 			s.Errorf("Unexpected status of mounting absent archive %q: %v", f, err)
@@ -444,8 +445,10 @@ func testCancellation(ctx context.Context, s *testing.State, cd *crosdisks.CrosD
 		s.Errorf("Unexpected error: got %v want %v", err, context.DeadlineExceeded)
 	}
 
-	// TODO(b/258344222) Use a short timeout of 2 seconds while unmounting.
-	ctxForUnmounting, close2 := context.WithTimeout(ctx, time.Second*60)
+	// TODO(b/258344222) Use a short timeout of less than 2 seconds while
+	// unmounting. Cancellation should be near instantaneous once the blocking
+	// umount() syscall issue is fixed on every kernel version.
+	ctxForUnmounting, close2 := context.WithTimeout(ctx, time.Second*3)
 	defer close2()
 
 	// Unmounting by passing the original archive path should cancel the mount
