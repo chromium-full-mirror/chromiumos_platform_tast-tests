@@ -25,11 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that HID screen is shown on Chromebase, Chromebox and Chromebit form factors and skipped on other form factors",
 		Contacts: []string{
+			"cros-oobe@google.com",
 			"osamafathy@google.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-oac@google.com",
-			"cros-oobe@google.com",
 		},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

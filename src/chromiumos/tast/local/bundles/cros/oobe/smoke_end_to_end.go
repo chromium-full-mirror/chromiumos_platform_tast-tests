@@ -26,11 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test that goes through OOBE, Login and Onboarding using the automation tools",
 		Contacts: []string{
+			"cros-oobe@google.com",
 			"bohdanty@google.com",
 			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
-			"cros-oobe@google.com",
 		},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

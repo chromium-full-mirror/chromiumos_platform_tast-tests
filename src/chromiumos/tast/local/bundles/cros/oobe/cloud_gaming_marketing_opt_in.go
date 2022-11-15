@@ -21,11 +21,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that we show gaming-specific marketing opt in screen on a cloud gaming board",
 		Contacts: []string{
+			"cros-oobe@google.com",
 			"bohdanty@google.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-oac@google.com",
-			"cros-oobe@google.com",
 		},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

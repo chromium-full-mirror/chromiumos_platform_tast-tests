@@ -30,12 +30,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test pin enrollment, pin unlock and pin login",
 		Contacts: []string{
+			"cros-oobe@google.com",
 			"anastasiian@google.com",
 			"bohdanty@google.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-oac@google.com",
-			"cros-oobe@google.com",
 		},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -17,12 +17,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test that clicks through OOBE",
 		Contacts: []string{
+			"cros-oobe@google.com",
 			"bohdanty@google.com",
 			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-oac@google.com",
-			"cros-oobe@google.com",
 		},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 	})
