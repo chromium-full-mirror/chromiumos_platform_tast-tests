@@ -7,10 +7,25 @@ package graphics
 
 import (
 	"context"
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
 	"net"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"chromiumos/tast/common/chameleon"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/display"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
 
@@ -25,27 +40,169 @@ var (
 		"",
 		"Local IP address of Chameleon (required)")
 
-	chameleonSSHPort = testing.RegisterVarString(
-		"graphics.chameleon_ssh_port",
-		"22",
-		"SSH port for Chameleon (optional/not currently used)")
-
 	chameleonPort = testing.RegisterVarString(
 		"graphics.chameleon_port",
 		"9992",
 		"Port for chameleond on Chameleon (optional/used)")
 )
 
+// ChameleonTest is used to describe the config used to run each test.
+type ChameleonTest struct {
+	Port         chameleon.PortID // The port number
+	Iterations   int
+	ExtendedMode bool
+	MirrorMode   bool
+}
+
+// RGB is an in-memory image whose At method returns color.RGBA values.
+// This is used for the Chameleon which return RGB pixels for its screenshots.
+// We need to implement the ColorModel(), Bounds(), and At() functions to be
+// able to encode and save PNG images.
+type RGB struct {
+	// Pix holds the image's pixels, in R, G, B order.
+	Pix []uint8
+	// Rect is the image's bounds.
+	Rect image.Rectangle
+	image.Image
+}
+
+// ColorModel returns the color model RGBA for the image
+func (p *RGB) ColorModel() color.Model { return color.RGBAModel }
+
+// Bounds gets the dimensions of the image
+func (p *RGB) Bounds() image.Rectangle { return p.Rect }
+
+// At gets the color at an (x, y) of the image
+func (p *RGB) At(x, y int) color.Color {
+	if !(image.Point{x, y}.In(p.Rect)) {
+		return color.RGBA{}
+	}
+	i := 3 * ((x - p.Rect.Min.X) + (y-p.Rect.Min.Y)*p.Rect.Dx())
+	return color.RGBA{p.Pix[i], p.Pix[i+1], p.Pix[i+2], 0xff}
+}
+
+// ChameleonGetScreenshot gets what chameleon sees
+func ChameleonGetScreenshot(ctx context.Context, cham chameleon.Chameleond, port chameleon.PortID, chamPath string) error {
+	pixels, err := cham.DumpPixels(ctx, port)
+	if err != nil {
+		return errors.Errorf("chameleon could not take screenshot: %s", err)
+	}
+
+	width, height, err := cham.DetectResolution(ctx, port)
+	if err != nil {
+		return errors.Errorf("failed to detect resolution: %s", err)
+	}
+	imgDim := image.Rect(0, 0, width, height)
+	img := RGB{Pix: pixels, Rect: imgDim}
+
+	outImage, err := os.Create(chamPath)
+	if err != nil {
+		return errors.Errorf("failed to create path %s: %s", chamPath, err)
+	}
+	defer outImage.Close()
+
+	err = png.Encode(outImage, &img)
+	if err != nil {
+		return errors.Errorf("image did not get encoded: %s", err)
+	}
+	return nil
+}
+
+// SwitchDisplayMode changes the display mode
+// mirrorMode set to true sets it to mirror mode, false sets it to extended mode
+func SwitchDisplayMode(ctx context.Context, cr *chrome.Chrome, setMirrorMode bool) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Errorf("failed to get test API connection: %s", err)
+	}
+
+	ui := uiauto.New(tconn)
+	settings, err := ossettings.Launch(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch os-settings Settings page")
+	}
+	defer settings.Close(ctx)
+
+	deviceFinder := nodewith.Name("Device").Role(role.Link)
+	err = ui.LeftClick(deviceFinder)(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch device page")
+	}
+
+	displayFinder := nodewith.Name("Displays").Role(role.Link).Ancestor(ossettings.WindowFinder)
+	err = ui.LeftClick(displayFinder)(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch display page")
+	}
+
+	displayParams := nodewith.Name("Mirror Built-in display").Role(role.CheckBox).Ancestor(ossettings.WindowFinder)
+	nodeInfo, err := ui.Info(ctx, displayParams)
+
+	if (setMirrorMode && nodeInfo.Checked == "false") || (!setMirrorMode && nodeInfo.Checked == "true") {
+		if err = ui.LeftClick(displayParams)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click mirror display")
+		}
+	}
+
+	// Expect the display is changed. Return err after poll timeout.
+	if err = testing.Poll(ctx, func(ctx context.Context) error {
+		internalDisplayInfo, err := display.GetInternalInfo(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get display infos in mirror mode")
+		}
+
+		if setMirrorMode && internalDisplayInfo.ID != internalDisplayInfo.MirroringSourceID {
+			return errors.Errorf("Set to mirror mode, but unexpected mirror source ID: got %s, want %s", internalDisplayInfo.MirroringSourceID, internalDisplayInfo.ID)
+		}
+
+		if !setMirrorMode && internalDisplayInfo.ID == internalDisplayInfo.MirroringSourceID {
+			return errors.New("Set to extended mode, but mirror source ID isn't an empty string")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ChameleonPlug plugs in chameleon and ensures stable video input.
+func ChameleonPlug(ctx context.Context, cham chameleon.Chameleond, port chameleon.PortID) error {
+	err := cham.Plug(ctx, port)
+	if err != nil {
+		return errors.Errorf("failed to plug in a physically plugged port %d: %s", port, err)
+	}
+
+	isVideoStable, err := cham.WaitVideoInputStable(ctx, port, 10)
+	if err != nil || !isVideoStable {
+		return errors.Errorf("video not stable after 10 seconds: %s", err)
+	}
+
+	return nil
+}
+
 // ChameleonGetURL retrieves the Chameleon's IP and port to create a URL.
 func ChameleonGetURL() (string, error) {
 	if net.ParseIP(chameleonIP.Value()) == nil {
 		return "", errors.Errorf("failed to get chameleon ip. The Chameleon ip: %s", chameleonIP.Value())
 	}
-
 	chamIP := chameleonIP.Value()
 	chamPort := chameleonPort.Value()
 	chamURL := net.JoinHostPort(chamIP, chamPort)
 	return chamURL, nil
+}
+
+// ChameleonGetConnection retrieves the connected Chameleond instance
+func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
+	chamURL, err := ChameleonGetURL()
+	if err != nil {
+		return nil, errors.Errorf("failed to get the Chameleon's URL: %s", err)
+	}
+	cham, err := chameleon.NewChameleond(ctx, chamURL)
+	if err != nil {
+		return nil, errors.Errorf("failed to connect to Chameleon: %s", err)
+	}
+	testing.ContextLog(ctx, "Connected to Chameleon")
+	return cham, nil
 }
 
 // ChameleonShouldUsePort determines whether a port is physically plugged for usage.
@@ -64,5 +221,42 @@ func ChameleonShouldUsePort(ctx context.Context, cham chameleon.Chameleond, port
 	if err != nil {
 		return false, errors.Errorf("failed to unplug the port %d : %s", port, err)
 	}
-	return isPhysPlug, nil
+
+	hasVideoSupport, err := cham.HasVideoSupport(ctx, port)
+	if err != nil {
+		return false, errors.Errorf("failed to check if port %d has video support: %s", port, err)
+	}
+	return isPhysPlug && hasVideoSupport, nil
+}
+
+// ChameleonResizePng resizes a png to the proper format for ChameleonPerceptualDiff
+// TODO(b/261513203): update perceptualdiff and use the --scale option instead of resizing.
+func ChameleonResizePng(ctx context.Context, src, dst string, width, height int) error {
+	imageSize := fmt.Sprintf("%dx%d!", width, height)
+	cmd := testexec.CommandContext(ctx, "convert", "-channel", "RGB", "-colorspace", "RGB", "-depth", "8", "-resize", imageSize, src, dst)
+	return cmd.Run(testexec.DumpLogOnError)
+}
+
+// ChameleonPerceptualDiff compares two images using perceptually based image metric
+func ChameleonPerceptualDiff(ctx context.Context, imagePath1, imagePath2, outDir string, threshold int) (bool, error) {
+	pixelThreshold := strconv.Itoa(threshold)
+
+	resizedPath1 := filepath.Join(outDir, "resized1.png")
+	resizedPath2 := filepath.Join(outDir, "resized2.png")
+
+	err := ChameleonResizePng(ctx, imagePath1, resizedPath1, 100, 100)
+	if err != nil {
+		return false, errors.Errorf("image at %s failed to resize: %s", imagePath1, err)
+	}
+	err = ChameleonResizePng(ctx, imagePath2, resizedPath2, 100, 100)
+	if err != nil {
+		return false, errors.Errorf("image at %s failed to resize: %s", imagePath2, err)
+	}
+
+	cmd := testexec.CommandContext(ctx, "perceptualdiff", "-threshold", pixelThreshold, resizedPath1, resizedPath2)
+	err = cmd.Run()
+	if err != nil {
+		return false, nil
+	}
+	return true, nil
 }

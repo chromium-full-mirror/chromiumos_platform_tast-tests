@@ -475,7 +475,7 @@ type Chameleond interface {
 	// DumpPixels calls the Chameleond RPC method of the same name.
 	// Dumps the raw pixel array of the selected area.
 	// If view is nil, the whole screen is captured.
-	DumpPixels(ctx context.Context, portID PortID, view *ImageView) error
+	DumpPixels(ctx context.Context, portID PortID) ([]byte, error)
 
 	// GetMaxFrameLimit calls the Chameleond RPC method of the same name.
 	// Gets the maximal number of frames which are accommodated in the buffer.
@@ -1134,17 +1134,12 @@ func (c *CommonChameleond) IsVideoInputEncrypted(ctx context.Context, portID Por
 
 // DumpPixels calls the Chameleond RPC method of the same name.
 // This implements Chameleond.DumpPixels, see that for more details.
-func (c *CommonChameleond) DumpPixels(ctx context.Context, portID PortID, view *ImageView) error {
-	args := []interface{}{
-		portID.Int(),
+func (c *CommonChameleond) DumpPixels(ctx context.Context, portID PortID) ([]byte, error) {
+	err := c.CaptureVideo(ctx, portID, 1, nil)
+	if err != nil {
+		return nil, errors.Errorf("failed to capture video: %s", err)
 	}
-	if view != nil {
-		args = append(args, view.X)
-		args = append(args, view.Y)
-		args = append(args, view.Width)
-		args = append(args, view.Height)
-	}
-	return c.RPC("DumpPixels").Args(args...).Call(ctx)
+	return c.ReadCapturedFrame(ctx, 0)
 }
 
 // GetMaxFrameLimit calls the Chameleond RPC method of the same name.
