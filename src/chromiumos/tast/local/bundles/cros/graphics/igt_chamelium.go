@@ -24,7 +24,7 @@ var (
 	chameleonIPVar = testing.RegisterVarString(
 		"graphics.chameleon_ip",
 		"",
-		"IP address of Chameleon (required)")
+		"Local IP address of Chameleon (required)")
 
 	chameleonSSHPortVar = testing.RegisterVarString(
 		"graphics.chameleon_ssh_port",
@@ -71,7 +71,6 @@ func setIgtrcFile(s *testing.State) {
 
 	// Get Chameleon IP
 	// This is used for local dev env.
-	s.Log("Got testing.RegisterVarString")
 	addr := net.ParseIP(chameleonIPVar.Value())
 	if addr == nil {
 		s.Fatal("Failed to get chameleon IP. The Chameleon IP: ", chameleonIPVar.Value())
@@ -104,7 +103,7 @@ URL=` + url + `
 	// Set the file path as env variable for IGT to find it.
 	os.Setenv("IGT_CONFIG_PATH", igtFilePath)
 
-	s.Log("IGT_CONFIG_PATH = ", igtFilePath)
+	s.Log("$IGT_CONFIG_PATH = ", igtFilePath)
 	s.Log("Chameleon Device URL = ", url)
 }
 
@@ -118,8 +117,7 @@ func IgtChamelium(ctx context.Context, s *testing.State) {
 
 	setIgtrcFile(s)
 
-	testPath := filepath.Join("chamelium", testOpt.Exe)
-	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testPath, f)
+	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testOpt.Exe, f)
 
 	isError, outputLog := graphics.IgtProcessResults(testOpt.Exe, f, isExitErr, exitErr, err)
 

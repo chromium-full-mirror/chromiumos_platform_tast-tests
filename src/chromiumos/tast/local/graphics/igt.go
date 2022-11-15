@@ -74,17 +74,16 @@ func IgtProcessResults(testExe string, file *os.File, isExitErr bool, exitErr *e
 	isError := false
 	outputLog := ""
 
-	if results.passed+results.failed+results.skipped == 0 {
-		// TODO(markyacoub): Many tests have igt_require_intel(), which automatically skips
-		// everything on other platforms. Mark the test as PASS for now until there are no more
-		// platform specific dependencies
-		outputLog = "Entire test was skipped - No subtests were run\n"
-		// In the case of running multiple subtests which all happen to be skipped, igt_exitcode is 0,
-		// but the final exit code will be 77.
-	} else if results.passed+results.failed == 0 && isExitErr && exitErr.ExitCode() == 77 {
+	// In the case of running multiple subtests which all happen to be skipped, igt_exitcode is 0,
+	// but the final exit code will be 77.
+	if results.passed+results.failed == 0 && isExitErr && exitErr.ExitCode() == 77 {
 		outputLog = "____________________________________________________\n"
 		outputLog += fmt.Sprintf("ALL %d subtests were SKIPPED: %s\n", results.skipped, err.Error())
 		outputLog += "----------------------------------------------------"
+		// Each test is expected to run and either pass or fail. If nothing happens, then something is off.
+	} else if results.passed+results.failed+results.skipped == 0 {
+		outputLog = "Entire test was skipped - No subtests were run\n"
+		isError = true
 	} else if len(failedSubtests) > 0 {
 		outputLog = fmt.Sprintf("FAIL: Test:%s - Pass:%d Fail:%d - FailedSubtests:%s - Summary:%s\n",
 			testExe, results.passed, results.failed, failedSubtests, summary)
