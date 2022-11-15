@@ -74,14 +74,15 @@ func init() {
 				SearchKeyword:  "goog stock",
 				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("NASDAQ")),
 			},
-		}, {
+		},
+		/* Disabled due to <1% pass rate over 30 days. See crbug/1364742
+		{
 			Name: "weather_card_clamshell",
 			Val: searchTestCase{TabletMode: false,
 				SearchKeyword:  "weather",
 				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("-?[1-9][0-9]*")),
 			},
 		},
-		/* Disabled due to <1% pass rate over 30 days. See b/241943050
 		{
 			Name:              "tablet_mode",
 			Val:               launcher.TestCase{TabletMode: true},
