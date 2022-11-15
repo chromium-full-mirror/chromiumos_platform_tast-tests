@@ -282,8 +282,9 @@ func (r *screenshotRecorderImpl) captureDisplay(ctx context.Context, fileSuffix 
 	err := cmd.Run(testexec.DumpLogOnError)
 	if err != nil {
 		err = errors.Wrapf(err, "failed running %q", strings.Join(cmd.Args, " "))
+	} else {
+		r.numImages++
 	}
-	r.numImages++
 
 	if r.firstErr == nil {
 		r.firstErr = err
