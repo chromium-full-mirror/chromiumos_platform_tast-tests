@@ -161,7 +161,12 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 
 	// Snap the window to the left and drag the second tab to snap to the right.
 	testing.ContextLog(ctx, "Snapping the browser window to the left")
-	if err := pc.Drag(tabStripGapPt, pc.DragTo(snapLeftPoint, duration))(ctx); err != nil {
+	if err := pc.Drag(
+		tabStripGapPt,
+		uiauto.Sleep(dragStartWaitTime),
+		pc.DragTo(snapLeftPoint, duration),
+		uiauto.Sleep(dragEndWaitTime),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to snap the browser window to the left")
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
@@ -175,7 +180,12 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	if err != nil {
 		return errors.Wrap(err, "failed to get the location of the first tab")
 	}
-	if err := pc.Drag(firstTabRect.CenterPoint(), pc.DragTo(snapRightPoint, duration))(ctx); err != nil {
+	if err := pc.Drag(
+		firstTabRect.CenterPoint(),
+		uiauto.Sleep(dragStartWaitTime),
+		pc.DragTo(snapRightPoint, duration),
+		uiauto.Sleep(dragEndWaitTime),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to snap the second tab to the right")
 	}
 	defer cleanUp(ctx, action.Named(
@@ -253,7 +263,13 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	if err != nil {
 		return errors.Wrap(err, "failed to find the browser window in the overview mode")
 	}
-	if err := pc.Drag(w.OverviewInfo.Bounds.CenterPoint(), pc.DragTo(snapLeftPoint, duration))(ctx); err != nil {
+	if err := pc.Drag(
+		w.OverviewInfo.Bounds.CenterPoint(),
+		// Skip dragStartWaitTime because it's not important that the
+		// drag start exactly from the center of the overview window.
+		pc.DragTo(snapLeftPoint, duration),
+		uiauto.Sleep(dragEndWaitTime),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to drag browser window from overview to snap")
 	}
 	// Wait for location-change events to be completed.
@@ -277,8 +293,13 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	if deskMiniViewCount := len(deskMiniViews); deskMiniViewCount < 2 {
 		return errors.Errorf("expected more than 1 desk mini-views; found %v", deskMiniViewCount)
 	}
-	if err := pc.Drag(w.OverviewInfo.Bounds.CenterPoint(),
-		pc.DragTo(deskMiniViews[1].Location.CenterPoint(), duration))(ctx); err != nil {
+	if err := pc.Drag(
+		w.OverviewInfo.Bounds.CenterPoint(),
+		// Skip dragStartWaitTime because it's not important that the
+		// drag start exactly from the center of the overview window.
+		pc.DragTo(deskMiniViews[1].Location.CenterPoint(), duration),
+		uiauto.Sleep(dragEndWaitTime),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to drag browser window from overview grid to desk mini-view")
 	}
 	// Wait for location-change events to be completed.

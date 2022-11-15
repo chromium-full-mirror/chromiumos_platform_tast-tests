@@ -32,9 +32,8 @@ import (
 // 5. Drag the divider.
 func exerciseSplitViewResize(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context, enterOverview action.Action, splitViewDragPoints ...coords.Point) error {
 	const (
-		slow              = 2 * time.Second
-		moderatePace      = time.Second
-		longPressDuration = time.Second
+		slow         = 2 * time.Second
+		moderatePace = time.Second
 	)
 
 	// 1. Drag the divider.
@@ -67,11 +66,10 @@ func exerciseSplitViewResize(ctx context.Context, tconn *chrome.TestConn, ui *ui
 		return errors.Errorf("expected more than 1 desk mini-views; found %v", deskMiniViewCount)
 	}
 	if err := pc.Drag(
-		// Initiate the drag with a long press at the centerpoint of the overview window.
 		w.OverviewInfo.Bounds.CenterPoint(),
 		uiauto.Sleep(longPressDuration),
-		// Then drag the overview window to the centerpoint of the second desk mini-view.
 		pc.DragTo(deskMiniViews[1].Location.CenterPoint(), moderatePace),
+		uiauto.Sleep(dragEndWaitTime),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to drag overview window to second desk")
 	}
@@ -147,9 +145,11 @@ func RunTablet(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uiauto
 			return nil
 		},
 	), &retErr)
-	if err := pc.Drag(firstTabRect.CenterPoint(),
-		uiauto.Sleep(time.Second),
+	if err := pc.Drag(
+		firstTabRect.CenterPoint(),
+		uiauto.Sleep(longPressDuration),
 		pc.DragTo(snapRightPoint, 3*time.Second),
+		uiauto.Sleep(dragEndWaitTime),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to drag a tab to snap to the right")
 	}

@@ -27,6 +27,25 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	// dragStartWaitTime specifies how long to wait to ensure that a
+	// drag is properly initiated before moving the pointer. I think
+	// this is only an issue for mouse dragging, but it can be used
+	// also for touch dragging, just for fair performance comparison
+	// between clamshell and tablet test variants.
+	dragStartWaitTime = time.Second
+	// dragEndWaitTime specifies how long to wait to ensure that the
+	// final position of the pointer is processed before ending a
+	// drag. I think this is only an issue for mouse dragging, but it
+	// can be used also for touch dragging, just for fair performance
+	// comparison between clamshell and tablet test variants.
+	dragEndWaitTime = time.Second
+	// longPressDuration specifies how long to wait so a touch drag
+	// is initiated with a long press. This is useful for dragging a
+	// window from overview, or a tab from the web UI tab strip.
+	longPressDuration = time.Second
+)
+
 // TestParam holds parameters of window arrangement cuj test variations.
 type TestParam struct {
 	BrowserType browser.Type
@@ -190,8 +209,10 @@ func combineTabs(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context
 
 	if err := pc.Drag(
 		firstTabRect.CenterPoint(),
+		uiauto.Sleep(dragStartWaitTime),
 		pc.DragTo(firstTabRect.BottomCenter(), duration),
 		pc.DragTo(secondTabRect.CenterPoint(), duration),
+		uiauto.Sleep(dragEndWaitTime),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to drag one browser tab to the other")
 	}
@@ -252,7 +273,7 @@ func dragAndRestore(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 	}
 	verifyBoundsTimeout := &testing.PollOptions{Timeout: time.Minute}
 
-	var dragSteps []uiauto.Action
+	dragSteps := []uiauto.Action{uiauto.Sleep(dragStartWaitTime)}
 	for i := 1; i < len(p); i++ {
 		dragSteps = append(dragSteps, pc.DragTo(p[i], duration))
 	}
