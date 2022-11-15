@@ -6,6 +6,7 @@ package testserver
 
 import (
 	"fmt"
+	"time"
 
 	"chromiumos/tast/local/bundles/cros/inputs/emojipicker"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
@@ -67,7 +68,7 @@ func (its *InputsTestServer) InputEmojiWithEmojiPickerSearch(uc *useractions.Use
 		ui.LeftClick(emojipicker.SearchFieldFinder),
 		keyboard.TypeAction(searchString),
 		util.WaitForFieldEmpty(its.tconn, emojipicker.NodeFinder.Name("😄").First()),
-		ui.LeftClick(emojiResultFinder),
+		ui.LeftClickUntil(emojiResultFinder, ui.WithTimeout(time.Second).WaitUntilGone(emojipicker.RootFinder)),
 		// Wait for input value to be test Emoji.
 		util.WaitForFieldTextToBe(uc.TestAPIConn(), inputField.Finder(), emojiChar),
 	)
