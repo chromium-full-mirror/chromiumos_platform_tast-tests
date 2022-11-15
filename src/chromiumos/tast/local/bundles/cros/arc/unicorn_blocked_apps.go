@@ -27,8 +27,10 @@ func init() {
 		Func:         UnicornBlockedApps,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if blocked apps cannot be installed from Child Account",
-		Contacts:     []string{"mhasank@google.com", "arc-commercial@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
+		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr: []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
