@@ -14,7 +14,7 @@ import (
 
 // bluetoothDetailedView is the detailed Bluetooth view within the Quick
 // Settings.
-var bluetoothDetailedView = nodewith.ClassName("BluetoothDetailedViewImpl")
+var bluetoothDetailedView = nodewith.ClassName("BluetoothDetailedViewLegacy")
 
 // bluetoothFeaturePodLabelButton is the label child of the Bluetooth feature pod button.
 var bluetoothFeaturePodLabelButton = nodewith.ClassName("FeaturePodLabelButton").NameContaining("Bluetooth")
