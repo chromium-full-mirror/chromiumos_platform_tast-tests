@@ -27,17 +27,18 @@ func init() {
 		Func:         LaunchCanvas,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Launches Chrome Canvas APP through the launcher after user login",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Contacts: []string{
 			"blick-swe@google.com",
 			"shengjun@chromium.org",
 		},
+		BugComponent: "b:385726",
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{{
 			Name:              "stable",
 			Fixture:           fixture.LoggedIn,
 			ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-			ExtraAttr:         []string{"group:mainline"},
 		}, {
 			Name:              "unstable",
 			Fixture:           fixture.LoggedIn,
@@ -48,7 +49,7 @@ func init() {
 			Name:              "lacros",
 			Fixture:           fixture.LacrosLoggedIn,
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 		}},
 	})

@@ -52,9 +52,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Cursive smoke test app launching and basic function",
 		Contacts: []string{
-			"shengjun@chromium.org",
+			"a4@google.com",
 			"gabpalado@google.com",
+			"jinrongwu@google.com",
 		},
+		BugComponent: "b:660747",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},

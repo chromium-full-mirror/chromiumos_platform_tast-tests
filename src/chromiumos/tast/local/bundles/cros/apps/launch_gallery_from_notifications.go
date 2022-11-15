@@ -35,6 +35,7 @@ func init() {
 		Contacts: []string{
 			"backlight-swe@google.com",
 		},
+		BugComponent: "b:562866",
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Data:         []string{"gear_wheels_4000x3000_20200624.jpg", "download_link.html"},

@@ -41,6 +41,7 @@ func init() {
 			"backlight-swe@google.com",
 			"bugsnash@chromium.org",
 		},
+		BugComponent: "b:562866",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      8 * time.Minute,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},

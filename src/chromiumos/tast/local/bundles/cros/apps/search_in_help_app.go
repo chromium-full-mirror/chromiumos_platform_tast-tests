@@ -39,6 +39,7 @@ func init() {
 			"callistus@chromium.org", // test author.
 			"showoff-eng@google.com",
 		},
+		BugComponent: "b:690873",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{
 			{

@@ -32,6 +32,7 @@ func init() {
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},
+		BugComponent: "b:690873",
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,

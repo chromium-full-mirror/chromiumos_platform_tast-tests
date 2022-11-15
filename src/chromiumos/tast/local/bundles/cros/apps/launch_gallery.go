@@ -36,6 +36,7 @@ func init() {
 		Contacts: []string{
 			"backlight-swe@google.com",
 		},
+		BugComponent: "b:562866",
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Data:         []string{testFile},

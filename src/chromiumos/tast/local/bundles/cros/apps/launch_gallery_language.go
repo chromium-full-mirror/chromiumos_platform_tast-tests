@@ -28,6 +28,7 @@ func init() {
 		Contacts: []string{
 			"backlight-swe@google.com",
 		},
+		BugComponent: "b:562866",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.AppsStableModels),

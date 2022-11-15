@@ -28,6 +28,7 @@ func init() {
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},
+		BugComponent: "b:690873",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.AppsStableModels),

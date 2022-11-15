@@ -32,6 +32,7 @@ func init() {
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},
+		BugComponent: "b:690873",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{
 			{
