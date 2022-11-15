@@ -26,6 +26,13 @@ func init() {
 		},
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -33,6 +40,7 @@ func init() {
 func CryptohomeNonDirs(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	const (
 		user     = "foo@example.com"
