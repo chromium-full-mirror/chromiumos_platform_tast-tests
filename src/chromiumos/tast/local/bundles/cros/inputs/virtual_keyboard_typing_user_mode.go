@@ -38,6 +38,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual keyboard works in different user modes",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SearchFlags:  util.IMESearchFlags(typingModeTestIMEs),
 		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},

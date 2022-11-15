@@ -48,6 +48,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual keyboard works on different input fields",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		BugComponent: "b:95887",
 		// TODO(b/243336476): Remove Informational
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
 		SearchFlags:  util.IMESearchFlags(inputFieldTestIMEs),

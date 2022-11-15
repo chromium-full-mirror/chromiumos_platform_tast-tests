@@ -30,6 +30,7 @@ func init() {
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 		},
+		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "informational", "group:input-tools"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

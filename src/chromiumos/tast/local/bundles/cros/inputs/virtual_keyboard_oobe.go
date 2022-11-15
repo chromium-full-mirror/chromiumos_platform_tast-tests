@@ -32,6 +32,7 @@ func init() {
 		Desc:         "Checks that the virtual keyboard works in OOBE Gaia Login",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream"},
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		BugComponent: "b:95887",
 		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
 		VarDeps:      []string{"inputs.signinProfileTestExtensionManifestKey"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
