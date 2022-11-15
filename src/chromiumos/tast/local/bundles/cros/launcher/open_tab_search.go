@@ -40,10 +40,12 @@ func init() {
 		Func: OpenTabSearch,
 		Desc: "Test that Launcher search works with open tabs",
 		Contacts: []string{
-			"etuck@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "crbug:UI>Shell>Launcher",
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "all_tabs_in_one_window",
 			Fixture: "chromeLoggedIn",

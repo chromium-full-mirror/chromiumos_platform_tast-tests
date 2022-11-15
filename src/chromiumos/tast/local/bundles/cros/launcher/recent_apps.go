@@ -34,10 +34,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that different types of apps show in the recent apps section",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"anasalazar@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

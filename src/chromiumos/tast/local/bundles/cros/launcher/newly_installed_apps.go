@@ -52,10 +52,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that newly installed apps are marked as such in launcher",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"amitrokhin@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"amitrokhin@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

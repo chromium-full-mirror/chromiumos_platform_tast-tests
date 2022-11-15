@@ -33,10 +33,11 @@ func init() {
 		Desc:         "Basic smoke tests for the app list sorting",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"chromeos-sw-engprod@google.com",
 			"andrewxu@chromium.org",
 			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         fakeAppInfoForSortSmokeTest.IconFileNames,

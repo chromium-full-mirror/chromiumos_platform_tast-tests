@@ -28,10 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launcher Folder Item Drag and Drop",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

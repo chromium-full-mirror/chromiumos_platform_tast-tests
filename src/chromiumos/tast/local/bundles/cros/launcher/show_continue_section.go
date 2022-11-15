@@ -28,10 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a local file shows to Continue Section",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"anasalazar@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3*time.Minute + cws.InstallationTimeout,

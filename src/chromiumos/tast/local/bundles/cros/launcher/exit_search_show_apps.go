@@ -25,10 +25,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks for best match search results in the launcher",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"yulunwu@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

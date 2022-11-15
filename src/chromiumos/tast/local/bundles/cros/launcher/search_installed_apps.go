@@ -28,10 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Install apps from CWS and verify that it appears in the launcher",
 		Contacts: []string{
-			"kyle.chen@cienet.com",
-			"cienet-development@googlegroups.com",
+			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3*time.Minute + cws.InstallationTimeout,

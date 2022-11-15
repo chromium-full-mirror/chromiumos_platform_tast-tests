@@ -52,10 +52,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies app can be deleted from the list of app in launcher",
 		Contacts: []string{
-			"cienet-development@googlegroups.com",
+			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"victor.chen@cienet.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      3*time.Minute + installationTimeout,

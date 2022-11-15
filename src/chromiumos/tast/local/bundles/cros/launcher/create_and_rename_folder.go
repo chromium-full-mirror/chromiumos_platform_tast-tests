@@ -24,10 +24,11 @@ func init() {
 		Desc:         "Renaming Folder In Launcher",
 		Contacts: []string{
 			"seewaifu@chromium.org",
-			"chromeos-sw-engprod@google.com",
-			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

@@ -27,8 +27,9 @@ func init() {
 		Desc:         "Test removing items from a folder in the launcher",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"mmourgos@chromium.org"},
+			"mmourgos@chromium.org",
+			"chromeos-sw-engprod@google.com"},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

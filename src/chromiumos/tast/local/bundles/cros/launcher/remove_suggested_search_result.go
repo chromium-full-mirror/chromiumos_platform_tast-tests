@@ -35,11 +35,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the user us able to remove omnibox search suggestions from launcher search UI",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"tbarzic@chromium.org",
-			"yulunwu@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
+			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

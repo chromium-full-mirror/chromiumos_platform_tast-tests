@@ -23,10 +23,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify the reorder nudge's behaviors",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"andrewxu@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

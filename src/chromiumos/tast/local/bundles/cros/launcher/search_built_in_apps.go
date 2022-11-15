@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches a built-in app through the launcher",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

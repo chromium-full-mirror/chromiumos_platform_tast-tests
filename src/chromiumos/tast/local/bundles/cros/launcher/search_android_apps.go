@@ -26,10 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches an Android app through the launcher",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

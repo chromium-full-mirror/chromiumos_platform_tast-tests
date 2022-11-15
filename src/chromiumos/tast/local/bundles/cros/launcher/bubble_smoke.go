@@ -26,9 +26,10 @@ func init() {
 		Desc:         "Basic smoke tests for the bubble launcher",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"chromeos-sw-engprod@google.com",
 			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/232996538): reenable on taniks when it passes.

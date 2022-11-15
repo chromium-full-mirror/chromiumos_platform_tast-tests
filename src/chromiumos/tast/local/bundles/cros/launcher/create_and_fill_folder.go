@@ -25,8 +25,9 @@ func init() {
 		Desc:         "Test adding items to a folder in the launcher",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"mmourgos@chromium.org"},
+			"mmourgos@chromium.org",
+			"chromeos-sw-engprod@google.com"},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,

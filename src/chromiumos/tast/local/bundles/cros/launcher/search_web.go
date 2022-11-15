@@ -28,10 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "App Launcher Search: Web",
 		Contacts: []string{
-			"cienet-development@googlegroups.com",
+			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"victor.chen@cienet.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "drivefs", "chrome_internal"},
 		Fixture:      "chromeLoggedIn",

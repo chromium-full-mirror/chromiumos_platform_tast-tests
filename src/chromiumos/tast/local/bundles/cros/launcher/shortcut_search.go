@@ -28,11 +28,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that searching for queries associated with a keyhboard shortcut returns a keyboard shortcut result",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
 			"yulunwu@chromium.org",
-			"cros-system-ui-eng@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Launcher",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
