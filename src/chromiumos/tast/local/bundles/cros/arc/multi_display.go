@@ -74,14 +74,6 @@ var stableTestSet = []testEntry{
 }
 
 var unstableTestSet = []testEntry{
-	// Based on http://b/129564108.
-	{"Launch activity on external display", launchActivityOnExternalDisplay},
-	// Based on http://b/110105532.
-	{"Activity is visible when other is maximized", maximizeVisibility},
-	// Based on http://b/63773037 and http://b/140056612.
-	{"Relayout displays", relayoutDisplays},
-	// Based on http://b/130897153.
-	{"Remove and re-add displays", removeAddDisplay},
 	{"Drag a window between displays", dragWindowBetweenDisplays},
 	{"Rotate display", rotateDisplay},
 	{"Snapping", snappingOnDisplay},
@@ -97,6 +89,13 @@ func init() {
 		SoftwareDeps: []string{"arc", "chrome"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "arcBooted",
+		Params: []testing.Param{{
+			Val: stableTestSet,
+		}, {
+			Name:              "vm_unstable",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val:               unstableTestSet,
+		}},
 	})
 }
 
@@ -146,20 +145,7 @@ func MultiDisplay(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	version, err := arc.SDKVersion()
-	if err != nil {
-		s.Fatal("Failed to get ARC version: ", err)
-	}
-	var testSet []testEntry
-	if version >= arc.SDKR {
-		testing.ContextLog(ctx, "Using unstable test set")
-		testSet = unstableTestSet
-	} else {
-		testing.ContextLog(ctx, "Using stable test set")
-		testSet = stableTestSet
-	}
-
-	for idx, test := range testSet {
+	for idx, test := range s.Param().([]testEntry) {
 		if !runOrFatal(ctx, s, test.name, func(ctx context.Context, s *testing.State) error {
 			return test.fn(ctx, s, cr, a)
 		}) {
