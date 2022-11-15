@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify ETM functionality with the perf tool",
 		Contacts: []string{
-			"denik@chromium.org",
 			"c-compiler-chrome@google.com",
+			"denik@chromium.org",
 		},
+		BugComponent: "b:1038090",
 		// CoreSight/ETM is the Arm technology.
 		SoftwareDeps: []string{"arm", "chrome"},
 		// ETM is the optional HW implemented only on Qualcomm SoCs
