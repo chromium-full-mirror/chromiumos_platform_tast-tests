@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -109,6 +110,12 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure clamshell/tablet mode: ", err)
 	}
 	defer cleanup(closeCtx)
+
+	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, conns.TestConn)
+	if err != nil {
+		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
+	}
+	defer revertZoom(closeCtx, conns.TestConn)
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, conns.TestConn)
 	if err != nil {

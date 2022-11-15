@@ -391,17 +391,11 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// zoom out on the browser after the Meet window is opened,
 	// because on some boards the display zoom is not enough to
 	// show all of the participants.
-	info, err := display.GetPrimaryInfo(ctx, tconn)
+	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get the primary display info: ", err)
+		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
 	}
-	zoomInitial := info.DisplayZoomFactor
-	zoomMin := info.AvailableDisplayZoomFactors[0]
-	if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &zoomMin}); err != nil {
-		s.Fatalf("Failed to set display zoom factor to minimum %f: %v", zoomMin, err)
-	}
-
-	defer display.SetDisplayProperties(closeCtx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &zoomInitial})
+	defer revertZoom(closeCtx, tconn)
 
 	var cs ash.ConnSource
 	var br *browser.Browser

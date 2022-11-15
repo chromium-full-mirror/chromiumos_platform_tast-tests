@@ -359,3 +359,36 @@ func CheckExtendedDisplay(tconn *chrome.TestConn, expectedMode DisplayMode) acti
 		return nil
 	}
 }
+
+// MinimizePrimaryDisplayZoomFactor sets the zoom factor of the primary display to
+// the smallest available. If successful, this function returns a function that
+// reverts the zoom factor. MinimizePrimaryDisplayZoomFactor is useful for
+// ensuring that the minimum size of a browser window is conducive to split view.
+func MinimizePrimaryDisplayZoomFactor(ctx context.Context, tconn *chrome.TestConn) (
+	func(context.Context, *chrome.TestConn) error,
+	error,
+) {
+	info, err := GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the primary display info")
+	}
+
+	zoomInitial := info.DisplayZoomFactor
+
+	zoomMin := math.Inf(1)
+	for _, zoom := range info.AvailableDisplayZoomFactors {
+		if zoom < zoomMin {
+			zoomMin = zoom
+		}
+	}
+
+	if err := SetDisplayProperties(ctx, tconn, info.ID, DisplayProperties{DisplayZoomFactor: &zoomMin}); err != nil {
+		return nil, errors.Wrapf(err, "failed to set zoom factor of primary display to minimum %f", zoomMin)
+	}
+	return func(ctx context.Context, tconn *chrome.TestConn) error {
+		if err := SetDisplayProperties(ctx, tconn, info.ID, DisplayProperties{DisplayZoomFactor: &zoomInitial}); err != nil {
+			return errors.Wrapf(err, "failed to revert zoom factor of primary display to %f", zoomInitial)
+		}
+		return nil
+	}, nil
+}

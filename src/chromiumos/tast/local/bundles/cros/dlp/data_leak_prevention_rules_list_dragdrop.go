@@ -81,19 +81,11 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	// Sets the display zoom factor to minimum, to ensure that the work area
-	// length is at least twice the minimum length of a browser window, so that
-	// browser windows can be snapped in split view.
-	info, err := display.GetPrimaryInfo(ctx, tconn)
+	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get the primary display info: ", err)
+		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
 	}
-	zoomInitial := info.DisplayZoomFactor
-	zoomMin := info.AvailableDisplayZoomFactors[0]
-	if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &zoomMin}); err != nil {
-		s.Fatalf("Failed to set display zoom factor to minimum %f: %v", zoomMin, err)
-	}
-	defer display.SetDisplayProperties(cleanupCtx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &zoomInitial})
+	defer revertZoom(cleanupCtx, tconn)
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
