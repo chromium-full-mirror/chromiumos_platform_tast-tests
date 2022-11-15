@@ -70,22 +70,21 @@ func setupTestConfig(ctx context.Context, cameraType UseCameraType) error {
 	return nil
 }
 
-type fakeCameraConfig struct {
+// FakeCameraConfig represents the config for a single camera for fake HAL.
+type FakeCameraConfig struct {
 	ID        int  `json:"id"`
 	Connected bool `json:"connected"`
 	// TODO(pihsun): Add other fields
 }
 
-type fakeHALConfig struct {
-	Cameras []fakeCameraConfig `json:"cameras"`
+// FakeHALConfig represents the config for the fake HAL.
+type FakeHALConfig struct {
+	Cameras []FakeCameraConfig `json:"cameras"`
 }
 
-func setupFakeHALConfig(ctx context.Context) error {
-	jsonCfg, err := json.Marshal(fakeHALConfig{
-		Cameras: []fakeCameraConfig{
-			{ID: 1, Connected: true},
-		},
-	})
+// WriteFakeHALConfig writes the config to fake HAL config file.
+func WriteFakeHALConfig(ctx context.Context, config FakeHALConfig) error {
+	jsonCfg, err := json.Marshal(config)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode fake hal config as json")
 	}
@@ -93,6 +92,15 @@ func setupFakeHALConfig(ctx context.Context) error {
 		return errors.Wrap(err, "failed to write json config file")
 	}
 	return nil
+}
+
+// SetupFakeHALConfig writes the default config for fake HAL tests.
+func SetupFakeHALConfig(ctx context.Context) error {
+	return WriteFakeHALConfig(ctx, FakeHALConfig{
+		Cameras: []FakeCameraConfig{
+			{ID: 1, Connected: true},
+		},
+	})
 }
 
 // removeTestConfig removes the test config if it exists or returns nil otherwise.
@@ -112,7 +120,7 @@ func NewTestBridge(ctx context.Context, cr *chrome.Chrome, cameraType UseCameraT
 			return nil, errors.Wrap(err, "failed to setup test config")
 		}
 		if cameraType == UseFakeHALCamera {
-			if err := setupFakeHALConfig(ctx); err != nil {
+			if err := SetupFakeHALConfig(ctx); err != nil {
 				return nil, errors.Wrap(err, "failed to setup fake hal config")
 			}
 		}
