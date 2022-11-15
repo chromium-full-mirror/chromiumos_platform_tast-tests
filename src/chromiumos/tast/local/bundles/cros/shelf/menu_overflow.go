@@ -23,10 +23,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the behavior of shelf menu when it is overflowed",
 		Contacts: []string{
-			"ting.chen@cienet.com",
-			"cienet-development@googlegroups.com",
+			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWith100FakeApps",

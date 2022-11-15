@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that launched apps appear in the shelf",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 

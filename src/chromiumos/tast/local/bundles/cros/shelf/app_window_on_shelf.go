@@ -41,10 +41,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks the window instances when opening a chrome app in a new window / tab",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"wcwang@chromium.org",
 			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWith100FakeAppsNoAppSort",

@@ -33,10 +33,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests the shelf alignment",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"andrewxu@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

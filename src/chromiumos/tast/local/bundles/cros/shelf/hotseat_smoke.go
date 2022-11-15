@@ -21,11 +21,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the basic features of hotseat",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"andrewxu@chromium.org",
 			"newcomer@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnModel("magister")),

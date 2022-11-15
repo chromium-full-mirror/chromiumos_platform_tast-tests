@@ -45,11 +45,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test that opens shelf apps and checks each app's activity indicators",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"mmourgos@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

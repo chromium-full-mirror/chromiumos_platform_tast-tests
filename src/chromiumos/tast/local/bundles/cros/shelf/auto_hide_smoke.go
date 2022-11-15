@@ -33,11 +33,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests shelf autohide behavior",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"yulunwu@chromium.org",
 			"tbarzic@chromium.org",
-			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "crbug:UI>Shell>Shelf",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
