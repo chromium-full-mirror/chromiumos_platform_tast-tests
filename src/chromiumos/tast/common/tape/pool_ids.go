@@ -20,6 +20,8 @@ const (
 	DeviceTrustEnabled                    = "device_trust_enabled"
 	Enrollment                            = "enrollment"
 	EnrollmentKiosk                       = "enrollment_kiosk"
+	ImprivataSharedKiosk                  = "imprivata_shared_kiosk"
+	ImprivataSingleUser                   = "imprivata_single_user"
 	ZTETestAutomation                     = "zte-test-automation"
 )
 
