@@ -46,6 +46,7 @@ type ZoomConference struct {
 
 // Zoom has two versions of ui that need to be captured.
 const (
+	zoomTitle              = "Zoom"
 	startVideoRegexCapture = "(Start Video|start sending my video|start my video)"
 	stopVideoRegexCapture  = "(Stop Video|stop sending my video|stop my video)"
 	muteRegexCapture       = "(Mute|mute).*"
@@ -72,27 +73,15 @@ func (conf *ZoomConference) Join(ctx context.Context, room string, toBlur bool) 
 			testing.ContextLogf(ctx, "Failed to wait for %q to be loaded and achieve quiescence: %q", room, err)
 		}
 
-		zoomMainWebArea := nodewith.NameContaining("Zoom").Role(role.RootWebArea)
+		// Maximize the zoom window to show all the browser UI elements for precise clicking.
+		if err := cuj.MaximizeBrowserWindow(ctx, conf.tconn, conf.tabletMode, zoomTitle); err != nil {
+			return err
+		}
+		zoomMainWebArea := nodewith.NameContaining(zoomTitle).Role(role.RootWebArea)
 		zoomMainPage := nodewith.NameRegex(regexp.MustCompile("(?i)sign in|MY ACCOUNT")).Role(role.Link).Ancestor(zoomMainWebArea)
 		if err := ui.WithTimeout(mediumUITimeout).WaitUntilExists(zoomMainPage)(ctx); err != nil {
 			return errors.Wrap(err, "failed to load the zoom website")
 		}
-
-		// Maximize the zoom window to show all the browser UI elements for precise clicking.
-		if !conf.tabletMode {
-			// Find the zoom browser window.
-			window, err := ash.FindWindow(ctx, conf.tconn, func(w *ash.Window) bool {
-				return (w.WindowType == ash.WindowTypeBrowser || w.WindowType == ash.WindowTypeLacros) && strings.Contains(w.Title, "Zoom")
-			})
-			if err != nil {
-				return errors.Wrap(err, "failed to find the zoom window")
-			}
-			if err := ash.SetWindowStateAndWait(ctx, conf.tconn, window.ID, ash.WindowStateMaximized); err != nil {
-				// Just log the error and try to continue.
-				testing.ContextLog(ctx, "Try to continue the test even though maximizing the zoom window failed: ", err)
-			}
-		}
-
 		if err := ui.Exists(nodewith.Name("MY ACCOUNT").Role(role.Link))(ctx); err != nil {
 			testing.ContextLog(ctx, "Start to sign in")
 			if err := conf.zoomConn.Navigate(ctx, cuj.ZoomSignInURL); err != nil {
@@ -366,7 +355,7 @@ func (conf *ZoomConference) SwitchTabs(ctx context.Context) error {
 	}
 	return uiauto.Combine("switch tab",
 		uiauto.NamedAction("stay wiki page for 3 seconds", uiauto.Sleep(3*time.Second)),
-		uiauto.NamedAction("switch to zoom tab", conf.uiHandler.SwitchToChromeTabByName("Zoom")),
+		uiauto.NamedAction("switch to zoom tab", conf.uiHandler.SwitchToChromeTabByName(zoomTitle)),
 	)(ctx)
 }
 
@@ -450,14 +439,14 @@ func (conf *ZoomConference) BackgroundChange(ctx context.Context) error {
 			ui.LeftClick(closeButton), // Close "Background" panel.
 			takeScreenshot(conf.cr, conf.outDir, fmt.Sprintf("change-background-to-background-%q", backgroundOption)),
 			// Double click to enter full screen.
-			doFullScreenAction(conf.tconn, ui.DoubleClick(zoomWebArea), "Zoom", true),
+			doFullScreenAction(conf.tconn, ui.DoubleClick(zoomWebArea), zoomTitle, true),
 			// After applying new background, give it 5 seconds for viewing before applying next one.
 			uiauto.Sleep(viewingTime),
 			// Double click to exit full screen.
-			doFullScreenAction(conf.tconn, ui.DoubleClick(zoomWebArea), "Zoom", false),
+			doFullScreenAction(conf.tconn, ui.DoubleClick(zoomWebArea), zoomTitle, false),
 		)(ctx)
 	}
-	if err := conf.uiHandler.SwitchToChromeTabByName("Zoom")(ctx); err != nil {
+	if err := conf.uiHandler.SwitchToChromeTabByName(zoomTitle)(ctx); err != nil {
 		return CheckSignedOutError(ctx, conf.tconn, errors.Wrap(err, "failed to switch to zoom page"))
 	}
 	if err := changeBackground(staticBackground); err != nil {
@@ -485,17 +474,17 @@ func (conf *ZoomConference) Presenting(ctx context.Context, application googleAp
 	// shareScreen shares screen by "Chrome Tab" and selects the tab which is going to present.
 	shareScreen := func(ctx context.Context) error {
 		shareScreenButton := nodewith.Name("Share Screen").Role(role.StaticText)
-		presenMode := nodewith.Name("Chrome Tab").Role(role.Tab).ClassName("Tab")
+		presenMode := nodewith.Name("Chrome Tab").Role(role.Tab)
 		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).Name(appTabName)
 		shareButton := nodewith.Name("Share").Role(role.Button)
 		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
 		return uiauto.NamedCombine("share Screen",
-			conf.uiHandler.SwitchToChromeTabByName("Zoom"),
+			conf.uiHandler.SwitchToChromeTabByName(zoomTitle),
 			conf.showInterface,
 			ui.LeftClickUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presenMode)),
 			ui.LeftClick(presenMode),
 			ui.LeftClick(presentTab),
-			ui.LeftClick(shareButton),
+			ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
 			ui.WithTimeout(mediumUITimeout).WaitUntilExists(stopSharing),
 		)(ctx)
 	}
