@@ -21,10 +21,11 @@ func init() {
 		Func: NNAPI,
 		Desc: "Verifies that libneuralnetworks.so can be loaded by ml_cmdline",
 		Contacts: []string{
+			"chromeos-platform-ml@google.com",
 			"jmpollock@google.com",
 			"slangley@google.com",
-			"chromeos-platform-ml@google.com",
 		},
+		BugComponent: "b:1140118",
 		Attr: []string{
 			"group:mainline",
 		},

@@ -19,10 +19,11 @@ func init() {
 		Desc:    "Validates that the HAL driver conforms to the NNAPI specification",
 		Timeout: 10 * time.Minute,
 		Contacts: []string{
+			"chromeos-platform-ml@google.com",
 			"jmpollock@google.com",
 			"slangley@google.com",
-			"chromeos-platform-ml@google.com",
 		},
+		BugComponent: "b:1140118",
 		Attr: []string{
 			"group:mainline", "informational",
 		},

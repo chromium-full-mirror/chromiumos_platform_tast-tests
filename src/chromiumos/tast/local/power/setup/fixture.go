@@ -16,8 +16,8 @@ func init() {
 		Name: "powerSetUp",
 		Desc: "Set up DUT for power measurements",
 		Contacts: []string{
-			"jakebarnes@google.com",
 			"chromeos-platform-ml@google.com",
+			"jakebarnes@google.com",
 		},
 		Impl:            &powerSetUpFixture{},
 		SetUpTimeout:    time.Minute,
