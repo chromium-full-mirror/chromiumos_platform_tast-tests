@@ -19,11 +19,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ARCVPNCrash,
-		Desc:     "When ARC VPN crashes, host VPN is still reachable in ARC",
-		Contacts: []string{"cassiewang@google.com", "cros-networking@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		Fixture:  "shillResetWithArcBooted",
+		Func:         ARCVPNCrash,
+		Desc:         "When ARC VPN crashes, host VPN is still reachable in ARC",
+		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "shillResetWithArcBooted",
 		Params: []testing.Param{{
 			Val:               "p",
 			ExtraSoftwareDeps: []string{"android_p"},

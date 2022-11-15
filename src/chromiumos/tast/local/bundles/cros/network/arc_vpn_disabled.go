@@ -19,7 +19,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCVPNDisabled,
 		Desc:         "ARC VPN doesn't start when flag is off",
-		Contacts:     []string{"cassiewang@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillResetWithArcBooted",
 		SoftwareDeps: []string{"arc"},

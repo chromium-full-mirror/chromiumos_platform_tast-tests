@@ -24,7 +24,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCVPNConfigs,
 		Desc:         "Host VPN configs are reflected properly in ARC VPN",
-		Contacts:     []string{"cassiewang@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillResetWithArcBooted",
 		SoftwareDeps: []string{"arc", "wireguard"},

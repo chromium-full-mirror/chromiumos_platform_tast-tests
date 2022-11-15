@@ -20,7 +20,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCToHostVPN,
 		Desc:         "Switch from an ARC VPN to a host VPN",
-		Contacts:     []string{"cassiewang@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBootedWithoutDNSProxy",
 		SoftwareDeps: []string{"arc"},
