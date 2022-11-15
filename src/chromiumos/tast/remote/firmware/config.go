@@ -81,7 +81,7 @@ type Config struct {
 	Hibernate             bool              `json:"hibernate"`
 	HasKeyboard           bool              `json:"has_keyboard"`
 	RawUSBEnablePins      []json.RawMessage `json:"custom_usb_enable_pins"`
-	USBAPortCount         int               `json:"usb_a_port_count"`
+	USBAPortCount         *int              `json:"usb_a_port_count"`
 	SMMStore              bool              `json:"smm_store"`
 	GSCCanWakeECWithReset bool              `json:"gsc_can_wake_ec_with_reset"`
 

@@ -186,16 +186,26 @@ func getUSBPorts(ctx context.Context, h *firmware.Helper) ([]firmware.USBEnableP
 		enablePins = append(enablePins, pin)
 	}
 
-	portsToCheck := h.Config.USBAPortCount
-	if portsToCheck <= 0 {
-		// If the value is -1 (unknown) or 0 (default), we want to check a bunch of numbers manually.
+	// Check for unset value for usb port a count in testing configs.
+	// Many models with custom enable pins set have not set a port count, ignore in that case.
+	if h.Config.USBAPortCount == nil && len(h.Config.USBEnablePins) == 0 {
+		return enablePins, errors.Errorf("USB A port count for model %s set to null (default value) and no custom usb a gpio pins defined. Set to correct amount in fw-testing-configs", h.Model)
+	}
+
+	portsToCheck := 0
+	if h.Config.USBAPortCount != nil {
+		portsToCheck = *h.Config.USBAPortCount
+	}
+
+	// If the value is -1 (unknown), we want to check a bunch of numbers manually.
+	if portsToCheck < 0 {
 		portsToCheck = 11
 	}
 	for i := 1; i <= portsToCheck; i++ {
 		name := fmt.Sprintf("USB%d_ENABLE", i)
 		testing.ContextLogf(ctx, "Probing port %q with gpioget", name)
 		_, err := ec.FindBaseGpio(ctx, []firmware.GpioName{firmware.GpioName(name)})
-		if err != nil && h.Config.USBAPortCount >= i {
+		if err != nil && *h.Config.USBAPortCount >= i {
 			// If port i doesn't exist (regex fails) but it is expected to exist (0 < i <= h.Config.USBAPortCount), raise an error.
 			return enablePins, errors.Errorf("explicit port count is %d; expected port %d to exist but it does not", h.Config.USBAPortCount, i)
 		} else if err == nil {
