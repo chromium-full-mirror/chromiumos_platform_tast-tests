@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -41,8 +40,6 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			// VM ureadahead should only be validated on 8GB+ boards. Please see arc.DataCollector for details.
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
 		}},
 		// Minimum acceptable.
 		Timeout: 5 * time.Minute,
