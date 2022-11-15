@@ -24,6 +24,9 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
+// TODO(b/250468510) : remove "trogdor-arc-r", "trogdor64" when b/250468510 is fixed.
+var checkingAudioFormatsUnstablePlatforms = []string{"trogdor-arc-r", "trogdor64"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckingAudioFormats,
@@ -35,6 +38,21 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
 		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"audio_stable"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(checkingAudioFormatsUnstablePlatforms...)),
+			}, {
+				Name:              "unstable_platform",
+				ExtraSoftwareDeps: []string{"audio_unstable"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "unstable_model",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model()),
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
