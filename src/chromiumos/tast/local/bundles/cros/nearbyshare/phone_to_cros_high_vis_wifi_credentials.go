@@ -38,6 +38,21 @@ func init() {
 				},
 				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
+
+			// Floss-enabled duplicate
+			{
+				Name:    "dataonline_noone_wificredentials_floss",
+				Fixture: "nearbyShareDataUsageOnlineNoOneFloss",
+				Val: nearbycommon.WiFiTestData{
+					WiFiName:        "test_network",
+					WiFiPassword:    "testpassword0000",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					SecurityType:    nearbycommon.SecurityTypeWpaPsk,
+				},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
 		},
 	})
 }

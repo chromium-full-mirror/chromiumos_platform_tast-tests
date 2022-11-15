@@ -38,17 +38,36 @@ func init() {
 		Params: []testing.Param{
 			{
 				// Test connecting to Instant Tether exclusively through OS settings.
-				Val: false,
+				Val:     false,
+				Fixture: "crossdeviceOnboardedAllFeatures",
 			},
 			{
 				// Test connecting to Instant Tether with the "Wi-Fi available via phone"
 				// notification that appears when tethering is available and CrOS has no
 				// active network connections.
-				Name: "connect_with_notification",
-				Val:  true,
+				Name:    "connect_with_notification",
+				Fixture: "crossdeviceOnboardedAllFeatures",
+				Val:     true,
+			},
+
+			// Floss-enabled duplicates
+			{
+				// Test connecting to Instant Tether exclusively through OS settings.
+				Name:      "floss",
+				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
+				Val:       false,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+			{
+				// Test connecting to Instant Tether with the "Wi-Fi available via phone"
+				// notification that appears when tethering is available and CrOS has no
+				// active network connections.
+				Name:      "connect_with_notification_floss",
+				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
+				Val:       true,
+				ExtraAttr: []string{"cross-device_floss"},
 			},
 		},
-		Fixture: "crossdeviceOnboardedAllFeatures",
 		Timeout: 5 * time.Minute,
 	})
 }

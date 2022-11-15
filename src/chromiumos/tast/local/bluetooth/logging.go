@@ -7,11 +7,14 @@
 package bluetooth
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/testing"
 )
 
 // LogVerbosity indicates whether or not to enable verbose logging for the different bluetooth modules.
@@ -22,6 +25,29 @@ type LogVerbosity struct {
 
 // SetDebugLogLevels sets the logging level for Bluetooth debug logs.
 func SetDebugLogLevels(ctx context.Context, levels LogVerbosity) error {
+	// First check if we are using Floss; if so, skip adjusting the log level.
+	cmd := testexec.CommandContext(ctx, "dbus-send", "--system", "--print-reply",
+		"--dest=org.chromium.bluetooth.Manager",
+		"/org/chromium/bluetooth/Manager",
+		"org.chromium.bluetooth.Manager.GetFlossEnabled",
+	)
+	var stderr bytes.Buffer
+	var stdout bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		// On systems that don't support Floss, the manager daemon will not be running by default.
+		// If the manager is not found, we know we're on a bluez system and can proceed.
+		testing.ContextLog(ctx, stderr.String())
+		if !strings.Contains(stderr.String(), "org.chromium.bluetooth.Manager was not provided by any .service file") {
+			return errors.Wrap(err, "failed to query floss status")
+		}
+	}
+	testing.ContextLog(ctx, stdout.String())
+	if strings.Contains(stdout.String(), "boolean true") {
+		// Floss is enabled, so don't set bluez debug log levels.
+		return nil
+	}
 	btoi := map[bool]int{
 		false: 0,
 		true:  1,

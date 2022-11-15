@@ -33,8 +33,17 @@ func init() {
 		},
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "crossdeviceOnboardedAllFeatures",
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{
+			{
+				Fixture: "crossdeviceOnboardedAllFeatures",
+			},
+			{
+				Name:      "floss",
+				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+		},
 	})
 }
 

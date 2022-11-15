@@ -164,6 +164,86 @@ func init() {
 				ExtraData: []string{"big_txt.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
+
+			// Floss-enabled duplicates
+			{
+				Name:    "dataoffline_noone_jpg11kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineNoOneFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeJpeg,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataoffline_noone_png5kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineNoOneFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_png.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypePng,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataonline_noone_txt30mb_floss",
+				Fixture: "nearbyShareDataUsageOnlineNoOneFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeTextPlain,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan_floss",
+				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCAndWLANFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeTextPlain,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:    "dataonline_noone_txt30mb_webrtc_floss",
+				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCOnlyFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeTextPlain,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:    "dataonline_noone_txt30mb_wlan_floss",
+				Fixture: "nearbyShareDataUsageOnlineNoOneWLANOnlyFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeTextPlain,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
 		},
 	})
 }

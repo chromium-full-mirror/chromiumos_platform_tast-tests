@@ -34,6 +34,7 @@ const (
 	backgroundScanning      = "NearbySharingBackgroundScanning"
 	webRTC                  = "NearbySharingWebRtc"
 	wlan                    = "NearbySharingWifiLan"
+	floss                   = "Floss"
 )
 
 // NewNearbyShareFixture creates a fixture for Nearby Share tests in different configurations.
@@ -50,215 +51,18 @@ func NewNearbyShareFixture(dataUsage nearbycommon.DataUsage, visibility nearbyco
 }
 
 func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOfflineAllContacts",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'All Contacts'",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOfflineSomeContacts",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'Some Contacts' with the sender selected as a contact on the receiver side",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilitySelectedContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineAllContacts",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'All Contacts'",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineSomeContacts",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'Some Contacts' with the sender selected as a contact on the receiver side",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilitySelectedContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineNoOne",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOfflineNoOne",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'No One'",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'No One'",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{advertisementMonitoring, backgroundScanning} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetup",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Nearby Share onboarding is not complete",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, false /*enabledFeatures=*/, []string{advertisementMonitoring, backgroundScanning} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLAN",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WebRTC and WLAN are eligible upgrade mediums",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{webRTC, wlan} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineNoOneWebRTCOnly",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WebRTC is the only upgrade medium",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{webRTC} /*disabledFeatures=*/, []string{wlan}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineNoOneWLANOnly",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WLAN is the only upgrade medium",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{wlan} /*disabledFeatures=*/, []string{webRTC}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			"nearbyshare.cros_username",
-			"nearbyshare.cros_password",
-			"nearbyshare.cros2_username",
-			"nearbyshare.cros2_password",
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
+	// We have a lot of fixtures for all the various Nearby Share use cases we test.
+	// Add new non-parent fixtures in separate files and functions to keep this one manageable.
+	addBasicOfflineFixtures()
+	addBasicOnlineFixtures()
+	addBackgroundScanningFixtures()
+	addWebRTCAndWLANFixtures()
+
+	// Floss-enabled duplicates
+	addFlossBasicOfflineFixtures()
+	addFlossBasicOnlineFixtures()
+	addFlossBackgroundScanningFixtures()
+	addFlossWebRTCAndWLANFixtures()
 }
 
 type nearbyShareFixture struct {

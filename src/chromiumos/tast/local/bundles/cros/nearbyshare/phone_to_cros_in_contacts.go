@@ -137,6 +137,86 @@ func init() {
 				ExtraData: []string{"small_jpg.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
+
+			// Floss-enabled duplicates
+			{
+				Name:    "dataoffline_allcontacts_jpg11kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeJpeg,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataoffline_allcontacts_png5kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_png.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypePng,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataoffline_somecontacts_jpg11kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContactFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeJpeg,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataoffline_somecontacts_png5kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidSelectedContactFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_png.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypePng,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataonline_allcontacts_txt30mb_floss",
+				Fixture: "nearbyShareDataUsageOnlineAllContactsFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeTextPlain,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:    "dataonline_somecontacts_txt30mb_floss",
+				Fixture: "nearbyShareDataUsageOnlineSomeContactsAndroidSelectedContactFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+					MimeType:        nearbycommon.MimeTypeTextPlain,
+				},
+				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
 		},
 	})
 }

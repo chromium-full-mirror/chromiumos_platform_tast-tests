@@ -29,8 +29,17 @@ func init() {
 		Attr:         []string{"group:cross-device", "cross-device_smartlock"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "crossdeviceOnboardedNoLock",
 		Timeout:      8 * time.Minute,
+		Params: []testing.Param{
+			{
+				Fixture: "crossdeviceOnboardedNoLock",
+			},
+			{
+				Name:      "floss",
+				Fixture:   "crossdeviceOnboardedNoLockFloss",
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+		},
 	})
 }
 

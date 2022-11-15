@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Nearby Device is trying to share notification shows up, clicking the notification enables high-vis mode and the receive flow is successful",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "hansenmichael@google.com"},
-		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare", "cross-device-remote_cq"},
+		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Vars:         []string{"secondaryTarget"},
@@ -39,6 +39,22 @@ func init() {
 					// Companion DUT 1 dependency.
 					"cd1": hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
 				},
+				ExtraAttr: []string{"cross-device-remote_cq"},
+			},
+
+			// Floss duplicate
+			{
+				Name:      "dataoffline_hidden_png5kb_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningFloss",
+				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
+				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
+					// Companion DUT 1 dependency.
+					"cd1": hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
+				},
+				ExtraAttr: []string{"cross-device-remote_floss"},
 			},
 		},
 	})

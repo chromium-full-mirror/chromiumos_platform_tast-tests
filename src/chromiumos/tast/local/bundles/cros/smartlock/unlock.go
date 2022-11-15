@@ -28,7 +28,16 @@ func init() {
 		},
 		Attr:         []string{"group:cross-device", "cross-device_smartlock"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "crossdeviceOnboarded",
+		Params: []testing.Param{
+			{
+				Fixture: "crossdeviceOnboarded",
+			},
+			{
+				Name:      "floss",
+				Fixture:   "crossdeviceOnboardedFloss",
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+		},
 	})
 }
 

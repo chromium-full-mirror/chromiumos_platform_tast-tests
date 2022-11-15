@@ -32,7 +32,7 @@ const (
 
 // NewNearbyShareLogin creates a fixture that logs in and enables Nearby Share.
 // Note that nearbyShareGAIALogin inherits from nearbyShareAndroidSetup.
-func NewNearbyShareLogin(arcEnabled, backgroundScanningEnabled, useAndroidAccount bool, m mediums) testing.FixtureImpl {
+func NewNearbyShareLogin(arcEnabled, backgroundScanningEnabled, useAndroidAccount bool, m mediums, opts []chrome.Option) testing.FixtureImpl {
 	defaultNearbyOpts := []chrome.Option{
 		chrome.EnableFeatures("GwpAsanMalloc", "GwpAsanPartitionAlloc"),
 		chrome.DisableFeatures("SplitSettingsSync"),
@@ -53,6 +53,8 @@ func NewNearbyShareLogin(arcEnabled, backgroundScanningEnabled, useAndroidAccoun
 	case wlanOnly:
 		defaultNearbyOpts = append(defaultNearbyOpts, chrome.DisableFeatures("NearbySharingWebRtc"), chrome.EnableFeatures("NearbySharingWifiLan"))
 	}
+
+	defaultNearbyOpts = append(defaultNearbyOpts, opts...)
 
 	return &nearbyShareLoginFixture{
 		opts:              defaultNearbyOpts,
@@ -76,6 +78,8 @@ func init() {
 		keepState = nearbycommon.KeepStateVar
 	)
 
+	flossOpt := []chrome.Option{chrome.EnableFeatures("Floss")}
+
 	// Basic login fixtures for general CrOS<->Android sharing. The Android account for these fixtures uses the modulefood version of Nearby Share.
 	testing.AddFixture(&testing.Fixture{
 		Name: "nearbyShareGAIALogin",
@@ -84,7 +88,31 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, nil),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			defaultAndroidUsername,
+			defaultAndroidPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginFloss",
+		Desc: "CrOS login with GAIA and Nearby Share flags enabled (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, flossOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -108,7 +136,31 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, nil),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			defaultAndroidUsername,
+			defaultAndroidPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginAndroidAccountFloss",
+		Desc: "CrOS login with Android nearby share account and Nearby Share enabled (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, flossOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -133,7 +185,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetupProd",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, nil),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -157,7 +209,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetupProd",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, nil),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -182,7 +234,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetupDev",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, nil),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -206,7 +258,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetupDev",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, nil),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -231,7 +283,31 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, true, false, defaultMediums),
+		Impl:   NewNearbyShareLogin(false, true, false, defaultMediums, nil),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			defaultAndroidUsername,
+			defaultAndroidPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginBackgroundScanningEnabledFloss",
+		Desc: "CrOS login with GAIA; Nearby Share and Background scanning flags enabled (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, true, false, defaultMediums, flossOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -257,7 +333,7 @@ func init() {
 			"arc-app-dev@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(true, false, false, defaultMediums),
+		Impl:   NewNearbyShareLogin(true, false, false, defaultMediums, nil),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -282,7 +358,29 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, webRTCAndWLAN),
+		Impl:   NewNearbyShareLogin(false, false, false, webRTCAndWLAN, nil),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginWebRTCAndWLANFloss",
+		Desc: "CrOS login with GAIA; use WebRTC and WLAN upgrade mediums (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, false, webRTCAndWLAN, flossOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -304,7 +402,29 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, webRTCOnly),
+		Impl:   NewNearbyShareLogin(false, false, false, webRTCOnly, nil),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginWebRTCOnlyFloss",
+		Desc: "CrOS login with GAIA; only use WebRTC upgrade medium (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, false, webRTCOnly, flossOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -326,7 +446,29 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, wlanOnly),
+		Impl:   NewNearbyShareLogin(false, false, false, wlanOnly, nil),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginWLANOnlyFloss",
+		Desc: "CrOS login with GAIA; only use WLAN upgrade medium (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, false, wlanOnly, flossOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,

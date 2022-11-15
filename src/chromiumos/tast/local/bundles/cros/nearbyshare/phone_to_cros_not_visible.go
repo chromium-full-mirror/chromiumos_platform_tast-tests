@@ -52,6 +52,32 @@ func init() {
 				ExtraData: []string{"small_jpg.zip"},
 				Timeout:   nearbycommon.DetectionTimeout,
 			},
+
+			// Floss-enabled duplicates
+			{
+				Name:    "somecontacts_floss",
+				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidNotSelectedContactFloss",
+				Val: nearbycommon.TestData{
+					Filename:    "small_jpg.zip",
+					TestTimeout: nearbycommon.DetectionTimeout,
+					MimeType:    nearbycommon.MimeTypeJpeg,
+				},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+			{
+				Name:    "noone_floss",
+				Fixture: "nearbyShareDataUsageOnlineNoOneFloss",
+				Val: nearbycommon.TestData{
+					Filename:    "small_jpg.zip",
+					TestTimeout: nearbycommon.DetectionTimeout,
+					MimeType:    nearbycommon.MimeTypeJpeg,
+				},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
 		},
 	})
 }

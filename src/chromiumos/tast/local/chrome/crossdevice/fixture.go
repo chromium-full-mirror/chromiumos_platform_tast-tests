@@ -179,6 +179,125 @@ func init() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+
+	// Floss fixtures - these are duplicates of all the above fixtures
+	// but modified to use the Floss bluetooth stack.
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossdeviceOnboardedAllFeaturesFloss",
+		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled (floss)",
+		Contacts: []string{
+			"kyleshima@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "crossdeviceAndroidSetupPhoneHub",
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
+		}),
+		Vars: []string{
+			customCrOSUsername,
+			customCrOSPassword,
+			KeepStateVar,
+		},
+		SetUpTimeout:    10*time.Minute + BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossdeviceOnboardedFloss",
+		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled (floss)",
+		Contacts: []string{
+			"kyleshima@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "crossdeviceAndroidSetupSmartLock",
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
+		}),
+		Vars: []string{
+			customCrOSUsername,
+			customCrOSPassword,
+			KeepStateVar,
+		},
+		SetUpTimeout:    10*time.Minute + BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossdeviceNoSignInFloss",
+		Desc: "User is not signed in (with GAIA) to CrOS but fixture requires control of an Android phone. Does not skip OOBE (floss)",
+		Contacts: []string{
+			"kyleshima@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "crossdeviceAndroidSetupPhoneHub",
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, true, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
+		}),
+		Vars: []string{
+			customCrOSUsername,
+			customCrOSPassword,
+			KeepStateVar,
+			SignInProfileTestExtensionManifestKey,
+		},
+		SetUpTimeout:    10*time.Minute + BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossdeviceOnboardedNoLockFloss",
+		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled. Doesn't lock the fixture before starting the test (floss)",
+		Contacts: []string{
+			"kyleshima@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "crossdeviceAndroidSetupSmartLockLogin",
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
+		}),
+		Vars: []string{
+			customCrOSUsername,
+			customCrOSPassword,
+			KeepStateVar,
+		},
+		SetUpTimeout:    10*time.Minute + BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "lacrosCrossdeviceOnboardedAllFeaturesFloss",
+		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled with lacros enabled (floss)",
+		Contacts: []string{
+			"kyleshima@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "crossdeviceAndroidSetupPhoneHub",
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			lacrosOpts, err := lacrosfixt.NewConfig().Opts()
+			if err != nil {
+				return nil, err
+			}
+			return append(lacrosOpts, chrome.EnableFeatures("Floss")), nil
+		}),
+		Vars: []string{
+			customCrOSUsername,
+			customCrOSPassword,
+			KeepStateVar,
+		},
+		SetUpTimeout:    10*time.Minute + BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 type crossdeviceFixture struct {

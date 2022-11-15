@@ -63,6 +63,44 @@ func init() {
 				ExtraData: []string{"big_txt.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
+
+			// Floss-enabled duplicates
+			{
+				Name:    "dataoffline_allcontacts_png5kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_png.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+			{
+				Name:    "dataoffline_allcontacts_jpg11kb_floss",
+				Fixture: "nearbyShareDataUsageOfflineAllContactsFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+			{
+				Name:    "dataonline_allcontacts_txt30mb_floss",
+				Fixture: "nearbyShareDataUsageOnlineAllContactsFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
 		},
 	})
 }

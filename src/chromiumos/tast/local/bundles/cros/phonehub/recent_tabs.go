@@ -32,16 +32,31 @@ func init() {
 		},
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "crossdeviceOnboardedAllFeatures",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacrosCrossdeviceOnboardedAllFeatures",
-			ExtraAttr:         []string{"cross-device_lacros"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Params: []testing.Param{
+			{
+				Fixture: "crossdeviceOnboardedAllFeatures",
+				Val:     browser.TypeAsh,
+			},
+			{
+				Name:      "floss",
+				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
+				Val:       browser.TypeAsh,
+				ExtraAttr: []string{"cross-device_floss"},
+			},
+			{
+				Name:              "lacros",
+				Fixture:           "lacrosCrossdeviceOnboardedAllFeatures",
+				ExtraAttr:         []string{"cross-device_lacros"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               browser.TypeLacros,
+			},
+			{
+				Name:              "lacros_floss",
+				Fixture:           "lacrosCrossdeviceOnboardedAllFeaturesFloss",
+				ExtraAttr:         []string{"cross-device_lacros", "cross-device_floss"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               browser.TypeLacros,
+			}},
 	})
 }
 

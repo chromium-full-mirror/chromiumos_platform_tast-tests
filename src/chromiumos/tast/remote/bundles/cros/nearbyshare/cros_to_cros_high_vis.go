@@ -78,6 +78,60 @@ func init() {
 				ExtraData: []string{"big_txt.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
+
+			// Floss duplicates
+			{
+				Name:      "dataoffline_allcontacts_png5kb_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneFloss",
+				ExtraAttr: []string{"cross-device-remote_floss"},
+				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:      "dataoffline_allcontacts_jpg11kb_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneFloss",
+				ExtraAttr: []string{"cross-device-remote_floss"},
+				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData: []string{"small_jpg.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:      "dataonline_noone_txt30mb_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOnlineNoOneFloss",
+				ExtraAttr: []string{"cross-device-remote_floss"},
+				Val: nearbycommon.TestData{
+					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:      "dataonline_noone_txt30mb_webrtc_and_wlan_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLANFloss",
+				ExtraAttr: []string{"cross-device-remote_floss"},
+				Val: nearbycommon.TestData{
+					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:      "dataonline_noone_txt30mb_webrtc_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOnlineNoOneWebRTCOnlyFloss",
+				ExtraAttr: []string{"cross-device-remote_floss"},
+				Val: nearbycommon.TestData{
+					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:      "dataonline_noone_txt30mb_wlan_floss",
+				Fixture:   "nearbyShareRemoteDataUsageOnlineNoOneWLANOnlyFloss",
+				ExtraAttr: []string{"cross-device-remote_floss"},
+				Val: nearbycommon.TestData{
+					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
+				ExtraData: []string{"big_txt.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
 		},
 	})
 }

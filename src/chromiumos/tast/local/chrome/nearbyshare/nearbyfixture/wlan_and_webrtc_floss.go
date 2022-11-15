@@ -13,12 +13,12 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// addWebRTCAndWLANFixtures registers fixtures for tests using WebRTC and WLAN transfer mediums.
-func addWebRTCAndWLANFixtures() {
+// addFlossWebRTCAndWLANFixtures registers fixtures for tests using WebRTC and WLAN transfer mediums, and Floss enabled.
+func addFlossWebRTCAndWLANFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:   "nearbyShareDataUsageOnlineNoOneWebRTCAndWLAN",
+		Name:   "nearbyShareDataUsageOnlineNoOneWebRTCAndWLANFloss",
 		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WebRTC and WLAN are eligible upgrade mediums",
-		Parent: "nearbyShareGAIALoginWebRTCAndWLAN",
+		Parent: "nearbyShareGAIALoginWebRTCAndWLANFloss",
 		Impl: NewNearbyShareFixture(fixtureOptions{
 			crosDataUsage:              nearbycommon.DataUsageOnline,
 			crosVisibility:             nearbycommon.VisibilityNoOne,
@@ -37,9 +37,9 @@ func addWebRTCAndWLANFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:   "nearbyShareDataUsageOnlineNoOneWebRTCOnly",
+		Name:   "nearbyShareDataUsageOnlineNoOneWebRTCOnlyFloss",
 		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WebRTC is the only upgrade medium",
-		Parent: "nearbyShareGAIALoginWebRTCOnly",
+		Parent: "nearbyShareGAIALoginWebRTCOnlyFloss",
 		Impl: NewNearbyShareFixture(fixtureOptions{
 			crosDataUsage:              nearbycommon.DataUsageOnline,
 			crosVisibility:             nearbycommon.VisibilityNoOne,
@@ -58,9 +58,9 @@ func addWebRTCAndWLANFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:   "nearbyShareDataUsageOnlineNoOneWLANOnly",
+		Name:   "nearbyShareDataUsageOnlineNoOneWLANOnlyFloss",
 		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WLAN is the only upgrade medium",
-		Parent: "nearbyShareGAIALoginWLANOnly",
+		Parent: "nearbyShareGAIALoginWLANOnlyFloss",
 		Impl: NewNearbyShareFixture(
 			fixtureOptions{
 				crosDataUsage:              nearbycommon.DataUsageOnline,

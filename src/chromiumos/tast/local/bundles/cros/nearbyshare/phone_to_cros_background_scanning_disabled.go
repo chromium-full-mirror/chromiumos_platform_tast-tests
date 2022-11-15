@@ -43,6 +43,22 @@ func init() {
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
 			},
+
+			// Floss-enabled duplicate
+			{
+				Name:    "no_notification_shown_floss",
+				Fixture: "nearbyShareDataUsageOfflineNoOneBackgroundScanningEnabledFloss",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypePng,
+				},
+				ExtraData:         []string{"small_jpg.zip"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
+				ExtraAttr:         []string{"cross-device_floss"},
+			},
 		},
 	})
 }
