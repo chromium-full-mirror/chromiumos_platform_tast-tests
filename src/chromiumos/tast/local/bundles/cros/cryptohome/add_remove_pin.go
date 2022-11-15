@@ -26,7 +26,7 @@ func init() {
 			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pinweaver", "reboot"},
 		Params: []testing.Param{{
 			Name:    "with_uss",
