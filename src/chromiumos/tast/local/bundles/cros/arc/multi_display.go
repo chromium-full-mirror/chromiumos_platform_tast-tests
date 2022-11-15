@@ -87,7 +87,7 @@ func init() {
 		Contacts:     []string{"ruanc@chromium.org", "niwa@chromium.org", "arc-framework+tast@google.com"},
 		// TODO(ruanc): There is no hardware dependency for multi-display. Move back to the mainline group once it is supported.
 		SoftwareDeps: []string{"arc", "chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      arc.BootTimeout + 2*time.Minute,
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Val: stableTestSet,
