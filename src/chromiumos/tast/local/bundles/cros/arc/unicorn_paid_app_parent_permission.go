@@ -59,7 +59,7 @@ func UnicornPaidAppParentPermission(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 	if st.Provisioned {
 		s.Log("ARC is already provisioned. Skipping the Play Store setup")
-		if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
+		if err := optin.ClosePlayStore(ctx, tconn); err != nil {
 			s.Fatal("Failed to close the provisioned Play Store: ", err)
 		}
 	} else {
@@ -69,6 +69,7 @@ func UnicornPaidAppParentPermission(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to optin to Play Store and Close: ", err)
 		}
 	}
+
 	if err := launcher.LaunchApp(tconn, apps.PlayStore.Name)(ctx); err != nil {
 		s.Fatal("Failed to launch Play Store")
 	}
