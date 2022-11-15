@@ -128,7 +128,7 @@ func openFileFromContinueSection(ctx context.Context, tconn *chrome.TestConn, ta
 	continueTask := nodewith.Ancestor(continueSection).Name(filePath)
 	if err := uiauto.Combine("Open file task",
 		ui.WithTimeout(3*time.Second).WaitUntilExists(continueTask),
-		ui.DoubleClick(continueTask),
+		ui.LeftClick(continueTask),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open the task on continue section")
 	}
