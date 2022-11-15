@@ -24,6 +24,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crostiniBullseyeWithLxdNext",
 		Timeout:      7 * time.Minute,
+		BugComponent: "b:1122570",
 		Params: []testing.Param{
 			{
 				Name:              "stable",
