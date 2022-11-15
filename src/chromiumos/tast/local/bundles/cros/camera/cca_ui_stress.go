@@ -64,7 +64,7 @@ func init() {
 			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
 			Fixture:   "ccaLaunchedWithFakeCamera",
 			Timeout:   5 * time.Minute,
-			Val:       testutil.UseFakeCamera,
+			Val:       testutil.UseFakeVCDCamera,
 		}, {
 			// For stress testing manually with real camera and longer timeout.
 			Name:              "manual",

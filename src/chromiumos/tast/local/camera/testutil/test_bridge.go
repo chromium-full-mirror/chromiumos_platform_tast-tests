@@ -28,10 +28,13 @@ const (
 	UseRealCamera UseCameraType = iota
 	// UseVividCamera is used when the test should use vivid camera, which is virtual video test driver.
 	UseVividCamera
-	// UseFakeCamera is used when the test should use fake camera in Chrome stack instead.
-	UseFakeCamera
+	// UseFakeVCDCamera is used when the test should use fake camera in Chrome VCD stack.
+	UseFakeVCDCamera
+	// UseFakeHALCamera is used when the test should use fake camera from fake camera HAL.
+	UseFakeHALCamera
 
-	jsonConfigPath = "/var/cache/camera/test_config.json"
+	jsonConfigPath    = "/var/cache/camera/test_config.json"
+	fakeHALConfigPath = "/run/camera/fake_hal.json"
 )
 
 // TestBridge is used to communicate with CCA for test specific logic, such as test environment set-up/tear-down flow, performance/error monitoring.
@@ -44,14 +47,49 @@ type TestBridge struct {
 	CameraType UseCameraType
 }
 
-func setupTestConfig(ctx context.Context) error {
-	jsonCfg, err := json.Marshal(map[string]bool{
+func getTestConfig(cameraType UseCameraType) ([]byte, error) {
+	if cameraType == UseFakeHALCamera {
+		return json.Marshal(map[string]interface{}{
+			"abort_when_capture_monitor_timeout": true,
+			"enabled_hals":                       []string{"fake.so"},
+		})
+	}
+	return json.Marshal(map[string]bool{
 		"abort_when_capture_monitor_timeout": true,
 	})
+}
+
+func setupTestConfig(ctx context.Context, cameraType UseCameraType) error {
+	jsonCfg, err := getTestConfig(cameraType)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode test config as json")
 	}
 	if err := ioutil.WriteFile(jsonConfigPath, jsonCfg, 0644); err != nil {
+		return errors.Wrap(err, "failed to write json config file")
+	}
+	return nil
+}
+
+type fakeCameraConfig struct {
+	ID        int  `json:"id"`
+	Connected bool `json:"connected"`
+	// TODO(pihsun): Add other fields
+}
+
+type fakeHALConfig struct {
+	Cameras []fakeCameraConfig `json:"cameras"`
+}
+
+func setupFakeHALConfig(ctx context.Context) error {
+	jsonCfg, err := json.Marshal(fakeHALConfig{
+		Cameras: []fakeCameraConfig{
+			{ID: 1, Connected: true},
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to encode fake hal config as json")
+	}
+	if err := ioutil.WriteFile(fakeHALConfigPath, jsonCfg, 0644); err != nil {
 		return errors.Wrap(err, "failed to write json config file")
 	}
 	return nil
@@ -62,11 +100,21 @@ func removeTestConfig(ctx context.Context) error {
 	return os.RemoveAll(jsonConfigPath)
 }
 
+// removeFakeHALConfig removes the fake hal config if it exists or returns nil otherwise.
+func removeFakeHALConfig(ctx context.Context) error {
+	return os.RemoveAll(fakeHALConfigPath)
+}
+
 // NewTestBridge returns a new test bridge instance.
 func NewTestBridge(ctx context.Context, cr *chrome.Chrome, cameraType UseCameraType) (*TestBridge, error) {
-	if cameraType != UseFakeCamera {
-		if err := setupTestConfig(ctx); err != nil {
+	if cameraType != UseFakeVCDCamera {
+		if err := setupTestConfig(ctx, cameraType); err != nil {
 			return nil, errors.Wrap(err, "failed to setup test config")
+		}
+		if cameraType == UseFakeHALCamera {
+			if err := setupFakeHALConfig(ctx); err != nil {
+				return nil, errors.Wrap(err, "failed to setup fake hal config")
+			}
 		}
 		if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 			return nil, errors.Wrap(err, "failed to restart cros-camera after test config setup")
@@ -179,6 +227,9 @@ func (t *TestBridge) TearDown(ctx context.Context) error {
 			testing.ContextLog(ctx, "Failed to release bridge page connection: ", err)
 		}
 		t.pageConn = nil
+	}
+	if err := removeFakeHALConfig(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to remove fake hal config: ", err)
 	}
 	if err := removeTestConfig(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to remove test config: ", err)

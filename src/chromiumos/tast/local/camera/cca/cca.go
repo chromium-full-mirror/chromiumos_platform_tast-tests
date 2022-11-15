@@ -193,7 +193,7 @@ func (r *Resolution) AspectRatio() float64 {
 func Init(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir string, appLauncher testutil.AppLauncher, tb *testutil.TestBridge) (_ *App, retErr error) {
 	// Since we don't use "cros-camera" service for fake camera, there is no need
 	// to ensure it is running.
-	if tb.CameraType != testutil.UseFakeCamera {
+	if tb.CameraType != testutil.UseFakeVCDCamera {
 		// Ensure that cros-camera service is running, because the service
 		// might stopped due to the errors from some previous tests, and failed
 		// to restart for some reasons.
@@ -438,7 +438,7 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 
 	code := fmt.Sprintf("Tast.isVideoActive() === %t", active)
 	if err := a.conn.WaitForExpr(ctx, code); err != nil {
-		if a.cameraType != testutil.UseFakeCamera {
+		if a.cameraType != testutil.UseFakeVCDCamera {
 			if jobErr := upstart.CheckJob(cleanupCtx, "cros-camera"); jobErr != nil {
 				return errors.Wrap(jobErr, err.Error())
 			}

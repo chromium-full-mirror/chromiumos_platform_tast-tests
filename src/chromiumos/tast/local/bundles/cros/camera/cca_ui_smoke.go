@@ -59,6 +59,19 @@ func init() {
 			Fixture:           "ccaLaunchedWithFakeCamera",
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Val:               videoRecoridng,
+		}, {
+			Name:    "fake_hal",
+			Fixture: "ccaLaunchedWithFakeHALCamera",
+			Val:     none,
+		}, {
+			Name:    "photo_fake_hal",
+			Fixture: "ccaLaunchedWithFakeHALCamera",
+			Val:     photoTaking,
+		}, {
+			Name:              "video_fake_hal",
+			Fixture:           "ccaLaunchedWithFakeHALCamera",
+			ExtraSoftwareDeps: []string{"proprietary_codecs"},
+			Val:               videoRecoridng,
 		}},
 		BugComponent: "b:978428",
 	})

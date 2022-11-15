@@ -33,7 +33,7 @@ func RunPortraitModeTesting(ctx context.Context, scriptPaths []string, outDir st
 		return errors.Wrap(err, "failed to clear saved directory")
 	}
 
-	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeCamera)
+	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeVCDCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
 	}

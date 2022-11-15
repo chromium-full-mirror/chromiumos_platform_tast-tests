@@ -98,7 +98,20 @@ func init() {
 		Desc:            "Launched CCA with fake camera input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, launchCCA: true},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedWithFakeHALCamera",
+		Desc:            "Launched CCA with fake camera HAL input",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -111,7 +124,7 @@ func init() {
 		Desc:            "Launched CCA with fake camera input with finch field trial config enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, launchCCA: true, fieldTrialConfig: "enable"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "enable"},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -124,7 +137,7 @@ func init() {
 		Desc:            "Launched CCA with fake camera input with finch field trial config disabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, launchCCA: true, fieldTrialConfig: "disable"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "disable"},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -160,7 +173,7 @@ func init() {
 		       fixture should switch the camera scene before opening camera`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, fakeScene: true},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -172,7 +185,7 @@ func init() {
 		       fixture should switch the camera scene before opening camera`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, fakeScene: true, lacros: true},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -206,7 +219,7 @@ func init() {
 		Desc:            "Set up test bridge for CCA and chrome for testing multi-page document scanning",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, fakeScene: true, enableFeatures: []feature{multiPageDocScan}},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, enableFeatures: []feature{multiPageDocScan}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -218,7 +231,7 @@ func init() {
 		Desc:            "Set up test bridge for CCA and chrome for testing single-page document scanning",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{fakeCamera: true, fakeScene: true, disableFeatures: []feature{multiPageDocScan}},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, disableFeatures: []feature{multiPageDocScan}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -317,7 +330,7 @@ type fixture struct {
 
 	lacros                 bool
 	scriptPaths            []string
-	fakeCamera             bool
+	useCameraType          testutil.UseCameraType
 	fakeScene              bool
 	arcBooted              bool
 	launchCCA              bool
@@ -331,13 +344,6 @@ type fixture struct {
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
 	fieldTrialConfig       string
-}
-
-func (f *fixture) cameraType() testutil.UseCameraType {
-	if f.fakeCamera {
-		return testutil.UseFakeCamera
-	}
-	return testutil.UseRealCamera
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -356,7 +362,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// TODO(b/226262670): Remove this line once the doc scan DLC is completely enabled.
 	chromeOpts = append(chromeOpts, chrome.EnableFeatures("CameraAppDocScanDlc"))
 
-	if f.fakeCamera {
+	if f.useCameraType == testutil.UseFakeVCDCamera {
 		chromeOpts = append(chromeOpts, chrome.ExtraArgs(
 			// The default fps of fake device is 20, but CCA requires fps >= 24.
 			// Set the fps to 30 to avoid OverconstrainedError.
@@ -438,7 +444,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		}()
 	}
 
-	tb, err := testutil.NewTestBridge(ctx, cr, f.cameraType())
+	tb, err := testutil.NewTestBridge(ctx, cr, f.useCameraType)
 	if err != nil {
 		s.Fatal("Failed to construct test bridge: ", err)
 	}
@@ -564,11 +570,7 @@ func (f *fixture) resetTestBridge(ctx context.Context) error {
 	}
 	f.tb = nil
 
-	cameraType := testutil.UseRealCamera
-	if f.fakeCamera {
-		cameraType = testutil.UseFakeCamera
-	}
-	tb, err := testutil.NewTestBridge(ctx, f.cr, cameraType)
+	tb, err := testutil.NewTestBridge(ctx, f.cr, f.useCameraType)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
 	}
@@ -580,7 +582,7 @@ func (f *fixture) resetChrome(ctx context.Context) error {
 	if err := f.cr.ResetState(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset chrome in fixture")
 	}
-	tb, err := testutil.NewTestBridge(ctx, f.cr, f.cameraType())
+	tb, err := testutil.NewTestBridge(ctx, f.cr, f.useCameraType)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge after reset chrome state")
 	}
