@@ -27,6 +27,13 @@ func init() {
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      10 * time.Minute,
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -40,6 +47,7 @@ func CryptohomeKeyEviction(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
+	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	chaps, err := pkcs11.NewChaps(ctx, cmdRunner, cryptohome)
 	if err != nil {
