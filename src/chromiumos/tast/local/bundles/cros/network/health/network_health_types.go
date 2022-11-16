@@ -11,8 +11,24 @@ package health
 
 // network_types.mojom types
 
+// NetworkType constants.
+const (
+	NetworkTypeAll      = "all"
+	NetworkTypeCellular = "cellular"
+	NetworkTypeEthernet = "ethernet"
+	NetworkTypeMobile   = "mobile"
+	NetworkTypeTether   = "tether"
+	NetworkTypeVPN      = "vpn"
+	NetworkTypeWireless = "wireless"
+	NetworkTypeWiFi     = "wifi"
+)
+
 // NetworkType describes the network technology type.
 type NetworkType int
+
+func (n NetworkType) String() string {
+	return [...]string{NetworkTypeAll, NetworkTypeCellular, NetworkTypeEthernet, NetworkTypeMobile, NetworkTypeTether, NetworkTypeVPN, NetworkTypeWireless, NetworkTypeWiFi}[n]
+}
 
 const (
 	// AllNT : All the network types. Unused.
@@ -35,9 +51,23 @@ const (
 	WiFiNT
 )
 
+// PortalState constants.
+const (
+	PortalStateUnknown           = "unknown"
+	PortalStateOnline            = "online"
+	PortalStatePortalSuspected   = "portal-suspected"
+	PortalStatePortal            = "portal"
+	PortalStateProxyAuthRequired = "proxy-auxy-required"
+	PortalStateNoInternet        = "no-internet"
+)
+
 // PortalState describes the captive portal state. Provides additional details
 // when the connection state is Portal.
 type PortalState int
+
+func (p PortalState) String() string {
+	return [...]string{PortalStateUnknown, PortalStateOnline, PortalStatePortalSuspected, PortalStatePortal, PortalStateProxyAuthRequired, PortalStateNoInternet}[p]
+}
 
 const (
 	// UnknownPS : The network is not connected or the portal state is not
@@ -65,8 +95,24 @@ type URL struct {
 
 // network_health.mojom types
 
+// NetworkState constants.
+const (
+	NetworkStateUninitialized = "uninitialized"
+	NetworkStateDisabled      = "disabled"
+	NetworkStateProhibited    = "prohibited"
+	NetworkStateNotConnected  = "not-connected"
+	NetworkStateConnecting    = "connecting"
+	NetworkStatePortal        = "portal"
+	NetworkStateConnected     = "connected"
+	NetworkStateOnline        = "online"
+)
+
 // NetworkState is the current state of the network.
 type NetworkState int
+
+func (n NetworkState) String() string {
+	return [...]string{NetworkStateUninitialized, NetworkStateDisabled, NetworkStateProhibited, NetworkStateNotConnected, NetworkStateConnecting, NetworkStatePortal, NetworkStateConnected, NetworkStateOnline}[n]
+}
 
 const (
 	// UninitializedNS : The network type is available but not yet

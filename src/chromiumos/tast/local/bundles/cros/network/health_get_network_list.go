@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/health"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/shill"
@@ -30,24 +29,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillReset",
 	})
-}
-
-// findMatchingNetwork searches the given list of networks to find one matching
-// the shill type (sType) and guid (for non-Ethernet networks).
-func findMatchingNetwork(networks []health.Network, sType, guid string) (*health.Network, error) {
-	networkType, err := health.NetworkTypeFromShillType(sType)
-	if err != nil {
-		return nil, err
-	}
-	for _, n := range networks {
-		if networkType != n.Type {
-			continue
-		}
-		if n.Type == health.EthernetNT || guid == n.GUID {
-			return &n, nil
-		}
-	}
-	return nil, errors.New("failed to find a connected network in Network Health")
 }
 
 // HealthGetNetworkList validates that the NetworkHealth API correctly retrieves
@@ -99,7 +80,7 @@ func HealthGetNetworkList(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to run GetNetworkList: ", err)
 	}
-	network, err := findMatchingNetwork(networks, sType, guid)
+	network, err := health.FindMatchingNetwork(networks, sType, guid)
 	if err != nil {
 		s.Fatalf("Network %s not found: %v", name, err)
 	}

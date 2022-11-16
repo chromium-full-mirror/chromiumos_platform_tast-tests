@@ -23,3 +23,21 @@ func NetworkTypeFromShillType(sType string) (NetworkType, error) {
 
 	return EthernetNT, errors.New("unknown shill type")
 }
+
+// FindMatchingNetwork searches the given list of networks to find one matching
+// the shill type (sType) and guid (for non-Ethernet networks).
+func FindMatchingNetwork(networks []Network, sType, guid string) (*Network, error) {
+	networkType, err := NetworkTypeFromShillType(sType)
+	if err != nil {
+		return nil, err
+	}
+	for _, n := range networks {
+		if networkType != n.Type {
+			continue
+		}
+		if n.Type == EthernetNT || guid == n.GUID {
+			return &n, nil
+		}
+	}
+	return nil, errors.New("failed to find a connected network in Network Health")
+}

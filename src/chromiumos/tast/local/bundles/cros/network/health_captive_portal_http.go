@@ -7,12 +7,15 @@ package network
 import (
 	"context"
 	"net/http"
+	"reflect"
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/captiveportalconsts"
+	"chromiumos/tast/local/bundles/cros/network/health"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/certs"
 	"chromiumos/tast/local/network/virtualnet/subnet"
@@ -20,93 +23,132 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type params struct {
+type healthCaptivePortalHTTPParams struct {
 	serviceState         string
 	httpResponseHandler  func(rw http.ResponseWriter, req *http.Request)
 	httpsResponseHandler func(rw http.ResponseWriter, req *http.Request)
 	proxyConfig          string
 	checkPortal          bool
+	networkState         string
+	portalState          string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCaptivePortalHTTP,
-		Desc:     "Ensures that setting up a virtual ethernet pair with a DNS server that points portal detection queries to an http server that responds via the handler. This results in a service state of |ServiceState| via the params for the ethernet service",
-		Contacts: []string{"michaelrygiel@google.com", "cros-network-health-team@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		Fixture:  "shillReset",
+		Func:         HealthCaptivePortalHTTP,
+		LacrosStatus: testing.LacrosVariantNeeded,
+		Desc:         "Ensures that captive portal-related Service state changes are propogated to the Networks obtained by the NetworkHealth API",
+		Contacts: []string{
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
+			"stevenjb@chromium.org",               // network-health tech lead
+		},
+		BugComponent: "b:1166446",
+		SoftwareDeps: []string{"chrome", "no_qemu"},
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "shillReset",
 		Params: []testing.Param{{
 			Name: "redirectfound",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
 				proxyConfig:          "",
 				checkPortal:          true,
+				networkState:         health.NetworkStatePortal,
+				portalState:          health.PortalStatePortal,
 			},
 		}, {
 			Name: "proxyconfig",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
 				proxyConfig:          captiveportalconsts.TestProxyConfig,
 				checkPortal:          true,
+				networkState:         health.NetworkStateOnline,
+				portalState:          health.PortalStateOnline,
 			},
 		}, {
 			Name: "checkportalfalse",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
 				proxyConfig:          "",
 				checkPortal:          false,
+				networkState:         health.NetworkStateOnline,
+				portalState:          health.PortalStateOnline,
 			},
 		}, {
-
 			Name: "portalsuspected",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStatePortalSuspected,
 				httpResponseHandler:  captiveportalconsts.RedirectWithNoLocationHandler,
 				httpsResponseHandler: nil,
 				proxyConfig:          "",
 				checkPortal:          true,
+				networkState:         health.NetworkStatePortal,
+				portalState:          health.PortalStatePortalSuspected,
 			},
 		}, {
 			Name: "online",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateOnline,
 				httpResponseHandler:  captiveportalconsts.NoContentHandler,
 				httpsResponseHandler: captiveportalconsts.NoContentHandler,
 				proxyConfig:          "",
 				checkPortal:          true,
+				networkState:         health.NetworkStateOnline,
+				portalState:          health.PortalStateOnline,
 			},
 		}, {
 			Name: "noconnectivity",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateNoConnectivity,
 				httpResponseHandler:  nil,
 				httpsResponseHandler: nil,
 				proxyConfig:          "",
 				checkPortal:          true,
+				networkState:         health.NetworkStatePortal,
+				portalState:          health.PortalStateNoInternet,
 			},
 		}, {
 			Name: "redirectfoundtempredirect",
-			Val: &params{
+			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.TempRedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
 				proxyConfig:          "",
 				checkPortal:          true,
+				networkState:         health.NetworkStatePortal,
+				portalState:          health.PortalStatePortal,
 			},
 		}},
 	})
 }
 
-func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
+func HealthCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
+	}
+
+	// Disable the physical ethernet so that the only Ethernet service
+	// available is the veth service created below.
+	if enableFunc, err := m.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
+		s.Fatal("Unable to disable Ethernet: ", err)
+	} else if enableFunc != nil {
+		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
+		defer cancel()
+		defer enableFunc(ctx)
+		ctx = newCtx
+	}
+
+	if enabled, err := m.IsEnabled(ctx, shill.TechnologyEthernet); err != nil {
+		s.Fatal("Error calling IsEnabled: ", err)
+	} else if enabled {
+		s.Fatal("Ethernet is still enabled")
 	}
 
 	testing.ContextLog(ctx, "Enabling portal detection on ethernet")
@@ -123,7 +165,7 @@ func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	params := s.Param().(*params)
+	params := s.Param().(*healthCaptivePortalHTTPParams)
 
 	var httpsCerts *certs.Certs
 	if params.httpsResponseHandler != nil {
@@ -146,13 +188,13 @@ func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 		HTTPSCerts:                 httpsCerts,
 	}
 	pool := subnet.NewPool()
-	service, portalEnv, err := virtualnet.CreateRouterEnv(ctx, m, pool, opts)
+	veth, portalEnv, err := virtualnet.CreateRouterEnv(ctx, m, pool, opts)
 	if err != nil {
 		s.Fatal("Failed to create a portal env: ", err)
 	}
 	defer portalEnv.Cleanup(cleanupCtx)
 
-	pw, err := service.CreateWatcher(ctx)
+	pw, err := veth.CreateWatcher(ctx)
 	if err != nil {
 		s.Fatal("Failed to create watcher: ", err)
 	}
@@ -160,19 +202,18 @@ func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 
 	//testing for ProxyConfig - no portal state to send in this case
 	if params.proxyConfig != "" {
-		if err := service.SetProperty(ctx, shillconst.ServicePropertyProxyConfig, params.proxyConfig); err != nil {
+		if err := veth.SetProperty(ctx, shillconst.ServicePropertyProxyConfig, params.proxyConfig); err != nil {
 			s.Fatal("Failed to set ProxyConfig: ", err)
 		}
 	}
 
 	//testing for CheckPortal - no portal state to send in this case
 	if !params.checkPortal {
-		if err := service.SetProperty(ctx, shillconst.ServicePropertyCheckPortal, "false"); err != nil {
+		if err := veth.SetProperty(ctx, shillconst.ServicePropertyCheckPortal, "false"); err != nil {
 			s.Fatal("Failed to invoke CheckPortal service: ", err)
 		}
 	}
 
-	s.Log("Make service restart portal detector")
 	if err := m.RecheckPortal(ctx); err != nil {
 		s.Fatal("Failed to invoke RecheckPortal on shill: ", err)
 	}
@@ -180,12 +221,69 @@ func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	s.Logf("Check if service state is %q", params.serviceState)
 	var expectedServiceState = []interface{}{
 		params.serviceState,
 	}
-	_, err = pw.ExpectIn(timeoutCtx, shillconst.ServicePropertyState, expectedServiceState)
-	if err != nil {
+	if _, err = pw.ExpectIn(timeoutCtx, shillconst.ServicePropertyState, expectedServiceState); err != nil {
 		s.Fatal("Service state is unexpected: ", err)
+	}
+
+	services, err := m.Services(ctx)
+	if err != nil {
+		s.Fatal("Failed to get list of services: ", err)
+	}
+	if len(services) == 0 {
+		s.Fatal("Failed to get non-zero list of services")
+	}
+
+	// The default service is guaranteed to to be first in Shill.
+	defaultService := services[0]
+	if !reflect.DeepEqual(defaultService, veth) {
+		s.Fatalf("Unexpected default service, got: %v, want: %v", defaultService, veth)
+	}
+	name, err := defaultService.GetName(ctx)
+	if err != nil {
+		s.Fatal("Failed to get name of default shill service: ", err)
+	}
+	sType, err := defaultService.GetType(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get type for %v: %v", name, err)
+	}
+	guid, err := defaultService.GetGUID(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get GUID for %v: %v", name, err)
+	}
+
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	netConn, err := health.CreateLoggedInNetworkHealth(ctx, cr)
+	if err != nil {
+		s.Fatal("Failed to get network Mojo Object: ", err)
+	}
+	defer netConn.Close(cleanupCtx)
+
+	networks, err := netConn.GetNetworkList(ctx, s)
+	if err != nil {
+		s.Fatal("Failed to run GetNetworkList: ", err)
+	}
+	network, err := health.FindMatchingNetwork(networks, sType, guid)
+	if err != nil {
+		s.Fatalf("Network %s not found: %v", name, err)
+	}
+
+	if network.State.String() != params.networkState {
+		s.Fatalf("Failed to get correct network state, got: %v, want: %v",
+			network.State.String(),
+			params.networkState)
+	}
+
+	if network.PortalState.String() != params.portalState {
+		s.Fatalf("Failed to get correct portal state, got: %v, want: %v",
+			network.PortalState.String(),
+			params.portalState)
 	}
 }
