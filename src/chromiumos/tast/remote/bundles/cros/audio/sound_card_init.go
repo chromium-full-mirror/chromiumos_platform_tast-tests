@@ -306,10 +306,15 @@ func appliedRDC(ctx context.Context, d *rpcdut.RPCDUT, soundCardID, config, amp 
 	dump, err := d.Conn().CommandContext(
 		ctx,
 		"/usr/bin/sound_card_init",
-		"--id="+soundCardID,
-		"--conf="+config,
-		"--amp="+amp,
-		"--read_applied_rdc="+strconv.Itoa(ch),
+		"read_applied_rdc",
+		"--id",
+		soundCardID,
+		"--conf",
+		config,
+		"--amp",
+		amp,
+		"--channel",
+		strconv.Itoa(ch),
 	).Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get applied rdc")

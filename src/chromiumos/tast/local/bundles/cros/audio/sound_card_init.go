@@ -113,9 +113,13 @@ func bootTimeCalibration(ctx context.Context, soundCardID string) error {
 	if err := testexec.CommandContext(
 		runCtx,
 		"/usr/bin/sound_card_init",
-		"--id="+soundCardID,
-		"--conf="+config,
-		"--amp="+amp,
+		"boot_time_calibration",
+		"--id",
+		soundCardID,
+		"--conf",
+		config,
+		"--amp",
+		amp,
 	).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to run sound_card_init")
 	}
