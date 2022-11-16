@@ -20,13 +20,14 @@ message ConnectToFakeIdPRequest {
   string pass = 2;
 }
 
-message FakeIdPResponse {
-  bool succesful = 1;
+message CheckFakeIdPStatusRequest {
+  bool expected = 1;
 }
 
 // DeviceTrustService provides RPC methods to run device trust related operations
 service DeviceTrustService {
   rpc Enroll(EnrollRequest) returns (google.protobuf.Empty) {}
-  rpc LoginWithFakeIdP(LoginWithFakeIdPRequest) returns (FakeIdPResponse) {}
-  rpc ConnectToFakeIdP(ConnectToFakeIdPRequest) returns (FakeIdPResponse) {}
+  rpc LoginWithFakeIdP(LoginWithFakeIdPRequest) returns (google.protobuf.Empty) {}
+  rpc ConnectToFakeIdP(ConnectToFakeIdPRequest) returns (google.protobuf.Empty) {}
+  rpc CheckFakeIdPStatus(CheckFakeIdPStatusRequest) returns (google.protobuf.Empty) {}
 }

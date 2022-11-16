@@ -135,12 +135,11 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	res, err := service.LoginWithFakeIdP(ctx, &enterpriseconnectors.LoginWithFakeIdPRequest{SigninProfileTestExtensionManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey")})
-	if err != nil {
+	if _, err := service.LoginWithFakeIdP(ctx, &enterpriseconnectors.LoginWithFakeIdPRequest{SigninProfileTestExtensionManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey")}); err != nil {
 		s.Fatal("Remote call LoginWithFakeIdP() failed: ", err)
 	}
 
-	if res.Succesful != param.loginPossible {
-		s.Errorf("Unexpected value for loginPossible: got %t, want %t", res.Succesful, param.loginPossible)
+	if _, err = service.CheckFakeIdPStatus(ctx, &enterpriseconnectors.CheckFakeIdPStatusRequest{Expected: param.loginPossible}); err != nil {
+		s.Fatal("Remote call CheckFakeIdPStatus() failed: ", err)
 	}
 }

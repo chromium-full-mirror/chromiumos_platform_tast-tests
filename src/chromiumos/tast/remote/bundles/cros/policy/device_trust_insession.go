@@ -134,12 +134,11 @@ func DeviceTrustInsession(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	res, err := service.ConnectToFakeIdP(ctx, &enterpriseconnectors.ConnectToFakeIdPRequest{User: acc.Username, Pass: acc.Password})
-	if err != nil {
+	if _, err := service.ConnectToFakeIdP(ctx, &enterpriseconnectors.ConnectToFakeIdPRequest{User: acc.Username, Pass: acc.Password}); err != nil {
 		s.Fatal("Remote call ConnectToFakeIdP() failed: ", err)
 	}
 
-	if res.Succesful != param.loginPossible {
-		s.Errorf("Unexpected value for loginPossible: got %t, want %t", res.Succesful, param.loginPossible)
+	if _, err = service.CheckFakeIdPStatus(ctx, &enterpriseconnectors.CheckFakeIdPStatusRequest{Expected: param.loginPossible}); err != nil {
+		s.Fatal("Remote call CheckFakeIdPStatus() failed: ", err)
 	}
 }
