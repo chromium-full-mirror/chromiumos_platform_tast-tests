@@ -21,7 +21,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: AutomaticCleanup,
 		Desc: "Test automatic disk cleanup",
+
+		BugComponent: "b:1264602",
 		Contacts: []string{
+			"chromeos-disk-cleanup@google.com",
 			"vsavu@google.com",     // Test author
 			"gwendal@chromium.com", // Lead for ChromeOS Storage
 		},
