@@ -22,7 +22,9 @@ func init() {
 		Func:         TextToSpeech,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Android TTS voice is used when chosen",
-		Contacts:     []string{"hirokisato@chromium.org", "sahok@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "sahok@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Accessibility
+		BugComponent: "b:165222",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

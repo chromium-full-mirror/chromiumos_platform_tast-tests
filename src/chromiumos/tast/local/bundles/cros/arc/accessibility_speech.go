@@ -28,7 +28,9 @@ func init() {
 		Func:         AccessibilitySpeech,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks ChromeVox reads Android elements as expected",
-		Contacts:     []string{"hirokisato@chromium.org", "dtseng@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "dtseng@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Accessibility
+		BugComponent: "b:165222",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithoutUIAutomator",
