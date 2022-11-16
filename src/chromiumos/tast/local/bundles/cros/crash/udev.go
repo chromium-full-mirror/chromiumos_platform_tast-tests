@@ -25,10 +25,11 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Udev,
-		Desc:     "Verify udev triggered crash works as expected",
-		Contacts: []string{"yamaguchi@chromium.org", "iby@chromium.org", "cros-telemetry@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         Udev,
+		Desc:         "Verify udev triggered crash works as expected",
+		Contacts:     []string{"cros-telemetry@google.com", "yamaguchi@chromium.org", "iby@chromium.org"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
