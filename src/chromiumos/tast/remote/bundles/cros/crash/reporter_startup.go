@@ -33,6 +33,7 @@ func init() {
 			"domlaskowski@chromium.org", // Original autotest author
 			"yamaguchi@chromium.org",    // Tast port author
 		},
+		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "metrics_consent"},
 		ServiceDeps: []string{
