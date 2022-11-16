@@ -404,6 +404,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	defer display.SetDisplayProperties(closeCtx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &zoomInitial})
 
 	var cs ash.ConnSource
+	var br *browser.Browser
 	var bTconn *chrome.TestConn
 	switch meet.browserType {
 	case browser.TypeLacros:
@@ -414,12 +415,14 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 		defer l.Close(closeCtx)
 		cs = l
+		br = l.Browser()
 
 		if bTconn, err = l.TestAPIConn(ctx); err != nil {
 			s.Fatal("Failed to get lacros TestAPIConn: ", err)
 		}
 	case browser.TypeAsh:
 		cs = cr
+		br = cr.Browser()
 		bTconn = tconn
 	}
 
@@ -572,6 +575,14 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 		if err := w.CloseWindow(ctx, tconn); err != nil {
 			s.Fatal("Failed to close New Tab window: ", err)
+		}
+	}
+
+	if meet.docs {
+		// Ensure docs offline extension is installed to avoid docs page hitting
+		// fatal network error. See http://b/254914987
+		if err := cuj.EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
+			s.Fatal("Failed to install docs offline extension: ", err)
 		}
 	}
 
