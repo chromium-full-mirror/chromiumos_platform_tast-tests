@@ -37,7 +37,10 @@ func init() {
 			"jacksontadie@google.com",
 			"cros-demo-mode-eng@google.com",
 		},
-		Impl:            &fixtureImpl{},
+		Impl: &fixtureImpl{
+			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
+			enrollmentUser: "admin-tast",
+		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -46,6 +49,9 @@ func init() {
 
 // fixtureImpl implements testing.FixtureImpl.
 type fixtureImpl struct {
+	// The user that the device enrolls into Demo Mode with. This allows us to
+	// control which Organizational Unit the device enrolls into, thus the policies.
+	enrollmentUser string
 }
 
 var _ testing.FixtureImpl = &fixtureImpl{}
@@ -64,6 +70,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		// Consolidated Consent screen instead of EULA + ARC TOS.
 		chrome.DisableFeatures("OobeConsolidatedConsent"),
 		chrome.DontSkipOOBEAfterLogin(),
+		chrome.ExtraArgs("--demo-mode-enrolling-username="+f.enrollmentUser),
 		chrome.ExtraArgs("--arc-start-mode=always-start"),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	)
