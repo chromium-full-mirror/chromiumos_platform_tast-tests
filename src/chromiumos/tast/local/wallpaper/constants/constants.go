@@ -63,6 +63,9 @@ const LocalWallpaperCollection = "My Images"
 // LocalWallpaperFilename is the filename of the image in the Downloads folder.
 const LocalWallpaperFilename = "set_local_wallpaper_light_pink_20210929.jpg"
 
+// LockscreenWallpaperFileName is the filename of the image to be verified in lockscreen in the Downloads folder.
+const LockscreenWallpaperFileName = "set_local_wallpaper_rgb_20221115.jpg"
+
 // LocalWallpaperColor is the color of LocalWallpaperFilename.
 var LocalWallpaperColor = color.RGBA{255, 203, 198, 255}
 
