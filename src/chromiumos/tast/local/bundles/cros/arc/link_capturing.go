@@ -37,10 +37,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies link capturing integration between ARC and the browser",
 		Contacts: []string{
-			"tsergeant@chromium.org",
 			"chromeos-apps-foundation-team@google.com",
+			"tsergeant@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation>Intents",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
