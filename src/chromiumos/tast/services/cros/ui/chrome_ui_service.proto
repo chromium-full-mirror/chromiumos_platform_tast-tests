@@ -18,6 +18,15 @@ service ChromeUIService {
     // DumpUITree dumps the UI tree to the context directory of the test.
     rpc DumpUITree (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+    // DumpUITreeWithScreenshotToFile dumps the UI tree with screenshot to the file.
+    rpc DumpUITreeWithScreenshotToFile (DumpUITreeWithScreenshotToFileRequest) returns (google.protobuf.Empty) {}
+
     // WaitForWelcomeScreen waits for welcome screen to be shown in OOBE.
     rpc WaitForWelcomeScreen (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message DumpUITreeWithScreenshotToFileRequest {
+    // file_prefix specifies the name prefix of file UI dump and screenshot.
+    // For instance, if file_prefix is specified as "ui_dump", the UI dump file and screenshot file will be saved as "ui_dump.txt" and "ui_dump.png".
+    string file_prefix = 1;
 }

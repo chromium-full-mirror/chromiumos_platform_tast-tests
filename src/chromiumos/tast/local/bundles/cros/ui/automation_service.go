@@ -195,6 +195,26 @@ func (svc *AutomationService) MouseClickAtLocation(ctx context.Context, req *pb.
 	return &empty.Empty{}, nil
 }
 
+// EnsureFocused ensures the found node is focused.
+func (svc *AutomationService) EnsureFocused(ctx context.Context, req *pb.EnsureFocusedRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ui.EnsureFocused(finder)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling EnsureFocused with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
 // WaitUntilExists waits until the node found by the input finder exists.
 func (svc *AutomationService) WaitUntilExists(ctx context.Context, req *pb.WaitUntilExistsRequest) (*empty.Empty, error) {
 	svc.sharedObject.ChromeMutex.Lock()
@@ -208,8 +228,63 @@ func (svc *AutomationService) WaitUntilExists(ctx context.Context, req *pb.WaitU
 	if err != nil {
 		return nil, err
 	}
+
+	if req.Timeout != nil {
+		ui = ui.WithTimeout(req.Timeout.AsDuration())
+	}
+
 	if err := ui.WaitUntilExists(finder)(ctx); err != nil {
 		return nil, errors.Wrapf(err, "failed calling WaitUntilExists with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
+// WaitUntilGone waits until the node found by the input finder gone.
+func (svc *AutomationService) WaitUntilGone(ctx context.Context, req *pb.WaitUntilGoneRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Timeout != nil {
+		ui = ui.WithTimeout(req.Timeout.AsDuration())
+	}
+
+	if err := ui.WaitUntilGone(finder)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling WaitUntilGone with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
+// EnsureGone ensures the node is gone by checks the input finder doesn't exist within the specified time duration.
+// If the input time duration isn't specified, a default time duration will be taken.
+func (svc *AutomationService) EnsureGone(ctx context.Context, req *pb.EnsureGoneRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	timeout := 15 * time.Second
+	if req.Timeout != nil {
+		timeout = req.Timeout.AsDuration()
+	}
+
+	if err := ui.EnsureGoneFor(finder, timeout)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling EnsureGoneFor with finder: %v", finder.Pretty())
 	}
 	return &empty.Empty{}, nil
 }

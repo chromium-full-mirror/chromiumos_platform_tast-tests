@@ -17,5 +17,8 @@ service QuickSettingsService {
   // within the Quick Settings. This is safe to call even when the Quick Settings
   // are already open.
   rpc NavigateToNetworkDetailedView(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Hide hides Quick Settings.
+  rpc Hide(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 

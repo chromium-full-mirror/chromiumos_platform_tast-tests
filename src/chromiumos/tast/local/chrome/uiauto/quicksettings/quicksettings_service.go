@@ -9,8 +9,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/testing"
@@ -35,13 +36,14 @@ type Service struct {
 // within the Quick Settings. This is safe to call even when the Quick Settings
 // are already open.
 func (s *Service) NavigateToNetworkDetailedView(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
-	cr := s.sharedObject.Chrome
-	if cr == nil {
-		return &empty.Empty{}, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to create test API connection")
-	}
-	return &empty.Empty{}, NavigateToNetworkDetailedView(ctx, tconn, true)
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, NavigateToNetworkDetailedView(ctx, tconn, true)
+	})
+}
+
+// Hide hides the Quick Settings.
+func (s *Service) Hide(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, Hide(ctx, tconn)
+	})
 }

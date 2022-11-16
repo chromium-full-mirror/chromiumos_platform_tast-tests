@@ -70,6 +70,24 @@ func (c *ChromeUIService) DumpUITree(ctx context.Context, req *empty.Empty) (*em
 	return &empty.Empty{}, nil
 }
 
+// DumpUITreeWithScreenshotToFile dumps the UI tree with screenshot to the file.
+func (c *ChromeUIService) DumpUITreeWithScreenshotToFile(ctx context.Context, req *pb.DumpUITreeWithScreenshotToFileRequest) (*empty.Empty, error) {
+	cr := c.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+
+	contextOutDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get the context output directory")
+	}
+
+	faillog.DumpUITreeWithScreenshotOnError(ctx, contextOutDir, func() bool { return true }, cr, req.FilePrefix)
+
+	return &empty.Empty{}, nil
+}
+
+// WaitForWelcomeScreen waits for welcome screen to be shown in OOBE.
 func (c *ChromeUIService) WaitForWelcomeScreen(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	cr := c.sharedObject.Chrome
 	if cr == nil {

@@ -13,6 +13,9 @@ option go_package = "chromiumos/tast/services/cros/chrome/uiauto/ossettings";
 // OsSettingsService provides functions for interacting with the OS Settings on
 // ChromeOS devices.
 service OsSettingsService {
+  // LaunchAtNetwork will launch the OS Settings application at Network page.
+  rpc LaunchAtNetwork(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // OpenNetworkDetailPage will open the OS Settings application and navigate
   // to the detail page for the specified network.
   rpc OpenNetworkDetailPage(OpenNetworkDetailPageRequest) returns (google.protobuf.Empty) {}

@@ -7,11 +7,13 @@ package ossettings
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/network/netconfig"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/ossettings"
@@ -43,39 +45,48 @@ func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest
 	return 0, errors.New("Network type must be Cellular or WiFi")
 }
 
+// LaunchAtNetwork will launch the OS Settings application at Wi-Fi page.
+func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		_, err := Launch(ctx, tconn)
+		if err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS-Settings")
+		}
+
+		if err := uiauto.New(tconn).LeftClick(Network)(ctx); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, `failed to navigate to sub page "Network"`)
+		}
+
+		return &emptypb.Empty{}, nil
+	})
+}
+
 // OpenNetworkDetailPage will open the OS Settings application and navigate
 // to the detail page for the specified network.
-func (s *Service) OpenNetworkDetailPage(ctx context.Context, req *pb.OpenNetworkDetailPageRequest) (*empty.Empty, error) {
+func (s *Service) OpenNetworkDetailPage(ctx context.Context, req *pb.OpenNetworkDetailPageRequest) (*emptypb.Empty, error) {
 	cr := s.sharedObject.Chrome
 	if cr == nil {
-		return &empty.Empty{}, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to create test API connection")
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
 	}
 	networkType, err := computeNetworkConfigNetworkType(req.NetworkType)
 	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to determine network type")
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to determine network type")
 	}
-	if _, err = OpenNetworkDetailPage(ctx, tconn, cr, req.NetworkName, networkType); err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to navigate to network detail page")
-	}
-	return &empty.Empty{}, nil
+
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		if _, err = OpenNetworkDetailPage(ctx, tconn, cr, req.NetworkName, networkType); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to navigate to network detail page")
+		}
+		return &emptypb.Empty{}, nil
+	})
 }
 
 // Close will close the open OS Settings application.
-func (s *Service) Close(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
-	cr := s.sharedObject.Chrome
-	if cr == nil {
-		return &empty.Empty{}, errors.New("Chrome has not been started")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to create test API connection")
-	}
-	if err := apps.Close(ctx, tconn, apps.Settings.ID); err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to close OS Settings")
-	}
-	return &empty.Empty{}, nil
+func (s *Service) Close(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		if err := apps.Close(ctx, tconn, apps.Settings.ID); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to close OS Settings")
+		}
+		return &emptypb.Empty{}, nil
+	})
 }
