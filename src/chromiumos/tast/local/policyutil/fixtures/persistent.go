@@ -63,7 +63,8 @@ func init() {
 			"family.unicornEmail",
 		},
 		Impl: &persistentFixture{
-			policyUserVar: "family.unicornEmail",
+			policyUserVar:                       "family.unicornEmail",
+			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -79,7 +80,8 @@ func init() {
 			"arc.childUser",
 		},
 		Impl: &persistentFixture{
-			policyUserVar: "arc.childUser",
+			policyUserVar:                       "arc.childUser",
+			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -157,6 +159,9 @@ type persistentFixture struct {
 	// a different account instead of tast-user@managedchrome.com for policy test.
 	// It is used to set the value of the policyUser variable above.
 	policyUserVar string
+
+	// persistentDisableDomainVerification is used to sign any domain.
+	persistentDisableDomainVerification *bool
 }
 
 func (p *persistentFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -176,6 +181,7 @@ func (p *persistentFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	p.fdms.SetPersistentPolicies(p.policies)
 	p.fdms.SetPersistentPublicAccountPolicies(p.persistentPublicAccountPolicies)
 	p.fdms.SetPersistentPolicyUser(p.policyUser)
+	p.fdms.SetPersistentDisablePolicyKeyVerification(p.persistentDisableDomainVerification)
 
 	// Write the policy blob with persistent values set as the one set by FakeDMS is the default.
 	if err := p.fdms.WritePolicyBlob(policy.NewBlob()); err != nil {
@@ -191,6 +197,7 @@ func (p *persistentFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 	p.fdms.SetPersistentPolicies([]policy.Policy{})
 	p.fdms.SetPersistentPublicAccountPolicies(nil)
 	p.fdms.SetPersistentPolicyUser(nil)
+	p.fdms.SetPersistentDisablePolicyKeyVerification(nil)
 }
 
 func (p *persistentFixture) Reset(ctx context.Context) error {
