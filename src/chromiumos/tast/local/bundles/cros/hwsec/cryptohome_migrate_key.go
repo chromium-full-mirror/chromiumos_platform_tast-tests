@@ -25,6 +25,13 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -64,12 +71,12 @@ func migrateGoodKeyTest(ctx context.Context, s *testing.State, cryptohome *hwsec
 	}
 
 	// We expect the mount should fail, because we are using old password.
-	if err := cryptohome.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(username, oldPassword), true, hwsec.NewVaultConfig()); err == nil {
+	if err := cryptohome.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(username, oldPassword) /*create user=*/, false, hwsec.NewVaultConfig()); err == nil {
 		s.Fatal("Cryptohome was successfully mounted with the old password; want: should have failed")
 	}
 
 	// Try the correct password.
-	if err := cryptohome.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(username, newPassword), true, hwsec.NewVaultConfig()); err != nil {
+	if err := cryptohome.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(username, newPassword) /*create user=*/, false, hwsec.NewVaultConfig()); err != nil {
 		s.Fatal("Failed to mount vault with correct password: ", err)
 	}
 }
@@ -94,6 +101,7 @@ func migrateNonexistUserTest(ctx context.Context, s *testing.State, cryptohome *
 func CryptohomeMigrateKey(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// Ensure clean cryptohome.
 	if _, err := cryptohome.Unmount(ctx, username); err != nil {
