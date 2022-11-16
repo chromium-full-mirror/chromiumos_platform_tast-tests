@@ -31,7 +31,12 @@ func init() {
 		Func:         ShowPassword,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Show/Hide password functionality on lockscreen Password field and \"PIN or password\" field",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-oac@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

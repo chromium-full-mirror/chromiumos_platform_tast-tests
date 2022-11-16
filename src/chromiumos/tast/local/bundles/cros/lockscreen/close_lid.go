@@ -22,7 +22,12 @@ func init() {
 		Func:         CloseLid,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that screen-locking works by closing lid",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-oac@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Attr:         []string{"group:mainline"},

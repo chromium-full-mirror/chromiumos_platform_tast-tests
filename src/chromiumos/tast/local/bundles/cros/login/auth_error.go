@@ -24,11 +24,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that auth error disappears when user perform some action",
 		Contacts: []string{
-			"anastasiian@google.com",
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"mbid@google.com",
 			"chromeos-sw-engprod@google.com",
-			"cros-oac@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -28,9 +28,14 @@ const hiddenPwdChar = "•"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShowPassword,
-		Desc:         "Test Show/Hide password functionality on Password field and \"PIN or password\" field of login screen",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-oac@google.com"},
+		Func: ShowPassword,
+		Desc: "Test Show/Hide password functionality on Password field and \"PIN or password\" field of login screen",
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

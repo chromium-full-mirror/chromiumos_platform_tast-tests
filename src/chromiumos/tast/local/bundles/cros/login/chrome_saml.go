@@ -19,9 +19,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome can make real SAML logins",
 		Contacts: []string{
-			"lmasopust@google.com",
 			"cros-3pidp@google.com",
+			"lmasopust@google.com",
 		},
+		BugComponent: "b:1253671", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",

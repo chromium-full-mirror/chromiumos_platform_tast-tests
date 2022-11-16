@@ -23,7 +23,12 @@ func init() {
 		Func:         DisplayProperTimeFormat,
 		Desc:         "Test display proper time format on the lock screen",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"sherrilin@google.com", "chromeos-sw-engprod@google.com", "cros-lurs@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 	})

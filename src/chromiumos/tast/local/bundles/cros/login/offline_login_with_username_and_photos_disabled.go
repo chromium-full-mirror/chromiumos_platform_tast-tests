@@ -28,7 +28,12 @@ func init() {
 		Func:         OfflineLoginWithUsernameAndPhotosDisabled,
 		Desc:         "Checks that a user can login again if they have already signed in even though the network is offline and the device owner disabled the username and photos",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"bchikhaoui@google.com", "cros-oac@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"bchikhaoui@google.com",
+			"cros-oac@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

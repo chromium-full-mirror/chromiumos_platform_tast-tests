@@ -28,11 +28,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the sign in page shows after signing out multi-users by clicking button from uber tray",
 		Contacts: []string{
+			"cros-lurs@google.com",
+			"mbid@google.com",
 			"vivian.tsai@cienet.com",
 			"kyle.chen@cienet.com",
 			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},

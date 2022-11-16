@@ -27,10 +27,11 @@ func init() {
 		Desc:         "Checks if device owner can restrict signin",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

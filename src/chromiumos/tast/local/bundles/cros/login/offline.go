@@ -23,11 +23,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that user can sign in when device offline ",
 		Contacts: []string{
+			"cros-lurs@google.com",
 			"bohdanty@google.com",
 			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-oac@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

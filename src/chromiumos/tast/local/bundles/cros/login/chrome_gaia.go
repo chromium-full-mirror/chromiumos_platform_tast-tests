@@ -18,10 +18,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome can make real GAIA logins",
 		Contacts: []string{
+			"cros-oobe@google.com",
+			"bohdanty@google.com",
 			"tast-owners@google.com",
 			"cros-oac@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",

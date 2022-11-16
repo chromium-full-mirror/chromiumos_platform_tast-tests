@@ -24,9 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that an existing device user can login from the login screen",
 		Contacts: []string{
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"cros-oac@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline"},
 		VarDeps: []string{

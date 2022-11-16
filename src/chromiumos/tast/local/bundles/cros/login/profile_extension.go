@@ -16,7 +16,13 @@ func init() {
 		Func:         ProfileExtension,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check private signin profile extension loads",
-		Contacts:     []string{"cros-oac@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"mbid@google.com",
+			"cros-oac@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -22,10 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks cryptohome password change flow when user does not remember the old password",
 		Contacts: []string{
-			"emaamari@google.com",
 			"cros-lurs@google.com",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",

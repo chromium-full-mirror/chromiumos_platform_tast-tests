@@ -27,7 +27,13 @@ func init() {
 		Func:         RemoveUsersExceptOwner,
 		Desc:         "Checks if device owner can remove other users, but not self (on the Settings page)",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"jaflis@google.com", "chromeos-sw-engprod@google.com", "cros-oac@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"jaflis@google.com",
+			"emaamari@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

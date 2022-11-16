@@ -21,7 +21,12 @@ func init() {
 		Func:         PINUnlock,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that PIN unlock and PIN autosubmit works for ChromeOS",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-oac@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"mbid@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

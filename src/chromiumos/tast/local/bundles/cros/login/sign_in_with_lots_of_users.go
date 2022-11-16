@@ -28,10 +28,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test user pods are all visible in the login screen and each user can log in accordingly",
 		Contacts: []string{
+			"cros-lurs@google.com",
+			"emaamari@google.com",
 			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 			"jason.hsiao@cienet.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

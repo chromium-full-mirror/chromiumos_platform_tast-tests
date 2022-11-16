@@ -22,7 +22,12 @@ func init() {
 		Func:         PinUnlockFail,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that password field is shown after incorrect PIN was entered multiple times",
-		Contacts:     []string{"sherrilin@google.com", "chromeos-sw-engprod@google.com", "cros-oac@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"mbid@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 	})

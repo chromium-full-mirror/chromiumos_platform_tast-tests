@@ -23,10 +23,11 @@ func init() {
 		Func: RemoveUserOnSigninScreen,
 		Desc: "Checks if users can be removed on the sign in screen",
 		Contacts: []string{
-			"mbid@google.com",
 			"cros-lurs@google.com",
+			"mbid@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -30,8 +30,16 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Logout,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the sign in page shows after signing out",
-		Contacts:     []string{"viviantsai@cienet.com", "cienet-development@googlegroups.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"cros-lurs@google.com",
+			"emaamari@google.com",
+			"viviantsai@cienet.com",
+			"cienet-development@googlegroups.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

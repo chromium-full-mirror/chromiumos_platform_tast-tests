@@ -28,10 +28,11 @@ func init() {
 		Desc:         "Check that 'Manage other people' validates user email format",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey", "ui.gaiaPoolDefault"},

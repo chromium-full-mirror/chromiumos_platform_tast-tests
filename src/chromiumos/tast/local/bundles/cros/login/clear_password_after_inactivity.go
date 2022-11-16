@@ -27,10 +27,11 @@ func init() {
 		Func: ClearPasswordAfterInactivity,
 		Desc: "Check that that the password input field on the signin screen is cleared after inactivity",
 		Contacts: []string{
-			"mbid@google.com",
 			"cros-lurs@google.com",
+			"mbid@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

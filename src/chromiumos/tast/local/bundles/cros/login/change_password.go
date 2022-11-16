@@ -30,11 +30,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks cryptohome password change flow",
 		Contacts: []string{
-			"anastasiian@google.com",
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"bohdanty@google.com",
-			"cros-oac@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",

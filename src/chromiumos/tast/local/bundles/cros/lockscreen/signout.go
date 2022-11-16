@@ -40,11 +40,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test signout from the lock screen",
 		Contacts: []string{
-			"anastasiian@google.com",
+			"cros-lurs@google.com",
+			"anastasiian@chromium.org",
 			"mbid@google.com",
 			"chromeos-sw-engprod@google.com",
-			"cros-oac@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
