@@ -18,9 +18,10 @@ func init() {
 		Func: EncryptedRebootVault,
 		Desc: "Checks that the encrypted reboot vault is setup correctly and survives a reboot",
 		Contacts: []string{
-			"sarthakkukreti@google.com",
 			"chromeos-storage@google.com",
+			"sarthakkukreti@google.com",
 		},
+		BugComponent: "b:974567",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pstore", "reboot"},
 	})

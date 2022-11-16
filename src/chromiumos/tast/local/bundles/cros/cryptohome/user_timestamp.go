@@ -24,11 +24,12 @@ func init() {
 		Func: UserTimestamp,
 		Desc: "Test removing oldest user",
 		Contacts: []string{
+			"chromeos-storage@google.com",
 			"asavery@chromium.org",
 			"gwendal@chromium.org",
-			"chromeos-storage@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:974567",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 	})
 }
 

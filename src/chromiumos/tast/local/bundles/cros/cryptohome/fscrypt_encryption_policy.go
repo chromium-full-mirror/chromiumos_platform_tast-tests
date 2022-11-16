@@ -26,10 +26,11 @@ func init() {
 		Func: FscryptEncryptionPolicy,
 		Desc: "Check fscrypt encryption policy version of a newly created user cryptohome",
 		Contacts: []string{
-			"sarthakkukreti@google.com",
 			"chromeos-storage@google.com",
+			"sarthakkukreti@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:974567",
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:              "v1",
 			Val:               fscryptVersionParam{version: 1},

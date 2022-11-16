@@ -43,9 +43,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify cross version vault's compatibility",
 		Contacts: []string{
-			"dlunev@google.com", // Test author
 			"chromeos-storage@google.com",
+			"dlunev@google.com", // Test author
 		},
+		BugComponent: "b:974567",
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{

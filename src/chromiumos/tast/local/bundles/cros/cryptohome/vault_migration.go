@@ -20,10 +20,11 @@ func init() {
 		Func: VaultMigration,
 		Desc: "Test vault encryption migration from ecryptfs to fscrypt",
 		Contacts: []string{
-			"dlunev@chromium.org",
 			"cryptohome-core@google.com",
+			"dlunev@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:974567",
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:              "fscrypt_v1",
 			ExtraSoftwareDeps: []string{"use_fscrypt_v1"},

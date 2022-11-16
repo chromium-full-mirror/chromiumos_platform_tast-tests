@@ -22,10 +22,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Spaced,
-		Desc:     "Checks that spaced queries work",
-		Contacts: []string{"sarthakkukreti@chromium.org", "chromeos-storage@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func: Spaced,
+		Desc: "Checks that spaced queries work",
+		Contacts: []string{
+			"chromeos-storage@google.com",
+			"sarthakkukreti@chromium.org",
+		},
+		BugComponent: "b:974567",
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
