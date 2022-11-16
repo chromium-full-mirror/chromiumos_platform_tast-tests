@@ -387,7 +387,11 @@ func GetTestExpectationFromDirectory(ctx context.Context, testName, testExpectat
 	for _, ft := range []FileType{ModelFile, BuildBoardFile, BoardFile, GpuChipsetFile, AllDevicesFile} {
 		filename, err := generateTestExpectationsFilename(ctx, testExpectationsDirectory, ft)
 		if err != nil {
-			return expectPass(ctx), errors.Wrap(err, "failed to generate test expectations file name")
+			testing.ContextLogf(ctx, "Failed to determine %s filename: %v", ft, err)
+			// Skips checking for the current expectations file type. The failure
+			// to determine the identity will result in a visible error in the
+			// expectations identifier test cases.
+			continue
 		}
 		debugLogf(ctx, "Looking for %s expectations file %s", ft, filename)
 		contents, err := os.ReadFile(filename)
