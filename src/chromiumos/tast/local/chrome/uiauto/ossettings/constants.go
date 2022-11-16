@@ -124,6 +124,9 @@ var networkFinder = nodewith.Name("Network").Role(role.Link).Ancestor(WindowFind
 // mobileButton is the finder for the Mobile Data page button UI in network page.
 var mobileButton = nodewith.Name("Mobile data").Role(role.Button)
 
+// MobileDataToggle is the finder for the mobile data toggle UI in the Mobile data subpage.
+var MobileDataToggle = nodewith.NameStartingWith("Mobile data").Role(role.ToggleButton)
+
 // AddCellularButton is the finder for the Add Cellular button in cellular network list.
 var AddCellularButton = nodewith.NameStartingWith("Add Cellular").Role(role.Button)
 
@@ -144,6 +147,9 @@ var ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Anc
 
 // Elements in "Cellular detail page"
 var (
+	// AutoconnectToggle is the finder for the autoconnect toggle UI in the cellular detail page.
+	AutoconnectToggle = nodewith.Name("Automatically connect to cellular network").Role(role.ToggleButton)
+
 	// ConnectedStatus is the finder for the connected status text UI in the cellular detail page.
 	ConnectedStatus = nodewith.Name("Connected").Role(role.StaticText)
 
