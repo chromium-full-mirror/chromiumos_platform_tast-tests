@@ -141,17 +141,40 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 		return errors.Wrap(err, "failed to drag browser window from the tab strip point to the middle and back")
 	}
 
-	// Maximize window and then minimize and restore it.
-	// TODO(https://crbug.com/1324662): When the bug is fixed,
-	// do these window state changes more like a real user.
-	for _, windowState := range []ash.WindowStateType{ash.WindowStateMaximized, ash.WindowStateMinimized, ash.WindowStateNormal} {
-		if err := ash.SetWindowStateAndWait(ctx, tconn, browserWinID, windowState); err != nil {
-			return errors.Wrapf(err, "failed to set browser window state to %v", windowState)
-		}
+	// Maximize window.
+	maximizeButton := nodewith.Name("Maximize").HasClass("FrameSizeButton").Role(role.Button)
+	if err := pc.Click(maximizeButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to maximize the browser window")
+	}
+	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+		return w.ID == browserWinID && w.State == ash.WindowStateMaximized && !w.IsAnimating
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return errors.Wrap(err, "failed to wait for browser window to become maximized")
 	}
 
-	// Lacros browser sometime restores to a different bounds so calculate
-	// a new grab point.
+	// Minimize window.
+	minimizeButton := nodewith.Name("Minimize").HasClass("FrameCaptionButton").Role(role.Button)
+	if err := pc.Click(minimizeButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to minimize the browser window")
+	}
+	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+		return w.ID == browserWinID && w.State == ash.WindowStateMinimized && !w.IsAnimating
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return errors.Wrap(err, "failed to wait for browser window to become minimized")
+	}
+
+	// Unminimize window.
+	chromeAppIcon := nodewith.NameContaining("Chrome").HasClass("ash/ShelfAppButton").Role(role.Button)
+	if err := pc.Click(chromeAppIcon)(ctx); err != nil {
+		return errors.Wrap(err, "failed to unminimize the browser window")
+	}
+	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+		return w.ID == browserWinID && w.State == ash.WindowStateMaximized && !w.IsAnimating
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return errors.Wrap(err, "failed to wait for browser window to be unminimized")
+	}
+
+	// Browser window is now maximized so calculate a new grab point.
 	newBrowserWin, err := ash.GetWindow(ctx, tconn, browserWinID)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser window info")
