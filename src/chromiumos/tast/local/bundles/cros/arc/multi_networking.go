@@ -25,7 +25,9 @@ func init() {
 		Func:         MultiNetworking,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies guest network setup upon physical interface change",
-		Contacts:     []string{"taoyl@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,

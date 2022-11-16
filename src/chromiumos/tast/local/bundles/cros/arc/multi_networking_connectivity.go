@@ -25,7 +25,9 @@ func init() {
 		Func:         MultiNetworkingConnectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks connectivity while multi-networking is enabled",
-		Contacts:     []string{"jasongustaman@google.com", "arc-eng@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

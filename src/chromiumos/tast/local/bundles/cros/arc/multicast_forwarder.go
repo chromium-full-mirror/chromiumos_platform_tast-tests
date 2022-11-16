@@ -29,7 +29,9 @@ func init() {
 		Func:         MulticastForwarder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if multicast forwarder works on ARC++",
-		Contacts:     []string{"jasongustaman@chromium.org", "cros-networking@google.com", "arc-eng@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

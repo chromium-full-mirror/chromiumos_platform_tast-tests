@@ -25,7 +25,9 @@ func init() {
 		Func:         IPv6Connectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks IPv6 connectivity inside ARC",
-		Contacts:     []string{"taoyl@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"arc", "chrome"},
 		Timeout:      4 * time.Minute,
