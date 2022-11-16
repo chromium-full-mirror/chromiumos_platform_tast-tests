@@ -30,10 +30,11 @@ func init() {
 		Func:         DrivefsDssOffline,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify that making a Docs/Sheets/Slides file available offline through Files App works",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"austinct@chromium.org",
 			"benreich@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -42,6 +43,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:mainline",
+			"group:hw_agnostic",
 			"informational",
 		},
 		Timeout: 5 * time.Minute,

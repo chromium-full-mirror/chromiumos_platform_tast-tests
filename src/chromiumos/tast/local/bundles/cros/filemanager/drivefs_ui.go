@@ -22,7 +22,9 @@ func init() {
 		Func:         DrivefsUI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that drivefs can be accessed through the UI",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"austinct@chromium.org",
 			"benreich@chromium.org",
 		},
@@ -33,6 +35,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:drivefs-cq",
+			"group:hw_agnostic",
 			"group:mainline",
 		},
 		VarDeps: []string{

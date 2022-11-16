@@ -24,10 +24,11 @@ func init() {
 		Func:         DrivefsSearch,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that exact file search for Google Drive returns correct value",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"austinct@chromium.org",
 			"benreich@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -36,6 +37,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:drivefs-cq",
+			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
 		},

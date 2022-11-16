@@ -22,10 +22,11 @@ func init() {
 		Func:         DrivefsGoogleDoc,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a google doc created via Drive API syncs to DriveFS",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"austinct@chromium.org",
 			"benreich@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -34,6 +35,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:mainline",
+			"group:hw_agnostic",
 			"informational",
 		},
 		Timeout: 5 * time.Minute,
