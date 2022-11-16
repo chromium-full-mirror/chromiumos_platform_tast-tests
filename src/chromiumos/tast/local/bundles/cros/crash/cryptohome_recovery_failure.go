@@ -26,11 +26,12 @@ func init() {
 		Func: CryptohomeRecoveryFailure,
 		Desc: "Verify cryptohome recovery failures are logged as expected",
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cros-telemetry@google.com",
+			"anastasiian@chromium.org",
 		},
-		Fixture: "ussAuthSessionFixture",
-		Attr:    []string{"group:mainline", "informational"},
+		BugComponent: "b:1032705",
+		Fixture:      "ussAuthSessionFixture",
+		Attr:         []string{"group:mainline", "informational"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 	})
