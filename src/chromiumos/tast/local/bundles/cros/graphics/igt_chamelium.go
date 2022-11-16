@@ -6,35 +6,12 @@ package graphics
 
 import (
 	"context"
-	"net"
 	"os"
 	"path/filepath"
 	"time"
 
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
-)
-
-var (
-	chameleonHostVar = testing.RegisterVarString(
-		"graphics.chameleon_host",
-		"",
-		"Hostname for Chameleon (optional/not currently used)")
-
-	chameleonIPVar = testing.RegisterVarString(
-		"graphics.chameleon_ip",
-		"",
-		"Local IP address of Chameleon (required)")
-
-	chameleonSSHPortVar = testing.RegisterVarString(
-		"graphics.chameleon_ssh_port",
-		"22",
-		"SSH port for Chameleon (optional/not currently used)")
-
-	chameleonPortVar = testing.RegisterVarString(
-		"graphics.chameleon_port",
-		"9992",
-		"Port for chameleond on Chameleon (optional/used)")
 )
 
 func init() {
@@ -65,20 +42,15 @@ func setIgtrcFile(s *testing.State) {
 	igtFile, err := os.Create(igtFilePath)
 	if err != nil {
 		s.Fatal("Failed to create .igtrc: ", err)
-		return
 	}
 	defer igtFile.Close()
 
 	// Get Chameleon IP
 	// This is used for local dev env.
-	addr := net.ParseIP(chameleonIPVar.Value())
-	if addr == nil {
-		s.Fatal("Failed to get chameleon IP. The Chameleon IP: ", chameleonIPVar.Value())
+	url, err := graphics.ChameleonGetURL()
+	if err != nil {
+		s.Fatal("Failed to get the Chameleon URL: ", err)
 	}
-	chameleonIP := chameleonIPVar.Value()
-	chameleonPort := chameleonPortVar.Value()
-
-	url := net.JoinHostPort(chameleonIP, chameleonPort)
 
 	content := `
 [Common]
