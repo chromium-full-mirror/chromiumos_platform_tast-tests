@@ -6,6 +6,8 @@ package wificell
 
 import (
 	"context"
+	"encoding/hex"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -224,6 +226,40 @@ func (cli *WifiClient) ExpectShillProperty(ctx context.Context, objectPath strin
 	}
 
 	return waitForProperties, nil
+}
+
+// WaitForConnected waits for the shill property "ServicePropertyIsConnected" of the specified network to be the expected value.
+// It can be used for checking if a network is connected or disconnected.
+// Note that the network has to be a known network from DUT, for checking disconnected without specifying
+// the network, consider using AssureDisconnect instead.
+func (cli *WifiClient) WaitForConnected(ctx context.Context, ssid string, expectedValue bool) error {
+	props := map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeWifi,
+		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+	}
+	servicePath, err := cli.GetServicePath(ctx, props)
+	if err != nil {
+		return errors.Wrap(err, "failed to get service path")
+	}
+
+	req := []*ShillProperty{{
+		Property:       shillconst.ServicePropertyIsConnected,
+		ExpectedValues: []interface{}{expectedValue},
+		Method:         wifi.ExpectShillPropertyRequest_CHECK_WAIT,
+	}}
+
+	waitCtx, cancel := context.WithTimeout(ctx, shillconst.DefaultTimeout)
+	defer cancel()
+
+	waitServiceConnected, err := cli.ExpectShillProperty(waitCtx, servicePath, req, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a property watcher")
+	}
+
+	if _, err := waitServiceConnected(); err != nil {
+		return errors.Wrap(err, "failed to wait for service connected")
+	}
+	return nil
 }
 
 // EAPAuthSkipped is a wrapper for the streaming gRPC call EAPAuthSkipped.
