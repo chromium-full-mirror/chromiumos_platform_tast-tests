@@ -78,9 +78,13 @@ func TimezoneEditable(ctx context.Context, s *testing.State) {
 	timeZoneReg := regexp.MustCompile(`(Time zone )?\(UTC([+-])(\d+):(\d+)\).*Time.*`)
 
 	for i, user := range []timezoneUserType{
+		// TODO(b/220639439): Run guest user scenario first to ensure the 24-hour
+		// toggle initial state is consistent in guest mode (i.e that the 24-hour
+		// toggle is off and correctly reflects the setting value). When bug is
+		// resolved, order should not matter here.
+		guestUser,
 		owner,
 		nonOwner,
-		// guestUser, // TODO(b/220639439): Add test for guest user once the issue is fixed.
 	} {
 		var is24HourBefore, is24HourAfter bool
 		var timezoneBefore, timezoneAfter string
