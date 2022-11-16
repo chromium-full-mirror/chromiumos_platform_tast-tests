@@ -37,7 +37,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"chingkang@google.com",
 		},
-		BugComponent: "b:1188704",
+		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"tpm1"},
 		Attr:         []string{"group:mainline"},
 	})

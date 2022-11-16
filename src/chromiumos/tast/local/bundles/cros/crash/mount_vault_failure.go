@@ -20,10 +20,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MountVaultFailure,
-		Desc:         "Verify the error from login failure is properly recorded",
-		Contacts:     []string{"cros-hwsec@google.com", "zuan@google.com"},
-		BugComponent: "b:1188704",
+		Func: MountVaultFailure,
+		Desc: "Verify the error from login failure is properly recorded",
+		Contacts: []string{
+			"cros-telemetry@google.com",
+			"zuan@google.com",
+			"cros-hwsec@google.com",
+		},
+		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{},
 		Params: []testing.Param{{
