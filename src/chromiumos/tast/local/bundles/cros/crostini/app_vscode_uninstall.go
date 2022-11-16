@@ -108,7 +108,7 @@ func AppVscodeUninstall(ctx context.Context, s *testing.State) {
 	progress := nodewith.NameStartingWith("Progress: [ ").Role(role.StaticText)
 	errorMsg := "VSCode not found"
 	outError := "VSCode: command not found"
-	codeError := nodewith.NameContaining(outError).Role(role.StaticText)
+	codeError := nodewith.NameContaining(outError).Role(role.StaticText).First()
 	if err := uiauto.Combine("uninstall Visual Studio Code",
 		// Run the command to uninstall.
 		terminalApp.RunCommand(keyboard, "sudo apt purge -y --allow-change-held-packages code"),
