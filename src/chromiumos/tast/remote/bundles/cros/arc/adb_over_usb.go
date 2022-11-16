@@ -23,7 +23,9 @@ func init() {
 		Func:         ADBOverUSB,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that arc(vm)-adbd job is up and running when adb-over-usb feature available",
-		Contacts:     []string{"vraheja@chromium.org", "arc-core@google.com"},
+		Contacts:     []string{"arc-core@google.com", "vraheja@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Integration
+		BugComponent: "b:1131321",
 		HardwareDeps: hwdep.D(
 			// Available boards info, please refer to doc https://www.chromium.org/chromium-os/chrome-os-systems-supporting-adb-debugging-over-usb
 			hwdep.Model("eve", "atlas", "nocturne", "soraka"),

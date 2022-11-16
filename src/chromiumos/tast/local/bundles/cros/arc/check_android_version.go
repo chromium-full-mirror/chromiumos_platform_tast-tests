@@ -19,6 +19,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that we are not shipping 32-bit Android on a 64-bit Kernel unintentionally",
 		Contacts:     []string{"arc-core@google.com", "vraheja@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Integration
+		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},

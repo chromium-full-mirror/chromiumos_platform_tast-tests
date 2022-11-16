@@ -23,11 +23,9 @@ func init() {
 		Func:         AdbSideloadWarningUI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enables the Adb Sideloading flag and further checks that a warning UI is displayed at login screen",
-		Contacts: []string{
-			"vraheja@chromium.org",
-			"victorhsieh@chromium.org",
-			"arc-core@google.com",
-		},
+		Contacts:     []string{"arc-core@google.com", "vraheja@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Integration
+		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"reboot", "chrome", "tpm2"},
 		ServiceDeps:  []string{"tast.cros.arc.AdbSideloadService", "tast.cros.example.ChromeService", "tast.cros.security.BootLockboxService"},
 		Timeout:      5 * time.Minute,

@@ -18,6 +18,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that any board with x86_64 built-in capability must support ARM64 ABI as well",
 		Contacts:     []string{"arc-core@google.com", "vraheja@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Integration
+		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},
