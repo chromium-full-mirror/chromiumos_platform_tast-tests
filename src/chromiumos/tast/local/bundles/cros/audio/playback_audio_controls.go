@@ -359,7 +359,7 @@ func exerciseAudioControls(ctx context.Context, ui *uiauto.Context, kb *input.Ke
 		return errors.Wrap(err, "failed to step backward audio playback")
 	}
 
-	playPauseButton := nodewith.Name("Toggle play pause").Role(role.Button)
+	playPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
 	infoBeforePause, err := ui.Info(ctx, playPauseButton)
 	if err != nil {
 		return errors.Wrap(err, "failed to get UI node info before pausing audio playback")
