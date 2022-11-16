@@ -43,10 +43,10 @@ func CellularESimInstallBadActivationCode(ctx context.Context, s *testing.State)
 	}
 
 	// Remove any existing profiles on test euicc
-	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodResetMemory, 1).Err; err != nil {
+	if err := euicc.ResetMemory(ctx); err != nil {
 		s.Fatal("Failed to reset test euicc: ", err)
 	}
-	defer euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodResetMemory, 1)
+	defer euicc.ResetMemory(ctx)
 	s.Log("Reset test euicc completed")
 
 	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodUseTestCerts, true).Err; err != nil {

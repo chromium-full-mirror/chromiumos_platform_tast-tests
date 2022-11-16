@@ -185,3 +185,34 @@ func (e *EUICC) getStringProperty(ctx context.Context, propertyName string) (str
 	}
 	return value, nil
 }
+
+// ResetMemory erases all profiles on the EUICC.
+func (e *EUICC) ResetMemory(ctx context.Context) error {
+	// Disable any active profile before clearing memory (b/257938384)
+	if err := e.DisableProfile(ctx); err != nil {
+		return errors.Wrap(err, "failed to disable enabled profile")
+	}
+
+	if err := e.DBusObject.Call(ctx, hermesconst.EuiccMethodResetMemory, 1 /*deleteOperationalProfiles*/).Err; err != nil {
+		return errors.Wrap(err, "failed to reset EUICC")
+	}
+
+	return nil
+}
+
+// DisableProfile disables the currently enabled profile (if any).
+func (e *EUICC) DisableProfile(ctx context.Context) error {
+	p, err := e.EnabledProfile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get enabled profile")
+	}
+
+	if p == nil {
+		return nil
+	}
+	testing.ContextLog(ctx, "Disabling profile: ", p)
+	if err := p.Call(ctx, hermesconst.ProfileMethodDisable).Err; err != nil {
+		return errors.Wrapf(err, "failed to disable profile: %v", p)
+	}
+	return nil
+}
