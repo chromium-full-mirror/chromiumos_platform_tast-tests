@@ -30,7 +30,9 @@ func init() {
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "diagnostics"},
+		// Skip on reven board (ChromeOS Flex) because the boot
+		// performance metrics are not supported on it.
+		SoftwareDeps: []string{"chrome", "diagnostics", "boot_perf_info"},
 		Fixture:      "crosHealthdRunning",
 	})
 }
