@@ -16,12 +16,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ReadyErrorLog,
-		Desc: "Check that ready.go successfully removed existing policies",
+		Func:         ReadyErrorLog,
+		Desc:         "Check that ready.go successfully removed existing policies",
+		BugComponent: "b:1111617",
 		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author
 			"nya@chromium.org",
-			"chromeos-commercial-remote-management@google.com",
 		},
 		Attr: []string{"group:mainline"},
 	})

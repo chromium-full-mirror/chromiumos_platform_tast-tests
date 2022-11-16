@@ -24,9 +24,10 @@ func init() {
 		Func:         Enrollment,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enroll a device without checking policies",
+		BugComponent: "b:1111632",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com", // Test author
 		},
 		Attr:         []string{"group:enrollment"},
 		SoftwareDeps: []string{"reboot", "chrome"},

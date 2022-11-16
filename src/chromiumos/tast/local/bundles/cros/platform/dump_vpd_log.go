@@ -23,7 +23,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DumpVPDLog,
 		Desc:         "Verify the behaviour of dump_vpd_log",
-		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111632",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com",
+		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"vpd"},
 	})

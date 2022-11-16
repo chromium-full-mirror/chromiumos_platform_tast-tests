@@ -28,9 +28,10 @@ func init() {
 		Func:         ExtensionPolicy,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Check if extension policies can be applied",
+		BugComponent: "b:1111617",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com", // Test author
 		},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome"},

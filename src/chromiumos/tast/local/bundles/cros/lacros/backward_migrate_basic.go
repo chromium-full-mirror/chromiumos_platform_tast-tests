@@ -18,9 +18,10 @@ func init() {
 		Func:         BackwardMigrateBasic,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test basic functionality of Lacros-to-Ash profile migration",
+		BugComponent: "b:1088267",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"lacros-team@google.com",
+			"vsavu@google.com", // Test author
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},

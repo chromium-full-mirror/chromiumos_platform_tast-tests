@@ -21,9 +21,10 @@ func init() {
 		Func:         AllowDinosaurEasterEgg,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AllowDinosaurEasterEgg policy",
+		BugComponent: "b:1111617",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com", // Test author
 		},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},

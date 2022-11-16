@@ -16,12 +16,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: NotEnterpriseOwned,
-		Desc: "Check that the DUT is not enterprise owned",
+		Func:         NotEnterpriseOwned,
+		Desc:         "Check that the DUT is not enterprise owned",
+		BugComponent: "b:1111632",
 		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author
 			"nya@chromium.org",
-			"chromeos-commercial-remote-management@google.com",
 		},
 		Attr: []string{"group:mainline"},
 	})

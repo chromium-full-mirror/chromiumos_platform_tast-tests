@@ -50,9 +50,10 @@ func init() {
 		Func:         UpdateEnginePolicies,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check of policies are properly propagating to update_engine by checking the logs",
+		BugComponent: "b:1031231",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com", // Test author
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
