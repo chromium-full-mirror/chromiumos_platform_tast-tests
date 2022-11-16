@@ -38,11 +38,6 @@ const (
 	Hardware DecoderType = iota
 	// Software - Any software-based video decoder (e.g. ffmpeg, libvpx).
 	Software
-	// LibGAV1 is a subtype of the Software above, using an alternative library
-	// to play AV1 video for experimentation purposes.
-	// TODO(crbug.com/1047051): remove this flag when the experiment is over, and
-	// turn DecoderType into a boolean to represent hardware or software decoding.
-	LibGAV1
 )
 
 const (
@@ -149,9 +144,6 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		return errors.New("software decoding was expected but wasn't used")
 	}
 	testing.ContextLog(ctx, "decoderName: ", decoderName)
-	if decoderType == LibGAV1 && decoderName != "Gav1VideoDecoder" {
-		return errors.Errorf("Expect Gav1VideoDecoder, but used Decoder is %s", decoderName)
-	}
 
 	p := perf.NewValues()
 

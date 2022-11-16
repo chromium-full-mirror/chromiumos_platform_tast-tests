@@ -489,22 +489,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithSWDecodingAndLibGAV1",
-		Desc:     "Similar to chromeVideoWithSWDecoding fixture but enabling the use of LibGAV1 for AV1 decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs("--disable-accelerated-video-decode", "--enable-features=Gav1VideoDecoder"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(b/255626192): Remove these *HWAV1Decoding preconditions once the hardware av1 decoder feature is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithHWAV1Decoding",

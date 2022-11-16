@@ -954,50 +954,6 @@ func init() {
 				Fixture:           "chromeVideoLacros",
 			},
 			{
-				Name: "av1_720p_30fps_sw_gav1",
-				Val: playbackPerfParams{
-					fileName:    "perf/av1/720p_30fps_300frames.av1.mp4",
-					decoderType: 2,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{"arm"},
-				ExtraData:         []string{"perf/av1/720p_30fps_300frames.av1.mp4"},
-				Fixture:           "chromeVideoWithSWDecodingAndLibGAV1",
-			},
-			{
-				Name: "av1_720p_60fps_sw_gav1",
-				Val: playbackPerfParams{
-					fileName:    "perf/av1/720p_60fps_600frames.av1.mp4",
-					decoderType: 2,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{"arm"},
-				ExtraData:         []string{"perf/av1/720p_60fps_600frames.av1.mp4"},
-				Fixture:           "chromeVideoWithSWDecodingAndLibGAV1",
-			},
-			{
-				Name: "av1_1080p_30fps_sw_gav1",
-				Val: playbackPerfParams{
-					fileName:    "perf/av1/1080p_30fps_300frames.av1.mp4",
-					decoderType: 2,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{"arm"},
-				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
-				Fixture:           "chromeVideoWithSWDecodingAndLibGAV1",
-			},
-			{
-				Name: "av1_1080p_60fps_sw_gav1",
-				Val: playbackPerfParams{
-					fileName:    "perf/av1/1080p_60fps_600frames.av1.mp4",
-					decoderType: 2,
-					browserType: browser.TypeAsh,
-				},
-				ExtraSoftwareDeps: []string{"arm"},
-				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
-				Fixture:           "chromeVideoWithSWDecodingAndLibGAV1",
-			},
-			{
 				Name: "h264_1080p_30fps_hw_x2_1threads",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/1080p_30fps_300frames.h264.mp4",

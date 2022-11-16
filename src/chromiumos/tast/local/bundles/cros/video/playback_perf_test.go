@@ -100,8 +100,6 @@ func genPlaybackParam(codec, file string, resolution, fps int, dec, nameSuffix, 
 	decType := playback.Hardware
 	if dec == "sw" {
 		decType = playback.Software
-	} else if dec == "sw_gav1" {
-		decType = playback.LibGAV1
 	}
 	if fixture == "" {
 		if dec == "hw" {
@@ -248,18 +246,6 @@ func TestPlaybackPerfParams(t *testing.T) {
 			genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 				resolution, fps, dec, "lacros", "chromeVideoLacros",
 				[]string{"lacros"}))
-	}
-	// libgav1
-	for _, resolution := range []int{720, 1080} {
-		codec := "av1"
-		fpss := []int{30, 60}
-		for _, fps := range fpss {
-			dec := "sw_gav1"
-			params = append(params,
-				genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-					resolution, fps, dec, "",
-					"chromeVideoWithSWDecodingAndLibGAV1", []string{"arm"}))
-		}
 	}
 
 	// multi-playback
