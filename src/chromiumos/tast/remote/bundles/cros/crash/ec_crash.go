@@ -26,13 +26,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        ECCrash,
-		Desc:        "Verify artificial EC crash creates crash files",
-		Contacts:    []string{"mutexlox@chromium.org", "cros-telemetry@google.com"},
-		Attr:        []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
-		Timeout:     10 * time.Minute,
-		Fixture:     fixture.NormalMode,
-		ServiceDeps: []string{"tast.cros.crash.FixtureService"},
+		Func: ECCrash,
+		Desc: "Verify artificial EC crash creates crash files",
+		Contacts: []string{
+			"cros-telemetry@google.com",
+			"mutexlox@chromium.org",
+			"chromeos-faft@google.com",
+		},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
+		Timeout:      10 * time.Minute,
+		Fixture:      fixture.NormalMode,
+		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},
 		// no_qemu because the servo is not available in VMs, and tast does
 		// not (yet) support skipping tests if required vars are not provided.
 		// TODO(crbug.com/967901): Remove no_qemu dep once servo var is sufficient.
