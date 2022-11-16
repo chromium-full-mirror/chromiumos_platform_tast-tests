@@ -1,0 +1,81 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.ui;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "chromiumos/tast/services/cros/ui";
+
+// NotificationService provides types and functions used to wait or close
+// notifications in system tray.
+service NotificationService {
+  // Notifications returns an array of notifications in system tray.
+  rpc Notifications(google.protobuf.Empty) returns (NotificationsResponse) {}
+
+  // CloseNotifications closes all notifications in system tray.
+  rpc CloseNotifications(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // WaitForNotification waits for the first notification that satisfies all
+  // wait predicates.
+  rpc WaitForNotification(WaitForNotificationRequest)
+      returns (WaitForNotificationResponse) {}
+
+  // WaitUntilNotificationGone waits for the notifications that satisfies all
+  // predicates to disappear.
+  rpc WaitUntilNotificationGone(WaitUntilNotificationGoneRequest)
+      returns (google.protobuf.Empty) {}
+}
+
+message NotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message WaitForNotificationRequest {
+  // Predicates contain a list of conditions for querying notifications.
+  repeated WaitPredicate predicates = 1;
+  // Defaults to 1 minute.
+  uint32 timeout_secs = 2;
+}
+
+message WaitForNotificationResponse {
+  Notification notification = 1;
+}
+
+message WaitUntilNotificationGoneRequest {
+  // Predicates contain the conditions for querying notifications.
+  repeated WaitPredicate predicates = 1;
+  // Defaults to 1 minute.
+  uint32 timeout_secs = 2;
+}
+
+// Notification corresponds to user notifications in the system tray.
+message Notification {
+  string id = 1;
+  string type = 2;
+  string title = 3;
+  string message = 4;
+  int32 priority = 5;
+  int32 progress = 6;
+}
+
+// WaitPredicate contains a condition for querying notifications.
+message WaitPredicate {
+  oneof value {
+    // IdContains checks if notification ID contains the value.
+    string id_contains = 1;
+    // Title checks if notification title matches the value.
+    string title = 2;
+    // TitleContains checks if notification title contains the value.
+    string title_contains = 3;
+    // TitleDoesNotContain checks if notification title does not contain the
+    // value.
+    string title_does_not_contain = 4;
+    // MessageContains checks if notification message contains the value.
+    string message_contains = 5;
+  }
+}

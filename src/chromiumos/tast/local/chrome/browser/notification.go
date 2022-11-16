@@ -7,6 +7,7 @@ package browser
 import (
 	"context"
 
+	"chromiumos/tast/common/chrome/ash"
 	"chromiumos/tast/errors"
 )
 
@@ -15,22 +16,19 @@ import (
 // see chromiumos/tast/local/chrome/ash/notification.go instead.
 
 // NotificationType describes the types of notifications you can create with chrome.notifications.create()
-type NotificationType string
+type NotificationType = ash.NotificationType
 
 // As defined in https://developer.chrome.com/apps/notifications#type-TemplateType
 const (
-	NotificationTypeBasic    NotificationType = "basic"
-	NotificationTypeImage    NotificationType = "image"
-	NotificationTypeList     NotificationType = "list"
-	NotificationTypeProgress NotificationType = "progress"
+	NotificationTypeBasic    = ash.NotificationTypeBasic
+	NotificationTypeImage    = ash.NotificationTypeImage
+	NotificationTypeList     = ash.NotificationTypeList
+	NotificationTypeProgress = ash.NotificationTypeProgress
 )
 
 // NotificationItem describes an individual item in a list notification.
 // As defined in https://developer.chrome.com/docs/extensions/reference/notifications/#type-NotificationItem
-type NotificationItem struct {
-	Message string `json:"message"`
-	Title   string `json:"title"`
-}
+type NotificationItem = ash.NotificationItem
 
 // CreateTestNotification creates a notification with a custom title and message.
 // iconUrl is a required field to the chrome.notifiations.create() call so a 1px transparent data-url is hardcoded.

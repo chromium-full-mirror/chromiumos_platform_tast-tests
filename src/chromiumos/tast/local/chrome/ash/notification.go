@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	commonash "chromiumos/tast/common/chrome/ash"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
@@ -20,14 +21,7 @@ import (
 
 // Notification corresponds to the "Notification" defined in
 // autotest_private.idl.
-type Notification struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Title    string `json:"title"`
-	Message  string `json:"message"`
-	Priority int    `json:"priority"`
-	Progress int    `json:"progress"`
-}
+type Notification = commonash.Notification
 
 // Notifications returns an array of notifications in Chrome.
 // tconn must be the connection returned by chrome.TestAPIConn().
@@ -47,13 +41,13 @@ func CloseNotifications(ctx context.Context, tconn *chrome.TestConn) error {
 	return tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.removeAllNotifications)")
 }
 
-// waitPredicate is a function that returns true if notification satisfies some
+// WaitPredicate is a function that returns true if notification satisfies some
 // conditions.
-type waitPredicate func(n *Notification) bool
+type WaitPredicate func(n *Notification) bool
 
 // WaitIDContains creates a predicate that checks whether notification ID
 // contains idContains.
-func WaitIDContains(idContains string) waitPredicate {
+func WaitIDContains(idContains string) WaitPredicate {
 	return func(n *Notification) bool {
 		return strings.Contains(n.ID, idContains)
 	}
@@ -61,28 +55,28 @@ func WaitIDContains(idContains string) waitPredicate {
 
 // WaitTitle creates a predicate that checks whether notification has specific
 // title.
-func WaitTitle(title string) waitPredicate {
+func WaitTitle(title string) WaitPredicate {
 	return func(n *Notification) bool {
 		return n.Title == title
 	}
 }
 
 // WaitTitleContains creates a predicate that checks whether the notification's title contains the given text.
-func WaitTitleContains(titleContains string) waitPredicate {
+func WaitTitleContains(titleContains string) WaitPredicate {
 	return func(n *Notification) bool {
 		return strings.Contains(n.Title, titleContains)
 	}
 }
 
 // WaitTitleDoesntContain creates a predicate that checks whether the notification's title doesn't contain the given text.
-func WaitTitleDoesntContain(excludeTitleContains string) waitPredicate {
+func WaitTitleDoesntContain(excludeTitleContains string) WaitPredicate {
 	return func(n *Notification) bool {
 		return !strings.Contains(n.Title, excludeTitleContains)
 	}
 }
 
 // WaitMessageContains creates a predicate that checks whether the notification's message contains the given text.
-func WaitMessageContains(messageContains string) waitPredicate {
+func WaitMessageContains(messageContains string) WaitPredicate {
 	return func(n *Notification) bool {
 		return strings.Contains(n.Message, messageContains)
 	}
@@ -90,7 +84,7 @@ func WaitMessageContains(messageContains string) waitPredicate {
 
 // WaitForNotification waits for the first notification that satisfies all wait
 // predicates.
-func WaitForNotification(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, predicates ...waitPredicate) (*Notification, error) {
+func WaitForNotification(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, predicates ...WaitPredicate) (*Notification, error) {
 	var result *Notification
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -117,7 +111,7 @@ func WaitForNotification(ctx context.Context, tconn *chrome.TestConn, timeout ti
 }
 
 // WaitUntilNotificationGone waits for the notifications that satisfies all predicates to disappear.
-func WaitUntilNotificationGone(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, predicates ...waitPredicate) error {
+func WaitUntilNotificationGone(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, predicates ...WaitPredicate) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		notifications, err := Notifications(ctx, tconn)
 		if err != nil {
