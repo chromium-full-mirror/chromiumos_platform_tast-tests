@@ -734,7 +734,8 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	routerName := rd.object.RouterName()
 	routerType := rd.object.RouterType()
 	routerMsgName := fmt.Sprintf("%s router %q", routerType.String(), routerName)
-
+	routerIsPcap := tf.pcapHost == rd.host
+  
 	// Close and reboot router.
 	testing.ContextLogf(ctx, "Preparing %s for reboot", routerMsgName)
 	if err := rd.object.Close(ctx); err != nil {
@@ -747,7 +748,10 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	_ = rd.host.Close(ctx)
 	rd.host = nil
 	rd.object = nil
-
+	if routerIsPcap {
+		tf.pcapHost = nil
+		tf.pcap = nil
+	}
 	// Wait for router reboot to complete and for the router to be ready for use.
 	// Currently, there's no reliable way to identify router state is stabilized
 	// enough to run tests, so as a short term work around, just Sleep for fixed
@@ -772,6 +776,11 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	}
 	rd.object = routerObject
 	testing.ContextLogf(ctx, "Reconnected to %s with new router controller after reboot", routerMsgName)
+	if routerIsPcap {
+		tf.pcapHost = routerHost
+		tf.pcap = routerObject
+		testing.ContextLogf(ctx, "Router also serves as capture device, reconnecting pcapHost to %s after reboot", routerMsgName)
+	}
 	return nil
 }
 
