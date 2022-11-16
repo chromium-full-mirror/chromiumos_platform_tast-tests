@@ -108,8 +108,12 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type UpdateUIServiceClient interface {
+	// New instantiates the service by logging into Chrome.
 	New(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Close shuts down the Chrome instance and frees resources.
 	Close(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// RelaunchAfterUpdate will relaunch the system if there's an update pending by clicking the
+	// relaunch button on the settings page.
 	RelaunchAfterUpdate(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -150,8 +154,12 @@ func (c *updateUIServiceClient) RelaunchAfterUpdate(ctx context.Context, in *emp
 
 // UpdateUIServiceServer is the server API for UpdateUIService service.
 type UpdateUIServiceServer interface {
+	// New instantiates the service by logging into Chrome.
 	New(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Close shuts down the Chrome instance and frees resources.
 	Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// RelaunchAfterUpdate will relaunch the system if there's an update pending by clicking the
+	// relaunch button on the settings page.
 	RelaunchAfterUpdate(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 

@@ -14,6 +14,7 @@ option go_package = "chromiumos/tast/services/cros/autoupdate";
 // and get data needed for the update.
 service UpdateService {
   rpc CheckForUpdate (UpdateRequest) returns (google.protobuf.Empty) {}
+  rpc PeriodicCheckForUpdate (google.protobuf.Empty) returns (StatusResult) {}
   rpc LSBReleaseContent (google.protobuf.Empty) returns (LSBRelease) {}
   rpc StatefulLSBReleaseContent (google.protobuf.Empty) returns (LSBRelease) {}
   rpc OverwriteStatefulLSBRelease (LSBRelease) returns (google.protobuf.Empty) {}
@@ -26,4 +27,10 @@ message UpdateRequest {
 
 message LSBRelease {
   bytes content_json = 1;
+}
+
+message StatusResult {
+  int64 last_checked_time = 1;
+  double progress = 2;
+  string current_operation = 3;
 }

@@ -116,6 +116,48 @@ func FillFromLSBRelease(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 // UpdateFromGS updates the DUT to an image found in the Google Storage under the builder path folder.
 // It saves the logs (udpdate engine logs and Nebraska logs) to the given outdir.
 func UpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath string) (retErr error) {
+	up := func(ctx context.Context, conn *grpc.ClientConn, req *aupb.UpdateRequest) error {
+		updateClient := aupb.NewUpdateServiceClient(conn)
+		if _, err := updateClient.CheckForUpdate(ctx, req); err != nil {
+			return errors.Wrap(err, "failed to update")
+		}
+		return nil
+	}
+	return updateFromGSInternal(ctx, dut, outdir, rpcHint, builderPath, up)
+}
+
+// PeriodicUpdateFromGS triggers periodic update check to update the DUT to an image found in the Google Storage under the builder path folder.
+// If `targetStatus` passed in a non-empty value, verify the update ended with this status.
+func PeriodicUpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath, targetStatus string) (retErr error) {
+	up := func(ctx context.Context, conn *grpc.ClientConn, req *aupb.UpdateRequest) error {
+		updateClient := aupb.NewUpdateServiceClient(conn)
+
+		lsbContent, err := json.Marshal(map[string]string{"CHROMEOS_AUSERVER": req.OmahaUrl})
+		if err != nil {
+			return errors.Wrap(err, "failed to create custom lsb_release")
+		}
+		updateClient.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: lsbContent})
+		// Clear stateful lsb_release after finish.
+		defer updateClient.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: []byte("{}")})
+
+		status, err := updateClient.PeriodicCheckForUpdate(ctx, &empty.Empty{})
+		if err != nil {
+			return errors.Wrap(err, "failed to do periodic update")
+		}
+
+		if targetStatus != "" && status.CurrentOperation != targetStatus {
+			return errors.Errorf("update ended with unexpected status: %s", status.CurrentOperation)
+		}
+		return nil
+	}
+	return updateFromGSInternal(ctx, dut, outdir, rpcHint, builderPath, up)
+}
+
+type updateFunc func(ctx context.Context, conn *grpc.ClientConn, rec *aupb.UpdateRequest) error
+
+// updateFromGSInternal sets up Nebraska and starts the update.
+// TODO(yuanpengni): Split up the function into individual utils.
+func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath string, doUpdate updateFunc) (retErr error) {
 	// Limit the timeout for the update.
 	updateCtx, cancel := context.WithTimeout(ctx, UpdateTimeout)
 	defer cancel()
@@ -234,14 +276,9 @@ func UpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *tes
 	}(cleanupCtx)
 
 	// Trigger the update and wait for the results.
-	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
-	if _, err := updateClient.CheckForUpdate(updateCtx, &aupb.UpdateRequest{
+	return doUpdate(updateCtx, cl.Conn, &aupb.UpdateRequest{
 		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%s/update?critical_update=True", nebraska.Port),
-	}); err != nil {
-		return errors.Wrap(err, "failed to update")
-	}
-
-	return nil
+	})
 }
 
 // cacheForDUT caches the required update files in a caching server which is available from the DUT.

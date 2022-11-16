@@ -17,7 +17,9 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/testexec"
+	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/updateengine"
 	"chromiumos/tast/lsbrelease"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	"chromiumos/tast/testing"
@@ -69,6 +71,65 @@ func (u *UpdateService) CheckForUpdate(ctx context.Context, req *aupb.UpdateRequ
 	return &empty.Empty{}, nil
 }
 
+// PeriodicCheckForUpdate triggers periodic update check to update the OS.
+func (u *UpdateService) PeriodicCheckForUpdate(ctx context.Context, e *empty.Empty) (*aupb.StatusResult, error) {
+	status := &aupb.StatusResult{}
+
+	// Mark being OOBE complete, so update-engine won't block update checks.
+	if err := updateengine.MarkOobeCompletion(ctx); err != nil {
+		return status, err
+	}
+
+	// Temporarily stop update-engine to override background update check interval.
+	if err := updateengine.StopDaemon(ctx); err != nil {
+		return status, err
+	}
+
+	// No delay in performing background update check.
+	if err := updateengine.SetPref(ctx, updateengine.TestUpdateCheckIntervalTimeout, "0"); err != nil {
+		return status, err
+	}
+	defer updateengine.ForceClearPrefs(ctx)
+
+	if err := updateengine.StartDaemon(ctx); err != nil {
+		return status, err
+	}
+	if err := updateengine.WaitForService(ctx); err != nil {
+		return status, err
+	}
+
+	// Monitor the update_engine status and wait for the update to complete.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var checkTime int64 = 0
+		var err error
+		status, err = updateengine.Status(ctx)
+		if err != nil {
+			return testing.PollBreak(err)
+		} else if status.LastCheckedTime == 0 {
+			return errors.New("update check was not performed when initiated a periodic update check")
+		} else if checkTime > 0 && status.LastCheckedTime > checkTime {
+			return testing.PollBreak(errors.New("another update check happened while waiting for update to complete"))
+		} else {
+			checkTime = status.LastCheckedTime
+
+			switch status.CurrentOperation {
+			case string(ue.UpdateStatusIdle):
+				return testing.PollBreak(errors.New("update status changed to IDLE unexpectedly"))
+			case string(ue.UpdateStatusReportingErrorEvent):
+				return testing.PollBreak(errors.New("error happened during update"))
+			case string(ue.UpdateStatusUpdatedNeedReboot), string(ue.UpdateStatusUpdatedButDeferred):
+				return nil
+			default:
+				return errors.Errorf("update in progress, current operation: %s, progress: %f", status.CurrentOperation, status.Progress)
+			}
+		}
+	}, &testing.PollOptions{Timeout: time.Minute * 15, Interval: time.Second * 5}); err != nil {
+		return status, err
+	}
+
+	return status, nil
+}
+
 func ensureUpdateEngineReady(ctx context.Context) error {
 	statusRegexp, err := regexp.Compile(`CURRENT_OP=(.*)`)
 	if err != nil {
@@ -92,7 +153,7 @@ func ensureUpdateEngineReady(ctx context.Context) error {
 		}
 
 		latestStatus = result[1]
-		if latestStatus != "UPDATE_STATUS_IDLE" {
+		if latestStatus != string(ue.UpdateStatusIdle) {
 			return errors.Wrapf(err, "update engine is not ready yet, current status is %q", latestStatus)
 		}
 

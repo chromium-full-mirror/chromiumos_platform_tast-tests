@@ -11,9 +11,11 @@ import (
 	"strconv"
 
 	"chromiumos/tast/common/testexec"
+	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+	aupb "chromiumos/tast/services/cros/autoupdate"
 	"chromiumos/tast/testing"
 )
 
@@ -47,16 +49,10 @@ func WaitForService(ctx context.Context) error {
 	return nil
 }
 
-// StatusResult holds the update_engine status.
-// TODO(kimjae): Update to use protos or json.
-type StatusResult struct {
-	LastCheckedTime int64
-}
-
-var reLastCheckedTime = regexp.MustCompile(`LAST_CHECKED_TIME=(.*)`)
+var reUpdateEngineStatus = regexp.MustCompile(`(?s)CURRENT_OP=(.*?)[\r\n]+.*LAST_CHECKED_TIME=(.*?)[\r\n]+.*PROGRESS=(.*?)[\r\n]+`)
 
 // Status calls the DBus method to fetch update_engine's status.
-func Status(ctx context.Context) (*StatusResult, error) {
+func Status(ctx context.Context) (*aupb.StatusResult, error) {
 	testing.ContextLog(ctx, "status: getting status from ", JobName)
 
 	buf, err := testexec.CommandContext(ctx, ClientBin, "--status").Output(testexec.DumpLogOnError)
@@ -64,23 +60,30 @@ func Status(ctx context.Context) (*StatusResult, error) {
 		return nil, err
 	}
 
-	match := reLastCheckedTime.FindStringSubmatch(string(buf))
+	match := reUpdateEngineStatus.FindStringSubmatch(string(buf))
 	if match == nil {
-		return nil, errors.New("status: failed to find last checked time")
+		return nil, errors.New("status: failed to parse update engine status")
 	}
 
-	i, err := strconv.ParseInt(string(match[1]), 10, 64)
+	currentOP := string(match[1])
+	LastCheckedTime, err := strconv.ParseInt(string(match[2]), 10, 64)
 	if err != nil {
 		return nil, errors.New("status: failed to parse last checked time")
 	}
+	progress, err := strconv.ParseFloat(string(match[3]), 64)
+	if err != nil {
+		return nil, errors.New("status: failed to parse update progress value")
+	}
 
-	return &StatusResult{
-		LastCheckedTime: i,
+	return &aupb.StatusResult{
+		LastCheckedTime:  LastCheckedTime,
+		Progress:         progress,
+		CurrentOperation: currentOP,
 	}, nil
 }
 
 // FeatureEnabled calls the DBus method to see if a feature in update_engine is enabled.
-func FeatureEnabled(ctx context.Context, feature Feature) (bool, error) {
+func FeatureEnabled(ctx context.Context, feature ue.Feature) (bool, error) {
 	testing.ContextLog(ctx, "is feature enabled: ", feature)
 
 	buf, err := testexec.CommandContext(ctx, ClientBin, "--is_feature_enabled="+string(feature)).Output(testexec.DumpLogOnError)
@@ -97,7 +100,7 @@ func FeatureEnabled(ctx context.Context, feature Feature) (bool, error) {
 }
 
 // ToggleFeature calls the DBus method to toggle a feature in update_engine.
-func ToggleFeature(ctx context.Context, feature Feature, enable bool) error {
+func ToggleFeature(ctx context.Context, feature ue.Feature, enable bool) error {
 	testing.ContextLog(ctx, "toggle feature: ", feature, " to ", enable)
 
 	var arg string
