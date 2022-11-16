@@ -33,7 +33,9 @@ func init() {
 		Func:         ResizeLockA2C2,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC++ Resize Lock via A2C2 works as expected",
-		Contacts:     []string{"toshikikikuchi@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBootedInClamshellModeWithArcUpdateO4CListViaA2C2",
 		SoftwareDeps: []string{"chrome", "android_vm"},

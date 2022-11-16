@@ -107,7 +107,9 @@ func init() {
 		Func:         PIP,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that ARC++ Picture-in-Picture works as expected",
-		Contacts:     []string{"takise@chromium.org", "arc-framework+tast@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:arc-functional"},
 		Timeout:      4 * time.Minute,

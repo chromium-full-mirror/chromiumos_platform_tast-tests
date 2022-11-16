@@ -110,7 +110,9 @@ func init() {
 		Func:         ResizeLock,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC++ Resize Lock works as expected",
-		Contacts:     []string{"takise@chromium.org", "toshikikikuchi@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      5 * time.Minute,

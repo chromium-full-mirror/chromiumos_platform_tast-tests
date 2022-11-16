@@ -63,7 +63,9 @@ func init() {
 		Func:         WindowManagerCUJ,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Window Manager Critical User Journey behaves as described in go/arc-wm-p",
-		Contacts:     []string{"takise@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

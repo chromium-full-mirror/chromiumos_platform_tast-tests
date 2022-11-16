@@ -26,7 +26,9 @@ func init() {
 		Func:         ResizeActivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that resizing ARC applications works without generating black background",
-		Contacts:     []string{"ruanc@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		// TODO(http://b/166827552): Test is disabled until it can be fixed
 		// Attr:     []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

@@ -20,7 +20,9 @@ func init() {
 		Func:         PerAppDensity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that density can be changed with Android applications",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		// TODO(b/150909711): Enable this test after fix.
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Timeout:      4 * time.Minute,

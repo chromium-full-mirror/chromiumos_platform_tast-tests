@@ -20,7 +20,9 @@ func init() {
 		Func:         DefaultDisplayDensity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the default density is calculated correctly for various boards",
-		Contacts:     []string{"takise@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome"},

@@ -22,7 +22,9 @@ func init() {
 		Func:         WindowOutsideDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures an ARC window can move outside the display",
-		Contacts:     []string{"takise@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInClamshellMode",
 		Attr:         []string{"group:mainline", "informational"},

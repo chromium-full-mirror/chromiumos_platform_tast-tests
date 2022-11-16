@@ -61,7 +61,9 @@ func init() {
 		Func:         WindowState,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC applications correctly change the window state",
-		Contacts:     []string{"phshah@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

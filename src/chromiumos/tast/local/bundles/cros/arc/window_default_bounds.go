@@ -28,7 +28,9 @@ func init() {
 		Func:         WindowDefaultBounds,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test default window size behavior",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Fixture:      "arcBooted",

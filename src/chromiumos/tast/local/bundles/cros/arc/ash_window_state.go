@@ -19,7 +19,9 @@ func init() {
 		Func:         AshWindowState,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that sending Ash WM event will change ARC app window state correctly",
-		Contacts:     []string{"xdai@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

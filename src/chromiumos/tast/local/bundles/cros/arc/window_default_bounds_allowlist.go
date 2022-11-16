@@ -23,7 +23,9 @@ func init() {
 		Func:         WindowDefaultBoundsAllowlist,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that allowlists for overriding launch window bounds work",
-		Contacts:     []string{"xutan@google.com", "takise@google.com", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

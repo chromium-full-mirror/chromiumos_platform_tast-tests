@@ -30,7 +30,9 @@ func init() {
 		Func:         WMResizableClamshell,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Window Manager resizable clamshell use-cases behave as described in go/arc-wm-r",
-		Contacts:     []string{"xutan@google.com", "takise@google.com", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Window Management
+		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Fixture:      "arcBooted",
