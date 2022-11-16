@@ -6,8 +6,29 @@
 			"socket$nl_generic",
 			"syz_init_net_socket$nl_generic",
 			"syz_genetlink_get_family_id$devlink",
+			"sendmsg$DEVLINK_CMD_REGION_READ",
 			"sendmsg$DEVLINK_CMD_FLASH_UPDATE",
-			"sendmsg$DEVLINK_CMD_REGION_READ"
+			"sendmsg$DEVLINK_CMD_GET",
+			"sendmsg$DEVLINK_CMD_RELOAD",
+			"sendmsg$DEVLINK_CMD_PORT_GET",
+			"sendmsg$DEVLINK_CMD_PORT_SET",
+			"sendmsg$DEVLINK_CMD_PORT_SPLIT",
+			"sendmsg$DEVLINK_CMD_PORT_UNSPLIT",
+			"sendmsg$DEVLINK_CMD_TRAP_GET",
+			"sendmsg$DEVLINK_CMD_TRAP_SET",
+			"sendmsg$DEVLINK_CMD_TRAP_GROUP_GET",
+			"sendmsg$DEVLINK_CMD_TRAP_GROUP_SET",
+			"sendmsg$DEVLINK_CMD_TRAP_POLICER_GET",
+			"sendmsg$DEVLINK_CMD_TRAP_POLICER_SET",
+			"sendmsg$DEVLINK_CMD_SB_GET",
+			"sendmsg$DEVLINK_CMD_SB_POOL_GET",
+			"sendmsg$DEVLINK_CMD_SB_POOL_SET",
+			"sendmsg$DEVLINK_CMD_SB_PORT_POOL_GET",
+			"sendmsg$DEVLINK_CMD_SB_PORT_POOL_SET",
+			"sendmsg$DEVLINK_CMD_SB_TC_POOL_BIND_GET",
+			"sendmsg$DEVLINK_CMD_SB_TC_POOL_BIND_SET",
+			"sendmsg$DEVLINK_CMD_SB_OCC_SNAPSHOT",
+			"sendmsg$DEVLINK_CMD_SB_OCC_MAX_CLEAR"
 		]
 	}
 ]
