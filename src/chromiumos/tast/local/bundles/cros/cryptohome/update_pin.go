@@ -24,10 +24,11 @@ func init() {
 		Func: UpdatePin,
 		Desc: "Update pin auth factor and authenticate with the new pin",
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 		SoftwareDeps: []string{"pinweaver"},

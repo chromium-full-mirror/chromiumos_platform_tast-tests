@@ -24,7 +24,11 @@ func init() {
 		Func:         RecoveryCryptoWithServer,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cryptohome recovery process succeeds with testing server mediation",
-		Contacts:     []string{"anastasiian@chromium.org", "cros-lurs@google.com"},
+		Contacts: []string{
+			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
+		},
+		BugComponent: "b:1088399",
 		SoftwareDeps: []string{"chrome", "tpm2"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps: []string{

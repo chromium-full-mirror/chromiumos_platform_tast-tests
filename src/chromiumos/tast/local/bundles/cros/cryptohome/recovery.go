@@ -23,10 +23,11 @@ func init() {
 		Func: Recovery,
 		Desc: "Test addition and authentication of recovery auth factor with password",
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",

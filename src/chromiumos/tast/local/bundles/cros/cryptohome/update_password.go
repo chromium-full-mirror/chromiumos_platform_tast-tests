@@ -26,10 +26,11 @@ func init() {
 		Func: UpdatePassword,
 		Desc: "Update password auth factor and authenticate with the new password",
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
 			Fixture: "vkAuthSessionFixture",

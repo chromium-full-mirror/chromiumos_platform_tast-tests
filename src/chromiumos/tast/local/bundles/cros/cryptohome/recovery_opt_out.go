@@ -29,9 +29,10 @@ func init() {
 					 was removed, it's not possible to authenticate with it even when the
 					 secrets are restored on disk`,
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
 		},
+		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pinweaver"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.

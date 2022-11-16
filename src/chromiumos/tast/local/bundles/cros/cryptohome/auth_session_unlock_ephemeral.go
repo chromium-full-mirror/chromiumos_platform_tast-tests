@@ -23,11 +23,12 @@ func init() {
 		Func: AuthSessionUnlockEphemeral,
 		Desc: "Check session unlock for ephemeral users via AuthSession",
 		Contacts: []string{
-			"emaxx@chromium.org",
 			"cryptohome-core@google.com",
+			"emaxx@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
-		Data: []string{"testcert.p12"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
+		Data:         []string{"testcert.p12"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
 			Fixture: "vkAuthSessionFixture",

@@ -20,11 +20,12 @@ func init() {
 		Func: GuestAuthSession,
 		Desc: "Test guest sessions with auth session API",
 		Contacts: []string{
+			"cryptohome-core@google.com",
 			"dlunev@chromium.org",
 			"hardikgoyal@chromium.org",
-			"cryptohome-core@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

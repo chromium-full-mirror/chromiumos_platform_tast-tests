@@ -22,9 +22,10 @@ func init() {
 		Func: RemovePassword,
 		Desc: "Adds and removes password in user secret stash",
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
 		},
+		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"reboot"},
 		Fixture:      "ussAuthSessionFixture",

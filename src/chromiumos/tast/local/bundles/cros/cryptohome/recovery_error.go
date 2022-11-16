@@ -20,11 +20,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RecoveryError,
-		Desc:     "Checks that the correct error code is returned after cryptohome recovery failure",
-		Contacts: []string{"anastasiian@chromium.org", "cros-lurs@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		Fixture:  "ussAuthSessionFixture",
+		Func: RecoveryError,
+		Desc: "Checks that the correct error code is returned after cryptohome recovery failure",
+		Contacts: []string{
+			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
+		},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "ussAuthSessionFixture",
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.

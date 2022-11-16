@@ -23,10 +23,11 @@ func init() {
 		Func: AuthSessionUnlock,
 		Desc: "Check session unlock via AuthSession",
 		Contacts: []string{
-			"emaxx@chromium.org",
 			"cryptohome-core@google.com",
+			"emaxx@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
 			Fixture: "vkAuthSessionFixture",

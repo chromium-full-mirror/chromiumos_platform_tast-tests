@@ -22,10 +22,11 @@ func init() {
 		Func: KioskPersistentMount,
 		Desc: "Ensures that cryptohome correctly mounts kiosk sessions with persistent vaults",
 		Contacts: []string{
-			"hardikgoyal@chromium.org",
 			"cryptohome-core@google.com",
+			"hardikgoyal@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
 			Fixture: "vkAuthSessionFixture",

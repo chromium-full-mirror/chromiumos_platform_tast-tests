@@ -24,10 +24,11 @@ func init() {
 		Func: ExistingVaultKeysetsWhenUssEnabled,
 		Desc: "Test AuthFactor API basic password flow when USS experiment is enabled but there is an existing VaultKeysets",
 		Contacts: []string{
-			"betuls@google.com",
 			"cryptohome-core@google.com",
+			"betuls@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

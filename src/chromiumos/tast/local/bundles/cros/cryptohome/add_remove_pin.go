@@ -23,9 +23,10 @@ func init() {
 		Func: AddRemovePIN,
 		Desc: "Adds, removes and re-adds PIN with specified backing store",
 		Contacts: []string{
-			"anastasiian@chromium.org",
 			"cryptohome-core@google.com",
+			"anastasiian@chromium.org",
 		},
+		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pinweaver", "reboot"},
 		Params: []testing.Param{{

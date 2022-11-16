@@ -20,11 +20,12 @@ func init() {
 		Func: LegacyLabelAuthSession,
 		Desc: "Test AuthSession with a cryptohome created via legacy APIs without key labels",
 		Contacts: []string{
-			"emaxx@chromium.org", // Test authors
 			"cryptohome-core@google.com",
+			"emaxx@chromium.org",
 		},
-		Attr:    []string{"group:mainline"},
-		Timeout: 60 * time.Second,
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline"},
+		Timeout:      60 * time.Second,
 	})
 }
 

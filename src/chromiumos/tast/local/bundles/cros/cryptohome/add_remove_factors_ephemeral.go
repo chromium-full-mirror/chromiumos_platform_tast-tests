@@ -22,11 +22,12 @@ func init() {
 		Func: AddRemoveFactorsEphemeral,
 		Desc: "Test adding, removing, and listing auth factors for ephemeral users",
 		Contacts: []string{
-			"jadmanski@chromium.org",
 			"cryptohome-core@google.com",
+			"jadmanski@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
-		Data: []string{"testcert.p12"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
+		Data:         []string{"testcert.p12"},
 		// While the ephemeral user behavior shouldn't in theory be affected by
 		// whether the UserSecretStash is enabled in cryptohome, we have two
 		// separate sub-tests to actually verify this in both cases.

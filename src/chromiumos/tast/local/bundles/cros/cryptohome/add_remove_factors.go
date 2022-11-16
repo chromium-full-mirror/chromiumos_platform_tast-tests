@@ -26,10 +26,11 @@ func init() {
 		Func: AddRemoveFactors,
 		Desc: "Test adding, removing, and listing auth factors",
 		Contacts: []string{
-			"jadmanski@chromium.org",
 			"cryptohome-core@google.com",
+			"jadmanski@chromium.org",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
 			Fixture: "vkAuthSessionFixture",
