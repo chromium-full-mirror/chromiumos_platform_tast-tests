@@ -23,9 +23,11 @@ func init() {
 		Func:         RightClickLongPress,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks right click is properly converted to long press in compat mode",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      "arcBooted",
 		Timeout:      4 * time.Minute,
 	})

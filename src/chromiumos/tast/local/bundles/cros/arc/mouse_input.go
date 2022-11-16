@@ -28,8 +28,10 @@ func init() {
 		Func:         MouseInput,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies mouse input in various window states on Android",
-		Contacts:     []string{"yhanada@chromium.org", "hirokisato@chromium.org", "arc-framework+tast@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "hirokisato@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
 		Timeout:      10 * time.Minute,

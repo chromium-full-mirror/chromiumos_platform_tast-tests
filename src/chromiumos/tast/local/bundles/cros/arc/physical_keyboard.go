@@ -48,10 +48,12 @@ func init() {
 		Func:         PhysicalKeyboard,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks physical keyboard works on Android",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Val:               stablePkTests,

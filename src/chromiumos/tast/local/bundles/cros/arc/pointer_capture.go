@@ -26,7 +26,9 @@ func init() {
 		Func:         PointerCapture,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Pointer Capture works in Android",
-		Contacts:     []string{"yhanada@chromium.org", "hirokisato@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "hirokisato@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",

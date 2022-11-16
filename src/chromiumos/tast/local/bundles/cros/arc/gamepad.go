@@ -27,8 +27,10 @@ func init() {
 		Func:         Gamepad,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks gamepad support works on Android",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
-		Attr:         []string{"group:mainline"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{

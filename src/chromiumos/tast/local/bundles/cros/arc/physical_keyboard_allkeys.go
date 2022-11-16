@@ -24,9 +24,11 @@ func init() {
 		Func:         PhysicalKeyboardAllkeys,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check any key doesn't crash Android",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},

@@ -25,8 +25,10 @@ func init() {
 		Func:         InputCompat,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks input compatibility for M and games working",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
-		Attr:         []string{"informational", "group:mainline"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
+		Attr:         []string{"informational", "group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Timeout:      3 * time.Minute,
