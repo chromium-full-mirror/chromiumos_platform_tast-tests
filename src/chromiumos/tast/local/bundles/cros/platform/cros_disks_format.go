@@ -13,8 +13,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: CrosDisksFormat,
-		Desc: "Verifies CrosDisks formats removable media",
+		Func:         CrosDisksFormat,
+		Desc:         "Verifies CrosDisks formats removable media",
+		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 		},

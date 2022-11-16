@@ -20,7 +20,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-var PreparedArchives = []string{
+var preparedArchives = []string{
 	"100,000 Files.7z",
 	"100,000 Files.iso",
 	"100,000 Files.rar",
@@ -33,12 +33,13 @@ var PreparedArchives = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     CrosDisksArchiveBig,
-		Desc:     "Checks that cros-disks can mount big archives",
-		Contacts: []string{"chromeos-files-syd@google.com"},
-		Attr:     []string{"group:mainline"},
-		Data:     PreparedArchives,
-		Timeout:  10 * time.Minute,
+		Func:         CrosDisksArchiveBig,
+		Desc:         "Checks that cros-disks can mount big archives",
+		BugComponent: "b:167289",
+		Contacts:     []string{"chromeos-files-syd@google.com"},
+		Attr:         []string{"group:mainline"},
+		Data:         preparedArchives,
+		Timeout:      10 * time.Minute,
 	})
 }
 
@@ -126,7 +127,7 @@ func CrosDisksArchiveBig(ctx context.Context, s *testing.State) {
 			}
 
 			s.Logf("Copying archives to loopback device mounted at %q", mountPath)
-			for _, name := range PreparedArchives {
+			for _, name := range preparedArchives {
 				s.Logf("Copying %q to %q", name, mountPath)
 				if err := c.CopyFile(s.DataPath(name), filepath.Join(mountPath, filepath.Base(name))); err != nil {
 					return errors.Wrapf(err, "cannot copy file %q into %q", name, mountPath)

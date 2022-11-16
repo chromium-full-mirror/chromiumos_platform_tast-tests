@@ -13,8 +13,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: CrosDisks,
-		Desc: "Verifies CrosDisks' D-Bus API works",
+		Func:         CrosDisks,
+		Desc:         "Verifies CrosDisks' D-Bus API works",
+		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 		},

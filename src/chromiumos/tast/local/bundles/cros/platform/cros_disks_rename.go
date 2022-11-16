@@ -13,8 +13,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: CrosDisksRename,
-		Desc: "Verifies CrosDisks renames labels of removable media",
+		Func:         CrosDisksRename,
+		Desc:         "Verifies CrosDisks renames labels of removable media",
+		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 		},
