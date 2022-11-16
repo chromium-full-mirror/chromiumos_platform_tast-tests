@@ -25,11 +25,12 @@ func init() {
 		Func:         LaunchFromShelfContextMenu,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Files app opens a single window using New Window from Shelf",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"benreich@chromium.org",
 			"chromeos-files-syd@google.com",
+			"benreich@chromium.org",
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{

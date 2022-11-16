@@ -28,9 +28,10 @@ func init() {
 		Func:         SMBFromSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify SMB mount can be added from OS Settings",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"benreich@chromium.org",
 			"chromeos-files-syd@google.com",
+			"benreich@chromium.org",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

@@ -31,9 +31,10 @@ func init() {
 		Func:         SendToTrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that local and DriveFS files can be trashed",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"benreich@chromium.org",
 			"chromeos-files-syd@google.com",
+			"benreich@chromium.org",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -44,6 +45,7 @@ func init() {
 			// TODO(b/239769339): Re-enable these tests once Drive is supported. We
 			// can more reliably test local trash scenarios as browser tests.
 			// "group:drivefs-cq",
+			// "group:hw_agnostic",
 			// "group:mainline",
 			// "informational",
 		},

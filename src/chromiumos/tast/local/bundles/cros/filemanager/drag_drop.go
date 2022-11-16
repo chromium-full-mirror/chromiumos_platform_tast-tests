@@ -39,12 +39,13 @@ func init() {
 		Func:         DragDrop,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify drag drop from files app works",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"benreich@chromium.org",
 			"chromeos-files-syd@google.com",
+			"benreich@chromium.org",
 		},
 		Timeout: 4 * time.Minute,
-		Attr:    []string{"group:mainline", "informational"},
+		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Data: []string{
 			"drag_drop_pwa_manifest.json",
 			"drag_drop_pwa_service.js",

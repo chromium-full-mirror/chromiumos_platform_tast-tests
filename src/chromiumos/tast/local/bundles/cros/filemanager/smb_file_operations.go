@@ -28,9 +28,10 @@ func init() {
 		Func:         SMBFileOperations,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Files app can mount an SMB share and verify the contents",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"benreich@chromium.org",
 			"chromeos-files-syd@google.com",
+			"benreich@chromium.org",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
