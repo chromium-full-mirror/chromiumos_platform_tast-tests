@@ -74,14 +74,14 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	ui := uiauto.New(tconn)
-	privacyMenu := nodewith.Name("Privacy controls")
+	privacyMenu := nodewith.NameStartingWith("Privacy controls")
 	if featureOn {
 		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
 			s.Fatal("Failed to find Privacy Hub in OS setting page: ", err)
 		}
 		// Check that the Privacy Hub section contains the required buttons.
-		cameraLabel := nodewith.Name("Camera").Role(role.ToggleButton)
-		microphoneLabel := nodewith.Name("Microphone").Role(role.ToggleButton)
+		cameraLabel := nodewith.NameStartingWith("Camera").Role(role.ToggleButton)
+		microphoneLabel := nodewith.NameStartingWith("Microphone").Role(role.ToggleButton)
 		if err := uiauto.Combine("Verify privacy menu page",
 			ui.DoDefault(privacyMenu),
 			ui.WaitUntilExists(cameraLabel),
