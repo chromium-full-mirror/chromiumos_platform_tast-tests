@@ -21,9 +21,10 @@ func init() {
 		Func:         DrivefsBlobDownloadOffline,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a download while offline fails gracefully",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"travislane@google.com",
 			"chromeos-files-syd@google.com",
+			"travislane@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -32,6 +33,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:drivefs-cq",
+			"group:hw_agnostic",
 		},
 		Data: []string{
 			"test_1KB.txt",

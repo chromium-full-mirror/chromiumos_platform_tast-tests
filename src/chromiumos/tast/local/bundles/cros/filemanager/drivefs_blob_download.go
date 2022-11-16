@@ -20,9 +20,10 @@ func init() {
 		Func:         DrivefsBlobDownload,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a file created in Drive Web can be downloaded",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"travislane@google.com",
 			"chromeos-files-syd@google.com",
+			"travislane@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -32,6 +33,7 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"group:drivefs-cq",
+			"group:hw_agnostic",
 			"informational",
 		},
 		Data: []string{
