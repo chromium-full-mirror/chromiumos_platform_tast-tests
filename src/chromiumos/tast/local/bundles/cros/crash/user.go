@@ -46,11 +46,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies crash reporting for user processes",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"domlaskowski@chromium.org", // Original autotest author
 			"yamaguchi@chromium.org",    // Tast port author
-			"cros-telemetry@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 		// Some of these tests verify crash_sender behavior, so only run on internal builds.
 		SoftwareDeps: []string{"cros_internal"},
 		Params: []testing.Param{{
