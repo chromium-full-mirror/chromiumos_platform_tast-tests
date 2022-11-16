@@ -43,11 +43,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that a WebAPK can be used to share data to a web app",
 		Contacts: []string{
-			"tsergeant@chromium.org",
-			"jinrongwu@chromium.org",
 			"chromeos-apps-foundation-team@google.com",
+			"tsergeant@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation>Intents",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{
 			"webshare_icon.png",
