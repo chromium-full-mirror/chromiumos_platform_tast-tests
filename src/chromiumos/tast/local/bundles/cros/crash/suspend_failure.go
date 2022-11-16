@@ -21,11 +21,12 @@ func init() {
 		Func: SuspendFailure,
 		Desc: "Verify suspend failures are logged as expected",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"dbasehore@google.com",
 			"mutexlox@google.com",
-			"cros-telemetry@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
