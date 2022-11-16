@@ -62,7 +62,7 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	accountID := "foo@bar.com"
+	accountID := "foo@managedchrome.com"
 	accountType := policy.AccountTypePublicSession
 
 	policies := []policy.Policy{
