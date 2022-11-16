@@ -17,7 +17,9 @@ func init() {
 		Func:         LibvdaGpuTests,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the non-decoding tests targetting libvda's GPU implementation",
-		Contacts:     []string{"alexlau@chromium.org", "chromeos-video-eng@google.com"},
+		Contacts:     []string{"chromeos-video-eng@google.com", "mwojtas@google.com"},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
+		BugComponent: "b:632502",
 		Attr:         []string{"group:mainline", "informational"},
 		// "no_qemu" disables the test on betty. b/168566159#comment3
 		SoftwareDeps: []string{"android_vm", "chrome", "no_qemu"},

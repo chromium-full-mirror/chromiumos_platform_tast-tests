@@ -18,7 +18,9 @@ func init() {
 		Func:         VideoDecodeAccelPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures ARC++ hardware video decode performance by running the c2_e2e_test APK",
-		Contacts:     []string{"chromeos-arc-video-eng@google.com"},
+		Contacts:     []string{"chromeos-video-eng@google.com", "mwojtas@google.com"},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
+		BugComponent: "b:632502",
 		Attr:         []string{"group:arc-video"},
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
 		SoftwareDeps: []string{"chrome"},

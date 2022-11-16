@@ -23,7 +23,9 @@ func init() {
 		Func:         VideoDecodeAccelVDVDA,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies hardware decode acceleration using a media::VideoDecoder through the VDA interface, by running the video_decode_accelerator_tests binary (see go/vd-migration)",
-		Contacts:     []string{"chromeos-arc-video-eng@google.com"},
+		Contacts:     []string{"chromeos-video-eng@google.com", "mwojtas@google.com"},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
+		BugComponent: "b:632502",
 		SoftwareDeps: []string{"arc", "chrome", "video_decoder_direct"},
 		Fixture:      "graphicsNoChrome",
 		Timeout:      4 * time.Minute,
