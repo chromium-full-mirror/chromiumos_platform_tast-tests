@@ -38,7 +38,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelIwlwifiError,
 		Desc:         "Verify kernel iwlwifi errors are logged as expected",
-		Contacts:     []string{"arowa@google.com", "cros-telemetry@google.com"},
+		Contacts:     []string{"cros-telemetry@google.com", "arowa@google.com"},
+		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi"},
 		// NB: The WifiIntel dependency tracks a manually maintained list of devices.

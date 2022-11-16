@@ -39,7 +39,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelAth10kError,
 		Desc:         "Verify kernel ath10k crashes are logged as expected",
-		Contacts:     []string{"arowa@google.com", "cros-telemetry@google.com"},
+		Contacts:     []string{"cros-telemetry@google.com", "arowa@google.com"},
+		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi"},
 		HardwareDeps: hwdep.D(hwdep.WifiQualcomm()),
