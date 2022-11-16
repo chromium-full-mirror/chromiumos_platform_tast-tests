@@ -24,12 +24,13 @@ func init() {
 		Func: Seccomp,
 		Desc: "Test to check that seccomp policy files are captured",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"mutexlox@chromium.org",
 			"allenwebb@chromium.org",
 			"jorgelo@google.com",
-			"cros-telemetry@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
