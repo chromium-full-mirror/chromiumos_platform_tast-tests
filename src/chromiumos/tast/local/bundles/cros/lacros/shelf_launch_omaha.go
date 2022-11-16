@@ -39,7 +39,8 @@ func init() {
 		Func:         ShelfLaunchOmaha,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests launching and interacting with stateful-lacros across the supported channels served in Omaha",
-		Contacts:     []string{"hyungtaekim@chromium.org", "chromeos-sw-engprod@google.com", "lacros-tast@google.com"},
+		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-tast@google.com", "hyungtaekim@chromium.org"},
+		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{{

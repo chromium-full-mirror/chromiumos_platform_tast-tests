@@ -24,7 +24,8 @@ func init() {
 		Func:         BrowserWithNewChrome,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests SetUpWithNewChrome in the browserfixt package. See http://go/lacros-tast-porting for the guidelines on how to use",
-		Contacts:     []string{"hyungtaekim@chromium.org", "lacros-team@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"lacros-team@google.com", "chromeos-sw-engprod@google.com", "hyungtaekim@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Timeout:      4 * time.Minute,
