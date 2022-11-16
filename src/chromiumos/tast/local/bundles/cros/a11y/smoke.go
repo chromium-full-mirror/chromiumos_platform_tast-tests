@@ -27,11 +27,8 @@ func init() {
 		Func:         Smoke,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a11y nodes on various browsers are accessible in Tast using the test extension from Ash",
-		Contacts: []string{
-			"hyungtaekim@chromium.org",
-			"chromeos-sw-engprod@google.com",
-			"chromeos-a11y-eng@google.com",
-		},
+		Contacts:     []string{"chromeos-a11y-eng@google.com", "chromeos-sw-engprod@google.com", "hyungtaekim@chromium.org"},
+		BugComponent: "b:1272672",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
@@ -46,18 +43,6 @@ func init() {
 		}, {
 			Name:              "lacros_unstable",
 			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
-			ExtraAttr:         []string{"informational"},
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_only",
-			Fixture:           "lacrosOnly",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			ExtraAttr:         []string{"informational"},
-			Val:               browser.TypeLacros,
-		}, {
-			Name:              "lacros_only_unstable",
-			Fixture:           "lacrosOnly",
 			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 			Val:               browser.TypeLacros,
