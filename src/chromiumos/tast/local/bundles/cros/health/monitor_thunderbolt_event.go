@@ -21,9 +21,11 @@ func init() {
 		Func:         MonitorThunderboltEvent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Monitors the Thunderbolt event detected properly or not",
-		Contacts: []string{"pathan.jilani@intel.com",
+		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"intel-chrome-system-automation-team@intel.com"},
+			"pathan.jilani@intel.com",
+			"intel-chrome-system-automation-team@intel.com",
+		},
 		BugComponent: "b:982097",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
