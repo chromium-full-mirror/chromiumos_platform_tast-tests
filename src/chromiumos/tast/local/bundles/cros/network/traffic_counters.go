@@ -386,7 +386,7 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 		addr = addrs.IPv4Addr
 	}
 	port := unusedOrRandomPort(ctx, fam)
-	udp := l4server.New(fam, port, 512, l4server.Reflector(), addr.String())
+	udp := l4server.New(fam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
 	if err := rt.StartServer(ctx, fam.String(), udp); err != nil {
 		return nil, errors.Wrapf(err, "failed to start %s server", fam)
 	}

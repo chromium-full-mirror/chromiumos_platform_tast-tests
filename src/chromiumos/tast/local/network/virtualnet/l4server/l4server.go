@@ -16,19 +16,50 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// Option is the function type to configure an l4server.
+type Option = func(*server)
+
+const defaultBufSize = 4096
+
+// WithBufSize sets the internal receive buffer size (in bytes) of the server.
+// For UDP servers, this value must be no smaller than the maximum packet size
+// to avoid the remaining part being discarded. The default value is 4096, which
+// should be a good enough size in most cases.
+func WithBufSize(size int) Option {
+	return func(s *server) {
+		s.bufSize = size
+	}
+}
+
+// WithAddr configures the listening address of the server. INADDR_ANY will be
+// used by default.
+func WithAddr(addr string) Option {
+	return func(s *server) {
+		s.addr = addr
+	}
+}
+
+// WithMsgHandler controls the behavior when the server receives any data. The
+// server will do nothing by default.
+func WithMsgHandler(handler MsgHandler) Option {
+	return func(s *server) {
+		s.handler = handler
+	}
+}
+
 // New creates a new TCP/UDP server. The returned object should be passed to
-// Env.StartServer; its lifetime will be managed by the environment. msgLen is
-// the size (in bytes) of the internal receive buffer. The server will be
-// listening on addr if it's not empty, all IP addresses otherwise. Note that
+// Env.StartServer; its lifetime will be managed by the environment. Note that
 // the TCP server can only accept one connection at most now.
-func New(fam Family, port, msgLen int, handler MsgHandler, addr string) *server {
-	return &server{
+func New(fam Family, port int, opts ...Option) *server {
+	s := &server{
 		fam:     fam,
 		port:    port,
-		msgLen:  msgLen,
-		handler: handler,
-		addr:    addr,
+		bufSize: defaultBufSize,
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 // MsgHandler defines a function for processing incoming messages and emitting replies.
@@ -73,7 +104,7 @@ type closeHandler interface {
 type server struct {
 	fam     Family
 	port    int
-	msgLen  int
+	bufSize int
 	conns   []closeHandler
 	handler MsgHandler
 	addr    string
@@ -81,7 +112,7 @@ type server struct {
 }
 
 func (s *server) String() string {
-	return fmt.Sprintf("%s:%d", s.fam, s.port)
+	return fmt.Sprintf("%s:%s", s.fam, s.addrPort())
 }
 
 func (s *server) addrPort() string {
@@ -151,18 +182,19 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 		return
 	}
 
-	in := make([]byte, s.msgLen)
+	in := make([]byte, s.bufSize)
 	for {
 		if !s.run {
 			return
 		}
-		if _, err := conn.Read(in); err != nil {
+		n, err := conn.Read(in)
+		if err != nil {
 			if s.run {
 				testing.ContextLogf(ctx, "%s read failed: %v", s, err)
 			}
 			continue
 		}
-		out := s.handler(in)
+		out := s.handler(in[:n])
 		if out == nil {
 			continue
 		}
@@ -189,19 +221,19 @@ func (s *server) handleUDP(ctx context.Context, ec chan<- error) {
 	s.conns = append(s.conns, conn)
 	ec <- nil
 
-	in := make([]byte, s.msgLen)
+	in := make([]byte, s.bufSize)
 	for {
 		if !s.run {
 			return
 		}
-		_, addr, err := conn.ReadFromUDP(in)
+		n, addr, err := conn.ReadFromUDP(in)
 		if err != nil {
 			if s.run {
 				testing.ContextLogf(ctx, "%s read failed: %v", s, err)
 			}
 			continue
 		}
-		out := s.handler(in)
+		out := s.handler(in[:n])
 		if out == nil {
 			continue
 		}
