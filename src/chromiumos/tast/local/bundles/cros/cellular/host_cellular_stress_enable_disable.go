@@ -54,7 +54,7 @@ func HostCellularStressEnableDisable(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to read APN info: ", err)
 			}
 			s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
-			if err := cellular.VerifyIPConnectivity(ctx, testexec.CommandContext, ipv4, ipv6, "/bin"); err != nil {
+			if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, ipv4, ipv6, "/usr/bin"); err != nil {
 				return errors.Wrap(err, "failed connectivity test")
 			}
 		}
