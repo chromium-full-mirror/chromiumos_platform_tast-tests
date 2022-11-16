@@ -1,0 +1,46 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.wifi;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "chromiumos/tast/services/cros/wifi";
+
+// WifiService allows remote case to do WiFi UI operations through
+// Quick Settings and OS-Settings.
+service WifiService {
+  // JoinWifiFromQuickSettings joins to the specified wifi network from
+  // Quick Settings.
+  rpc JoinWifiFromQuickSettings(JoinWifiFromQuickSettingsRequest) returns (google.protobuf.Empty) {}
+
+  // KnownNetworksControls opens the OS-Settings at "Known Networks" page and
+  // interacts/controls the known networks.
+  rpc KnownNetworksControls(KnownNetworksControlsRequest) returns (google.protobuf.Empty) {}
+}
+
+message JoinWifiFromQuickSettingsRequest {
+  enum SecurityOption {
+    None = 0;
+    PSK = 1;
+  }
+
+  string ssid = 1;
+  string password = 2;
+  SecurityOption security_option = 3;
+}
+
+message KnownNetworksControlsRequest {
+  enum KnownNetworkControl {
+    WaitUntilExist = 0;
+    WaitUntilGone = 1;
+    Forget = 2;
+    Disconnect = 3;
+  }
+
+  repeated string ssids = 1;
+  KnownNetworkControl control = 2;
+}

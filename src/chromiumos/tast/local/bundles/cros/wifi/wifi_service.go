@@ -1,0 +1,257 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package wifi
+
+import (
+	"context"
+	"fmt"
+	"path/filepath"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/common"
+	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/shill"
+	"chromiumos/tast/services/cros/wifi"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddService(&testing.Service{
+		Register: func(srv *grpc.Server, s *testing.ServiceState) {
+			wifiService := Service{sharedObject: common.SharedObjectsForServiceSingleton, serviceState: s}
+			wifi.RegisterWifiServiceServer(srv, &wifiService)
+		},
+	})
+}
+
+type Service struct {
+	serviceState *testing.ServiceState
+	sharedObject *common.SharedObjectsForService
+}
+
+// runtimeResources holds the resources that needs to be retrieved in runtime,
+// such as connections that are associated with Chrome session.
+type runtimeResources struct {
+	cr    *chrome.Chrome
+	tconn *chrome.TestConn
+	ui    *uiauto.Context
+}
+
+// initializeRuntimeResources initializes all service-scoped resources.
+func (s *Service) initializeRuntimeResources(ctx context.Context) (*runtimeResources, error) {
+	// DUT could be logged and out, hence, it shouldn't be held as service-scoped resource.
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+
+	// A Test API connection is associated with Chrome session, it shouldn't be held as service-scoped resource either.
+	tconn, err := common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*chrome.TestConn, error) {
+		return tconn, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &runtimeResources{
+		cr:    cr,
+		tconn: tconn,
+		ui:    uiauto.New(tconn),
+	}, nil
+}
+
+func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinWifiFromQuickSettingsRequest) (_ *emptypb.Empty, retErr error) {
+	res, err := s.initializeRuntimeResources(ctx)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to find keyboard")
+	}
+	defer kb.Close()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, res.tconn, true); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
+	}
+	defer quicksettings.Hide(cleanupCtx, res.tconn)
+	defer s.dumpUITreeWithScreenshotOnError(cleanupCtx, func() bool { return retErr != nil }, "quick_settings_ui_dump")
+
+	joinWiFiButton := nodewith.Name("Join other Wi-Fi networks").Role(role.Button).Ancestor(quicksettings.RootFinder)
+	if err := res.ui.LeftClick(joinWiFiButton)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the join button")
+	}
+
+	joinWiFiNetworkDialog := nodewith.NameContaining("Join Wi-Fi network").Role(role.Dialog)
+	if err := res.ui.WaitUntilExists(joinWiFiNetworkDialog)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, `failed to find the "Join Wi-Fi" dialog`)
+	}
+
+	ssidTextField := nodewith.NameContaining("SSID").Role(role.TextField).Ancestor(joinWiFiNetworkDialog)
+	if err := setTextField(ctx, res.ui, kb, ssidTextField, req.Ssid); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to fill the SSID")
+	}
+
+	securityComboBoxSelect := nodewith.Name("Security").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialog)
+	if err := res.ui.LeftClick(securityComboBoxSelect)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the security combo-box")
+	}
+
+	var optionName string
+	switch req.SecurityOption {
+	case wifi.JoinWifiFromQuickSettingsRequest_None:
+		optionName = "None"
+	case wifi.JoinWifiFromQuickSettingsRequest_PSK:
+		optionName = "PSK (WPA or RSN)"
+	}
+	securityOption := nodewith.Name(optionName).Role(role.ListBoxOption).Ancestor(joinWiFiNetworkDialog)
+	if err := res.ui.LeftClick(securityOption)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to click list option")
+	}
+
+	if req.SecurityOption != wifi.JoinWifiFromQuickSettingsRequest_None {
+		passwordTextField := nodewith.Name("Password").Role(role.TextField).Ancestor(joinWiFiNetworkDialog)
+		if err := setTextField(ctx, res.ui, kb, passwordTextField, req.Password); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to fill the password")
+		}
+	}
+
+	connectButton := nodewith.NameContaining("Connect").Role(role.Button).Ancestor(joinWiFiNetworkDialog)
+	if err := res.ui.LeftClick(connectButton)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the connect button")
+	}
+
+	return &emptypb.Empty{}, verifyConnectedStatus(ctx, req.Ssid, true)
+}
+
+func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetworksControlsRequest) (_ *emptypb.Empty, retErr error) {
+	res, err := s.initializeRuntimeResources(ctx)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+
+	const pageShortURL = "knownNetworks"
+	condition := res.ui.Exists(nodewith.NameContaining("Known Networks").Role(role.Heading).Ancestor(ossettings.WindowFinder))
+	settings, err := ossettings.LaunchAtPageURL(ctx, res.tconn, res.cr, pageShortURL, condition)
+	if err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS Settings and navigate to the specific page")
+	}
+	defer s.dumpUITreeWithScreenshotOnError(ctx, func() bool { return retErr != nil }, "known_networks_controls")
+	defer settings.Close(ctx)
+
+	for _, ssid := range req.Ssids {
+		settingsNodeFinder := nodewith.Ancestor(ossettings.WindowFinder)
+		networkItem := settingsNodeFinder.Name(ssid).Role(role.Link)
+
+		switch req.Control {
+		case wifi.KnownNetworksControlsRequest_WaitUntilExist:
+			if err := res.ui.WaitUntilExists(networkItem)(ctx); err != nil {
+				return &emptypb.Empty{}, err
+			}
+		case wifi.KnownNetworksControlsRequest_WaitUntilGone:
+			if err := uiauto.Combine("ensure Wifi finder gone",
+				res.ui.WaitUntilGone(networkItem),
+				res.ui.EnsureGoneFor(networkItem, 5*time.Second),
+			)(ctx); err != nil {
+				return &emptypb.Empty{}, err
+			}
+		case wifi.KnownNetworksControlsRequest_Forget:
+			if err := uiauto.Combine(fmt.Sprintf("forget network %q", ssid),
+				res.ui.LeftClick(settingsNodeFinder.Name("More actions for "+ssid).Role(role.Button)),
+				res.ui.LeftClick(settingsNodeFinder.Name("Forget").Role(role.MenuItem)),
+				res.ui.WaitUntilGone(networkItem),
+			)(ctx); err != nil {
+				return &emptypb.Empty{}, err
+			}
+			if err := verifyConnectedStatus(ctx, ssid, false); err != nil {
+				return &emptypb.Empty{}, err
+			}
+		case wifi.KnownNetworksControlsRequest_Disconnect:
+			if err := uiauto.Combine(fmt.Sprintf("disconnect network %q", req.Ssids),
+				res.ui.LeftClick(networkItem),
+				res.ui.LeftClick(settingsNodeFinder.Name("Disconnect").Role(role.Button)),
+				res.ui.WaitUntilExists(settingsNodeFinder.Name("Not Connected").Role(role.StaticText)),
+			)(ctx); err != nil {
+				return &emptypb.Empty{}, err
+			}
+			// The disconnect control clicks on the network and navigate to another page.
+			// Need to navigate back to "Known Networks" for the next iteration.
+			if err := settings.NavigateToPageURL(ctx, res.cr, pageShortURL, condition); err != nil {
+				return &emptypb.Empty{}, err
+			}
+		default:
+			return &emptypb.Empty{}, errors.Errorf("unrecognized control type %d", req.Control)
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Service) dumpUITreeWithScreenshotOnError(ctx context.Context, hasError func() bool, filePrefix string) {
+	res, err := s.initializeRuntimeResources(ctx)
+	if err != nil {
+		s.serviceState.Log("Failed to dump UI tree with screenshot: ", err)
+		return
+	}
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		s.serviceState.Log(ctx, "Failed to obtain output directory")
+		return
+	}
+
+	if res.cr.LoginMode() == "NoLogin" {
+		faillog.DumpUITreeOnErrorToFile(ctx, filepath.Join(outDir, "service"), hasError, res.tconn, filePrefix)
+	} else {
+		faillog.DumpUITreeWithScreenshotOnError(ctx, filepath.Join(outDir, "service"), hasError, res.cr, filePrefix)
+	}
+}
+
+func verifyConnectedStatus(ctx context.Context, ssid string, expectedStatus bool) error {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a shill manager")
+	}
+
+	expectProps := map[string]interface{}{
+		shillconst.ServicePropertyName:        ssid,
+		shillconst.ServicePropertyIsConnected: []interface{}{expectedStatus},
+	}
+	if _, err := m.WaitForServiceProperties(ctx, expectProps, 15*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait WiFi to be expected status")
+	}
+
+	return nil
+}
+
+func setTextField(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, textField *nodewith.Finder, text string) error {
+	if err := ui.EnsureFocused(textField)(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure the text field is focused")
+	}
+
+	return uiauto.Combine(fmt.Sprintf("set text field with text: %q", text),
+		kb.AccelAction("ctrl+A"),
+		kb.AccelAction("backspace"),
+		kb.TypeAction(text),
+	)(ctx)
+}
