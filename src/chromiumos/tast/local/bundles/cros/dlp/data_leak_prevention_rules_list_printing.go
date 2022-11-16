@@ -47,7 +47,7 @@ const (
 	dlpPrintingWarnPath           = "/warn"
 	waitTimeSecNotificationAsh    = 10
 	waitTimeSecNotificationLacros = 10
-	waitTimeSecWarningAsh         = 2
+	waitTimeSecWarningAsh         = 4
 	waitTimeSecWarningLacros      = 5
 )
 
