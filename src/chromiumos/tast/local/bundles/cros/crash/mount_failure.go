@@ -18,10 +18,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     MountFailure,
-		Desc:     "Verify mount and umount failures are logged as expected",
-		Contacts: []string{"sarthakkukreti@google.com", "cros-telemetry@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         MountFailure,
+		Desc:         "Verify mount and umount failures are logged as expected",
+		Contacts:     []string{"cros-telemetry@google.com", "sarthakkukreti@google.com"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
