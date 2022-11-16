@@ -20,12 +20,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that crashes are not uploaded without consent",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
-			"cros-telemetry@google.com",
 			"nya@chromium.org", // ported to Tast
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"chrome", "cros_internal", "metrics_consent"},
 		Pre:          crash.ChromePreWithVerboseConsent(),

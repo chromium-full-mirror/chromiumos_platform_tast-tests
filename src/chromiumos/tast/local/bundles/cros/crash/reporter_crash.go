@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies crash_reporter itself crashing is captured through anomaly detector",
 		Contacts: []string{
-			"joonbug@chromium.org",
 			"cros-telemetry@google.com",
+			"mutexlox@google.com",
 		},
+		BugComponent: "b:1032705",
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},

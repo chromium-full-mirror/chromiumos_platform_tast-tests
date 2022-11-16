@@ -28,10 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Basic test to check that crash_sender runs on login",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
-			"cros-telemetry@google.com",
 		},
+		BugComponent: "b:1032705",
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"chrome", "cros_internal"},
 		Attr:         []string{"group:mainline", "informational"},

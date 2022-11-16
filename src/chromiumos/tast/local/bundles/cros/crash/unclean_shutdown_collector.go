@@ -20,10 +20,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     UncleanShutdownCollector,
-		Desc:     "Verify unclean shutdown produces collection",
-		Contacts: []string{"joonbug@chromium.org", "cros-telemetry@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         UncleanShutdownCollector,
+		Desc:         "Verify unclean shutdown produces collection",
+		Contacts:     []string{"cros-telemetry@google.com", "mutexlox@google.com"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

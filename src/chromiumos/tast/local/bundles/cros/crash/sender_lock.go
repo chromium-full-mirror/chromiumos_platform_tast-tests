@@ -19,12 +19,13 @@ func init() {
 		Func: SenderLock,
 		Desc: "Check that only one crash_sender runs at a time",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
-			"cros-telemetry@google.com",
 			"nya@chromium.org", // ported to Tast
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"cros_internal"},
 	})

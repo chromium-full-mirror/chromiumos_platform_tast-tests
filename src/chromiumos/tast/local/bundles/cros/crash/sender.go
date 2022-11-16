@@ -24,11 +24,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Basic test to check that minidump crashes are uploaded",
 		Contacts: []string{
+			"cros-telemetry@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
-			"cros-telemetry@google.com",
 			"nya@chromium.org", // ported to Tast
 		},
+		BugComponent: "b:1032705",
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"cros_internal"},
 		Attr:         []string{"group:mainline"},

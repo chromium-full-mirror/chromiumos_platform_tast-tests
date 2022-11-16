@@ -25,9 +25,10 @@ func init() {
 		Func: Serializer,
 		Desc: "Basic test to check that minidump crashes are serialized",
 		Contacts: []string{
-			"mutexlox@chromium.org",
 			"cros-telemetry@google.com",
+			"mutexlox@chromium.org",
 		},
+		BugComponent: "b:1032705",
 		// We only care about crash_serializer on internal builds.
 		SoftwareDeps: []string{"cros_internal"},
 		Params: []testing.Param{{
