@@ -20,9 +20,14 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevCoredump,
-		Desc:         "Verify device coredumps are handled as expected",
-		Contacts:     []string{"briannorris@chromium.org", "cros-telemetry@google.com"},
+		Func: DevCoredump,
+		Desc: "Verify device coredumps are handled as expected",
+		Contacts: []string{
+			"cros-telemetry@google.com",
+			"mutexlox@google.com",
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+		},
+		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi"},
 		// NB: The WifiIntel dependency tracks a manually maintained list of devices.
