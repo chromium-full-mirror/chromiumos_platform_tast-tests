@@ -23,15 +23,16 @@ func init() {
 		Func:         SoftInputMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Ash split view works properly with softInputMode=adjustPan|adjustResize activity flags",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > IME VK
+		BugComponent: "b:537350",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInTabletMode",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"informational", "group:mainline"},
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"informational", "group:mainline"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 	})

@@ -21,8 +21,10 @@ func init() {
 		Func:         IMESwitchShortcut,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Chrome's IME switch shortcut can work on an Android app",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > IME VK
+		BugComponent: "b:537350",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{

@@ -28,10 +28,12 @@ func init() {
 		Func:         PreIMEKeyEvent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks View.onKeyPreIme() works on Android apps",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > IME VK
+		BugComponent: "b:537350",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},

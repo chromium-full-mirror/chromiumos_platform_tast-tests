@@ -19,8 +19,10 @@ func init() {
 		Func:         IMEBlocking,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if IME blocking works on ARC",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > IME VK
+		BugComponent: "b:537350",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Timeout:      3 * time.Minute,

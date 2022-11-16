@@ -54,8 +54,10 @@ func init() {
 		Func:         ChromeVirtualKeyboard,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Chrome virtual keyboard working on Android apps",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > IME VK
+		BugComponent: "b:537350",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInTabletMode",
 		Params: []testing.Param{{
