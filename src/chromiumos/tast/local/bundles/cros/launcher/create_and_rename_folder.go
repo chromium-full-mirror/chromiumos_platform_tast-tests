@@ -23,8 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Renaming Folder In Launcher",
 		Contacts: []string{
-			"seewaifu@chromium.org",
 			"cros-system-ui-eng@google.com",
+			"seewaifu@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
