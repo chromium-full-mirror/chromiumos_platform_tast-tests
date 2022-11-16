@@ -236,6 +236,12 @@ func EnableVerboseLogging(ctx context.Context, d *adb.Device, rooted bool, tags 
 // ConfigureDevice performs basic device preparation. This includes clearing logcat and waking the screen,
 // and if the device is rooted, enabling bluetooth and extending the screen-off timeout.
 func ConfigureDevice(ctx context.Context, d *adb.Device, rooted bool) error {
+	gmsVersion, err := d.GMSCoreVersion(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get GMS Core version")
+	}
+	testing.ContextLogf(ctx, "Configuring Android device (GMSCore version: %d)", gmsVersion)
+
 	// If the PIN was left on from a previous test we need to remove it.
 	// However depending on what state the Phone is in when you remove the PIN,
 	// you might still be shown the lock screen PIN UI and the test will be blocked.
