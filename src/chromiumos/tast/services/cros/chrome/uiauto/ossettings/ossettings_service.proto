@@ -20,6 +20,10 @@ service OsSettingsService {
   // to the detail page for the specified network.
   rpc OpenNetworkDetailPage(OpenNetworkDetailPageRequest) returns (google.protobuf.Empty) {}
 
+  // SetToggleOption clicks toggle option to enable or disable an option.
+  // It does nothing if the option is already expected.
+  rpc SetToggleOption(SetToggleOptionRequest) returns (google.protobuf.Empty) {}
+
   // Close will close the open OS Settings application.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
@@ -35,4 +39,12 @@ message OpenNetworkDetailPageRequest {
 
   // The type of the network.
   NetworkType network_type = 2;
+}
+
+message SetToggleOptionRequest{
+  // The name of the toggle option.
+  string toggle_option_name = 1;
+
+  // The expected value of the toggle option is on or off.
+  bool enabled = 2;
 }

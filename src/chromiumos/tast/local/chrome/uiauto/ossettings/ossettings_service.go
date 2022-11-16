@@ -81,6 +81,23 @@ func (s *Service) OpenNetworkDetailPage(ctx context.Context, req *pb.OpenNetwork
 	})
 }
 
+// SetToggleOption clicks toggle option to enable or disable an option.
+// It does nothing if the option is already expected.
+func (s *Service) SetToggleOption(ctx context.Context, req *pb.SetToggleOptionRequest) (*emptypb.Empty, error) {
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
+	}
+
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		osSettings := New(tconn)
+		if err := osSettings.SetToggleOption(cr, req.ToggleOptionName, req.Enabled)(ctx); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to set toggle option")
+		}
+		return &emptypb.Empty{}, nil
+	})
+}
+
 // Close will close the open OS Settings application.
 func (s *Service) Close(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
