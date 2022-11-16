@@ -28,12 +28,11 @@ func init() {
 		Func:         ARCPlayStoreIcon,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures ARC policy controls the visibility of Play Store icon",
-		Contacts: []string{
-			"yaohuali@google.com",
-			"arc-commercial@google.com",
-		},
+		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "no_tablet_form_factor"},

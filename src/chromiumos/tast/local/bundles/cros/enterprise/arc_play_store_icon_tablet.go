@@ -29,12 +29,11 @@ func init() {
 		Func:         ARCPlayStoreIconTablet,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the visibility of Play Store icon on tablet form factor w.r.t. ArcPolicy",
-		Contacts: []string{
-			"yaohuali@google.com", // Test author
-			"arc-commercial@google.com",
-		},
+		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "tablet_form_factor"},

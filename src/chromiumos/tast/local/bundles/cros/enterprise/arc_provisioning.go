@@ -28,7 +28,9 @@ func init() {
 			"mhasank@chromium.org",
 			"yaohuali@google.com",
 		},
-		Attr: []string{"group:mainline", "group:arc-functional"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},

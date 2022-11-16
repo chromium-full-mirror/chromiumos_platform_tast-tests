@@ -27,8 +27,10 @@ func init() {
 		Func:         ARCBoot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC is booted when policy is set",
-		Contacts:     []string{"mhasank@chromium.org", "arc-commercial@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      4 * time.Minute,
 		VarDeps: []string{

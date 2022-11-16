@@ -23,8 +23,10 @@ func init() {
 		Func:         ARCPlayStoreModeAllowlist,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that no apps are shown when Play Store mode is allowlist only",
-		Contacts:     []string{"mhasank@chromium.org", "arc-commercial@google.com"},
-		Attr:         []string{"group:mainline"},
+		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
