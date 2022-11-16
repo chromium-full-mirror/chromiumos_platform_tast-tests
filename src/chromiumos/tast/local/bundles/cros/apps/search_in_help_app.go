@@ -36,8 +36,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Help app local search service works",
 		Contacts: []string{
-			"callistus@chromium.org", // test author.
 			"showoff-eng@google.com",
+			"callistus@chromium.org", // test author.
 		},
 		BugComponent: "b:690873",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
