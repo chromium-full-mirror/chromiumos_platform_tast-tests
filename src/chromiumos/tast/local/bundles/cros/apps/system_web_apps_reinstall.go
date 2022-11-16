@@ -29,12 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that system web apps can be reinstalled",
 		Contacts: []string{
-			"qjw@chromium.org", // Test author
-			"chrome-apps-platform-rationalization@google.com", // Backup mailing list
+			"chrome-apps-platform-rationalization@google.com",
 		},
+		BugComponent: "b:1168727",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

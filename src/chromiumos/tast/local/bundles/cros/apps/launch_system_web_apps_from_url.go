@@ -29,10 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that System Web Apps can launch through their URL",
 		Contacts: []string{
-			"qjw@chromium.org",
 			"chrome-apps-platform-rationalization@google.com",
 		},
-		Attr:         []string{"group:mainline"},
+		BugComponent: "b:1168727",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),

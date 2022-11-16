@@ -19,13 +19,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that system web apps are installed in guest mode",
 		Contacts: []string{
-			"qjw@chromium.org",
 			"chrome-apps-platform-rationalization@google.com",
 		},
+		BugComponent: "b:1168727",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInGuest",
-		Attr:         []string{"group:mainline"},
 	})
 }
 
