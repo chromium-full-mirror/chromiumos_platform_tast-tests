@@ -32,7 +32,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),
-		Fixture:      "chromeEnterOobeHidDetection",
+		Fixture:      "chromeEnterOobeHidDetectionServoOff",
 		Timeout:      time.Second * 60,
 	})
 }

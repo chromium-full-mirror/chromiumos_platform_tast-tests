@@ -22,6 +22,19 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+		Impl:            &ChromeOobeHidDetection{},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeEnterOobeHidDetectionServoOff",
+		Desc: "Enter Chrome OOBE HID Detection screen with the servo keyboard turned off",
+		Contacts: []string{
+			"andrewdear@google.com",
+			"cros-connectivity@google.com",
+		},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 		Parent:          "turnOffServoKeyboard",
 		Impl:            &ChromeOobeHidDetection{},
 		SetUpTimeout:    chrome.LoginTimeout,
