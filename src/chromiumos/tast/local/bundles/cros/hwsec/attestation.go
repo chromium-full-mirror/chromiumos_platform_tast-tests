@@ -29,7 +29,8 @@ func init() {
 			Name: "auth_factor_api",
 			Val:  &hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI},
 		}},
-		Contacts:     []string{"cylai@chromium.org", "cros-hwsec@google.com"},
+		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement"},
 		Timeout:      4 * time.Minute,
 	})

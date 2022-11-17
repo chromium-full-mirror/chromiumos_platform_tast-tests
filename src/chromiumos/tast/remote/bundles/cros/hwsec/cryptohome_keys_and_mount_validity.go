@@ -24,9 +24,10 @@ func init() {
 		Func: CryptohomeKeysAndMountValidity,
 		Desc: "Checks that the mount and keys related APIs works",
 		Contacts: []string{
-			"zuan@chromium.org", // Test author
 			"cros-hwsec@google.com",
+			"zuan@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:hwsec_destructive_func"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		// Skip "enguarde" due to the reboot issue when removing the key. Please see b/151057300.

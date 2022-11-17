@@ -22,10 +22,11 @@ func init() {
 		Desc: "Tests the response of the PKCS #11 system to login events",
 		Attr: []string{"group:mainline", "informational"},
 		Contacts: []string{
-			"chenyian@google.com",
 			"cros-hwsec@chromium.org",
+			"chenyian@google.com",
 		},
-		Timeout: 4 * time.Minute,
+		BugComponent: "b:1188704",
+		Timeout:      4 * time.Minute,
 	})
 }
 

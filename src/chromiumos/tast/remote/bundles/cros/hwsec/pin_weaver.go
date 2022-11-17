@@ -36,9 +36,10 @@ func init() {
 		Func: PINWeaver,
 		Desc: "Checks that LE credentials work with AuthSession, AuthFactor and USS",
 		Contacts: []string{
-			"hardikgoyal@chromium.org", // Test author
 			"cryptohome-core@google.com",
+			"hardikgoyal@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"informational", "group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "reboot"},
 		Params: []testing.Param{{

@@ -23,9 +23,10 @@ func init() {
 			"group:hwsec_destructive_crosbolt",
 		},
 		Contacts: []string{
-			"yich@google.com",
 			"cros-hwsec@chromium.org",
+			"yich@google.com",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm"},
 	})
 }

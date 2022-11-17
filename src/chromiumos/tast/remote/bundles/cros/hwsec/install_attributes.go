@@ -20,9 +20,10 @@ func init() {
 		Func: InstallAttributes,
 		Desc: "Checks that install attributes works",
 		Contacts: []string{
-			"zuan@chromium.org", // Test author
 			"cros-hwsec@google.com",
+			"zuan@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:hwsec_destructive_func"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		Timeout:      5 * time.Minute,

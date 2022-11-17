@@ -40,6 +40,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"yich@google.com",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome", "gsc", "reboot"},
 		ServiceDeps: []string{
 			"tast.cros.example.ChromeService",

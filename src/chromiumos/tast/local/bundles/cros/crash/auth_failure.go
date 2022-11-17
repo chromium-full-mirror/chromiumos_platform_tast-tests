@@ -33,10 +33,11 @@ func init() {
 		Func: AuthFailure,
 		Desc: "Verify auth failures are logged as expected",
 		Contacts: []string{
-			"chingkang@google.com",
 			"cros-telemetry@google.com",
 			"cros-hwsec@chromium.org",
+			"chingkang@google.com",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm1"},
 		Attr:         []string{"group:mainline"},
 	})

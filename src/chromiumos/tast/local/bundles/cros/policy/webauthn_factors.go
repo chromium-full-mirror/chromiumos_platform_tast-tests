@@ -39,9 +39,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks that WebAuthn options are enabled or disabled based on the policy value",
 		Contacts: []string{
-			"hcyang@google.com", // Test author
 			"cros-hwsec@google.com",
+			"hcyang@google.com", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

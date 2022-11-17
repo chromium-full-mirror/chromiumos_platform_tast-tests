@@ -34,9 +34,10 @@ func init() {
 		Func: CheckKeyPerf,
 		Desc: "Performance for CheckKey operation",
 		Contacts: []string{
-			"dlunev@chromium.org", // Test author
 			"cros-hwsec@google.com",
+			"dlunev@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		Vars:         []string{"hwsec.CheckKeyPerf.iterations"},

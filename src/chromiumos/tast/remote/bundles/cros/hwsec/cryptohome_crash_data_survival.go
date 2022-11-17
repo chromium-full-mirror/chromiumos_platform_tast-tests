@@ -28,9 +28,10 @@ func init() {
 		Func: CryptohomeCrashDataSurvival,
 		Desc: "Checks when cryptohome crashed or is forcefully killed, user's data are not lost",
 		Contacts: []string{
-			"zuan@chromium.org", // Test author
 			"cros-hwsec@google.com",
+			"zuan@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"tpm"},
 	})

@@ -26,9 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify decrypted user data is cleared after end of session",
 		Contacts: []string{
+			"cros-hwsec@chromium.org",
 			"sarthakkukreti@chromium.org", // Original autotest author
 			"chingkang@google.com",        // Tast port author
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

@@ -1,4 +1,4 @@
-// Copyright 2022 The Chromium OS Authors. All rights reserved.
+// Copyright 2022 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -29,6 +29,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"mvertescher@google.com",
 		},
+		BugComponent: "b:1188654",
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"gsc"},
 		Timeout:      2 * time.Minute,

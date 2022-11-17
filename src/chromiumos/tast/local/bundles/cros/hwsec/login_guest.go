@@ -19,9 +19,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the cryptohome is mounted for guest user login",
 		Contacts: []string{
+			"cros-hwsec@chromium.org",
 			"achuith@chromium.org",  // Original autotest author
 			"hidehiko@chromium.org", // Tast port author
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:labqual"},
 	})

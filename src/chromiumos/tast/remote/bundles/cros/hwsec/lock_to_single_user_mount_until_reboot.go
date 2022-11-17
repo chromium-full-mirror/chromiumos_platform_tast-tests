@@ -30,9 +30,10 @@ func init() {
 		Func: LockToSingleUserMountUntilReboot,
 		Desc: "Checks that LockToSingleUserMountUntilReboot method works",
 		Contacts: []string{
-			"zuan@chromium.org", // Test author
 			"cros-hwsec@google.com",
+			"zuan@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"informational", "group:mainline"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{

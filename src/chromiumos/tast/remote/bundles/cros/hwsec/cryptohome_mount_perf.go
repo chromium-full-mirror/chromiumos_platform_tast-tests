@@ -24,9 +24,10 @@ func init() {
 		Func: CryptohomeMountPerf,
 		Desc: "Performance for cryptohome mount operation",
 		Contacts: []string{
-			"yich@google.com", // Test author
 			"cros-hwsec@google.com",
+			"yich@google.com", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		Vars: []string{

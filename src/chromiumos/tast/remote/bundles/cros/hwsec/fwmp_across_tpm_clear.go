@@ -22,6 +22,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"yich@google.com",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm", "gsc"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 		Timeout:      5 * time.Minute,

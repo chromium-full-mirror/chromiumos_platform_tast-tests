@@ -24,6 +24,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"yich@chromium.org",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

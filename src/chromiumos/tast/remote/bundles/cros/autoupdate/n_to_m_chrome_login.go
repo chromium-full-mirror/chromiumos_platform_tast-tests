@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify cross version vault's compatibility",
 		Contacts: []string{
-			"hcyang@google.com", // Test author
 			"cros-hwsec@google.com",
+			"hcyang@google.com", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{

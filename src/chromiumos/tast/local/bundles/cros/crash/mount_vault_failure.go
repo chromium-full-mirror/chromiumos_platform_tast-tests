@@ -22,7 +22,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MountVaultFailure,
 		Desc:         "Verify the error from login failure is properly recorded",
-		Contacts:     []string{"zuan@google.com", "cros-hwsecy@google.com"},
+		Contacts:     []string{"cros-hwsec@google.com", "zuan@google.com"},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{},
 		Params: []testing.Param{{

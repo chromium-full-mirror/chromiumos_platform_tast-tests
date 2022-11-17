@@ -29,6 +29,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"mvertescher@google.com",
 		},
+		BugComponent: "b:1188654",
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"gsc"},
 		Timeout:      2 * time.Minute,

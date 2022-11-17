@@ -18,9 +18,10 @@ func init() {
 		Func: ECDHShortKey,
 		Desc: "Verifies a short ECC key (leading byte(s) of X/Y coordinate being 0) works correctly",
 		Contacts: []string{
-			"cylai@google.com", // Test author.
 			"cros-hwsec@chromium.org",
+			"cylai@google.com", // Test author.
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"tpm2"},
 	})

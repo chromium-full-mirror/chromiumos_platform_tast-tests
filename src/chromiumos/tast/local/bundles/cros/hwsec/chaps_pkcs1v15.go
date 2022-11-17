@@ -23,9 +23,10 @@ func init() {
 		Desc:         "Verifies PKCS#1 v1.5 works with RSA keys (sign, verify) in chaps",
 		Attr:         []string{"group:mainline"},
 		Contacts: []string{
-			"zuan@chromium.org",
 			"cros-hwsec@chromium.org",
+			"zuan@chromium.org",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 	})

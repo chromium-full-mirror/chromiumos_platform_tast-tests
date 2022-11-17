@@ -23,9 +23,10 @@ func init() {
 		Func: SmartCardLockScreenAuthSession,
 		Desc: "Tests for Lock Screen verification with Smart Card backend, for both persistent and ephemeral users, based on the old AuthSession based CheckKey verificaiton",
 		Contacts: []string{
-			"thomascedeno@google.com",
 			"cryptohome-core@chromium.org",
+			"thomascedeno@google.com",
 		},
+		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"testcert.p12"},
 		SoftwareDeps: []string{"tpm"},

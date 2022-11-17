@@ -33,9 +33,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that WebAuthn under u2f mode succeeds in different configurations",
 		Contacts: []string{
-			"hcyang@google.com",
 			"cros-hwsec@chromium.org",
+			"hcyang@google.com",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome", "gsc"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.WebauthnService",

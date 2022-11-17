@@ -24,7 +24,8 @@ func init() {
 		Func:         AttestationNoExternalServer,
 		Desc:         "Verifies attestation-related functionality with the locally PCA and VA response",
 		Attr:         []string{"group:mainline", "informational"},
-		Contacts:     []string{"cylai@chromium.org", "cros-hwsec@google.com"},
+		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{{
 			Name:    "with_uss",

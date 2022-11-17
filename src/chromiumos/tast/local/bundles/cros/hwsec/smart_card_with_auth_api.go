@@ -39,9 +39,10 @@ func init() {
 		Func: SmartCardWithAuthAPI,
 		Desc: "Checks that Smart Cards work with AuthSession, AuthFactor and USS",
 		Contacts: []string{
+			"cryptohome-core@chromium.org",
 			"thomascedeno@google.com", // Test author
-			"cryptohome-core@google.com",
 		},
+		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{{

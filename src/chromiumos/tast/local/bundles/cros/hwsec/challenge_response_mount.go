@@ -22,9 +22,10 @@ func init() {
 		Func: ChallengeResponseMount,
 		Desc: "Checks that the cryptohome challenge-response mount works",
 		Contacts: []string{
-			"emaxx@chromium.org", // Test author
 			"cros-hwsec@google.com",
+			"emaxx@chromium.org", // Test author
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{

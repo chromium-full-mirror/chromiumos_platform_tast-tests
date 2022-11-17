@@ -21,10 +21,11 @@ func init() {
 		Desc: "Tests the TPM under low-resource conditions",
 		Attr: []string{"group:mainline", "informational"},
 		Contacts: []string{
-			"chenyian@google.com",
 			"cros-hwsec@chromium.org",
+			"chenyian@google.com",
 		},
-		Timeout: 8 * time.Minute,
+		BugComponent: "b:1188704",
+		Timeout:      8 * time.Minute,
 	})
 }
 

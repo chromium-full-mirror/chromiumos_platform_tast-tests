@@ -23,9 +23,10 @@ func init() {
 		Desc:         "Verifies RSA PSS works with RSA keys (sign, verify, encrypt, decrypt) in chaps",
 		Attr:         []string{"group:mainline"},
 		Contacts: []string{
-			"zuan@chromium.org",
 			"cros-hwsec@chromium.org",
+			"zuan@chromium.org",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome", "tpm2"},
 		Timeout:      4 * time.Minute,
 	})

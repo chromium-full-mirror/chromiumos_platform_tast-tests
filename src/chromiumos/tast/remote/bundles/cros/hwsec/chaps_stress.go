@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Repeatedly load/unload slots, create/remove keys, sign to check that chaps works as intended. This is designed to uncover flaws in chaps key/session reloading mechanism",
 		Contacts: []string{
-			"zuan@chromium.org",
 			"cros-hwsec@chromium.org",
+			"zuan@chromium.org",
 		},
+		BugComponent: "b:1188704",
 		// Note: This is not in mainline because it takes too long to run.
 		Attr:         []string{"group:hwsec", "hwsec_weekly"},
 		SoftwareDeps: []string{"chrome", "tpm"},

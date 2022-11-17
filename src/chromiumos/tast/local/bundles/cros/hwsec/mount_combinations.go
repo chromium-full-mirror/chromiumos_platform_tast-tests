@@ -25,6 +25,7 @@ func init() {
 			"cros-hwsec@chromium.org",
 			"zuan@chromium.org",
 		},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,

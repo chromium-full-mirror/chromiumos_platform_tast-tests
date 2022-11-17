@@ -35,9 +35,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies login functionality across the version",
 		Contacts: []string{
-			"chingkang@google.com",
 			"cros-hwsec@chromium.org",
+			"chingkang@google.com",
 		},
+		BugComponent: "b:1188704",
+		Attr:         []string{"group:hw_agnostic"},
 		// TODO(b/249934249): Add the gsc version test after we enabled the ti50-emulator.
 		SoftwareDeps: []string{"chrome", "tpm2_simulator", "no_gsc"},
 		Params: []testing.Param{{

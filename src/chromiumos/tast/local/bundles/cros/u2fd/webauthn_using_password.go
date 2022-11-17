@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that WebAuthn using password succeeds",
 		Contacts: []string{
-			"hcyang@google.com",
 			"cros-hwsec@chromium.org",
+			"hcyang@google.com",
 		},
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

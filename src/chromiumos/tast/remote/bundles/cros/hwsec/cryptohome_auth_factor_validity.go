@@ -24,9 +24,10 @@ func init() {
 		Func: CryptohomeAuthFactorValidity,
 		Desc: "Checks that the AuthFactor APIs work in various TPM states",
 		Contacts: []string{
+			"cryptohome-core@chromium.org",
 			"jadmanski@chromium.org", // Test author
-			"cros-hwsec@google.com",
 		},
+		BugComponent: "b:1088399",
 		Attr:         []string{"group:hwsec_destructive_func"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		// Skip "enguarde" due to the reboot issue when removing the key. Please see b/151057300.

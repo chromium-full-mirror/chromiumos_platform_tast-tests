@@ -30,10 +30,11 @@ func init() {
 		Desc: "Verifies chaps works correctly after remount",
 		Attr: []string{"group:mainline", "informational"},
 		Contacts: []string{
-			"yich@google.com",
 			"cros-hwsec@chromium.org",
+			"yich@google.com",
 		},
-		Timeout: 4 * time.Minute,
+		BugComponent: "b:1188704",
+		Timeout:      4 * time.Minute,
 
 		Params: []testing.Param{{
 			Name: "uss",

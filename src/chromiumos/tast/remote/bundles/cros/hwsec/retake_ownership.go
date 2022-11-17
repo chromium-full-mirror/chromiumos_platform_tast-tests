@@ -19,7 +19,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RetakeOwnership,
 		Desc:         "Verifies that the TPM ownership can be cleared and taken",
-		Contacts:     []string{"cylai@chromium.org", "cros-hwsec@google.com"},
+		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 		ServiceDeps:  []string{"tast.cros.hwsec.AttestationDBusService"},
