@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/logsaver"
@@ -556,13 +557,9 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				// Playstore app window might not be shown, but optin should be successful
 				// at this time. Log the error message but continue.
 				s.Log("Failed to wait for the playstore window to be visible: ", err)
-				return
-			}
-
-			if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
+			} else if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
 				s.Fatal("Failed to close Play Store: ", err)
-			}
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
+			} else if err := testing.Poll(ctx, func(ctx context.Context) error {
 				if _, err := ash.GetARCAppWindowInfo(ctx, tconn, playStorePackageName); err == ash.ErrWindowNotFound {
 					return nil
 				} else if err != nil {
@@ -572,6 +569,19 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 				s.Fatal("Failed to wait for the playstore window to be closed: ", err)
 			}
+			histogram, err := metrics.WaitForHistogram(
+				ctx,
+				tconn,
+				"Ash.ArcAppInitialAppsInstallDuration",
+				10*time.Second,
+			)
+			if err != nil {
+				s.Fatal("Failed to wait until ARC initial "+
+					"apps installed: ", err)
+			}
+			s.Log("loggedInToCUJUserFixture: "+
+				"Ash.ArcAppInitialAppsInstallDuration histogram=",
+				histogram)
 		}()
 	}
 
