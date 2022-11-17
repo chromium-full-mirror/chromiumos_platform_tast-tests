@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
@@ -37,6 +38,12 @@ const (
 	minExpectedFileSize = 100
 )
 
+var (
+	// Sometimes it will take long after the broadcast is sent until it is received. As a result,
+	// adding this flag for broadcast is helpful to raise its priority and reduce the waiting time.
+	prioritizingParams = []string{"-f", "0x10000000"}
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCCameraApp,
@@ -48,6 +55,14 @@ func init() {
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcBootedRestricted",
 	})
+}
+
+func broadcastIntent(ctx context.Context, a *arc.ARC, action string, params ...string) (*adb.BroadcastResult, error) {
+	return a.BroadcastIntent(ctx, action, append(prioritizingParams, params...)...)
+}
+
+func broadcastIntentGetData(ctx context.Context, a *arc.ARC, action string, params ...string) (string, error) {
+	return a.BroadcastIntentGetData(ctx, action, append(prioritizingParams, params...)...)
 }
 
 func ARCCameraApp(ctx context.Context, s *testing.State) {
@@ -114,7 +129,7 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 
 			for _, facing := range []string{"0", "1"} {
 				testing.ContextLog(ctx, "Switch to camera ", facing)
-				if success, err := a.BroadcastIntentGetData(ctx, intentSwitchCamera, "--ei", keyCameraFacing, facing); err != nil {
+				if success, err := broadcastIntentGetData(ctx, a, intentSwitchCamera, "--ei", keyCameraFacing, facing); err != nil {
 					s.Fatalf("Failed to switch to camera %v: %v", facing, err)
 				} else if success == "FALSE" {
 					// Continue when there is no camera with such facing.
@@ -133,11 +148,11 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 // takePhoto asks ArcCameraFpsTest app to take a photo via intent and ensures
 // that the captured photo is saved successfully.
 func takePhoto(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
-	if _, err := a.BroadcastIntent(ctx, intentSwitchMode, "--es", keyCameraMode, valuePhoto); err != nil {
+	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valuePhoto); err != nil {
 		return errors.Wrap(err, "failed to switch to photo mode")
 	}
 
-	outputFile, err := a.BroadcastIntentGetData(ctx, intentTakePhoto)
+	outputFile, err := broadcastIntentGetData(ctx, a, intentTakePhoto)
 	if err != nil {
 		return errors.Wrap(err, "could not send intent")
 	}
@@ -154,19 +169,19 @@ func takePhoto(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 // recordVideo asks ArcCameraFpsTest app to record a video via intent and
 // ensures that the captured video is saved successfully.
 func recordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
-	if _, err := a.BroadcastIntent(ctx, intentSwitchMode, "--es", keyCameraMode, valueVideo); err != nil {
+	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valueVideo); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
 
 	// Start record video
-	if _, err := a.BroadcastIntent(ctx, intentStartRecording); err != nil {
+	if _, err := broadcastIntent(ctx, a, intentStartRecording); err != nil {
 		return errors.Wrap(err, "could not send intent")
 	}
 
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		testing.ContextLog(ctx, "Failed to sleep: ", err)
 	}
-	outputFile, err := a.BroadcastIntentGetData(ctx, intentStopRecording)
+	outputFile, err := broadcastIntentGetData(ctx, a, intentStopRecording)
 	if err != nil {
 		return errors.Wrap(err, "could not send intent")
 	}
