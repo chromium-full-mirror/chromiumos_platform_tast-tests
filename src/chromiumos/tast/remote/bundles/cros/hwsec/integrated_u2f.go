@@ -39,6 +39,7 @@ func init() {
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
 			"yich@google.com",
+			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome", "gsc", "reboot"},

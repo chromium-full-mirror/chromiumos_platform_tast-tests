@@ -28,6 +28,7 @@ func init() {
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
 			"mvertescher@google.com",
+			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:1188654",
 		Fixture:      fixture.NormalMode,
