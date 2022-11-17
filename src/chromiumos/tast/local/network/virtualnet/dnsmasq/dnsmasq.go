@@ -23,7 +23,9 @@ import (
 
 const confTemplate = `
 port={{.port}}
+{{if .ifname}}
 interface={{.ifname}}
+{{end -}}
 {{if .subnet}}
 dhcp-range={{.pool_start}},{{.pool_end}},{{.netmask}},12h
 dhcp-option=option:netmask,{{.netmask}}
@@ -40,7 +42,9 @@ dhcp-option=121,{{.classless_static_routes}}
 {{end -}}
 {{if .wpad}}
 dhcp-option=252,{{.wpad}}
-{{end -}}
+{{end}}
+log-queries
+log-dhcp
 `
 
 // Paths in chroot.
@@ -73,6 +77,7 @@ type dnsmasq struct {
 	dns                   []string
 	enableDNS             bool
 	ifname                string
+	noIfname              bool
 	wpad                  string
 
 	cmd *testexec.Cmd
@@ -119,6 +124,16 @@ func WithDHCPWPAD(wpad string) Option {
 func WithInterface(ifname string) Option {
 	return func(d *dnsmasq) {
 		d.ifname = ifname
+		d.noIfname = false
+	}
+}
+
+// WithAllInterfaces let dnsmasq listen on all interfaces. That includes
+// interfaces that will be set up later.
+func WithAllInterfaces() Option {
+	return func(d *dnsmasq) {
+		d.ifname = ""
+		d.noIfname = true
 	}
 }
 
@@ -148,7 +163,7 @@ func New(opts ...Option) *dnsmasq {
 func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 	d.env = env
 
-	if d.ifname == "" {
+	if !d.noIfname && d.ifname == "" {
 		d.ifname = d.env.VethInName
 	}
 

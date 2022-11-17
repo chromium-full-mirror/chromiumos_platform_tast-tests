@@ -30,6 +30,7 @@ type Config struct {
 	AuthType      string
 	MTU           int
 	Metered       bool
+	PushDNS       bool
 	SearchDomains []string
 
 	// Parameters for an L2TP/IPsec VPN connection.

@@ -70,6 +70,13 @@ var (
 			"      net = 2\n" +
 			"    }\n" +
 			"  }\n" +
+			"{{if .push_dns}}\n" +
+			"  plugins {\n" +
+			"    attr {\n" +
+			"      dns = 192.168.1.99\n" +
+			"    }\n" +
+			"  }\n" +
+			"{{end}}\n" +
 			"  install_routes = no\n" +
 			"  ignore_routing_tables = 0\n" +
 			"  routing_table = 0\n" +
@@ -309,6 +316,7 @@ var (
 			"writepid /{{.pid_file}}\n" +
 			"tmp-dir /tmp\n" +
 			"push \"redirect-gateway def1\"\n" +
+			"{{if .push_dns}}push \"dhcp-option DNS 10.11.12.1\"\n {{end}}" +
 			"{{.optional_user_verification}}\n",
 	}
 )
@@ -460,6 +468,7 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType string) (*Serv
 		"charon_logfile": charonLogFile,
 		"client_vip":     ikev2ClientIP,
 		"if_id":          ikev2InterfaceID,
+		"push_dns":       true,
 	}
 
 	switch authType {
@@ -533,6 +542,7 @@ func StartOpenVPNServer(ctx context.Context, env *env.Env, useUserPassword, useT
 		"status_file":                  openvpnStatusFile,
 		"username":                     openvpnUsername,
 		"log_file":                     openvpnLogFile,
+		"push_dns":                     true,
 	}
 	if useUserPassword {
 		configValues["optional_user_verification"] = fmt.Sprintf("auth-user-pass-verify /%s via-file\nscript-security 2", openvpnAuthScript)
