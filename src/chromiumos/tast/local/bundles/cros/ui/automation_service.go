@@ -368,6 +368,26 @@ func (svc *AutomationService) MouseRelease(ctx context.Context, req *pb.MouseRel
 	return &empty.Empty{}, nil
 }
 
+// MakeVisible makes node visible.
+func (svc *AutomationService) MakeVisible(ctx context.Context, req *pb.MakeVisibleRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ui.MakeVisible(finder)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling MakeVisible with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
 // CaptureScreenshot captures the screenshot of the whole screen or a stable UI node.
 func (svc *AutomationService) CaptureScreenshot(ctx context.Context, req *pb.CaptureScreenshotRequest) (*pb.CaptureScreenshotResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()

@@ -61,6 +61,9 @@ service AutomationService {
   // MouseMoveTo moves the mouse to hover the requested node.
   rpc MouseMoveTo(MouseMoveToRequest) returns (google.protobuf.Empty) {}
 
+  // MakeVisible makes node visible.
+  rpc MakeVisible(MakeVisibleRequest) returns (google.protobuf.Empty) {}
+
   // CaptureScreenshot captures the screenshot of the whole screen or a stable
   // UI node.
   rpc CaptureScreenshot(CaptureScreenshotRequest)
@@ -128,6 +131,10 @@ message InfoRequest {
 
 message InfoResponse {
   NodeInfo node_info = 1;
+}
+
+message MakeVisibleRequest {
+  Finder finder = 1;
 }
 
 message CaptureScreenshotRequest {

@@ -40,6 +40,7 @@ type NodeHelper struct {
 	role           Role
 	hasClass       string
 	ancestor       *Finder
+	nth            int32
 
 	mask int
 }
@@ -49,6 +50,19 @@ func Node() *NodeHelper {
 	return &NodeHelper{}
 }
 
+func (n *NodeHelper) copy() *NodeHelper {
+	return &NodeHelper{
+		name:           n.name,
+		nameContaining: n.nameContaining,
+		nameRegex:      n.nameRegex,
+		role:           n.role,
+		hasClass:       n.hasClass,
+		ancestor:       n.ancestor,
+		nth:            n.nth,
+		mask:           n.mask,
+	}
+}
+
 const (
 	maskName = 1 << iota
 	maskNameContaining
@@ -56,48 +70,63 @@ const (
 	maskRole
 	maskHasClass
 	maskAncestor
+	maskNth
 )
 
 // Name sets a specified name to NodeHelper.
 func (n *NodeHelper) Name(name string) *NodeHelper {
-	n.name = name
-	n.mask |= maskName
-	return n
+	c := n.copy()
+	c.name = name
+	c.mask |= maskName
+	return c
 }
 
 // NameContaining sets a specified name segment to NodeHelper.
 func (n *NodeHelper) NameContaining(s string) *NodeHelper {
-	n.nameContaining = s
-	n.mask |= maskNameContaining
-	return n
+	c := n.copy()
+	c.nameContaining = s
+	c.mask |= maskNameContaining
+	return c
 }
 
 // NameRegex sets a specified regex name to NodeHelper.
 func (n *NodeHelper) NameRegex(nameRegex string) *NodeHelper {
-	n.nameRegex = nameRegex
-	n.mask |= maskNameRegex
-	return n
+	c := n.copy()
+	c.nameRegex = nameRegex
+	c.mask |= maskNameRegex
+	return c
 }
 
 // Role sets a specified role to NodeHelper.
 func (n *NodeHelper) Role(role Role) *NodeHelper {
-	n.role = role
-	n.mask |= maskRole
-	return n
+	c := n.copy()
+	c.role = role
+	c.mask |= maskRole
+	return c
 }
 
 // HasClass sets a specified class to NodeHelper.
 func (n *NodeHelper) HasClass(hasClass string) *NodeHelper {
-	n.hasClass = hasClass
-	n.mask |= maskHasClass
-	return n
+	c := n.copy()
+	c.hasClass = hasClass
+	c.mask |= maskHasClass
+	return c
 }
 
 // Ancestor sets a specified ancestor to NodeHelper.
 func (n *NodeHelper) Ancestor(ancestor *Finder) *NodeHelper {
-	n.ancestor = ancestor
-	n.mask |= maskAncestor
-	return n
+	c := n.copy()
+	c.ancestor = ancestor
+	c.mask |= maskAncestor
+	return c
+}
+
+// Nth sets a specified Nth to NodeHelper.
+func (n *NodeHelper) Nth(i int32) *NodeHelper {
+	c := n.copy()
+	c.nth = i
+	c.mask |= maskNth
+	return c
 }
 
 // Finder returns the Finder.
@@ -126,6 +155,10 @@ func (n *NodeHelper) Finder() *Finder {
 
 	if n.mask&maskAncestor != 0 {
 		nodeWiths = append(nodeWiths, &NodeWith{Value: &NodeWith_Ancestor{Ancestor: n.ancestor}})
+	}
+
+	if n.mask&maskNth != 0 {
+		nodeWiths = append(nodeWiths, &NodeWith{Value: &NodeWith_Nth{Nth: int32(n.nth)}})
 	}
 
 	return &Finder{NodeWiths: nodeWiths}
