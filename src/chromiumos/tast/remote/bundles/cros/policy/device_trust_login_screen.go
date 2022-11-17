@@ -118,6 +118,10 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	}
 	defer captureScreenshotOnError(ctx, s.HasError)
 
+	// Waiting for prior deprovisionings to be finished.
+	// TODO(b:259513140): Add deterministic waiting on server side.
+	testing.Sleep(ctx, 1*time.Minute)
+
 	service := enterpriseconnectors.NewDeviceTrustServiceClient(cl.Conn)
 	s.Log("Enrolling device")
 	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password}); err != nil {
