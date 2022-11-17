@@ -66,6 +66,7 @@
 	},
 	{
 		"driver": "bluetooth(CONFIG_BT)",
+		"exclude_boards": ["herobrine"],
 		"syscalls": [
 			"accept4$bt_l2cap",
 			"bind$bt_hci",
@@ -136,6 +137,7 @@
 	},
 	{
 		"driver": "v4l(CONFIG_VIDEO_V4L2)",
+		"exclude_boards": ["herobrine"],
 		"syscalls": [
 			"ioctl$MEDIA_IOC_REQUEST_ALLOC",
 			"ioctl$MEDIA_REQUEST_IOC_QUEUE",
@@ -659,6 +661,7 @@
 	},
 	{
 		"driver": "drm(CONFIG_DRM)",
+		"exclude_boards": ["herobrine"],
 		"syscalls": [
 			"syz_open_dev$dri",
 			"syz_open_dev$dricontrol",
@@ -747,7 +750,7 @@
 	},
 	{
 		"driver": "drm_syncobj(CONFIG_DRM)",
-		"boards": ["strongbad", "trogdor", "herobrine"],
+		"boards": ["strongbad", "trogdor"],
 		"syscalls": [
 			"ioctl$DRM_IOCTL_SYNCOBJ_CREATE",
 			"ioctl$DRM_IOCTL_SYNCOBJ_DESTROY",
@@ -818,6 +821,7 @@
 	},
 	{
 		"driver": "media-controller(CONFIG_MEDIA_CONTROLLER)",
+		"exclude_boards": ["herobrine"],
 		"syscalls": [
 			"syz_open_dev$media",
 			"ioctl$MEDIA_IOC_DEVICE_INFO",
