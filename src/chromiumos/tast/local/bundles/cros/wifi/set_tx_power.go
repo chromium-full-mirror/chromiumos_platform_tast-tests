@@ -20,8 +20,10 @@ func init() {
 		Desc: "Tests WiFi TX power helper's basic operation",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-faft@google.com",
 		},
-		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:firmware", "firmware_ec", "group:labqual"},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:firmware", "firmware_ec", "group:labqual"},
 		// TODO(b/259084061) - Skip on craask until lab has correct coreboot fw.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("craask")),
 		Params: []testing.Param{
