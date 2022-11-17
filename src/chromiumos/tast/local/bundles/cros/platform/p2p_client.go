@@ -22,10 +22,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     P2PClient,
-		Desc:     "Tests that ChromiumOS can download files from local network peers with p2p-client",
-		Contacts: []string{"kimjae@google.com", "chromeos-core-services@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         P2PClient,
+		Desc:         "Tests that ChromiumOS can download files from local network peers with p2p-client",
+		Contacts:     []string{"chromeos-core-services@google.com", "kimjae@chromium.org"},
+		BugComponent: "b:908319",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

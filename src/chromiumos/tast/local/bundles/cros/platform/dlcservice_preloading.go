@@ -19,7 +19,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DLCServicePreloading,
 		Desc:         "Verifies that DLC preloading works by setting up a preloaded test DLC and installing it",
-		Contacts:     []string{"kimjae@chromium.org", "chromeos-core-services@google.com"},
+		Contacts:     []string{"chromeos-core-services@google.com", "kimjae@chromium.org"},
+		BugComponent: "b:908242",
 		SoftwareDeps: []string{"dlc"},
 		Attr:         []string{"group:mainline"},
 	})
