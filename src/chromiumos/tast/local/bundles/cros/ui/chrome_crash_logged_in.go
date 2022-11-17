@@ -30,7 +30,8 @@ func init() {
 		Func:         ChromeCrashLoggedIn,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks that Chrome writes crash dumps while logged in",
-		Contacts:     []string{"iby@chromium.org", "cros-telemetry@google.com"},
+		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
+		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "browser_breakpad",
