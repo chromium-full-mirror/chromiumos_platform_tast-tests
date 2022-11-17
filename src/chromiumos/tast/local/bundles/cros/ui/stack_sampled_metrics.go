@@ -48,9 +48,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Check that stack-sampled metrics work",
 		Contacts: []string{
-			"iby@chromium.org",
 			"cros-telemetry@google.com",
+			"iby@chromium.org",
 		},
+		BugComponent: "b:1087262",
 		// Test temporarily disabled because the feature it's testing is temporarily
 		// deactivated due to b/257675336.
 		// TODO(b/214117401): Reenable when the feature is relaunched.
