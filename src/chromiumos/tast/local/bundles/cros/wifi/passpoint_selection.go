@@ -34,12 +34,11 @@ func init() {
 	// Passpoint compatible access point. The test then verifies the device
 	// select the best possible Passpoint network.
 	testing.AddTest(&testing.Test{
-		Func: PasspointSelection,
-		Desc: "Wi-Fi Passpoint network selection tests",
-		Contacts: []string{
-			"damiendejean@chromium.org", // Test author
-			"cros-networking@google.com",
-		},
+		Func:     PasspointSelection,
+		Desc:     "Wi-Fi Passpoint network selection tests",
+		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},

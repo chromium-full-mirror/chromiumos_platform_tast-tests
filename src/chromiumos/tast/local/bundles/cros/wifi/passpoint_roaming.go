@@ -35,12 +35,11 @@ func init() {
 	// where a device with a set of credentials moves from one place to another
 	// and need to connect to the Passpoint networks around.
 	testing.AddTest(&testing.Test{
-		Func: PasspointRoaming,
-		Desc: "Passpoint network roaming tests",
-		Contacts: []string{
-			"damiendejean@chromium.org", // Test author
-			"cros-networking@google.com",
-		},
+		Func:     PasspointRoaming,
+		Desc:     "Passpoint network roaming tests",
+		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},

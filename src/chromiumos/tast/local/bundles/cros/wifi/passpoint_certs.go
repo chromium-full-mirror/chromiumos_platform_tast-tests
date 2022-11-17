@@ -24,13 +24,11 @@ func init() {
 	// After the credentials is removed, the certificates and keys are
 	// supposed to be removed as well.
 	testing.AddTest(&testing.Test{
-		Func: PasspointCerts,
-		Desc: "Passpoint network certificates provisioning and removal tests",
-		Contacts: []string{
-			"jasongustaman@google.com",
-			"damiendejean@google.com",
-			"cros-networking@google.com",
-		},
+		Func:     PasspointCerts,
+		Desc:     "Passpoint network certificates provisioning and removal tests",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome", "arc"},

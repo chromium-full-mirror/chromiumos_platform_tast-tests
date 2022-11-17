@@ -25,13 +25,11 @@ func init() {
 	// with different Passpoint credentials. Once the credentials is removed from
 	// ARC, the device is expected to disconnect from the network.
 	testing.AddTest(&testing.Test{
-		Func: PasspointARCProvisioning,
-		Desc: "Passpoint network ARC provisioning tests",
-		Contacts: []string{
-			"jasongustaman@google.com",
-			"damiendejean@google.com",
-			"cros-networking@google.com",
-		},
+		Func:     PasspointARCProvisioning,
+		Desc:     "Passpoint network ARC provisioning tests",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome", "arc"},
