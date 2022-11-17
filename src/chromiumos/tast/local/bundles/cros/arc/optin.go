@@ -22,10 +22,11 @@ func init() {
 		Contacts: []string{
 			"arc-core@google.com",
 			"mhasank@chromium.org",
-			"khmel@chromium.org", // author.
 		},
-		Attr:    []string{"group:mainline", "group:arc-functional"},
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		// ChromeOS > Software > ARC++ > Core > Play Store Setup
+		BugComponent: "b:1131344",
+		Attr:         []string{"group:mainline", "group:arc-functional"},
+		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
