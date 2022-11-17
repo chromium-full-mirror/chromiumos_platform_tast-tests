@@ -41,6 +41,8 @@ func ChromeApps(ctx context.Context, s *testing.State) {
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
 		chrome.KeepEnrollment(),
+		// Disable DemoModeSWA feature as this replaces the Chrome Apps.
+		chrome.DisableFeatures("DemoModeSWA"),
 		// Force devtools on regardless of policy (devtools is disabled in
 		// Demo Mode policy) to support connecting to the test API extension.
 		chrome.ExtraArgs("--force-devtools-available"))
