@@ -27,6 +27,12 @@ const (
 	atLockScreen = "atLockScreen"
 )
 
+type tabletModeTestParams struct {
+	hasLid        bool
+	tabletModeOn  string
+	tabletModeOff string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ECTabletMode,
@@ -42,7 +48,29 @@ func init() {
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService", "tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Chromeslate, hwdep.Detachable)),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
+			Val: tabletModeTestParams{
+				hasLid:        true,
+				tabletModeOn:  "tabletmode on",
+				tabletModeOff: "tabletmode off",
+			},
+		}, {
+			Name:              "detachable",
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
+			Val: tabletModeTestParams{
+				hasLid:        true,
+				tabletModeOn:  "basestate detach",
+				tabletModeOff: "basestate attach",
+			},
+		}, {
+			Name:              "chromeslate",
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromeslate)),
+			Val: tabletModeTestParams{
+				hasLid: false,
+			},
+		}},
 	})
 }
 
@@ -60,28 +88,44 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	// Run EC command to put DUT in tablet mode.
-	if err := h.Servo.RunECCommand(ctx, "tabletmode on"); err != nil {
-		s.Fatal("Failed to set DUT into tablet mode: ", err)
-	}
-
-	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "tabletmode reset"); err != nil {
-			s.Fatal("Failed to restore DUT to the original tabletmode setting: ", err)
+	args := s.Param().(tabletModeTestParams)
+	if args.hasLid {
+		if err := h.Servo.RunECCommand(ctx, args.tabletModeOn); err != nil {
+			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}
-	}()
-
-	s.Log("Power-cycle DUT with a warm reset")
-	h.CloseRPCConnection(ctx)
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to reboot DUT by servo: ", err)
+		defer func() {
+			if err := h.Servo.RunECCommand(ctx, args.tabletModeOff); err != nil {
+				s.Fatal("Failed to restore DUT's tabletmode to off: ", err)
+			}
+		}()
 	}
 
-	s.Log("Wait for DUT to power ON")
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelWaitConnect()
+	// As commented in ticket b:259153719, tablet mode emulation wasn't preserved on a few
+	// DUTs over a warm reset. For steps that verify that devices would warm reset into
+	// tablet mode, we could maybe manually test the platforms listed in skipWarmResetList by
+	// physically folding them into a tablet mode position first.
+	skipWarmResetList := []string{"jacuzzi", "hatch"}
+	skipWarmReset := func(dutPlatform string, knownList []string) bool {
+		for _, name := range knownList {
+			if name == dutPlatform {
+				return true
+			}
+		}
+		return false
+	}
+	if !skipWarmReset(h.Board, skipWarmResetList) {
+		s.Log("Power-cycle DUT with a warm reset")
+		h.CloseRPCConnection(ctx)
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			s.Fatal("Failed to reboot DUT by servo: ", err)
+		}
+		s.Log("Wait for DUT to power ON")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
 
-	if err := d.WaitConnect(waitConnectCtx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+		if err := d.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 	}
 
 	// Get initial boot ID.
@@ -233,18 +277,27 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		}
 
 		// Short press on power button to activate the pre-shutdown animation.
+		// Differentiate the press durations on Zork from the other platforms.
+		// Depending on Stainless results, a new flag may be created inside
+		// fw-testing-configs for a more general use.
 		s.Log("Activate the pre-shutdown animation")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur((h.Config.HoldPwrButtonPowerOff)/3)); err != nil {
+		var whiteScreenPwrDur time.Duration
+		if h.Config.Platform == "zork" {
+			whiteScreenPwrDur = 2000 * time.Millisecond
+		} else {
+			whiteScreenPwrDur = (h.Config.HoldPwrButtonPowerOff) / 3
+		}
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur((whiteScreenPwrDur))); err != nil {
 			s.Fatal("Failed to set a KeypressControl by servo: ", err)
 		}
 
 		// Verify that DUT did not reboot.
 		curID, err := r.BootID(ctx)
 		if err != nil {
-			s.Fatal("Failed to read the current boot ID: ", curID)
+			s.Fatal("Failed to read the current boot ID: ", err)
 		}
 		if curID != origID {
-			s.Fatal("DUT rebooted after short power press")
+			s.Fatalf("DUT rebooted after short power press, got current ID: %s, and ID before: %s", curID, origID)
 		}
 		s.Log("DUT did not reboot")
 	}
