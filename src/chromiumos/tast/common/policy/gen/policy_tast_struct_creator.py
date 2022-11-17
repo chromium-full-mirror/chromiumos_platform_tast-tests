@@ -543,6 +543,7 @@ type ArcPolicyValue struct {
 \tPlayLocalPolicyEnabled\tbool\t`json:"playLocalPolicyEnabled"`
 \tPlayEmmApiInstallDisabled\tbool\t`json:"playEmmApiInstallDisabled"`
 \tPlayStoreMode\tstring\t`json:"playStoreMode"`
+\tDpsInteractionsDisabled\tbool\t`json:"dpsInteractionsDisabled"`
 }
 """ + attr_structs
   return attr_type, attr_structs

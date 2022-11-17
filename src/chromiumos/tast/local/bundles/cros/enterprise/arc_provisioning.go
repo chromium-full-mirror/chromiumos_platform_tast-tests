@@ -71,7 +71,16 @@ func ARCProvisioning(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	policies := []policy.Policy{&policy.ArcEnabled{Val: true, Stat: policy.StatusSet}}
+	arcPolicy := &policy.ArcPolicy{
+		Val: &policy.ArcPolicyValue{
+			DpsInteractionsDisabled:   true,
+			PlayEmmApiInstallDisabled: true,
+		},
+	}
+
+	arcEnabledPolicy := &policy.ArcEnabled{Val: true, Stat: policy.StatusSet}
+
+	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
