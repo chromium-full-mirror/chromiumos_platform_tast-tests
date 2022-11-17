@@ -31,11 +31,13 @@ func init() {
 		Desc:    "Ti50 firmware update over CCD using gsctool",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
+			"chromeos-faft@google.com",
 			"ecgh@chromium.org",
 			"ti50-core@google.com",
 		},
-		Attr:    []string{"group:firmware"},
-		Fixture: fixture.Ti50,
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware"},
+		Fixture:      fixture.Ti50,
 	})
 }
 

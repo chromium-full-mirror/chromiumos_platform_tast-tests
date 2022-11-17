@@ -20,9 +20,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Ti50Rescue,
-		Desc:         "Use UART rescue to flash Ti50 image",
-		Contacts:     []string{"ecgh@chromium.org", "ti50-core@google.com"},
+		Func: Ti50Rescue,
+		Desc: "Use UART rescue to flash Ti50 image",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"ecgh@chromium.org", "ti50-core@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		Vars:         []string{"servo", "image"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

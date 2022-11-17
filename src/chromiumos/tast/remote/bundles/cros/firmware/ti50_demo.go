@@ -20,12 +20,13 @@ func init() {
 		Desc:    "Demo ti50 in remote environment(Andreiboard connected to devboardsvc host)",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"aluo@chromium.org",            // Test Author
-			"chromeos-firmware@google.com", // CrOS Firmware Developers
+			"chromeos-faft@google.com",
+			"aluo@chromium.org",
 		},
-		Attr:    []string{"group:firmware"},
-		Fixture: fixture.Ti50,
-		Vars:    []string{"servo"},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware"},
+		Fixture:      fixture.Ti50,
+		Vars:         []string{"servo"},
 	})
 }
 

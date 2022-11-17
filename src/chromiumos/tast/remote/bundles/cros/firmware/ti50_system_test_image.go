@@ -23,11 +23,13 @@ func init() {
 		Desc:    "Ti50 system test",
 		Timeout: 20 * time.Minute,
 		Contacts: []string{
+			"chromeos-faft@google.com",
 			"ecgh@chromium.org",
 			"ti50-core@google.com",
 		},
-		Attr:    []string{"group:firmware"},
-		Fixture: fixture.SystemTestAuto,
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware"},
+		Fixture:      fixture.SystemTestAuto,
 	})
 }
 
