@@ -36,7 +36,11 @@ func init() {
 		Func:         PowerModes,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that system comes back after shutdown and coldreset",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com", "cros-fw-engprod@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Vars: []string{"servo",
