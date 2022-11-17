@@ -22,9 +22,13 @@ const waitAfterCCDSettingChange = 3 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Cr50Password,
-		Desc:         "Verify that Cr50 password can be set and cleared",
-		Contacts:     []string{"tj@semihalf.com", "chromeos-firmware@google.com"},
+		Func: Cr50Password,
+		Desc: "Verify that Cr50 password can be set and cleared",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tj@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.DevMode,
 		Timeout:      10 * time.Minute,

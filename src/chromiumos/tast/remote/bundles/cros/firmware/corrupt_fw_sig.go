@@ -22,9 +22,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CorruptFWSig,
-		Desc:         "Servo based firmware signatures corruption test",
-		Contacts:     []string{"pf@semihalf.com", "chromeos-firmware@google.com"},
+		Func: CorruptFWSig,
+		Desc: "Servo based firmware signatures corruption test",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pf@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,

@@ -16,9 +16,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TPMKernelVersion,
-		Desc:         "Check firmware and kernel version stored in TPM",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: TPMKernelVersion,
+		Desc: "Check firmware and kernel version stored in TPM",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.DevMode,
@@ -61,10 +65,10 @@ func TPMKernelVersion(ctx context.Context, s *testing.State) {
 	s.Logf("Firmware version in TPM: 0x%x", fwVersion)
 
 	if kernVersion == 0xFFFFFFFF {
-		s.Fatal("Invalid kernel version found in TPM!")
+		s.Fatal("Invalid kernel version found in TPM")
 	}
 
 	if fwVersion == 0xFFFFFFFF {
-		s.Fatal("Invalid firmware version found in TPM!")
+		s.Fatal("Invalid firmware version found in TPM")
 	}
 }

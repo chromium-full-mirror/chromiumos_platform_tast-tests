@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FwScreenPowerOff,
-		Desc:         "Test power off from developer and recovery screen using power button and UI menu if exists",
-		Contacts:     []string{"tj@semihalf.com", "chromeos-firmware@google.com"},
+		Func: FwScreenPowerOff,
+		Desc: "Test power off from developer and recovery screen using power button and UI menu if exists",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tj@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.DevMode,
 		Timeout:      8 * time.Minute,

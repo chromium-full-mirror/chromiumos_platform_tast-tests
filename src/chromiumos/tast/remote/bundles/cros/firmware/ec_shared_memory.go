@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECSharedMemory,
-		Desc:         "Checks that there is still EC shared memory available",
-		Contacts:     []string{"pf@semihalf.com", "chromeos-firmware@google.com"},
+		Func: ECSharedMemory,
+		Desc: "Checks that there is still EC shared memory available",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pf@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_bringup"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
@@ -113,7 +117,7 @@ func checkSharedMemory(ctx context.Context, h *firmware.Helper) error {
 	}
 
 	if ecShmem <= errorLevel {
-		return errors.Errorf("EC shared memory size is too small")
+		return errors.New("EC shared memory size is too small")
 	} else if ecShmem <= warningLevel {
 		testing.ContextLogf(ctx, "EC shared memory is less than %d bytes", warningLevel)
 	}

@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECSystemLocked,
-		Desc:         "This test case verifies that changing the FW write protection state has expected effect",
-		Contacts:     []string{"tj@semihalf.com", "chromeos-firmware@google.com"},
+		Func: ECSystemLocked,
+		Desc: "This test case verifies that changing the FW write protection state has expected effect",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tj@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

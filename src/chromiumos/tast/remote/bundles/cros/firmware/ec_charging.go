@@ -12,16 +12,18 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECCharging,
-		Desc:         "Servo based EC charging control test",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: ECCharging, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Servo based EC charging control test",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      "bootModeNormal",
 		SoftwareDeps: []string{"chrome"},
@@ -99,7 +101,7 @@ func getChargingState(ctx context.Context, s *testing.State, h *firmware.Helper)
 	return cstate_map
 }
 
-func chargingInt(raw string, suffix string) (value int) {
+func chargingInt(raw, suffix string) (value int) {
 	raw = strings.TrimSuffix(raw, suffix)
 	value, _ = strconv.Atoi(raw)
 	return value

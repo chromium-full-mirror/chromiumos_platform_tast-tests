@@ -8,19 +8,21 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/testing/hwdep"
-
-	"chromiumos/tast/testing"
-
 	"github.com/golang/protobuf/ptypes/empty"
+
+	"chromiumos/tast/remote/firmware/fixture"
+	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FWConsecutiveLidSwitch,
-		Desc:         "Trigger lid switch on and off many times consecutively",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: FWConsecutiveLidSwitch, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Trigger lid switch on and off many times consecutively",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

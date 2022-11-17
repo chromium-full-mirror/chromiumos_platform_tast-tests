@@ -16,9 +16,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECReboot,
-		Desc:         "Checks that device will reboot when EC gets the remote requests via UART",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: ECReboot,
+		Desc: "Checks that device will reboot when EC gets the remote requests via UART",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECBattery,
-		Desc:         "Check battery temperature, voltage, and current readings",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: ECBattery,
+		Desc: "Check battery temperature, voltage, and current readings",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),

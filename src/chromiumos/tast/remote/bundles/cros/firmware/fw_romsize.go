@@ -10,16 +10,19 @@ import (
 	"strings"
 
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/testing/hwdep"
-
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FWROMSize,
-		Desc:         "Check that flash sizes are within reasonable range",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: FWROMSize,
+		Desc: "Check that flash sizes are within reasonable range",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,

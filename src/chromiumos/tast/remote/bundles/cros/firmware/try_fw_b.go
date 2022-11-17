@@ -20,9 +20,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TryFWB,
-		Desc:         "Servo based boot firmware B test",
-		Contacts:     []string{"pf@semihalf.com", "chromeos-firmware@google.com"},
+		Func: TryFWB,
+		Desc: "Servo based boot firmware B test",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pf@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      10 * time.Minute,

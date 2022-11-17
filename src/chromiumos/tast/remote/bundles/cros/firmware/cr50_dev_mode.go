@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Cr50DevMode,
-		Desc:         "Verify cr50 can tell the state of the dev mode switch",
-		Contacts:     []string{"tj@semihalf.com", "chromeos-firmware@google.com"},
+		Func: Cr50DevMode,
+		Desc: "Verify cr50 can tell the state of the dev mode switch",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tj@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,

@@ -12,16 +12,18 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/testing"
-
 	pb "chromiumos/tast/services/cros/firmware"
+	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UpdateKernelVersion,
-		Desc:         "Update kernel version bits in CGPT and verify its consistency",
-		Contacts:     []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: UpdateKernelVersion, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Update kernel version bits in CGPT and verify its consistency",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.CgptService"},
@@ -32,13 +34,13 @@ func init() {
 func kernelImageVersion(ctx context.Context, h *firmware.Helper, imagePath string) (string, error) {
 	vbutilOutput, err := h.DUT.Conn().CommandContext(ctx, "vbutil_kernel", "--verify", imagePath).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to call vbutil_kernel")
+		return "", errors.Wrap(err, "failed to call vbutil_kernel")
 	}
 
 	for _, line := range strings.Split(string(vbutilOutput), "\n") {
 		if strings.Contains(line, "Kernel version:") {
 			if len(strings.Fields(line)) > 2 {
-				return "", errors.Wrapf(err, "failed to determine kernel version from vbutil_kernel output")
+				return "", errors.Wrap(err, "failed to determine kernel version from vbutil_kernel output")
 			}
 			return strings.Fields(line)[2], nil
 
@@ -50,26 +52,26 @@ func kernelImageVersion(ctx context.Context, h *firmware.Helper, imagePath strin
 func rebootDUT(ctx context.Context, h *firmware.Helper, s *testing.State) error {
 	h.CloseRPCConnection(ctx)
 	if err := h.DUT.Reboot(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reboot DUT")
+		return errors.Wrap(err, "failed to reboot DUT")
 	}
 
 	s.Log("Wait for DUT to reconnect")
 	if err := h.DUT.WaitConnect(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reconnect to DUT")
+		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 
 	s.Log("Reconnecting to RPC services on DUT")
 	if err := h.RequireRPCClient(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reconnect to the RPC service on DUT")
+		return errors.Wrap(err, "failed to reconnect to the RPC service on DUT")
 	}
 
 	s.Log("Reconnecting to CgptService on DUT")
 	if err := h.RequireCgptServiceClient(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reconnect to BiosServiceClient on DUT")
+		return errors.Wrap(err, "failed to reconnect to BiosServiceClient on DUT")
 	}
 
 	if err := h.EnsureDUTBooted(ctx); err != nil {
-		return errors.Wrapf(err, "failed to ensure the DUT is booted!")
+		return errors.Wrap(err, "failed to ensure the DUT is booted")
 	}
 
 	return nil
@@ -94,7 +96,7 @@ func setKernelImageVersion(ctx context.Context, h *firmware.Helper, s *testing.S
 		return errors.Wrapf(err, "failed to load repack kernel from image %s with version %s: %s", imagePath, version, string(vbutilOutput))
 	}
 
-	s.Log("Writing kernel image back...")
+	s.Log("Writing kernel image back")
 	ddOutput, err := h.DUT.Conn().CommandContext(ctx,
 		"dd", "if=/tmp/kernel-repack.bin", "of="+imagePath, "conv=sync",
 	).Output(testexec.DumpLogOnError)
