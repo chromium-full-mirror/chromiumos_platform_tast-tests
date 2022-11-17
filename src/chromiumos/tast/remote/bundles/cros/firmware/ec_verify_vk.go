@@ -43,7 +43,11 @@ func init() {
 		Func:         ECVerifyVK,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify whether virtual keyboard window is present during change in tablet mode",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/200305355): Add back to firmware_unstable when this test passes.
 		Attr:         []string{"group:firmware", "firmware_detachable"},
 		SoftwareDeps: []string{"chrome"},

@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ToNormConfirmed,
-		Desc:         "Check that while TO_NORM_CONFIRMED is displayed, ctrl+u, volume and power buttons have no effect",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Func: ToNormConfirmed,
+		Desc: "Check that while TO_NORM_CONFIRMED is displayed, ctrl+u, volume and power buttons have no effect",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		// To-do: Some DUTs (i.e. Strongbad) showed behavior of KeyboardDevSwitcher at

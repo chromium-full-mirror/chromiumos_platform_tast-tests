@@ -32,7 +32,11 @@ func init() {
 		Func:         ECTabletMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that power button actions behave as expected in tablet mode, replacing case 1.4.9",
-		Contacts:     []string{"arthur.chuang@cienet.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"arthur.chuang@cienet.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -21,9 +21,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     FwmpDevDisableBoot,
-		Desc:     "Verify that firmware management parameters (FWMP) can restrict developer mode",
-		Contacts: []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Func: FwmpDevDisableBoot,
+		Desc: "Verify that firmware management parameters (FWMP) can restrict developer mode",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/235742217): This test might be leaving broken DUTS that can't be auto-repaired. Add attr firmware_unstable when fixed.
 		Attr:         []string{"group:firmware"},
 		Timeout:      15 * time.Minute,

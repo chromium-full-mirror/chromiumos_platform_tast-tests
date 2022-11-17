@@ -30,9 +30,13 @@ type params struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevModeFwScreen,
-		Desc:         "Verify the functionality of Ctrl+D and Ctrl+U while on the dev screen",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Func: DevModeFwScreen,
+		Desc: "Verify the functionality of Ctrl+D and Ctrl+U while on the dev screen",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},

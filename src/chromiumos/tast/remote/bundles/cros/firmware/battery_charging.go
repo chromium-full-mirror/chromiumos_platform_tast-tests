@@ -21,9 +21,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BatteryCharging,
-		Desc:         "Verify battery information when charger state is changed during suspend",
-		Contacts:     []string{"arthur.chuang@cienet.com", "chromeos-firmware@google.com"},
+		Func: BatteryCharging,
+		Desc: "Verify battery information when charger state is changed during suspend",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"arthur.chuang@cienet.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),

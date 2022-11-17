@@ -23,7 +23,11 @@ func init() {
 		Func:         ECPDRole,
 		Desc:         "Verify USB-C/PD source role policy",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome"},

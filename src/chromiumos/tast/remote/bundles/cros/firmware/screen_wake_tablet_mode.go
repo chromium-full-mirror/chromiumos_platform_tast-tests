@@ -113,7 +113,11 @@ func init() {
 		Func:         ScreenWakeTabletMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that tablet mode allows waking screen from additional triggers",
-		Contacts:     []string{"arthur.chuang@cienet.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"arthur.chuang@cienet.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"chrome"},

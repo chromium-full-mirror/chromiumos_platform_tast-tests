@@ -43,7 +43,11 @@ func init() {
 		Func:         ECWakeOnCharge,
 		Desc:         "Checks that device will charge when EC is in a low-power mode, as a replacement for manual test 1.4.11",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"arthur.chuang@cienet.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"arthur.chuang@cienet.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_bringup"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"board", "model"},

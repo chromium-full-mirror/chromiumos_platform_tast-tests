@@ -29,7 +29,11 @@ func init() {
 		Func:         CheckKeyboardBacklightFunctionality,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Confirm keyboard backlight support and check keyboard backlight functionality",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ScreenRecorderService"},

@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeepSleep,
-		Desc:         "Estimate battery life in deep sleep state, as a replacement for manual test 1.10.1",
-		Contacts:     []string{"hc.tsai@cienet.com", "chromeos-firmware@google.com"},
+		Func: DeepSleep,
+		Desc: "Estimate battery life in deep sleep state, as a replacement for manual test 1.10.1",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"hc.tsai@cienet.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bringup"},
 		Vars:         []string{"firmware.hibernate_time", "board", "model"},
 		HardwareDeps: hwdep.D(hwdep.Battery(), hwdep.ChromeEC()),

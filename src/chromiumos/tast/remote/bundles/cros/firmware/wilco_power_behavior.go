@@ -20,7 +20,11 @@ func init() {
 		Func:         WilcoPowerBehavior,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Wilco devices can wake from pressing power, but not from connecting AC",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,

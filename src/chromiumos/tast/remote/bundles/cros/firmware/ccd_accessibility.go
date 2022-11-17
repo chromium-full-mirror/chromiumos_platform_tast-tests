@@ -20,9 +20,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CCDAccessibility,
-		Desc:         "Verifies if we can open CCD while having capabilities in different states",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Func: CCDAccessibility,
+		Desc: "Verifies if we can open CCD while having capabilities in different states",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"cienet-firmware@cienet.corp-partner.google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_trial"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
