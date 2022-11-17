@@ -35,7 +35,7 @@ func init() {
 		Desc:         "Functional test for Pixlr that install, launch the app and check that the main page is open, also checks Pixlr correctly changes the window state in both clamshell and touchview mode",
 		Contacts:     []string{"cros-arc-apps-te@google.com"},
 		// ChromeOS > Software > ARC++ > Apps Testing
-		// Bug Component:1122984
+		BugComponent: "b:1122984",
 		// Disabled the test since Pixlr is not compatible with Chromebook.
 		// Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},

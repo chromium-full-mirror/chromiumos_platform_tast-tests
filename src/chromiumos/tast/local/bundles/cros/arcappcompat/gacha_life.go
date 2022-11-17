@@ -35,7 +35,7 @@ func init() {
 		Desc:         "Functional test for GachaLife that install, launch the app and check that the main page is open, also checks GachaLife correctly changes the window state in both clamshell and touchview mode",
 		Contacts:     []string{"cros-arc-apps-te@google.com"},
 		// ChromeOS > Software > ARC++ > Apps Testing
-		// Bug Component:1122984
+		BugComponent: "b:1122984",
 		Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

@@ -35,7 +35,7 @@ func init() {
 		Desc:         "Functional test for CrossDJ that installs the app also verifies it is logged in and that the main page is open, checks CrossDJ correctly changes the window state in both clamshell and touchview mode",
 		Contacts:     []string{"cros-arc-apps-te@google.com"},
 		// ChromeOS > Software > ARC++ > Apps Testing
-		// Bug Component:1122984
+		BugComponent: "b:1122984",
 		Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("elm")),

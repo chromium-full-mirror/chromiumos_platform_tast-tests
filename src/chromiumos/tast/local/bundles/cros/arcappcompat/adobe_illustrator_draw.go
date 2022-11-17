@@ -35,7 +35,7 @@ func init() {
 		Desc:         "Functional test for AdobeIllustratorDraw that installs the app also verifies it is logged in and that the main page is open, checks AdobeIllustratorDraw correctly changes the window state in both clamshell and touchview mode",
 		Contacts:     []string{"cros-arc-apps-te@google.com"},
 		// ChromeOS > Software > ARC++ > Apps Testing
-		// Bug Component:1122984
+		BugComponent: "b:1122984",
 		// Disabled the test since Adobe illustrator draw is no longer available in play store.
 		// Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},
