@@ -106,7 +106,7 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 			return errors.Wrap(err, "failed to create persistent user")
 		}
-		if err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 			return errors.Wrap(err, "failed to prepare new persistent vault")
 		}
 		if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
@@ -123,7 +123,7 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 			return errors.Wrap(err, "failed to create persistent user")
 		}
-		if err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 			return errors.Wrap(err, "failed to prepare new persistent vault")
 		}
 		if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, secondPassword); err != nil {

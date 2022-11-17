@@ -211,7 +211,7 @@ func SmartCardWithAuthAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run authenticateWithSmartCard with error: ", err)
 	}
 
-	if err := client.PreparePersistentVault(ctx, authSessionID, false); err != nil {
+	if _, err := client.PreparePersistentVault(ctx, authSessionID, false); err != nil {
 		s.Fatal("Failed to prepare persistent vault: ", err)
 	}
 
@@ -292,7 +292,7 @@ func setupUserWithSmartCard(ctx context.Context, testUser string, isEphemeral bo
 			return nil, errors.Wrap(err, "failed to create persistent user with auth session")
 		}
 
-		if err = cryptohome.PreparePersistentVault(ctx, authSessionID, false); err != nil {
+		if _, err = cryptohome.PreparePersistentVault(ctx, authSessionID, false); err != nil {
 			return nil, errors.Wrap(err, "failed to prepare persistent user with auth session")
 		}
 	}

@@ -61,7 +61,7 @@ func RemovePassword(ctx context.Context, s *testing.State) {
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
-	if err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 		s.Fatal("Failed to prepare new persistent vault: ", err)
 	}
 	defer client.UnmountAll(ctxForCleanUp)
@@ -86,7 +86,7 @@ func RemovePassword(ctx context.Context, s *testing.State) {
 			return authSessionID, errors.Wrap(err, "failed to authenticate with pin")
 		}
 
-		if err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 			return authSessionID, errors.Wrap(err, "failed to prepare persistent vault")
 		}
 

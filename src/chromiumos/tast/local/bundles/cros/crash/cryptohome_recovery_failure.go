@@ -133,7 +133,7 @@ func induceRecoveryRequestFailure(ctx context.Context) error {
 	}
 	defer cryptohome.RemoveVault(ctx, userName)
 
-	if err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 		return errors.Wrap(err, "failed to prepare new persistent vault")
 	}
 	defer client.UnmountAll(ctx)

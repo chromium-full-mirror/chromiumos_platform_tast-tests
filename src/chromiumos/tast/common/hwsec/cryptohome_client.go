@@ -443,7 +443,7 @@ func (u *CryptohomeClient) mountVaultWithAuthSession(ctx context.Context, label 
 	}
 
 	if !vaultConfig.Ephemeral {
-		if err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
+		if _, err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
 			return errors.Wrap(err, "failed to prepare persistent vault")
 		}
 	} else {
@@ -479,7 +479,7 @@ func (u *CryptohomeClient) mountVaultWithAuthFactor(ctx context.Context, label s
 	}
 
 	if !vaultConfig.Ephemeral {
-		if err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
+		if _, err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
 			return errors.Wrap(err, "failed to prepare persistent vault")
 		}
 	} else {
@@ -1215,10 +1215,21 @@ func (u *CryptohomeClient) PrepareEphemeralVault(ctx context.Context, authSessio
 	return err
 }
 
-// PreparePersistentVault prepares vault for persistent user session.
-func (u *CryptohomeClient) PreparePersistentVault(ctx context.Context, authSessionID string, ecryptfs bool) error {
-	_, err := u.binary.preparePersistentVault(ctx, authSessionID, ecryptfs)
-	return err
+// PreparePersistentVault prepares vault for persistent user session, the reply is returned as long as they are available, even if the underlying operation failed. The returned error is nil iff the operation is successful.
+func (u *CryptohomeClient) PreparePersistentVault(ctx context.Context, authSessionID string, ecryptfs bool) (*uda.PreparePersistentVaultReply, error) {
+	binaryMsg, err := u.binary.preparePersistentVault(ctx, authSessionID, ecryptfs)
+
+	// Attempt to parse the binaryMsg anyway, we need them to check for the correct error code.
+	reply := &uda.PreparePersistentVaultReply{}
+	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal PreparePersistentVault reply")
+	}
+
+	if err != nil {
+		return reply, errors.Wrap(err, "PreparePersistentVault failed")
+	}
+
+	return reply, nil
 }
 
 // PrepareVaultForMigration prepares vault for migration.
