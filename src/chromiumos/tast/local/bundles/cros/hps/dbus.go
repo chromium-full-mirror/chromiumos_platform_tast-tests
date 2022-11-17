@@ -26,9 +26,10 @@ func init() {
 		Func: DBus,
 		Desc: "Check that hpsd can be connected to via dbus",
 		Contacts: []string{
-			"evanbenn@chromium.org", // Test author
 			"chromeos-hps-swe@google.com",
+			"evanbenn@chromium.org", // Test author
 		},
+		BugComponent: "b:1140302",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"hps"},
 		Params: []testing.Param{{
