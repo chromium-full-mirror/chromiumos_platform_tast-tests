@@ -31,14 +31,13 @@ func init() {
 		Func:         FilesAppDragAndDrop,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks dragging and dropping to/from Holding Space from/to Files App",
+		BugComponent: "crbug:UI>Shell>HoldingSpace",
 		Contacts: []string{
 			"tote-eng@google.com",
-			"angusmclean@chromium.org",
-			"dmblack@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"cros-system-ui-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"dmblack@google.com",
 		},
-		BugComponent: "b:200987409", // ChromeOS > External > Cienet > Manual Test Automation
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
