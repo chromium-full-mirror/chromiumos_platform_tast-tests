@@ -138,9 +138,10 @@ func expectedBootMode() (string, error) {
 
 func expectedOSInfo(ctx context.Context) (osInfo, error) {
 	const (
-		cfgCodeName      = "/name"
-		cfgMarketingName = "/branding/marketing-name"
-		cfgOEMName       = "/branding/oem-name"
+		cfgCodeName          = "/name"
+		cfgMarketingName     = "/branding/marketing-name"
+		cfgOEMName           = "/branding/oem-name"
+		pathUEFIPlatformSize = "/sys/firmware/efi/fw_platform_size"
 	)
 	var r osInfo
 	var err error
@@ -159,9 +160,13 @@ func expectedOSInfo(ctx context.Context) (osInfo, error) {
 	if r.BootMode, err = expectedBootMode(); err != nil {
 		return r, err
 	}
-	// Before we have DUT boot with efi, we can assume that the result should be
-	// "unknown".
-	r.EfiPlatformSize = "unknown"
+	if r.BootMode == "cros_efi" {
+		if r.EfiPlatformSize, err = utils.ReadStringFile(pathUEFIPlatformSize); err != nil {
+			return r, err
+		}
+	} else {
+		r.EfiPlatformSize = "unknown"
+	}
 	return r, nil
 }
 
