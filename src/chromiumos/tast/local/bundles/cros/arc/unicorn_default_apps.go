@@ -24,8 +24,10 @@ func init() {
 		Func:         UnicornDefaultApps,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the Default arc apps for Unicorn Account",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
+		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
 		Timeout:      6 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

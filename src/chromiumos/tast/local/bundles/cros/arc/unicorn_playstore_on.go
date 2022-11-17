@@ -20,8 +20,10 @@ func init() {
 		Func:         UnicornPlaystoreOn,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if PlayStore is Enabled for Unicorn Acccount",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
+		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
+		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
