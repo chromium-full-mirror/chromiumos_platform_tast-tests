@@ -6,11 +6,13 @@ package firmware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
@@ -18,6 +20,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -46,6 +49,16 @@ type crossystemValues struct {
 	fwUpdateTriesVal   string
 	locIdxVal          string
 	backupNvramRequest string
+}
+
+type fwUpdaterVersions struct {
+	RO string `json:"ro"`
+	RW string `json:"rw"`
+}
+
+type currentFwVersions struct {
+	ro string
+	rw string
 }
 
 func FlagsPreservation(ctx context.Context, s *testing.State) {
@@ -121,6 +134,29 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set target crossystem values: ", err)
 	}
 
+	// On dirinboz and gumboz, running fw update allowed them to wake from a 45W charger.
+	// needFwUpdate first checks the ec, and then ap to find if an update is required.
+	// It will return true as soon as it detects that fw updater has a newer version, either
+	// for ro, or for rw. In case that the dut doesn't wake up during power cycles, include
+	// information from needFwUpdate for debugging purposes.
+	needFwUpdate := func() string {
+		for _, programmer := range []string{"ec", "host"} {
+			val, err := compareForFwUpdate(ctx, h, programmer)
+			if err != nil {
+				s.Log("Failed to determine if fw update is required: ", err)
+				return "unknown"
+			}
+			if val == true {
+				return "need to run firmware update mode recovery"
+			}
+		}
+		return "all fw versions are up to date"
+	}
+	fwStatus := needFwUpdate()
+	// Ensure CCD open and testlab enabled prior to power-cycling the DUT.
+	if err := h.OpenCCD(ctx, true, true); err != nil {
+		s.Fatal("CCD not opened: ", err)
+	}
 	for _, tc := range []struct {
 		powerDisruption string
 		fwVboot2        bool
@@ -187,12 +223,6 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to perform a tap on the power button: ", err)
 			}
 		case "powerCycleByRemovingBattery":
-			// Opening CCD prior to battery cutoff would help some DUTs in waking
-			// when ac is re-attached.
-			if err := openCCD(ctx, h); err != nil {
-				s.Fatal("CCD not opened: ", err)
-			}
-
 			// Explicitly log servo type and dut connection type for debugging purposes.
 			s.Log("Logging servo type and dut connection type")
 			var validInfo = []string{"servoType", "dutConnectionType"}
@@ -311,7 +341,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 					if err := h.WaitConnect(ctx); err != nil {
 						s.Fatal("DUT did not wake up: ", err)
 					}
-					if err := openCCD(ctx, h); err != nil {
+					if err := h.OpenCCD(ctx, true, true); err != nil {
 						s.Fatal("CCD not opened: ", err)
 					}
 				}
@@ -357,12 +387,12 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 			// vilboz and dirinboz. Add more gpio names in the future if more
 			// models are to be checked.
 			pwrOkGpio, _ := grepGpio(ctx, h, "EC_FCH_PWROK")
-			s.Fatalf("Failed to reconnect to DUT [power state %s, battery %s, %s, gpio_pwrok %s]: %v",
-				pwrState, stateOfCharge, battPresent, pwrOkGpio, err)
+			s.Fatalf("Failed to reconnect to DUT [power state %s, battery %s, %s, gpio_pwrok %s, fw status: %s]: %v",
+				pwrState, stateOfCharge, battPresent, pwrOkGpio, fwStatus, err)
 		}
 		// Cr50 goes to sleep when the battery is disconnected, and when DUT wakes,
 		// CCD might be locked. Open CCD after waking DUT and before talking to the EC.
-		if err := openCCD(ctx, h); err != nil {
+		if err := h.OpenCCD(ctx, true, true); err != nil {
 			s.Fatal("CCD not opened: ", err)
 		}
 
@@ -469,26 +499,6 @@ func logInformation(ctx context.Context, h *firmware.Helper, information string)
 	return result, nil
 }
 
-// openCCD attempts to open ccd if it's closed.
-// To-do: we're adding a firmware helper function to check and open CCD via
-// a more thorough process, i.e. verifying testlab status, ccd capabilities,
-// and whether a servo micro is present.
-func openCCD(ctx context.Context, h *firmware.Helper) error {
-	if hasCCD, err := h.Servo.HasCCD(ctx); err != nil {
-		return errors.Wrap(err, "while checking if servo has a CCD connection")
-	} else if hasCCD {
-		if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
-			return errors.Wrap(err, "failed to get gsc_ccd_level")
-		} else if val != servo.Open {
-			testing.ContextLogf(ctx, "CCD is not open, got %q. Attempting to unlock", val)
-			if err := h.Servo.SetString(ctx, servo.CR50Testlab, servo.Open); err != nil {
-				return errors.Wrap(err, "failed to unlock CCD")
-			}
-		}
-	}
-	return nil
-}
-
 // checkDUTAsleepAndPressPwr checks if DUT is at S5 or G3, and presses power button to boot it.
 func checkDUTAsleepAndPressPwr(ctx context.Context, h *firmware.Helper) error {
 	shortCtx, cancelShortCtx := context.WithTimeout(ctx, 2*time.Minute)
@@ -591,4 +601,143 @@ func checkPowerState(ctx context.Context, h *firmware.Helper) (string, error) {
 		return "unknown", err
 	}
 	return state, nil
+}
+
+// checkUpdaterFirmware checks for the fw versions contained in the firmware updater archive
+// for a specific programmer and dut model.
+func checkUpdaterFirmware(ctx context.Context, h *firmware.Helper, programmer string) (fwUpdaterVersions, error) {
+	testing.ContextLogf(ctx, "Checking %s firmware updater version for %s", programmer, h.Model)
+	checkFirmwareUpdaterManifest := fmt.Sprintf(
+		"chromeos-firmwareupdate --manifest | jq -c .%s.%s.versions", h.Model, programmer)
+	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", checkFirmwareUpdaterManifest).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return fwUpdaterVersions{}, errors.Wrap(err, "failed to check for firmware updater manifest")
+	}
+	var data fwUpdaterVersions
+	if err := json.Unmarshal(out, &data); err != nil {
+		return fwUpdaterVersions{}, errors.Wrap(err, "failed to parse JSON file")
+	}
+	return data, nil
+}
+
+// checkCurrentFirmware checks for the current fw versions running on the dut.
+// For ec, it runs 'ectool version' to find both the ro and rw versions.
+// For ap, it runs 'crossystem ro_fwid', and 'crossystem fwid' to find ro and rw respectively.
+func checkCurrentFirmware(ctx context.Context, h *firmware.Helper, programmer string) (currentFwVersions, error) {
+	var data currentFwVersions
+	switch programmer {
+	case "ec":
+		var (
+			reROVersion = regexp.MustCompile(`RO version:\s*(\S+)\s`)
+			reRWVersion = regexp.MustCompile(`RW version:\s*(\S+)\s`)
+		)
+		ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
+		output, err := ec.Command(ctx, "version").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return currentFwVersions{}, errors.Wrap(err, "failed to run 'ectool version' on DUT")
+		}
+		roVersion := reROVersion.FindSubmatch(output)
+		if len(roVersion) == 0 {
+			return data, errors.Errorf("failed to match regexp %s in ectool version output: %s", reROVersion, output)
+		}
+		rwVersion := reRWVersion.FindSubmatch(output)
+		if len(rwVersion) == 0 {
+			return data, errors.Errorf("failed to match regexp %s in ectool version output: %s", reRWVersion, output)
+		}
+		data.ro = string(roVersion[1])
+		data.rw = string(rwVersion[1])
+	case "host":
+		rofwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamRoFwid)
+		if err != nil {
+			return data, errors.Wrap(err, "failed to get crosystem ro_fwid")
+		}
+		rwfwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+		if err != nil {
+			return data, errors.Wrap(err, "failed to get crossystem fwid")
+		}
+		data.ro = rofwid
+		data.rw = rwfwid
+	default:
+		return data, errors.New("unknown programmer name")
+	}
+	return data, nil
+}
+
+// checkUpdaterVersionBigger checks whether fw updater has newer versions (higher version numbers) than
+// the current ones running on the dut.
+func checkUpdaterVersionBigger(ctx context.Context, h *firmware.Helper, fwUpdater, current, programmer string) (bool, error) {
+	var fwUpdaterIDs, currentIDs []string
+	testing.ContextLogf(ctx, "Full fw updater version value: %s, current fw version value: %s", fwUpdater, current)
+	switch programmer {
+	case "ec":
+		// As an example, before parsed into ids, ec fw version is represented by
+		// the following format, "cret_v2.0.11733-88ee536526", where cret is the
+		// dut's model name. Use parseECVerIntoID to extract 2, 0, and 11733.
+		parseECVerIntoID := func(version string) string {
+			str := strings.TrimLeft(version, fmt.Sprintf("%s_v", h.Model))
+			nums := strings.Split(str, "-")
+			id := nums[0]
+			return id
+		}
+		fwUpdaterIDs = strings.Split(parseECVerIntoID(fwUpdater), ".")
+		currentIDs = strings.Split(parseECVerIntoID(current), ".")
+	case "host":
+		// As an example, before parsed into ids, host fw version is represented by
+		// the following format, "Google_Cret.13606.426.0". Use parseHostVerIntoID
+		// to extract 13606, 426, and 0.
+		parseHostVerIntoID := func(version string) string {
+			id := strings.TrimLeftFunc(version, func(r rune) bool { return !unicode.IsNumber(r) })
+			return id
+		}
+		fwUpdaterIDs = strings.Split(parseHostVerIntoID(fwUpdater), ".")
+		currentIDs = strings.Split(parseHostVerIntoID(current), ".")
+	default:
+		return false, errors.New("unknown programmer name")
+	}
+	testing.ContextLogf(ctx, "Found fw updater id: %s, current id: %s", fwUpdaterIDs, currentIDs)
+	for i, val := range fwUpdaterIDs {
+		var idA, idB int
+		// As an example, say we have "fw updater id: [2 0 11733], current id: [2 0 11081]".
+		// Running fmt.Sscanf below would assign '2' to idA, and '2' to idB during the first
+		// iteration. In the second iteration, '0' to idA, and '0' to idB, and so on and so
+		// fourth, until finding out eventually that '11733' is greater than '11081'.
+		if _, err := fmt.Sscanf(val, "%d", &idA); err != nil {
+			return false, errors.Wrapf(err, "failed to sscanf %s", val)
+		}
+		if _, err := fmt.Sscanf(currentIDs[i], "%d", &idB); err != nil {
+			return false, errors.Wrapf(err, "failed to sscanf %s", currentIDs[i])
+		}
+		if idA > idB {
+			testing.ContextLogf(ctx, "%v is bigger than %v", fwUpdaterIDs, currentIDs)
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// compareForFwUpdate returns true if either the ro or rw version number is found bigger from fw updater,
+// denoting that the dut needs a fw update.
+func compareForFwUpdate(ctx context.Context, h *firmware.Helper, programmer string) (bool, error) {
+	updater, err := checkUpdaterFirmware(ctx, h, programmer)
+	if err != nil {
+		return false, err
+	}
+	current, err := checkCurrentFirmware(ctx, h, programmer)
+	if err != nil {
+		return false, err
+	}
+	testing.ContextLogf(ctx, "Compaing %s ro fw versions", programmer)
+	updateRO, err := checkUpdaterVersionBigger(ctx, h, updater.RO, current.ro, programmer)
+	if err != nil {
+		return false, err
+	}
+	testing.ContextLogf(ctx, "Compaing %s rw fw versions", programmer)
+	updateRW, err := checkUpdaterVersionBigger(ctx, h, updater.RW, current.rw, programmer)
+	if err != nil {
+		return false, err
+	}
+	if updateRO || updateRW {
+		return true, nil
+	}
+	return false, nil
 }
