@@ -32,7 +32,7 @@ func init() {
 		Func:         AudioAplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that playback devices are listed correctly",
-		Contacts:     []string{"pteerapong@google.com", "chromeos-audio-bugs@google.com", "crosvm-core@google.com"},
+		Contacts:     []string{"pteerapong@google.com", "chromeos-audio-bugs@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{runAudioAplay},
 		Timeout:      3 * time.Minute,

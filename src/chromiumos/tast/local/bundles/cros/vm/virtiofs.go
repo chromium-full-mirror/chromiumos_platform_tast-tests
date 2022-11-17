@@ -26,7 +26,8 @@ func init() {
 		Func:         Virtiofs,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the crosvm virtio-fs device works correctly",
-		Contacts:     []string{"crosvm-core@google.com"},
+		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
+		BugComponent: "b:1248538",
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{runPjdfstest},

@@ -32,7 +32,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VhostUserNet,
 		Desc:         "Tests crosvm's vhost-user net device",
-		Contacts:     []string{"keiichiw@chromium.org", "crosvm-core@google.com"},
+		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
+		BugComponent: "b:1248538",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{vm.ArtifactData(), runVhostUserNetTest},
 		SoftwareDeps: []string{"vm_host"},
