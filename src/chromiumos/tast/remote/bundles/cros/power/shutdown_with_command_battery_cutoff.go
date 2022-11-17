@@ -24,7 +24,11 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ShutdownWithCommandBatteryCutoff, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies that system comes back after executing shutdown command with battery cutoff",
-		Contacts:     []string{"timvp@google.com", "cros-fw-engprod@google.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"timvp@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
