@@ -16,9 +16,11 @@ func init() {
 		Func: StorageWearoutDetect,
 		Desc: "Fails if storage device information indicates impending failure",
 		Contacts: []string{
+			"chromeos-storage@google.com",
 			"puthik@chromium.org",       // Autotest author
 			"brooke.mylander@intel.com", // Migrated Autotest to Tast
 		},
+		BugComponent: "b:974567",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"storage_wearout_detect"},
 	})
