@@ -28,7 +28,10 @@ func init() {
 		Func:         Clipboard,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Tests copying and pasting from Chrome to Android and vice versa",
-		Contacts:     []string{"ruanc@chromium.org", "yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
+
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"clipboard_image.html"},

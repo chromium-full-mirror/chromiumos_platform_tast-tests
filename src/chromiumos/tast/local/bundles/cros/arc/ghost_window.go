@@ -70,7 +70,9 @@ func init() {
 		Func:         GhostWindow,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ghost window for ARC Apps",
-		Contacts:     []string{"sstan@google.com", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -29,7 +29,9 @@ func init() {
 		Func:         ImagePaste,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks image copy paste app compat CUJ",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"image_paste.html", "image_paste_sample.png"},

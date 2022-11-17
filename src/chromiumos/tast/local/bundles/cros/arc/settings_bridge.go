@@ -25,7 +25,9 @@ func init() {
 		Func:         SettingsBridge,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome settings are persisted in ARC",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithoutUIAutomator",

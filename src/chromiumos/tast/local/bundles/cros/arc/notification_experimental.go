@@ -55,10 +55,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches a testing APK to generate various kinds of notifications and verifies its state",
 		Contacts: []string{
-			"toshikikikuchi@chromium.org",
-			"yhanada@chromium.org",
 			"arc-framework+tast@google.com",
+			"yhanada@chromium.org",
+			"toshikikikuchi@chromium.org",
 		},
+		// ChromeOS > Software > ARC++ > Framework > Notifications
+		BugComponent: "b:537324",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{arcNotificationTest2ApkFilename},
 		Fixture:      "arcBooted",

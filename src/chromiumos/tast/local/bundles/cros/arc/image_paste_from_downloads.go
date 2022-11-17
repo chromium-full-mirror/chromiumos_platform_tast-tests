@@ -24,7 +24,9 @@ func init() {
 		Func:         ImagePasteFromDownloads,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks image copy paste app compat from Files App",
-		Contacts:     []string{"yhanada@chromium.org", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},

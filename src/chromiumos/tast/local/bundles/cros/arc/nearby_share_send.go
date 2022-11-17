@@ -62,11 +62,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs ARC share test app and share text/file to Nearby Share via Sharesheet",
 		Contacts: []string{
+			"arc-app-dev@google.com",
 			"alanding@chromium.org",
 			"kyleshima@chromium.org",
 			"phshah@chromium.org",
-			"arc-app-dev@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		Attr:         []string{"group:nearby-share-arc"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{apkName},

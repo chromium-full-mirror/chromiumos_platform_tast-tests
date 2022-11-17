@@ -106,7 +106,9 @@ func init() {
 		Func:         CompanionLibrary,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test all ARC++ companion library",
-		Contacts:     []string{"sstan@google.com", "arc-framework+tast@google.com"},
+		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com", "yhanada@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Developer Support
+		BugComponent: "b:537247",
 		// ARC team decide move this test out of mainline, since:
 		// (1) The tested feature already deprecated in ChromeOS.
 		// (2) P and R WM related features has done, R is the last support version.
