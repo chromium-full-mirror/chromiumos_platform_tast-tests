@@ -14,14 +14,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Mtpd,
-		Desc: "Verifies mtpd is running and responds to D-Bus calls",
-		Contacts: []string{
-			"amistry@chromium.org",
-			"benchan@chromium.org",
-			"chromeos-files-app@google.com",
-		},
-		Attr: []string{"group:mainline"},
+		Func:         Mtpd,
+		Desc:         "Verifies mtpd is running and responds to D-Bus calls",
+		BugComponent: "b:167289",
+		Contacts:     []string{"chromeos-files-syd@google.com"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
