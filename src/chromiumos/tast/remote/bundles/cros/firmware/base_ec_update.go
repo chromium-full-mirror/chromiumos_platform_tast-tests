@@ -198,6 +198,24 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx, &requiredReboot)
 
+	var wpScrewInBool bool
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		hammerInfo, err := s.DUT().Conn().CommandContext(ctx, "python", "/usr/local/bin/hammer_info.py", "wp_screw").Output()
+		if err != nil {
+			return errors.Wrap(err, "failed to run hammer_info")
+		}
+		hammerSplitByLine := strings.Split(string(hammerInfo), "\n")
+		hammerWpScrew := strings.Split(hammerSplitByLine[len(hammerSplitByLine)-2], " ")
+
+		wpScrewInBool, err = strconv.ParseBool(hammerWpScrew[0])
+		if err != nil {
+			return errors.New("failed to get wp_screw from hammer_info")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
+		s.Fatal("While checking for wp_screw: ", err)
+	}
+
 	s.Log("Flashing an old image to detachable-base ec")
 	if err := flashAnOldImgToDetachableBaseEC(ctx, dut, hammerConfigs, fileDir.onHost); err != nil {
 		// If flashing an edited image fails, check whether the version
@@ -226,7 +244,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		if errBaseEC != nil {
 			s.Fatal("Failed to trigger and find notification window, and while getting base ec info: ", errBaseEC)
 		}
-		s.Fatalf("Failed to trigger and find notification window [current base ec version: %s, ro protected: %t]: %v", currentBaseEC.version, currentBaseEC.roProtected, err)
+		s.Fatalf("Failed to trigger and find notification window [current base ec version: %s, ro protected: %t, wp_screw: %t]: %v", currentBaseEC.version, currentBaseEC.roProtected, wpScrewInBool, err)
 	}
 
 	s.Log("Power-cycling DUT with a warm reset")
