@@ -1,0 +1,231 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package network
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/common/pkcs11/netcertstore"
+	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/network/vpn"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/network/routing"
+	"chromiumos/tast/local/shill"
+	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/testing"
+)
+
+// alwaysOnVPNAutoconnectTestCase defines mode and config of the VPN
+// we want to set up in the test
+type alwaysOnVPNAutoconnectTestCase struct {
+	// mode of always on VPN we want to test.
+	mode string
+	// configurarion of host VPN.
+	config vpn.Config
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         AlwaysOnVPNAutoconnect,
+		Desc:         "Host VPN client can be configured as always-on VPN and connected automatically after logout and login",
+		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
+		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"chrome"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:237712133",
+		Fixture:      "vpnShillReset",
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Name: "strict_mode_l2tp_ipsec",
+				Val: alwaysOnVPNAutoconnectTestCase{
+					mode: shillconst.AlwaysOnVPNModeStrict,
+					config: vpn.Config{
+						Type:     vpn.TypeL2TPIPsec,
+						AuthType: vpn.AuthTypePSK,
+					},
+				},
+			},
+			{
+				Name: "best_effort_mode_l2tp_ipsec",
+				Val: alwaysOnVPNAutoconnectTestCase{
+					mode: shillconst.AlwaysOnVPNModeBestEffort,
+					config: vpn.Config{
+						Type:     vpn.TypeL2TPIPsec,
+						AuthType: vpn.AuthTypePSK,
+					},
+				},
+			},
+			{
+				Name: "strict_mode_openvpn",
+				Val: alwaysOnVPNAutoconnectTestCase{
+					mode: shillconst.AlwaysOnVPNModeStrict,
+					config: vpn.Config{
+						Type:           vpn.TypeOpenVPN,
+						AuthType:       vpn.AuthTypeCert,
+						OpenVPNTLSAuth: true,
+					},
+				},
+			},
+			{
+				Name: "best_effort_mode_openvpn",
+				Val: alwaysOnVPNAutoconnectTestCase{
+					mode: shillconst.AlwaysOnVPNModeBestEffort,
+					config: vpn.Config{
+						Type:           vpn.TypeOpenVPN,
+						AuthType:       vpn.AuthTypeCert,
+						OpenVPNTLSAuth: true,
+					},
+				},
+			},
+		},
+		Timeout: 10 * time.Minute,
+	})
+}
+
+// AlwaysOnVPNAutoconnect tests always on VPN can be configured and auto reconnect
+// after user logout and login.
+func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
+	// If the main body of the test times out, we still want to reserve a
+	// few seconds to allow for our cleanup code to run.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create shill manager proxy: ", err)
+	}
+	// Set up virtualnet environment.
+	testEnv := routing.NewTestEnvWithoutResetProfile()
+	if err := testEnv.SetUp(ctx); err != nil {
+		s.Fatal("Failed to set up routing test env: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := testEnv.TearDown(ctx); err != nil {
+			s.Error("Failed to tear down routing test env: ", err)
+		}
+	}(cleanupCtx)
+
+	cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
+	cr, err := chrome.New(
+		ctx,
+		chrome.KeepState(),     // to avoid resetings TPM
+		chrome.FakeLogin(cred), // to use the same user as certs are installed for
+	)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+
+	// Disable portal detection to avoid default network fallback.
+	if err := m.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
+		s.Fatal("Failed to disable portal detection on ethernet: ", err)
+	}
+	defer func() {
+		if err := m.SetProperty(cleanupCtx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular"); err != nil {
+			s.Fatal("Failed to restore portal detection on ethernet: ", err)
+		}
+	}()
+
+	// Set up new VPN connection based on the config.
+	config := s.Param().(alwaysOnVPNAutoconnectTestCase).config
+	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
+
+	conn, err := vpn.NewConnectionWithEnvs(ctx, config, testEnv.BaseServer, nil)
+	if err != nil {
+		s.Fatal("Failed to create connection object: ", err)
+	}
+
+	if err := conn.SetUp(ctx); err != nil {
+		s.Fatal("Failed to setup VPN server: ", err)
+	}
+
+	// Use set up host VPN as service and change the Always-on VPN mode.
+	profile, err := m.ActiveProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to get active profile: ", err)
+	}
+	vpnMode := s.Param().(alwaysOnVPNAutoconnectTestCase).mode
+	if err := profile.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNServive, conn.Service().DBusObject.ObjectPath()); err != nil {
+		s.Fatal("Failed to set Always-on VPN service: ", err)
+	}
+	if err := profile.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNMode, vpnMode); err != nil {
+		s.Fatal("Failed to set Always-on VPN mode: ", err)
+	}
+
+	// Check if always on VPN is set in correct mode.
+	props, err := profile.GetProperties(ctx)
+	if err != nil {
+		s.Fatal("Failed to get props: ", err)
+	}
+	if curMode, err := props.GetString(shillconst.ProfilePropertyAlwaysOnVPNMode); err != nil {
+		s.Fatal("Failed to get Always-on VPN mode: ", err)
+	} else if curMode != vpnMode {
+		s.Fatalf("Current Always-on VPN mode is %v, want: %v", curMode, vpnMode)
+	}
+
+	// Check if VPN can be automatically connected.
+	if err := conn.Service().WaitForConnectedOrError(ctx); err != nil {
+		s.Fatal("Failed to wait for VPN connected automatically: ", err)
+	}
+
+	// Restart UI to logout.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui: ", err)
+	}
+
+	// Re-login to Chrome.
+	cr, err = chrome.New(
+		ctx,
+		chrome.CustomLoginTimeout(chrome.ManagedUserLoginTimeout),
+		chrome.KeepState(),     // to avoid resetings TPM
+		chrome.FakeLogin(cred), // to use the same user as certs are installed for
+	)
+	if err != nil {
+		s.Fatal("Failed to login again: ", err)
+	}
+	defer func() {
+		if err := cr.Close(ctx); err != nil {
+			s.Fatal("Failed to close Chrome connection: ", err)
+		}
+	}()
+
+	// Manager properties will be cleared after re-login, so we need to disable
+	// portal detection again.
+	if err := m.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
+		s.Fatal("Failed to disable portal detection on ethernet: ", err)
+	}
+
+	// Search for the VPN service we set up.
+	// In this testing condition, we only have one VPN service, so we can directly
+	// search for VPN type to find the service.
+	serviceProps := map[string]interface{}{
+		shillconst.ServicePropertyType: shillconst.TypeVPN,
+	}
+	vpnService, err := m.FindMatchingService(ctx, serviceProps)
+	if err != nil {
+		s.Fatal("Failed to find VPN service: ", err)
+	}
+	defer func() {
+		if err := vpnService.Remove(cleanupCtx); err != nil {
+			s.Error("Failed to clean up connection: ", err)
+		}
+	}()
+
+	// Check if VPN can be automatically connected in 20 seconds.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if connected, err := vpnService.IsConnected(ctx); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get connection state"))
+		} else if !connected {
+			return errors.Wrap(err, "not connected")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+		s.Error("VPN is not connected automatically: ", err)
+	}
+}

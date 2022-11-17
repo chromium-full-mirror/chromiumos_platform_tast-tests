@@ -381,6 +381,7 @@ func (c *Connection) createL2TPIPsecProperties() (map[string]interface{}, error)
 		"Type":               "vpn",
 		"L2TPIPsec.User":     chapUser,
 		"L2TPIPsec.Password": chapSecret,
+		"SaveCredentials":    true,
 	}
 
 	if c.config.AuthType == AuthTypePSK {
@@ -453,6 +454,7 @@ func (c *Connection) createOpenVPNProperties() (map[string]interface{}, error) {
 		"OpenVPN.Pkcs11.PIN":    c.config.CertVals.pin,
 		"OpenVPN.RemoteCertEKU": "TLS Web Server Authentication",
 		"OpenVPN.Verb":          "5",
+		"SaveCredentials":       true,
 	}
 
 	if c.config.OpenVPNUseUserPassword {
