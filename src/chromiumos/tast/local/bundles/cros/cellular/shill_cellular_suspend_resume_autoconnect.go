@@ -105,7 +105,7 @@ func ShillCellularSuspendResumeAutoconnect(ctx context.Context, s *testing.State
 	}
 
 	// The reconnection will not occur from the login screen, so we log in.
-	cr, err := chrome.New(ctx)
+	cr, err := chrome.New(ctx, chrome.GuestLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
