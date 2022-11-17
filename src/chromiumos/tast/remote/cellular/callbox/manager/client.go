@@ -356,3 +356,12 @@ func (s CallboxManagerClient) CloseTxMeasurement(ctx context.Context, requestBod
 	_, err := s.sendJSONPost(ctx, "/txmeas/close", nil, requestBody)
 	return err
 }
+
+// Handover performs an intra/inter-RAT handover.
+func (s CallboxManagerClient) Handover(ctx context.Context, requestBody *HandoverRequestBody) error {
+	if requestBody.Callbox == "" {
+		requestBody.Callbox = s.defaultCallbox
+	}
+	_, err := s.sendJSONPost(ctx, "/handover", nil, requestBody)
+	return err
+}

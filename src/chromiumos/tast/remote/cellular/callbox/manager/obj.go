@@ -221,3 +221,22 @@ type StopTxMeasurementRequestBody struct {
 type CloseTxMeasurementRequestBody struct {
 	Callbox string `json:"callbox,omitempty"`
 }
+
+// CellularTechnology is a callbox cellular technology.
+type CellularTechnology string
+
+const (
+	// CellularTechnologyLTE represents an LTE callbox network.
+	CellularTechnologyLTE CellularTechnology = "LTE"
+	// CellularTechnologyWCDMA represents a WCDMA callbox network.
+	CellularTechnologyWCDMA CellularTechnology = "WCDMA"
+)
+
+// HandoverRequestBody is the request body for an inter/intra-RAT handover.
+type HandoverRequestBody struct {
+	Callbox     string             `json:"callbox,omitempty"`
+	Band        int                `json:"band,omitempty"`
+	Channel     int                `json:"channel,omitempty"`
+	Bandwidth   float64            `json:"bw,omitempty"`
+	Destination CellularTechnology `json:"technology,omitempty"`
+}
