@@ -20,10 +20,9 @@ func init() {
 		Func:         Preopt,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that ARC++ is fully pre-optimized and there is no pre-opt happening during the boot",
-		Contacts: []string{
-			"khmel@chromium.org", // author.
-			"arc-performance@google.com",
-		},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

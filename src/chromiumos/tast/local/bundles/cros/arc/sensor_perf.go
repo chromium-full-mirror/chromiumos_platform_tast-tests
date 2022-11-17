@@ -23,7 +23,9 @@ func init() {
 		Func:         SensorPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC sensor system performance",
-		Contacts:     []string{"arc-performance@google.com", "wvk@google.com"},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

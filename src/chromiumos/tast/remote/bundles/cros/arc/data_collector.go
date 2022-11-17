@@ -118,10 +118,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Signs in to DUT and performs ARC++ boot with various paramters. Captures required data and uploads it to Chrome binary server. This data is used by various tools. Normally, this test should be run during the Android PFQ, once per build/arch",
 		Contacts: []string{
+			"arc-performance@google.com",
 			"khmel@chromium.org", // Original author.
 			"alanding@chromium.org",
-			"arc-performance@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "chrome_internal"},
 		ServiceDeps: []string{"tast.cros.arc.UreadaheadPackService",
 			"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},

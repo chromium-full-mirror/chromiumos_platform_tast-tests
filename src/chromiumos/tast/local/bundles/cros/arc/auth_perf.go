@@ -52,10 +52,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure auth times in ARC",
 		Contacts: []string{
-			"khmel@chromium.org", // Original author.
-			"niwa@chromium.org",  // Tast port author.
 			"arc-performance@google.com",
+			"khmel@chromium.org", // Original author.
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_arc_perf_qual"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		// This test steps through opt-in flow 10 times and each iteration takes 20~40 seconds.

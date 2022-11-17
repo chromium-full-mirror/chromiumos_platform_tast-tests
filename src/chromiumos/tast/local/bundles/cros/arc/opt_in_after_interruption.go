@@ -48,6 +48,8 @@ func init() {
 			"alanding@chromium.org", // Tast port author.
 			"khmel@chromium.org",    // Original autotest author.
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},

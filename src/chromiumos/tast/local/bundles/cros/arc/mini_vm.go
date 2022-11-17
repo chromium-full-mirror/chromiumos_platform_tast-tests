@@ -24,10 +24,9 @@ func init() {
 		Func:         MiniVM,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures mini-ARCVM is functional and can be upgraded successfully",
-		Contacts: []string{
-			"wvk@chromium.org",
-			"arc-performance@google.com",
-		},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Timeout:      4 * time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

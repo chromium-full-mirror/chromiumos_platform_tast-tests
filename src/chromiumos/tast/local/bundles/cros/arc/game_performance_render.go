@@ -17,7 +17,9 @@ func init() {
 		Func:         GamePerformanceRender,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures set of performance metrics for the render and upload it to the server",
-		Contacts:     []string{"khmel@chromium.org", "skuhne@chromium.org", "arc-performance@google.com"},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org", "skuhne@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

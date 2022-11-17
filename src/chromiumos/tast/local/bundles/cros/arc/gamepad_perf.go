@@ -21,7 +21,9 @@ func init() {
 		Func:         GamepadPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test ARC gamepad system performance",
-		Contacts:     []string{"arc-performance@google.com", "ruanc@chromium.org"},
+		Contacts:     []string{"arc-performance@google.com", "alanding@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         inputlatency.AndroidData(),

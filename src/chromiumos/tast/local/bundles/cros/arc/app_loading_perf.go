@@ -42,10 +42,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Captures set of apploading performance metrics and uploads them as perf metrics",
 		Contacts: []string{
+			"arc-performance@google.com",
 			"alanding@chromium.org",
 			"khmel@chromium.org",
-			"arc-performance@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_arc_perf_qual"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{apploading.X86ApkName, apploading.ArmApkName},

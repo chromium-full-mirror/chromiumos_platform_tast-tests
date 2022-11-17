@@ -56,9 +56,11 @@ func init() {
 		// Contact owners of this test first prior to altering its configuration.
 		// This provides viable information about release branch health.
 		Contacts: []string{
-			"khmel@google.com",
 			"arc-performance@google.com",
+			"khmel@chromium.org",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
 		ServiceDeps:  []string{"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},

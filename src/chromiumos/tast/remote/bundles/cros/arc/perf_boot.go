@@ -30,11 +30,9 @@ func init() {
 		Func:         PerfBoot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Signs in to DUT and measures Android boot performance metrics",
-		Contacts: []string{
-			"cywang@chromium.org", // Original author.
-			"niwa@chromium.org",   // Tast port author.
-			"arc-performance@google.com",
-		},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_arc_perf_qual"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService"},

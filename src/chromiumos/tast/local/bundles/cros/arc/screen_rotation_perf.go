@@ -25,11 +25,9 @@ func init() {
 		Func:         ScreenRotationPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC rotation performance",
-		Contacts: []string{
-			"khmel@chromium.org", // Maintainer.
-			"arc-framework+tast@google.com",
-			"ricardoq@chromium.org", // Tast port author.
-		},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

@@ -26,10 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Validates that ARC ureadahead packs in the host/guest OS exist and are valid",
 		Contacts: []string{
-			"khmel@google.com",
-			"alanding@google.com",
 			"arc-performance@google.com",
+			"alanding@google.com",
+			"khmel@google.com",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		// NOTE: This test should never be promoted to critical. It has build dependency and it will
 		//       always fail in PFQ since we don't have ureadahead caches generated at PFQ time.
 		Attr: []string{"group:mainline", "informational", "group:arc-functional"},

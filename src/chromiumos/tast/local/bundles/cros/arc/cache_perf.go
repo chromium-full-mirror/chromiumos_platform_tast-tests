@@ -36,9 +36,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure benefits of using pre-generated caches for package manager and GMS Core",
 		Contacts: []string{
-			"khmel@chromium.org", // Original author.
 			"arc-performance@google.com",
+			"khmel@chromium.org", // Original author.
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      30 * time.Minute,

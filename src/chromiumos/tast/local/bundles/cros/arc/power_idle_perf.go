@@ -33,11 +33,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the battery drain of an idle system with and without ARC",
 		Contacts: []string{
-			"cwd@chromium.org", // Author
-			"alanding@chromium.org",
-			"arcvm-eng@google.com",
 			"arc-performance@google.com",
+			"cwd@chromium.org", // Author
+			"khmel@chromium.org",
+			"alanding@chromium.org",
 		},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      15 * time.Minute,

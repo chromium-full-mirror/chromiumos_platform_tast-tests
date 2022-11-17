@@ -17,7 +17,9 @@ func init() {
 		Func:         GamePerformanceRenderUnderLoad,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures set of performance metrics for the render under the load and upload it to the server. This test takes long time so use it for manual run only. See also GamePerformanceRender",
-		Contacts:     []string{"khmel@chromium.org", "skuhne@chromium.org", "arc-performance@google.com"},
+		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org", "skuhne@chromium.org"},
+		// ChromeOS > Software > ARC++ > Performance
+		BugComponent: "b:168382",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"ArcGamePerformanceTest.apk"},
