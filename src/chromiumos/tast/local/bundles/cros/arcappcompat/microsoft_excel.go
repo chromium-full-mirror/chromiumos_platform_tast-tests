@@ -34,7 +34,9 @@ func init() {
 		Func:         MicrosoftExcel,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test for MicrosoftExcel that installs the app also verifies it is logged in and that the main page is open, checks MicrosoftExcel correctly changes the window state in both clamshell and touchview mode",
-		Contacts:     []string{"mthiyagarajan@chromium.org", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com"},
+		// ChromeOS > Software > ARC++ > Apps Testing
+		// Bug Component:1122984
 		// b/205859043: Disabled the test as Microsoft has ended it's support for android version of Microsoft Excel.
 		// Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},

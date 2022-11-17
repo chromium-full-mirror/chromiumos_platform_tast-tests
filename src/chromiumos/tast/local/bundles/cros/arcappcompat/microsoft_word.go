@@ -34,7 +34,9 @@ func init() {
 		Func:         MicrosoftWord,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test for MicrosoftWord that installs the app also verifies it is logged in and that the main page is open, checks MicrosoftWord correctly changes the window state in both clamshell and touchview mode",
-		Contacts:     []string{"mthiyagarajan@chromium.org", "cros-appcompat-test-team@google.com"},
+		Contacts:     []string{"cros-arc-apps-te@google.com"},
+		// ChromeOS > Software > ARC++ > Apps Testing
+		// Bug Component:1122984
 		// b/205855698: Disabled the test as Microsoft has ended it's support for android version of Microsoft word.
 		// Attr:         []string{"group:appcompat", "appcompat_release"},
 		SoftwareDeps: []string{"chrome"},
