@@ -64,10 +64,11 @@ func init() {
 		Func:         MountMultiple,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Files App can mount multiple archives in one go",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"jboulic@chromium.org",
 			"fdegros@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

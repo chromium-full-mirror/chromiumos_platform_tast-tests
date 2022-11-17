@@ -39,9 +39,10 @@ func init() {
 		Func:         ZipPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures performance for ZIP file operations",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"jboulic@google.com",
 			"chromeos-files-syd@google.com",
+			"jboulic@google.com",
 		},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},

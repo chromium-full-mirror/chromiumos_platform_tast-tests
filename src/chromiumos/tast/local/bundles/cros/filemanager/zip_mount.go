@@ -27,11 +27,12 @@ func init() {
 		Func:         ZipMount,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Files App can mount archives (ZIP, RAR, 7Z...)",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"fdegros@chromium.org",
 			"jboulic@chromium.org",
 			"msalomao@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
