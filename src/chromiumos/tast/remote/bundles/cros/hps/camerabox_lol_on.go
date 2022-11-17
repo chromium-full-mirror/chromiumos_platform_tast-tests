@@ -36,10 +36,11 @@ func init() {
 		Desc:         "Verify that the HPS can dim/lock as expected when LOL enabled",
 		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
+			"chromeos-hps-swe@google.com",
 			"eunicesun@google.com",
 			"mblsha@google.com",
-			"chromeos-hps-swe@google.com",
 		},
+		BugComponent: "b:1140302",
 		Attr:         []string{"group:camerabox", "group:hps", "hps_perbuild"},
 		Timeout:      50 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.HPS()),

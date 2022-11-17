@@ -34,10 +34,11 @@ func init() {
 		Desc:         "Verify that HPS does not respond when SPA is off",
 		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
+			"chromeos-hps-swe@google.com",
 			"eunicesun@google.com",
 			"mblsha@google.com",
-			"chromeos-hps-swe@google.com",
 		},
+		BugComponent: "b:1140302",
 		Attr:         []string{"group:camerabox", "group:hps", "hps_perbuild"},
 		Timeout:      6 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.HPS()),
