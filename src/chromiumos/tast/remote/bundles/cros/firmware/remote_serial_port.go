@@ -21,11 +21,12 @@ func init() {
 		Desc:    "Test RemoteSerialPort",
 		Timeout: 1 * time.Minute,
 		Contacts: []string{
-			"aluo@chromium.org",            // Test Author
-			"chromeos-firmware@google.com", // CrOS Firmware Developers
+			"chromeos-faft@google.com",
+			"aluo@chromium.org",
 		},
-		ServiceDeps: []string{"tast.cros.firmware.SerialPortService"},
-		Attr:        []string{"group:firmware", "firmware_smoke"},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		ServiceDeps:  []string{"tast.cros.firmware.SerialPortService"},
+		Attr:         []string{"group:firmware", "firmware_smoke"},
 	})
 }
 

@@ -18,11 +18,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     H1Version,
-		Desc:     "Verifies that H1 is running either the prod or pre-PVT version",
-		Contacts: []string{"jbettis@chromium.org", "cros-fw-engprod@google.com"},
-		Attr:     []string{"group:firmware", "firmware_bringup"},
-		Vars:     []string{"servo"},
+		Func: H1Version,
+		Desc: "Verifies that H1 is running either the prod or pre-PVT version",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware", "firmware_bringup"},
+		Vars:         []string{"servo"},
 	})
 }
 

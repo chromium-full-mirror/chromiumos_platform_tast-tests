@@ -22,9 +22,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECChargingState,
-		Desc:         "Verify enabling and disabling write protect works as expected",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ECChargingState,
+		Desc: "Verify enabling and disabling write protect works as expected",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_ccd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,

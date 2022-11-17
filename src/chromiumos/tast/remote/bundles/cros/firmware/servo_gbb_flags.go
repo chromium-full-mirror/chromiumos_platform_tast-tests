@@ -28,10 +28,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ServoGBBFlags,
-		Desc:         "Verifies GBB flags state can be obtained and manipulated via the servo interface",
-		Timeout:      8 * time.Minute,
-		Contacts:     []string{"cros-fw-engprod@google.com", "jbettis@google.com"},
+		Func:    ServoGBBFlags,
+		Desc:    "Verifies GBB flags state can be obtained and manipulated via the servo interface",
+		Timeout: 8 * time.Minute,
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_ccd"},
 		SoftwareDeps: []string{"flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},

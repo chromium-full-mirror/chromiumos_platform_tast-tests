@@ -14,9 +14,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECVersion,
-		Desc:         "Verify that the EC version can be retrieved from ectool",
-		Contacts:     []string{"cros-fw-engprod@google.com"},
+		Func: ECVersion,
+		Desc: "Verify that the EC version can be retrieved from ectool",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_smoke"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})

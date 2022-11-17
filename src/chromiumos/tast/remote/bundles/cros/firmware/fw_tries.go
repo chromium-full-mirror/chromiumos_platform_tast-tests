@@ -15,9 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FWTries,
-		Desc:         "Verify that the DUT can be specified to boot from A or B",
-		Contacts:     []string{"cros-fw-engprod@google.com"},
+		Func: FWTries,
+		Desc: "Verify that the DUT can be specified to boot from A or B",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		Attr:         []string{"group:firmware", "firmware_bios"},

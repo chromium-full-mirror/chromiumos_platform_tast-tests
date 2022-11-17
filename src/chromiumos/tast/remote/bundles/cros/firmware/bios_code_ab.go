@@ -18,9 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BIOSCodeAB,
-		Desc:         "Verifies the AP can reach Port 80 code 0xab",
-		Contacts:     []string{"jbettis@chromium.org", "cros-fw-engprod@google.com"},
+		Func: BIOSCodeAB,
+		Desc: "Verifies the AP can reach Port 80 code 0xab",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_bringup"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.X86()),

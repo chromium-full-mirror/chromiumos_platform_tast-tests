@@ -17,9 +17,10 @@ func init() {
 		Func: SHANI,
 		Desc: "Run SHA-NI extension test on x86 platforms",
 		Contacts: []string{
-			"khwon@chromium.org",           // Test Author
-			"chromeos-firmware@google.com", // CrOS Firmware Developers
+			"chromeos-faft@google.com",
+			"khwon@chromium.org", // Test Author
 		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.CPUSupportsSHANI()),
 	})

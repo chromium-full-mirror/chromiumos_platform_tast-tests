@@ -35,9 +35,13 @@ type bootModeTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BootMode,
-		Desc:         "Verifies that remote tests can boot the DUT into, and confirm that the DUT is in, the different firmware modes (normal, dev, and recovery)",
-		Contacts:     []string{"cros-fw-engprod@google.com"},
+		Func: BootMode,
+		Desc: "Verifies that remote tests can boot the DUT into, and confirm that the DUT is in, the different firmware modes (normal, dev, and recovery)",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Vars:         []string{"firmware.skipFlashUSB"},

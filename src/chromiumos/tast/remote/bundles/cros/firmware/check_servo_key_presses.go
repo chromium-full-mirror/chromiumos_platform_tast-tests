@@ -18,11 +18,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        CheckServoKeyPresses,
-		Desc:        "Verifies that key presses can be initiated on the servo's keyboard emulator and that the DUT can receive and decode them",
-		Contacts:    []string{"kmshelton@chromium.org", "cros-fw-engprod@google.com", "chromeos-firmware@google.com"},
-		ServiceDeps: []string{"tast.cros.firmware.UtilsService"},
-		Vars:        []string{"servo"},
+		Func: CheckServoKeyPresses,
+		Desc: "Verifies that key presses can be initiated on the servo's keyboard emulator and that the DUT can receive and decode them",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"kmshelton@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
+		Vars:         []string{"servo"},
 	})
 }
 

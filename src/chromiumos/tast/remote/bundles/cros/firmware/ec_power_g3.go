@@ -31,9 +31,13 @@ type powerG3Params struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECPowerG3,
-		Desc:         "Test that DUT goes to G3 powerstate on various types of shutdown",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ECPowerG3,
+		Desc: "Test that DUT goes to G3 powerstate on various types of shutdown",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

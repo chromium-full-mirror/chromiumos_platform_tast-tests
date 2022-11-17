@@ -40,13 +40,14 @@ func init() {
 		Func: SuspendConsumption,
 		Desc: "Tests that power consumption in suspend meets requirements",
 		Contacts: []string{
+			"chromeos-faft@google.com",
 			"robertzieba@google.com",
-			"tast-users@chromium.org",
 		},
-		Attr:    []string{"group:firmware"},
-		Fixture: fixture.NormalMode,
-		Timeout: defaultDuration + 5*time.Minute, // Ensure we have enough time for test setup/teardown
-		Vars:    []string{varDuration, varNoGsc}, // Duration is in seconds
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware"},
+		Fixture:      fixture.NormalMode,
+		Timeout:      defaultDuration + 5*time.Minute, // Ensure we have enough time for test setup/teardown
+		Vars:         []string{varDuration, varNoGsc}, // Duration is in seconds
 		Params: []testing.Param{{
 			Name: "s0ix",
 			Val:  suspend.StateS0ix,

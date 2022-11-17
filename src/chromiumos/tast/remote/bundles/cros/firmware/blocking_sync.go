@@ -15,11 +15,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        BlockingSync,
-		Desc:        "Verifies that firmware tests can remotely perform a blocking sync on the DUT",
-		Contacts:    []string{"cros-fw-engprod@google.com"},
-		ServiceDeps: []string{"tast.cros.firmware.UtilsService"},
-		Attr:        []string{"group:firmware", "firmware_smoke"},
+		Func: BlockingSync,
+		Desc: "Verifies that firmware tests can remotely perform a blocking sync on the DUT",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
+		Attr:         []string{"group:firmware", "firmware_smoke"},
 	})
 }
 

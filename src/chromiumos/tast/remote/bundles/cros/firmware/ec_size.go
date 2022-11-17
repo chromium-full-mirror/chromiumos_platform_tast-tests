@@ -15,9 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECSize,
-		Desc:         "Compare ec flash size to expected ec size from a chip-to-size map",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ECSize,
+		Desc: "Compare ec flash size to expected ec size from a chip-to-size map",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,

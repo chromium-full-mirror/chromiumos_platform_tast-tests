@@ -47,10 +47,11 @@ func init() {
 		Func: Eventlog,
 		Desc: "Ensure that eventlog is written on boot and suspend/resume",
 		Contacts: []string{
-			"gredelston@google.com", // Test author.
-			"cros-fw-engprod@google.com",
+			"chromeos-faft@google.com",
+			"gredelston@google.com",
 		},
-		Attr: []string{"group:firmware"},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(
 			// Eventlog is broken/wontfix on veyron devices.
 			// See http://b/35585376#comment14 for more info.

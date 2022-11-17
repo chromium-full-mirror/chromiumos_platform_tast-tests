@@ -13,9 +13,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Config,
-		Desc:         "Verifies that remote tests can load fw-testing-configs properly",
-		Contacts:     []string{"cros-fw-engprod@google.com"},
+		Func: Config,
+		Desc: "Verifies that remote tests can load fw-testing-configs properly",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:mainline", "group:firmware", "firmware_smoke"},
 		SoftwareDeps: []string{"crossystem", "chromeos_firmware"},

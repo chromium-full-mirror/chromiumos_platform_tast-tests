@@ -14,9 +14,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECConsole,
-		Desc:         "Verifies that EC console is working",
-		Contacts:     []string{"jbettis@chromium.org", "cros-fw-engprod@google.com"},
+		Func: ECConsole,
+		Desc: "Verifies that EC console is working",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

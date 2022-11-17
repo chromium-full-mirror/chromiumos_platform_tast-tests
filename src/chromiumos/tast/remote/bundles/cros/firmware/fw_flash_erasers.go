@@ -51,9 +51,13 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FwFlashErasers,
-		Desc:         "Test erase functions by calling flashrom to erase and write blocks of different sizes",
-		Contacts:     []string{"aklm@chromium.org"},
+		Func: FwFlashErasers,
+		Desc: "Test erase functions by calling flashrom to erase and write blocks of different sizes",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"aklm@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"flashrom"},
 		Fixture:      fixture.NormalMode,

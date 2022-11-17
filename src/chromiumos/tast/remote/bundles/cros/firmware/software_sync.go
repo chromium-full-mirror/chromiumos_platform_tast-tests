@@ -24,9 +24,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SoftwareSync,
-		Desc:         "Servo based EC software sync test",
-		Contacts:     []string{"jbettis@google.com", "chromeos-firmware@google.com"},
+		Func: SoftwareSync,
+		Desc: "Servo based EC software sync test",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

@@ -33,9 +33,13 @@ type argsForConsecutiveBoot struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConsecutiveBoot,
-		Desc:         "Test DUT shuts down and boots to ChromeOS over many iterations",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ConsecutiveBoot,
+		Desc: "Test DUT shuts down and boots to ChromeOS over many iterations",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Vars:         []string{"firmware.consecutiveBootIters", "firmware.consecutiveBootCustomCmd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

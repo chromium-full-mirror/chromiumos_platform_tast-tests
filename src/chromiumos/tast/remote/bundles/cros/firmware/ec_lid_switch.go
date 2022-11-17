@@ -31,9 +31,13 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECLidSwitch,
-		Desc:         "Test EC Lid Switch",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ECLidSwitch,
+		Desc: "Test EC Lid Switch",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),

@@ -26,9 +26,13 @@ type testParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BootTime,
-		Desc:         "Measures EC boot time",
-		Contacts:     []string{"jbettis@chromium.org", "cros-fw-engprod@google.com"},
+		Func: BootTime,
+		Desc: "Measures EC boot time",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_smoke", "firmware_bringup"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

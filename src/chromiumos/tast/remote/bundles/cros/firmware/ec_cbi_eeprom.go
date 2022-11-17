@@ -20,12 +20,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ECCbiEeprom,
-		Desc:     "Test that ectool can be used to read/write to cbi, and setting write protect prevents writing",
-		Contacts: []string{"tij@google.com", "cros-fw-engprod@google.com"},
-		Attr:     []string{"group:firmware", "firmware_unstable"},
-		Fixture:  fixture.NormalMode,
-		Timeout:  15 * time.Minute,
+		Func: ECCbiEeprom,
+		Desc: "Test that ectool can be used to read/write to cbi, and setting write protect prevents writing",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Fixture:      fixture.NormalMode,
+		Timeout:      15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
 			"jax", // Fizz models

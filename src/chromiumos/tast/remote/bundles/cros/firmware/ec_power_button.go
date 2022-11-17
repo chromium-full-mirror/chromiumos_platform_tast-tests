@@ -29,9 +29,13 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECPowerButton,
-		Desc:         "Verify using servo power key results in expected shutdown behaviour",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ECPowerButton,
+		Desc: "Verify using servo power key results in expected shutdown behaviour",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"crossystem"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},

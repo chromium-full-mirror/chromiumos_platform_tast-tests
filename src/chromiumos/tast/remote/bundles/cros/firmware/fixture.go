@@ -14,9 +14,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Fixture,
-		Desc:         "Verifies firmware fixtures",
-		Contacts:     []string{"cros-fw-engprod@google.com", "jbettis@google.com"},
+		Func: Fixture,
+		Desc: "Verifies firmware fixtures",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_smoke"},
 		SoftwareDeps: []string{"crossystem"},
 		Params: []testing.Param{{

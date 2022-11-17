@@ -20,10 +20,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GBBFlags,
-		Desc:         "Verifies GBB flags state can be obtained and manipulated on the DUT",
-		Timeout:      8 * time.Minute,
-		Contacts:     []string{"cros-fw-engprod@google.com", "aluo@google.com"},
+		Func:    GBBFlags,
+		Desc:    "Verifies GBB flags state can be obtained and manipulated on the DUT",
+		Timeout: 8 * time.Minute,
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"aluo@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Attr:         []string{"group:firmware", "firmware_smoke"},
 		SoftwareDeps: []string{"flashrom"},

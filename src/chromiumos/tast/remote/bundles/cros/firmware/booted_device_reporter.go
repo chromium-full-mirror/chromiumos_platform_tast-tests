@@ -14,10 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     BootedDeviceReporter,
-		Desc:     "Verifies that the BootedDevice reporter identifies if the DUT was booted from a removable device",
-		Contacts: []string{"cros-fw-engprod@google.com"},
-		Attr:     []string{"group:firmware", "firmware_smoke"},
+		Func: BootedDeviceReporter,
+		Desc: "Verifies that the BootedDevice reporter identifies if the DUT was booted from a removable device",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"jbettis@chromium.org",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware", "firmware_smoke"},
 		Params: []testing.Param{{
 			Fixture: fixture.NormalMode,
 			Val:     false,

@@ -27,9 +27,13 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECUSBPorts,
-		Desc:         "Verify usb ports stop read/write after DUT shuts down",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: ECUSBPorts,
+		Desc: "Verify usb ports stop read/write after DUT shuts down",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,

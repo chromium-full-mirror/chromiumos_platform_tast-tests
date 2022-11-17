@@ -20,9 +20,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevModeStress,
-		Desc:         "Test mode aware reboot and suspend preserve dev mode over several iterations",
-		Contacts:     []string{"tij@google.com", "cros-fw-engprod@google.com"},
+		Func: DevModeStress,
+		Desc: "Test mode aware reboot and suspend preserve dev mode over several iterations",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"tij@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Vars:         []string{"firmware.DevModeStressIters"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

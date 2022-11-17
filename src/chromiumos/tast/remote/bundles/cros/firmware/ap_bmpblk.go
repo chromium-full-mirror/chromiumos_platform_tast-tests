@@ -18,12 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: APBmpblk,
-		Desc: "Inspects coreboot contents for configuration indicators for the bitmaps used in firmware UI",
+		Func:         APBmpblk,
+		Desc:         "Inspects coreboot contents for configuration indicators for the bitmaps used in firmware UI",
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Contacts: []string{
-			"jwerner@chromium.org",       // Test author
-			"kmshelton@chromium.org",     // Test porter (from TAuto)
-			"chromeos-faft@chromium.org", // Backup mailing list
+			"chromeos-faft@google.com",
+			"jwerner@chromium.org",   // Test author
+			"kmshelton@chromium.org", // Test porter (from TAuto)
 		},
 		Attr:        []string{"group:firmware", "firmware_bios"},
 		Fixture:     fixture.NormalMode,
