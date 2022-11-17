@@ -13,11 +13,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: CrosDisksSSHFS,
-		Desc: "Verifies CrosDisks mounts a network server over ssh",
+		Func:         CrosDisksSSHFS,
+		Desc:         "Verifies CrosDisks mounts a network server over ssh",
+		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
-			"joelhockey@chromium.org",
 		},
 		Attr: []string{"group:mainline"},
 	})
