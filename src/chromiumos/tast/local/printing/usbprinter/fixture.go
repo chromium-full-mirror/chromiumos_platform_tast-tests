@@ -20,7 +20,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "virtualUsbPrinterModulesLoaded",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded",
-		Contacts:        []string{"cros-printing-dev@chromium.org"},
+		Contacts:        []string{"project-bolton@google.com"},
 		Impl:            &loadModuleFixture{},
 		SetUpTimeout:    moduleLoadTimeout,
 		TearDownTimeout: moduleLoadTimeout,
@@ -28,7 +28,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedIn` fixture)",
-		Contacts:        []string{"cros-printing-dev@chromium.org"},
+		Contacts:        []string{"project-bolton@google.com"},
 		Impl:            &loadModuleFixture{},
 		Parent:          "chromeLoggedIn",
 		SetUpTimeout:    moduleLoadTimeout,
@@ -37,7 +37,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "virtualUsbPrinterModulesLoadedWithLacros",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacros` fixture)",
-		Contacts:        []string{"cros-printing-dev@chromium.org"},
+		Contacts:        []string{"project-bolton@google.com"},
 		Impl:            &loadModuleFixture{},
 		Parent:          "lacros",
 		SetUpTimeout:    moduleLoadTimeout,
@@ -46,7 +46,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `arcBooted` fixture)",
-		Contacts:        []string{"cros-printing-dev@chromium.org"},
+		Contacts:        []string{"project-bolton@google.com"},
 		Impl:            &loadModuleFixture{},
 		Parent:          "arcBooted",
 		SetUpTimeout:    moduleLoadTimeout,

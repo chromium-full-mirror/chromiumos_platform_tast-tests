@@ -20,13 +20,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: GnuTLS,
-		Desc: "Validity test for lpadmin connecting to IPPS server using GnuTLS",
-		Contacts: []string{
-			"mw@semihalf.com",
-			"bmgordon@google.com",
-			"cros-printing-dev@chromium.org",
-		},
+		Func:     GnuTLS,
+		Desc:     "Validity test for lpadmin connecting to IPPS server using GnuTLS",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		SoftwareDeps: []string{"cros_internal", "cups"},
 		Attr: []string{
 			"group:mainline",

@@ -17,10 +17,9 @@ func init() {
 		Func:         ProxyAdd,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the lp command enqueues print jobs",
-		Contacts: []string{
-			"batrapranav@chromium.org",
-			"cros-printing-dev@chromium.org",
-		},
+		Contacts:     []string{"project-bolton@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

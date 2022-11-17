@@ -30,14 +30,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that ARC++ printing is working properly",
 		Contacts: []string{
-			"bmgordon@google.com",
 			"project-bolton@google.com",
+			"bmgordon@google.com",
 		},
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_printing",
 		},
+		// ChromeOS > Software > ARC++ > Printing
+		BugComponent: "b:613731",
 		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Timeout:      4 * time.Minute,

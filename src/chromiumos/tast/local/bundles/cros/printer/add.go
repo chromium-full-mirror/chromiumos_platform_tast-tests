@@ -13,12 +13,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Add,
-		Desc: "Verifies the lp command enqueues print jobs",
-		Contacts: []string{
-			"batrapranav@chromium.org",
-			"cros-printing-dev@chromium.org",
-		},
+		Func:     Add,
+		Desc:     "Verifies the lp command enqueues print jobs",
+		Contacts: []string{"project-bolton@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

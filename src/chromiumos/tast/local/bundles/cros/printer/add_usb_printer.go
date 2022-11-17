@@ -16,7 +16,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     AddUSBPrinter,
 		Desc:     "Verifies setup of a basic USB printer",
-		Contacts: []string{"bmgordon@chromium.org", "project-bolton@google.com"},
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

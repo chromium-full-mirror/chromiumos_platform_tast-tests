@@ -19,7 +19,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     PrintUSB,
 		Desc:     "Tests that USB print job can be successfully sent",
-		Contacts: []string{"bmgordon@chromium.org", "project-bolton@google.com"},
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

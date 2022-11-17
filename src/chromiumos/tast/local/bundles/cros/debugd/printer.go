@@ -22,10 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performs validity testing of printer-related D-Bus methods",
 		Contacts: []string{
-			"bmgordon@chromium.org",
-			"hidehiko@chromium.org", // Tast port author
 			"project-bolton@google.com",
+			"bmgordon@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		SoftwareDeps: []string{"chrome", "cups"},
 		Data:         []string{"GenericPostScript.ppd.gz"},
 		Pre:          chrome.LoggedIn(),
@@ -33,6 +34,7 @@ func init() {
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_printing",
+			"group:hw_agnostic",
 		},
 	})
 }

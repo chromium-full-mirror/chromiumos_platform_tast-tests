@@ -24,8 +24,7 @@ func init() {
 		Name: "ensureUI",
 		Desc: "Ensure the ui service is running",
 		Contacts: []string{
-			"pwang@chromium.org", // fixture author
-			"cros-printing-dev@chromium.org",
+			"project-bolton@google.com",
 		},
 		Impl:            &ensureUIFixture{running: true},
 		SetUpTimeout:    UIRestartTimeout,

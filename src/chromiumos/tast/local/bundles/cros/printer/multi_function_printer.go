@@ -28,7 +28,9 @@ func init() {
 		Func:         MultiFunctionPrinter,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests printer/scanner/storage combo device",
-		Contacts:     []string{"bmgordon@chromium.org", "project-bolton@google.com"},
+		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

@@ -24,12 +24,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: TestPPDs,
-		Desc: "Verifies the PPD files pass cupstestppd and foomatic-rip",
-		Contacts: []string{
-			"batrapranav@chromium.org",
-			"cros-printing-dev@chromium.org",
-		},
+		Func:     TestPPDs,
+		Desc:     "Verifies the PPD files pass cupstestppd and foomatic-rip",
+		Contacts: []string{"project-bolton@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

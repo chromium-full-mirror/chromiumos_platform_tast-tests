@@ -31,13 +31,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests debugd's behavior when parsing printer URIs",
 		Contacts: []string{
-			"cros-printing-dev@chromium.org", // Team alias
-			"kdlee@chromium.org",             // Test author
+			"project-bolton@google.com",
+			"masonwilde@google.com",
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_printing",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "cups"},
 		Data:         []string{"GenericPostScript.ppd.gz"},

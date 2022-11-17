@@ -26,7 +26,9 @@ func init() {
 		Func:         OAuthToken,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that ensure the oauth token is passed to printer",
-		Contacts:     []string{"nmuggli@google.com", "project-bolton@google.com"},
+		Contacts:     []string{"project-bolton@google.com", "nmuggli@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"informational",

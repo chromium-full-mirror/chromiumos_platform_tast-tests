@@ -34,7 +34,9 @@ func init() {
 		Func:         ScanESCLIPP,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests eSCL scanning via an ipp-over-usb tunnel",
-		Contacts:     []string{"bmgordon@chromium.org", "project-bolton@google.com"},
+		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Scanning
+		BugComponent: "b:860616",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

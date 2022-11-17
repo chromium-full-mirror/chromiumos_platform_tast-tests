@@ -35,7 +35,9 @@ func init() {
 		Func:         Scan,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a scan can be performed using the Document Scan API",
-		Contacts:     []string{"bmgordon@chromium.org", "project-bolton@google.com"},
+		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Scanning
+		BugComponent: "b:860616",
 		Data:         []string{"manifest.json", "background.js", "scan.css", "scan.html", "scan.js", "scan_escl_ipp_source.jpg", "scan_escl_ipp_golden.png"},
 		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
 		Attr: []string{

@@ -18,9 +18,11 @@ func init() {
 		Func: ResolveLocalHostnameInvalidAddress,
 		Desc: "Verifies avahi logs when attempts to resolve .local mDNS hostnames fail",
 		Contacts: []string{
+			"project-bolton@google.com",
 			"bmgordon@chromium.org",
-			"cros-printing-dev@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",

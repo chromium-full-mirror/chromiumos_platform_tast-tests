@@ -24,6 +24,8 @@ func init() {
 			"cros-peripherals@google.com",
 			"project-bolton@google.com",
 		},
+		// ChromeOS > Platform > Services > Scanning
+		BugComponent: "b:860616",
 		Attr: []string{
 			"group:paper-io",
 			"paper-io_scanning",

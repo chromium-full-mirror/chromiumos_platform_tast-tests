@@ -18,12 +18,11 @@ const httpTestPPDFile string = "printer_add_generic_printer_GenericPostScript.pp
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: AddHTTPPrinter,
-		Desc: "Verifies that http printers can be installed",
-		Contacts: []string{
-			"bmgordon@chromium.org",
-			"project-bolton@google.com",
-		},
+		Func:     AddHTTPPrinter,
+		Desc:     "Verifies that http printers can be installed",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		SoftwareDeps: []string{"cros_internal", "cups"},
 		Data:         []string{httpTestPPDFile},
 		Attr: []string{

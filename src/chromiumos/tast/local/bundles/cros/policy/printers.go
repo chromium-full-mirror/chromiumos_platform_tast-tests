@@ -34,15 +34,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of Printers policy, checking that configured printers are available to users in the printer selection after setting the policy",
 		Contacts: []string{
-			"cmfcmf@google.com", // Test author
 			"project-bolton@google.com",
+			"cmfcmf@google.com", // Test author
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_printing",
 			"informational",
+			"group:hw_agnostic",
 		},
 		Fixture: fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
