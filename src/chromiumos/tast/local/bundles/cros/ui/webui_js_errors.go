@@ -27,8 +27,9 @@ func init() {
 		Func:         WebUIJSErrors,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome's WebUI JavaScript Error Reporting works on ChromeOS",
-		Contacts:     []string{"iby@chromium.org", "cros-telemetry@google.com"},
-		Attr:         []string{"group:mainline"},
+		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
