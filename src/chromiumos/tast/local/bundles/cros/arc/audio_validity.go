@@ -24,6 +24,8 @@ func init() {
 			"paulhsia@chromium.org",          // Media team
 			"judyhsiao@chromium.org",         // Author
 		},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
+		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},

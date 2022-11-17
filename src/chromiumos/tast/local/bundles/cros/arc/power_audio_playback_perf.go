@@ -26,11 +26,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the battery drain during audio playback with different performance flags",
 		Contacts: []string{
+			"chromeos-audio-bugs@google.com", // Media team
 			"judyhsiao@chromium.org",         // Author
 			"cychiang@chromium.org",          // Media team
 			"paulhsia@chromium.org",          // Media team
-			"chromeos-audio-bugs@google.com", // Media team
 		},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
+		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithDisableSyncFlags",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},

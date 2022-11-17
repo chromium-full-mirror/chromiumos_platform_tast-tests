@@ -24,6 +24,8 @@ func init() {
 			"paulhsia@chromium.org",          // Media team
 			"judyhsiao@chromium.org",         // Author
 		},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
+		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		// Disable this test case as AEC is currently disabled in ARCVM. (b/201378884)
 		Attr:    []string{},

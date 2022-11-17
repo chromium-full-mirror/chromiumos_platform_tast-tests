@@ -30,6 +30,8 @@ func init() {
 			"chromeos-audio-bugs@google.com", // Media team
 			"pteerapong@chromium.org",        // Author
 		},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
+		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "arc"},
 		Fixture:      "arcBooted",
 		Data:         []string{"oboetester_debug.apk"},
