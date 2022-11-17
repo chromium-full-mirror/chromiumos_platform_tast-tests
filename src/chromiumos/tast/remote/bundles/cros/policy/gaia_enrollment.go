@@ -38,6 +38,11 @@ func init() {
 			"tast.cros.graphics.ScreenshotService",
 		},
 		Timeout: gaiaEnrollmentTimeout,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Enroll devices manually (COM_ONB_CUJ7_TASK5_WF1).
+			Value: "screenplay-2de3fdfc-26eb-4fe5-9959-91cbfed05acb",
+		}},
 		Params: []testing.Param{
 			{
 				Name: "autopush",
