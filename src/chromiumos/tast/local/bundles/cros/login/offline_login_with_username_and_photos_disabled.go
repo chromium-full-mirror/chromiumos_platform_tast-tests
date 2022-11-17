@@ -170,13 +170,13 @@ func (h *helper) disableAllNetworkInterfaces(ctx context.Context) error {
 	}
 
 	// Disable  Cellular if present and maybe re-enabling.
-	cellularFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
+	cellularFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular)
 	if err != nil {
 		return errors.Wrap(err, "unable to disable Cellular")
 	}
 
 	// Disable Wifi if present and maybe re-enabling.
-	wifiFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
+	wifiFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyWifi)
 	if err != nil {
 		return errors.Wrap(err, "unable to disable Wifi")
 	}
