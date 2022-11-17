@@ -92,7 +92,10 @@ func performArcInitialBoot(ctx context.Context, credPool string) (chrome.Creds, 
 	opts := []chrome.Option{
 		chrome.ARCSupported(),
 		chrome.GAIALoginPool(credPool),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...)}
+		chrome.ExtraArgs(append(arc.DisableSyncFlags(),
+			// Disable ArcWindowPredictor to let chrome record the necessary histograms.
+			// TODO(b/259517082): Stop disabling ArcWindowPredictor.
+			"--disable-features=ArcWindowPredictor")...)}
 
 	testing.ContextLog(ctx, "Create initial Chrome")
 	cr, err := chrome.New(ctx, opts...)
@@ -154,7 +157,10 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		chrome.ARCSupported(),
 		chrome.GAIALogin(creds),
 		chrome.KeepState(),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags())...)}
+		chrome.ExtraArgs(append(arc.DisableSyncFlags(),
+			// Disable ArcWindowPredictor to let chrome record the necessary histograms.
+			// TODO(b/259517082): Stop disabling ArcWindowPredictor.
+			"--disable-features=ArcWindowPredictor")...)}
 
 	testing.ContextLog(ctx, "Create Chrome")
 	cr, err := chrome.New(ctx, opts...)
