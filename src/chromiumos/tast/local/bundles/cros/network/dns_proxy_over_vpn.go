@@ -32,7 +32,9 @@ func init() {
 		Func:         DNSProxyOverVPN,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensure that DNS proxies are working correctly over VPN",
-		Contacts:     []string{"jasongustaman@google.com", "garrick@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host", "arc", "dlc", "no_kernel_upstream"},
 		Data:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
