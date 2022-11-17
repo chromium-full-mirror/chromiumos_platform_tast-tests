@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/dumputil"
 	"chromiumos/tast/local/network/routing"
+	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/testing"
 )
 
@@ -256,9 +257,43 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
+	// Create envs for holding servers.
+	routingEnv := routing.NewTestEnvWithoutResetProfile()
+	if err := routingEnv.SetUp(ctx); err != nil {
+		s.Fatal("Failed to setup routing env: ", err)
+	}
+	defer func() {
+		if err := routingEnv.TearDown(cleanupCtx); err != nil {
+			testing.ContextLog(ctx, "Failed to tear down routing env: ", err)
+		}
+	}()
+	// Create another env and connect it to the router. This can be used to verify
+	// if physical network is reachable.
+	physicalEnv := env.NewHidden("phy")
+	if err := physicalEnv.SetUp(ctx); err != nil {
+		s.Fatal("Failed to setup env for verifying physical connection: ", err)
+	}
+	defer func() {
+		if err := physicalEnv.Cleanup(cleanupCtx); err != nil {
+			testing.ContextLog(ctx, "Failed to tear down physical env: ", err)
+		}
+	}()
+	if err := physicalEnv.ConnectToRouterWithPool(ctx, routingEnv.BaseRouter, routingEnv.Pool); err != nil {
+		s.Fatal("Failed to connect physical env to router: ", err)
+	}
+
+	// Verify physicalEnv can be reached by IPv6 before connecting VPN.
+	physicalAddrs, err := physicalEnv.GetVethInAddrs(ctx)
+	if err != nil {
+		s.Fatal("Failed to addrs from physical env: ", err)
+	}
+	if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos", 10*time.Second); err != nil {
+		s.Fatal("Cannot reach physical env by IPv6: ", err)
+	}
+
 	config := s.Param().(vpnTestParams).config
 	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
-	conn, err := vpn.NewConnection(ctx, config)
+	conn, err := vpn.NewConnectionWithEnvs(ctx, config, routingEnv.BaseServer, routingEnv.BaseRouter)
 	if err != nil {
 		s.Fatal("Failed to create connection object: ", err)
 	}
@@ -307,10 +342,17 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
+
 	// In IPv4-only case, IPv6 should be blackholed.
-	if config.IPType == vpn.IPTypeIPv4 {
-		if err := routing.ExpectPingFailure(ctx, "2001:4860:4860::8888", "chronos"); err != nil {
-			s.Fatal("IPv6 ping should fail: ", err)
-		}
+	if config.IPType != vpn.IPTypeIPv4 {
+		return
+	}
+	// TODO(b/257379393): WireGuard does not support this properly now.
+	if config.Type == vpn.TypeWireGuard {
+		testing.ContextLog(ctx, "Skip IPv6 blocking check for WireGuard")
+		return
+	}
+	if err := routing.ExpectPingFailure(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos"); err != nil {
+		s.Fatal("IPv6 ping should fail: ", err)
 	}
 }

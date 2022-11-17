@@ -150,7 +150,7 @@ func NewConnectionWithEnvs(ctx context.Context, config Config, env, secondEnv *e
 	if env == nil {
 		return nil, errors.New("empty env for connection")
 	}
-	if config.WGTwoPeers != (secondEnv != nil) {
+	if config.WGTwoPeers && secondEnv == nil {
 		return nil, errors.New("wireguard two peers requires 2 servers")
 	}
 	conn, err := NewConnection(ctx, config)
