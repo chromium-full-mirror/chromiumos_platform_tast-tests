@@ -1165,6 +1165,9 @@ func DragIconToNeighbourPage(tconn *chrome.TestConn, item *nodewith.Finder, next
 // This assumes that there is no folder open and may not work if a folder is already opened.
 func GetFolderSize(ctx context.Context, tconn *chrome.TestConn, folder *nodewith.Finder) (int, error) {
 	ui := uiauto.New(tconn)
+	// Wait for folder location to stabalize in case of a moving folder animation.
+	ui.WaitForLocation(folder)(ctx)
+
 	// Click to open the folder.
 	if err := ui.LeftClick(folder)(ctx); err != nil {
 		return 0, errors.Wrap(err, "failed to click the folder")
