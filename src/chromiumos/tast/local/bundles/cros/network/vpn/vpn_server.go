@@ -308,6 +308,7 @@ var (
 			"verb 5\n" +
 			"writepid /{{.pid_file}}\n" +
 			"tmp-dir /tmp\n" +
+			"push \"redirect-gateway def1\"\n" +
 			"{{.optional_user_verification}}\n",
 	}
 )
