@@ -119,7 +119,7 @@ func PasspointCerts(ctx context.Context, s *testing.State) {
 
 // getPKCS11Objects gets all PKCS#11 objects from the user slot (slot 1).
 func getPKCS11Objects(ctx context.Context) ([]pkcs11Object, error) {
-	out, err := testexec.CommandContext(ctx, "pkcs11-tool", "--module", "/usr/lib64/libchaps.so", "--slot", "1", "-O").Output(testexec.DumpLogOnError)
+	out, err := testexec.CommandContext(ctx, "pkcs11-tool", "--module", "libchaps.so", "--slot", "1", "-O").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, err
 	}
