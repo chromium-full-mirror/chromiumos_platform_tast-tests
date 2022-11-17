@@ -33,9 +33,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GAIA Enroll a device and verify memory reporting functionality",
 		Contacts: []string{
-			"albertojuarez@google.com", // Test owner
 			"cros-reporting-team@google.com",
+			"albertojuarez@google.com", // Test owner
 		},
+		BugComponent: "b:817866", // ChromeOS Server Projects > Enterprise Management > Reporting
 		Attr:         []string{"group:dpanel-end2end", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
