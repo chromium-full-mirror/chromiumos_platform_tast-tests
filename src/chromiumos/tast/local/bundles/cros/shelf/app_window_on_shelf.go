@@ -244,21 +244,6 @@ func openAppFromLauncherAs(ctx context.Context, tconn *chrome.TestConn, tabletMo
 		if err := setLaunchAppAs(ctx, tconn, newInstanceMenuItem, instanceType); err != nil {
 			return err
 		}
-
-		// Fallback block to support legacy behavior where the whole menu gets closed.
-		// TODO(crbug.com/844786): Remove once the Chromium change is picked up by ChromeOS.
-		isMenuItemFound, err := ui.IsNodeFound(ctx, newInstanceMenuItem)
-		if err != nil {
-			return errors.Wrapf(err, "error finding the New %s menu item", instanceType)
-		}
-		if !isMenuItemFound {
-			if err := uiauto.Combine("Right click on the app again to show context menu",
-				ui.RightClick(app),
-				ui.WaitUntilExists(newInstanceMenuItem),
-			)(ctx); err != nil {
-				return errors.Wrapf(err, "failed to open the context menu on %s", app.Pretty())
-			}
-		}
 	}
 
 	// Click on the menu option to open a new window / tab on the app.
