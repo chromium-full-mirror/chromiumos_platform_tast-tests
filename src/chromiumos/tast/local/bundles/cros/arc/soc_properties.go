@@ -46,7 +46,7 @@ func init() {
 		// TODO(b/225373614): Merge with BuildProperties once all SOCs
 		// can be detected, which will make this testcase
 		// non-informational and CQ-blocking.
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "informational"},
 	})
 }
 
