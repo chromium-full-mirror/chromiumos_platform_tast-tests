@@ -315,6 +315,17 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		shortCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
+		// TODO(b/259450728): kukui-arc-r devices are failing Uprev due to missing ureadahead
+		// cache (b/259433794). Current suspicion is ureadhead generation is not running to completion
+		// before SIGTERM interrupt stopping the service. kukui-arc-r is a really slow device
+		// so we are looking into moving to more up-to-date ARM device like herobrine or corsola.
+		if param.vmEnabled && param.upload {
+			if desc.ModelType == "kukui" {
+				testing.ContextLogf(shortCtx, "Model type %s not supported for VM ureadahead, skipping generate", desc.ModelType)
+				return nil
+			}
+		}
+
 		// Pass initial boot and capture results.
 		response, err := service.Generate(shortCtx, &request)
 		if err != nil {

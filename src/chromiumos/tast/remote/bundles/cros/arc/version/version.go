@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/errors"
 )
 
-// BuildDescriptor contains essential parametrs of ARC Android image taken from test device.
+// BuildDescriptor contains essential parameters of ARC Android image taken from test device.
 type BuildDescriptor struct {
 	// true in case built by ab/
 	Official bool
@@ -24,6 +24,8 @@ type BuildDescriptor struct {
 	BuildVersion int
 	// build type e.g. user, userdebug
 	BuildType string
+	// model type e.g. eve
+	ModelType string
 	// Host ureadahead abi e.g. x86_64, arm, arm64
 	HostUreadaheadAbi string
 	// Guest cpu abi e.g. x86_64, x86, arm, arm64
@@ -92,6 +94,11 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		return nil, errors.Errorf("ro.product.cpu.abi is not found in %q", buildPropStr)
 	}
 
+	mModelType := regexp.MustCompile(`(\n|^)ro.product.system.model=(.+)(\n|$)`).FindStringSubmatch(buildPropStr)
+	if mModelType == nil {
+		return nil, errors.Errorf("ro.product.system.model is not found in %q", buildPropStr)
+	}
+
 	mBuildType := regexp.MustCompile(`(\n|^)ro.build.type=(.+)(\n|$)`).FindStringSubmatch(buildPropStr)
 	if mBuildType == nil {
 		return nil, errors.Errorf("ro.product.cpu.abi is not found in %q", buildPropStr)
@@ -155,6 +162,7 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		BuildID:           mBuildID[2],
 		BuildVersion:      buildVersion,
 		BuildType:         mBuildType[2],
+		ModelType:         mModelType[2],
 		HostUreadaheadAbi: hostUreadaheadAbi,
 		CPUAbi:            abi,
 		VersionRelease:    versionRelease,
