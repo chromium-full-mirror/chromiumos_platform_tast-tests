@@ -95,7 +95,6 @@ func init() {
 
 	// lacrosWith100FakeApps is the same as the "lacros" fixture but
 	// creates 100 fake apps for lacros that are shown in the OS launcher.
-	// TODO(crbug.com/1309565): Remove this fixture if no longer used in any tests.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosWith100FakeApps",
 		Desc:     "Lacros Chrome from a pre-built image with 100 fake apps installed for lacros",
