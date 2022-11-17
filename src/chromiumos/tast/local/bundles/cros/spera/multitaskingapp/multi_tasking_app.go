@@ -54,7 +54,7 @@ const (
 // RunParams holds the parameters to run the test main logic.
 type RunParams struct {
 	tier            cuj.Tier
-	ccaScriptPaths  []string // ccaSriptPaths is the scirpt paths used by CCA package to do camera testing.
+	ccaScriptPaths  []string // ccaSriptPaths is the script paths used by CCA package to do camera testing.
 	outDir          string
 	appName         string
 	account         string // account is the one used by Spotify APP to do login.
@@ -281,6 +281,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		if err := takePhotoAndVideo(ctx, cr, params.ccaScriptPaths, params.outDir); err != nil {
 			return errors.Wrap(err, "failed to take photo and video")
 		}
+
 		if err := cuj.GenerateADF(ctx, tconn, params.tabletMode); err != nil {
 			return errors.Wrap(err, "failed to generate ADF")
 		}
@@ -548,6 +549,10 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 }
 
 func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir string) error {
+	if len(scriptPaths) == 0 {
+		testing.ContextLog(ctx, "Skip take photo and video")
+		return nil
+	}
 	testing.ContextLog(ctx, "Take photo and video")
 
 	tb, err := testutil.NewTestBridgeWithoutTestConfig(ctx, cr, testutil.UseRealCamera)

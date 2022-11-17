@@ -6,6 +6,7 @@ package spera
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -34,14 +35,16 @@ func init() {
 		Func:         MultiTaskingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of multi-tasking app test",
-		Contacts:     []string{"xliu@cienet.com", "jane.yang@cienet.com"},
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
+		Contacts:     []string{"cienet-development@googlegroups.com", "jane.yang@cienet.com", "xibin@google.com"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{
-			"spera.cuj_mute",      // Optional. Mute the DUT during the test.
-			"spera.cuj_mode",      // Optional. Expecting "tablet" or "clamshell".
-			"spera.collectTrace",  // Optional. Expecting "enable" or "disable", default is "disable".
-			"spera.bt_devicename", // Required for Bluetooth subtests.
+			"spera.cuj_mute",                      // Optional. Mute the DUT during the test.
+			"spera.cuj_mode",                      // Optional. Expecting "tablet" or "clamshell".
+			"spera.collectTrace",                  // Optional. Expecting "enable" or "disable", default is "disable".
+			"spera.bt_devicename",                 // Required for Bluetooth subtests.
+			"spera.MultiTaskingApp.operateCamera", // Optional. Expecting "true" or "false", default is "true".
 		},
 		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
@@ -191,7 +194,12 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	ccaScriptPaths := []string{s.DataPath("cca_ui.js")}
+	var ccaScriptPaths []string
+	if v, ok := s.Var("spera.MultiTaskingApp.operateCamera"); !ok || strings.ToLower(v) != "false" {
+		// If there is no variable, the camera should be operated.
+		ccaScriptPaths = []string{s.DataPath("cca_ui.js")}
+	}
+
 	testRunParams := multitaskingapp.NewRunParams(tier, ccaScriptPaths, s.OutDir(), app, account, traceConfigPath, tabletMode, enableBT)
 	if err := multitaskingapp.Run(ctx, cr, param.browserType, a, testRunParams); err != nil {
 		s.Fatal("Failed to run multi-tasking app test: ", err)
