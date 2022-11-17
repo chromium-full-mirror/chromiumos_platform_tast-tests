@@ -30,9 +30,10 @@ func init() {
 		Func:         DrivefsPooledStorage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the Files App UI correctly reflects the DriveFs states related to Pooled Storage",
+		BugComponent: "b:167289",
 		Contacts: []string{
-			"msalomao@google.org",
 			"chromeos-files-syd@google.com",
+			"msalomao@google.org",
 		},
 		SoftwareDeps: []string{
 			"chrome",
@@ -41,8 +42,9 @@ func init() {
 		},
 		Attr: []string{
 			"group:drivefs-cq",
-			"informational",
+			"group:hw_agnostic",
 			"group:mainline",
+			"informational",
 		},
 		VarDeps: []string{
 			"filemanager.DrivefsPooledStorage.OrgFullUsername",
