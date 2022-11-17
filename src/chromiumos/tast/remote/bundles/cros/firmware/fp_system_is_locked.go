@@ -21,9 +21,11 @@ func init() {
 		Func: FpSystemIsLocked,
 		Desc: "Verify that system_is_locked() is true in the firmware (i.e., CONFIG_CMD_FPSENSOR_DEBUG) is disabled",
 		Contacts: []string{
-			"tomhughes@chromium.org", // Test author
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org", // Test author
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},

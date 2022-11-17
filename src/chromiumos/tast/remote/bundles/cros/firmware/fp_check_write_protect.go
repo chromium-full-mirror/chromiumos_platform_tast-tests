@@ -24,9 +24,11 @@ func init() {
 		Func: FpCheckWriteProtect,
 		Desc: "Validate that write protect signal is correctly reported by FPMCU",
 		Contacts: []string{
-			"patrykd@google.com", // Test author
 			"chromeos-fingerprint@google.com",
+			"patrykd@google.com", // Test author
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		SoftwareDeps: []string{"crossystem"},

@@ -19,9 +19,11 @@ func init() {
 		Func: FpFlashFpMcuHello,
 		Desc: "Validate that flash_fp_mcu can communicate with the FPMCU's bootloader",
 		Contacts: []string{
-			"hesling@chromium.org", // Test author
 			"chromeos-fingerprint@google.com",
+			"hesling@chromium.org", // Test author
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr: []string{"group:mainline", "group:fingerprint-cq"},
 		// On hatch+bloonchipper(Dratini) flash_fp_mcu --hello takes about
 		// 4 seconds and the full test with reboot takes about 30 seconds.

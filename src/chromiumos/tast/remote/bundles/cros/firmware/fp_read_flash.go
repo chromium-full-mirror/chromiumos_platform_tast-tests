@@ -22,9 +22,11 @@ func init() {
 		Func: FpReadFlash,
 		Desc: "Verify that fingerprint flash cannot be read",
 		Contacts: []string{
-			"tomhughes@chromium.org", // Test author
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org", // Test author
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},

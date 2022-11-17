@@ -24,10 +24,12 @@ func init() {
 		Func: FpROCanUpdateRW,
 		Desc: "Verify that RO can update RW",
 		Contacts: []string{
+			"chromeos-fingerprint@google.com",
 			"josienordrum@google.com", // Test author
 			"tomhughes@chromium.org",
-			"chromeos-fingerprint@google.com",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      8 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},

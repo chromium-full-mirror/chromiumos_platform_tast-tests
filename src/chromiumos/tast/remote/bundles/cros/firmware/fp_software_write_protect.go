@@ -21,9 +21,11 @@ func init() {
 		Func: FpSoftwareWriteProtect,
 		Desc: "Verify that software write protect cannot be disabled when hardware write protect is enabled",
 		Contacts: []string{
-			"tomhughes@chromium.org", // Test author
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org", // Test author
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},

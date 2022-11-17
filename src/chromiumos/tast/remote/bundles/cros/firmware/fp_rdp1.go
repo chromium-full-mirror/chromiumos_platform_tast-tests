@@ -27,10 +27,12 @@ func init() {
 		Func: FpRDP1,
 		Desc: "Validate read protection (RDP) level 1 of the fingerprint firmware works as expected",
 		Contacts: []string{
+			"chromeos-fingerprint@google.com",
 			"josienordrum@google.com", // Test author
 			"tomhughes@chromium.org",
-			"chromeos-fingerprint@google.com",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},

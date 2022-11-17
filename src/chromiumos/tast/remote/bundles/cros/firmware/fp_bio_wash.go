@@ -22,10 +22,12 @@ func init() {
 		Func: FpBioWash,
 		Desc: "Validate bio_wash behavior",
 		Contacts: []string{
+			"chromeos-fingerprint@google.com",
 			"josienordrum@chromium.org", // Test author
 			"tomhughes@chromium.org",
-			"chromeos-fingerprint@google.com",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      8 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},

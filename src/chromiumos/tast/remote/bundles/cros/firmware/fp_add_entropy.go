@@ -21,9 +21,11 @@ func init() {
 		Func: FpAddEntropy,
 		Desc: "Validate adding entropy only succeeds when running RO",
 		Contacts: []string{
-			"tomhughes@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},
