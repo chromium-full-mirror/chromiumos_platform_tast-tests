@@ -24,10 +24,10 @@ func init() {
 		Func:         KernelCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test handling of a guest kernel crash",
-		Contacts:     []string{"arcvm-eng@google.com", "kimiyuki@google.com"},
+		Contacts:     []string{"arcvm-eng@google.com", "hikalium@chromium.org", "matvore@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
