@@ -260,6 +260,23 @@ func (wifi *WifiManager) ConnectAP(ctx context.Context, ssid, passphrase string)
 	}
 }
 
+// HasMatchingAP returns whether the WiFi AP is known to the user profile.
+func (wifi *WifiManager) HasMatchingAP(ctx context.Context, ssid string) (bool, error) {
+	props := map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeWifi,
+		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+	}
+
+	service, err := wifi.m.FindMatchingService(ctx, props)
+	if err != nil {
+		if err.Error() == shillconst.ErrorMatchingServiceNotFound {
+			return false, nil
+		}
+		return false, errors.Wrap(err, "cannot find the given WiFi AP service")
+	}
+	return service != nil, nil
+}
+
 // ForgetAP removes the WiFi AP from user profile.
 func (wifi *WifiManager) ForgetAP(ctx context.Context, ssid string) error {
 	props := map[string]interface{}{
