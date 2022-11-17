@@ -23,9 +23,10 @@ func init() {
 		Func: CodelabRPC,
 		Desc: "Demonstrates common functionality for remote firmware tests",
 		Contacts: []string{
-			"me@chromium.org",      // Test author
-			"my-team@chromium.org", // Backup mailing list
+			"chromeos-faft@google.com", // Owning team list
+			"me@chromium.org",          // Test author
 		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Data: []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_experimental"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

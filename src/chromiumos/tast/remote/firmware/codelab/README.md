@@ -46,9 +46,10 @@ func init() {
 		Func: Codelab,
 		Desc: "Demonstrates common functionality for remote firmware tests",
 		Contacts: []string{
-			"me@chromium.org",      // Test author
-			"my-team@chromium.org", // Backup mailing list
+			"chromeos-faft@google.com", // Owning team list
+			"me@chromium.org",          // Test author
 		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: Move to firmware_unstable, then firmware_ec
 		Attr: []string{"group:firmware", "firmware_experimental"},
 	})
