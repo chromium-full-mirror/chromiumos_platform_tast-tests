@@ -257,7 +257,22 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 
 		defer func(ctx context.Context) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, params.outDir, func() bool { return retErr != nil }, cr, "ui_tree")
-			cuj.CloseChrome(ctx, tconn)
+
+			shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			defer cancel()
+			// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
+			if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
+				testing.ContextLog(ctx, "Failed to close all tabs: ", err)
+				// When closing the "Youtube Music" website, the popup "Leave site?" might appear.
+				leaveWindow := nodewith.Name("Leave site?").Role(role.Window).First()
+				leaveButton := nodewith.Name("Leave").Role(role.Button).Ancestor(leaveWindow)
+				if err := uiauto.IfSuccessThen(
+					ui.WithTimeout(time.Second).WaitUntilExists(leaveWindow),
+					ui.RetryUntil(ui.LeftClick(leaveButton), ui.WithTimeout(time.Second).WaitUntilGone(leaveWindow)),
+				)(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to click leave site button: ", err)
+				}
+			}
 		}(cleanupCtx)
 
 		if err := switchWindows(ctx, tconn, params, resources); err != nil {

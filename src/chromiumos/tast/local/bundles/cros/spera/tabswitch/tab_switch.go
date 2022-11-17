@@ -426,25 +426,6 @@ func generateTabSwitchTargets(tier cuj.Tier) ([]*chromeWindow, error) {
 	return windows, nil
 }
 
-func closeAllTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, windows []*chromeWindow) error {
-	// Close all tabs normally.
-	failed := 0
-	for _, window := range windows {
-		for _, tab := range window.tabs {
-			if err := tab.close(ctx); err != nil {
-				failed++
-			}
-		}
-	}
-
-	if failed == 0 {
-		// All tabs have been closed.
-		return nil
-	}
-	testing.ContextLogf(ctx, "Failed to close %d tab(s), which could have been detached; tring directly close Chrome window", failed)
-	return cuj.CloseChrome(ctx, tconn)
-}
-
 // Run runs the TabSwitch test. It is invoked by TabSwitchRecorder to
 // record web contents via WPR and invoked by TabSwitch to execute the tests
 // from the recorded contents. Additional actions will be executed in each tab.
@@ -559,8 +540,8 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 
 		defer func(ctx context.Context) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_tree")
-			if err := closeAllTabs(ctx, cr, tconn, windows); err != nil {
-				testing.ContextLog(ctx, "Failed to cleanup: ", err)
+			if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+				testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 			}
 		}(cleanupCtx)
 

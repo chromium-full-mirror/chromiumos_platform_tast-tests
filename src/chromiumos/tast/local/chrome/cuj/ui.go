@@ -47,6 +47,17 @@ func CloseAllWindows(ctx context.Context, tconn *chrome.TestConn) error {
 	return nil
 }
 
+// CloseAllTabs closes all tabs in Ash, leave a new tab in Lacros.
+func CloseAllTabs(ctx context.Context, bTconn *chrome.TestConn, bt browser.Type) error {
+	closeTabsFunc := browser.CloseAllTabs
+	if bt == browser.TypeLacros {
+		// For lacros-Chrome, we will close all existing tabs but leave a new tab to keep the Chrome
+		// process alive.
+		closeTabsFunc = browser.ReplaceAllTabsWithSingleNewTab
+	}
+	return closeTabsFunc(ctx, bTconn)
+}
+
 // GetBrowserStartTime opens chrome browser and returns the browser start time.
 // If lfixtVal is given, it will open the lacros-Chrome, and return the lacros instance.
 func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
