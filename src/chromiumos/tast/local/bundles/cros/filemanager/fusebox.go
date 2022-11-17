@@ -21,11 +21,12 @@ func init() {
 		Func:         Fusebox,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Mount fusebox daemon and verify it responds to requests",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"benreich@chromium.org",
 			"nigeltao@chromium.org",
 			"noel@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
