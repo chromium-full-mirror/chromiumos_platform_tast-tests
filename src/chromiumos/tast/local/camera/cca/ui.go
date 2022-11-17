@@ -194,6 +194,15 @@ var (
 	FrontVideoResolutionOptions = UIComponent{"front video resolution options", []string{"#view-video-resolution-settings .menu-item>input[data-facing=\"user\"]"}}
 	// BackVideoResolutionOptions are the buttons of video resolution options for the back camera.
 	BackVideoResolutionOptions = UIComponent{"back video resolution options", []string{"#view-video-resolution-settings .menu-item>input[data-facing=\"environment\"]"}}
+
+	// LowStorageDialog is the dialog displayed when there's an unexpected behavior during recording due to low storage.
+	LowStorageDialog = UIComponent{"low storage dialog", []string{"#view-low-storage-dialog"}}
+	// LowStorageDialogOKButton is the button labeled "OK" in LowStorageDialog, used to acknowledge and close the dialog.
+	LowStorageDialogOKButton = UIComponent{"low storage dialog OK button", []string{"#view-low-storage-dialog button.dialog-positive-button"}}
+	// LowStorageDialogManageButton is the button in LowStorageDialog that navigates users to "Manage storage" page in system settings.
+	LowStorageDialogManageButton = UIComponent{"low storage manage storage button", []string{"#view-low-storage-dialog button.dialog-negative-button"}}
+	// LowStorageWarning is the warning nudge displayed while recording on device with low storage.
+	LowStorageWarning = UIComponent{"low storage warning nudge", []string{"#nudge"}}
 )
 
 // Option is the option for toggling state.
