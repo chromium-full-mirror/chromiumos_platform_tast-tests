@@ -34,7 +34,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FlashromTester,
 		Desc:         "Tast wrapper that runs flashrom_tester",
-		Contacts:     []string{"nartemiev@google.com", "cros-flashrom-team@google.com"},
+		Contacts:     []string{"cros-flashrom-team@google.com", "nartemiev@google.com"},
+		BugComponent: "b:750299",
 		Attr:         []string{"group:flashrom"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
