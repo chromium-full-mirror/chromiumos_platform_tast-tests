@@ -339,7 +339,8 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 			},
-			Fixture: "chromeVideoWithFakeWebcam",
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "vp9_enc_1080p",
 			Val: peerconnection.RTCTestParams{
@@ -349,7 +350,8 @@ func init() {
 				StreamWidth:       1920,
 				StreamHeight:      1080,
 			},
-			Fixture: "chromeVideoWithFakeWebcam",
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "vp9_enc_cam",
 			Val: peerconnection.RTCTestParams{
