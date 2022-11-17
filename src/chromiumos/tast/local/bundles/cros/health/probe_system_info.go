@@ -297,7 +297,7 @@ func expectedSystemInfo(ctx context.Context) (systemInfo, error) {
 		return r, err
 	}
 	// Fallback to VPD when OEM name is missing in cros-config.
-	if r.OSInfo.OEMName == nil {
+	if r.OSInfo.OEMName == nil && r.VPDInfo != nil {
 		r.OSInfo.OEMName = r.VPDInfo.OEMName
 	}
 	return r, nil
