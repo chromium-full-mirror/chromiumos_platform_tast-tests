@@ -55,8 +55,28 @@ name to a serilization of the `expectations.Expectation` structure. For
 parameterized tests, there may be many keys for different test cases. For
 non-parameterized tests, there will be at most one key.
 
-For example:
+The schema for each expectation value is based on following jsonscheme format
+```
+type: object
+properties:
+  expectation:
+    type: string
+    enum:
+      - PASS
+      - FAIL
+  tickets:
+    type: array
+    items:
+      type: string
+  comments:
+    type: string
+  since_build:
+    type: string
+required:
+  - expectation
+```
 
+For example:
 ```
 <package>.<test name>.<test case>:
   expectation: FAIL
