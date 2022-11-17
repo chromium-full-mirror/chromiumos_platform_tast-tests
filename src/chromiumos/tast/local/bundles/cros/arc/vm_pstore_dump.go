@@ -19,8 +19,9 @@ func init() {
 		Func:         VMPstoreDump,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test of vm_pstore_dump command: check the kernel's console output after running vm_pstore_dump",
-		Contacts:     []string{"kimiyuki@google.com", "arcvm-eng@google.com"},
-		Attr:         []string{"group:mainline"},
+		Contacts:     []string{"arcvm-eng@google.com", "hikalium@chromium.org", "matvore@chromium.org"},
+		BugComponent: "b:882467",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
 	})
