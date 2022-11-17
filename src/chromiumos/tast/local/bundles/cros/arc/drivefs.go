@@ -23,11 +23,9 @@ func init() {
 		Func:         Drivefs,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Android app can read files on Drive FS (Google Drive) via FilesApp",
-		Contacts: []string{
-			"youkichihosoi@chromium.org",
-			"arc-storage@google.com",
-			"cros-arc-te@google.com",
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "drivefs"},
 		Timeout:      4 * time.Minute,

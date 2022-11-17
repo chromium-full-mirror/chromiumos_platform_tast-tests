@@ -19,11 +19,9 @@ func init() {
 		Func:         FileSystemPermissions,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies filesystem permissions for ARC container",
-		Contacts: []string{
-			"yusukes@chromium.org",
-			"arc-storage@google.com",
-			"hidehiko@chromium.org", // Tast port author.
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Fixture:      "arcBooted",

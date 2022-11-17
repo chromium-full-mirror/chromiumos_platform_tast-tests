@@ -25,7 +25,9 @@ func init() {
 		Func:         QuotaProjectID,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Android's quota project ID setting logic works",
-		Contacts:     []string{"hashimoto@chromium.org", "arcvm-eng@google.com"},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm", "arc_android_data_cros_access"},
 		Fixture:      "arcBooted",

@@ -34,11 +34,9 @@ func init() {
 		Func:         MTP,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "ARC++/ARCVM Android app can read files on external Android device (with MTP) via FilesApp",
-		Contacts: []string{
-			"youkichihosoi@chromium.org",
-			"arc-storage@google.com",
-			"cros-arc-te@google.com",
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mtp"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

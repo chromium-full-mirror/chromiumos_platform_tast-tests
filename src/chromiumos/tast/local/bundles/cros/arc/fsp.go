@@ -43,10 +43,9 @@ func init() {
 		Func:         Fsp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Android app can read files on pseudo file systems using File System Provider (FSP) via FilesApp",
-		Contacts: []string{
-			"youkichihosoi@chromium.org",
-			"arc-storage@google.com",
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,

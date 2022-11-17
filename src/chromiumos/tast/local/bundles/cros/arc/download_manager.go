@@ -30,7 +30,9 @@ func init() {
 		Func:         DownloadManager,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks whether ARC can download files through DownloadManager",
-		Contacts:     []string{"youkichihosoi@chromium.org", "arc-storage@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

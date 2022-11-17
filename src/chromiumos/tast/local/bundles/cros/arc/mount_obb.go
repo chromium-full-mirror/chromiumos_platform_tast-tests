@@ -28,11 +28,9 @@ func init() {
 		Func:         MountOBB,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies mount-obb's fuse works",
-		Contacts: []string{
-			"hashimoto@chromium.org", // original author.
-			"arc-storage@google.com",
-			"hidehiko@chromium.org", // Tast port.
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		// TODO(hidehiko,nya): registration_test.go is too strict.
 		// Actually, this does not actually need "chrome", and
 		// should be done very quickly so default Timeout should work.

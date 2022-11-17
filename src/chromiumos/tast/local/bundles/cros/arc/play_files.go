@@ -38,9 +38,9 @@ func init() {
 		Func:         PlayFiles,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks whether the Play files directory is properly shared from ARC to ChromeOS",
-		Contacts: []string{
-			"youkichihosoi@chromium.org", "arc-storage@google.com",
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"capybara.jpg"},

@@ -26,9 +26,9 @@ func init() {
 		Func:         MyFiles,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks whether the MyFiles directory is properly shared from ChromeOS to ARC",
-		Contacts: []string{
-			"youkichihosoi@chromium.org", "arc-storage@google.com",
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

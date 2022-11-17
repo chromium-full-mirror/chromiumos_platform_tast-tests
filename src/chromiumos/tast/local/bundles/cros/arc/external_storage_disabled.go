@@ -21,10 +21,9 @@ func init() {
 		Func:         ExternalStorageDisabled,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ExternalStorageDisabled policy is correctly applied to ARC",
-		Contacts: []string{
-			"arc-storage@google.com",
-			"momohatt@google.com",
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		VarDeps:      []string{"arc.managedAccountPool"},
 		SoftwareDeps: []string{"chrome"},

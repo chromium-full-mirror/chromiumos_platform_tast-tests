@@ -22,7 +22,9 @@ func init() {
 		Func:         Downloads,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Downloads integration is working",
-		Contacts:     []string{"nya@chromium.org", "arc-eng@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"capybara.jpg"},

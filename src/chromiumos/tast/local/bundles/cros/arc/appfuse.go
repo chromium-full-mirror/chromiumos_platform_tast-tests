@@ -20,11 +20,9 @@ func init() {
 		Func:         Appfuse,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Make sure arc-appfuse-provider works",
-		Contacts: []string{
-			"hashimoto@google.com", // original author.
-			"arc-storage@google.com",
-			"kimiyuki@google.org", // Tast port.
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Fixture:      "arcBooted",

@@ -17,11 +17,9 @@ func init() {
 		Func:         ContainerMount,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies mount points' shared flags for ARC",
-		Contacts: []string{
-			"arc-core@google.com",
-			"arc-storage@google.com",
-			"hidehiko@chromium.org", // Tast port author.
-		},
+		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Storage
+		BugComponent: "b:516669",
 		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.
 		SoftwareDeps: []string{
 			"android_p",
