@@ -46,10 +46,11 @@ func init() {
 		Func:         UIPerf,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "UI performance metrics for Files app",
+		BugComponent: "b:167289",
 		Contacts: []string{
+			"chromeos-files-syd@google.com",
 			"benreich@chromium.org",
 			"lucmult@chromium.org",
-			"chromeos-files-syd@google.com",
 		},
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
