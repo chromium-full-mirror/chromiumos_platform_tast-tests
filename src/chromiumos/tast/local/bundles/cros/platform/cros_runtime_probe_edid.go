@@ -18,9 +18,10 @@ func init() {
 		Func: CrosRuntimeProbeEdid,
 		Desc: "Checks that edid probe results are expected",
 		Contacts: []string{
-			"ckclark@chromium.org",
 			"chromeos-runtime-probe@google.com",
+			"clarkchung@google.com",
 		},
+		BugComponent: "b:606088",
 		Attr:         []string{"group:runtime_probe"},
 		SoftwareDeps: []string{"racc"},
 		Vars:         []string{"autotest_host_info_labels"},

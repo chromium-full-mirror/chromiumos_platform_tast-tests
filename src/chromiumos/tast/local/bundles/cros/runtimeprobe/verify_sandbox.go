@@ -27,9 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks runtime_probe sandbox",
 		Contacts: []string{
-			"chungsheng@google.com",
 			"chromeos-runtime-probe@google.com",
+			"chungsheng@google.com",
 		},
+		BugComponent: "b:606088",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"racc"},
 		Params: []testing.Param{{

@@ -76,9 +76,13 @@ func (s sortableMessage) String() string {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrosHardwareVerifier,
-		Desc:         "Test Hardware Verifier functionality",
-		Contacts:     []string{"ckclark@chromium.org", "chromeos-runtime-probe@google.com"},
+		Func: CrosHardwareVerifier,
+		Desc: "Test Hardware Verifier functionality",
+		Contacts: []string{
+			"chromeos-runtime-probe@google.com",
+			"clarkchung@google.com",
+		},
+		BugComponent: "b:606088",
 		SoftwareDeps: []string{"reboot", "racc"},
 		Attr:         []string{"group:runtime_probe"},
 	})
@@ -173,9 +177,10 @@ func requiredFields(ctx context.Context, s *testing.State) (requiredFieldSet, er
 // decodeResult will return decoded binary of hex-encoded result from
 // dbus-send, also it trims the prefix, suffix, and all space characters.
 // For reference, the output format of dbus-send is:
-//   array of bytes [
-//      1a 6f 0a ...
-//   ]
+//
+//	array of bytes [
+//	   1a 6f 0a ...
+//	]
 func decodeResult(result string) []byte {
 	result = strings.TrimSuffix(strings.TrimPrefix(result, "   array of bytes ["), "]\n")
 	result = strings.NewReplacer(" ", "", "\n", "").Replace(result)
