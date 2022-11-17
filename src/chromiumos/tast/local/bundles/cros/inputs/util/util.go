@@ -99,13 +99,24 @@ func WaitForFieldEmpty(tconn *chrome.TestConn, finder *nodewith.Finder) uiauto.A
 // GetNthCandidateText returns the candidate text in the specified position in the candidates window.
 func GetNthCandidateText(ctx context.Context, tconn *chrome.TestConn, n int) (string, error) {
 	ui := uiauto.New(tconn)
+	var lastText, curText string
 
-	candidate, err := ui.Info(ctx, PKCandidatesFinder.Nth(n))
-	if err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		candidate, err := ui.Info(ctx, PKCandidatesFinder.Nth(n))
+		if err != nil {
+			return err
+		}
+		curText = candidate.Name
+		if curText != lastText {
+			lastText = curText
+			return errors.New("text is not stable between internval")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
 		return "", err
 	}
 
-	return candidate.Name, nil
+	return curText, nil
 }
 
 // RunSubtestsPerInputMethodAndMessage runs subtest that uses testName and inputdata on
