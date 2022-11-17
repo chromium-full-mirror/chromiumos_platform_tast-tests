@@ -25,7 +25,11 @@ func init() {
 		Func:         ARCAccountPickerNewAccount,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify new account addition from ARC account picker",
-		Contacts:     []string{"anastasiian@chromium.org", "team-dent@google.com"},
+		Contacts: []string{
+			"team-dent@google.com",
+			"anastasiian@chromium.org",
+		},
+		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{{

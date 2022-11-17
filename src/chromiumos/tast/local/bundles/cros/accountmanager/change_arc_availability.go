@@ -24,7 +24,11 @@ func init() {
 		Func:         ChangeARCAvailability,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify that ARC availability can be changed in OS Settings",
-		Contacts:     []string{"anastasiian@chromium.org", "team-dent@google.com"},
+		Contacts: []string{
+			"team-dent@google.com",
+			"anastasiian@chromium.org",
+		},
+		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

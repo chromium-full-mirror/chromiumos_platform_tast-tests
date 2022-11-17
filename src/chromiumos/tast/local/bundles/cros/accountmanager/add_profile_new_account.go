@@ -26,7 +26,11 @@ func init() {
 		Func:         AddProfileNewAccount,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Addition of a secondary profile with a new account",
-		Contacts:     []string{"anastasiian@chromium.org", "team-dent@google.com"},
+		Contacts: []string{
+			"team-dent@google.com",
+			"anastasiian@chromium.org",
+		},
+		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "loggedInToLacros",

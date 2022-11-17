@@ -26,7 +26,11 @@ func init() {
 		Func:         AddAccountOSSettings,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify that a secondary account can be added and removed from OS Settings",
-		Contacts:     []string{"anastasiian@chromium.org", "team-dent@google.com"},
+		Contacts: []string{
+			"team-dent@google.com",
+			"anastasiian@chromium.org",
+		},
+		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr: []string{
 			"group:mainline",
 			"informational",

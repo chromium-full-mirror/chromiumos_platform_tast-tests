@@ -31,10 +31,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "In-session account addition using system 'Add account' dialog",
 		Contacts: []string{
-			"anastasiian@chromium.org", // Test author.
 			"team-dent@google.com",     // Account Manager owners.
+			"anastasiian@chromium.org", // Test author.
 			"cros-3pidp@google.com",    // Domain owners for SAML test.
 		},
+		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
