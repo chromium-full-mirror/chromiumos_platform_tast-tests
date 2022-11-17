@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/local/wpr"
@@ -22,7 +23,7 @@ import (
 )
 
 type tabSwitchParam struct {
-	level       tabswitchcuj.Level
+	tier        cuj.Tier
 	wprProxy    bool
 	browserType browser.Type
 }
@@ -47,34 +48,34 @@ func init() {
 			{
 				Name:    "basic",
 				Timeout: 30 * time.Minute,
-				Val:     tabSwitchParam{level: tabswitchcuj.Basic, wprProxy: true},
+				Val:     tabSwitchParam{tier: cuj.Basic, wprProxy: true},
 				Pre:     wpr.RemoteReplayMode(),
 			}, {
 				Name:    "plus",
 				Timeout: 35 * time.Minute,
-				Val:     tabSwitchParam{level: tabswitchcuj.Plus, wprProxy: true},
+				Val:     tabSwitchParam{tier: cuj.Plus, wprProxy: true},
 				Pre:     wpr.RemoteReplayMode(),
 			}, {
 				Name:    "premium",
 				Timeout: 40 * time.Minute,
-				Val:     tabSwitchParam{level: tabswitchcuj.Premium, wprProxy: true},
+				Val:     tabSwitchParam{tier: cuj.Premium, wprProxy: true},
 				Pre:     wpr.RemoteReplayMode(),
 			}, {
 				Name:              "basic_noproxy",
 				Timeout:           35 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Basic, wprProxy: false},
+				Val:               tabSwitchParam{tier: cuj.Basic, wprProxy: false},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
 				Name:              "basic_lacros_noproxy",
 				Timeout:           35 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Basic, wprProxy: false, browserType: browser.TypeLacros},
+				Val:               tabSwitchParam{tier: cuj.Basic, wprProxy: false, browserType: browser.TypeLacros},
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
 			}, {
 				Name:              "basic_noproxy_crosbolt",
 				Timeout:           35 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Basic, wprProxy: false},
+				Val:               tabSwitchParam{tier: cuj.Basic, wprProxy: false},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
@@ -82,19 +83,19 @@ func init() {
 			}, {
 				Name:              "plus_noproxy",
 				Timeout:           40 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Plus, wprProxy: false},
+				Val:               tabSwitchParam{tier: cuj.Plus, wprProxy: false},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
 				Name:              "plus_lacros_noproxy",
 				Timeout:           40 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Plus, wprProxy: false, browserType: browser.TypeLacros},
+				Val:               tabSwitchParam{tier: cuj.Plus, wprProxy: false, browserType: browser.TypeLacros},
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
 			}, {
 				Name:              "plus_noproxy_crosbolt",
 				Timeout:           40 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Plus, wprProxy: false},
+				Val:               tabSwitchParam{tier: cuj.Plus, wprProxy: false},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
@@ -102,21 +103,21 @@ func init() {
 			}, {
 				Name:    "premium_noproxy",
 				Timeout: 45 * time.Minute,
-				Val:     tabSwitchParam{level: tabswitchcuj.Premium, wprProxy: false},
+				Val:     tabSwitchParam{tier: cuj.Premium, wprProxy: false},
 
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
 				Name:    "premium_lacros_noproxy",
 				Timeout: 45 * time.Minute,
-				Val:     tabSwitchParam{level: tabswitchcuj.Premium, wprProxy: false, browserType: browser.TypeLacros},
+				Val:     tabSwitchParam{tier: cuj.Premium, wprProxy: false, browserType: browser.TypeLacros},
 
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
 			}, {
 				Name:              "premium_noproxy_crosbolt",
 				Timeout:           45 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitchcuj.Premium, wprProxy: false},
+				Val:               tabSwitchParam{tier: cuj.Premium, wprProxy: false},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
@@ -176,5 +177,5 @@ func TabSwitchCUJ2(ctx context.Context, s *testing.State) {
 	// Shorten context a bit to allow for cleanup if Run fails.
 	ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
-	tabswitchcuj.Run2(ctx, s, cr, p.level, tabletMode, p.browserType)
+	tabswitchcuj.Run2(ctx, s, cr, p.tier, p.browserType, tabletMode, false)
 }

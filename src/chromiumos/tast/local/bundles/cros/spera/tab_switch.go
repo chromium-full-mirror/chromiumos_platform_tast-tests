@@ -13,13 +13,14 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
 
 type tabSwitchParam struct {
-	level       tabswitch.Level
+	tier        cuj.Tier
 	wprProxy    bool
 	browserType browser.Type
 }
@@ -42,27 +43,41 @@ func init() {
 		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Name:              "essential",
-				Timeout:           35 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitch.Essential, wprProxy: false},
+				Name:    "essential",
+				Timeout: 35 * time.Minute,
+				Val: tabSwitchParam{
+					tier:     cuj.Essential,
+					wprProxy: false,
+				},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
-				Name:              "essential_lacros",
-				Timeout:           35 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitch.Essential, wprProxy: false, browserType: browser.TypeLacros},
+				Name:    "essential_lacros",
+				Timeout: 35 * time.Minute,
+				Val: tabSwitchParam{
+					tier:        cuj.Essential,
+					wprProxy:    false,
+					browserType: browser.TypeLacros,
+				},
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
 			}, {
-				Name:              "advanced",
-				Timeout:           45 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitch.Advanced, wprProxy: false},
+				Name:    "advanced",
+				Timeout: 45 * time.Minute,
+				Val: tabSwitchParam{
+					tier:     cuj.Advanced,
+					wprProxy: false,
+				},
 				Fixture:           "loggedInAndKeepState",
 				ExtraSoftwareDeps: []string{"arc"},
 			}, {
-				Name:              "advanced_lacros",
-				Timeout:           45 * time.Minute,
-				Val:               tabSwitchParam{level: tabswitch.Advanced, wprProxy: false, browserType: browser.TypeLacros},
+				Name:    "advanced_lacros",
+				Timeout: 45 * time.Minute,
+				Val: tabSwitchParam{
+					tier:        cuj.Advanced,
+					wprProxy:    false,
+					browserType: browser.TypeLacros,
+				},
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros", "arc"},
 			},
@@ -120,5 +135,5 @@ func TabSwitch(ctx context.Context, s *testing.State) {
 	// Shorten context a bit to allow for cleanup if Run fails.
 	ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
-	tabswitch.Run(ctx, s, cr, p.level, tabletMode, p.browserType)
+	tabswitch.Run(ctx, s, cr, p.tier, p.browserType, tabletMode, false)
 }

@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/spera/tabswitch"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/wpr"
 	"chromiumos/tast/testing"
 )
@@ -63,5 +64,5 @@ func TabSwitchRecorder(ctx context.Context, s *testing.State) {
 	// is the dut tablet or not shouldn't affect to recording web content
 	// Currently recorder is supported for ash-Chrome only. We call Run2() with lFixtVal as nil.
 	// If support of lacros is needed, we need to enhance the test to pass lacrosFixtValue.
-	tabswitch.Run(ctx, s, cr, tabswitch.Record, false, browser.TypeAsh)
+	tabswitch.Run(ctx, s, cr, cuj.Advanced, browser.TypeAsh, false, true)
 }

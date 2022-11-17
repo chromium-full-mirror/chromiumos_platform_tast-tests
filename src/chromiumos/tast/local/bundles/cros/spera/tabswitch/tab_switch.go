@@ -47,33 +47,13 @@ const (
 )
 
 // pageLoadingTimeout returns the timeout value when waiting for a page being loaded.
-func pageLoadingTimeout(caseLevel Level) time.Duration {
+func pageLoadingTimeout(isRecordMode bool) time.Duration {
 	// In record mode, give more time to loading to ensure web content is fully recorded.
-	if caseLevel == Record {
+	if isRecordMode {
 		return recordingPageLoadingTimeout
 	}
 	return replayPageLoadingTimeout
 }
-
-// Level indicate how intensive of this test case is going to execute.
-type Level uint8
-
-// Level indicate how intensive of this test case is going to execute.
-//
-// Basic is the level to use to run this case in basic level
-// Essential is the level to use to run this case in essential level
-// Plus is the level to use to run this case in plus level
-// Premium is the level to use to run this case in premium level
-// Advanced is the level to use to run this case in advanced level
-// Record is the level to use to run this case in *record mode*
-const (
-	Basic Level = iota
-	Essential
-	Plus
-	Premium
-	Advanced
-	Record
-)
 
 // webType define all web site is involved in this test case
 type webType string
@@ -95,21 +75,21 @@ const (
 // webPageInfo records a Chrome page's information, including the current browsing page
 // and url links (in patterns) for page navigation.
 type webPageInfo struct {
-	level   Level   // the test level of this link will be used for. Only used for generating targets
-	webName webType // current page's website name
+	tier    cuj.Tier // the test tier of this link will be used for. Only used for generating targets
+	webName webType  // current page's website name
 	// contentPatterns holds the patterns of the url links embedded in the web page. During
 	// tab switch, we find the url of the given pattern in the current page and click it.
 	// Links can be clicked back and forth in case multiple rounds of tab switch are executed.
 	contentPatterns []string
 }
 
-func newPageInfo(level Level, web webType, patterns ...string) *webPageInfo {
+func newPageInfo(tier cuj.Tier, web webType, patterns ...string) *webPageInfo {
 	if len(patterns) < 2 {
 		panic("Invalid configuration of webPageInfo")
 	}
 
 	return &webPageInfo{
-		level:           level,
+		tier:            tier,
 		webName:         web,
 		contentPatterns: patterns,
 	}
@@ -330,67 +310,64 @@ var allTargets = []struct {
 	url  string
 	info *webPageInfo
 }{
-	{cuj.WikipediaMainURL, newPageInfo(Basic, wikipedia, `/Main_Page`, `/Wikipedia:Contents`)},
-	{cuj.WikipediaCurrentEventsURL, newPageInfo(Basic, wikipedia, `/Portal:Current_events`, `/Special:Random`)},
-	{cuj.WikipediaAboutURL, newPageInfo(Basic, wikipedia, `/Wikipedia:About`, `/Wikipedia:Contact_us`)},
-	{cuj.WikipediaHelpURL, newPageInfo(Plus, wikipedia, `/Help:Contents`, `/Help:Introduction`)},
-	{cuj.WikipediaCommunityURL, newPageInfo(Plus, wikipedia, `/Wikipedia:Community_portal`, `/Special:RecentChanges`)},
-	{cuj.WikipediaContributionURL, newPageInfo(Premium, wikipedia, `/Help:User_contributions`, `/Wikipedia`)},
+	{cuj.WikipediaMainURL, newPageInfo(cuj.Essential, wikipedia, `/Main_Page`, `/Wikipedia:Contents`)},
+	{cuj.WikipediaCurrentEventsURL, newPageInfo(cuj.Essential, wikipedia, `/Portal:Current_events`, `/Special:Random`)},
+	{cuj.WikipediaAboutURL, newPageInfo(cuj.Essential, wikipedia, `/Wikipedia:About`, `/Wikipedia:Contact_us`)},
+	{cuj.WikipediaHelpURL, newPageInfo(cuj.Advanced, wikipedia, `/Help:Contents`, `/Help:Introduction`)},
+	{cuj.WikipediaCommunityURL, newPageInfo(cuj.Advanced, wikipedia, `/Wikipedia:Community_portal`, `/Special:RecentChanges`)},
+	{cuj.WikipediaContributionURL, newPageInfo(cuj.Advanced, wikipedia, `/Help:User_contributions`, `/Wikipedia`)},
 
-	{cuj.RedditWallstreetURL, newPageInfo(Basic, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
-	{cuj.RedditTechNewsURL, newPageInfo(Basic, reddit, `/r/technews/hot/`, `/r/technews/new/`)},
-	{cuj.RedditOlympicsURL, newPageInfo(Basic, reddit, `/r/olympics/hot/`, `/r/olympics/new/`)},
-	{cuj.RedditProgrammingURL, newPageInfo(Plus, reddit, `/r/programming/hot/`, `/r/programming/new/`)},
-	{cuj.RedditAppleURL, newPageInfo(Plus, reddit, `/r/apple/hot/`, `/r/apple/new/`)},
-	{cuj.RedditBrooklynURL, newPageInfo(Premium, reddit, `/r/brooklynninenine/hot/`, `/r/brooklynninenine/new/`)},
+	{cuj.RedditWallstreetURL, newPageInfo(cuj.Essential, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
+	{cuj.RedditTechNewsURL, newPageInfo(cuj.Essential, reddit, `/r/technews/hot/`, `/r/technews/new/`)},
+	{cuj.RedditOlympicsURL, newPageInfo(cuj.Essential, reddit, `/r/olympics/hot/`, `/r/olympics/new/`)},
+	{cuj.RedditProgrammingURL, newPageInfo(cuj.Advanced, reddit, `/r/programming/hot/`, `/r/programming/new/`)},
+	{cuj.RedditAppleURL, newPageInfo(cuj.Advanced, reddit, `/r/apple/hot/`, `/r/apple/new/`)},
+	{cuj.RedditBrooklynURL, newPageInfo(cuj.Advanced, reddit, `/r/brooklynninenine/hot/`, `/r/brooklynninenine/new/`)},
 
 	// Since "Medium" sites change content frequently, add an alternate tag link pattern.
-	{cuj.MediumBusinessURL, newPageInfo(Basic, medium, `/business`, `/economy`, `/money`, `/marketing`)},
-	{cuj.MediumStartupURL, newPageInfo(Basic, medium, `/startup`, `/leadership`, `/marketing`, `/business`)},
-	{cuj.MediumWorkURL, newPageInfo(Plus, medium, `/work`, `/productivity`, `/careers`, `/business`)},
-	{cuj.MediumSoftwareURL, newPageInfo(Premium, medium, `/software-engineering`, `/programming`, `/coding`, `/technology`)},
-	{cuj.MediumAIURL, newPageInfo(Premium, medium, `/artificial-intelligence`, `/data-science`, `/software-engineering`, `/programming`)},
+	{cuj.MediumBusinessURL, newPageInfo(cuj.Essential, medium, `/business`, `/economy`, `/money`, `/marketing`)},
+	{cuj.MediumStartupURL, newPageInfo(cuj.Essential, medium, `/startup`, `/leadership`, `/marketing`, `/business`)},
+	{cuj.MediumWorkURL, newPageInfo(cuj.Advanced, medium, `/work`, `/productivity`, `/careers`, `/business`)},
+	{cuj.MediumSoftwareURL, newPageInfo(cuj.Advanced, medium, `/software-engineering`, `/programming`, `/coding`, `/technology`)},
+	{cuj.MediumAIURL, newPageInfo(cuj.Advanced, medium, `/artificial-intelligence`, `/data-science`, `/software-engineering`, `/programming`)},
 
 	// Since "Yahoo" sites change content frequently, add an alternate tag link pattern.
-	{cuj.YahooUsURL, newPageInfo(Basic, yahooNews, `/us/`, `/politics/`, `/world/`)},
-	{cuj.YahooWorldURL, newPageInfo(Basic, yahooNews, `/world/`, `/coronavirus/`, `/health/`)},
-	{cuj.YahooScienceURL, newPageInfo(Plus, yahooNews, `/science/`, `/originals/`, `/us/`)},
-	{cuj.YahooFinanaceWatchlistURL, newPageInfo(Premium, yahooFinance, `/watchlists/`, `/news/`)},
+	{cuj.YahooUsURL, newPageInfo(cuj.Essential, yahooNews, `/us/`, `/politics/`, `/world/`)},
+	{cuj.YahooWorldURL, newPageInfo(cuj.Essential, yahooNews, `/world/`, `/coronavirus/`, `/health/`)},
+	{cuj.YahooScienceURL, newPageInfo(cuj.Advanced, yahooNews, `/science/`, `/originals/`, `/us/`)},
+	{cuj.YahooFinanaceWatchlistURL, newPageInfo(cuj.Advanced, yahooFinance, `/watchlists/`, `/news/`)},
 
-	{cuj.CnnWorldURL, newPageInfo(Plus, cnn, `/world`, `/africa`)},
-	{cuj.CnnAmericasURL, newPageInfo(Plus, cnn, `/americas`, `/asia`)},
-	{cuj.CnnAustraliaURL, newPageInfo(Plus, cnn, `/australia`, `/china`)},
-	{cuj.CnnEuropeURL, newPageInfo(Premium, cnn, `/europe`, `/india`)},
-	{cuj.CnnMiddleEastURL, newPageInfo(Premium, cnn, `/middle-east`, `/uk`)},
+	{cuj.CnnWorldURL, newPageInfo(cuj.Advanced, cnn, `/world`, `/africa`)},
+	{cuj.CnnAmericasURL, newPageInfo(cuj.Advanced, cnn, `/americas`, `/asia`)},
+	{cuj.CnnAustraliaURL, newPageInfo(cuj.Advanced, cnn, `/australia`, `/china`)},
+	{cuj.CnnEuropeURL, newPageInfo(cuj.Advanced, cnn, `/europe`, `/india`)},
+	{cuj.CnnMiddleEastURL, newPageInfo(cuj.Advanced, cnn, `/middle-east`, `/uk`)},
 
-	{cuj.EspnNflURL, newPageInfo(Plus, espn, `/nfl/scoreboard`, `/nfl/schedule`)},
-	{cuj.EspnNbaURL, newPageInfo(Plus, espn, `/nba/scoreboard`, `/nba/schedule`)},
-	{cuj.EspnCollegeBasketballURL, newPageInfo(Plus, espn, `/mens-college-basketball/scoreboard`, `/mens-college-basketball/schedule`)},
-	{cuj.EspnTennisURL, newPageInfo(Premium, espn, `/tennis/dailyResults`, `/tennis/schedule`)},
-	{cuj.EspnSoccerURL, newPageInfo(Premium, espn, `/soccer/scoreboard`, `/soccer/schedule`)},
+	{cuj.EspnNflURL, newPageInfo(cuj.Advanced, espn, `/nfl/scoreboard`, `/nfl/schedule`)},
+	{cuj.EspnNbaURL, newPageInfo(cuj.Advanced, espn, `/nba/scoreboard`, `/nba/schedule`)},
+	{cuj.EspnCollegeBasketballURL, newPageInfo(cuj.Advanced, espn, `/mens-college-basketball/scoreboard`, `/mens-college-basketball/schedule`)},
+	{cuj.EspnTennisURL, newPageInfo(cuj.Advanced, espn, `/tennis/dailyResults`, `/tennis/schedule`)},
+	{cuj.EspnSoccerURL, newPageInfo(cuj.Advanced, espn, `/soccer/scoreboard`, `/soccer/schedule`)},
 
-	{cuj.HuluMoviesURL, newPageInfo(Plus, hulu, `/hub/movies`, `/hub/originals`)},
-	{cuj.HuluKidsURL, newPageInfo(Premium, hulu, `/hub/kids`, `/hub/networks`)},
+	{cuj.HuluMoviesURL, newPageInfo(cuj.Advanced, hulu, `/hub/movies`, `/hub/originals`)},
+	{cuj.HuluKidsURL, newPageInfo(cuj.Advanced, hulu, `/hub/kids`, `/hub/networks`)},
 
-	{cuj.PinterestURL, newPageInfo(Plus, pinterest, `/ideas/`, `/ideas/holidays/910319220330/`)},
+	{cuj.PinterestURL, newPageInfo(cuj.Advanced, pinterest, `/ideas/`, `/ideas/holidays/910319220330/`)},
 
-	{cuj.NetflixURL, newPageInfo(Premium, netflix, `/en`, `/en/legal/termsofuse`)},
+	{cuj.NetflixURL, newPageInfo(cuj.Advanced, netflix, `/en`, `/en/legal/termsofuse`)},
 
-	{cuj.YoutubeURL, newPageInfo(Premium, youtube, `/`, `/feed/explore`)},
+	{cuj.YoutubeURL, newPageInfo(cuj.Advanced, youtube, `/`, `/feed/explore`)},
 }
 
-// generateTabSwitchTargets sets all web targets according to the input Level.
-func generateTabSwitchTargets(caseLevel Level) ([]*chromeWindow, error) {
+// generateTabSwitchTargets sets all web targets according to the input tier.
+func generateTabSwitchTargets(tier cuj.Tier) ([]*chromeWindow, error) {
 	winNum := 1
 	tabNum := 0
-	switch caseLevel {
-	case Basic, Essential:
+	switch tier {
+	case cuj.Essential:
 		winNum = 2
 		tabNum = 5
-	case Plus:
-		winNum = 4
-		tabNum = 6
-	case Premium, Advanced, Record:
+	case cuj.Advanced:
 		winNum = 4
 		tabNum = 9
 	}
@@ -401,7 +378,7 @@ func generateTabSwitchTargets(caseLevel Level) ([]*chromeWindow, error) {
 	}
 
 	for _, tgt := range allTargets {
-		if tgt.info.level <= caseLevel {
+		if tgt.info.tier <= tier {
 			targets = append(targets, tgt)
 		}
 	}
@@ -471,7 +448,7 @@ func closeAllTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 // Run runs the TabSwitch test. It is invoked by TabSwitchRecorder to
 // record web contents via WPR and invoked by TabSwitch to execute the tests
 // from the recorded contents. Additional actions will be executed in each tab.
-func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Level, isTablet bool, bt browser.Type) {
+func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier, bt browser.Type, isTablet, isRecordMode bool) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API, error: ", err)
@@ -503,7 +480,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Lev
 	}
 	defer cleanupSetting(cleanupSettingsCtx)
 
-	windows, err := generateTabSwitchTargets(caseLevel)
+	windows, err := generateTabSwitchTargets(tier)
 	if err != nil {
 		s.Fatal("Failed to generate tab targets: ", err)
 	}
@@ -560,7 +537,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Lev
 	var timeElapsed time.Duration
 	if err = recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open all windows and tabs.
-		if err := openAllWindowsAndTabs(ctx, br, &windows, tsAction, caseLevel); err != nil {
+		if err := openAllWindowsAndTabs(ctx, br, &windows, tsAction, isRecordMode); err != nil {
 			return errors.Wrap(err, "failed to open targets for tab switch")
 		}
 
@@ -587,7 +564,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Lev
 			}
 		}(cleanupCtx)
 
-		if err := tabSwitchAction(ctx, cr, tconn, &windows, tsAction, caseLevel); err != nil {
+		if err := tabSwitchAction(ctx, cr, tconn, &windows, tsAction, isRecordMode); err != nil {
 			return errors.Wrap(err, "failed to execute tab switch action")
 		}
 		if err := cuj.GenerateADF(ctx, tconn, isTablet); err != nil {
@@ -626,9 +603,9 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, caseLevel Lev
 	}
 }
 
-func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, caseLevel Level) (err error) {
+func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, isRecordMode bool) (err error) {
 	windows := (*targets)
-	plTimeout := pageLoadingTimeout(caseLevel)
+	plTimeout := pageLoadingTimeout(isRecordMode)
 	for idxWindow, window := range windows {
 		for idxTab, tab := range window.tabs {
 			testing.ContextLogf(ctx, "Opening window %d, tab %d", idxWindow+1, idxTab+1)
@@ -644,7 +621,7 @@ func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]
 			// In replay mode, user won't be able to know whether the page is quiescence or not,
 			// and it is not necessary to wait for quiescence in replay mode.
 			// In record mode, needs to wait for quiescence to properly record web content.
-			if caseLevel == Record {
+			if isRecordMode {
 				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
 					return errors.Wrapf(err, "failed to wait for tab to achieve quiescence within %v", plTimeout)
 				}
@@ -655,10 +632,10 @@ func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]
 	return nil
 }
 
-func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, caseLevel Level) error {
+func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, isRecordMode bool) error {
 	windows := (*targets)
 	scrollActions := tsAction.ScrollChromePage(ctx)
-	plTimeout := pageLoadingTimeout(caseLevel)
+	plTimeout := pageLoadingTimeout(isRecordMode)
 
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
@@ -713,7 +690,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			renderTime := time.Since(timeStart)
 			// Debugging purpose message, to observe which tab takes unusual long time to render.
 			testing.ContextLog(ctx, "Tab rendering time after switching: ", renderTime)
-			if caseLevel == Record {
+			if isRecordMode {
 				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
 					return errors.Wrapf(err, "failed to wait for tab to achieve quiescence within %v", plTimeout)
 				}
@@ -735,7 +712,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 						return errors.Wrap(err, "failed to execute action")
 					}
 					// Make sure the whole web content is recorded only under Recording.
-					if caseLevel == Record {
+					if isRecordMode {
 						if err := webutil.WaitForRender(ctx, tab.conn, tabSwitchTimeout); err != nil {
 							return errors.Wrap(err, "failed to wait for render to finish after scroll")
 						}
@@ -747,12 +724,12 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			}
 
 			// Click on 1 link per 2 tabs, or click on 1 link for every tab under Record mode to ensure all links are
-			// accessible under any other levels.
-			if tabIdx%2 == 0 || caseLevel == Record {
+			// accessible under any other tiers.
+			if tabIdx%2 == 0 || isRecordMode {
 				if err := tab.clickAnchor(ctx, plTimeout, tconn); err != nil {
 					return errors.Wrap(err, "failed to click anchor")
 				}
-				if caseLevel == Record {
+				if isRecordMode {
 					// Ensure contents are renderred in recording mode.
 					if err := webutil.WaitForRender(ctx, tab.conn, plTimeout); err != nil {
 						return errors.Wrap(err, "failed to wait for render to finish")
