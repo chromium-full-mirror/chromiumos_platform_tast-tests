@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/env"
@@ -167,8 +168,13 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 		ec <- errors.Wrapf(err, "failed to resolve %s addr", s)
 		return
 	}
-	listener, err := net.ListenTCP(s.fam.String(), addr)
-	if err != nil {
+	// bind() call may fail here, perhaps because the interface is still not
+	// ready. Use Poll() to retry. See b/259179849#comment13.
+	var listener *net.TCPListener
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		listener, err = net.ListenTCP(s.fam.String(), addr)
+		return err
+	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
 		ec <- errors.Wrapf(err, "failed to listen on %s network", s)
 		return
 	}
@@ -213,8 +219,13 @@ func (s *server) handleUDP(ctx context.Context, ec chan<- error) {
 		ec <- errors.Wrapf(err, "failed to resolve %s addr", s)
 		return
 	}
-	conn, err := net.ListenUDP(s.fam.String(), addr)
-	if err != nil {
+	// bind() call may fail here, perhaps because the interface is still not
+	// ready. Use Poll() to retry. See b/259179849#comment13.
+	var conn *net.UDPConn
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		conn, err = net.ListenUDP(s.fam.String(), addr)
+		return err
+	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
 		ec <- errors.Wrapf(err, "failed to listen on %s network", s)
 		return
 	}
