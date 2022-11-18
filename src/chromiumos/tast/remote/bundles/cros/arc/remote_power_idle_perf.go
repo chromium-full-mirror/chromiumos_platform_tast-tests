@@ -24,8 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Uses a servo to measure the battery drain of an idle system running ARC",
 		Contacts: []string{
-			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"cwd@chromium.org",
 		},
+		// ChromeOS > Platform > Virtualization > VM Technology
+		BugComponent: "b:930563",
 		Attr:         []string{"group:crosbolt"},
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome", "arc"},

@@ -33,10 +33,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the behavior of ARC around suspend/resume",
 		Contacts: []string{
+			"cros-vm-technology@google.com",
 			"hikalium@chromium.org",
-			"cros-platform-kernel-core@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		// ChromeOS > Platform > Virtualization > VM Technology
+		BugComponent: "b:930563",
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{
 			"chrome",
 			"android_vm",

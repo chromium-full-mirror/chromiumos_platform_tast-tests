@@ -21,9 +21,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "How much memory can be allocated in ChromeOS before critical memory pressure",
 		Contacts: []string{
+			"cros-vm-technology@google.com",
 			"cwd@chromium.org",
 			"arcvm-eng@google.com",
 		},
+		// ChromeOS > Platform > Virtualization > VM Technology
+		BugComponent: "b:930563",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:              "noarc",
