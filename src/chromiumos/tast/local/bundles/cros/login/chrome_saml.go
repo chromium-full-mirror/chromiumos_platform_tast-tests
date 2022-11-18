@@ -35,8 +35,7 @@ func init() {
 			"accountmanager.samlpassword",
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Timeout:      chrome.GAIALoginTimeout + time.Minute,
-		BugComponent: "b:1027806",
+		Timeout: chrome.GAIALoginTimeout + time.Minute,
 	})
 }
 
