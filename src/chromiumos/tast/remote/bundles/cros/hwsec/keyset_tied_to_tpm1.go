@@ -13,6 +13,12 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// keysetTiedToTPM1Params contains the test parameters that specifies the type of storage.
+type keysetTiedToTPM1Params struct {
+	// Specifies whether to use secret stash.
+	useUserSecretStash bool
+}
+
 // NOTE: This test is largely similar to hwsec.KeysetTiedToTPM2 (a local test), if change is made to one, it is likely that the other have to be changed as well.
 // The referred test is specifically for TPMv2.0, while this test is for TPMv1.2.
 // Both versions of TPM is incompatible with each other and they way we handle reboot for the 2 versions are different and thus the need for 2 versions of the same test.
@@ -28,6 +34,17 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm1"},
 		Attr:         []string{"group:hwsec_destructive_func"},
+		Params: []testing.Param{{
+			Name: "uss",
+			Val: keysetTiedToTPM1Params{
+				useUserSecretStash: true,
+			},
+		}, {
+			Name: "vk",
+			Val: keysetTiedToTPM1Params{
+				useUserSecretStash: false,
+			},
+		}},
 	})
 }
 
@@ -85,12 +102,29 @@ func loginTakeOwnershipAndCheckKeysetTiedToTPM(ctx context.Context, s *testing.S
 // KeysetTiedToTPM1 is an integration test that verifies a user's VKK is tied
 // to the TPM after the second login.
 func KeysetTiedToTPM1(ctx context.Context, s *testing.State) {
+	userParam := s.Param().(keysetTiedToTPM1Params)
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewHelper(cmdRunner, s.DUT())
 	if err != nil {
 		s.Fatal("Helper creation error: ", err)
 	}
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
+	if userParam.useUserSecretStash {
+		// Enable UserSecretStash.
+		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
+		if err != nil {
+			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
+		}
+		defer cleanupUSSExperiment(ctx)
+	} else {
+		// Disable UserSecretStash to use VaultKeyset.
+		cleanupUSSDisable, err := helper.DisableUserSecretStash(ctx)
+		if err != nil {
+			s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
+		}
+		defer cleanupUSSDisable(ctx)
+	}
 
 	// First we test the case without reboot, that is:
 	// Reset TPM -> Login+Logout -> TakeOwnership -> Login -> Check TPM Bound.
