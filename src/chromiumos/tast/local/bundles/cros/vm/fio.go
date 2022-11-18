@@ -68,14 +68,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"amd64"},
 			},
 			{
-				Name:      "p9_boot",
-				ExtraData: []string{"fio_boot.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_boot.job",
-				},
-			},
-			{
 				Name:      "block_login",
 				ExtraData: []string{"fio_login.job"},
 				Val: param{
@@ -101,14 +93,6 @@ func init() {
 				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
 				// on ARM.
 				ExtraSoftwareDeps: []string{"amd64"},
-			},
-			{
-				Name:      "p9_login",
-				ExtraData: []string{"fio_login.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_login.job",
-				},
 			},
 			{
 				Name:      "block_surfing",
@@ -138,14 +122,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"amd64"},
 			},
 			{
-				Name:      "p9_surfing",
-				ExtraData: []string{"fio_surfing.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_surfing.job",
-				},
-			},
-			{
 				Name:      "block_randread",
 				ExtraData: []string{"fio_randread.job"},
 				Val: param{
@@ -171,14 +147,6 @@ func init() {
 				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
 				// on ARM.
 				ExtraSoftwareDeps: []string{"amd64"},
-			},
-			{
-				Name:      "p9_randread",
-				ExtraData: []string{"fio_randread.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_randread.job",
-				},
 			},
 			{
 				Name:      "block_randwrite",
@@ -208,14 +176,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"amd64"},
 			},
 			{
-				Name:      "p9_randwrite",
-				ExtraData: []string{"fio_randwrite.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_randwrite.job",
-				},
-			},
-			{
 				Name:      "block_seqread",
 				ExtraData: []string{"fio_seqread.job"},
 				Val: param{
@@ -241,14 +201,6 @@ func init() {
 				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
 				// on ARM.
 				ExtraSoftwareDeps: []string{"amd64"},
-			},
-			{
-				Name:      "p9_seqread",
-				ExtraData: []string{"fio_seqread.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_seqread.job",
-				},
 			},
 			{
 				Name:      "block_seqwrite",
@@ -278,14 +230,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"amd64"},
 			},
 			{
-				Name:      "p9_seqwrite",
-				ExtraData: []string{"fio_seqwrite.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_seqwrite.job",
-				},
-			},
-			{
 				Name:      "block_stress_rw",
 				ExtraData: []string{"fio_stress_rw.job"},
 				Val: param{
@@ -311,14 +255,6 @@ func init() {
 				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
 				// on ARM.
 				ExtraSoftwareDeps: []string{"amd64"},
-			},
-			{
-				Name:      "p9_stress_rw",
-				ExtraData: []string{"fio_stress_rw.job"},
-				Val: param{
-					kind: "p9",
-					job:  "fio_stress_rw.job",
-				},
 			},
 		},
 	})

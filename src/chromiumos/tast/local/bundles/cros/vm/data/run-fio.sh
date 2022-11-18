@@ -43,11 +43,6 @@ main() {
       mkfs.ext4 "${src}"
       mount "${src}" "${mountpoint}"
       ;;
-    p9)
-      mount -t 9p \
-            -o "trans=virtio,version=9p2000.L,access=client,cache=loose" \
-            "${src}" "${mountpoint}"
-      ;;
     virtiofs)
       mount -t virtiofs "${src}" "${mountpoint}"
       ;;
