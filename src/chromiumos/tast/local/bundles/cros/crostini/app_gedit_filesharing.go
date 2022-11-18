@@ -185,7 +185,7 @@ func AppGeditFilesharing(ctx context.Context, s *testing.State) {
 	// Restart Crostini. This will start linux and the terminal and then close the terminal, but not Linux.
 	s.Log("Restarting Crostini for the rest of this test")
 	if err := terminalApp.RestartCrostini(keyboard, cont, cr.NormalizedUser())(ctx); err != nil {
-		s.Log("Failed to restart Crostini: ", err)
+		s.Fatal("Failed to restart Crostini: ", err)
 	}
 
 	err = checkFilesharingWorksAfterRestart(
