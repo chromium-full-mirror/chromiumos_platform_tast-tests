@@ -23,7 +23,9 @@ func init() {
 		Func:         ConciergeCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test concierge crash handling",
-		Contacts:     []string{"hashimoto@chromium.org", "arcvm-eng@google.com"},
+		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
+		// ChromeOS > Software > ARC++ > ARCVM
+		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "informational"}, // b/203428993
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      10 * time.Minute,

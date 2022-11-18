@@ -26,7 +26,9 @@ func init() {
 		Func:         UsbAttachToArcvm,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Validity attaching virtual usb device to arcvm",
-		Contacts:     []string{"lgcheng@google.com", "arc-eng@google.com"},
+		Contacts:     []string{"arc-core@google.com", "lgcheng@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Integration
+		BugComponent: "b:1131321",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

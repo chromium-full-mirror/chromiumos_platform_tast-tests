@@ -21,7 +21,9 @@ func init() {
 		Func:         FontSharing,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that font-sharing from ChromeOS to ARC works",
-		Contacts:     []string{"hashimoto@chromium.org", "arc-eng@google.com"},
+		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
+		// ChromeOS > Software > ARC++ > ARCVM
+		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
