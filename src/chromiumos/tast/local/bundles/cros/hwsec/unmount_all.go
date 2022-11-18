@@ -25,6 +25,13 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -63,6 +70,7 @@ func UnmountAll(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// Take TPM Ownership before the test.
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
