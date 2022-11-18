@@ -523,6 +523,13 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		if err := h.Servo.SetPowerState(ctx, powerState); err != nil {
 			return err
 		}
+		// Verify DUT becomes unreachable after triggering a reset.
+		waitDisconnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 10*time.Second)
+		defer cancelWaitConnect()
+
+		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+			return errors.Wrapf(err, "failed to rest DUT: %s", resetType)
+		}
 	}
 
 	if msOptsContain(opts, VerifyECRO) {
