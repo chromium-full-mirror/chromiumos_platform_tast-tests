@@ -29,11 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that gestures for hotseat, home, back and overview works correctly",
 		Contacts: []string{
-			"sophiewen@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"sophiewen@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:1252584",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",

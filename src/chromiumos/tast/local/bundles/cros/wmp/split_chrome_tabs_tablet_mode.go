@@ -30,11 +30,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome tabs are draggable to split screen",
 		Contacts: []string{
-			"sophiewen@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"sophiewen@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:1253115",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{

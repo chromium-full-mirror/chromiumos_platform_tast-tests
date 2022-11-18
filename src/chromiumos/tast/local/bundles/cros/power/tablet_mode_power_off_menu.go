@@ -35,10 +35,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks power",
 		Contacts: []string{
-			"sophiewen@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"sophiewen@chromium.org",
 		},
+		BugComponent: "b:1253115",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
