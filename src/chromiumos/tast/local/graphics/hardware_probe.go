@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/testing"
 )
 
 const (
@@ -19,8 +20,9 @@ const (
 
 func runAndGrepRegex(ctx context.Context, args []string, regexStr string) ([]string, error) {
 	re := regexp.MustCompile(regexStr)
-	out, err := testexec.CommandContext(ctx, hardwareProbeBinary, args...).Output(testexec.DumpLogOnError)
+	out, stderr, err := testexec.CommandContext(ctx, hardwareProbeBinary, args...).SeparatedOutput(testexec.DumpLogOnError)
 	if err != nil {
+		testing.ContextLogf(ctx, "stdout: %q, stderr: %q", string(out), string(stderr))
 		return nil, errors.Wrapf(err, "failed to run %v", hardwareProbeBinary)
 	}
 
