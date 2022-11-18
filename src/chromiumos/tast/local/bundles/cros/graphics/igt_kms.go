@@ -27,11 +27,12 @@ func init() {
 		Func: IgtKms,
 		Desc: "Verifies IGT KMS test binaries run successfully",
 		Contacts: []string{
-			"ddavenport@chromium.org",
-			"chromeos-gfx@google.com",
 			"chromeos-gfx-display@google.com",
+			"ddavenport@chromium.org",
 			"markyacoub@google.com",
 		},
+		// ChromeOS > Platform > Graphics > Display
+		BugComponent: "b:188154",
 		SoftwareDeps: []string{"drm_atomic", "igt", "no_qemu"},
 		Attr:         []string{"group:graphics", "graphics_igt"},
 		Fixture:      "chromeGraphicsIgt",

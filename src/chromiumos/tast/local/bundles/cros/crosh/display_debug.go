@@ -40,9 +40,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the display_debug commands",
 		Contacts: []string{
-			"ddavenport@google.com",
 			"chromeos-gfx-display@google.com",
+			"ddavenport@google.com",
 		},
+		// ChromeOS > Platform > Graphics > Display
+		BugComponent: "b:188154",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "drm_trace"},
 	})

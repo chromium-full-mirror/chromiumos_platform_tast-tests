@@ -35,8 +35,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests D-Bus methods related to DRMTraceTool",
 		Contacts: []string{
+			"chromeos-gfx-display@chromium.org",
 			"ddavenport@chromium.org",
 		},
+		// ChromeOS > Platform > Graphics > Display
+		BugComponent: "b:188154",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "drm_trace"},
 		Params: []testing.Param{
