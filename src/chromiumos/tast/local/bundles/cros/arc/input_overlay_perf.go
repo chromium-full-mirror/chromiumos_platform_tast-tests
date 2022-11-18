@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/inputlatency"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -53,6 +54,10 @@ func init() {
 
 func InputOverlayPerf(ctx context.Context, s *testing.State) {
 	gio.SetupTestApp(ctx, s, func(params gio.TestParams) error {
+		// Wait for the CPU to idle before performing the test.
+		if _, err := cpu.WaitUntilCoolDown(ctx, inputOverlayCoolDownConfig()); err != nil {
+			s.Fatal("Failed to wait until CPU is cooled down: ", err)
+		}
 		// Start up keyboard.
 		kb, err := input.Keyboard(ctx)
 		if err != nil {
@@ -178,4 +183,14 @@ func evaluateLatency(ctx context.Context, params gio.TestParams, eventTimes []in
 		Direction: perf.SmallerIsBetter,
 	}, mean)
 	return nil
+}
+
+// inputOverlayCoolDownConfig returns the config to wait for the machine to cooldown for game performance tests.
+// This overrides the default config timeout (5 minutes) and temperature threshold (46 C)
+// settings to reduce test flakes on low-end devices.
+func inputOverlayCoolDownConfig() cpu.CoolDownConfig {
+	cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	cdConfig.PollTimeout = 7 * time.Minute
+	cdConfig.TemperatureThreshold = 61000
+	return cdConfig
 }

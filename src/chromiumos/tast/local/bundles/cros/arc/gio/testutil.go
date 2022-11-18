@@ -24,7 +24,6 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
@@ -82,16 +81,6 @@ type TestParams struct {
 // mode specifies the type of tap event via the number of expected logcat lines.
 type mode int
 
-// coolDownConfig returns the config to wait for the machine to cooldown for game performance tests.
-// This overrides the default config timeout (5 minutes) and temperature threshold (46 C)
-// settings to reduce test flakes on low-end devices.
-func coolDownConfig() cpu.CoolDownConfig {
-	cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
-	cdConfig.PollTimeout = 7 * time.Minute
-	cdConfig.TemperatureThreshold = 61000
-	return cdConfig
-}
-
 // PerformTestFunc allows callers to run their desired test after a provided activity has been launched.
 type PerformTestFunc func(params TestParams) (err error)
 
@@ -138,11 +127,6 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 	// Install the gaming input overlay test application.
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed installing ArcInputOverlayTest: ", err)
-	}
-
-	// Wait for the CPU to idle before performing the test.
-	if _, err := cpu.WaitUntilCoolDown(ctx, coolDownConfig()); err != nil {
-		s.Fatal("Failed to wait until CPU is cooled down: ", err)
 	}
 
 	// Take screenshot on failure.
