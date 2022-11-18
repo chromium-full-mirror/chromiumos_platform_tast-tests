@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
@@ -107,9 +107,36 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		}
 		defer act.Stop(cleanupCtx, tconn)
 
-		// Go to https://www.youtube.com/watch?v=862r3XS2YB0
-		if err := a.SendIntentCommand(ctx, "android.intent.action.VIEW", "vnd.youtube:862r3XS2YB0").Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to open https://www.youtube.com/watch?v=862r3XS2YB0")
+		// Click the Search icon.
+		if err := d.Object(
+			ui.ClassName("android.widget.ImageView"),
+			ui.Description("Search"),
+			ui.PackageName(ytAppPkgName),
+		).Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click Search")
+		}
+
+		// Put 862r3XS2YB0 in the search box, because we want this video: https://www.youtube.com/watch?v=862r3XS2YB0
+		if err := d.Object(
+			ui.Text("Search YouTube"),
+			ui.ClassName("android.widget.EditText"),
+			ui.PackageName(ytAppPkgName),
+		).SetText(ctx, "862r3XS2YB0"); err != nil {
+			return errors.Wrap(err, "failed to set search query")
+		}
+
+		// Press Enter to search.
+		if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
+			return errors.Wrap(err, "failed to press Enter")
+		}
+
+		// Click the desired video.
+		if err := d.Object(
+			ui.ClassName("android.view.ViewGroup"),
+			ui.DescriptionMatches("Google I/O 2016 - Keynote - 1 hour, 54 minutes - Go to channel - Google Developers .+ - play video"),
+			ui.PackageName(ytAppPkgName),
+		).Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click for video")
 		}
 
 		// Wait for the ARC YouTube app to idle, so that we know the video has started actually playing.
