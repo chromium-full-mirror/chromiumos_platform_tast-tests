@@ -239,6 +239,12 @@ func RunTestCases(ctx context.Context, s *testing.State, appPkgName, appActivity
 		AllTests = append(AllTests, curTest)
 	}
 
+	d, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed initializing UI Automator: ", err)
+	}
+	defer d.Close(ctx)
+
 	// Run the different test cases.
 	for idx, test := range AllTests {
 		// Limit the launch test case, signout test case to a specified timeout.
@@ -269,12 +275,6 @@ func RunTestCases(ctx context.Context, s *testing.State, appPkgName, appActivity
 				s.Fatal("Failed to start app: ", err)
 			}
 			s.Log("App launched successfully")
-
-			d, err := a.NewUIDevice(ctx)
-			if err != nil {
-				s.Fatal("Failed initializing UI Automator: ", err)
-			}
-			defer d.Close(ctx)
 
 			// Close the app between iterations.
 			defer func(ctx context.Context) {

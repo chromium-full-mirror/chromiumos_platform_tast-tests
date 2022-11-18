@@ -259,49 +259,60 @@ func launchAppForAdobeAcrobatReader(ctx context.Context, s *testing.State, tconn
 		gmailAccountPageID  = "com.google.android.gms:id/account_picker_container"
 		signInButtonText    = "Sign in with Google"
 		userButtonClassName = "android.widget.TextView"
+		homeButtonText      = "Home"
+		homeButtonID        = "com.adobe.reader:id/home_left_nav_item_title_view"
 	)
 
-	// Click on sign in button.
-	signInButton := d.Object(ui.ClassName(userButtonClassName), ui.Text(signInButtonText))
-	if err := signInButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Error("signInButton doesn't exists: ", err)
-	} else if err := signInButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on signInButton: ", err)
+	signIn := func() {
+		s.Log("Sign in for Adobe Acrobat Reader")
+		// Click on sign in button.
+		signInButton := d.Object(ui.ClassName(userButtonClassName), ui.Text(signInButtonText))
+		if err := signInButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+			s.Error("signInButton doesn't exists: ", err)
+		} else if err := signInButton.Click(ctx); err != nil {
+			s.Fatal("Failed to click on signInButton: ", err)
+		}
+
+		// Wait for Gmail account page.
+		gmailAccountPage := d.Object(ui.ID(gmailAccountPageID))
+		if err := gmailAccountPage.WaitForExists(ctx, testutil.LongUITimeout); err != nil {
+			s.Log("gmailAccountPage doesn't exists: ", err)
+		}
+
+		// For selecting Gmail account
+		if err := d.PressKeyCode(ctx, ui.KEYCODE_TAB, 0); err != nil {
+			s.Log("Failed to enter KEYCODE_TAB: ", err)
+		} else {
+			s.Log("Entered KEYCODE_TAB")
+		}
+
+		if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
+			s.Log("Failed to enter KEYCODE_ENTER: ", err)
+		} else {
+			s.Log("Entered KEYCODE_ENTER")
+		}
+
+		// Click on continue button.
+		continueButton := d.Object(ui.ID(continueButtonID), ui.Text(continueButtonText))
+		if err := continueButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+			s.Log("continueButton doesn't exists: ", err)
+		} else if err := continueButton.Click(ctx); err != nil {
+			s.Fatal("Failed to click on continueButton: ", err)
+		}
+
+		// Click on close button.
+		closeButton := d.Object(ui.ClassName(closeClassName), ui.Description(closeDes))
+		if err := closeButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+			s.Log("closeButton doesn't exists: ", err)
+		} else if err := closeButton.Click(ctx); err != nil {
+			s.Fatal("Failed to click on closeButton: ", err)
+		}
 	}
 
-	// Wait for Gmail account page.
-	gmailAccountPage := d.Object(ui.ID(gmailAccountPageID))
-	if err := gmailAccountPage.WaitForExists(ctx, testutil.LongUITimeout); err != nil {
-		s.Log("gmailAccountPage doesn't exists: ", err)
-	}
-
-	// For selecting Gmail account
-	if err := d.PressKeyCode(ctx, ui.KEYCODE_TAB, 0); err != nil {
-		s.Log("Failed to enter KEYCODE_TAB: ", err)
-	} else {
-		s.Log("Entered KEYCODE_TAB")
-	}
-
-	if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
-		s.Log("Failed to enter KEYCODE_ENTER: ", err)
-	} else {
-		s.Log("Entered KEYCODE_ENTER")
-	}
-
-	// Click on continue button.
-	continueButton := d.Object(ui.ID(continueButtonID), ui.Text(continueButtonText))
-	if err := continueButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Log("continueButton doesn't exists: ", err)
-	} else if err := continueButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on continueButton: ", err)
-	}
-
-	// Click on close button.
-	closeButton := d.Object(ui.ClassName(closeClassName), ui.Description(closeDes))
-	if err := closeButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Log("closeButton doesn't exists: ", err)
-	} else if err := closeButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on closeButton: ", err)
+	// Check the existence of "Home" button on lefthand side to see if the sign-in has completed.
+	homeButton := d.Object(ui.ID(homeButtonID), ui.Text(homeButtonText))
+	if err := homeButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+		signIn()
 	}
 
 	testutil.HandleDialogBoxes(ctx, s, d, appPkgName)
