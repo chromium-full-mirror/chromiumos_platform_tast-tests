@@ -31,6 +31,11 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlagWithName("ExtensionInstallForceList", pci.VerifiedFunctionalityUI),
+			{
+				Key: "feature_id",
+				// Test ExtensionInstallForcelist policy (COM_FOUND_CUJ3_TASK1_WF1).
+				Value: "screenplay-2b459de1-2ea4-427b-88ae-20e14d4bc62c",
+			},
 		},
 	})
 }

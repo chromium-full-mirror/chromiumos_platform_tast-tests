@@ -38,6 +38,11 @@ func init() {
 		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.UserPrintersAllowed{}, pci.VerifiedFunctionalityUI),
+			{
+				Key: "feature_id",
+				// Check that UserPrintersAllowed policy controls the ability to add a printer (COM_FOUND_CUJ8_TASK3_WF1).
+				Value: "screenplay-82497314-906c-4db1-9d41-16d11d411050",
+			},
 		},
 	})
 }

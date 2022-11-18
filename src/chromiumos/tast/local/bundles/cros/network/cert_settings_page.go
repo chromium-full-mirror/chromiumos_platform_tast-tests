@@ -84,6 +84,40 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			Val:               browser.TypeLacros,
 		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Verify that affected users are able to access the protected page
+				// (COM_FOUND_CUJ1_TASK3_WF1).
+				Value: "screenplay-e6cce756-073c-4d8b-962e-299f376f6dd5",
+			},
+			{
+				Key: "feature_id",
+				// Add a client certificate (COM_FOUND_CUJ16_TASK1_WF1).
+				Value: "screenplay-475a7692-c5ac-44d3-8db2-890d98d8f6d0",
+			},
+			{
+				Key: "feature_id",
+				// Remove a client certificate (COM_FOUND_CUJ16_TASK2_WF1).
+				Value: "screenplay-9be9b6c0-367d-4bf2-a3d2-bd2e823ce20f",
+			},
+			{
+				Key: "feature_id",
+				// Add a CA certificate (COM_FOUND_CUJ16_TASK3_WF1).
+				Value: "screenplay-cc6decc7-8869-4f61-9e6a-c9a4ecabaa00",
+			},
+			{
+				Key: "feature_id",
+				// Remove a CA certificate (COM_FOUND_CUJ16_TASK4_WF1).
+				Value: "screenplay-6c71993a-4bae-406e-88f8-546ffb7803e6",
+			},
+			{
+				Key: "feature_id",
+				// Manage client certificate and CA entries by managed users
+				// (COM_FOUND_CUJ16_TASK6_WF1).
+				Value: "screenplay-1260e07c-6cfc-4a0c-97f0-d4e799d65261",
+			},
+		},
 	})
 }
 

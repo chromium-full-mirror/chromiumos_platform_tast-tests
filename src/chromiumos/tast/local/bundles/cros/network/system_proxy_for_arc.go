@@ -35,6 +35,13 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Verify that traffic from the device goes through the managed proxy (COM_FOUND_CUJ6_TASK3_WF1).
+				Value: "screenplay-4b1ea96e-e06c-4c3a-b153-626de2ebdaf8",
+			},
+		},
 	})
 }
 

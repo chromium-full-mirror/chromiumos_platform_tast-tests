@@ -49,6 +49,11 @@ func init() {
 			pci.SearchFlag(&policy.RequiredClientCertificateForUser{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.RequiredClientCertificateForDevice{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedValue),
+			{
+				Key: "feature_id",
+				// Test RequiredClientCertificate policy and successful provisioning of client certificate (COM_FOUND_CUJ2_TASK3_WF1).
+				Value: "screenplay-ae79450f-065e-4902-a260-0147376e5803",
+			},
 		},
 	})
 }

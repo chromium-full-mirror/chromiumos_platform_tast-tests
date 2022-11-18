@@ -34,6 +34,13 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "chromeEnrolledLoggedIn",
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Verify that traffic from the device goes through the managed proxy (COM_FOUND_CUJ6_TASK3_WF1).
+				Value: "screenplay-2e4de0e2-ea40-4348-9bbc-f518c68484b9",
+			},
+		},
 	})
 }
 

@@ -50,6 +50,11 @@ func init() {
 		Fixture: fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.Printers{}, pci.VerifiedFunctionalityUI),
+			{
+				Key: "feature_id",
+				// Check that configured printers are accessible after setting the Printers policy (COM_FOUND_CUJ7_TASK3_WF1).
+				Value: "screenplay-87696fca-4b8c-410d-a5f7-b2b5f1391eb3",
+			},
 		},
 	})
 }
