@@ -94,9 +94,9 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		return nil, errors.Errorf("ro.product.cpu.abi is not found in %q", buildPropStr)
 	}
 
-	mModelType := regexp.MustCompile(`(\n|^)ro.product.system.model=(.+)(\n|$)`).FindStringSubmatch(buildPropStr)
+	mModelType := regexp.MustCompile(`(\n|^)ro.product(\.[a-z]+)?.model=(.+)(\n|$)`).FindStringSubmatch(buildPropStr)
 	if mModelType == nil {
-		return nil, errors.Errorf("ro.product.system.model is not found in %q", buildPropStr)
+		return nil, errors.Errorf("ro.product*.model is not found in %q", buildPropStr)
 	}
 
 	mBuildType := regexp.MustCompile(`(\n|^)ro.build.type=(.+)(\n|$)`).FindStringSubmatch(buildPropStr)
@@ -162,7 +162,7 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		BuildID:           mBuildID[2],
 		BuildVersion:      buildVersion,
 		BuildType:         mBuildType[2],
-		ModelType:         mModelType[2],
+		ModelType:         mModelType[3],
 		HostUreadaheadAbi: hostUreadaheadAbi,
 		CPUAbi:            abi,
 		VersionRelease:    versionRelease,
