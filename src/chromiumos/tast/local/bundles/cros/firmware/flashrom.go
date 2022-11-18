@@ -20,10 +20,12 @@ func init() {
 		Func: Flashrom,
 		Desc: "Checks that flashrom can find a SPI ROM",
 		Contacts: []string{
-			"kmshelton@chromium.org",       // Test Author
-			"quasisec@chromium.org",        // CrOS Flashrom Maintainer
-			"chromeos-firmware@google.com", // CrOS Firmware Developers
+			"cros-flashrom-team@google.com", // CrOS Flashrom team
+			"chromeos-firmware@google.com",  // CrOS Firmware Developers
+			"kmshelton@chromium.org",        // Test Author
+			"quasisec@chromium.org",         // CrOS Flashrom Maintainer
 		},
+		BugComponent: "b:750299", // ChromeOS > Platform > Enablement > Firmware > Flashrom
 		Attr:         []string{"group:mainline", "group:labqual"},
 		SoftwareDeps: []string{"flashrom", "chromeos_firmware"},
 	})
