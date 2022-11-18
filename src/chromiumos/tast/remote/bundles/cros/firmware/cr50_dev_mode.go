@@ -24,7 +24,8 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART()),
+		SoftwareDeps: []string{"gsc"},
 	})
 }
 
