@@ -27,6 +27,7 @@ port={{.port}}
 interface={{.ifname}}
 {{end -}}
 {{if .subnet}}
+no-ping
 dhcp-range={{.pool_start}},{{.pool_end}},{{.netmask}},12h
 dhcp-option=option:netmask,{{.netmask}}
 dhcp-option=option:router,{{.gateway}}
