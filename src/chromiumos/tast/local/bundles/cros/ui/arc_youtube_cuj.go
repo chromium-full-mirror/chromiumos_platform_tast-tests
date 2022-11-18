@@ -32,7 +32,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Fixture:      "loggedInToCUJUser",
-		Timeout:      14 * time.Minute,
+		Timeout:      20 * time.Minute,
 		Vars:         []string{"record"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -140,14 +140,75 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to click for video")
 		}
 
-		// Wait for the ARC YouTube app to idle, so that we know the video has started actually playing.
-		if err := d.WaitForIdle(ctx, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to wait for ARC++ YouTube app to idle")
+		// Wait for the seek bar.
+		seekBar := d.Object(
+			ui.ClassName("android.widget.SeekBar"),
+			ui.PackageName(ytAppPkgName),
+		)
+		if err := seekBar.WaitForExists(ctx, time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for seek bar")
 		}
 
-		// Sleep to simulate a user passively watching.
-		if err := testing.Sleep(ctx, 10*time.Minute); err != nil {
-			return errors.Wrap(err, "failed to sleep")
+		// Wait for the video to load (just enough that it can start playing).
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			videoPosition, err := seekBar.GetContentDescription(ctx)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to get video position from seek bar"))
+			}
+
+			if videoPosition == "0 minutes 0 seconds of 0 minutes 0 seconds" {
+				return errors.New("video is still loading")
+			}
+			// Log the position along the timeline of video playback. Video playback starts from the
+			// position where the user left off if they were watching the same video in the past.
+			s.Log("Video is starting from: ", videoPosition)
+			return nil
+		}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
+			return errors.Wrap(err, "failed to wait for video to load")
+		}
+
+		// Wait for the recommended videos section to load.
+		recommendedVideosLandmark := d.Object(
+			ui.ClassName("android.view.ViewGroup"),
+			ui.DescriptionMatches(".+ - play video"),
+			ui.PackageName(ytAppPkgName),
+		)
+		if err := recommendedVideosLandmark.WaitForExists(ctx, time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for recommended videos section to load")
+		}
+
+		// Get the position along the timeline of video playback.
+		videoPosition, err := seekBar.GetContentDescription(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get video position from seek bar")
+		}
+
+		// Log the position along the timeline of video playback.
+		s.Log("Initial video position (after waiting for everything to load): ", videoPosition)
+
+		// Monitor video playback.
+		for endTime := time.Now().Add(10 * time.Minute); time.Now().Before(endTime); {
+			const verificationInterval = 30 * time.Second
+			if err := testing.Sleep(ctx, verificationInterval); err != nil {
+				return errors.Wrapf(err, "failed to wait %s", verificationInterval)
+			}
+
+			// Get the current position along the timeline of video playback, and
+			// verify that it has changed (so the video is actually playing).
+			updatedPosition, err := seekBar.GetContentDescription(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get video position from seek bar")
+			}
+			if updatedPosition == videoPosition {
+				return errors.Errorf("video has not progressed for %s", verificationInterval)
+			}
+			videoPosition = updatedPosition
+			s.Log("Video position: ", videoPosition)
+
+			// Verify that the recommended videos section is still loaded.
+			if err := recommendedVideosLandmark.Exists(ctx); err != nil {
+				return errors.Wrap(err, "failed to verify that the recommended videos section is still loaded")
+			}
 		}
 
 		// Take a screenshot at the end of recorder.Run, before
