@@ -38,7 +38,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Virtualization > VM Technology
 		BugComponent: "b:930563",
-		Attr:         []string{"group:mainline", "informational"},
+		/* This test is hardware dependent */
 		SoftwareDeps: []string{
 			"chrome",
 			"android_vm",
@@ -48,13 +48,16 @@ func init() {
 		ServiceDeps: []string{"tast.cros.arc.SuspendService"},
 		Timeout:     60 * time.Minute,
 		Params: []testing.Param{{
-			Name: "s10c100",
+			ExtraAttr: []string{"group:mainline", "informational"},
+			Name:      "s10c100",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          10,
 				suspendDurationAllowanceSeconds: 0.1,
 				numTrials:                       100,
 			},
 		}, {
+			// TODO(b/214861486): Re-enable the test once it is stabilized
+			// ExtraAttr: []string{"group:mainline", "informational"},
 			Name: "s120c5",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          120, /* Longer than CONFIG_RCU_CPU_STALL_TIMEOUT */
@@ -62,6 +65,8 @@ func init() {
 				numTrials:                       5,
 			},
 		}, {
+			// TODO(b/214861486): Re-enable the test once it is stabilized
+			// ExtraAttr: []string{"group:mainline", "informational"},
 			Name: "s600c2",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          600, /* Long enough to trigger watchdog timeouts */
