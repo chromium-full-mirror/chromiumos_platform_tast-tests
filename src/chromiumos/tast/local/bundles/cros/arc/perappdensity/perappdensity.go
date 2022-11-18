@@ -17,7 +17,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/screen"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
@@ -43,30 +42,6 @@ const (
 	// Disabled is the value to disable uniform scaling
 	Disabled = "0"
 )
-
-// Change is a struct containing information to perform density changes.
-type Change struct {
-	// The action that should be performed to the current density.
-	Name string
-	// The corresponding key sequence to perform the action.
-	KeySequence string
-	// The expected pixel count after performing the current action.
-	BlackPixelCount float64
-}
-
-// Execute executes the density change, specified by KeySequence
-// and confirms that the density was changed by validating the size of the square on the screen.
-func (dc *Change) Execute(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, ew *input.KeyboardEventWriter) error {
-	testing.ContextLogf(ctx, "%s density using key %q", dc.Name, dc.KeySequence)
-	if err := ew.Accel(ctx, dc.KeySequence); err != nil {
-		return errors.Wrapf(err, "could not change scale factor using %q", dc.KeySequence)
-	}
-
-	if err := confirmPixelCountInScreenshot(ctx, cr, a, int(dc.BlackPixelCount), screenshot.GrabScreenshot, color.Black); err != nil {
-		return errors.Wrap(err, "could not check number of black pixels")
-	}
-	return nil
-}
 
 // confirmPixelCountInScreenshot confirms that the number of clr pixels is equal to wantPixelCount.
 // As the drawing of the colored pixels is handled by the Android framework, which does this and
@@ -173,62 +148,5 @@ func ConfirmPixelCountInActivitySurface(ctx context.Context, cr *chrome.Chrome, 
 	if err := confirmPixelCountInScreenshot(ctx, cr, a, wantPixelCount, grabScreenshot, clr); err != nil {
 		return errors.Wrap(err, "failed to verify uniform scale factor state")
 	}
-	return nil
-}
-
-// RunTest takes a slice of activity names and a slice of density changes and executes them.
-func RunTest(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, packageName string, testSteps []Change, activity string, expectedInitialPixelCount float64) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-	ew, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "error creating keyboard")
-	}
-	defer ew.Close()
-
-	act, err := arc.NewActivity(a, packageName, activity)
-	if err != nil {
-		return errors.Wrap(err, "failed to create new activity")
-	}
-	defer act.Close()
-
-	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to start the activity")
-	}
-	defer act.Stop(ctx, tconn)
-
-	if err := ash.WaitForVisible(ctx, tconn, packageName); err != nil {
-		return errors.Wrap(err, "failed to wait for visible app")
-	}
-
-	if err := act.SetWindowState(ctx, tconn, arc.WindowStateFullscreen); err != nil {
-		return errors.Wrap(err, "failed to set window state to fullscreen")
-	}
-
-	if err := ash.WaitForARCAppWindowState(ctx, tconn, packageName, ash.WindowStateFullscreen); err != nil {
-		return errors.Wrap(err, "failed to wait for the activity to be fullscreen")
-	}
-
-	if err := confirmPixelCountInScreenshot(ctx, cr, a, int(expectedInitialPixelCount), screenshot.GrabScreenshot, color.Black); err != nil {
-		return errors.Wrap(err, "failed to check initial state")
-	}
-
-	// Ensure that density is restored to initial state.
-	defer func() {
-		initialState := Change{"reset", "ctrl+0", expectedInitialPixelCount}
-
-		if err := initialState.Execute(ctx, cr, a, ew); err != nil {
-			testing.ContextLog(ctx, "Failed to restore initial state: ", err)
-		}
-	}()
-
-	for _, testStep := range testSteps {
-		if err := testStep.Execute(ctx, cr, a, ew); err != nil {
-			return errors.Wrapf(err, "failed performing %q on %q", testStep.Name, activity)
-		}
-	}
-
 	return nil
 }
