@@ -25,10 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Use the CrosNetworkConfig API during OOBE and after login to configure a basic network and check it is set as expected",
 		Contacts: []string{
+			"cros-networking@google.com",
 			"crisguerrero@chromium.com", // Test author
 		},
+		BugComponent: "b:156085",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{{
 			Name: "oobe",
