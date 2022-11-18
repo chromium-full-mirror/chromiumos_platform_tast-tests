@@ -53,7 +53,8 @@ func init() {
 					"woomax",
 				)),
 				Val: testParameters{
-					apBootRegexp: `HC 0x|Port 80|ACPI query|Executing host reboot command`,
+					// Same as default, with 1.5 seconds
+					apBootRegexp: `power state \d+ = S0,`,
 					apBootMax:    1500 * time.Millisecond,
 				},
 			},
