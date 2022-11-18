@@ -90,6 +90,13 @@ func VirtualDesks(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Make sure the device is in clamshell mode
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure in clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	// Explicitly start a browser window to test that switching to a new desk
 	// doesn't cause it to change desks.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
