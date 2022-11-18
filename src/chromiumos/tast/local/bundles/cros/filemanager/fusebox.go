@@ -73,18 +73,23 @@ func Fusebox(ctx context.Context, s *testing.State) {
 
 	// That temporary directory has two names: a fusebox one at
 	// "/media/fuse/fusebox/tmp.foo" and an underlying one at "/tmp/.foo".
-	// Creating "hello.txt" in the second should be visible in the first.
-	// TODO(crbug.com/1360740): and vice versa.
-	const helloTxt = "hello.txt"
-	const world = "world\n"
-	helloFuseboxFilename := filepath.Join(tdd.FuseboxFilePath, helloTxt)
-	helloUnderlyingFilename := filepath.Join(tdd.UnderlyingFilePath, helloTxt)
-	if err := os.WriteFile(helloUnderlyingFilename, []byte(world), 0777); err != nil {
-		s.Fatal("WriteFile(hello.txt) failed: ", err)
-	} else if got, err := os.ReadFile(helloFuseboxFilename); err != nil {
-		s.Fatal("ReadFile(hello.txt) failed: ", err)
-	} else if string(got) != world {
-		s.Fatalf("ReadFile(hello.txt): got %q, want %q", got, world)
+	// Creating "wfru.txt" in the first should be visible in the second and
+	// vice versa for "wurf.txt".
+	checkFuseboxRoundTrip(s, tdd.FuseboxFilePath, tdd.UnderlyingFilePath,
+		"wfru.txt", "write fusebox; read underlying")
+	checkFuseboxRoundTrip(s, tdd.UnderlyingFilePath, tdd.FuseboxFilePath,
+		"wurf.txt", "write underlying; read fusebox")
+}
+
+func checkFuseboxRoundTrip(s *testing.State, writeFilePath, readFilePath, baseName, data string) {
+	writeFilename := filepath.Join(writeFilePath, baseName)
+	readFilename := filepath.Join(readFilePath, baseName)
+	if err := os.WriteFile(writeFilename, []byte(data), 0777); err != nil {
+		s.Fatalf("WriteFile(%q) failed: %v", writeFilename, err)
+	} else if got, err := os.ReadFile(readFilename); err != nil {
+		s.Fatalf("ReadFile(%q) failed: %v", readFilename, err)
+	} else if string(got) != data {
+		s.Fatalf("ReadFile(%q): got %q, want %q", readFilename, got, data)
 	}
 }
 
