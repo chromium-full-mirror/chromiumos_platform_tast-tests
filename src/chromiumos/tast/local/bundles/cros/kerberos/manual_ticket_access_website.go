@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -125,26 +126,35 @@ func ManualTicketAccessWebsite(ctx context.Context, s *testing.State) {
 	if err := kerberos.AddTicket(ctx, cr, tconn, ui, keyboard, config, password); err != nil {
 		s.Fatal("Failed to add Kerberos ticket: ", err)
 	}
-	// Refresh the website.
-	if err := conn.Navigate(ctx, config.WebsiteAddress); err != nil {
-		s.Fatalf("Failed to navigate to the server URL %q: %v", config.WebsiteAddress, err)
-	}
-	// Wait for the website to load.
-	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		s.Fatal("Failed waiting for URL to load: ", err)
-	}
 
-	s.Log("Getting the website's title")
-	if err := conn.Eval(ctx, "document.title", &websiteTitle); err != nil {
-		s.Fatal("Failed to get the website title: ", err)
-	}
-	if websiteTitle == "" {
-		s.Fatal("Website title is empty")
-	}
-	if strings.Contains(websiteTitle, "401") {
-		s.Error("Website title contains 401")
-	}
-	if !strings.Contains(websiteTitle, "KerberosTest") {
-		s.Fatal("Website title was not KerberosTest but ", websiteTitle)
+	// Sometimes the window refreshes too fast and Kerberos settings are not yet applied
+	// so this part is done until success/timeout.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Refresh the website.
+		if err := conn.Navigate(ctx, config.WebsiteAddress); err != nil {
+			return errors.New("failed to navigate to the server URL")
+		}
+		// Wait for the website to load.
+		if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+			errors.Wrap(err, "failed waiting for URL to load")
+		}
+		if err := conn.Eval(ctx, "document.title", &websiteTitle); err != nil {
+			return errors.Wrap(err, "failed to get the website title")
+		}
+		if websiteTitle == "" {
+			return errors.New("Website title is empty")
+		}
+		if strings.Contains(websiteTitle, "401") {
+			return errors.New("Website title contains 401")
+		}
+		if !strings.Contains(websiteTitle, "KerberosTest") {
+			return errors.New("Website title was not KerberosTest but ")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: 1 * time.Second,
+	}); err != nil {
+		s.Fatal("Failed to get access to the website: ", err)
 	}
 }
