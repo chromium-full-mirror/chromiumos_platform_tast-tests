@@ -1423,6 +1423,23 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 	}
 
+	// Generate V4L2 stateless VP8 tests.
+	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
+		files := vp8Files[testGroup]
+
+		params = append(params, paramData{
+			Name:         fmt.Sprintf("v4l2_stateless_vp8_%s", testGroup),
+			Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
+			CmdBuilder:   "v4l2StatelessDecodeArgs",
+			Files:        files,
+			Timeout:      defaultTimeout,
+			SoftwareDeps: []string{"v4l2_codec"},
+			HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
+			Metadata:     genExtraData(files),
+			Attr:         []string{"graphics_video_vp8"},
+		})
+	}
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  platformDecodingParams{
