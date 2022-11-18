@@ -236,14 +236,18 @@ const (
 	// GoogleKeepURL specifies the URL for Google Keep.
 	GoogleKeepURL = "https://keep.google.com/"
 
-	// URLs used by WebRTCProxyCUJ
+	// URLs used by VideoConfProxy
 
-	// VideoCallURL specifies the URL for WebRTCProxyCUJ.
-	VideoCallURL = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html"
-	// VideoCallHighURL specifies the URL with 720p 30fps camera streams for WebRTCProxyCUJ.
-	VideoCallHighURL = VideoCallURL + "?preset=high"
-	// VideoCallUltraURL specifies the URL with 1080p 30fps camera streams for WebRTCProxyCUJ.
-	VideoCallUltraURL = VideoCallURL + "?preset=ultra"
-	// VideoCallDocsURL specifies the URL for WebRTCProxyCUJ.
+	// VideoCallURL specifies the video URL for VideoConfProxy.
+	VideoCallURL = "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/spera/video_conf_proxy.html"
+	// VideoCallEssentialURL specifies the URL with 4 video streams at 720p 15fps for VideoConfProxy.
+	VideoCallEssentialURL = VideoCallURL + "?preset=essential&&numVideo=4"
+	// VideoCallAdvancedURL specifies the URL with 4 video streams at 1080p 30fps for VideoConfProxy.
+	VideoCallAdvancedURL = VideoCallURL + "?preset=advanced&&numVideo=4"
+	// VideoCallGridEssentialURL specifies the video URL with 16 video streams at 720p 15fps for VideoConfProxy.
+	VideoCallGridEssentialURL = VideoCallURL + "?preset=essential&&numVideo=16"
+	// VideoCallGridAdvancedURL specifies the video URL with 16 video streams at 1080p 30fps for VideoConfProxy.
+	VideoCallGridAdvancedURL = VideoCallURL + "?preset=advanced&&numVideo=16"
+	// VideoCallDocsURL specifies the doc URL for VideoConfProxy.
 	VideoCallDocsURL = "http://crospower.page.link/power_VideoCall_doc"
 )

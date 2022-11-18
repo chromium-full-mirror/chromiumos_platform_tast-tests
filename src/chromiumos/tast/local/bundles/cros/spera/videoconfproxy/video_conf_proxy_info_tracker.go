@@ -6,8 +6,6 @@ package videoconfproxy
 
 import (
 	"context"
-	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -22,6 +20,7 @@ import (
 // InfoTracker is a helper to collect video conf proxy info.
 type InfoTracker struct {
 	tconn         *chrome.TestConn
+	videoConn     *chrome.Conn
 	srcFrameRate  []float64
 	outFrameRate  []float64
 	collecting    chan bool
@@ -30,44 +29,35 @@ type InfoTracker struct {
 }
 
 // NewVideoConfProxyInfoTracker creates a new instance of InfoTracker.
-func NewVideoConfProxyInfoTracker(ctx context.Context, tconn *chrome.TestConn) *InfoTracker {
-	return &InfoTracker{tconn: tconn}
+func NewVideoConfProxyInfoTracker(ctx context.Context, tconn *chrome.TestConn, videoConn *chrome.Conn) *InfoTracker {
+	return &InfoTracker{tconn: tconn, videoConn: videoConn}
 }
 
-func (t *InfoTracker) getFrameRates(ctx context.Context) error {
+func (t *InfoTracker) getFrameRates(ctx context.Context) (err error) {
+	// Wait until the src text appears to ensure the data can be collected.
 	ui := uiauto.New(t.tconn)
 	srcFinder := nodewith.NameContaining("src: ").Role(role.StaticText)
-	outFinder := nodewith.NameContaining("out: ").Role(role.StaticText)
+	if err := ui.WaitUntilExists(srcFinder)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for src text to appear")
+	}
 
-	srcInfo, err := ui.NodesInfo(ctx, srcFinder)
-	if err != nil {
-		return err
+	var frameRates []float64
+	if err := t.videoConn.Call(ctx, &frameRates, `() => {
+		let stats = window.outboundWebRTCStats;
+		return [stats.srcFramesPerSecond, stats.framesPerSecond]
+		}
+		`); err != nil {
+		return errors.Wrap(err, "failed to get frame rates")
 	}
-	if len(srcInfo) == 0 {
-		return errors.New("there is no src frame rate info")
+	if len(frameRates) != 2 {
+		return errors.Errorf("got wrong number of frame rate data, got %d, want %d", len(frameRates), 2)
 	}
-	srcName := srcInfo[0].Name
-	srcFrameRateStr := strings.Split(strings.Split(srcName, "@")[1], ";")[0]
-	srcFrameRateFloat, err := strconv.ParseFloat(srcFrameRateStr, 64)
-	if err != nil {
-		return err
-	}
-	t.srcFrameRate = append(t.srcFrameRate, srcFrameRateFloat)
+	srcFrameRate := frameRates[0]
+	outFrameRate := frameRates[1]
 
-	outInfo, err := ui.NodesInfo(ctx, outFinder)
-	if err != nil {
-		return err
-	}
-	if len(outInfo) == 0 {
-		return errors.New("there is no out frame rate info")
-	}
-	outName := outInfo[0].Name
-	outFrameRateStr := strings.Split(strings.Split(outName, "@")[1], " ")[0]
-	outFrameRateFloat, err := strconv.ParseFloat(outFrameRateStr, 64)
-	if err != nil {
-		return err
-	}
-	t.outFrameRate = append(t.outFrameRate, outFrameRateFloat)
+	t.srcFrameRate = append(t.srcFrameRate, float64(srcFrameRate))
+	t.outFrameRate = append(t.outFrameRate, float64(outFrameRate))
+
 	return nil
 }
 
@@ -120,7 +110,7 @@ func (t *InfoTracker) Stop(ctx context.Context) error {
 }
 
 // Record stores the collected data into pv for further processing.
-func (t *InfoTracker) Record(pv *perf.Values) error {
+func (t *InfoTracker) Record(ctx context.Context, pv *perf.Values) error {
 	if t == nil {
 		return errors.New("video conf proxy info tracker is not provided to record")
 	}
@@ -138,6 +128,26 @@ func (t *InfoTracker) Record(pv *perf.Values) error {
 		sumOutFrameRate += frameRate
 	}
 	avgOutFrameRate = sumOutFrameRate / float64(len(t.outFrameRate))
+
+	var frames []float64
+	if err := t.videoConn.Call(ctx, &frames, `() => {
+		let stats = window.outboundWebRTCStats;
+		return [stats.srcFrames, stats.framesSent]
+		}
+		`); err != nil {
+		return errors.Wrap(err, "failed to get frame data")
+	}
+	if len(frames) != 2 {
+		return errors.Errorf("got wrong number of frame data, got %d, want %d", len(frames), 2)
+	}
+	srcFrames := frames[0]
+	outFrames := frames[1]
+	if outFrames > srcFrames {
+		return errors.Errorf("out frames %f should not be larger than src frames %f", outFrames, srcFrames)
+	}
+	testing.ContextLogf(ctx, "Camera src frame count: %f, out frame count: %f", srcFrames, outFrames)
+	droppedFrames := srcFrames - outFrames
+	droppedFrameRate := droppedFrames / srcFrames
 
 	pv.Set(perf.Metric{
 		Name:      "VideoConfProxy.Src.FrameRate",
@@ -161,5 +171,15 @@ func (t *InfoTracker) Record(pv *perf.Values) error {
 		Unit:      "fps",
 		Direction: perf.BiggerIsBetter,
 	}, avgOutFrameRate)
+	pv.Set(perf.Metric{
+		Name:      "VideoConfProxy.DroppedFrames",
+		Unit:      "count",
+		Direction: perf.SmallerIsBetter,
+	}, droppedFrames)
+	pv.Set(perf.Metric{
+		Name:      "VideoConfProxy.DroppedFrameRate",
+		Unit:      "percent",
+		Direction: perf.SmallerIsBetter,
+	}, droppedFrameRate)
 	return nil
 }

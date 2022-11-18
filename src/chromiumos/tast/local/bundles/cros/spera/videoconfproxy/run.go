@@ -27,16 +27,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// URLs for video call.
-var (
-	VP9720P30FPS  = cuj.VideoCallHighURL
-	VP91080P30FPS = cuj.VideoCallUltraURL
-)
-
-const (
-	googleDocsTitle = "Google Docs"
-)
-
 // TestParams stores data common to the tests run in this package.
 type TestParams struct {
 	BrowserType     browser.Type
@@ -135,13 +125,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 		docsConn.Close()
 	}(cleanupCtx)
 	pv := perf.NewValues()
-	if err := recorder.Run(ctx, func(ctx context.Context) error {
+	if err := recorder.Run(ctx, func(ctx context.Context) (recorderErr error) {
 		videoConn, err := uiHandler.NewChromeTab(ctx, br, p.VideoCallURL, true)
 		if err != nil {
 			return errors.Wrapf(err, "failed to open URL: %s", p.VideoCallURL)
 		}
 		defer func(ctx context.Context) {
-			faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return retErr != nil }, cr, "ui_dump")
+			faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return recorderErr != nil }, cr, "ui_dump")
 			videoConn.CloseTarget(ctx)
 			videoConn.Close()
 		}(cleanupCtx)
@@ -153,7 +143,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 		bubbleView := nodewith.ClassName("PermissionPromptBubbleView").First()
 		allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(bubbleView)
 		clearPromptBubble := uiauto.IfSuccessThen(ui.WithTimeout(3*time.Second).WaitUntilExists(allowButton),
-			ui.DoDefaultUntil(allowButton, ui.Gone(allowButton)))
+			ui.DoDefaultUntil(allowButton, ui.WithTimeout(3*time.Second).WaitUntilGone(allowButton)))
 		editHereField := nodewith.Name("Edit here").Role(role.TextField)
 
 		if err := uiauto.Combine("initial test",
@@ -164,7 +154,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 			return errors.Wrap(err, "failed to initial test")
 		}
 
-		return videoConfProxyScenario(ctx, tconn, kb, pv)
+		return videoConfProxyScenario(ctx, tconn, videoConn, kb, pv)
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the video conf proxy scenario")
 	}
@@ -211,13 +201,12 @@ func putWindowSideBySide(tconn *chrome.TestConn) action.Action {
 		return nil
 	}
 }
-
-func videoConfProxyScenario(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, pv *perf.Values) error {
+func videoConfProxyScenario(ctx context.Context, tconn *chrome.TestConn, videoConn *chrome.Conn, kb *input.KeyboardEventWriter, pv *perf.Values) error {
 	const (
 		notes         = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
 		repeatTimeout = 2 * time.Minute
 	)
-	tracker := NewVideoConfProxyInfoTracker(ctx, tconn)
+	tracker := NewVideoConfProxyInfoTracker(ctx, tconn, videoConn)
 	if err := tracker.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start VideoConfProxyInfoTracker")
 	}
@@ -240,7 +229,7 @@ func videoConfProxyScenario(ctx context.Context, tconn *chrome.TestConn, kb *inp
 	if err := tracker.Stop(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to stop VideoConfProxyInfoTracker: ", err)
 	}
-	if err := tracker.Record(pv); err != nil {
+	if err := tracker.Record(ctx, pv); err != nil {
 		testing.ContextLog(ctx, "Failed to record VideoConfProxyInfoTracker: ", err)
 	}
 	return nil

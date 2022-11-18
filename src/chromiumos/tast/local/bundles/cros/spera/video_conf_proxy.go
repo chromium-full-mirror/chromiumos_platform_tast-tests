@@ -11,8 +11,8 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/spera/videoconfproxy"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
@@ -39,7 +39,7 @@ func init() {
 				Timeout: 5 * time.Minute,
 				Val: videoconfproxy.TestParams{
 					BrowserType:  browser.TypeAsh,
-					VideoCallURL: videoconfproxy.VP9720P30FPS,
+					VideoCallURL: cuj.VideoCallEssentialURL,
 				},
 			},
 			{
@@ -48,7 +48,7 @@ func init() {
 				Timeout: 5 * time.Minute,
 				Val: videoconfproxy.TestParams{
 					BrowserType:  browser.TypeAsh,
-					VideoCallURL: videoconfproxy.VP91080P30FPS,
+					VideoCallURL: cuj.VideoCallAdvancedURL,
 				},
 			},
 			{
@@ -58,7 +58,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoconfproxy.TestParams{
 					BrowserType:  browser.TypeLacros,
-					VideoCallURL: videoconfproxy.VP9720P30FPS,
+					VideoCallURL: cuj.VideoCallEssentialURL,
 				},
 			},
 			{
@@ -68,7 +68,45 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoconfproxy.TestParams{
 					BrowserType:  browser.TypeLacros,
-					VideoCallURL: videoconfproxy.VP91080P30FPS,
+					VideoCallURL: cuj.VideoCallAdvancedURL,
+				},
+			},
+			{
+				Name:    "vp9_grid_essential",
+				Fixture: "loggedInAndKeepStateWithFakeCamera",
+				Timeout: 5 * time.Minute,
+				Val: videoconfproxy.TestParams{
+					BrowserType:  browser.TypeAsh,
+					VideoCallURL: cuj.VideoCallGridEssentialURL,
+				},
+			},
+			{
+				Name:    "vp9_grid_advanced",
+				Fixture: "loggedInAndKeepStateWithFakeCamera",
+				Timeout: 5 * time.Minute,
+				Val: videoconfproxy.TestParams{
+					BrowserType:  browser.TypeAsh,
+					VideoCallURL: cuj.VideoCallGridAdvancedURL,
+				},
+			},
+			{
+				Name:              "vp9_grid_essential_lacros",
+				Fixture:           "loggedInAndKeepStateLacrosWithFakeCamera",
+				Timeout:           5 * time.Minute,
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: videoconfproxy.TestParams{
+					BrowserType:  browser.TypeLacros,
+					VideoCallURL: cuj.VideoCallGridEssentialURL,
+				},
+			},
+			{
+				Name:              "vp9_grid_advanced_lacros",
+				Fixture:           "loggedInAndKeepStateLacrosWithFakeCamera",
+				Timeout:           5 * time.Minute,
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: videoconfproxy.TestParams{
+					BrowserType:  browser.TypeLacros,
+					VideoCallURL: cuj.VideoCallGridAdvancedURL,
 				},
 			},
 		},
@@ -88,22 +126,11 @@ func VideoConfProxy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	var tabletMode bool
-	if mode, ok := s.Var("spera.cuj_mode"); ok {
-		tabletMode = mode == "tablet"
-		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-		if err != nil {
-			s.Fatalf("Failed to enable tablet mode to %v: %v", tabletMode, err)
-		}
-		defer cleanup(cleanupCtx)
-	} else {
-		// Use default screen mode of the DUT.
-		tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to get DUT default screen mode: ", err)
-		}
+	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.Var, "spera.cuj_mode")
+	if err != nil {
+		s.Fatal("Failed to enable tablet mode: ", err)
 	}
-	s.Log("Running test with tablet mode: ", tabletMode)
+	defer resetTabletMode(cleanupCtx)
 
 	if tabletMode {
 		cleanup, err := display.RotateToLandscape(ctx, tconn)
@@ -114,6 +141,7 @@ func VideoConfProxy(ctx context.Context, s *testing.State) {
 	}
 	p.TabletMode = tabletMode
 	p.OutDir = s.OutDir()
+
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		p.TraceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
