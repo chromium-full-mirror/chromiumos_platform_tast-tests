@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/pkcs11/pkcs11test"
 	"chromiumos/tast/ctxutil"
@@ -29,6 +30,13 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "tpm2"},
 		Timeout:      4 * time.Minute,
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -40,6 +48,7 @@ func ChapsECDSA(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	pkcs11Util, err := pkcs11.NewChaps(ctx, r, utility)
 	if err != nil {
