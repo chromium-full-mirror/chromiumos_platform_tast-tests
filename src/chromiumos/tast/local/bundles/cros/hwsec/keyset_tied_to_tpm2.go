@@ -29,6 +29,13 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm2"},
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -97,6 +104,7 @@ func KeysetTiedToTPM2(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// First we test the case without reboot, that is:
 	// Reset TPM -> Login+Logout -> TakeOwnership -> Login -> Check TPM Bound.
