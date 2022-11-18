@@ -23,6 +23,7 @@ func init() {
 		Desc:         "Check that oobe_config_save runs successfully on reboot",
 		Contacts: []string{
 			"mpolzer@google.com", // Test author
+			"crisguerrero@chromium.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
