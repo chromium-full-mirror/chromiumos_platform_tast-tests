@@ -15,6 +15,12 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// recreateUserVaultTPM1Params contains the test parameters that specifies the type of storage.
+type recreateUserVaultTPM1Params struct {
+	// Specifies whether to use secret stash.
+	useUserSecretStash bool
+}
+
 // NOTE: This test is largely similar to hwsec.RecreateUserVaultTPM2 (a local test), if change is made to one, it is likely that the other have to be changed as well.
 // The referred test is specifically for TPMv2.0, while this test is for TPMv1.2.
 // Both versions of TPM is incompatible with each other and they way we handle reboot for the 2 versions are different and thus the need for 2 versions of the same test.
@@ -31,6 +37,17 @@ func init() {
 		SoftwareDeps: []string{"reboot", "tpm1"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			Name: "uss",
+			Val: recreateUserVaultTPM1Params{
+				useUserSecretStash: true,
+			},
+		}, {
+			Name: "vk",
+			Val: recreateUserVaultTPM1Params{
+				useUserSecretStash: false,
+			},
+		}},
 	})
 }
 
@@ -38,6 +55,7 @@ func init() {
 // which was ported from the autotest test platform_CryptohomeTPMReOwn and
 // renamed to reflects what's being tested.
 func RecreateUserVaultTPM1(ctx context.Context, s *testing.State) {
+	userParam := s.Param().(recreateUserVaultTPM1Params)
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 
 	helper, err := hwsecremote.NewHelper(cmdRunner, s.DUT())
@@ -46,6 +64,22 @@ func RecreateUserVaultTPM1(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
+	if userParam.useUserSecretStash {
+		// Enable UserSecretStash.
+		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
+		if err != nil {
+			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
+		}
+		defer cleanupUSSExperiment(ctx)
+	} else {
+		// Disable UserSecretStash to use VaultKeysets.
+		cleanupUSSDisable, err := helper.DisableUserSecretStash(ctx)
+		if err != nil {
+			s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
+		}
+		defer cleanupUSSDisable(ctx)
+	}
 
 	// Resets the TPM states before running the tests.
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
