@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
@@ -127,11 +128,14 @@ func testCreateFileWithGedit(ctx context.Context, terminalApp *terminalapp.Termi
 	)
 
 	ui := uiauto.New(tconn)
+	uda := uidetection.NewDefault(tconn)
 	appWindow := nodewith.NameStartingWith(testFile).Role(role.Window).First()
 	if err := uiauto.Combine("Create file with Gedit",
 		// Launch Gedit.
 		terminalApp.RunCommand(keyboard, "gedit "+testFile),
-		// Focus on the Gedit window and input string.
+		// Sometimes the first character got lost if input immediately.
+		// Wait until the menu exists, indicating the window is launched.
+		uda.WaitUntilExists(uidetection.Word("Open").WithinA11yNode(appWindow)),
 		ui.LeftClick(appWindow),
 		keyboard.TypeAction(testString),
 		// Press ctrl+S to save the file.
