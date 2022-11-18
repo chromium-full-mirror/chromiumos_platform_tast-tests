@@ -21,12 +21,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SensorIioserviceHard,
-		Desc: "Tests that iioservice provides sensors' samples properly",
+		Func:         SensorIioserviceHard,
+		BugComponent: "b:811602",
+		Desc:         "Tests that iioservice provides sensors' samples properly",
 		Contacts: []string{
-			"gwendal@chromium.com",      // ChromeOS sensors point of contact
+			"chromeos-sensors-eng@google.com",
+			"gwendal@chromium.com",
 			"chenghaoyang@chromium.org", // Test author
-			"chromeos-sensors@google.com",
 		},
 		Attr:         []string{"group:sensors"},
 		SoftwareDeps: []string{"iioservice"},

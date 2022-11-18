@@ -13,11 +13,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SensorLight,
-		Desc: "Tests that ambient light sensor can be read and give valid data",
+		Func:         SensorLight,
+		BugComponent: "b:811602",
+		Desc:         "Tests that ambient light sensor can be read and give valid data",
 		Contacts: []string{
-			"gwendal@chromium.com", // ChromeOS sensors point of contact
 			"chromeos-sensors-eng@google.com",
+			"gwendal@chromium.com",
 		},
 		Attr: []string{"group:sensors"},
 	})

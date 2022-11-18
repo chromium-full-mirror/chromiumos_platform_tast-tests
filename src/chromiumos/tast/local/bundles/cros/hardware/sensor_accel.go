@@ -14,12 +14,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SensorAccel,
-		Desc: "Tests that accelerometer sensors can be read and give valid data",
+		Func:         SensorAccel,
+		BugComponent: "b:811602",
+		Desc:         "Tests that accelerometer sensors can be read and give valid data",
 		Contacts: []string{
-			"gwendal@chromium.com", // ChromeOS sensors point of contact
-			"mathewk@chromium.org", // Test author
 			"chromeos-sensors-eng@google.com",
+			"gwendal@chromium.com",
+			"mathewk@chromium.org", // Test author
 		},
 		Attr: []string{"group:mainline"},
 	})

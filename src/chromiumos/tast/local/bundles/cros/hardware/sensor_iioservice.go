@@ -20,12 +20,13 @@ const succeedReadingSamples = "Number of success reads"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SensorIioservice,
-		Desc: "Tests that iioservice provides sensors' samples properly",
+		Func:         SensorIioservice,
+		BugComponent: "b:811602",
+		Desc:         "Tests that iioservice provides sensors' samples properly",
 		Contacts: []string{
-			"gwendal@chromium.com",      // ChromeOS sensors point of contact
+			"chromeos-sensors-eng@google.com",
+			"gwendal@chromium.com",
 			"chenghaoyang@chromium.org", // Test author
-			"chromeos-sensors@google.com",
 		},
 		Attr:         []string{"group:sensors"},
 		SoftwareDeps: []string{"iioservice"},

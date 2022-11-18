@@ -14,13 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SensorPresence,
-		Desc: "Tests that all sensors defined in model.yaml are present in the system",
+		Func:         SensorPresence,
+		BugComponent: "b:811602",
+		Desc:         "Tests that all sensors defined in model.yaml are present in the system",
 		Contacts: []string{
-			"gwendal@chromium.com", // ChromeOS sensors point of contact
+			"chromeos-sensors-eng@google.com",
+			"gwendal@chromium.com",
 			"mathewk@chromium.org", // Test author
 			"jettrink@chromium.org",
-			"chromeos-sensors-eng@google.com",
 		},
 		SoftwareDeps: []string{"unibuild"},
 		Attr:         []string{"group:mainline"},
