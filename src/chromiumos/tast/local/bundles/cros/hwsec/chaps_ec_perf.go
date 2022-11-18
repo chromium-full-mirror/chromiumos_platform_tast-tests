@@ -32,6 +32,13 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "tpm2"},
 		Timeout:      4 * time.Minute,
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -61,6 +68,7 @@ func ChapsECPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	pkcs11Util, err := pkcs11.NewChaps(ctx, r, utility)
 	if err != nil {
