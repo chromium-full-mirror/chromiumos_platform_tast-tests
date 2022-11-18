@@ -20,22 +20,31 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// Resolution for video option.
+type Resolution string
+
+var (
+	common1080P Resolution = "1920x1080"
+	common4K    Resolution = "3840x2160"
+	av4K        Resolution = "3840x2026"
+)
+
 // VideoOption defines the name and resolution of the video option.
 type VideoOption struct {
 	name       string
-	resolution string
+	resolution Resolution
 }
 
 // Options for video options.
 var (
-	H264DASH1080P30FPS = VideoOption{"H264 DASH 30 FPS", "1920x1080"}
-	H264DASH1080P60FPS = VideoOption{"H264 DASH 60 FPS", "1920x1080"}
-	H264DASH4K60FPS    = VideoOption{"H264 DASH 60 FPS", "3840x2160"}
-	AV1DASH60FPS       = VideoOption{"AV1 DASH 60FPS", "3840x2026"}
-	VP9DASH1080P60FPS  = VideoOption{"VP9 DASH 60 FPS", "1920x1080"}
-	VP9DASH4K60FPS     = VideoOption{"VP9 DASH 60 FPS", "3840x2160"}
-	HEVC1080P60FPS     = VideoOption{"HEVC 60 FPS", "1920x1080"}
-	HEVC4K60FPS        = VideoOption{"HEVC 60 FPS", "3840x2160"}
+	H264DASH1080P30FPS = VideoOption{"H264 DASH 30 FPS", common1080P}
+	H264DASH1080P60FPS = VideoOption{"H264 DASH 60 FPS", common1080P}
+	H264DASH4K60FPS    = VideoOption{"H264 DASH 60 FPS", common4K}
+	AV1DASH60FPS       = VideoOption{"AV1 DASH 60FPS", av4K}
+	VP9DASH1080P60FPS  = VideoOption{"VP9 DASH 60 FPS", common1080P}
+	VP9DASH4K60FPS     = VideoOption{"VP9 DASH 60 FPS", common4K}
+	HEVC1080P60FPS     = VideoOption{"HEVC 60FPS", common1080P}
+	HEVC4K60FPS        = VideoOption{"HEVC 60FPS", common4K}
 )
 
 // CrosVideo defines the struct related to cros video web.
@@ -80,15 +89,16 @@ func (v *CrosVideo) Play(option VideoOption) action.Action {
 	}
 	loadStream := nodewith.Name("Load stream").Role(role.Button).Ancestor(crosVideoWebArea)
 	selectResolution := func(ctx context.Context) error {
-		expectedResolution := nodewith.NameContaining(option.resolution).Role(role.Cell).Ancestor(crosVideoWebArea)
+		resolution := string(option.resolution)
+		expectedResolution := nodewith.NameContaining(resolution).Role(role.Cell).Ancestor(crosVideoWebArea)
 		if err := v.ui.WaitUntilExists(expectedResolution)(ctx); err == nil {
 			return nil
 		}
 		defaultResolution := nodewith.NameContaining("bits").Role(role.Cell).Ancestor(crosVideoWebArea)
-		resolution := nodewith.NameContaining(option.resolution).Role(role.ListBoxOption).Ancestor(crosVideoWebArea)
-		return uiauto.NamedCombine("select resolution "+option.resolution,
+		resolutionOption := nodewith.NameContaining(resolution).Role(role.ListBoxOption).Ancestor(crosVideoWebArea)
+		return uiauto.NamedCombine("select resolution "+resolution,
 			v.ui.LeftClick(defaultResolution),
-			v.ui.LeftClick(resolution),
+			v.ui.LeftClick(resolutionOption),
 			v.ui.WaitUntilExists(expectedResolution),
 			v.VerifyPlaying,
 		)(ctx)

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/spera/webstreaming"
 	"chromiumos/tast/local/chrome"
@@ -50,18 +51,20 @@ func init() {
 				},
 			},
 			{
-				Name:    "h265_essential",
-				Fixture: "loggedInAndKeepState",
-				Timeout: 20 * time.Minute,
+				Name:              "h265_essential",
+				Fixture:           "loggedInAndKeepState",
+				Timeout:           20 * time.Minute,
+				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC60},
 				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
 					VideoOption: webstreaming.HEVC1080P60FPS,
 				},
 			},
 			{
-				Name:    "h265_advanced",
-				Fixture: "loggedInAndKeepState",
-				Timeout: 20 * time.Minute,
+				Name:              "h265_advanced",
+				Fixture:           "loggedInAndKeepState",
+				Timeout:           20 * time.Minute,
+				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC4K60},
 				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeAsh,
 					VideoOption: webstreaming.HEVC4K60FPS,
@@ -118,7 +121,7 @@ func init() {
 				Name:              "h265_essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
-				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraSoftwareDeps: []string{"lacros", caps.HWDecodeHEVC60},
 				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
 					VideoOption: webstreaming.HEVC1080P60FPS,
@@ -128,7 +131,7 @@ func init() {
 				Name:              "h265_advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           20 * time.Minute,
-				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraSoftwareDeps: []string{"lacros", caps.HWDecodeHEVC4K60},
 				Val: webstreaming.TestParams{
 					BrowserType: browser.TypeLacros,
 					VideoOption: webstreaming.HEVC4K60FPS,
