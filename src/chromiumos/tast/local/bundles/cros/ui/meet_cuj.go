@@ -324,6 +324,37 @@ func init() {
 			},
 			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			// 16p call presenting a Google Doc.
+			Name:      "16p_present_notes_split",
+			Timeout:   defaultTestTimeout,
+			ExtraAttr: []string{"group:cuj"},
+			Val: meetTest{
+				num:         15,
+				layout:      meetLayoutTiled,
+				present:     true,
+				docs:        true,
+				split:       true,
+				cam:         true,
+				browserType: browser.TypeAsh,
+			},
+			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+		}, {
+			// 16p_present_notes_split variant with
+			// OneGroupPerRenderer enabled.
+			Name:      "16p_present_notes_split_cgroup",
+			Timeout:   defaultTestTimeout,
+			ExtraAttr: []string{"group:cuj"},
+			Val: meetTest{
+				num:         15,
+				layout:      meetLayoutTiled,
+				present:     true,
+				docs:        true,
+				split:       true,
+				cam:         true,
+				browserType: browser.TypeAsh,
+			},
+			Fixture: "loggedInToCUJUserWithOneGroupPerRenderer",
 		}},
 	})
 }

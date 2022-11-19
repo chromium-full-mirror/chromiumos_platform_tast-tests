@@ -293,6 +293,28 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithOneGroupPerRenderer",
+		Desc: "CUJ test fixture with the OneGroupPerRenderer feature enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("OneGroupPerRenderer"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func loginOption(s *testing.FixtState, useEnterprisePool bool) chrome.Option {
