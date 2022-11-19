@@ -43,8 +43,8 @@ const (
 	ipv4v6     = shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4v6
 	ipv6       = shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv6
 	auth       = shillconst.DevicePropertyCellularAPNInfoApnAuthentication
-	chap       = shillconst.DevicePropertyCellularAPNInfoApnAuthenticationCHAP
-	pap        = shillconst.DevicePropertyCellularAPNInfoApnAuthenticationPAP
+	chap       = shillconst.DevicePropertyCellularAPNInfoApnAuthenticationChap
+	pap        = shillconst.DevicePropertyCellularAPNInfoApnAuthenticationPap
 	username   = shillconst.DevicePropertyCellularAPNInfoApnUsername
 	password   = shillconst.DevicePropertyCellularAPNInfoApnPassword
 )

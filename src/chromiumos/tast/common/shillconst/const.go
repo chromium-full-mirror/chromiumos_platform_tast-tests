@@ -167,8 +167,8 @@ const (
 	DevicePropertyCellularAPNInfoApnIPTypeIPv4v6       = "ipv4v6"
 	DevicePropertyCellularAPNInfoApnIPTypeIPv6         = "ipv6"
 	DevicePropertyCellularAPNInfoApnAttachTrue         = "attach"
-	DevicePropertyCellularAPNInfoApnAuthenticationCHAP = "CHAP"
-	DevicePropertyCellularAPNInfoApnAuthenticationPAP  = "PAP"
+	DevicePropertyCellularAPNInfoApnAuthenticationChap = "chap"
+	DevicePropertyCellularAPNInfoApnAuthenticationPap  = "pap"
 
 	// WiFi service property names.
 	ServicePropertyPassphrase          = "Passphrase"

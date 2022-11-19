@@ -111,7 +111,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 			// Skip known ipv4v6 and ipv6 APNs, since Cellular.APN doesn't support the ip_type field.
 			// Skip known PAP APNs, since Cellular.APN doesn't support the authentication field.
 			if (okIPType && (ipType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4v6 || ipType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv6)) ||
-				(okAuth && (auth == shillconst.DevicePropertyCellularAPNInfoApnAuthenticationPAP)) {
+				(okAuth && (auth == shillconst.DevicePropertyCellularAPNInfoApnAuthenticationPap)) {
 				continue
 			}
 		}
