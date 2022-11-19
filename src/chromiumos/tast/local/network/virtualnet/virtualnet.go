@@ -109,10 +109,7 @@ func CreateRouterEnv(ctx context.Context, m *shill.Manager, pool *subnet.Pool, o
 	// that this speed-up is in a best effort way since it cannot be guaranteed
 	// that the DHCP server is ready this time.
 	if opts.EnableDHCP {
-		if err := svc.Disconnect(ctx); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to disconnect the veth service")
-		}
-		if err := svc.Connect(ctx); err != nil {
+		if err := svc.Reconnect(ctx); err != nil {
 			return nil, nil, errors.Wrap(err, "failed to reconnect the veth service")
 		}
 	}

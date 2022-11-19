@@ -236,10 +236,7 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 
 	// Reconnect service to speed up DHCP acquisition.
 	testing.ContextLog(ctx, "Reconnecting to test service")
-	if err := testEnv.TestService.Disconnect(ctx); err != nil {
-		s.Fatal("Failed to disconnect test service: ", err)
-	}
-	if err := testEnv.TestService.Connect(ctx); err != nil {
+	if err := testEnv.TestService.Reconnect(ctx); err != nil {
 		s.Fatal("Failed to connect test service: ", err)
 	}
 

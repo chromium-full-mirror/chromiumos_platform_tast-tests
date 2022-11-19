@@ -6,6 +6,7 @@ package shill
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -207,6 +208,28 @@ func (s *Service) Connect(ctx context.Context) error {
 // Disconnect calls the Disconnect method on the service.
 func (s *Service) Disconnect(ctx context.Context) error {
 	return s.Call(ctx, "Disconnect").Err
+}
+
+// Reconnect disconnects the service at first and then connect to it again.
+func (s *Service) Reconnect(ctx context.Context) error {
+	if err := s.Disconnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to disconnect")
+	}
+	// Shill will disable auto-connect for a service if it is disconnected
+	// explicitly, but this may not work for Ethernet services. When a Ethernet
+	// service is disconnected, a service reload might be triggered and as a
+	// result the user-initiate-disconnect bit is cleared, and the service will be
+	// reconnected immediately. In that case, an error will be returned when
+	// Connect() is called.
+	if err := s.Connect(ctx); err != nil {
+		// The error messages are defined in Service::Connect() function in
+		// platform2/shill/service.cc file.
+		if strings.Contains(err.Error(), "already connected") || strings.Contains(err.Error(), "already connecting") {
+			return nil
+		}
+		return errors.Wrap(err, "failed to reconnect")
+	}
+	return nil
 }
 
 // Remove calls the Remove method on the service.
