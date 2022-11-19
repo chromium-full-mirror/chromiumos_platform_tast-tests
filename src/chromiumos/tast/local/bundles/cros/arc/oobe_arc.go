@@ -29,7 +29,9 @@ func init() {
 		Func:         OobeArc,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Navigate through OOBE and Verify that PlayStore Settings Screen is launched at the end",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com", "cros-oac@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "cros-oac@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

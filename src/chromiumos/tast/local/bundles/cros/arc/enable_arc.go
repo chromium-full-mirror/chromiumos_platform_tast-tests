@@ -25,7 +25,9 @@ func init() {
 		Func:         EnableArc,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify PlayStore can be turned On from Settings ",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

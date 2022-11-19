@@ -23,7 +23,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Task Manager Integration with Arc",
 		Fixture:      "arcBooted",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      arc.BootTimeout + 2*time.Minute,

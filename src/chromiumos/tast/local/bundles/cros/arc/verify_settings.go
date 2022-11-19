@@ -29,7 +29,9 @@ func init() {
 		Func:         VerifySettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies ARC++ settings work as intended",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

@@ -29,7 +29,9 @@ func init() {
 		Func:         OobeArcAppOpen,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launch ARC App post the OOBE Flow Setup Complete",
-		Contacts:     []string{"cpiao@google.com", "cros-arc-te@google.com", "cros-oac@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "cros-oac@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

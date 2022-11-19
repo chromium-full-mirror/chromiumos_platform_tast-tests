@@ -25,7 +25,9 @@ func init() {
 		Func:         TitleBar,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the Title Bar of the ARC App and Its buttons",
-		Contacts:     []string{"rnanjappan@chromium.org", "cros-arc-te@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

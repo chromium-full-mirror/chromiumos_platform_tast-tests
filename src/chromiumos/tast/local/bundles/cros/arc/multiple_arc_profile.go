@@ -32,7 +32,9 @@ func init() {
 		Func:         MultipleArcProfile,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that Second Account can be added from ARC Settings ",
-		Contacts:     []string{"rnanjappan@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

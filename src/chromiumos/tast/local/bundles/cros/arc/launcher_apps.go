@@ -24,7 +24,9 @@ func init() {
 		Func:         LauncherApps,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A functional test that checks if installed app appears in Launcher",
-		Contacts:     []string{"cpiao@google.com", "arc-core@google.com", "cros-arc-te@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		// ChromeOS > Software > ARC++ > EngProd
+		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "chrome"},
