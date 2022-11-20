@@ -452,10 +452,9 @@ func testCancellation(ctx context.Context, s *testing.State, cd *crosdisks.CrosD
 		s.Errorf("Unexpected error: got %v want %v", err, context.DeadlineExceeded)
 	}
 
-	// TODO(b/258344222) Use a short timeout of less than 2 seconds while
-	// unmounting. Cancellation should be near instantaneous once the blocking
-	// umount() syscall issue is fixed on every kernel version.
-	ctxForUnmounting, close2 := context.WithTimeout(ctx, time.Second*3)
+	// Use a short timeout of one second while unmounting.
+	// Cancellation should be near instantaneous.
+	ctxForUnmounting, close2 := context.WithTimeout(ctx, time.Second)
 	defer close2()
 
 	// Unmounting by passing the original archive path should cancel the mount
