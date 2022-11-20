@@ -87,9 +87,14 @@ func (vm *VM) Name() string {
 	return vm.name
 }
 
+// IsTermina returns whether this VM is a Termina VM.
+func (vm *VM) IsTermina() bool {
+	return vm.name == DefaultVMName
+}
+
 // Start launches the VM.
 func (vm *VM) Start(ctx context.Context) error {
-	diskPath, err := vm.Concierge.startTerminaVM(ctx, vm)
+	diskPath, err := vm.Concierge.startVM(ctx, vm)
 	if err != nil {
 		return err
 	}
@@ -101,12 +106,15 @@ func (vm *VM) Start(ctx context.Context) error {
 	}
 	vm.diskSize = diskSize
 
-	cmd := vm.Command(ctx, "grep", "CHROMEOS_RELEASE_VERSION=", "/etc/lsb-release")
-	if output, err := cmd.Output(testexec.DumpLogOnError); err != nil {
-		testing.ContextLog(ctx, "Failed to get VM image version")
-	} else {
-		version := strings.Split(string(output), "=")[1]
-		testing.ContextLog(ctx, "VM image version is ", version)
+	// TODO(b:256052459): Figure out an appropriate command for generic VMs.
+	if vm.IsTermina() {
+		cmd := vm.Command(ctx, "grep", "CHROMEOS_RELEASE_VERSION=", "/etc/lsb-release")
+		if output, err := cmd.Output(testexec.DumpLogOnError); err != nil {
+			testing.ContextLog(ctx, "Failed to get VM image version")
+		} else {
+			version := strings.Split(string(output), "=")[1]
+			testing.ContextLog(ctx, "VM image version is ", version)
+		}
 	}
 	return nil
 }

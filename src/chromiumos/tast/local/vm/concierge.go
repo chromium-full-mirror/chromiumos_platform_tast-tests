@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/godbus/dbus/v5"
@@ -178,20 +179,71 @@ func (c *Concierge) SyncTimes(ctx context.Context) error {
 	return nil
 }
 
-func (c *Concierge) startTerminaVM(ctx context.Context, vm *VM) (string, error) {
+func (c *Concierge) sendStartVMRequest(ctx context.Context, vm *VM, diskPath string, cpus uint32) (*vmpb.StartVmResponse, error) {
+	request := vmpb.StartVmRequest{
+		Name:         vm.name,
+		StartTermina: vm.IsTermina(),
+		OwnerId:      c.ownerID,
+		Disks: []*vmpb.DiskImage{
+			{
+				Path:      diskPath,
+				ImageType: vmpb.DiskImageType_DISK_IMAGE_AUTO,
+				Writable:  true,
+				DoMount:   false,
+			},
+		},
+		EnableGpu: vm.EnableGPU,
+		Cpus:      cpus,
+	}
+
+	const startVMRequestMethodName = conciergeInterface + ".StartVm"
+	resp := &vmpb.StartVmResponse{}
+	var err error
+	if vm.IsTermina() {
+		if err = dbusutil.CallProtoMethod(ctx, c.conciergeObj, startVMRequestMethodName,
+			&request, resp); err != nil {
+			return resp, err
+		}
+	} else {
+		request.Fds = append(request.Fds, vmpb.StartVmRequest_KERNEL, vmpb.StartVmRequest_ROOTFS)
+		kernelFile, err := os.OpenFile(vm.kernel, os.O_RDONLY, 0755)
+		if err != nil {
+			return resp, errors.Wrapf(err, "failed to open kernel file %s", vm.kernel)
+		}
+		kernelFd := dbus.UnixFD(kernelFile.Fd())
+		defer kernelFile.Close()
+
+		rootfsFile, err := os.OpenFile(vm.rootfs, os.O_RDONLY, 0755)
+		if err != nil {
+			return resp, errors.Wrapf(err, "failed to open rootfs file %s", vm.rootfs)
+		}
+		rootfsFd := dbus.UnixFD(rootfsFile.Fd())
+		defer kernelFile.Close()
+
+		newBuf, err := proto.Marshal(&request)
+		if err != nil {
+			return resp, errors.Wrapf(err, "failed marshaling %s request", startVMRequestMethodName)
+		}
+
+		var respBuf []byte
+		if err = c.conciergeObj.CallWithContext(ctx, startVMRequestMethodName, 0, newBuf, kernelFd, rootfsFd).Store(&respBuf); err != nil {
+			return resp, errors.Wrapf(err, "failed reading %s response", startVMRequestMethodName)
+		}
+
+		if err = proto.Unmarshal(respBuf, resp); err != nil {
+			return resp, errors.Wrapf(err, "failed unmarshaling %s response", startVMRequestMethodName)
+		}
+	}
+
+	return resp, nil
+}
+
+func (c *Concierge) startVM(ctx context.Context, vm *VM) (string, error) {
 	// Create the new disk first.
 	diskPath, err := c.createDiskImage(ctx, vm.targetDiskSize, vm.name)
 	if err != nil {
 		return diskPath, err
 	}
-
-	tremplin, err := dbusutil.NewSignalWatcherForSystemBus(ctx, dbusutil.MatchSpec{
-		Type:      "signal",
-		Path:      ciceronePath,
-		Interface: ciceroneInterface,
-		Member:    "TremplinStarted",
-	})
-	defer tremplin.Close(ctx)
 
 	// Get the number of online cpus.
 	buf, err := ioutil.ReadFile("/sys/devices/system/cpu/online")
@@ -216,58 +268,58 @@ func (c *Concierge) startTerminaVM(ctx context.Context, vm *VM) (string, error) 
 		cpus++
 	}
 
-	resp := &vmpb.StartVmResponse{}
-	if err = dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".StartVm",
-		&vmpb.StartVmRequest{
-			Name:         vm.name,
-			StartTermina: true,
-			OwnerId:      c.ownerID,
-			Disks: []*vmpb.DiskImage{
-				{
-					Path:      diskPath,
-					ImageType: vmpb.DiskImageType_DISK_IMAGE_AUTO,
-					Writable:  true,
-					DoMount:   false,
-				},
-			},
-			EnableGpu: vm.EnableGPU,
-			Cpus:      cpus,
-		}, resp); err != nil {
-		return diskPath, err
+	resp, err := c.sendStartVMRequest(ctx, vm, diskPath, cpus)
+	if err != nil {
+		return diskPath, errors.Wrap(err, "failed to send start VM request")
 	}
+
 	if !resp.GetSuccess() {
 		return diskPath, errors.Errorf("failed to start VM: %s", resp.GetFailureReason())
-	}
-
-	testing.ContextLog(ctx, "Waiting for TremplinStarted D-Bus signal")
-	sigResult := &cpb.TremplinStartedSignal{}
-	select {
-	case sig := <-tremplin.Signals:
-		if len(sig.Body) == 0 {
-			return diskPath, errors.New("TremplinStarted signal lacked a body")
-		}
-		buf, ok := sig.Body[0].([]byte)
-		if !ok {
-			return diskPath, errors.New("TremplinStarted signal body is not a byte slice")
-		}
-		if err := proto.Unmarshal(buf, sigResult); err != nil {
-			return diskPath, errors.Wrap(err, "failed unmarshaling TremplinStarted body")
-		}
-	case <-ctx.Done():
-		return diskPath, errors.Wrap(ctx.Err(), "didn't get TremplinStarted D-Bus signal")
-	}
-
-	if sigResult.OwnerId != c.ownerID {
-		return diskPath, errors.Errorf("expected owner id %q, received %q", c.ownerID, sigResult.OwnerId)
-	}
-	if sigResult.VmName != vm.name {
-		return diskPath, errors.Errorf("expected VM name %q, received %q", vm.name, sigResult.VmName)
 	}
 
 	vm.ContextID = resp.VmInfo.Cid
 	vm.seneschalHandle = resp.VmInfo.SeneschalServerHandle
 
 	testing.ContextLogf(ctx, "Started VM %q with CID %d and PID %d", vm.name, resp.VmInfo.Cid, resp.VmInfo.Pid)
+
+	if vm.IsTermina() {
+		// Tremplin is a termina specific daemon. This watcher doesn't need to be setup for generic VMs.
+		tremplin, err := dbusutil.NewSignalWatcherForSystemBus(ctx, dbusutil.MatchSpec{
+			Type:      "signal",
+			Path:      ciceronePath,
+			Interface: ciceroneInterface,
+			Member:    "TremplinStarted",
+		})
+		if err != nil {
+			return diskPath, errors.Wrap(err, "failed to setup signal watcher for tremplin started")
+		}
+		defer tremplin.Close(ctx)
+
+		testing.ContextLog(ctx, "Waiting for TremplinStarted D-Bus signal")
+		sigResult := &cpb.TremplinStartedSignal{}
+		select {
+		case sig := <-tremplin.Signals:
+			if len(sig.Body) == 0 {
+				return diskPath, errors.New("TremplinStarted signal lacked a body")
+			}
+			buf, ok := sig.Body[0].([]byte)
+			if !ok {
+				return diskPath, errors.New("TremplinStarted signal body is not a byte slice")
+			}
+			if err := proto.Unmarshal(buf, sigResult); err != nil {
+				return diskPath, errors.Wrap(err, "failed unmarshaling TremplinStarted body")
+			}
+		case <-ctx.Done():
+			return diskPath, errors.Wrap(ctx.Err(), "didn't get TremplinStarted D-Bus signal")
+		}
+
+		if sigResult.OwnerId != c.ownerID {
+			return diskPath, errors.Errorf("expected owner id %q, received %q", c.ownerID, sigResult.OwnerId)
+		}
+		if sigResult.VmName != vm.name {
+			return diskPath, errors.Errorf("expected VM name %q, received %q", vm.name, sigResult.VmName)
+		}
+	}
 
 	return diskPath, nil
 }
