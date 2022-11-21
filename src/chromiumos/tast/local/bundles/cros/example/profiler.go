@@ -14,10 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Profiler,
-		Desc:     "Demonstrates how to use profiler package",
-		Contacts: []string{"chinglinyu@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func: Profiler,
+		Desc: "Demonstrates how to use profiler package",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+		},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

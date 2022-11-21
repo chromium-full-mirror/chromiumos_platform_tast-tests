@@ -19,9 +19,13 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     PerfettoTraceProcessing,
-		Desc:     "Exercises post-processing perfetto traces",
-		Contacts: []string{"chinglinyu@chromium.org", "baseos-perf@google.com"},
+		Func: PerfettoTraceProcessing,
+		Desc: "Exercises post-processing perfetto traces",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		Data: []string{traceConfig,
 			traceQuery,
 			tracing.TraceProcessorAmd64,
