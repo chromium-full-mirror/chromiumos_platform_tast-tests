@@ -22,10 +22,11 @@ func init() {
 		Func: CpufreqConf,
 		Desc: "Check that we respect the /etc/cpufreq.conf file",
 		Contacts: []string{
-			"briannorris@chromium.org",
 			"chromeos-platform-power@google.com",
+			"briannorris@chromium.org",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:167191",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
