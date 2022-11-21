@@ -19,7 +19,15 @@ func init() {
 		Func:         AppCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test handling of a local app crash",
-		Contacts:     []string{"mutexlox@google.com", "cros-telemetry@google.com"},
+		Contacts: []string{
+			// ARC
+			"arc-core@google.com",
+			"jhorwich@google.com",
+			// Telemetry
+			"mutexlox@google.com",
+			"cros-telemetry@google.com",
+		},
+		BugComponent: "b:153255",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
