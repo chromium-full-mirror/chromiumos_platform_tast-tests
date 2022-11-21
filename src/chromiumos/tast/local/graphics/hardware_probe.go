@@ -48,7 +48,7 @@ func CPUFamily(ctx context.Context) (string, error) {
 
 // GPUFamilies returns the GPU families on the host. e.g. qualcomm, broadwell, kabylake, cezanne, etc.
 func GPUFamilies(ctx context.Context) ([]string, error) {
-	match, err := runAndGrepRegex(ctx, []string{"--gpu-family"}, `GPU_Family: (\w*)`)
+	match, err := runAndGrepRegex(ctx, []string{"--gpu-family"}, `GPU_Family: ([\w-]*)`)
 	if err != nil {
 		return nil, err
 	}
