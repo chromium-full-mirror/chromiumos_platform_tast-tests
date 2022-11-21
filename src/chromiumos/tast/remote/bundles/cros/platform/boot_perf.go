@@ -43,7 +43,12 @@ func init() {
 		// The test reboots to the login screen and doesn't require a lacaros variant.
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot performance test",
-		Contacts:     []string{"chinglinyu@chromium.org"},
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+			"briannorris@chromium.org",
+		},
+		BugComponent: "b:167279", // ChromeOS > Platform > System > Performance
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},
 		// Deps of "chrome" is used to ensure the test doesn't boot to the OOBE screen.

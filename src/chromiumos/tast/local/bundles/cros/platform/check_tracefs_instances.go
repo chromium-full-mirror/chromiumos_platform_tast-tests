@@ -15,10 +15,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     CheckTracefsInstances,
-		Desc:     "Checks that the number of tracefs instances doesn't exceed the number of CPU cores/threads",
-		Contacts: []string{"chinglinyu@chromium.org"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func: CheckTracefsInstances,
+		Desc: "Checks that the number of tracefs instances doesn't exceed the number of CPU cores/threads",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+		},
+		BugComponent: "b:167279", // ChromeOS > Platform > System > Performance
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
