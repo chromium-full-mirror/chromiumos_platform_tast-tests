@@ -33,7 +33,12 @@ func init() {
 		Func:         CoreSchedTag,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Ensures renderers scheduling cookies are assigned correctly",
-		Contacts:     []string{"joelaf@google.com", "briannorris@chromium.org"},
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"joelaf@google.com",
+			"briannorris@chromium.org",
+		},
+		BugComponent: "b:167279",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "arc", "coresched"},
 		HardwareDeps: hwdep.D(hwdep.CPUSupportsSMT(), hwdep.CPUNeedsCoreScheduling()),
