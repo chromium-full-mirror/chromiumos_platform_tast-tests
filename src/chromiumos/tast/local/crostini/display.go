@@ -85,7 +85,7 @@ func PollWindowSize(ctx context.Context, tconn *chrome.TestConn, name string, ti
 func windowSize(ctx context.Context, tconn *chrome.TestConn, name string) (sz coords.Size, err error) {
 	ui := uiauto.New(tconn)
 	appWindow := nodewith.Name(name).First()
-	if err := ui.WaitUntilExists(appWindow)(ctx); err != nil {
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(appWindow)(ctx); err != nil {
 		return coords.Size{}, errors.Wrap(err, "failed to locate the app window")
 	}
 

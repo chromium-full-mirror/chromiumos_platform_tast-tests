@@ -88,7 +88,7 @@ func NavigateToURLInApp(conn *chrome.Conn, url string, condition uiauto.Action, 
 		}
 
 		// Wait for condition after changing location.
-		if err := testing.Poll(ctx, condition, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+		if err := testing.Poll(ctx, condition, &testing.PollOptions{Timeout: timeout, Interval: 200 * time.Millisecond}); err != nil {
 			return errors.Wrap(err, "failed to match condition after changing page location in javascript")
 		}
 		return nil

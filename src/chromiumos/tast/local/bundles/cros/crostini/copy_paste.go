@@ -304,7 +304,7 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run copy applet: ", err)
 	}
 
-	output, err := crostini.RunWindowedApp(ctx, tconn, cont, pre.KB, 30*time.Second, nil, false, pasteAppletTitle, param.Paste.cmdArgs)
+	output, err := crostini.RunWindowedApp(ctx, tconn, cont, pre.KB, 60*time.Second, nil, false, pasteAppletTitle, param.Paste.cmdArgs)
 	if err != nil {
 		s.Fatal("Failed to run paste application: ", err)
 	}

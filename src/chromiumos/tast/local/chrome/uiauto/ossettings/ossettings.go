@@ -157,7 +157,7 @@ func (s *OSSettings) NavigateToPageURL(ctx context.Context, cr *chrome.Chrome, p
 	}
 	defer settingsConn.Close()
 
-	return webutil.NavigateToURLInApp(settingsConn, urlPrefix+pageShortURL, condition, 20*time.Second)(ctx)
+	return webutil.NavigateToURLInApp(settingsConn, urlPrefix+pageShortURL, condition, 30*time.Second)(ctx)
 }
 
 // LaunchHelpApp returns a function that launches Help app by clicking "Get help with ChromeOS".

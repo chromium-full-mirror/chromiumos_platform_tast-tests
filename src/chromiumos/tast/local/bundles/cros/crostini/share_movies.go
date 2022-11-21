@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
@@ -82,6 +83,8 @@ func ShareMovies(ctx context.Context, s *testing.State) {
 			s.Error("Failed to opt out of Play Store: ", err)
 		}
 	}(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	sharedFolders := sharedfolders.NewSharedFolders(tconn)
 	// Unshare shared folders in the end.

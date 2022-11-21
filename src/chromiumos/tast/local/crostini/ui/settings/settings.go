@@ -273,7 +273,7 @@ func (s *Settings) GetSharedFolders(ctx context.Context) ([]string, error) {
 			}
 			return nil
 		}
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 20 * time.Second})
 
 	if err != nil {
 		return nil, err
