@@ -63,97 +63,101 @@ func OfflineLoginWithUsernameAndPhotosDisabled(ctx context.Context, s *testing.S
 
 	setupOwnerAndUsersAndPresetting(ctx, cleanUpCtx, s, creds)
 
+	loginOffline(ctx, s, creds)
+
+}
+
+func loginOffline(ctx context.Context, s *testing.State, creds []chrome.Creds) {
+	cleanUpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	cr, err := chrome.New(ctx,
+		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
+		chrome.NoLogin(),
+		chrome.KeepState(),
+		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
+
+	if err != nil {
+		s.Fatal("Chrome start failed: ", err)
+	}
+	defer cr.Close(cleanUpCtx)
+
+	oobeConn, err := cr.WaitForOOBEConnection(ctx)
+	if err != nil {
+		s.Fatal("Failed to create OOBE connection: ", err)
+	}
+	defer oobeConn.Close()
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Creating login test API connection failed: ", err)
+	}
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Manager object: ", err)
 	}
-
-	helper := helper{Manager: manager}
-
-	loginOffline := func(ctx context.Context) error {
-		cleanUpCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		cr, err := chrome.New(ctx,
-			chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
-			chrome.NoLogin(),
-			chrome.KeepState(),
-			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
-
-		if err != nil {
-			return errors.Wrap(err, "chrome start failed")
-		}
-		defer cr.Close(ctx)
-
-		oobeConn, err := cr.WaitForOOBEConnection(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to create OOBE connection")
-		}
-		defer oobeConn.Close()
-
-		tconn, err := cr.SigninProfileTestAPIConn(ctx)
-		if err != nil {
-			return errors.Wrap(err, "creating login test API connection failed")
-		}
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
-		const uiTimeout = 10 * time.Second
-
-		ui := uiauto.New(tconn)
-
-		clickSignInAsExistingUserLink(ctx, s, oobeConn)
-
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.OfflineLoginScreen.isReadyForTesting()"); err != nil {
-			s.Fatal("Failed to wait for the offline login screen to be visible: ", err)
-		}
-
-		var emailFieldName string
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.OfflineLoginScreen.getEmailFieldName()", &emailFieldName); err != nil {
-			s.Fatal("Failed to retrieve the email field name: ", err)
-		}
-
-		var passwordFieldName string
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.OfflineLoginScreen.getPasswordFieldName()", &passwordFieldName); err != nil {
-			s.Fatal("Failed to retrieve the password field name: ", err)
-		}
-
-		kb, err := input.VirtualKeyboard(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get virtual keyboard")
-		}
-		defer kb.Close()
-
-		fillTextField(ctx, s, ui, kb, emailFieldName, creds[1].User)
-
-		clickNextButton(ctx, s, ui, oobeConn)
-
-		fillTextField(ctx, s, ui, kb, passwordFieldName, creds[1].Pass)
-
-		clickNextButton(ctx, s, ui, oobeConn)
-
-		if err := lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
-			s.Fatal("Failed to login: ", err)
-		}
-
-		return nil
+	h := helper{Manager: manager}
+	defer h.restoreAllNetworkInterfaces(cleanUpCtx)
+	if err := h.disableAllNetworkInterfaces(ctx); err != nil {
+		s.Fatal("Failed to disable non cellular interface: ", err)
 	}
 
-	if err := helper.runTestOffline(ctx, loginOffline); err != nil {
-		s.Fatal("Failed to run test on cellular interface: ", err)
+	// GetEnabledTechnologies returns a list of all enabled shill networking technologies.
+	enabledTechnologies, err := manager.GetEnabledTechnologies(ctx)
+	if err != nil {
+		s.Fatal("Failed to retrieve enabled shill networking technologies: ", err)
 	}
 
+	s.Log("List of all enabled shill networking technologies ", enabledTechnologies)
+	if err := clickSignInAsExistingUserLink(ctx, oobeConn); err != nil {
+		s.Fatal("Failed to click signIn as existing user: ", err)
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.OfflineLoginScreen.isReadyForTesting()"); err != nil {
+		s.Fatal("Failed to wait for the offline login screen to be visible: ", err)
+	}
+
+	var emailFieldName string
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.OfflineLoginScreen.getEmailFieldName()", &emailFieldName); err != nil {
+		s.Fatal("Failed to retrieve the email field name: ", err)
+	}
+
+	var passwordFieldName string
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.OfflineLoginScreen.getPasswordFieldName()", &passwordFieldName); err != nil {
+		s.Fatal("Failed to retrieve the password field name: ", err)
+	}
+
+	kb, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get virtual keyboard: ", err)
+	}
+	defer kb.Close()
+
+	ui := uiauto.New(tconn)
+	fillTextField(ctx, s, ui, kb, emailFieldName, creds[1].User)
+	clickNextButton(ctx, s, ui, oobeConn)
+	fillTextField(ctx, s, ui, kb, passwordFieldName, creds[1].Pass)
+	clickNextButton(ctx, s, ui, oobeConn)
+
+	if err := lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
+		s.Fatal("Failed to login: ", err)
+	}
 }
 
-func clickSignInAsExistingUserLink(ctx context.Context, s *testing.State, oobeConn *chrome.Conn) {
+func clickSignInAsExistingUserLink(ctx context.Context, oobeConn *chrome.Conn) error {
 
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ErrorScreen.isReadyForTesting()"); err != nil {
-		s.Fatal("Failed to wait for the error screen to be visible : ", err)
+		return errors.Wrap(err, "failed to wait for the error screen to be visible")
 	}
 
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ErrorScreen.clickSignInAsExistingUserLink()", nil); err != nil {
-		s.Fatal("Failed to click on sign in as existing user link : ", err)
+		return errors.Wrap(err, "failed to click on sign in as existing user link")
 	}
+
+	return nil
 
 }
 
@@ -210,16 +214,6 @@ func (h *helper) restoreAllNetworkInterfaces(ctx context.Context) {
 	h.enableEthernetFunc = nil
 	h.enableWifiFunc = nil
 	h.enableCellularFunc = nil
-}
-
-// runTestOffline setup the device for offline test and run testBody.
-func (h *helper) runTestOffline(ctx context.Context, testBody func(ctx context.Context) error) error {
-	defer h.restoreAllNetworkInterfaces(ctx)
-	if err := h.disableAllNetworkInterfaces(ctx); err != nil {
-		return errors.Wrap(err, "failed to disable non cellular interface")
-	}
-
-	return testBody(ctx)
 }
 
 func fillTextField(ctx context.Context, s *testing.State, ui *uiauto.Context, kb *input.KeyboardEventWriter, nodeName, nodeValue string) {
