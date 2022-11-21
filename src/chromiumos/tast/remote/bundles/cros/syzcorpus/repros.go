@@ -49,14 +49,13 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Repros,
-		Desc: "Test that runs syzkaller repros",
-		Contacts: []string{
-			"zsm@chromium.org", // Test author
-			"chromeos-kernel@google.com",
-		},
-		Timeout: 30 * time.Minute,
-		Attr:    []string{"group:syzcorpus"},
+		Func:     Repros,
+		Desc:     "Test that runs syzkaller repros",
+		Contacts: []string{"chromeos-kernel@google.com", "zsm@chromium.org"},
+		// ChromeOS > Platform > System > Kernel > Syzkaller > Syzkaller-Dev > Syzcorpus
+		BugComponent: "b:1148019",
+		Timeout:      30 * time.Minute,
+		Attr:         []string{"group:syzcorpus"},
 		Params: []testing.Param{
 			{
 				Name: "kvm",
