@@ -92,6 +92,13 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.Locked && st.ReadyForPassword }, 30*time.Second); err != nil {
 		s.Fatalf("Waiting for the screen to be locked failed: %v (last status %+v)", err, st)
 	}
+	// Unlock the screen to ensure subsequent tests aren't affected by the screen remaining locked.
+	// TODO(b/187794615): Remove once chrome.go has a way to clean up the lock screen state.
+	defer func() {
+		if err := lockscreen.Unlock(ctx, tconn); err != nil {
+			s.Fatal("Failed to unlock the screen: ", err)
+		}
+	}()
 
 	// Take a screenshot of the lock screen.
 	lockScreenshot, err := screenshot.GrabScreenshot(ctx, cr)
@@ -105,8 +112,8 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 	threshold := float64(10)
 
 	redDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(50, 50), red))
-	blueDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(lockScreenshot.Bounds().Dx()-50, 0), blue))
-	greenDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(0, lockScreenshot.Bounds().Dy()-50), green))
+	blueDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(lockScreenshot.Bounds().Dx()-50, 50), blue))
+	greenDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(50, lockScreenshot.Bounds().Dy()-50), green))
 
 	// The shield is applied evenly so we expect the color distance of the original color and the shielded color to be relatively the same for all three zones.
 	if math.Abs(redDistance-blueDistance) > threshold || math.Abs(redDistance-greenDistance) > threshold || math.Abs(blueDistance-greenDistance) > threshold {
