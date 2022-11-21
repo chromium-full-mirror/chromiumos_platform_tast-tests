@@ -582,9 +582,9 @@ func (im InputMethod) WaitUntilActivated(tconn *chrome.TestConn) action.Action {
 	// Use 10s as warming up time by default.
 	imWarmingUpTime := 10 * time.Second
 
-	// SW, FR, SP takes longer time.
+	// Swedish, FrenchFrance, SpanishSpain, Korean, Cantonese take longer time.
 	switch im {
-	case Swedish, FrenchFrance, SpanishSpain:
+	case Swedish, FrenchFrance, SpanishSpain, Korean, Cantonese:
 		imWarmingUpTime = 15 * time.Second
 	}
 
