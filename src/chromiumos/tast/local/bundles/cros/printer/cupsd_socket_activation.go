@@ -21,9 +21,11 @@ func init() {
 		Func: CupsdSocketActivation,
 		Desc: "Validity test for cupsd and the upstart-socket-bridge socket-activation",
 		Contacts: []string{
-			"briannorris@chromium.org", // Original autotest author
-			"hidehiko@chromium.org",    // Tast port author
+			"project-bolton@google.com",
+			"bmgordon@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		SoftwareDeps: []string{"cros_internal", "cups"},
 		Attr: []string{
 			"group:mainline",
