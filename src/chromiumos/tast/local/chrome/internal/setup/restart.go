@@ -30,6 +30,13 @@ import (
 // https://source.corp.google.com/chromeos_public/src/platform2/libbrillo/brillo/cryptohome.cc;l=83
 var obfuscatedUsernameRegexp = regexp.MustCompile(`^[\da-f]{40}$`)
 
+// Finch experiements in fieldtrial_testing_config.json are enabled by default
+// for chromium-branded builds, but disabled by default for chrome-branded.
+var fieldTrialConfig = testing.RegisterVarString(
+	"setup.FieldTrialConfig",
+	"default",
+	"[enable|disable|default] Whether to force enable / disable finch experiements, or use default.")
+
 // RestartChromeForTesting restarts the ui job, asks session_manager to enable Chrome testing,
 // and waits for Chrome to listen on its debugging port.
 func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, lacrosExtArgs []string) error {
@@ -203,6 +210,14 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		stackProfilerArg = "--start-stack-profiler=browser-test"
 	}
 	args = append(args, stackProfilerArg)
+
+	if fieldTrialConfig.Value() == "enable" {
+		args = append(args, "--enable-field-trial-config")
+	} else if fieldTrialConfig.Value() == "disable" {
+		args = append(args, "--disable-field-trial-config")
+	} else if fieldTrialConfig.Value() != "default" {
+		return errors.Errorf("unexpected value for `%v`: %v", fieldTrialConfig.Name(), fieldTrialConfig.Value())
+	}
 
 	// Lacros features and additional args used to launch lacros-chrome should be delimited by
 	// '####' and passed in from ash-chrome as a single argument with --lacros-chrome-additional-args.
