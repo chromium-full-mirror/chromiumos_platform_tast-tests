@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
@@ -266,13 +268,12 @@ func (e *wifiEnv) Cleanup(ctx context.Context) error {
 		}
 	}
 	if e.hostapd != nil && e.hostapd.Process != nil {
-		if err := e.hostapd.Kill(); err != nil {
+		// Stop hostapd using SIGTERM to let the process stop the access point
+		// correctly and remove the bridge interface.
+		if err := e.hostapd.Signal(unix.SIGTERM); err != nil {
 			return errors.Wrap(err, "failed to kill hostapd process")
 		}
 		e.hostapd.Wait()
-		if err := testexec.CommandContext(ctx, "ip", "link", "del", e.br).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrapf(err, "failed to remove %s", e.br)
-		}
 	}
 	return nil
 }
