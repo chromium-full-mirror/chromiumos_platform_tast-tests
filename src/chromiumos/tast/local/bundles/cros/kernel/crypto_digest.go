@@ -26,11 +26,11 @@ func init() {
 		Func: CryptoDigest,
 		Desc: "Tests the crypto user API to compute message digests",
 		Contacts: []string{
-			"briannorris@chromium.org", // Original test author
 			"chromeos-kernel-test@google.com",
-			"oka@chromium.org", // Tast port author
+			"briannorris@chromium.org", // Original test author
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:167278",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

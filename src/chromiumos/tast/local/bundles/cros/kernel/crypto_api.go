@@ -20,11 +20,11 @@ func init() {
 		Func: CryptoAPI,
 		Desc: "Verifies that the crypto user API can't be used to load arbitrary modules, using the kernel module test_module",
 		Contacts: []string{
-			"briannorris@chromium.org", // Original test author
 			"chromeos-kernel-test@google.com",
-			"oka@chromium.org", // Tast port author
+			"briannorris@chromium.org", // Original test author
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:167278",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
