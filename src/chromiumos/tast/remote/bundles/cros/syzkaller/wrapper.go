@@ -129,12 +129,11 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Wrapper,
-		Desc: "Wrapper test that runs Syzkaller",
-		Contacts: []string{
-			"zsm@chromium.org", // Test author
-			"chromeos-kernel@google.com",
-		},
+		Func:     Wrapper,
+		Desc:     "Wrapper test that runs Syzkaller",
+		Contacts: []string{"chromeos-kernel@google.com", "zsm@chromium.org"},
+		// ChromeOS > Platform > System > Kernel > Syzkaller > Syzkaller-Dev > CTP-Infra
+		BugComponent: "b:1047538",
 		SoftwareDeps: []string{"pstore", "reboot"},
 		// This wrapper runs syzkaller against the DUT for a duration of 30 minutes before
 		// stopping. The overall test duration is 40 minutes.
