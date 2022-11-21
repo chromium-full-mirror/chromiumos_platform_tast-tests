@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Checks that flashrom supports writeprotect commands on the device's flash IC",
 		Contacts:     []string{"nartemiev@google.com", "chromeos-firmware@google.com"},
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"flashrom"},
+		SoftwareDeps: []string{"flashrom", "chromeos_firmware"},
 		Timeout:      3 * time.Minute,
 	})
 }

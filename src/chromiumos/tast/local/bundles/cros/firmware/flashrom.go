@@ -25,7 +25,7 @@ func init() {
 			"chromeos-firmware@google.com", // CrOS Firmware Developers
 		},
 		Attr:         []string{"group:mainline", "group:labqual"},
-		SoftwareDeps: []string{"flashrom"},
+		SoftwareDeps: []string{"flashrom", "chromeos_firmware"},
 	})
 }
 
