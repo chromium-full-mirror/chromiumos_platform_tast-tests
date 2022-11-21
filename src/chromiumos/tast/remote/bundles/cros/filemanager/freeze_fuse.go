@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verify that freeze on suspend works with FUSE",
 		Contacts: []string{
 			"dbasehore@google.com",
-			"cros-telemetry@google.com",
+			"chromeos-platform-power@google.com",
 		},
 		// This test doesn't run well in VMs. See b/180868425.
 		SoftwareDeps: []string{
