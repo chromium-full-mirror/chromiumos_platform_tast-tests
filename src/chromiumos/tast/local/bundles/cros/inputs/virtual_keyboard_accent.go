@@ -82,7 +82,6 @@ func VirtualKeyboardAccent(ctx context.Context, s *testing.State) {
 	const (
 		keyName       = "e"
 		accentKeyName = "é"
-		languageLabel = "FR"
 	)
 
 	if err := inputMethod.InstallAndActivateUserAction(uc)(ctx); err != nil {
@@ -93,12 +92,10 @@ func VirtualKeyboardAccent(ctx context.Context, s *testing.State) {
 	inputField := testserver.TextAreaNoCorrectionInputField
 	accentContainerFinder := nodewith.HasClass("accent-container")
 	accentKeyFinder := nodewith.Ancestor(accentContainerFinder).Name(accentKeyName).Role(role.StaticText)
-	languageLabelFinder := vkb.NodeFinder.Name(languageLabel).First()
 	keyFinder := vkb.KeyByNameIgnoringCase(keyName)
 
 	validateAction := uiauto.Combine("input accent letter with virtual keyboard",
 		its.ClickFieldUntilVKShown(inputField),
-		ui.WaitUntilExists(languageLabelFinder),
 		ui.MouseMoveTo(keyFinder, 500*time.Millisecond),
 		mouse.Press(tconn, mouse.LeftButton),
 		// Popup accent window sometimes flash on showing, so using Retry instead of WaitUntilExist.
