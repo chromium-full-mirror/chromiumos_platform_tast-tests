@@ -29,7 +29,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 			"briannorris@chromium.org",        // Test author
 		},
-
+		BugComponent: "b:893827",
 		SoftwareDeps: []string{"hostap_hwsim"},
 		// For running manually, with specific 'run-all.sh' arguments (e.g., specific tests or
 		// modules).
