@@ -40,7 +40,7 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: BootPerf,
-		// The test reboots to the login screen and doesn't require a lacaros variant.
+		// The test reboots to the login screen and doesn't require a lacros variant.
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot performance test",
 		Contacts: []string{
