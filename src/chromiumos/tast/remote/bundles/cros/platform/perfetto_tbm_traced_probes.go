@@ -26,11 +26,16 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        PerfettoTBMTracedProbes,
-		Desc:        "Verifies functions of Perfetto traced and traced_probes",
-		Contacts:    []string{"chenghaoyang@chromium.org", "chinglinyu@chromium.org"},
-		Data:        []string{traceConfigFile, perfetto.TraceProcessor},
-		ServiceDeps: []string{"tast.cros.platform.PerfettoTraceBasedMetricsService"},
+		Func: PerfettoTBMTracedProbes,
+		Desc: "Verifies functions of Perfetto traced and traced_probes",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+			"chenghaoyang@chromium.org",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
+		Data:         []string{traceConfigFile, perfetto.TraceProcessor},
+		ServiceDeps:  []string{"tast.cros.platform.PerfettoTraceBasedMetricsService"},
 	})
 }
 

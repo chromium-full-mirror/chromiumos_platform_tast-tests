@@ -15,11 +15,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     PerfettoSystemTracing,
-		Desc:     "Verifies functions of Perfetto traced and traced_probes",
-		Contacts: []string{"chinglinyu@chromium.org", "baseos-perf@google.com"},
-		Data:     []string{tracing.TraceConfigFile},
-		Attr:     []string{"group:mainline"},
+		Func: PerfettoSystemTracing,
+		Desc: "Verifies functions of Perfetto traced and traced_probes",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
+		Data:         []string{tracing.TraceConfigFile},
+		Attr:         []string{"group:mainline"},
 	})
 }
 

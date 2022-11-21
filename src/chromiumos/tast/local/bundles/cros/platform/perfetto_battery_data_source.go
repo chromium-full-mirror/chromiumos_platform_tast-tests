@@ -21,9 +21,14 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     PerfettoBatteryDataSource,
-		Desc:     "Verifies the linux.sysfs_power data source of traced_probes",
-		Contacts: []string{"chinglinyu@chromium.org", "chenghaoyang@chromium.org"},
+		Func: PerfettoBatteryDataSource,
+		Desc: "Verifies the linux.sysfs_power data source of traced_probes",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromiupm.org",
+			"chenghaoyang@chromium.org",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		Data: []string{batteryTraceConfigFile,
 			batteryTraceQueryFile,
 			tracing.TraceProcessorAmd64,

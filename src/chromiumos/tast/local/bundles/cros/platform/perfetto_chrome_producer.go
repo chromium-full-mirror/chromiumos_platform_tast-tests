@@ -31,7 +31,12 @@ func init() {
 		Func:         PerfettoChromeProducer,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests Chrome connecting to the Perfetto system tracing service",
-		Contacts:     []string{"chinglinyu@chromium.org", "baseos-perf@google.com"},
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+			"baseos-perf@google.com",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

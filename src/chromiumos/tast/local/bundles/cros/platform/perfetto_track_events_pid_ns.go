@@ -27,11 +27,15 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     PerfettoTrackEventsPidNS,
-		Desc:     "Tests Perfetto's support of tracing PID-namespaced processes",
-		Contacts: []string{"chinglinyu@chromium.org"},
-		Data:     []string{trackEventsPidNSConfigFile, trackEventsPidNSQueryFile, tracing.TraceProcessorAmd64, tracing.TraceProcessorArm, tracing.TraceProcessorArm64},
-		Attr:     []string{"group:mainline", "informational"},
+		Func: PerfettoTrackEventsPidNS,
+		Desc: "Tests Perfetto's support of tracing PID-namespaced processes",
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
+		Data:         []string{trackEventsPidNSConfigFile, trackEventsPidNSQueryFile, tracing.TraceProcessorAmd64, tracing.TraceProcessorArm, tracing.TraceProcessorArm64},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

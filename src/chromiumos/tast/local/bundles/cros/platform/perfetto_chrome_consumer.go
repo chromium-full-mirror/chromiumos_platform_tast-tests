@@ -26,7 +26,12 @@ func init() {
 		Func:         PerfettoChromeConsumer,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests Chrome DevTools protocol for collecting a system-wide trace via the system tracing service",
-		Contacts:     []string{"chinglinyu@chromium.org", "chenghaoyang@chromium.org"},
+		Contacts: []string{
+			"baseos-perf@google.com",
+			"chinglinyu@chromium.org",
+			"chenghaoyang@chromium.org",
+		},
+		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{tracing.TraceConfigFile},
 		Attr:         []string{"group:mainline"},
