@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
 )
@@ -226,6 +227,15 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 		s.Fatal("Failed to open syslog reader: ", err)
 	}
 	defer reader.Close()
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			path := filepath.Join(s.OutDir(), "fixture_failure.png")
+			if err := screenshot.Capture(ctx, path); err != nil {
+				s.Log("Failed to capture screenshot: ", err)
+			}
+		}
+	}(ctx)
 
 	opts := []chrome.Option{
 		chrome.FakeLogin(chrome.Creds{User: Username, Pass: Password}),
