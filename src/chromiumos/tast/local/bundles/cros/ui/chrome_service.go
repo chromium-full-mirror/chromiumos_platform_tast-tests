@@ -210,6 +210,12 @@ func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 		}
 	}
 
+	if len(req.LacrosUnpackedExtensions) > 0 {
+		for _, extDir := range req.LacrosUnpackedExtensions {
+			options = append(options, chrome.LacrosUnpackedExtension(extDir))
+		}
+	}
+
 	return options, nil
 }
 

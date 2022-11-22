@@ -100,8 +100,11 @@ message NewRequest {
   // in OOBE, by passing the value into chrome options |LoadSigninProfileExtension|.
   string signin_profile_test_extension_id = 14;
 
-  // Pass directories of unpacked extensions to be loaded by Chrome.
+  // Pass directories of unpacked extensions to be loaded by Ash Chrome.
   repeated string unpacked_extensions = 15;
+
+  // Pass directories of unpacked extensions to be loaded by Lacros Chrome.
+  repeated string lacros_unpacked_extensions = 16;
 }
 
 // LoginMode describes the user mode for the login.
