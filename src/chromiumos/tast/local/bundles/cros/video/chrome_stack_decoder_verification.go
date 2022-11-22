@@ -349,7 +349,8 @@ var hevcCommonFiles = []string{
 	"test_vectors/hevc/main/DBLK_E_VIXS_2.hevc",
 	"test_vectors/hevc/main/DBLK_F_VIXS_2.hevc",
 	"test_vectors/hevc/main/DBLK_G_VIXS_2.hevc",
-	"test_vectors/hevc/main/DELTAQP_A_BRCM_4.hevc",
+	// TODO(b/251179086): Reenable.
+	//"test_vectors/hevc/main/DELTAQP_A_BRCM_4.hevc",
 	"test_vectors/hevc/main/DELTAQP_B_SONY_3.hevc",
 	"test_vectors/hevc/main/DELTAQP_C_SONY_3.hevc",
 	"test_vectors/hevc/main/DSLICE_A_HHI_5.hevc",
@@ -427,7 +428,8 @@ var hevcCommonFiles = []string{
 	"test_vectors/hevc/main/STRUCT_A_Samsung_7.hevc",
 	"test_vectors/hevc/main/STRUCT_B_Samsung_7.hevc",
 	"test_vectors/hevc/main/TILES_A_Cisco_2.hevc",
-	"test_vectors/hevc/main/TILES_B_Cisco_1.hevc",
+	// TODO(b/251179086): Reenable.
+	//"test_vectors/hevc/main/TILES_B_Cisco_1.hevc",
 	"test_vectors/hevc/main/TMVP_A_MS_3.hevc",
 	"test_vectors/hevc/main/TSCL_A_VIDYO_5.hevc",
 	"test_vectors/hevc/main/TSCL_B_VIDYO_4.hevc",
