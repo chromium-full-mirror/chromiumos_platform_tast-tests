@@ -187,12 +187,7 @@ func (a *ARC) ReadXMLFile(ctx context.Context, filepath string) ([]byte, error) 
 	if err != nil || len(out) == 0 || bytes.HasPrefix(out, []byte("<?xml ")) {
 		return out, err
 	}
-	if isVMEnabled, err := VMEnabled(); err != nil {
-		return nil, err
-	} else if isVMEnabled {
-		out, err = a.Abx2Xml(ctx, out)
-	}
-	return out, err
+	return a.Abx2Xml(ctx, out)
 }
 
 // Abx2Xml converts binary XML to plain-text XML.
