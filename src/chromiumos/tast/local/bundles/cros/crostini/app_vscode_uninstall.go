@@ -105,7 +105,7 @@ func AppVscodeUninstall(ctx context.Context, s *testing.State) {
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
 	ui := uiauto.New(tconn)
-	progress := nodewith.NameStartingWith("Progress: [ ").Role(role.StaticText)
+	progress := nodewith.NameStartingWith("Progress: [ ").Role(role.StaticText).First()
 	errorMsg := "VSCode not found"
 	outError := "VSCode: command not found"
 	codeError := nodewith.NameContaining(outError).Role(role.StaticText).First()
