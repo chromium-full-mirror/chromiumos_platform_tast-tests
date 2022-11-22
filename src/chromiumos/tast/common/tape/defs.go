@@ -1413,3 +1413,132 @@ type KerberosServicePrincipalName struct {
 func (p *KerberosServicePrincipalName) Schema2JSON(orgunit string) ([]byte, error) {
 	return marshalJSON(orgunit, "chrome.users.KerberosServicePrincipalName", p, []string{"disableAuthNegotiateCnameLookup"})
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// AutoUpdateSettings
+///////////////////////////////////////////////////////////////////////////////
+
+type AutoUpdateSettings struct {
+	UpdateDisabled                    bool                         `json:"updateDisabled"`
+	RebootAfterUpdate                 bool                         `json:"rebootAfterUpdate"`
+	AutoUpdateAllowedConnectionType   AutoUpdateConnectionTypeEnum `json:"autoUpdateAllowedConnectionType"`
+	DeviceRollbackToTargetVersion     RollbackToTargetVersionEnum  `json:"deviceRollbackToTargetVersion"`
+	AutoUpdateRolloutPlan             AutoUpdateRolloutPlan        `json:"autoUpdateRolloutPlan"`
+	AutoUpdateTimeRestrictions        AutoUpdateTimeRestrictions   `json:"autoUpdateTimeRestrictions"`
+	AutoUpdateTargetVersionLts        AutoUpdateTargetVersionLts   `json:"autoUpdateTargetVersionLts"`
+	DeviceMinimumVersionAueMessage    string                       `json:"deviceMinimumVersionAueMessage"`
+	DeviceMinimumVersion              DeviceMinimumVersion         `json:"deviceMinimumVersion"`
+	AutoUpdateHttpDownloadsEnabled    bool                         `json:"autoUpdateHttpDownloadsEnabled"`
+	ReleaseChannelWithLts             ReleaseChannelWithLtsEnum    `json:"releaseChannelWithLts"`
+	DeviceAutoUpdatePeerToPeerEnabled bool                         `json:"deviceAutoUpdatePeerToPeerEnabled"`
+	AutoUpdateTargetSelector          string                       `json:"autoUpdateTargetSelector"`
+}
+
+type AutoUpdateConnectionTypeEnum int
+
+const (
+	AUTOUPDATECONNECTIONTYPEENUM_AUTO_UPDATE_CONNECTION_TYPE_ENUM_WIFI_AND_ETHERNET AutoUpdateConnectionTypeEnum = iota // 0
+	AUTOUPDATECONNECTIONTYPEENUM_AUTO_UPDATE_CONNECTION_TYPE_ENUM_ALL_CONNECTIONS                                       // 1
+)
+
+type RollbackToTargetVersionEnum int
+
+const (
+	ROLLBACKTOTARGETVERSIONENUM_ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_DISABLED                RollbackToTargetVersionEnum = iota // 0
+	ROLLBACKTOTARGETVERSIONENUM_ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_AND_RESTORE_IF_POSSIBLE                                    // 1
+)
+
+type ReleaseChannelWithLtsEnum int
+
+const (
+	RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_ALLOW_USER_CHOICE ReleaseChannelWithLtsEnum = iota // 0
+	RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL                                     // 1
+	RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_BETA_CHANNEL                                       // 2
+	RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL                                        // 3
+	RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTC_CHANNEL                                        // 4
+	RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_DEV_CHANNEL                                        // 5
+)
+
+type AutoUpdateRolloutPlan struct {
+	Plan    RolloutPlan   `json:"plan"`
+	Stages  []Stage       `json:"stages"`
+	Scatter ScatterFactor `json:"scatter"`
+}
+
+type RolloutPlan int
+
+const (
+	ROLLOUTPLAN_DEFAULT_UPDATES  RolloutPlan = iota // 0
+	ROLLOUTPLAN_SCATTER_UPDATES                     // 1
+	ROLLOUTPLAN_SCHEDULE_UPDATES                    // 2
+)
+
+type ScatterFactor int
+
+const (
+	SCATTERFACTOR_NO_SCATTER_FACTOR ScatterFactor = iota // 0
+	SCATTERFACTOR_ONE_DAY                                // 1
+	SCATTERFACTOR_TWO_DAYS                               // 2
+	SCATTERFACTOR_THREE_DAYS                             // 3
+	SCATTERFACTOR_FOUR_DAYS                              // 4
+	SCATTERFACTOR_FIVE_DAYS                              // 5
+	SCATTERFACTOR_SIX_DAYS                               // 6
+	SCATTERFACTOR_SEVEN_DAYS                             // 7
+	SCATTERFACTOR_EIGHT_DAYS                             // 8
+	SCATTERFACTOR_NINE_DAYS                              // 9
+	SCATTERFACTOR_TEN_DAYS                               // 10
+	SCATTERFACTOR_ELEVEN_DAYS                            // 11
+	SCATTERFACTOR_TWELVE_DAYS                            // 12
+	SCATTERFACTOR_THIRTEEN_DAYS                          // 13
+	SCATTERFACTOR_FOURTEEN_DAYS                          // 14
+)
+
+type Stage struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
+}
+
+type AutoUpdateTimeRestrictions struct {
+	TimeRestriction []TimeRestriction `json:"timeRestriction"`
+}
+
+type TimeRestriction struct {
+	Start DayAndTime `json:"start"`
+	End   DayAndTime `json:"end"`
+}
+
+type DayAndTime struct {
+	WeekDay DayOfWeek `json:"dayOfWeek"`
+	Hours   int       `json:"hours"`
+	Minutes int       `json:"minutes"`
+}
+
+type DayOfWeek int
+
+const (
+	DAYOFWEEK_MONDAY    DayOfWeek = iota // 0
+	DAYOFWEEK_TUESDAY                    // 1
+	DAYOFWEEK_WEDNESDAY                  // 2
+	DAYOFWEEK_THURSDAY                   // 3
+	DAYOFWEEK_FRIDAY                     // 4
+	DAYOFWEEK_SATURDAY                   // 5
+	DAYOFWEEK_SUNDAY                     // 6
+)
+
+type AutoUpdateTargetVersionLts struct {
+	SelectedVersion SelectedVersion `json:"selectedVersion"`
+}
+
+type SelectedVersion struct {
+	DisplayName string `json:"displayName"`
+}
+
+type DeviceMinimumVersion struct {
+	ChromeosVersion      string `json:"chromeosVersion"`
+	AueWarningPeriodDays int64  `json:"aueWarningPeriodDays"`
+	WarningPeriodDays    int64  `json:"warningPeriodDays"`
+}
+
+func (p *AutoUpdateSettings) Schema2JSON(orgunit string) ([]byte, error) {
+	return marshalJSON(orgunit, "chrome.devices.AutoUpdateSettings", p, []string{"updateDisabled", "rebootAfterUpdate", "autoUpdateAllowedConnectionType", "deviceRollbackToTargetVersion", "autoUpdateRolloutPlan", "autoUpdateTimeRestrictions", "autoUpdateTargetVersionLts", "deviceMinimumVersionAueMessage", "deviceMinimumVersion", "autoUpdateHttpDownloadsEnabled", "releaseChannelWithLts", "deviceAutoUpdatePeerToPeerEnabled", "autoUpdateTargetSelector"})
+}
