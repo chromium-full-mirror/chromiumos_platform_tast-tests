@@ -1433,7 +1433,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			CmdBuilder:   "v4l2StatelessDecodeArgs",
 			Files:        files,
 			Timeout:      defaultTimeout,
-			SoftwareDeps: []string{"v4l2_codec"},
+			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP8},
 			HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
 			Metadata:     genExtraData(files),
 			Attr:         []string{"graphics_video_vp8"},
