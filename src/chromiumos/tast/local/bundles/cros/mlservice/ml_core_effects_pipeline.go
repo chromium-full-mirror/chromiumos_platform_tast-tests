@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -23,9 +24,7 @@ func init() {
 			"shafron@google.com",
 		},
 		BugComponent: "b:255451722",
-		Attr: []string{
-			"group:mainline", "informational",
-		},
+
 		Fixture:      fixture.EffectsPipelineInstalled,
 		SoftwareDeps: []string{"camera_feature_effects"},
 		Params: []testing.Param{
@@ -33,7 +32,18 @@ func init() {
 				Name: "effects_pipeline",
 				// this binary is installed from ml-core-tests
 				// into /usr/bin/
-				Val: []string{"ml_core_effects_pipeline_test"},
+				ExtraAttr: []string{
+					"group:mainline", "informational",
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+				Val:               []string{"ml_core_effects_pipeline_test"},
+			},
+			{
+				Name: "effects_pipeline_betty",
+				// this binary is installed from ml-core-tests
+				// into /usr/bin/
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
+				Val:               []string{"ml_core_effects_pipeline_test"},
 			},
 		},
 	})
