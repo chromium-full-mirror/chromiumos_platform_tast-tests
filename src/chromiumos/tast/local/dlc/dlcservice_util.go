@@ -112,6 +112,20 @@ func List(ctx context.Context) (map[string][]Info, error) {
 	return info, nil
 }
 
+// Installed checks whether a certain DLC is installed.
+func Installed(ctx context.Context, dlcID string) (bool, error) {
+	installedDLCs, err := List(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get installed DLCs")
+	}
+	for id := range installedDLCs {
+		if id == dlcID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // GetDlcState returns the state of a DLC.
 func GetDlcState(ctx context.Context, id string) (*State, error) {
 	buf, err := testexec.CommandContext(ctx, "dlcservice_util", "--dlc_state", "--id="+id).Output(testexec.DumpLogOnError)

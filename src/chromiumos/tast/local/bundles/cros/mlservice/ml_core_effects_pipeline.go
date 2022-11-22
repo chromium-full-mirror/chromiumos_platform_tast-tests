@@ -2,13 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package platform
+package mlservice
 
 import (
 	"context"
 	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/testing"
 )
 
@@ -25,6 +26,7 @@ func init() {
 		Attr: []string{
 			"group:mainline", "informational",
 		},
+		Fixture:      fixture.EffectsPipelineInstalled,
 		SoftwareDeps: []string{"camera_feature_effects"},
 		Params: []testing.Param{
 			{
