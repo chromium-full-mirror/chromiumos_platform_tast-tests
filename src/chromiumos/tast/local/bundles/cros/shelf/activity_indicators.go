@@ -117,7 +117,7 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 
 	var appIDToLaunch string
 
-	// Install the paramaterized app type and get the appIDToLaunch
+	// Install the parameterized app type and get the appIDToLaunch
 	switch testAppType {
 	case chromeApp:
 		// Get the expected browser.
@@ -163,6 +163,12 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch Files app: ", err)
 	}
+	if err = ash.WaitForApp(ctx, tconn, apps.FilesSWA.ID, time.Minute); err != nil {
+		s.Fatal("Files app did not appear in shelf after launch: ", err)
+	}
+	if _, err = ash.WaitForAppWindow(ctx, tconn, apps.FilesSWA.ID); err != nil {
+		s.Fatal("Error waiting for files app window: ", err)
+	}
 
 	// Expect that 1 activity indicator is shown.
 	numIndicators, err = numberOfActivityIndicators(ctx, tconn)
@@ -173,12 +179,15 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 		s.Fatalf("Wrong number of activity indicators shown, got %d, want 1", numIndicators)
 	}
 
-	// Launch the paramaterized app type.
+	// Launch the parameterized app type.
 	if err = apps.Launch(ctx, tconn, appIDToLaunch); err != nil {
 		s.Fatalf("Failed to launch %s: %v", testAppType, err)
 	}
 	if err = ash.WaitForApp(ctx, tconn, appIDToLaunch, time.Minute); err != nil {
 		s.Fatalf("%s did not appear in shelf after launch: %v", testAppType, err)
+	}
+	if _, err = ash.WaitForAppWindow(ctx, tconn, appIDToLaunch); err != nil {
+		s.Fatal("Error waiting for parameterized app window: ", err)
 	}
 
 	// Expect that 2 activity indicators are shown.
@@ -190,7 +199,7 @@ func ActivityIndicators(ctx context.Context, s *testing.State) {
 		s.Fatalf("Wrong number of activity indicators shown, got %d, want 2", numIndicators)
 	}
 
-	// Close the paramaterized app.
+	// Close the parameterized app.
 	if err = apps.Close(ctx, tconn, appIDToLaunch); err != nil {
 		s.Fatalf("Failed to close the %s: %v", testAppType, err)
 	}
