@@ -77,7 +77,7 @@ func (im *IfaceManager) uniqueIfaceName(t iw.IfType) string {
 func (im *IfaceManager) Create(ctx context.Context, phyName string, phyID int, t iw.IfType) (*iw.NetDev, error) {
 	ifaceName := im.uniqueIfaceName(t)
 	testing.ContextLogf(ctx, "Creating wdev %s on wiphy %s", ifaceName, phyName)
-	if err := im.iwr.AddInterface(ctx, phyName, ifaceName, t); err != nil {
+	if err := im.iwr.AddInterface(ctx, phyName, ifaceName, t, nil); err != nil {
 		return nil, err
 	}
 	nd := &iw.NetDev{

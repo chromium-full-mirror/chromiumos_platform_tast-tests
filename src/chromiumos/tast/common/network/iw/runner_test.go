@@ -7,9 +7,12 @@ package iw
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"net"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -19,11 +22,13 @@ import (
 // as command output. This is useful for testing some simple parsing that is not
 // extracted as an independent function.
 type stubCmdRunner struct {
+	in  string
 	out []byte
 }
 
 // Run is a noop mock which always returns nil.
 func (r *stubCmdRunner) Run(ctx context.Context, cmd string, args ...string) error {
+	r.in = cmd + " " + strings.Join(args, " ")
 	return nil
 }
 
@@ -830,5 +835,45 @@ country US: DFS-UNSET
 		} else if selfManaged != tc.selfManaged {
 			t.Errorf("case#%d, got self managed: %t, expect: %t", i, selfManaged, tc.selfManaged)
 		}
+	}
+}
+
+func TestAddInterface(t *testing.T) {
+	testcases := []struct {
+		phy    string
+		ifName string
+		ifType IfType
+		hwAddr string
+		cmd    string
+	}{
+		{
+			phy:    "phy0",
+			ifName: "wlan1",
+			ifType: IfTypeManaged,
+			cmd:    "iw phy phy0 interface add wlan1 type managed",
+		}, {
+			phy:    "phy0",
+			ifName: "ap0",
+			ifType: IfSetTypeAP,
+			hwAddr: "AB:CD:EF:01:23:45",
+			cmd:    "iw phy phy0 interface add ap0 type __ap addr ab:cd:ef:01:23:45",
+		},
+	}
+
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("%v:%q:%v", i, tc.ifName, tc.hwAddr), func(t *testing.T) {
+			mock := &stubCmdRunner{}
+			r := &Runner{cmd: mock}
+			// Test regulatory domain.
+			if tc.hwAddr != "" {
+				hwAddr, _ := net.ParseMAC(tc.hwAddr)
+				r.AddInterface(context.Background(), tc.phy, tc.ifName, tc.ifType, &hwAddr)
+			} else {
+				r.AddInterface(context.Background(), tc.phy, tc.ifName, tc.ifType, nil)
+			}
+			if mock.in != tc.cmd {
+				t.Errorf("r.AddInterface(%q, %q, %q, %v) = %q want %q", tc.phy, tc.ifName, tc.ifType, tc.hwAddr, tc.cmd, mock.in)
+			}
+		})
 	}
 }

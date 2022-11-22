@@ -8,6 +8,7 @@ package iw
 import (
 	"context"
 	"fmt"
+	"net"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -51,6 +52,7 @@ const (
 	IfTypeWDS                 IfType = "WDS"
 	IfTypeOutsideContextOfBSS IfType = "outside context of a BSS"
 	IfTypeNAN                 IfType = "NAN"
+	IfSetTypeAP               IfType = "__ap" // Used only when setting the type.
 )
 
 // IsValid returns true if an Iftype is valid, false otherwise.
@@ -743,9 +745,13 @@ func (r *Runner) SetAntennaBitmap(ctx context.Context, phy string, txBitmap, rxB
 	return nil
 }
 
-// AddInterface creates a interface on phy with name=iface and type=t.
-func (r *Runner) AddInterface(ctx context.Context, phy, iface string, t IfType) error {
-	if err := r.cmd.Run(ctx, "iw", "phy", phy, "interface", "add", iface, "type", string(t)); err != nil {
+// AddInterface creates a interface on phy with name=iface, type=t and MAC address=addr.
+func (r *Runner) AddInterface(ctx context.Context, phy, iface string, ifType IfType, addr *net.HardwareAddr) error {
+	params := []string{"phy", phy, "interface", "add", iface, "type", string(ifType)}
+	if addr != nil {
+		params = append(params, "addr", addr.String())
+	}
+	if err := r.cmd.Run(ctx, "iw", params...); err != nil {
 		return errors.Wrapf(err, "failed to add interface %s on %s", iface, phy)
 	}
 	return nil
