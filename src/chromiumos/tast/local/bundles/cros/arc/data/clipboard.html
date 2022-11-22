@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head lang="en">
+    <meta charset=utf-8>
+    <script>
+      async function onCopy(event) {
+          const type = getData('format');
+          const blob = new Blob([getData('data')], { type });
+          const data = [new ClipboardItem({ [type]: blob })];
+
+          await navigator.clipboard.write(data);
+      }
+
+      function getData(id) {
+          return document.getElementById(id).value;
+      }
+
+      window.addEventListener('load', function() {
+          document.getElementById('copy_button').addEventListener('click', onCopy);
+      });
+    </script>
+  </head>
+  <body>
+    <input type="text" id="data" class="data" >
+    <input type="text" id="format" class="format" >
+    <input type="button" id="copy_button" class="copy" value="Copy" >
+  </body>
+</html>
