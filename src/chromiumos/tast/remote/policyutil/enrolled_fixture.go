@@ -145,6 +145,14 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}()
 
+	err := s.DUT().Conn().CommandContext(ctx, "grep", "serial_number", "/tmp/machine-info").Run()
+	if err != nil {
+		s.Error("Missing DUT serial number: ", err)
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), "/tmp/machine-info", filepath.Join(s.OutDir(), "machine-info"), linuxssh.DereferenceSymlinks); err != nil {
+			s.Log("Failed to dump machine-info: ", err)
+		}
+	}
+
 	for tries := 1; tries < 5; tries++ {
 		// Make sure we have enough time to perform enrollment.
 		// This helps differentiate real issues from timeout hitting different components.
