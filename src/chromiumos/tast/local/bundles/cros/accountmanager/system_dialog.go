@@ -68,6 +68,7 @@ func init() {
 				password: "accountmanager.samlpassword",
 			},
 		}},
+		Timeout: 3 * time.Minute,
 	})
 }
 
