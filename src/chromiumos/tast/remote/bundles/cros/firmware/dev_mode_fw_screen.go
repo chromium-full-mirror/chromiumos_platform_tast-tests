@@ -202,9 +202,23 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to warm reset DUT: ", err)
 		}
 
-		s.Log("Waiting for DUT to get into firmware screen")
+		// Verify that dut becomes unreachable after triggering a warm reset.
+		waitDisconnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 10*time.Second)
+		defer cancelWaitConnect()
+
+		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+			s.Fatal("Dut is still connected after warm reset: ", err)
+		}
+
+		s.Logf("Waiting %s for DUT to get into firmware screen", h.Config.FirmwareScreen)
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatalf("Failed to sleep for %s to wait for firmware screen: %v", h.Config.FirmwareScreen, err)
+		}
+
+		// Ensure DUT disconnected before starting presses
+		// on the up key.
+		if h.DUT.Connected(ctx) {
+			s.Fatal("DUT has already booted past the firmware screen")
 		}
 
 		dutAtFwScreen := false
