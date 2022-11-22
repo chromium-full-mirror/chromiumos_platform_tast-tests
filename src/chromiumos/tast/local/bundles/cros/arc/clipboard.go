@@ -111,23 +111,45 @@ func prepareCopyInChrome(browser *browser.Browser, uia *uiauto.Context, keyboard
 
 // preparePasteInChrome sets up a paste operation with Chrome as the
 // destination clipboard.
-func preparePasteInChrome(tconn *chrome.TestConn, format string) pasteFunc {
+// For the security reason (crbug.com/1334203), reading from the clipboard
+// works only after granting the permission. That's why this function uses clicking and
+// typing instead of running js on the page.
+func preparePasteInChrome(browser *browser.Browser, conn *browser.Conn, uia *uiauto.Context, keyboard *input.KeyboardEventWriter, format, baseURL string) pasteFunc {
 	return func(ctx context.Context) (string, error) {
-		var result string
-		if err := tconn.Call(ctx, &result, `
-		  (format) => {
-		    let result;
-		    document.addEventListener('paste', (event) => {
-		      result = event.clipboardData.getData(format);
-		    }, {once: true});
-		    if (!document.execCommand('paste')) {
-			    throw new Error('Failed to execute paste');
-		    }
-		    return result;
-		  }`, format,
-		); err != nil {
-			return "", err
+		formatBoxNode := nodewith.HasClass("format").Role(role.TextField).State(state.Editable, true).First()
+		pasteButtonNode := nodewith.HasClass("paste").Role(role.Button).First()
+
+		// Put the format info to the field
+		if err := uiauto.Combine("Typing the format to the text field",
+			uia.WaitUntilExists(formatBoxNode.Visible()),
+			uia.LeftClick(formatBoxNode),
+			uia.WaitUntilExists(formatBoxNode.Focused()),
+			keyboard.AccelAction("ctrl+a"),
+			keyboard.TypeAction(format),
+		)(ctx); err != nil {
+			return "", errors.Wrap(err, "failed to type the format")
 		}
+
+		// Click the paste button
+		if err := uiauto.Combine("Clicking the paste button",
+			uia.WaitUntilExists(pasteButtonNode.Visible()),
+			uia.LeftClick(pasteButtonNode),
+		)(ctx); err != nil {
+			return "", errors.Wrap(err, "failed to click the paste button")
+		}
+
+		// Click the allow dialog if shown
+		allowButtonNode := nodewith.HasClass("MdTextButton").Name("Allow").First()
+		if err := uiauto.IfSuccessThen(
+			uia.WithTimeout(5*time.Second).WaitUntilEnabled(allowButtonNode),
+			uia.LeftClick(allowButtonNode),
+		)(ctx); err != nil {
+			return "", errors.Wrap(err, "failed to click the allow button")
+		}
+
+		var result string
+		conn.Eval(ctx, `document.getElementById('data').value`, &result)
+
 		return result, nil
 	}
 }
@@ -409,7 +431,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	}, {
 		"CopyTextFromAndroidToChrome",
 		prepareCopyInAndroid(d, writeTextBtnID, editTextID, expectedTextFromAndroid),
-		preparePasteInChrome(tconn, "text/plain"),
+		preparePasteInChrome(browser, conn, uia, keyboard, "text/plain", server.URL),
 		expectedTextFromAndroid,
 	}, {
 		"CopyHTMLFromChromeToAndroid",
@@ -419,7 +441,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	}, {
 		"CopyHTMLFromAndroidToChrome",
 		prepareCopyInAndroid(d, writeHTMLBtnID, textViewID, expectedHTMLFromAndroid),
-		preparePasteInChrome(tconn, "text/html"),
+		preparePasteInChrome(browser, conn, uia, keyboard, "text/html", server.URL),
 		expectedHTMLFromAndroid,
 	}} {
 		s.Run(ctx, row.name, func(ctx context.Context, s *testing.State) {
@@ -455,10 +477,6 @@ func Clipboard(ctx context.Context, s *testing.State) {
 				// second), so we are forced to give a relatively high upper bound
 				// for the overall timeout.
 				Timeout: 5 * time.Second,
-				// The latencies we are interested in observing are in the
-				// magnitude of tens of milliseconds (for some test cases), so
-				// sleep a very short amount of time.
-				Interval: 5 * time.Millisecond,
 			})
 			if err != nil {
 				s.Fatal("Failed during paste retry loop: ", err)
