@@ -40,9 +40,9 @@ func VerifyUnrecoverableVaultBehaviour(ctx context.Context, s *testing.State) {
 
 	utility := helper.CryptohomeClient()
 
-	// Resets the TPM states before running the tests.
-	if err := helper.EnsureTPMIsReset(ctx); err != nil {
-		s.Fatal("Failed to ensure resetting TPM: ", err)
+	// Resets the TPM and system states before running the tests.
+	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
+		s.Fatal("Failed to ensure resetting TPM and system: ", err)
 	}
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
 		s.Fatal("Failed to wait for TPM to be owned: ", err)
