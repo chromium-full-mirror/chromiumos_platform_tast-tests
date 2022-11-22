@@ -437,15 +437,38 @@ func (c *AndroidDevice) EnableChromeSync(ctx context.Context) error {
 		return errors.Wrap(err, "failed to select account for Chrome Sync")
 	}
 
-	// After selecting the account there is a final opt-in step.
-	acceptBtn = d.Object(ui.ResourceID("com.android.chrome:id/positive_button"))
-	if err := acceptBtn.WaitForExists(ctx, 3*time.Second); err != nil {
-		return errors.Wrap(err, "failed to find opt-in button for Chrome Sync")
+	// After selecting the account, go to the Chrome settings page to finish the opt-in flow.
+	menuBtn := d.Object(ui.ResourceID("com.android.chrome:id/menu_button"))
+	if err := menuBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find Android Chrome menu button")
 	}
-	if err := acceptBtn.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to opt in to Chrome Sync")
+	if err := menuBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to open Android Chrome menu")
 	}
 
+	settingsBtn := d.Object(ui.ResourceID("com.android.chrome:id/menu_item_text"), ui.TextMatches("(?i)settings"))
+	if err := settingsBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find Android Chrome settings button")
+	}
+	if err := settingsBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to open Android Chrome settings")
+	}
+
+	continueBtn := d.Object(ui.ResourceID("com.android.chrome:id/signin_promo_signin_button"))
+	if err := continueBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find settings menu Chrome Sync opt-in button")
+	}
+	if err := continueBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click settings menu Chrome Sync opt-in button")
+	}
+
+	acceptBtn = d.Object(ui.ResourceID("com.android.chrome:id/positive_button"))
+	if err := acceptBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find final opt-in button")
+	}
+	if err := acceptBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click final opt-in button")
+	}
 	return nil
 }
 
