@@ -15,9 +15,11 @@ import (
 )
 
 const (
-	dbusBasePath           = "/fi/w1/wpa_supplicant1"
-	dbusBaseInterface      = "fi.w1.wpa_supplicant1"
-	dbusBaseGetIfaceMethod = "GetInterface"
+	dbusBasePath              = "/fi/w1/wpa_supplicant1"
+	dbusBaseInterface         = "fi.w1.wpa_supplicant1"
+	dbusBaseGetIfaceMethod    = "GetInterface"
+	dbusCreateInterfaceMethod = "CreateInterface"
+	dbusRemoveInterfaceMethod = "RemoveInterface"
 )
 
 // Supplicant is the object to interact with wpa_supplicant's
@@ -43,4 +45,27 @@ func (s *Supplicant) GetInterface(ctx context.Context, name string) (*Interface,
 		return nil, err
 	}
 	return NewInterface(ctx, path)
+}
+
+// CreateInterface calls fi.w1.wpa_supplicant1.CreateInterface to include particular interface
+// under supplicant control.
+func (s *Supplicant) CreateInterface(ctx context.Context, name, driver, cfg string) error {
+	var empty dbus.ObjectPath
+
+	ifaceCfg := map[string]dbus.Variant{"Ifname": dbus.MakeVariant(name),
+		"Driver":     dbus.MakeVariant(driver),
+		"ConfigFile": dbus.MakeVariant(cfg)}
+
+	// We don't need to return path, just check if it's correct. We can always get it via GetInterface() if needed.
+	return s.dbus.Call(ctx, dbusCreateInterfaceMethod, ifaceCfg).Store(&empty)
+}
+
+// RemoveInterface calls fi.w1.wpa_supplicant1.RemoveInterface to remove particular interface
+// from supplicant control.
+func (s *Supplicant) RemoveInterface(ctx context.Context, name string) error {
+	var path dbus.ObjectPath
+	if err := s.dbus.Call(ctx, dbusBaseGetIfaceMethod, name).Store(&path); err != nil {
+		return err
+	}
+	return s.dbus.Call(ctx, dbusRemoveInterfaceMethod, path).Err
 }
