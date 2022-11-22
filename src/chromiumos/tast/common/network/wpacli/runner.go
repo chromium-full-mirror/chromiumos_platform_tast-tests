@@ -127,16 +127,22 @@ func (r *Runner) Set(ctx context.Context, prop Property, val string) error {
 	return nil
 }
 
-// run runs a specific command and checks for expected response.
-func (r *Runner) run(ctx context.Context, expected string, opts ...string) error {
+// runAndCheck runs a specific wpa_cli command and checks for the desired response.
+func (r *Runner) runAndCheck(ctx context.Context, chk func(out string) bool, opts ...string) error {
 	cmdOut, err := r.cmd.Output(ctx, "sudo", r.sudoWPACLI(opts...)...)
 	if err != nil {
 		return errors.Wrapf(err, "failed running wpa_cli %s", strings.Join(opts, " "))
 	}
-	if !strings.Contains(string(cmdOut), expected) {
-		return errors.Errorf("failed to get %q in wpa_cli %s output: %s", expected, strings.Join(opts, " "), string(cmdOut))
+	if !chk(string(cmdOut)) {
+		return errors.Errorf("failed to get proper result in wpa_cli %s, output: %s", strings.Join(opts, " "), string(cmdOut))
 	}
 	return nil
+}
+
+// run runs a specific command and checks for expected response string.
+func (r *Runner) run(ctx context.Context, expected string, opts ...string) error {
+	cmp := func(out string) bool { return strings.Contains(out, expected) }
+	return r.runAndCheck(ctx, cmp, opts...)
 }
 
 // RemoveAllNetworks removes all saved network profiles.
@@ -502,7 +508,7 @@ func (r *Runner) StartSoftAP(ctx context.Context, freq uint32, ssid, keyMgmt, ps
 		return errors.Wrap(err, "failed running wpa_cli select_network")
 	}
 
-	if err := r.waitForStatus(ctx, "COMPLETE"); err != nil {
+	if err := r.waitForStatus(ctx, []string{"COMPLETE"}); err != nil {
 		return errors.Wrap(err, "cannot start soft AP")
 	}
 
@@ -515,16 +521,26 @@ func (r *Runner) StopSoftAP(ctx context.Context) error {
 		return errors.Wrap(err, "failed running wpa_cli remove_network")
 	}
 
-	if err := r.waitForStatus(ctx, "INACTIVE"); err != nil {
+	// Shutting down AP should end up in one of these states.
+	if err := r.waitForStatus(ctx, []string{"INACTIVE", "DISCONNECTED"}); err != nil {
 		return errors.Wrap(err, "cannot stop soft AP")
 	}
 
 	return nil
 }
 
-func (r *Runner) waitForStatus(ctx context.Context, status string) error {
+func (r *Runner) waitForStatus(ctx context.Context, states []string) error {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return r.run(ctx, "wpa_state="+status, "status")
+		cmp := func(out string) bool {
+			for _, status := range states {
+				if strings.Contains(out, "wpa_state="+status) {
+					return true
+				}
+			}
+			return false
+		}
+		return r.runAndCheck(ctx, cmp, "status")
+
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
 		return err
 	}
