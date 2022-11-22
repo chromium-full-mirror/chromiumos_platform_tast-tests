@@ -11,8 +11,10 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/network/routing"
+	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
 
@@ -127,11 +129,25 @@ func CrostiniConnectivity(ctx context.Context, s *testing.State) {
 	}
 
 	for _, ip := range pingAddrs {
-		if output, err := cont.Command(ctx, "/bin/ping", "-c1", "-w1", ip).Output(); err != nil {
-			s.Errorf("Failed to ping %s from Crostini: output %s, %v", ip, output, err)
+		if err := crostiniRetriedPingWithTimeout(ctx, cont, ip, 10*time.Second); err != nil {
+			s.Errorf("Failed to ping %s from Crostini: %v", ip, err)
 		} else {
 			testing.ContextLogf(ctx, "Succeeded to ping %s from Crostini", ip)
 		}
 	}
+}
 
+func crostiniRetriedPingWithTimeout(ctx context.Context, cont *vm.Container, addr string, timeout time.Duration) error {
+	numRetries := 0
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		output, err := cont.Command(ctx, "/bin/ping", "-c1", "-w2", addr).Output()
+		if err == nil {
+			return nil
+		}
+		numRetries++
+		return errors.Wrapf(err, "failed to ping %s with %d retries: output %s", addr, numRetries, output)
+	}, &testing.PollOptions{Timeout: timeout, Interval: 500 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "failed to ping with polling")
+	}
+	return nil
 }
