@@ -7,6 +7,7 @@ package wifi
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -23,6 +24,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/network/firewall"
+	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/common/network/protoutil"
 	"chromiumos/tast/common/shillconst"
@@ -35,6 +37,7 @@ import (
 	local_firewall "chromiumos/tast/local/network/firewall"
 	network_iface "chromiumos/tast/local/network/iface"
 	"chromiumos/tast/local/network/ip"
+	local_iw "chromiumos/tast/local/network/iw"
 	local_ping "chromiumos/tast/local/network/ping"
 	localwpacli "chromiumos/tast/local/network/wpacli"
 	"chromiumos/tast/local/power"
@@ -64,6 +67,7 @@ func init() {
 const wifiTestProfileName = "test"
 const softAPIPAddress string = "192.168.50.1"
 const dhcpPort = 67
+const apIfName = shillconst.ApInterfaceName
 
 // dhcpFirewallParams is a set of parameters needed for unblocking DHCP traffic.
 var dhcpFirewallParams = []firewall.RuleOption{
@@ -2371,6 +2375,32 @@ func (s *ShillService) SetScanAllowRoamProperty(ctx context.Context, req *wifi.S
 	return &empty.Empty{}, nil
 }
 
+// AddInterface adds interface under supplicant's control.
+func (s *ShillService) AddInterface(ctx context.Context, ifName, driver, cfg string) error {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	supplicant, err := wpasupplicant.NewSupplicant(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to wpa_supplicant")
+	}
+
+	return supplicant.CreateInterface(ctx, ifName, driver, cfg)
+}
+
+// RemoveInterface removes interface from supplicant's control.
+func (s *ShillService) RemoveInterface(ctx context.Context, ifName string) error {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	supplicant, err := wpasupplicant.NewSupplicant(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to wpa_supplicant")
+	}
+
+	return supplicant.RemoveInterface(ctx, ifName)
+}
+
 // FlushBSS flushes BSS entries over the specified age from wpa_supplicant's cache.
 func (s *ShillService) FlushBSS(ctx context.Context, req *wifi.FlushBSSRequest) (*empty.Empty, error) {
 	ctx, cancel := reserveForReturn(ctx)
@@ -2955,15 +2985,59 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 	testing.ContextLog(ctx, "Attempting to start tethering with config: ", request)
 
 	// TODO(b/235758932): Change to use Shill dbus call instead of wpa_supplicant when tethering support in Shill is ready.
+	const macBitLocal = 0x2
+	const macBitMulticast = 0x1
+
+	// Prepare random MAC, not all drivers are capable of creating new MAC address when adding interface.
+	mac := make(net.HardwareAddr, 6)
+	if _, err := rand.Read(mac); err != nil {
+		return nil, errors.Wrap(err, "failed to generate a random MAC address")
+	}
+	mac[0] = (mac[0] &^ macBitMulticast) | macBitLocal
+
+	// Add interfce to system.
+	err := local_iw.NewLocalRunner().AddInterface(ctx, "phy0", apIfName, iw.IfSetTypeAP, &mac)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to add interface to system")
+	}
+
+	// There are three possible places, where config file can be found.
+	paths := []string{"/usr/lib64/shill/shims/wpa_supplicant.conf",
+		"/usr/lib/shill/shims/wpa_supplicant.conf",
+		"/usr/lib/shill/shim/wpa_supplicant.conf",
+	}
+
+	path := ""
+	for _, path = range paths {
+		if _, err = os.Stat(path); err == nil {
+			// It is enough if one copy of the config is found.
+			break
+		}
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find supplicant conf path")
+	}
+
+	// Add new interface under wpa_supplicant's control.
+	err = s.AddInterface(ctx, apIfName, "nl80211", path)
+	if err != nil {
+		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
+		return nil, errors.Wrap(err, "failed to add interface to supplicant")
+	}
+
 	channel, err := s.startSoftAP(ctx, request)
 	if err != nil {
-		localwpacli.NewLocalRunner().StopSoftAP(ctx)
+		localwpacli.NewSpecificLocalRunner(apIfName).StopSoftAP(ctx)
+		s.RemoveInterface(ctx, apIfName)
+		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return nil, errors.Wrap(err, "failed to start SoftAP")
 	}
 
 	if err := s.startDHCPServer(ctx); err != nil {
 		s.stopDHCPServer(ctx)
-		localwpacli.NewLocalRunner().StopSoftAP(ctx)
+		localwpacli.NewSpecificLocalRunner(apIfName).StopSoftAP(ctx)
+		s.RemoveInterface(ctx, apIfName)
+		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return nil, errors.Wrap(err, "failed to start DHCP server")
 	}
 
@@ -2986,9 +3060,12 @@ func (s *ShillService) StopTethering(ctx context.Context, _ *empty.Empty) (*empt
 	}
 
 	// TODO(b/235758932): Change to use Shill dbus call instead of wpa_supplicant when tethering support in Shill is ready.
-	if err := localwpacli.NewLocalRunner().StopSoftAP(ctx); err != nil {
+	if err := localwpacli.NewSpecificLocalRunner(apIfName).StopSoftAP(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop soft AP in wpa_supplicant"))
 	}
+
+	s.RemoveInterface(ctx, apIfName)
+	local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 
 	return &empty.Empty{}, firstErr
 }
@@ -3010,7 +3087,7 @@ func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringR
 		keyMgmt = "WPA-PSK SAE"
 	}
 
-	if err := localwpacli.NewLocalRunner().StartSoftAP(ctx, freq, string(request.Ssid), keyMgmt, string(request.Psk), string(request.Cipher)); err != nil {
+	if err := localwpacli.NewSpecificLocalRunner(apIfName).StartSoftAP(ctx, freq, string(request.Ssid), keyMgmt, string(request.Psk), string(request.Cipher)); err != nil {
 		return 0, errors.Wrap(err, "failed to start soft AP in wpa_supplicant")
 	}
 
@@ -3022,22 +3099,13 @@ func (s *ShillService) startDHCPServer(ctx context.Context) (ret error) {
 
 	_ = r.Run(ctx, "killall", "dnsmasq")
 
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create shill manager proxy")
-	}
-	iface, err := shill.WifiInterface(ctx, m, 5*time.Second)
-	if err != nil {
-		return errors.Wrap(err, "failed to get a WiFi device")
-	}
-
 	ipr := ip.NewLocalRunner()
-	if err := ipr.AddIP(ctx, iface, net.ParseIP(softAPIPAddress), 24); err != nil {
+	if err := ipr.AddIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
 		return errors.Wrap(err, "failed to assign IPv4 address on WiFi interface")
 	}
 	defer func() {
 		if ret != nil {
-			ipr.DeleteIP(ctx, iface, net.ParseIP(softAPIPAddress), 24)
+			ipr.DeleteIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24)
 		}
 	}()
 
@@ -3056,7 +3124,7 @@ func (s *ShillService) startDHCPServer(ctx context.Context) (ret error) {
 		}
 	}()
 
-	if err := r.Run(ctx, "dnsmasq", "--interface="+iface, "--port=0", "--dhcp-range=192.168.50.100,192.168.50.150,255.255.255.0,6h", "--dhcp-option=3,192.168.50.1"); err != nil {
+	if err := r.Run(ctx, "dnsmasq", "--interface="+apIfName, "--port=0", "--dhcp-range=192.168.50.100,192.168.50.150,255.255.255.0,6h", "--dhcp-option=3,192.168.50.1"); err != nil {
 		return errors.Wrap(err, "failed to start dnsmasq on WiFi interface")
 	}
 
@@ -3078,17 +3146,8 @@ func (s *ShillService) stopDHCPServer(ctx context.Context) error {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to delete DHCP iptable rule"))
 	}
 
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to create shill manager proxy"))
-	}
-	iface, err := shill.WifiInterface(ctx, m, 5*time.Second)
-	if err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to get a WiFi device"))
-	}
-
 	ipr := ip.NewLocalRunner()
-	if err := ipr.DeleteIP(ctx, iface, net.ParseIP(softAPIPAddress), 24); err != nil {
+	if err := ipr.DeleteIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to delete IPv4 address on WiFi interface"))
 	}
 

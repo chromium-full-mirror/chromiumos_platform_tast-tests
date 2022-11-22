@@ -7,12 +7,15 @@ package wifi
 import (
 	"context"
 	"fmt"
+	"net"
 
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/tethering"
+	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -146,11 +149,22 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 		defer cancel()
 		s.Log("Connected")
 
-		addrs, err := tf.DUTIPv4Addrs(ctx, wificell.DefaultDUT)
-		if err != nil || len(addrs) == 0 {
-			s.Fatal("Failed to get the Soft AP's IP address: ", err)
+		addrsReq := &wifi.GetIPv4AddrsRequest{
+			InterfaceName: shillconst.ApInterfaceName,
 		}
-		if _, err := tf.PingFromSpecificDUT(ctx, cdIdx, addrs[0].String()); err != nil {
+		addrsResp, err := tf.DUTWifiClient(wificell.DefaultDUT).GetIPv4Addrs(ctx, addrsReq)
+		if err != nil {
+			s.Fatal("Failed to get the IPv4 addresses: ", err)
+		}
+		if len(addrsResp.Ipv4) == 0 {
+			s.Fatal("No IP address returned")
+		}
+		addr, _, err := net.ParseCIDR(addrsResp.Ipv4[0])
+		if err != nil {
+			s.Fatalf("Failed to parse IP address %s: %v", addrsResp.Ipv4[0], err)
+		}
+
+		if _, err := tf.PingFromSpecificDUT(ctx, cdIdx, addr.String()); err != nil {
 			s.Fatal("Failed to ping from Companion DUT to DUT: ", err)
 		}
 	}

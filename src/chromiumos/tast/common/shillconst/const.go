@@ -287,6 +287,9 @@ const ServiceKeyMgmtIEEE8021X = "IEEE8021X"
 
 const defaultStorageDir = "/var/cache/shill/"
 
+// ApInterfaceName is the default interface name used to bring up AP on.
+const ApInterfaceName = "ap0"
+
 const (
 	// DefaultProfileName is the name of default profile.
 	DefaultProfileName = "default"
