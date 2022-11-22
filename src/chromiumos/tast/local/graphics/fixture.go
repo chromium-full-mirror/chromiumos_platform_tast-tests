@@ -192,13 +192,13 @@ func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) 
 	f.regexp = regexp.MustCompile(strings.Join(hangRegexStrs, "|"))
 	s.Log("Setup regex to detect GPU hang: ", f.regexp)
 
-	if hangCheckTimer, err := GetHangCheckTimer(); err != nil {
+	if hangCheckTimer, err := GetHangCheckTimer(ctx); err != nil {
 		testing.ContextLog(ctx, "Warning: failed to get hangcheck timer. This is normal for kernels older than 5.4: ", err)
 	} else {
 		testing.ContextLog(ctx, "Hangcheck timer: ", hangCheckTimer)
 		// Only tries to check the hangcheck timer if we successfully get the timer.
 		f.tearDownFunc = append(f.tearDownFunc, func(ctx context.Context) error {
-			tTimer, err := GetHangCheckTimer()
+			tTimer, err := GetHangCheckTimer(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to get hangcheck timer")
 			}

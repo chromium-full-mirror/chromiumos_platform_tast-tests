@@ -57,7 +57,7 @@ type Config interface {
 // Run runs the glbench binary. outDir specifies the directories to store the results. preValue is the structure given by precondition/fixture for test to access container/environment.
 func Run(ctx context.Context, outDir string, preValue interface{}, config Config) (resultErr error) {
 	// Set host hangcheck timer to allow longer GL calls.
-	if originalTimer, err := graphics.GetHangCheckTimer(); err != nil {
+	if originalTimer, err := graphics.GetHangCheckTimer(ctx); err != nil {
 		testing.ContextLog(ctx, "Can't get the hangcheck timer, it is normal for kernels older than 5.4: ", err)
 	} else {
 		// Only tries to set hangcheck timer if we successfully get the timer.
