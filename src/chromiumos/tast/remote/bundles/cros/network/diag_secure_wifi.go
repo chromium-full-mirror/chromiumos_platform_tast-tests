@@ -56,7 +56,7 @@ func genEAPSecConf() security.ConfigFactory {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DiagSecureWifi,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the network diagnostic routine for secure WiFi connection gives correct results with different WiFi security protocols",
 		Contacts: []string{
 			"khegde@chromium.org",            // test maintainer

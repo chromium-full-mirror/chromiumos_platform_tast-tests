@@ -17,7 +17,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConnectivityDiagnosticsApp,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests launching the connectivity diagnostics UI",
 		Contacts: []string{
 			"khegde@chromium.org",            // test maintainer
