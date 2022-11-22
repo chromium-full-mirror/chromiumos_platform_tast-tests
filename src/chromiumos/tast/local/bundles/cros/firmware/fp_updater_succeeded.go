@@ -18,9 +18,11 @@ func init() {
 		Func: FpUpdaterSucceeded,
 		Desc: "Checks that the fingerprint firmware updater did not fail at boot",
 		Contacts: []string{
-			"tomhughes@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "group:fingerprint-cq"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),

@@ -55,9 +55,11 @@ func init() {
 		Func: FpmcuUnittest,
 		Desc: "Flashes a unittest binary to the FPMCU and verifies it passes",
 		Contacts: []string{
-			"tomhughes@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr: []string{"group:fingerprint-mcu"},
 		Data: []string{"fpmcu_unittests.tar.bz2"},
 		// Flashing the FPMCU can take 2 minutes, so allow more time.
