@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:arc-functional", "group:cq-minimal", "group:hw_agnostic", "group:mainline", "informational"},
 		Params: []testing.Param{{
 			Val: playStoreTestParams{
 				MaxOptinAttempts: 2,
