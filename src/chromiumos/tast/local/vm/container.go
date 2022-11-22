@@ -132,7 +132,7 @@ func DefaultContainer(ctx context.Context, userEmail string) (*Container, error)
 
 // Connect connects the container to the running VM and cicerone instances.
 func (c *Container) Connect(ctx context.Context, user string) error {
-	vm, err := GetRunningVM(ctx, user)
+	vm, err := GetRunningTerminaVM(ctx, user)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (c *Container) Connect(ctx context.Context, user string) error {
 // This is useful when the container was started by some other means, eg the installer.
 // Will return an error if no container is currently running.
 func GetRunningContainer(ctx context.Context, user string) (*Container, error) {
-	_, err := GetRunningVM(ctx, user)
+	_, err := GetRunningTerminaVM(ctx, user)
 	if err != nil {
 		return nil, err
 	}

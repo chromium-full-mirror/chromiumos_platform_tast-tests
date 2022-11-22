@@ -44,28 +44,37 @@ type VM struct {
 	DiskPath        string // the location of the stateful disk
 	diskSize        uint64 // actual disk size in bytes
 	targetDiskSize  uint64 // targeted disk size during creation time
+	kernel          string // Path of the VM's kernel. If empty, concierge chooses the path
+	rootfs          string // Path of the VM's rootfs. If empty, concierge chooses the path
 }
 
-// NewDefaultVM gets a default VM instance. enableGPU enabled the hardware gpu support for the VM. diskSize set the targeted disk size of the VM.
-func NewDefaultVM(c *Concierge, enableGPU bool, diskSize uint64) *VM {
+// NewTerminaVM gets a VM instance configured as a "Termina" VM.
+func NewTerminaVM(c *Concierge, enableGPU bool, diskSize uint64) *VM {
+	return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultVMName)
+}
+
+// NewGenericVM gets a default VM instance. enableGPU enabled the hardware gpu support for the VM. diskSize set the targeted disk size of the VM.
+func NewGenericVM(c *Concierge, enableGPU bool, diskSize uint64, kernel, rootfs, name string) *VM {
 	return &VM{
 		Concierge:       c,
-		name:            DefaultVMName,
+		name:            name,
 		ContextID:       -1,        // not populated until VM is started.
 		seneschalHandle: 0,         // not populated until VM is started.
 		EnableGPU:       enableGPU, // enable the gpu if set.
 		diskSize:        0,         // not populated until VM is started.
 		targetDiskSize:  diskSize,
+		kernel:          kernel,
+		rootfs:          rootfs,
 	}
 }
 
-// GetRunningVM creates a VM struct for the VM that is currently running.
-func GetRunningVM(ctx context.Context, user string) (*VM, error) {
+// GetRunningTerminaVM creates a VM struct for the Termina VM that is currently running.
+func GetRunningTerminaVM(ctx context.Context, user string) (*VM, error) {
 	c, err := GetRunningConcierge(ctx, user)
 	if err != nil {
 		return nil, err
 	}
-	vm := NewDefaultVM(c, false, 0)
+	vm := NewTerminaVM(c, false, 0)
 	if err := c.getVMInfo(ctx, vm); err != nil {
 		return nil, errors.Wrapf(err, "failed to get info for %q VM", vm.name)
 	}
