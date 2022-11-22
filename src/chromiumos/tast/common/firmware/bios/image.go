@@ -152,6 +152,11 @@ const (
 	SIMEImageSection ImageSection = "SI_ME"
 	// SIBIOSImageSection is the SI_BIOS section of the firmware.
 	SIBIOSImageSection ImageSection = "SI_BIOS"
+
+	// SignedAMDFWAImageSection is the SIGNED_AMDFW_A section of the firmware in AMD mainboards.
+	SignedAMDFWAImageSection ImageSection = "SIGNED_AMDFW_A"
+	// SignedAMDFWBImageSection is the SIGNED_AMDFW_B section of the firmware in AMD mainboards.
+	SignedAMDFWBImageSection ImageSection = "SIGNED_AMDFW_B"
 )
 
 // sectionToSectionEnum is a direct inverse of sectionEnumToSection map in bios_service.
@@ -216,6 +221,9 @@ var sectionToSectionEnum = map[ImageSection]pb.ImageSection{
 	SIDESCImageSection: pb.ImageSection_SIDESCImageSection,
 	SIMEImageSection:   pb.ImageSection_SIMEImageSection,
 	SIBIOSImageSection: pb.ImageSection_SIBIOSImageSection,
+
+	SignedAMDFWAImageSection: pb.ImageSection_SignedAMDFWAImageSection,
+	SignedAMDFWBImageSection: pb.ImageSection_SignedAMDFWBImageSection,
 }
 
 // defaultChromeosFmapConversion converts dump_fmap names to those recognized by flashrom

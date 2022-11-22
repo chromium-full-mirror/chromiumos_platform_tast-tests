@@ -241,6 +241,8 @@ const (
 	ImageSection_DEVICEEXTENSIONImageSection  ImageSection = 47
 	ImageSection_UNUSEDHOLEImageSection       ImageSection = 48
 	ImageSection_IFWIImageSection             ImageSection = 49
+	ImageSection_SignedAMDFWAImageSection     ImageSection = 50
+	ImageSection_SignedAMDFWBImageSection     ImageSection = 51
 )
 
 // Enum value maps for ImageSection.
@@ -295,6 +297,8 @@ var (
 		47: "DEVICEEXTENSIONImageSection",
 		48: "UNUSEDHOLEImageSection",
 		49: "IFWIImageSection",
+		50: "SignedAMDFWAImageSection",
+		51: "SignedAMDFWBImageSection",
 	}
 	ImageSection_value = map[string]int32{
 		"EmptyImageSection":            0,
@@ -346,6 +350,8 @@ var (
 		"DEVICEEXTENSIONImageSection":  47,
 		"UNUSEDHOLEImageSection":       48,
 		"IFWIImageSection":             49,
+		"SignedAMDFWAImageSection":     50,
+		"SignedAMDFWBImageSection":     51,
 	}
 )
 

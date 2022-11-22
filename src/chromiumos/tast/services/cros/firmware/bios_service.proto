@@ -126,6 +126,8 @@ enum ImageSection {
   DEVICEEXTENSIONImageSection = 47;
   UNUSEDHOLEImageSection = 48;
   IFWIImageSection = 49;
+  SignedAMDFWAImageSection = 50;
+  SignedAMDFWBImageSection = 51;
 }
 
 enum UpdateMode {

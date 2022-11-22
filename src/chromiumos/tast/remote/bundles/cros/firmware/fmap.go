@@ -194,6 +194,19 @@ func Fmap(ctx context.Context, s *testing.State) {
 			hostExpectedStructure[pb.ImageSection_IntelCSERWBImageSection] = []pb.ImageSection{}
 		}
 
+		// If actual fmap has SIGNED_AMDFW_A (implies also has SIGNED_AMDFW_B) add those to expected structure under RW_SECTION_A/B respectively.
+		if _, ok := fmap[pb.ImageSection_SignedAMDFWAImageSection]; ok {
+			alst := hostExpectedStructure[pb.ImageSection_APRWAImageSection]
+			alst = append(alst, pb.ImageSection_SignedAMDFWAImageSection)
+			hostExpectedStructure[pb.ImageSection_APRWAImageSection] = alst
+			hostExpectedStructure[pb.ImageSection_SignedAMDFWAImageSection] = []pb.ImageSection{}
+
+			blst := hostExpectedStructure[pb.ImageSection_APRWBImageSection]
+			blst = append(blst, pb.ImageSection_SignedAMDFWBImageSection)
+			hostExpectedStructure[pb.ImageSection_APRWBImageSection] = blst
+			hostExpectedStructure[pb.ImageSection_SignedAMDFWBImageSection] = []pb.ImageSection{}
+		}
+
 		if err := checkStructure(ctx, fmap, hostExpectedStructure); err != nil {
 			s.Fatal("Output of host FMAP didn't match expected structure: ", err)
 		}
