@@ -26,12 +26,15 @@ func init() {
 		Func:         ViewPPD,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that a user can view the PPD for an installed printer",
-		Contacts:     []string{"nmuggli@google.com", "cros-peripherals@google.com"},
+		Contacts:     []string{"cros-peripherals@google.com", "project-bolton@google.com", "nmuggli@google.com"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:paper-io",
 			"paper-io_printing",
+			"group:hw_agnostic",
 		},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cros_internal", "cups"},

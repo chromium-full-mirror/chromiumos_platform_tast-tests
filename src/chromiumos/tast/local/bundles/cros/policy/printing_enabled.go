@@ -40,9 +40,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of PrintingEnabled policy, checking the correspoding menu item restriction and printing preview dialog after setting the policy",
 		Contacts: []string{
-			"abuaboud@google.com",
-			"chromeos-commercial-networking@google.com",
+			"chromeos-commercial-printing@google.com",
+			"project-bolton@google.com",
+			"ust@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:mainline",

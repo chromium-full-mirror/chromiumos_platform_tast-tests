@@ -34,11 +34,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Peripherals app can be found and launched from the settings",
 		Contacts: []string{
+			"cros-peripherals@google.com",
 			"jimmyxgong@google.com",
 			"ashleydp@google.com",
 			"zentaro@google.com",
-			"cros-peripherals@google.com",
 		},
+		// ChromeOS > Software > System Services > Peripherals > Printing
+		BugComponent: "b:1131981",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

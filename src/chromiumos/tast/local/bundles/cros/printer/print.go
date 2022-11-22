@@ -33,13 +33,15 @@ func init() {
 		Func:         Print,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a virtual USB printer can be saved and printed to",
-		Contacts:     []string{"gavinwill@google.com", "cros-peripherals@google.com"},
+		Contacts:     []string{"cros-peripherals@google.com", "project-bolton@google.com", "gavinwill@google.com"},
 		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:paper-io",
 			"paper-io_printing",
 		},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cros_internal", "cups", "virtual_usb_printer"},
 		Params: []testing.Param{

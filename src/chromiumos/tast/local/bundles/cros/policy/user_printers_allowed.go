@@ -26,8 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of UserPrintersAllowed policy: check if Add printer button is restricted based on the value of the policy",
 		Contacts: []string{
+			"chromeos-commercial-printing@google.com",
+			"project-bolton@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:mainline",
