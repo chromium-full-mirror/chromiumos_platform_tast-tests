@@ -118,7 +118,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	androidWindow := nodewith.Name("Import Android Studio Settings From...").Role(role.Window).First()
 	if err := uiauto.Combine("Open android studio",
 		terminalApp.RunCommand(keyboard, "/android-studio/bin/studio.sh &"),
-		uiauto.New(tconn).WaitUntilExists(androidWindow),
+		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(androidWindow),
 		crostini.TakeAppScreenshot("android_studio"))(ctx); err != nil {
 		s.Fatal("Failed to start android studio in Terminal: ", err)
 	}
