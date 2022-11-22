@@ -22645,36 +22645,6 @@ func (p *OnFileTransferEnterpriseConnector) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 993. WebSQLNonSecureContextEnabled
-// ****************************************************************************
-type WebSQLNonSecureContextEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *WebSQLNonSecureContextEnabled) Name() string          { return "WebSQLNonSecureContextEnabled" }
-func (p *WebSQLNonSecureContextEnabled) Scope() Scope          { return ScopeUser }
-func (p *WebSQLNonSecureContextEnabled) Status() Status        { return p.Stat }
-func (p *WebSQLNonSecureContextEnabled) UntypedV() interface{} { return p.Val }
-func (p *WebSQLNonSecureContextEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *WebSQLNonSecureContextEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *WebSQLNonSecureContextEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 995. NewWindowsInKioskAllowed
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
@@ -22859,37 +22829,6 @@ func (p *DeviceLoginScreenContextAwareAccessSignalsAllowlist) SetProto(m *protor
 }
 func (p *DeviceLoginScreenContextAwareAccessSignalsAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1004. PrefixedStorageInfoEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type PrefixedStorageInfoEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *PrefixedStorageInfoEnabled) Name() string          { return "PrefixedStorageInfoEnabled" }
-func (p *PrefixedStorageInfoEnabled) Scope() Scope          { return ScopeUser }
-func (p *PrefixedStorageInfoEnabled) Status() Status        { return p.Stat }
-func (p *PrefixedStorageInfoEnabled) UntypedV() interface{} { return p.Val }
-func (p *PrefixedStorageInfoEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *PrefixedStorageInfoEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PrefixedStorageInfoEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -23088,7 +23027,6 @@ func (p *AssistantWebEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1012. LacrosDataBackwardMigrationMode
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type LacrosDataBackwardMigrationMode struct {
 	Stat Status
@@ -23637,14 +23575,40 @@ func (p *ExtensionManifestV2Availability) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1033. BruschettaVMConfiguration
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type BruschettaVMConfiguration struct {
+	Stat Status
+	Val  map[string]interface{}
+}
+
+func (p *BruschettaVMConfiguration) Name() string          { return "BruschettaVMConfiguration" }
+func (p *BruschettaVMConfiguration) Scope() Scope          { return ScopeUser }
+func (p *BruschettaVMConfiguration) Status() Status        { return p.Stat }
+func (p *BruschettaVMConfiguration) UntypedV() interface{} { return p.Val }
+func (p *BruschettaVMConfiguration) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v map[string]interface{}
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as map[string]interface{}", m)
+	}
+	return v, nil
+}
+func (p *BruschettaVMConfiguration) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *BruschettaVMConfiguration) Equal(iface interface{}) bool {
+	v, ok := iface.(map[string]interface{})
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
-}
 
 type RefTimeUsageLimitEntry struct {
 	LastUpdatedMillis string `json:"last_updated_millis"`
@@ -23656,6 +23620,12 @@ type RefTime struct {
 	Minute int `json:"minute"`
 }
 
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
+}
+
 type RefDeviceLoginScreenPowerSettings struct {
 	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
 	IdleAction string                                   `json:"IdleAction"`
@@ -23665,38 +23635,6 @@ type RefDeviceLoginScreenPowerSettingsDelays struct {
 	Idle      int `json:"Idle"`
 	ScreenDim int `json:"ScreenDim"`
 	ScreenOff int `json:"ScreenOff"`
-}
-
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
-}
-
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
-type RefWeeklyTimeIntervals struct {
-	End   *RefWeeklyTime               `json:"end"`
-	Start *RefWeeklyTimeIntervalsStart `json:"start"`
-}
-
-type RefWeeklyTimeIntervalsStart struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type RefWeeklyTime struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -23717,20 +23655,41 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefUsbDeviceId struct {
+type RefUsbDeviceIdInclusive struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
 }
 
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
 }
 
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
+}
+
+type RefWeeklyTimeIntervals struct {
+	End   *RefWeeklyTime               `json:"end"`
+	Start *RefWeeklyTimeIntervalsStart `json:"start"`
+}
+
+type RefWeeklyTimeIntervalsStart struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type RefWeeklyTime struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefPowerManagementDelays struct {
@@ -23743,6 +23702,17 @@ type RefPowerManagementDelaysDelays struct {
 	IdleWarning int `json:"IdleWarning"`
 	ScreenDim   int `json:"ScreenDim"`
 	ScreenOff   int `json:"ScreenOff"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
 // ****************************************************************************

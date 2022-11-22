@@ -343,15 +343,19 @@ def parse_object(name, schema, refs, references_only):
   Returns the Go type of this object and any supporting code needed.
   """
   # First handle the case where there are no named properties. If only
-  # additionalProperties is defined, this object is best represented as a
-  # map of string -> additionalProperty, not a struct.
+  # additionalProperties or patternProperties is defined, this object
+  # is best represented as a map of string -> additionalProperty, not a struct.
   # If neither field is there, raise an error.
   if 'properties' not in schema:
-    if not 'additionalProperties' in schema:
-      raise_key_error('properties or additionalProperties', schema)
-    add_type, code = parse_schema(name, schema['additionalProperties'], refs,
-                                  references_only)
-    return 'map[string]' + add_type, code
+    if 'additionalProperties' in schema:
+      add_type, code = parse_schema(name, schema['additionalProperties'], refs,
+                                    references_only)
+      return 'map[string]' + add_type, code
+    # Since this is so rarely used, leave type handling to individual tests.
+    if 'patternProperties' in schema:
+      return 'map[string]interface{}', ''
+
+    raise_key_error('properties, additionalProperties or patternProperties', schema)
 
   # Represent an object with named properties as a struct. Recursively find
   # the Go type for each member of this struct, keeping track of any
