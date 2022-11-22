@@ -146,7 +146,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Project Template", " "))),
 		ud.LeftClick(nextButton.WithinA11yNode(nodewith.Name("Create New Project").HasClass("Widget"))),
 		ud.LeftClick(finishButton),
-		uiauto.New(tconn).WaitUntilExists(newProjectWindow),
+		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(newProjectWindow),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new project with defaults: ", err)
 	}
