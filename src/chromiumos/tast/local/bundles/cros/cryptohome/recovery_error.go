@@ -24,9 +24,10 @@ func init() {
 		Desc: "Checks that the correct error code is returned after cryptohome recovery failure",
 		Contacts: []string{
 			"cryptohome-core@google.com",
+			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "ussAuthSessionFixture",
 		// For "no_tpm_dynamic" - see http://b/251789202.

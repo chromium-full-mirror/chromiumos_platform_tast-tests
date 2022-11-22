@@ -17,9 +17,10 @@ func init() {
 		Desc: "Checks that cryptohome recovery process succeeds with fake/local mediation",
 		Contacts: []string{
 			"cryptohome-core@google.com",
+			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},

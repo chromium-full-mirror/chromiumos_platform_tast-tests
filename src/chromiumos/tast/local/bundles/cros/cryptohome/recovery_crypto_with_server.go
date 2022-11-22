@@ -26,9 +26,10 @@ func init() {
 		Desc:         "Checks that cryptohome recovery process succeeds with testing server mediation",
 		Contacts: []string{
 			"cryptohome-core@google.com",
+			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps: []string{

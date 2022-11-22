@@ -27,9 +27,10 @@ func init() {
 		Desc: "Update recovery auth factor and authenticate again",
 		Contacts: []string{
 			"cryptohome-core@google.com",
+			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "informational"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),

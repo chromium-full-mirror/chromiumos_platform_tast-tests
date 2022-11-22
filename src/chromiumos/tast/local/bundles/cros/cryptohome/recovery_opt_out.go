@@ -30,9 +30,10 @@ func init() {
 					 secrets are restored on disk`,
 		Contacts: []string{
 			"cryptohome-core@google.com",
+			"cros-lurs@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pinweaver"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.

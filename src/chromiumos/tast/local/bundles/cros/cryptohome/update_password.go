@@ -29,7 +29,7 @@ func init() {
 			"cryptohome-core@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "with_vk",

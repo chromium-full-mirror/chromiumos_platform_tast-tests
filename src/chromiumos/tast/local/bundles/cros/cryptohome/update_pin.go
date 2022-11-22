@@ -27,7 +27,7 @@ func init() {
 			"cryptohome-core@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"group:mainline", "informational"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
