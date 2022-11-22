@@ -116,11 +116,8 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.Fatal("Failed DUT connection check at the beginning")
 	}
 
-	vpdOK := true
 	if err := checkVPDState(ctx, s.DUT()); err != nil {
-		// TODO(b/253326688): Change Log to Error when VPD restoration works again.
-		vpdOK = false
-		s.Log("VPD broken, trying to enroll anyway: ", err)
+		s.Fatal("VPD is broken: ", err)
 	}
 
 	ok := false
@@ -172,7 +169,7 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			s.Fatal("Failed DUT connection check after reboot")
 		}
 
-		if err := enroll(enrollCtx, attemptDir, s.DUT(), s.RPCHint(), e.fdmsDir, vpdOK); err != nil {
+		if err := enroll(enrollCtx, attemptDir, s.DUT(), s.RPCHint(), e.fdmsDir); err != nil {
 			errs = append(errs, err)
 		} else {
 			// When the enrollment is successful, there is no need to retry again.
@@ -211,7 +208,7 @@ func (*enrolledFixt) Reset(ctx context.Context) error                        { r
 func (*enrolledFixt) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
 func (*enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
-func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testing.RPCHint, fdmsDir string, vpdOK bool) (retErr error) {
+func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testing.RPCHint, fdmsDir string) (retErr error) {
 	// Reserve time for cleaning up and copying the logs from the DUT.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -293,10 +290,6 @@ func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testi
 		FakedmsDir: fdmsDir,
 		SkipLogin:  true,
 	}); err != nil {
-		if !vpdOK {
-			return errors.Wrap(err, "VPD broken, likely cause of enrollment failure")
-		}
-
 		return errors.Wrap(err, "failed to enroll using Chrome")
 	}
 
