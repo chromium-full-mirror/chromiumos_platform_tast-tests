@@ -116,7 +116,7 @@ func (c *Concierge) GetVMDiskInfo(ctx context.Context, vmName string) (*vmpb.VmD
 		&vmpb.ListVmDisksRequest{
 			CryptohomeId: c.ownerID,
 			AllLocations: true,
-			VmName:       DefaultVMName,
+			VmName:       vmName,
 		}, resp); err != nil {
 		return nil, err
 	}
@@ -142,12 +142,12 @@ func (c *Concierge) listVMDisksSize(ctx context.Context, vmName string) (size ui
 	return disk.Size, nil
 }
 
-func (c *Concierge) createDiskImage(ctx context.Context, diskSize uint64) (diskPath string, err error) {
+func (c *Concierge) createDiskImage(ctx context.Context, diskSize uint64, vmName string) (diskPath string, err error) {
 	resp := &vmpb.CreateDiskImageResponse{}
 	if err = dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".CreateDiskImage",
 		&vmpb.CreateDiskImageRequest{
 			CryptohomeId:    c.ownerID,
-			VmName:          DefaultVMName,
+			VmName:          vmName,
 			DiskSize:        diskSize,
 			ImageType:       vmpb.DiskImageType_DISK_IMAGE_AUTO,
 			StorageLocation: vmpb.StorageLocation_STORAGE_CRYPTOHOME_ROOT,
@@ -180,7 +180,7 @@ func (c *Concierge) SyncTimes(ctx context.Context) error {
 
 func (c *Concierge) startTerminaVM(ctx context.Context, vm *VM) (string, error) {
 	// Create the new disk first.
-	diskPath, err := c.createDiskImage(ctx, vm.targetDiskSize)
+	diskPath, err := c.createDiskImage(ctx, vm.targetDiskSize, vm.name)
 	if err != nil {
 		return diskPath, err
 	}
