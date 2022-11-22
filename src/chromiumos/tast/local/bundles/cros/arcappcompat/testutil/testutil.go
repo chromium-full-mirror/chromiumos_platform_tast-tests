@@ -265,15 +265,21 @@ func RunTestCases(ctx context.Context, s *testing.State, appPkgName, appActivity
 			ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 			defer cancel()
 
-			if appPkgName == toontasticPkgName { // Skip StartWithDefaultOptions if app is Toontastic and if test cases are clamshell / tablet launch test cases.
-				if test.Name != clamshellLaunchTestForToontastic && test.Name != tabletLaunchTestForToontastic {
-					if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-						s.Fatal("Failed to start app: ", err)
+			if err := uiauto.Retry(2, func(ctx context.Context) error {
+				if appPkgName == toontasticPkgName { // Skip StartWithDefaultOptions if app is Toontastic and if test cases are clamshell / tablet launch test cases.
+					if test.Name != clamshellLaunchTestForToontastic && test.Name != tabletLaunchTestForToontastic {
+						if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+							return errors.Wrap(err, "failed to start app")
+						}
 					}
+				} else if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+					return errors.Wrap(err, "failed to start app")
 				}
-			} else if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-				s.Fatal("Failed to start app: ", err)
+				return nil
+			})(ctx); err != nil {
+				s.Fatal("Failed to start app with retry: ", err)
 			}
+
 			s.Log("App launched successfully")
 
 			// Close the app between iterations.
@@ -349,6 +355,14 @@ func RunTestCases(ctx context.Context, s *testing.State, appPkgName, appActivity
 						allowedAppPackage = true
 						break
 					}
+				}
+
+				// Check if the app failed to launch as time might not be enough for previous
+				// DetectAndHandleCloseCrashOrAppNotResponding to run.
+				// TODO: Add retry in DetectAndHandleCloseCrashOrAppNotResponding to remove extra check below
+				if currentAppPkg == "android" || currentAppPkg == "org.chromium.arc.home" {
+					DetectAndHandleCloseCrashOrAppNotResponding(ctx, s, d)
+					allowedAppPackage = false
 				}
 			}
 			if !allowedAppPackage {
