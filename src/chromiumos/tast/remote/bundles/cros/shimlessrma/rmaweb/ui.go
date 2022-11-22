@@ -252,36 +252,26 @@ func (uiHelper *UIHelper) CalibrateLidAccelerometerPageOperation(ctx context.Con
 	testing.ContextLogf(ctx, "Lid angle using fake data is %q", string(output))
 
 	// The second attempt should succeed since we use fake data.
-	if err := action.Combine("recalibrate lid accelerometer operation",
+	return action.Combine("recalibrate lid accelerometer operation",
 		uiHelper.waitForPageToLoad("Couldn't calibrate some components", timeInSecondToLoadPage),
 		uiHelper.clickToggleButton("Lid Accelerometer"),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Calibrate components", timeInSecondToLoadPage),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Calibrating components…", timeInSecondToLoadPage),
-	)(ctx); err != nil {
-		return err
-	}
-
-	return action.Combine("calibration completion page",
-		uiHelper.waitForPageToLoad("Calibration complete", timeInSecondToLoadPage),
-		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
+		uiHelper.waitForPageToLoad("Finalizing repair", timeInSecondToLoadPage),
+		uiHelper.waitForPageToLoad("Almost done!", timeInSecondToLoadPage),
 	)(ctx)
 }
 
 // CalibrateBaseGyroPageOperation handles all operations on calibrate base gyro Page.
 func (uiHelper *UIHelper) CalibrateBaseGyroPageOperation(ctx context.Context) error {
-	if err := action.Combine("calibrate base gyro operation",
+	return action.Combine("calibrate base gyro operation",
 		uiHelper.waitForPageToLoad("Calibrate components", timeInSecondToLoadPage),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Calibrating components…", timeInSecondToLoadPage),
-	)(ctx); err != nil {
-		return err
-	}
-
-	return action.Combine("calibration completion page",
-		uiHelper.waitForPageToLoad("Calibration complete", timeInSecondToLoadPage),
-		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
+		uiHelper.waitForPageToLoad("Finalizing repair", timeInSecondToLoadPage),
+		uiHelper.waitForPageToLoad("Almost done!", timeInSecondToLoadPage),
 	)(ctx)
 }
 
@@ -695,10 +685,8 @@ func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
 }
 
 func (uiHelper *UIHelper) flattenDutWithFakeSensorData(ctx context.Context) error {
-	// I got the following data by:
-	// (1) flatten the DUT to around 180 degree.
-	// (2) Read lid accelerometer data by `ectool motionsense`.
-	return uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "spoof", "--", "0", "1", "-75", "2035", "16119").Run()
+	// The following data is provided by ShimlessRMA team (genechang@).
+	return uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "spoof", "--", "0", "1", "0", "0", "16373").Run()
 }
 
 func (uiHelper *UIHelper) resetToUseRealSensorData(ctx context.Context) error {

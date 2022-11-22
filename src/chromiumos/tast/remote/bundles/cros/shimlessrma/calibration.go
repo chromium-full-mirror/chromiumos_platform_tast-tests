@@ -83,6 +83,10 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
 
+	if err := uiHelper.SetupInitStatus(ctx, false); err != nil {
+		s.Fatal("Fail to setup init status: ", err)
+	}
+
 	component := s.Param().(sensor)
 	statePath := s.DataPath(component.stateFilePath)
 
