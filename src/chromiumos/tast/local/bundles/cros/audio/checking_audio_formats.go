@@ -27,6 +27,9 @@ import (
 // TODO(b/250468510) : remove "trogdor-arc-r", "trogdor64" when b/250468510 is fixed.
 var checkingAudioFormatsUnstablePlatforms = []string{"trogdor-arc-r", "trogdor64"}
 
+// TODO(b/260164943) : remove "katsu" when b/260164943 is fixed.
+var checkingAudioFormatsUnstableModels = []string{"katsu"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckingAudioFormats,
@@ -34,22 +37,23 @@ func init() {
 		Desc:         "Verifies supported audio file formats",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(checkingAudioFormatsUnstablePlatforms...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(checkingAudioFormatsUnstablePlatforms...), hwdep.SkipOnModel(checkingAudioFormatsUnstableModels...)),
 			}, {
 				Name:              "unstable_platform",
+				ExtraHardwareDeps: hwdep.D(hwdep.Platform(checkingAudioFormatsUnstablePlatforms...)),
 				ExtraSoftwareDeps: []string{"audio_unstable"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "unstable_model",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(checkingAudioFormatsUnstableModels...)),
 				ExtraAttr:         []string{"informational"},
 			},
 		},
