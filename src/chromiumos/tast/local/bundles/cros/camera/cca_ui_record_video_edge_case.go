@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/testing"
 )
@@ -36,7 +37,6 @@ func init() {
 
 // Constants taken from cryptohome for testing low storage recording.
 const (
-	userHome            string = "/home/user"
 	mib                 uint64 = 1024 * 1024 // 1 mib
 	lowTarget                  = 128 * mib
 	criticallyLowTarget        = 32 * mib
@@ -47,8 +47,12 @@ type fillFile struct {
 	deleted bool
 }
 
-func createFillFile(fillUntil uint64) (*fillFile, error) {
-	fileName, err := disk.FillUntil(userHome, fillUntil)
+func createFillFile(ctx context.Context, cr *chrome.Chrome, fillUntil uint64) (*fillFile, error) {
+	userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot find user home dir path")
+	}
+	fileName, err := disk.FillUntil(userPath, fillUntil)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create a fill file")
 	}
@@ -93,9 +97,8 @@ func CCAUIRecordVideoEdgeCase(ctx context.Context, s *testing.State) {
 	}
 }
 
-func checkVideoFile(ctx context.Context, app *cca.App) error {
+func checkVideoFile(ctx context.Context, app *cca.App, beforeSaveTime time.Time) error {
 	testing.ContextLog(ctx, "Checking for saved video file")
-	beforeSaveTime := time.Now()
 	dir, err := app.SavedDir(ctx)
 	if err != nil {
 		return errors.Wrap(err, "cannot find saved directory")
@@ -113,14 +116,14 @@ func checkVideoFile(ctx context.Context, app *cca.App) error {
 // testLowStorageWarning tries to assert that warning visibility while recording
 // video. The warning is expected to be shown if the storage is LOW, and will be
 // hidden if the storage is back to NORMAL.
-func testLowStorageWarning(ctx context.Context, app *cca.App, _ *chrome.Chrome) (retErr error) {
+func testLowStorageWarning(ctx context.Context, app *cca.App, cr *chrome.Chrome) (retErr error) {
 	testing.ContextLog(ctx, "Switch to video mode")
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
 
 	// Create the first file to take up space.
-	f, err := createFillFile(lowTarget)
+	f, err := createFillFile(ctx, cr, lowTarget)
 	if err != nil {
 		return err
 	}
@@ -151,7 +154,7 @@ func testLowStorageWarning(ctx context.Context, app *cca.App, _ *chrome.Chrome) 
 		return errors.Wrap(err, "failed to wait for warning to hide")
 	}
 
-	f, err = createFillFile(lowTarget)
+	f, err = createFillFile(ctx, cr, lowTarget)
 	if err != nil {
 		return err
 	}
@@ -166,13 +169,14 @@ func testLowStorageWarning(ctx context.Context, app *cca.App, _ *chrome.Chrome) 
 		return errors.Wrap(err, "failed to wait for warning to re-display")
 	}
 
+	stopRecordingTime := time.Now()
 	if err := app.ClickShutter(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop recording")
 	}
 	if err := app.WaitForState(ctx, "recording", false); err != nil {
 		return errors.Wrap(err, "recording is not stopped")
 	}
-	if err := checkVideoFile(ctx, app); err != nil {
+	if err := checkVideoFile(ctx, app, stopRecordingTime); err != nil {
 		return err
 	}
 	return nil
@@ -181,7 +185,7 @@ func testLowStorageWarning(ctx context.Context, app *cca.App, _ *chrome.Chrome) 
 // testLowStorageAutoStop asserts that video would be automatically stopped
 // after storage is changed to CRITICALLY_LOW. The dialog should appear, and
 // clicking OK should close the dialog.
-func testLowStorageAutoStop(ctx context.Context, app *cca.App, _ *chrome.Chrome) (retErr error) {
+func testLowStorageAutoStop(ctx context.Context, app *cca.App, cr *chrome.Chrome) (retErr error) {
 	testing.ContextLog(ctx, "Switch to video mode")
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
@@ -200,7 +204,7 @@ func testLowStorageAutoStop(ctx context.Context, app *cca.App, _ *chrome.Chrome)
 		return err
 	}
 	// Create a big file to make the storage CRITICALLY_LOW.
-	f, err := createFillFile(criticallyLowTarget)
+	f, err := createFillFile(ctx, cr, criticallyLowTarget)
 	if err != nil {
 		return err
 	}
@@ -211,13 +215,14 @@ func testLowStorageAutoStop(ctx context.Context, app *cca.App, _ *chrome.Chrome)
 	}()
 
 	testing.ContextLog(ctx, "Waiting for recording to stop and the dialog to show up")
+	beforeVideoEndTime := time.Now()
 	if err := app.WaitForVisibleStateFor(ctx, cca.LowStorageDialog, true, 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to wait for auto-stop dialog to display")
 	}
 	if err := app.WaitForState(ctx, "recording", false); err != nil {
 		return errors.Wrap(err, "recording is not stopped")
 	}
-	if err := checkVideoFile(ctx, app); err != nil {
+	if err := checkVideoFile(ctx, app, beforeVideoEndTime); err != nil {
 		return err
 	}
 
@@ -241,7 +246,7 @@ func testLowStorageCannotStart(ctx context.Context, app *cca.App, cr *chrome.Chr
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
 
-	f, err := createFillFile(criticallyLowTarget)
+	f, err := createFillFile(ctx, cr, criticallyLowTarget)
 	if err != nil {
 		return err
 	}
