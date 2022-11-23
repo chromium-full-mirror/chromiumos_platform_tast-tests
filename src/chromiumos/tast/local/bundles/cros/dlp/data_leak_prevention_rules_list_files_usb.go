@@ -109,6 +109,23 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Block users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK1_WF1.
+			Value: "screenplay-8372a021-869b-466b-a031-0199b899874c",
+		}, {
+			Key: "feature_id",
+			// Block users from sharing confidential information within company (usb): COM_DATPROT_CUJ4_TASK1_WF1.
+			Value: "screenplay-b6dab588-8e02-4914-a8d5-608395e75d4b",
+		}, {
+			Key: "feature_id",
+			// Warn users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK2_WF1.
+			Value: "screenplay-6d903887-d562-4238-9a8c-99bef2351d72",
+		}, {
+			Key: "feature_id",
+			// Warn users from sharing confidential information within company (usb): COM_DATPROT_CUJ4_TASK2_WF1.
+			Value: "screenplay-387a9ca9-a622-43df-b0a1-8f95fa1c78c8",
+		}},
 		Params: []testing.Param{
 			{
 				Name:    "ash_allowed",

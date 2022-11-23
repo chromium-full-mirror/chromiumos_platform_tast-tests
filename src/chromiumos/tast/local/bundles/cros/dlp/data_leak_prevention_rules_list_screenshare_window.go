@@ -40,6 +40,23 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"text_1.html", "text_2.html"},
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Block users from sharing confidential information (screenshare_window): COM_DATPROT_CUJ3_TASK1_WF1.
+			Value: "screenplay-54242ac5-8f9e-449e-98f7-a40ee9fa6630",
+		}, {
+			Key: "feature_id",
+			// Block users from sharing confidential information within company (screenshare_window): COM_DATPROT_CUJ4_TASK1_WF1.
+			Value: "screenplay-ed94f6c9-1142-495a-9dde-df73440d9d62",
+		}, {
+			Key: "feature_id",
+			// Warn users from sharing confidential information (screenshare_window): COM_DATPROT_CUJ3_TASK2_WF1.
+			Value: "screenplay-54aea56a-6acf-4fbf-b217-c4c9cbc8a6b9",
+		}, {
+			Key: "feature_id",
+			// Warn users from sharing confidential information within company (screenshare_window): COM_DATPROT_CUJ4_TASK2_WF1.
+			Value: "screenplay-1e0b14ae-d9d3-4ae7-9962-0e6d342f58a1",
+		}},
 		Params: []testing.Param{{
 			Name:    "ash_blocked",
 			Fixture: fixture.ChromePolicyLoggedIn,
