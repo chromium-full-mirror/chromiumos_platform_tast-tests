@@ -29,7 +29,7 @@ func init() {
 			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1088399",
-		SoftwareDeps: []string{"chrome", "tpm2"},
+		SoftwareDeps: []string{"chrome", "tpm"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
