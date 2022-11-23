@@ -81,7 +81,7 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get audio file info: ", err)
 	}
 
-	ytmusicVideo := "Beat It (Official Video)"
+	ytmusicVideo := "Beat It (Official 4K Video)"
 	ytappLink := "https://www.youtube.com/watch?v=JE3-LkMqBfM"
 	ytappVideo := "Whale Songs and AI, for everyone to explore"
 
