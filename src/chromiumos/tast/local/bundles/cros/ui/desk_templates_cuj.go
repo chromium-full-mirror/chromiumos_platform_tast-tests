@@ -38,10 +38,19 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome", "android_vm", "no_kernel_upstream"},
+		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
+		Params: []testing.Param{{
+			Fixture: "savedDesksEnableWithoutArc",
+			Val:     []apps.App{apps.FilesSWA},
+		}, {
+			Name:              "arc_enabled",
+			Fixture:           "savedDesksEnableWithArc",
+			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
+			ExtraSoftwareDeps: []string{"android_vm"},
+		}},
 	})
 }
 
@@ -52,16 +61,9 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.EnableFeatures("DesksTemplates"),
-		chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
+	// Set up the apps to launch list.
+	appsList := s.Param().([]apps.App)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -77,22 +79,6 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	ac := uiauto.New(tconn)
-
-	// Setup for launching ARC apps.
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store and Close: ", err)
-	}
-
-	// Setup ARC.
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(cleanupCtx)
-
-	if err := a.WaitIntentHelper(ctx); err != nil {
-		s.Fatal("Failed to wait for ARC Intent Helper: ", err)
-	}
 
 	// Set up metrics recorder for TPS calculation
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
@@ -115,7 +101,11 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open PlayStore, Chrome and Files.
-		appsList := []apps.App{apps.Chrome, apps.FilesSWA, apps.PlayStore}
+		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		if err != nil {
+			s.Fatal("Could not find the primary browser app info: ", err)
+		}
+		appsList = append(appsList, browserApp)
 		if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 			return errors.Wrap(err, "failed to open apps")
 		}

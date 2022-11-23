@@ -14,9 +14,6 @@ import (
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -37,7 +34,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "android_vm", "no_kernel_upstream"},
+		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
@@ -46,11 +43,18 @@ func init() {
 		}},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Val: browser.TypeAsh,
+			Fixture: "savedDesksEnableWithoutArc",
+			Val:     []apps.App{apps.FilesSWA},
 		}, {
 			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
+			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
+			ExtraSoftwareDeps: []string{"lacros", "android_vm"},
+		}, {
+			Name:              "arc_enabled",
+			Fixture:           "savedDesksEnableWithArc",
+			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
+			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 	})
 }
@@ -62,19 +66,9 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Set up the browser.
-	bt := s.Param().(browser.Type)
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
-		chrome.DisableFeatures("DeskTemplateSync"),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
+	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
+	// Set up the apps to launch list.
+	appsList := s.Param().([]apps.App)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -92,27 +86,12 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	// Setup for launching ARC apps.
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store and Close: ", err)
-	}
-
-	// Setup ARC.
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(cleanupCtx)
-	if err := a.WaitIntentHelper(ctx); err != nil {
-		s.Fatal("Failed to wait for ARC Intent Helper: ", err)
-	}
-
 	// Opens PlayStore, Browser and Files.
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	appsList = append(appsList, browserApp)
 	if err != nil {
 		s.Fatal("Could not find the primary browser app info: ", err)
 	}
-	appsList := []apps.App{apps.PlayStore, browserApp, apps.FilesSWA}
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
 	}

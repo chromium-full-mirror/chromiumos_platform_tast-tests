@@ -86,6 +86,7 @@ var prePackages = []string{
 	"chromiumos/tast/local/arc",
 	"chromiumos/tast/local/bundles/crosint/arc",
 	"chromiumos/tast/local/multivm",
+	"chromiumos/tast/local/saveddesks",
 }
 
 // Lock sets a flag that makes New and Close fail unconditionally.
