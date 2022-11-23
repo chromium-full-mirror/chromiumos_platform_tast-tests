@@ -172,7 +172,7 @@ func (f *crostiniAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 	defaultWindowState := ash.WindowStateNormal
 	if f.deviceMode == devicemode.TabletMode {
 		// WindowStateNormal is invalid in the tablet mode.
-		defaultWindowState = ash.WindowStateMaximized
+		defaultWindowState = ash.WindowStateDefault
 	}
 
 	// Using normalization&resizing doesn't help much to reduce the number of

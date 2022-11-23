@@ -29,7 +29,7 @@ type WindowStateType string
 // As defined in chromeos::WindowStateType here:
 // https://cs.chromium.org/chromium/src/chromeos/ui/base/window_state_type.h
 const (
-	// Normal is actually used to represent both "Normal" and "Default".
+	WindowStateDefault      WindowStateType = "Default"
 	WindowStateNormal       WindowStateType = "Normal"
 	WindowStateMinimized    WindowStateType = "Minimized"
 	WindowStateMaximized    WindowStateType = "Maximized"

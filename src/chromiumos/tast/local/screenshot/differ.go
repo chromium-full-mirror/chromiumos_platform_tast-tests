@@ -435,8 +435,10 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 	}
 	windowBoundsDP := window.BoundsInRoot
 
-	if err := ash.SetWindowStateAndWait(ctx, d.tconn, window.ID, options.WindowState); err != nil {
-		return testArgs, err
+	if options.WindowState != ash.WindowStateDefault {
+		if err := ash.SetWindowStateAndWait(ctx, d.tconn, window.ID, options.WindowState); err != nil {
+			return testArgs, err
+		}
 	}
 
 	// .First() ensures it selects the outermost window element.
@@ -527,7 +529,7 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 		"--add-test-optional-key", fmt.Sprintf("cropped_resolution:%dx%d", boundsPx.Width, boundsPx.Height),
 		"--add-test-optional-key", fmt.Sprintf("screenshot_name:%s", screenshotName),
 		"--add-test-optional-key", fmt.Sprintf("window_size:%dx%d", windowBoundsPX.Width, windowBoundsPX.Height),
-		"--add-test-optional-key", fmt.Sprintf("window_state:%s", options.WindowState),
+		"--add-test-optional-key", fmt.Sprintf("window_state:%s", window.State),
 	)
 
 	srcOffset := image.Point{X: boundsPx.Left, Y: boundsPx.Top}
