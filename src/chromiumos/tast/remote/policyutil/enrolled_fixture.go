@@ -112,8 +112,8 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.Fatalf("Not enough time until global timeout: have %s; need %s", diff, enrollmentSetupTimeout)
 	}
 
-	if !s.DUT().Connected(ctx) {
-		s.Fatal("Failed DUT connection check at the beginning")
+	if err := s.DUT().Health(ctx); err != nil {
+		s.Fatal("Failed DUT connection check at the beginning: ", err)
 	}
 
 	if err := checkVPDState(ctx, s.DUT()); err != nil {
@@ -165,8 +165,8 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 
 		// Check connection state after reboot.
-		if !s.DUT().Connected(ctx) {
-			s.Fatal("Failed DUT connection check after reboot")
+		if err := s.DUT().Health(ctx); err != nil {
+			s.Fatal("Failed DUT connection check after reboot: ", err)
 		}
 
 		if err := enroll(enrollCtx, attemptDir, s.DUT(), s.RPCHint(), e.fdmsDir); err != nil {
