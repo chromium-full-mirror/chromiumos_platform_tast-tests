@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
 )
 
@@ -240,6 +241,15 @@ func AppRearrangement(ctx context.Context, s *testing.State) {
 	defer resetPinState(ctx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
+	// Ensure the display is shown before test starts dragging apps. If the
+	// display is off, mouse press on the shelf item will turn on the display,
+	// causing display configuration change, which in turns resets the mouse
+	// capture, causing mouse drag events not to get propagated to the shelf
+	// item. See https://crbug.com/1364741.
+	if err := power.TurnOnDisplay(ctx); err != nil {
+		s.Fatal("Failed to turn on display: ", err)
+	}
 
 	items, err := ash.ShelfItems(ctx, tconn)
 	if err != nil {
