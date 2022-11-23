@@ -149,7 +149,7 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 			}
 
 			// Get /var/log/messages from DUTs.
-			if err := downloadVarLogMessages(ctx, dir, dut); err != nil {
+			if err := downloadVarLogMessages(ctx, dir, dut, s.MaxSysMsgLogSize()); err != nil {
 				s.Log("Download /var/log/messages failed from DUT (primary): ", err)
 			}
 		}
@@ -162,7 +162,7 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 			}
 			dirName := fmt.Sprintf("%v_%v", role, cdut.HostName())
 			outputDir := filepath.Join(dir, dirName)
-			if err := downloadVarLogMessages(ctx, outputDir, cdut); err != nil {
+			if err := downloadVarLogMessages(ctx, outputDir, cdut, s.MaxSysMsgLogSize()); err != nil {
 				s.Logf("Download /var/log/messages failed from DUT (%v): %v", role, err)
 			}
 
@@ -225,7 +225,7 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 }
 
 // downloadVarLogMessages downloads /var/log/messages from a DUT.
-func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT) error {
+func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT, maxSysMsgLogSize int64) error {
 	if !dut.Connected(ctx) {
 		if err := dut.WaitConnect(ctx); err != nil {
 			return errors.Wrapf(err, "failed to connect to the DUT (%v)", dut.HostName())
@@ -238,8 +238,9 @@ func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT)
 		return errors.Errorf("failed to create directory %q to store /var/log/messages for DUT (%v)", outputDir, dut.HostName())
 	}
 
-	// Transfer messages file from DUT to host machine.
-	if err := linuxssh.GetFile(ctx, dut.Conn(), "/var/log/messages", dst, linuxssh.PreserveSymlinks); err != nil {
+	// Transfer messages file base on the maxSysMsgLogSize from DUT to host machine.
+	err := linuxssh.GetFileTail(ctx, dut.Conn(), "/var/log/messages", dst, maxSysMsgLogSize)
+	if err != nil {
 		return errors.Wrapf(err, "failed to download /var/log/messages from DUT (%v) to %v at local host", dut.HostName(), dst)
 	}
 
