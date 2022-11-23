@@ -6,15 +6,16 @@ package camera
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
+	"chromiumos/tast/local/camera/features"
 	"chromiumos/tast/local/camera/histogramutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -24,34 +25,16 @@ func init() {
 		Desc:         "Runs the HDRnet end-to-end integration test",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"camera_app", "camera_feature_hdrnet", "chrome", caps.BuiltinMIPICamera},
+		HardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet)),
+		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinMIPICamera},
 		Fixture:      "ccaTestBridgeReady",
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:167281",
 	})
 }
 
-// createFile creates the file specified by |filePath| if it does not exist.
-func createFile(filePath string) error {
-	file, err := os.OpenFile(filePath, os.O_RDONLY|os.O_CREATE, 0666)
-	if err != nil {
-		return err
-	}
-	return file.Close()
-}
-
 // HDRnetE2E runs the HDRnet end-to-end subtests.
 func HDRnetE2E(ctx context.Context, s *testing.State) {
-	hdrnetEnablePath := "/run/camera/force_enable_hdrnet"
-	if err := createFile(hdrnetEnablePath); err != nil {
-		s.Fatalf("Failed to create HDRnet force enable file %s: %s", hdrnetEnablePath, err)
-	}
-	defer func() {
-		if err := os.Remove(hdrnetEnablePath); err != nil {
-			s.Errorf("Failed to remove HDRnet force enable file %s: %s", hdrnetEnablePath, err)
-		}
-	}()
-
 	runSubTest := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)

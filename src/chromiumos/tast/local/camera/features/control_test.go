@@ -52,7 +52,7 @@ const (
 )
 
 func TestNewModelConfigFromJSON(t *testing.T) {
-	modelConf, err := NewModelConfigFromJSON(model, []byte(fakeFeatureProfile))
+	modelConf, err := newModelConfigFromJSON(model, []byte(fakeFeatureProfile))
 	if err != nil {
 		t.Fatalf("Failed to parse input JSON bytes: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestNewModelConfigFromJSON(t *testing.T) {
 }
 
 func TestIsFeatureEnabled(t *testing.T) {
-	modelConf, err := NewModelConfigFromJSON(model, []byte(fakeFeatureProfile))
+	modelConf, err := newModelConfigFromJSON(model, []byte(fakeFeatureProfile))
 	if err != nil {
 		t.Fatalf("Failed to parse input JSON bytes: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 		f        string
 		expected bool
 	}{
-		{hdrnet, true},
+		{HDRnet, true},
 		{fooFeature, false},
 	} {
 		v := modelConf.IsFeatureEnabled(tst.f)
@@ -83,7 +83,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 }
 
 func TestFeatureConfigFilePath(t *testing.T) {
-	modelConf, err := NewModelConfigFromJSON(model, []byte(fakeFeatureProfile))
+	modelConf, err := newModelConfigFromJSON(model, []byte(fakeFeatureProfile))
 	if err != nil {
 		t.Fatalf("Failed to parse input JSON bytes: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestFeatureConfigFilePath(t *testing.T) {
 }
 
 func TestFeatureConfigFromJSON(t *testing.T) {
-	modelConf, err := NewModelConfigFromJSON(model, []byte(fakeFeatureProfile))
+	modelConf, err := newModelConfigFromJSON(model, []byte(fakeFeatureProfile))
 	if err != nil {
 		t.Fatalf("Failed to parse input JSON bytes: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestFeatureConfigFromJSON(t *testing.T) {
 }
 
 func TestMeldFeatureConfig(t *testing.T) {
-	modelConf, err := NewModelConfigFromJSON(model, []byte(fakeFeatureProfile))
+	modelConf, err := newModelConfigFromJSON(model, []byte(fakeFeatureProfile))
 	if err != nil {
 		t.Fatalf("Failed to parse input JSON bytes: %v", err)
 	}

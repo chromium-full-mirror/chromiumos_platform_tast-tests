@@ -24,8 +24,8 @@ import (
 	"chromiumos/tast/local/camera/testpage"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
-	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -35,7 +35,8 @@ func init() {
 		Desc:         "Runs the HDRnet performance tests",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		SoftwareDeps: []string{"camera_feature_hdrnet", "chrome", caps.BuiltinMIPICamera},
+		HardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet, features.GcamAE)),
+		SoftwareDeps: []string{"chrome", caps.BuiltinMIPICamera},
 		Data:         []string{"camera_page.html", "camera_page.js"},
 		Vars: []string{
 			// Test only the specified resolution (360p, 720p, 1080p).
@@ -53,23 +54,12 @@ func init() {
 }
 
 func HDRnetPerf(ctx context.Context, s *testing.State) {
-	model, err := crosconfig.Get(ctx, "/", "name")
+	modelConf, err := features.ActiveModelConfig(ctx)
 	if err != nil {
-		s.Errorf("Failed to get device model: %s", err)
-	}
-	modelConf, err := features.NewModelConfig(model)
-	if err != nil {
-		s.Errorf("Failed to get feature profile for device model %s: %v", model, err)
+		s.Fatal("Failed to get active model config: ", err)
 	}
 
 	testing.ContextLogf(ctx, "Model config: %s", modelConf)
-
-	// The features we want to test.
-	const (
-		hdrnet        string = "hdrnet"
-		gcamAE               = "gcam_ae"
-		faceDetection        = "face_detection"
-	)
 
 	// The feature controls that we want to override in the test.
 	const (
@@ -82,9 +72,9 @@ func HDRnetPerf(ctx context.Context, s *testing.State) {
 		deviceConfig     features.FeatureConfig
 		overrideFilePath string
 	}{
-		hdrnet:        {nil, "/run/camera/hdrnet_config.json"},
-		gcamAE:        {nil, "/run/camera/gcam_ae_config.json"},
-		faceDetection: {nil, "/run/camera/face_detection_config.json"},
+		features.HDRnet:        {nil, "/run/camera/hdrnet_config.json"},
+		features.GcamAE:        {nil, "/run/camera/gcam_ae_config.json"},
+		features.FaceDetection: {nil, "/run/camera/face_detection_config.json"},
 	}
 
 	type featureOverride map[string]features.FeatureConfig
@@ -157,30 +147,30 @@ func HDRnetPerf(ctx context.Context, s *testing.State) {
 	}{
 		// All features disabled.
 		{"baseline", featureOverride{
-			hdrnet:        {hdrnetEnable: false},
-			gcamAE:        {gcamAEEnable: false},
-			faceDetection: {faceDetectionEnable: false},
+			features.HDRnet:        {hdrnetEnable: false},
+			features.GcamAE:        {gcamAEEnable: false},
+			features.FaceDetection: {faceDetectionEnable: false},
 		}},
 		// All features enabled.
 		{"all_on", featureOverride{
-			hdrnet:        {hdrnetEnable: true},
-			gcamAE:        {gcamAEEnable: true},
-			faceDetection: {faceDetectionEnable: true},
+			features.HDRnet:        {hdrnetEnable: true},
+			features.GcamAE:        {gcamAEEnable: true},
+			features.FaceDetection: {faceDetectionEnable: true},
 		}},
 		{"HDRnet_only", featureOverride{
-			hdrnet:        {hdrnetEnable: true},
-			gcamAE:        {gcamAEEnable: false},
-			faceDetection: {faceDetectionEnable: false},
+			features.HDRnet:        {hdrnetEnable: true},
+			features.GcamAE:        {gcamAEEnable: false},
+			features.FaceDetection: {faceDetectionEnable: false},
 		}},
 		{"GcamAE_only", featureOverride{
-			hdrnet:        {hdrnetEnable: false},
-			gcamAE:        {gcamAEEnable: true},
-			faceDetection: {faceDetectionEnable: false},
+			features.HDRnet:        {hdrnetEnable: false},
+			features.GcamAE:        {gcamAEEnable: true},
+			features.FaceDetection: {faceDetectionEnable: false},
 		}},
 		{"FaceDetection_only", featureOverride{
-			hdrnet:        {hdrnetEnable: false},
-			gcamAE:        {gcamAEEnable: false},
-			faceDetection: {faceDetectionEnable: true},
+			features.HDRnet:        {hdrnetEnable: false},
+			features.GcamAE:        {gcamAEEnable: false},
+			features.FaceDetection: {faceDetectionEnable: true},
 		}},
 	}
 
