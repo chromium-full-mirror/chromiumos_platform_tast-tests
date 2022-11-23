@@ -658,7 +658,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 				notificationsDialog := nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
 				allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
 				if err := uiauto.IfSuccessThen(
-					ui.WithTimeout(shortUITimeout).WaitUntilExists(notificationsDialog),
+					ui.WaitUntilExists(notificationsDialog),
 					tsAction.Click(allowButton),
 				)(ctx); err != nil {
 					return errors.Wrap(err, "failed to close alert dialog")
