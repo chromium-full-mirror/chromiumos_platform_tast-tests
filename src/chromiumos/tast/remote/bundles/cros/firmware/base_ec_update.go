@@ -29,6 +29,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	fwpb "chromiumos/tast/services/cros/firmware"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -351,6 +352,17 @@ func getBaseECInfo(ctx context.Context, dut *dut.DUT, productIDDecimal string) (
 }
 
 func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, utilSvcClient fwpb.UtilsServiceClient, dut *dut.DUT, hammerPid string) error {
+	// Check for the hammerd process ID from the hammerd log before
+	// and after power cycling the base. On builds newer than R108,
+	// Stainless reported some strongbad duts failing the test because
+	// no update window popped up. We suspected that hammerd wasn't
+	// initialized when the base re-attached. Comparing the process IDs
+	// would help us determine if this was the case.
+	hammerdLog := "/var/log/hammerd.log"
+	originalHammerdID, err := hammerdProcessID(ctx, hammerdLog, dut)
+	if err != nil {
+		return errors.Wrap(err, "failed to get hammerd process id")
+	}
 
 	// Included in baseGpioNames are a list of possible gpios available for
 	// controlling the base state. The first one found from the list would
@@ -358,10 +370,10 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 	var baseStateGpio string
 	baseGpioNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO, firmware.PP3300DXBASE}
 	foundNames, err := ecTool.FindBaseGpio(ctx, baseGpioNames)
-
 	if err != nil {
 		return errors.Wrapf(err, "while looking for %q", baseGpioNames)
 	}
+
 	for _, name := range baseGpioNames {
 		if _, ok := foundNames[name]; ok {
 			baseStateGpio = string(name)
@@ -412,12 +424,21 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 		}
 	}
 
+	newHammerdID, err := hammerdProcessID(ctx, hammerdLog, dut)
+	if err != nil {
+		return errors.Wrap(err, "failed to get hammerd process id")
+	}
+	testing.ContextLogf(ctx, "Hammerd process ids: %s [before re-attach], %s [after re-attach]", originalHammerdID, newHammerdID)
+
 	testing.ContextLog(ctx, "Finding notification window")
 	const title = "Your detachable keyboard needs a critical update"
 	req := fwpb.NodeElement{
 		Name: title,
 	}
 	if _, err := utilSvcClient.FindSingleNode(ctx, &req); err != nil {
+		if originalHammerdID == newHammerdID {
+			return errors.Wrap(err, "hammerd did not restart following base power-cycle")
+		}
 		return errors.Wrap(err, "failed to find notification of detachable keyboard update")
 	}
 
@@ -496,4 +517,13 @@ func modifyBaseEC(ctx context.Context, dut *dut.DUT, boardInfo baseECInfo, fileD
 		return errors.Wrap(err, "failed to copy files into DUT")
 	}
 	return nil
+}
+
+func hammerdProcessID(ctx context.Context, hammerdLog string, dut *dut.DUT) (string, error) {
+	cmd := fmt.Sprintf("tail -1 %s | cut -d ' ' -f3 | grep -o '[[:digit:]]*'", hammerdLog)
+	processID, err := dut.Conn().CommandContext(ctx, "bash", "-c", cmd).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to run %s", cmd)
+	}
+	return strings.TrimSpace(string(processID)), nil
 }
