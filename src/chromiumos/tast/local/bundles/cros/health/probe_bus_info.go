@@ -233,7 +233,6 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 			Class:       fmt.Sprintf("%02x", udIn.ClassID),
 			SubClass:    fmt.Sprintf("%02x", udIn.SubClassID),
 			Protocol:    fmt.Sprintf("%02x", udIn.ProtocolID),
-			SpecSpeed:   udIn.SpecSpeed,
 		}
 		for _, ifc := range udIn.Interfaces {
 			udOut.Interfaces = append(udOut.Interfaces, usbutil.Interface{
