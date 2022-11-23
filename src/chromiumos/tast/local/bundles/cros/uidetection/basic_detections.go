@@ -6,9 +6,11 @@ package uidetection
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -17,7 +19,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
+	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/uidetection"
+	"chromiumos/tast/local/wallpaper"
+	"chromiumos/tast/local/wallpaper/constants"
 	"chromiumos/tast/testing"
 )
 
@@ -36,27 +41,58 @@ func init() {
 	})
 }
 
+func setDefaultWallpaper(ui *uiauto.Context) uiauto.Action {
+	const defaultWallpaper = "Default Wallpaper"
+	return uiauto.Combine("switch to the default wallaper",
+		wallpaper.OpenWallpaperPicker(ui),
+		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
+		wallpaper.SelectImage(ui, defaultWallpaper),
+		wallpaper.WaitForWallpaperWithName(ui, defaultWallpaper),
+		wallpaper.CloseWallpaperPicker(),
+	)
+}
+
+func setLightMode(ui *uiauto.Context) uiauto.Action {
+	return uiauto.Combine("Enable light mode",
+		personalization.OpenPersonalizationHub(ui),
+		personalization.ToggleLightMode(ui),
+		personalization.ClosePersonalizationHub(ui),
+	)
+}
+
+func setAutoThemeMode(ui *uiauto.Context) uiauto.Action {
+	return uiauto.Combine("Enable auto theme mode",
+		personalization.OpenPersonalizationHub(ui),
+		personalization.ToggleAutoMode(ui),
+		personalization.ClosePersonalizationHub(ui),
+	)
+}
+
 func BasicDetections(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*chrome.Chrome)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "basic_detections")
+
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to enter clamshell mode: ", err)
 	}
 
-	// Force light mode to minimise icon detection flakiness.
-	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.forceAutoThemeMode)`, false); err != nil {
-		s.Fatal("Failed to force light mode: ", err)
-	}
-
 	ud := uidetection.NewDefault(tconn)
 	ui := uiauto.New(tconn)
 
-	chromeIcon := uidetection.CustomIcon(s.DataPath("logo_chrome.png"), uidetection.MinConfidence(0.7))
+	chromeIcon := uidetection.CustomIcon(s.DataPath("logo_chrome.png"))
 	addShortcut := uidetection.TextBlock([]string{"Add", "shortcut"})
 	bottomBar := nodewith.ClassName("ShelfView")
 	notificationArea := nodewith.ClassName("StatusAreaWidget")
@@ -79,6 +115,24 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	}
 
 	maximizeButton := nodewith.Role(role.Button).ClassName("FrameSizeButton").Name("Maximize")
+
+	// Use light mode and the default wallpaper to minimise icon detection flakiness.
+	if err := setLightMode(ui)(ctx); err != nil {
+		s.Fatal("Failed to set light mode: ", err)
+	}
+	defer func(cleanupCtx context.Context) {
+		// If Chrome is open, minimise it to make the desktop visible.
+		if err := uiauto.IfSuccessThen(verifyChromeIsShown, ud.LeftClick(chromeIcon))(cleanupCtx); err != nil {
+			s.Fatal("Failed to minimise Chrome: ", err)
+		}
+		if err := setAutoThemeMode(ui)(cleanupCtx); err != nil {
+			s.Fatal("Failed to set auto theme mode: ", err)
+		}
+	}(cleanupCtx)
+
+	if err := setDefaultWallpaper(ui)(ctx); err != nil {
+		s.Fatal("Failed to switch to the default wallpaper: ", err)
+	}
 
 	// Perform UI interaction to click Chrome logo to open Chrome,
 	// click "Add shortcut", and click "cancel".
