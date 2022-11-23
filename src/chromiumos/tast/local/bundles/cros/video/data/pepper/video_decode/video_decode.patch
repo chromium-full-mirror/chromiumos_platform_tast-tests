@@ -1,0 +1,147 @@
+From 6ff31e82e640e96e62a19bb878867d66288d9182 Mon Sep 17 00:00:00 2001
+From: Pilar Molina Lopez <pmolinalopez@chromium.org>
+Date: Tue, 22 Nov 2022 17:16:48 -0500
+Subject: [PATCH] [DO NOT SUBMIT] Make video_decode Pepper example send
+ completion msg
+
+This CL modifies the video_decode example from the NaCl SDK so it sends
+a message when the video finishes playing. This message is sent by using
+pp::Instance().PostMessage(). The video decoding Pepper Tast tests
+(video.PepperVideoDecode.*) wait for this message to know when the test
+is completed. If the tests don't receive this message after some
+predetermined time, they will assume that the video didn't play
+correctly and fail.
+
+Bug: None
+---
+ .../examples/api/video_decode/video_decode.cc | 36 +++++++++++++++----
+ 1 file changed, 30 insertions(+), 6 deletions(-)
+
+diff --git a/native_client_sdk/src/examples/api/video_decode/video_decode.cc b/native_client_sdk/src/examples/api/video_decode/video_decode.cc
+index 5c0ce634fabd8..0d32d500df730 100644
+--- a/native_client_sdk/src/examples/api/video_decode/video_decode.cc
++++ b/native_client_sdk/src/examples/api/video_decode/video_decode.cc
+@@ -82,6 +82,8 @@ class MyInstance : public pp::Instance, public pp::Graphics3DClient {
+ 
+   void PaintPicture(Decoder* decoder, const PP_VideoPicture& picture);
+ 
++  void AllFramesRenderedForDecoder();
++
+  private:
+   // Log an error to the developer console and stderr by creating a temporary
+   // object of this type and streaming to it.  Example usage:
+@@ -116,7 +118,7 @@ class MyInstance : public pp::Instance, public pp::Graphics3DClient {
+   Shader CreateProgram(const char* vertex_shader, const char* fragment_shader);
+   void CreateShader(GLuint program, GLenum type, const char* source, int size);
+   void PaintNextPicture();
+-  void PaintFinished(int32_t result);
++  void PaintFinished(int32_t result, Decoder* decoder);
+ 
+   pp::Size plugin_size_;
+   bool is_painting_;
+@@ -131,6 +133,8 @@ class MyInstance : public pp::Instance, public pp::Graphics3DClient {
+   PP_TimeTicks swap_ticks_;
+   pp::CompletionCallbackFactory<MyInstance> callback_factory_;
+ 
++  size_t decoders_done_;
++
+   // Unowned pointers.
+   const PPB_Console* console_if_;
+   const PPB_Core* core_if_;
+@@ -165,6 +169,8 @@ class Decoder {
+     return num_pictures_ ? total_latency_ / num_pictures_ : 0;
+   }
+ 
++  void RenderDone();
++
+  private:
+   void InitializeDone(int32_t result);
+   void Start();
+@@ -190,6 +196,8 @@ class Decoder {
+   PP_TimeTicks decode_time_[kMaxDecodeDelay];
+   PP_TimeTicks total_latency_;
+   int num_pictures_;
++
++  int num_frames_rendered_;
+ };
+ 
+ #if defined USE_VP8_TESTDATA_INSTEAD_OF_H264
+@@ -241,7 +249,8 @@ Decoder::Decoder(MyInstance* instance,
+       flushing_(false),
+       resetting_(false),
+       total_latency_(0.0),
+-      num_pictures_(0) {
++      num_pictures_(0),
++      num_frames_rendered_(0) {
+   core_if_ = static_cast<const PPB_Core*>(
+       pp::Module::Get()->GetBrowserInterface(PPB_CORE_INTERFACE));
+ 
+@@ -364,6 +373,13 @@ void Decoder::ResetDone(int32_t result) {
+   Start();
+ }
+ 
++void Decoder::RenderDone() {
++  if (++num_frames_rendered_ == next_picture_id_ &&
++      encoded_data_next_pos_to_decode_ >= kDataLen) {
++    instance_->AllFramesRenderedForDecoder();
++  }
++}
++
+ MyInstance::MyInstance(PP_Instance instance, pp::Module* module)
+     : pp::Instance(instance),
+       pp::Graphics3DClient(this),
+@@ -373,6 +389,7 @@ MyInstance::MyInstance(PP_Instance instance, pp::Module* module)
+       last_swap_request_ticks_(-1),
+       swap_ticks_(0),
+       callback_factory_(this),
++      decoders_done_(0),
+       context_(NULL) {
+   console_if_ = static_cast<const PPB_Console*>(
+       pp::Module::Get()->GetBrowserInterface(PPB_CONSOLE_INTERFACE));
+@@ -504,10 +521,10 @@ void MyInstance::PaintNextPicture() {
+ 
+   last_swap_request_ticks_ = core_if_->GetTimeTicks();
+   context_->SwapBuffers(
+-      callback_factory_.NewCallback(&MyInstance::PaintFinished));
++      callback_factory_.NewCallback(&MyInstance::PaintFinished, decoder));
+ }
+ 
+-void MyInstance::PaintFinished(int32_t result) {
++void MyInstance::PaintFinished(int32_t result, Decoder* decoder) {
+   assert(result == PP_OK);
+   swap_ticks_ += core_if_->GetTimeTicks() - last_swap_request_ticks_;
+   is_painting_ = false;
+@@ -530,14 +547,16 @@ void MyInstance::PaintFinished(int32_t result) {
+                        << ms_average_latency;
+   }
+ 
++  decoder->RenderDone();
++
+   // If the decoders were reset, this will be empty.
+   if (pending_pictures_.empty())
+     return;
+ 
+   const PendingPicture& next = pending_pictures_.front();
+-  Decoder* decoder = next.decoder;
++  Decoder* next_decoder = next.decoder;
+   const PP_VideoPicture& picture = next.picture;
+-  decoder->RecyclePicture(picture);
++  next_decoder->RecyclePicture(picture);
+   pending_pictures_.pop();
+ 
+   // Keep painting as long as we have pictures.
+@@ -545,6 +564,11 @@ void MyInstance::PaintFinished(int32_t result) {
+     PaintNextPicture();
+ }
+ 
++void MyInstance::AllFramesRenderedForDecoder() {
++  if (++decoders_done_ == video_decoders_.size())
++    this->PostMessage(pp::Var("testCompleted"));
++}
++
+ void MyInstance::InitGL() {
+   assert(plugin_size_.width() && plugin_size_.height());
+   is_painting_ = false;
+-- 
+2.38.1.584.g0f3c55d4c2-goog
+
