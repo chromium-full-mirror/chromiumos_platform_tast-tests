@@ -149,7 +149,7 @@ func clickAddAccount(ctx context.Context, ui *uiauto.Context) error {
 	dialog := accountmanager.AddAccountDialog()
 	if err := uiauto.Combine("Click add account",
 		ui.WaitUntilExists(addAccount),
-		ui.WithInterval(time.Second).LeftClickUntil(addAccount, ui.Exists(dialog)),
+		ui.WithInterval(time.Second).DoDefaultUntil(addAccount, ui.Exists(dialog)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find and click add account link")
 	}
