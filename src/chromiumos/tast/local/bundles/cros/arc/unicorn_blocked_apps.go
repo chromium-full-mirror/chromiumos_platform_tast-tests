@@ -11,14 +11,11 @@ import (
 
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
-	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/familylink"
-	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/arc/unicorn"
 	"chromiumos/tast/testing"
 )
 
@@ -30,21 +27,20 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr: []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
 			"play_store",
 		},
 		Timeout: 7 * time.Minute,
-		VarDeps: []string{"arc.parentUser", "arc.parentPassword", "arc.childUser", "arc.childPassword"},
+		VarDeps: []string{unicorn.ParentUserVar, unicorn.ParentPasswordVar, unicorn.ChildUserVar, unicorn.ChildPasswordVar},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Fixture: "familyLinkUnicornArcPolicyLogin",
 	})
 }
 
@@ -54,10 +50,8 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 		provisioningTimeout = 3 * time.Minute
 		blockedPackage      = "com.google.android.apps.youtube.creator"
 	)
-	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 
+	childUser := s.RequiredVar(unicorn.ChildUserVar)
 	packages := []string{blockedPackage}
 
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
@@ -65,16 +59,31 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
-	pb := policy.NewBlob()
-	pb.PolicyUser = s.FixtValue().(familylink.HasPolicyUser).PolicyUser()
-	pb.AddPolicies(policies)
-	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
-		s.Fatal("Failed to serve policies: ", err)
-	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
+
+	fdms, err := unicorn.SetUpFakePolicyServer(ctx, s.OutDir(), childUser, policies)
+	if err != nil {
+		s.Fatal("Failed to setup fake policy server: ", err)
+	}
+	defer fdms.Stop(cleanupCtx)
+
+	cr, err := unicorn.StartChromeWithARC(ctx,
+		childUser,
+		s.RequiredVar(unicorn.ChildPasswordVar),
+		s.RequiredVar(unicorn.ParentUserVar),
+		s.RequiredVar(unicorn.ParentPasswordVar),
+		fdms.URL)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create test API Connection: ", err)
+	}
 
 	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
 	if err != nil {
