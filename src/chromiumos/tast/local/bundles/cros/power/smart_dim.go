@@ -28,7 +28,13 @@ func init() {
 		Func:         SmartDim,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check the SmartDim can make decision with ML Service",
-		Contacts:     []string{"alanlxl@chromium.org"},
+		Contacts: []string{
+			"ml-service-team@google.com",
+			"alanlxl@chromium.org",
+			"amoylan@chromium.org",
+		},
+		// Software > Machine Intelligence > ML Service
+		BugComponent: "b:1179044",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "ml_service", "smartdim"},
 		Params: []testing.Param{{
