@@ -52,10 +52,9 @@ const (
 
 // runCommandLineRemote creates command context from given connection and runs command line with given arguments.
 //
-// Returns:
-// When the command execution succeeded, the byte slice contains the output to stdout and the error is nil.
+// It returns joint slice of stdout and strerr from command line execution.
 // When any error happened during command execution (including non-zero exit status in remote), non-nil error
-// is returned and the byte slice data is invalid.
+// is returned.
 func runCommandLineRemote(ctx context.Context, conn *ssh.Conn, args []string) ([]byte, error) {
 	testing.ContextLog(ctx, "Running command line remotely with arguments: ", args)
 	cmd := conn.CommandContext(ctx, args[0], args[1:]...)
@@ -78,6 +77,9 @@ func runCommandLineRemote(ctx context.Context, conn *ssh.Conn, args []string) ([
 }
 
 // runCommandLineLocal runs command line using testexec command context.
+//
+// It returns output returned by cmd.Output command line execution.
+// When any error happened during command execution non-nil error is returned.
 func runCommandLineLocal(ctx context.Context, args []string) ([]byte, error) {
 	testing.ContextLog(ctx, "Running command line locally with arguments: ", args)
 	cmd := testexec.CommandContext(ctx, args[0], args[1:]...)
@@ -153,6 +155,43 @@ type Instance struct {
 	params Params
 }
 
+// programmerWithParamsArg constructs programmer param command line argument (to be used in command line
+// invocation) out of given programmer and programmer param string.
+func (i *Instance) programmerWithParamsArg() string {
+	programmerWithParams := string(i.params.programmer)
+	if i.params.programmerParam != "" {
+		programmerWithParams = fmt.Sprintf("%v:%v", programmerWithParams, i.params.programmerParam)
+	}
+	return programmerWithParams
+}
+
+// appendVerbosityArg qppends command line argument for verbosity level to the array of given command line
+// arguments.
+func (i *Instance) appendVerbosityArg(cmdArgs []string) []string {
+	if i.params.verbosity != VerbosityInfo {
+		return append(cmdArgs, string(i.params.verbosity))
+	}
+	return cmdArgs
+}
+
+// runCommandLine detects whether flashrom instance is set up for a local or remote test
+// and runs command line with given command line arguments accordingly.
+// It returns the output from command line execution.
+// If an error happens during command line execution, a non-nil error is returned.
+func (i *Instance) runCommandLine(ctx context.Context, cmdArgs []string) ([]byte, error) {
+	var out []byte
+	var err error
+	if i.params.testDut != nil {
+		out, err = runCommandLineRemote(ctx, i.params.testDut.Conn(), cmdArgs)
+	} else {
+		out, err = runCommandLineLocal(ctx, cmdArgs)
+	}
+
+	// TODO(b:247668196) make sure errors are informative for the caller.
+
+	return out, err
+}
+
 // FlashromInit sets verbosity level.
 // If verbosity is not given, it is set to flashromMsgInfo.
 func (c *Config) FlashromInit(verbosity VerbosityLevel) *Config {
@@ -193,7 +232,10 @@ func (c *Config) isReady() error {
 }
 
 // Probe gets a flashrom instance that will probe the chip.
+//
 // Returns flashrom instance which is ready to use, or nil instance and error.
+// Returns the output from command line execution, so that the caller can handle it if needed,
+// for example store in log file.
 func (c *Config) Probe(ctx context.Context) (*Instance, []byte, error) {
 	if err := c.isReady(); err != nil {
 		return nil, nil, errors.Wrap(err, "config missing required data")
@@ -202,25 +244,10 @@ func (c *Config) Probe(ctx context.Context) (*Instance, []byte, error) {
 	var instance Instance
 	instance.params = c.params
 
-	programmerWithParams := string(instance.params.programmer)
-	if instance.params.programmerParam != "" {
-		programmerWithParams = fmt.Sprintf("%v:%v", programmerWithParams, instance.params.programmerParam)
-	}
-	cmdArgs := []string{dutFlashromPath, "-p", programmerWithParams}
-	cmdArgs = append(cmdArgs, string(instance.params.verbosity))
+	cmdArgs := []string{dutFlashromPath, "-p", instance.programmerWithParamsArg()}
+	cmdArgs = instance.appendVerbosityArg(cmdArgs)
 
-	var out []byte
-	var err error
-	if instance.params.testDut != nil {
-		out, err = runCommandLineRemote(ctx, instance.params.testDut.Conn(), cmdArgs)
-	} else {
-		out, err = runCommandLineLocal(ctx, cmdArgs)
-	}
-
-	// TODO(b:247668196) make sure errors are informative for the caller.
-
-	// TODO(b:247668196) implement full logging if test gives a file?
-	// Note stderr from runCommandLineRemote available inside that functions.
+	out, err := instance.runCommandLine(ctx, cmdArgs)
 
 	if err != nil {
 		return nil, out, errors.Wrapf(err, "error while probing flashrom with arguments %v", cmdArgs)
@@ -248,13 +275,36 @@ func (i *Instance) SoftwareWriteProtectStatus(ctx context.Context) (bool, error)
 	return true, nil
 }
 
-// Read reads the chip into the file provided by filePath.
+// Read reads the chip into the file provided by filePath. Note the filePath is a path on the DUT,
+// which will not be local in case of remote test.
 // If optional parameter regionNames is provided, only given regions are read.
 // nil as regionNames indicates entire chip.
-func (i *Instance) Read(ctx context.Context, filePath string, regionNames []string) (int, error) {
-	// TODO(b:247668196) implement
+//
+// If an error happened during read operation, a non-nil error is returned.
+// Returns the output from command line execution, so that the caller can handle it if needed,
+// for example store in log file.
+func (i *Instance) Read(ctx context.Context, filePath string, regionNames []string) ([]byte, error) {
+	if filePath == "" {
+		return nil, errors.New("Flashrom cannot do read: empty filePath argument")
+	}
 
-	return 0, nil
+	// TODO(b:247668196) handle regionNames.
+	if regionNames != nil {
+		return nil, errors.New("Region names are not implemented yet")
+	}
+
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-r", filePath}
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
+
+	out, err := i.runCommandLine(ctx, cmdArgs)
+
+	if err != nil {
+		return out, errors.Wrapf(err, "error while reading flashrom with arguments %v", cmdArgs)
+	}
+
+	testing.ContextLog(ctx, "Flashrom read successful: ", cmdArgs)
+
+	return out, nil
 }
 
 // SoftwareWriteProtectRegion enables software write protect for the specified region.
@@ -280,11 +330,49 @@ func (i *Instance) SoftwareWriteProtectEnableWithRange(ctx context.Context, wpRa
 	return 0, nil
 }
 
-// Write writes on chip.
-func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, noverify bool, flashcontentsImage string) (int, error) {
-	// TODO(b:247668196) implement
+// Write writes data on chip from the file provided by filePath. Note filePath is a path on the DUT,
+// which will not be local in case of remote test.
+// If optional parameter regionNames is provided, only given regions are written.
+// nil as regionNames indicates entire chip.
+// noverifyAll==true adds `--noverify-all` argument to command line
+// noverify==true adds `--noverify` argument to command line
+// Providing flashcontentsImage path adds `--flash-contents flashcontentsImage` to command line.
+// Note that flashcontentsImage is a path on the DUT, which will not be local in case of remote test.
+//
+// If an error happened during write operation, a non-nil error is returned.
+// Returns the output from command line execution, so that the caller can handle it if needed,
+// for example store in log file.
+func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, noverify bool, flashcontentsImage string, regionNames []string) ([]byte, error) {
+	if filePath == "" {
+		return nil, errors.New("Flashrom cannot do write: empty filePath argument")
+	}
 
-	return 0, nil
+	// TODO(b:247668196) handle regionNames
+	if regionNames != nil {
+		return nil, errors.New("Region names are not implemented yet")
+	}
+
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-w", filePath}
+	if flashcontentsImage != "" {
+		cmdArgs = append(cmdArgs, "--flash-contents", flashcontentsImage)
+	}
+	if noverifyAll {
+		cmdArgs = append(cmdArgs, "--noverify-all")
+	}
+	if noverify {
+		cmdArgs = append(cmdArgs, "--noverify")
+	}
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
+
+	out, err := i.runCommandLine(ctx, cmdArgs)
+
+	if err != nil {
+		return out, errors.Wrapf(err, "error while writing flashrom with arguments %v", cmdArgs)
+	}
+
+	testing.ContextLog(ctx, "Flashrom write successful: ", cmdArgs)
+
+	return out, nil
 }
 
 // FullShutdown shuts down flashrom programmer, cleans up all resources and shuts down flashrom.

@@ -14,7 +14,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
+	"chromiumos/tast/common/flashrom"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/ssh"
@@ -68,26 +71,17 @@ func sectionSizes() []int {
 	return []int{maxSectionSize / 16, maxSectionSize / 8, maxSectionSize / 4, maxSectionSize / 2, maxSectionSize}
 }
 
-func writeOutputFile(args []string, outbuf, errbuf bytes.Buffer, outDir string) error {
+func writeOutputFile(opName string, output []byte, outDir string) error {
 	f, err := os.OpenFile(path.Join(outDir, outputFileName), os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	if _, err := fmt.Fprintf(f, " ==== Running command line with arguments: %v ==== \n", args); err != nil {
+	if _, err := fmt.Fprintf(f, " ==== Output of: [%s] ==== \n", opName); err != nil {
 		return err
 	}
-	if _, err := f.Write([]byte("\nstdout\n")); err != nil {
-		return err
-	}
-	if _, err := f.Write(outbuf.Bytes()); err != nil {
-		return err
-	}
-	if _, err := f.Write([]byte("\nstderr\n")); err != nil {
-		return err
-	}
-	if _, err := f.Write(errbuf.Bytes()); err != nil {
+	if _, err := f.Write(output); err != nil {
 		return err
 	}
 	return nil
@@ -120,9 +114,10 @@ func runCommandLine(ctx context.Context, conn *ssh.Conn, args []string, logOutpu
 	}
 
 	if logOutput {
-		if writeErr := writeOutputFile(args, outbuf, errbuf, outDir); writeErr != nil {
-			testing.ContextLog(ctx, "Write output file fails: ", writeErr)
+		fullOutput := bytes.Join([][]byte{outbuf.Bytes(), errbuf.Bytes()}, []byte("\n"))
+		if writeErr := writeOutputFile(strings.Join(args, ", "), fullOutput, outDir); writeErr != nil {
 			if err != nil {
+				testing.ContextLog(ctx, "Write output file fails: ", writeErr)
 				return nil, err
 			}
 			return nil, writeErr
@@ -135,22 +130,35 @@ func runCommandLine(ctx context.Context, conn *ssh.Conn, args []string, logOutpu
 	return outbuf.Bytes(), err
 }
 
-func flashromRead(ctx context.Context, conn *ssh.Conn, imagePath, outDir string) error {
+func flashromRead(ctx context.Context, flashromInstance *flashrom.Instance, imagePath, outDir string) error {
 	testing.ContextLogf(ctx, "Reading image into file %s", imagePath)
 
-	_, err := runCommandLine(ctx, conn, []string{dutFlashromPath, "-r", imagePath}, true, outDir)
+	out, err := flashromInstance.Read(ctx, imagePath, nil /* entire chip */)
+
+	if writeErr := writeOutputFile("flashrom read", out, outDir); writeErr != nil {
+		if err != nil {
+			testing.ContextLog(ctx, "Write output file fails: ", writeErr)
+			return err
+		}
+		return writeErr
+	}
+
 	return err
 }
 
-func flashromWrite(ctx context.Context, conn *ssh.Conn, imagePath, originalImagePath string, noVerifyAll bool, outDir string) error {
+func flashromWrite(ctx context.Context, flashromInstance *flashrom.Instance, imagePath, originalImagePath string, noVerifyAll bool, outDir string) error {
 	testing.ContextLogf(ctx, "Writing image from file %s, flash contents %s", imagePath, originalImagePath)
 
-	args := []string{dutFlashromPath, "-w", imagePath, "--flash-contents", originalImagePath}
-	if noVerifyAll {
-		args = append(args, "--noverify-all")
+	out, err := flashromInstance.Write(ctx, imagePath, noVerifyAll, false /* noverify */, originalImagePath, nil /* entire chip */)
+
+	if writeErr := writeOutputFile("flashrom write", out, outDir); writeErr != nil {
+		if err != nil {
+			testing.ContextLog(ctx, "Write output file fails: ", writeErr)
+			return err
+		}
+		return writeErr
 	}
 
-	_, err := runCommandLine(ctx, conn, args, true, outDir)
 	return err
 }
 
@@ -303,6 +311,23 @@ func prepareJunkImage(ctx context.Context, conn *ssh.Conn,
 }
 
 func FwFlashErasers(ctx context.Context, s *testing.State) {
+	// Configure flashrom instance
+	var flashromConfig flashrom.Config
+	instance, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(s.DUT()).
+		Probe(ctx)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	defer instance.FullShutdown(cleanupCtx)
+
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
+	}
+
 	// Detect inactive section on DUT
 	section, err := inactiveSection(ctx, s.DUT().Conn())
 	if err != nil {
@@ -312,7 +337,7 @@ func FwFlashErasers(ctx context.Context, s *testing.State) {
 	biosImagePath := path.Join(dutLocalDataDir, "bios_image.bin")
 
 	// Read the image from chip
-	if err := flashromRead(ctx, s.DUT().Conn(), string(biosImagePath), s.OutDir()); err != nil {
+	if err := flashromRead(ctx, instance, string(biosImagePath), s.OutDir()); err != nil {
 		s.Fatalf("Flashrom read into file %s failed: %v", string(biosImagePath), err)
 	}
 
@@ -352,14 +377,14 @@ func FwFlashErasers(ctx context.Context, s *testing.State) {
 		}
 
 		// Now write to chip the corrupted image, this would involve erasing the section of testSize bytes.
-		if err := flashromWrite(ctx, s.DUT().Conn(), junkImagePath, biosImagePath, true, s.OutDir()); err != nil {
+		if err := flashromWrite(ctx, instance, junkImagePath, biosImagePath, true, s.OutDir()); err != nil {
 			s.Fatalf("Flashrom write from file %s failed: %v", junkImagePath, err)
 		}
 
 		s.Logf("Successfully write file %s, junk image written to chip", junkImagePath)
 
 		// Now restore the image (write good image back)
-		if err := flashromWrite(ctx, s.DUT().Conn(), biosImagePath, junkImagePath, false, s.OutDir()); err != nil {
+		if err := flashromWrite(ctx, instance, biosImagePath, junkImagePath, false, s.OutDir()); err != nil {
 			s.Fatalf("Flashrom write from file %s failed: %v", biosImagePath, err)
 		}
 
