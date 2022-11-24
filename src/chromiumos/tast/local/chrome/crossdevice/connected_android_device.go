@@ -469,6 +469,33 @@ func (c *AndroidDevice) EnableChromeSync(ctx context.Context) error {
 	if err := acceptBtn.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click final opt-in button")
 	}
+
+	// Enable system-level app sync to get phones out of the state
+	// where Chrome Sync and Android App sync are coupled.
+	if err := c.Device.ShellCommand(ctx, "am", "start", "-a", "android.settings.SYNC_SETTINGS").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to open Android account settings")
+	}
+	syncToggle := d.Object(ui.ResourceID("android:id/switch_widget"))
+	if err := syncToggle.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find Android sync toggle")
+	}
+	syncEnabled, err := syncToggle.IsChecked(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get Android sync status")
+	}
+	if syncEnabled {
+		return nil
+	}
+	if err := syncToggle.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to toggle Android sync")
+	}
+	okBtn := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)ok"))
+	if err := okBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find 'OK' button to turn on auto sync")
+	}
+	if err := okBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click 'OK' button to turn on auto sync")
+	}
 	return nil
 }
 
