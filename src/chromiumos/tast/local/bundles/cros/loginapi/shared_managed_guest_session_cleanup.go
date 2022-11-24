@@ -35,6 +35,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Clean shared MGS on clinician logout (COM_HEALTH_CUJ2_TASK1_WF1).
+			Value: "screenplay-3422ba87-53ab-4a6b-9ee2-135ad7eca0f5",
+		}},
 	})
 }
 

@@ -32,6 +32,19 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Launch MGS with Password (COM_HEALTH_CUJ1_TASK1_WF1).
+			Value: "screenplay-47fd7e2a-db80-46cd-b766-71eaf9705376",
+		}, {
+			Key: "feature_id",
+			// Lock MGS in the patient room (COM_HEALTH_CUJ5_TASK2_WF1).
+			Value: "screenplay-017b8790-0f92-4483-b395-78dda7d3fd45",
+		}, {
+			Key: "feature_id",
+			// Unlock MGS in the patient room (COM_HEALTH_CUJ5_TASK4_WF1).
+			Value: "screenplay-dd1b7d25-4346-4c74-a59e-bafbd4346c86",
+		}},
 	})
 }
 
