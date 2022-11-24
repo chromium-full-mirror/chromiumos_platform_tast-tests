@@ -43,20 +43,20 @@ func init() {
 			ExtraAttr: []string{"group:camera-postsubmit", "informational"},
 			Val:       none,
 		}, {
-			Name:    "fake_finch_on",
-			Fixture: "ccaLaunchedWithFakeCameraFinchOn",
+			Name:    "fake_vcd_finch_on",
+			Fixture: "ccaLaunchedWithFakeVCDCameraFinchOn",
 			Val:     none,
 		}, {
-			Name:    "fake_finch_off",
-			Fixture: "ccaLaunchedWithFakeCameraFinchOff",
+			Name:    "fake_vcd_finch_off",
+			Fixture: "ccaLaunchedWithFakeVCDCameraFinchOff",
 			Val:     none,
 		}, {
-			Name:    "photo_fake",
-			Fixture: "ccaLaunchedWithFakeCamera",
+			Name:    "photo_fake_vcd",
+			Fixture: "ccaLaunchedWithFakeVCDCamera",
 			Val:     photoTaking,
 		}, {
-			Name:              "video_fake",
-			Fixture:           "ccaLaunchedWithFakeCamera",
+			Name:              "video_fake_vcd",
+			Fixture:           "ccaLaunchedWithFakeVCDCamera",
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Val:               videoRecoridng,
 		}, {

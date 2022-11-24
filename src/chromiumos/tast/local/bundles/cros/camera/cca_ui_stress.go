@@ -60,9 +60,9 @@ func init() {
 			Timeout:           5 * time.Minute,
 			Val:               testutil.UseVividCamera,
 		}, {
-			Name:      "fake",
+			Name:      "fake_vcd",
 			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:   "ccaLaunchedWithFakeCamera",
+			Fixture:   "ccaLaunchedWithFakeVCDCamera",
 			Timeout:   5 * time.Minute,
 			Val:       testutil.UseFakeVCDCamera,
 		}, {

@@ -94,8 +94,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithFakeCamera",
-		Desc:            "Launched CCA with fake camera input",
+		Name:            "ccaLaunchedWithFakeVCDCamera",
+		Desc:            "Launched CCA with fake VCD camera input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true},
@@ -120,8 +120,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithFakeCameraFinchOn",
-		Desc:            "Launched CCA with fake camera input with finch field trial config enabled",
+		Name:            "ccaLaunchedWithFakeVCDCameraFinchOn",
+		Desc:            "Launched CCA with fake VCD camera input with finch field trial config enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "enable"},
@@ -133,8 +133,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithFakeCameraFinchOff",
-		Desc:            "Launched CCA with fake camera input with finch field trial config disabled",
+		Name:            "ccaLaunchedWithFakeVCDCameraFinchOff",
+		Desc:            "Launched CCA with fake VCD camera input with finch field trial config disabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "disable"},

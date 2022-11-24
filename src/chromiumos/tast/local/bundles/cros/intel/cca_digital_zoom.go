@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "ccaLaunchedWithFakeCamera",
+		Fixture:      "ccaLaunchedWithFakeVCDCamera",
 		Params: []testing.Param{{
 			Name: "photo",
 			Val:  photoTaking,
