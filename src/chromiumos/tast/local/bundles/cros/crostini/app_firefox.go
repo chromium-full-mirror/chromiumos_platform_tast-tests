@@ -6,39 +6,27 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
-)
-
-const (
-	firefoxPackage = "firefox-esr.deb"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppFirefoxInstall,
+		Func:         AppFirefox,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         `Install a pinned version of Firefox, check rendering, and uninstall. Rendering is checked by looking for a rendered browser tab with the title "Welcome to Firefox" or "New Tab" via ACUITI`,
+		Desc:         `Open Firefox, check rendering by looking for a rendered browser tab with the title "Welcome to Firefox" or "New Tab" via ACUITI`,
 		Contacts:     []string{"ashpakov@google.com", "clumptini@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{firefoxPackage},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
@@ -102,12 +90,9 @@ func init() {
 	})
 }
 
-func AppFirefoxInstall(ctx context.Context, s *testing.State) {
-	const packageName = "firefox-esr"
+func AppFirefox(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
-	cont := s.FixtValue().(crostini.FixtureData).Cont
-	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -115,52 +100,6 @@ func AppFirefoxInstall(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	firefoxPath := fmt.Sprintf("/home/%s/%s", strings.Split(cr.NormalizedUser(), "@")[0], firefoxPackage)
-
-	if err := crostini.TransferToContainer(ctx, cont, s.DataPath(firefoxPackage), firefoxPath); err != nil {
-		s.Fatal("Failed to transfer Firefox package to the container: ", err)
-	}
-
-	defer func(ctx context.Context) {
-		if err := crostini.RemoveContainerFile(ctx, cont, firefoxPath); err != nil {
-			s.Fatal("Failed to cleanup Firefox package from the container: ", err)
-		}
-	}(cleanupCtx)
-
-	s.Log("Installing Firefox")
-	if err := install(ctx, cont, firefoxPath); err != nil {
-		s.Fatal("Failed to install Firefox: ", err)
-	}
-
-	defer func(ctx context.Context) {
-		s.Log("Uninstalling Firefox")
-		if err := uninstall(ctx, cont, packageName); err != nil {
-			s.Fatal("Failed to uninstall Firefox: ", err)
-		}
-	}(cleanupCtx)
-
-	s.Log("Verifying Firefox")
-	if err := verify(ctx, tconn, keyboard); err != nil {
-		s.Fatal("Failed to verify: ", err)
-	}
-}
-
-func install(ctx context.Context, cont *vm.Container, debPath string) error {
-	if err := cont.Command(ctx, "sudo", "apt", "-y", "install", debPath).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "failed to install %s: ", debPath)
-	}
-
-	return nil
-}
-func uninstall(ctx context.Context, cont *vm.Container, packageName string) error {
-	if err := cont.Command(ctx, "sudo", "apt-get", "-y", "remove", packageName).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "failed to uninstall %s: ", packageName)
-	}
-
-	return nil
-}
-
-func verify(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter) error {
 	ud := uidetection.NewDefault(tconn)
 	ui := uiauto.New(tconn)
 	firefoxWindow := nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
@@ -177,8 +116,6 @@ func verify(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Keyboar
 			ui.WithTimeout(3*time.Second).WaitUntilGone(firefoxWindow),
 		),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify Firefox")
+		s.Fatal("Failed to verify Firefox: ", err)
 	}
-
-	return nil
 }
