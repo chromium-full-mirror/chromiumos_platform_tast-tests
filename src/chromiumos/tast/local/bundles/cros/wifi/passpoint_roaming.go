@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
+	"chromiumos/tast/local/wpasupplicant"
 	"chromiumos/tast/testing"
 )
 
@@ -186,8 +187,6 @@ type roamingTestContext struct {
 	manager *shill.Manager
 	// clientIface is the simulated interface used by Shill.
 	clientIface string
-	// apIface is the simulated access point interface.
-	apIface string
 	// aps is the list of access point created for the test.
 	aps []*hostapd.Server
 	// credentials is the set of Passpoint credentials under test.
@@ -225,6 +224,16 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 	}
 	defer tc.manager.SetInterworkingSelectEnabled(ctx, tc.clientIface, false)
 
+	// Obtain a proxy to wpa_supplicant to flush BSS cache during the test.
+	wpas, err := wpasupplicant.NewSupplicant(ctx)
+	if err != nil {
+		s.Fatal("Failed to create wpa_supplicant proxy")
+	}
+	iface, err := wpas.GetInterface(ctx, tc.clientIface)
+	if err != nil {
+		s.Fatalf("Failed to obtain %s interface from wpa_supplicant", tc.clientIface)
+	}
+
 	// Add the set of credentials to Shill.
 	prop, err := tc.credentials.ToShillProperties()
 	if err != nil {
@@ -238,6 +247,12 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 		if err := runApTestCase(ctx, s, tc, ap); err != nil {
 			s.Fatalf("Failed to connect to access point %d: %v", i, err)
 		}
+		// Flush the cache of previously scanned networks.
+		// As the test does quick AP changes, the previous access point stays in
+		// wpa_supplicant cache for a while which causes tests failures (see
+		// b/245919543). As the APs are not changing that quickly in real life,
+		// so we can safely clean the cache without breaking the test validity.
+		iface.FlushBSS(ctx, 0)
 	}
 }
 
@@ -287,29 +302,28 @@ func prepareRoamingTest(ctx context.Context, s *testing.State) (*roamingTestCont
 		return nil, errors.Wrap(err, "failed to connect to shill Manager")
 	}
 
+	// Obtain the test case.
+	params := s.Param().(roamingTest)
+
 	// Obtain the simulated interfaces from the fixture environment.
 	ifaces := s.FixtValue().(*hwsim.ShillSimulatedWiFi)
-	if len(ifaces.AP) < 1 {
-		return nil, errors.Wrap(err, "roaming test require at least one simulated interface")
+	if len(ifaces.AP) < len(params.aps) {
+		return nil, errors.Wrapf(err, "roaming test require at least %d simulated interface", len(params.aps))
 	}
 	if len(ifaces.Client) < 1 {
 		return nil, errors.Wrap(err, "roaming test require at least one simulated client interface")
 	}
 
-	// Obtain the test case.
-	params := s.Param().(roamingTest)
-
 	// Create one access point per test network.
 	var servers []*hostapd.Server
-	for _, ap := range params.aps {
-		server := ap.ToServer(ifaces.AP[0], s.OutDir())
+	for i, ap := range params.aps {
+		server := ap.ToServer(ifaces.AP[i], s.OutDir())
 		servers = append(servers, server)
 	}
 
 	return &roamingTestContext{
 		manager:     m,
 		clientIface: ifaces.Client[0],
-		apIface:     ifaces.AP[0],
 		credentials: params.credentials,
 		aps:         servers,
 	}, nil
