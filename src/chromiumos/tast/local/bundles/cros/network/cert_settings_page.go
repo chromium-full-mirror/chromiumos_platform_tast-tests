@@ -70,9 +70,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test that chrome://settings/certificates page can import and use client and CA certificates",
 		Contacts: []string{
-			"miersh@google.com",
-			"chromeos-commercial-networking@google.com",
+			"chromeos-commercial-networking@google.com", // Team
+			"miersh@google.com",                         // Test author
 		},
+		BugComponent: "b:1000044",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacros",
