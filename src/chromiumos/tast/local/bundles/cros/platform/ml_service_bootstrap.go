@@ -19,7 +19,12 @@ func init() {
 		Func:         MLServiceBootstrap,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome can establish a Mojo connection to ML Service",
-		Contacts:     []string{"amoylan@chromium.org"},
+		Contacts: []string{
+			"ml-service-team@google.com",
+			"amoylan@chromium.org",
+		},
+		// Software > Machine Intelligence > ML Service
+		BugComponent: "b:1179044",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "ml_service"},
 		Pre:          chrome.LoggedIn(),
