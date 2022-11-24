@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"chromiumos/tast/common/policy"
@@ -108,16 +107,15 @@ func GAIABytebotEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 
-	pb := policy.NewBlob()
-	pb.AddPolicy(&policy.PluginVmUserId{Stat: policy.StatusSet})
-
-	pJSON, err := json.Marshal(pb)
+	pJSON, err := policy.MarshalList([]policy.Policy{
+		&policy.PluginVmUserId{Stat: policy.StatusSet, Val: "********"},
+	})
 	if err != nil {
 		s.Fatal("Error while marshalling policies to JSON: ", err)
 	}
 
 	if _, err := policyClient.VerifyPolicyStatus(ctx, &pspb.VerifyPolicyStatusRequest{
-		PolicyBlob: pJSON,
+		Policies: pJSON,
 	}); err != nil {
 		s.Fatal("Failed to verify policy: ", err)
 	}

@@ -53,8 +53,8 @@ service PolicyService {
   rpc ClientID(google.protobuf.Empty) returns (ClientIdResponse) {}
 }
 
-  message VerifyPolicyStatusRequest {
-  bytes policy_blob = 1;
+message VerifyPolicyStatusRequest {
+  bytes policies = 1;
 }
 
 message EnrollUsingChromeRequest {

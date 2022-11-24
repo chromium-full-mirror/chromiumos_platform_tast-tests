@@ -61,16 +61,16 @@ func (c *PolicyService) VerifyPolicyStatus(ctx context.Context, req *ppb.VerifyP
 	testing.ContextLog(ctx, "Verifying the policy is set to correct status")
 	tconn, err := c.chrome.TestAPIConn(ctx)
 	if err != nil {
-		errors.Wrap(err, "create test API connection")
+		return nil, errors.Wrap(err, "create test API connection")
 	}
 
-	var pJSON []policy.Policy
-	if err := json.Unmarshal(req.PolicyBlob, &pJSON); err != nil {
-		errors.Wrap(err, "failed to unmarshal")
+	policies, err := policy.UnmarshalList(req.Policies)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal")
 	}
 
-	if err := policyutil.Verify(ctx, tconn, pJSON); err != nil {
-		errors.Wrap(err, "failed to verify policies")
+	if err := policyutil.Verify(ctx, tconn, policies); err != nil {
+		return nil, errors.Wrap(err, "failed to verify policies")
 	}
 
 	return &empty.Empty{}, nil

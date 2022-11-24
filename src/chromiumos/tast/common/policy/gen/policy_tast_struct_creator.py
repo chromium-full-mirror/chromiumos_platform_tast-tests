@@ -184,6 +184,19 @@ STRING_PROPERTY_TEMPLATE = (
     """\n\t{go_name} {go_type} `json:"{json_name},string"`""")
 EMBEDDED_TEMPLATE = """\n\t{go_type}"""
 
+DESERIALIZE_HEADER = """
+// ****************************************************************************
+// JSON deserialization logic (used by policy.Unmarshal).
+// ****************************************************************************
+
+// newByName creates a new policy object for a given policy name
+func newByName(name string) (Policy, error){
+\tswitch name {
+"""
+
+DESERIALIZE_ENTRY_TEMPLATE = """\t\tcase "{self.name}": \t\t\treturn &{self.name}{{}}, nil\n"""
+DESERIALIZE_FOOTER = """\t\tdefault: \t\t\treturn nil, errors.New("Unknown policy " + name)\n\t}\n}"""
+
 
 def new_struct(name, members):
   """Return Go code for a new struct with the given name and members.
@@ -775,6 +788,12 @@ def write_code(output_path, policies_by_id, schema_ids):
     fh.write(HEADER)
     for i in sorted(policies_by_id.keys()):
       fh.write(policies_by_id[i].code)
+
+    # Append code for policy deserialization.
+    fh.write(DESERIALIZE_HEADER)
+    for i in sorted(policies_by_id.keys()):
+      fh.write(DESERIALIZE_ENTRY_TEMPLATE.format(self=policies_by_id[i]))
+    fh.write(DESERIALIZE_FOOTER)
 
     # Append code for any reference values being used by ChromeOS policies.
     fh.write(REFERENCE_HEADER)

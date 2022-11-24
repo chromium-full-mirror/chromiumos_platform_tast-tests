@@ -23607,6 +23607,1468 @@ func (p *BruschettaVMConfiguration) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// JSON deserialization logic (used by policy.Unmarshal).
+// ****************************************************************************
+
+// newByName creates a new policy object for a given policy name
+func newByName(name string) (Policy, error) {
+	switch name {
+	case "HomepageLocation":
+		return &HomepageLocation{}, nil
+	case "HomepageIsNewTabPage":
+		return &HomepageIsNewTabPage{}, nil
+	case "AlternateErrorPagesEnabled":
+		return &AlternateErrorPagesEnabled{}, nil
+	case "SearchSuggestEnabled":
+		return &SearchSuggestEnabled{}, nil
+	case "JavascriptEnabled":
+		return &JavascriptEnabled{}, nil
+	case "IncognitoEnabled":
+		return &IncognitoEnabled{}, nil
+	case "SavingBrowserHistoryDisabled":
+		return &SavingBrowserHistoryDisabled{}, nil
+	case "PrintingEnabled":
+		return &PrintingEnabled{}, nil
+	case "SafeBrowsingEnabled":
+		return &SafeBrowsingEnabled{}, nil
+	case "PasswordManagerEnabled":
+		return &PasswordManagerEnabled{}, nil
+	case "AutoFillEnabled":
+		return &AutoFillEnabled{}, nil
+	case "SyncDisabled":
+		return &SyncDisabled{}, nil
+	case "ProxyMode":
+		return &ProxyMode{}, nil
+	case "ProxyServerMode":
+		return &ProxyServerMode{}, nil
+	case "ProxyServer":
+		return &ProxyServer{}, nil
+	case "ProxyPacUrl":
+		return &ProxyPacUrl{}, nil
+	case "ProxyBypassList":
+		return &ProxyBypassList{}, nil
+	case "AuthSchemes":
+		return &AuthSchemes{}, nil
+	case "DisableAuthNegotiateCnameLookup":
+		return &DisableAuthNegotiateCnameLookup{}, nil
+	case "EnableAuthNegotiatePort":
+		return &EnableAuthNegotiatePort{}, nil
+	case "ExtensionInstallForcelist":
+		return &ExtensionInstallForcelist{}, nil
+	case "ShowHomeButton":
+		return &ShowHomeButton{}, nil
+	case "DeveloperToolsDisabled":
+		return &DeveloperToolsDisabled{}, nil
+	case "RestoreOnStartup":
+		return &RestoreOnStartup{}, nil
+	case "RestoreOnStartupURLs":
+		return &RestoreOnStartupURLs{}, nil
+	case "BlockThirdPartyCookies":
+		return &BlockThirdPartyCookies{}, nil
+	case "DefaultSearchProviderEnabled":
+		return &DefaultSearchProviderEnabled{}, nil
+	case "DefaultSearchProviderName":
+		return &DefaultSearchProviderName{}, nil
+	case "DefaultSearchProviderKeyword":
+		return &DefaultSearchProviderKeyword{}, nil
+	case "DefaultSearchProviderSearchURL":
+		return &DefaultSearchProviderSearchURL{}, nil
+	case "DefaultSearchProviderSuggestURL":
+		return &DefaultSearchProviderSuggestURL{}, nil
+	case "DefaultSearchProviderIconURL":
+		return &DefaultSearchProviderIconURL{}, nil
+	case "DefaultSearchProviderEncodings":
+		return &DefaultSearchProviderEncodings{}, nil
+	case "DefaultCookiesSetting":
+		return &DefaultCookiesSetting{}, nil
+	case "DefaultImagesSetting":
+		return &DefaultImagesSetting{}, nil
+	case "DefaultJavaScriptSetting":
+		return &DefaultJavaScriptSetting{}, nil
+	case "DefaultPopupsSetting":
+		return &DefaultPopupsSetting{}, nil
+	case "DefaultNotificationsSetting":
+		return &DefaultNotificationsSetting{}, nil
+	case "DefaultGeolocationSetting":
+		return &DefaultGeolocationSetting{}, nil
+	case "Disable3DAPIs":
+		return &Disable3DAPIs{}, nil
+	case "PolicyRefreshRate":
+		return &PolicyRefreshRate{}, nil
+	case "ChromeOsLockOnIdleSuspend":
+		return &ChromeOsLockOnIdleSuspend{}, nil
+	case "DownloadDirectory":
+		return &DownloadDirectory{}, nil
+	case "CookiesBlockedForUrls":
+		return &CookiesBlockedForUrls{}, nil
+	case "CookiesSessionOnlyForUrls":
+		return &CookiesSessionOnlyForUrls{}, nil
+	case "ImagesAllowedForUrls":
+		return &ImagesAllowedForUrls{}, nil
+	case "ImagesBlockedForUrls":
+		return &ImagesBlockedForUrls{}, nil
+	case "JavaScriptAllowedForUrls":
+		return &JavaScriptAllowedForUrls{}, nil
+	case "JavaScriptBlockedForUrls":
+		return &JavaScriptBlockedForUrls{}, nil
+	case "PopupsAllowedForUrls":
+		return &PopupsAllowedForUrls{}, nil
+	case "PopupsBlockedForUrls":
+		return &PopupsBlockedForUrls{}, nil
+	case "CookiesAllowedForUrls":
+		return &CookiesAllowedForUrls{}, nil
+	case "TranslateEnabled":
+		return &TranslateEnabled{}, nil
+	case "BookmarkBarEnabled":
+		return &BookmarkBarEnabled{}, nil
+	case "EditBookmarksEnabled":
+		return &EditBookmarksEnabled{}, nil
+	case "DisabledSchemes":
+		return &DisabledSchemes{}, nil
+	case "AllowCrossOriginAuthPrompt":
+		return &AllowCrossOriginAuthPrompt{}, nil
+	case "DevicePolicyRefreshRate":
+		return &DevicePolicyRefreshRate{}, nil
+	case "ChromeOsReleaseChannel":
+		return &ChromeOsReleaseChannel{}, nil
+	case "MaxConnectionsPerProxy":
+		return &MaxConnectionsPerProxy{}, nil
+	case "IncognitoModeAvailability":
+		return &IncognitoModeAvailability{}, nil
+	case "RemoteAccessHostFirewallTraversal":
+		return &RemoteAccessHostFirewallTraversal{}, nil
+	case "AutoSelectCertificateForUrls":
+		return &AutoSelectCertificateForUrls{}, nil
+	case "NotificationsAllowedForUrls":
+		return &NotificationsAllowedForUrls{}, nil
+	case "NotificationsBlockedForUrls":
+		return &NotificationsBlockedForUrls{}, nil
+	case "OpenNetworkConfiguration":
+		return &OpenNetworkConfiguration{}, nil
+	case "DeviceOpenNetworkConfiguration":
+		return &DeviceOpenNetworkConfiguration{}, nil
+	case "ProxySettings":
+		return &ProxySettings{}, nil
+	case "ReportDeviceVersionInfo":
+		return &ReportDeviceVersionInfo{}, nil
+	case "ReportDeviceActivityTimes":
+		return &ReportDeviceActivityTimes{}, nil
+	case "ReportDeviceBootMode":
+		return &ReportDeviceBootMode{}, nil
+	case "DeviceAllowNewUsers":
+		return &DeviceAllowNewUsers{}, nil
+	case "DeviceGuestModeEnabled":
+		return &DeviceGuestModeEnabled{}, nil
+	case "DeviceShowUserNamesOnSignin":
+		return &DeviceShowUserNamesOnSignin{}, nil
+	case "DeviceDataRoamingEnabled":
+		return &DeviceDataRoamingEnabled{}, nil
+	case "DeviceMetricsReportingEnabled":
+		return &DeviceMetricsReportingEnabled{}, nil
+	case "DeviceEphemeralUsersEnabled":
+		return &DeviceEphemeralUsersEnabled{}, nil
+	case "EnableOnlineRevocationChecks":
+		return &EnableOnlineRevocationChecks{}, nil
+	case "ChromeOsReleaseChannelDelegated":
+		return &ChromeOsReleaseChannelDelegated{}, nil
+	case "DeviceAutoUpdateDisabled":
+		return &DeviceAutoUpdateDisabled{}, nil
+	case "DriveDisabled":
+		return &DriveDisabled{}, nil
+	case "DriveDisabledOverCellular":
+		return &DriveDisabledOverCellular{}, nil
+	case "DeviceTargetVersionPrefix":
+		return &DeviceTargetVersionPrefix{}, nil
+	case "ReportDeviceLocation":
+		return &ReportDeviceLocation{}, nil
+	case "PinnedLauncherApps":
+		return &PinnedLauncherApps{}, nil
+	case "DeviceUpdateScatterFactor":
+		return &DeviceUpdateScatterFactor{}, nil
+	case "DeviceUpdateAllowedConnectionTypes":
+		return &DeviceUpdateAllowedConnectionTypes{}, nil
+	case "ExtensionInstallSources":
+		return &ExtensionInstallSources{}, nil
+	case "DefaultMediaStreamSetting":
+		return &DefaultMediaStreamSetting{}, nil
+	case "DisableSafeBrowsingProceedAnyway":
+		return &DisableSafeBrowsingProceedAnyway{}, nil
+	case "SpellCheckServiceEnabled":
+		return &SpellCheckServiceEnabled{}, nil
+	case "ExternalStorageDisabled":
+		return &ExternalStorageDisabled{}, nil
+	case "DisableScreenshots":
+		return &DisableScreenshots{}, nil
+	case "RemoteAccessHostDomain":
+		return &RemoteAccessHostDomain{}, nil
+	case "SystemTimezone":
+		return &SystemTimezone{}, nil
+	case "AudioOutputAllowed":
+		return &AudioOutputAllowed{}, nil
+	case "AudioCaptureAllowed":
+		return &AudioCaptureAllowed{}, nil
+	case "DefaultSearchProviderAlternateURLs":
+		return &DefaultSearchProviderAlternateURLs{}, nil
+	case "ForceSafeSearch":
+		return &ForceSafeSearch{}, nil
+	case "DeviceLocalAccounts":
+		return &DeviceLocalAccounts{}, nil
+	case "ShowLogoutButtonInTray":
+		return &ShowLogoutButtonInTray{}, nil
+	case "BuiltInDnsClientEnabled":
+		return &BuiltInDnsClientEnabled{}, nil
+	case "ShelfAutoHideBehavior":
+		return &ShelfAutoHideBehavior{}, nil
+	case "VideoCaptureAllowed":
+		return &VideoCaptureAllowed{}, nil
+	case "ExtensionAllowedTypes":
+		return &ExtensionAllowedTypes{}, nil
+	case "UserDisplayName":
+		return &UserDisplayName{}, nil
+	case "SessionLengthLimit":
+		return &SessionLengthLimit{}, nil
+	case "ScreenDimDelayAC":
+		return &ScreenDimDelayAC{}, nil
+	case "ScreenOffDelayAC":
+		return &ScreenOffDelayAC{}, nil
+	case "ScreenLockDelayAC":
+		return &ScreenLockDelayAC{}, nil
+	case "IdleDelayAC":
+		return &IdleDelayAC{}, nil
+	case "ScreenDimDelayBattery":
+		return &ScreenDimDelayBattery{}, nil
+	case "ScreenOffDelayBattery":
+		return &ScreenOffDelayBattery{}, nil
+	case "ScreenLockDelayBattery":
+		return &ScreenLockDelayBattery{}, nil
+	case "IdleDelayBattery":
+		return &IdleDelayBattery{}, nil
+	case "IdleAction":
+		return &IdleAction{}, nil
+	case "LidCloseAction":
+		return &LidCloseAction{}, nil
+	case "PowerManagementUsesAudioActivity":
+		return &PowerManagementUsesAudioActivity{}, nil
+	case "PowerManagementUsesVideoActivity":
+		return &PowerManagementUsesVideoActivity{}, nil
+	case "DeviceAllowRedeemChromeOsRegistrationOffers":
+		return &DeviceAllowRedeemChromeOsRegistrationOffers{}, nil
+	case "TermsOfServiceURL":
+		return &TermsOfServiceURL{}, nil
+	case "AllowDeletingBrowserHistory":
+		return &AllowDeletingBrowserHistory{}, nil
+	case "ShowAccessibilityOptionsInSystemTrayMenu":
+		return &ShowAccessibilityOptionsInSystemTrayMenu{}, nil
+	case "HideWebStoreIcon":
+		return &HideWebStoreIcon{}, nil
+	case "UptimeLimit":
+		return &UptimeLimit{}, nil
+	case "RebootAfterUpdate":
+		return &RebootAfterUpdate{}, nil
+	case "DeviceLocalAccountAutoLoginId":
+		return &DeviceLocalAccountAutoLoginId{}, nil
+	case "DeviceLocalAccountAutoLoginDelay":
+		return &DeviceLocalAccountAutoLoginDelay{}, nil
+	case "IdleWarningDelayAC":
+		return &IdleWarningDelayAC{}, nil
+	case "IdleWarningDelayBattery":
+		return &IdleWarningDelayBattery{}, nil
+	case "DeviceVariationsRestrictParameter":
+		return &DeviceVariationsRestrictParameter{}, nil
+	case "AttestationEnabledForUser":
+		return &AttestationEnabledForUser{}, nil
+	case "DeviceLocalAccountAutoLoginBailoutEnabled":
+		return &DeviceLocalAccountAutoLoginBailoutEnabled{}, nil
+	case "AllowScreenWakeLocks":
+		return &AllowScreenWakeLocks{}, nil
+	case "AttestationEnabledForDevice":
+		return &AttestationEnabledForDevice{}, nil
+	case "AudioCaptureAllowedUrls":
+		return &AudioCaptureAllowedUrls{}, nil
+	case "VideoCaptureAllowedUrls":
+		return &VideoCaptureAllowedUrls{}, nil
+	case "UserActivityScreenDimDelayScale":
+		return &UserActivityScreenDimDelayScale{}, nil
+	case "LargeCursorEnabled":
+		return &LargeCursorEnabled{}, nil
+	case "SpokenFeedbackEnabled":
+		return &SpokenFeedbackEnabled{}, nil
+	case "HighContrastEnabled":
+		return &HighContrastEnabled{}, nil
+	case "ScreenMagnifierType":
+		return &ScreenMagnifierType{}, nil
+	case "DeviceLoginScreenDefaultLargeCursorEnabled":
+		return &DeviceLoginScreenDefaultLargeCursorEnabled{}, nil
+	case "DeviceLoginScreenDefaultSpokenFeedbackEnabled":
+		return &DeviceLoginScreenDefaultSpokenFeedbackEnabled{}, nil
+	case "DeviceLoginScreenDefaultHighContrastEnabled":
+		return &DeviceLoginScreenDefaultHighContrastEnabled{}, nil
+	case "DeviceLoginScreenDefaultScreenMagnifierType":
+		return &DeviceLoginScreenDefaultScreenMagnifierType{}, nil
+	case "PresentationScreenDimDelayScale":
+		return &PresentationScreenDimDelayScale{}, nil
+	case "IdleActionBattery":
+		return &IdleActionBattery{}, nil
+	case "ReportDeviceNetworkInterfaces":
+		return &ReportDeviceNetworkInterfaces{}, nil
+	case "DeviceLoginScreenPowerManagement":
+		return &DeviceLoginScreenPowerManagement{}, nil
+	case "IdleActionAC":
+		return &IdleActionAC{}, nil
+	case "ManagedBookmarks":
+		return &ManagedBookmarks{}, nil
+	case "MaxInvalidationFetchDelay":
+		return &MaxInvalidationFetchDelay{}, nil
+	case "DefaultSearchProviderImageURL":
+		return &DefaultSearchProviderImageURL{}, nil
+	case "DefaultSearchProviderSearchURLPostParams":
+		return &DefaultSearchProviderSearchURLPostParams{}, nil
+	case "DefaultSearchProviderSuggestURLPostParams":
+		return &DefaultSearchProviderSuggestURLPostParams{}, nil
+	case "DefaultSearchProviderImageURLPostParams":
+		return &DefaultSearchProviderImageURLPostParams{}, nil
+	case "RequireOnlineRevocationChecksForLocalAnchors":
+		return &RequireOnlineRevocationChecksForLocalAnchors{}, nil
+	case "SystemUse24HourClock":
+		return &SystemUse24HourClock{}, nil
+	case "DefaultSearchProviderNewTabURL":
+		return &DefaultSearchProviderNewTabURL{}, nil
+	case "AttestationForContentProtectionEnabled":
+		return &AttestationForContentProtectionEnabled{}, nil
+	case "FullscreenAllowed":
+		return &FullscreenAllowed{}, nil
+	case "DeviceAutoUpdateP2PEnabled":
+		return &DeviceAutoUpdateP2PEnabled{}, nil
+	case "DeviceUpdateHttpDownloadsEnabled":
+		return &DeviceUpdateHttpDownloadsEnabled{}, nil
+	case "ChromeOsMultiProfileUserBehavior":
+		return &ChromeOsMultiProfileUserBehavior{}, nil
+	case "WaitForInitialUserActivity":
+		return &WaitForInitialUserActivity{}, nil
+	case "ReportDeviceUsers":
+		return &ReportDeviceUsers{}, nil
+	case "UserAvatarImage":
+		return &UserAvatarImage{}, nil
+	case "DeviceLocalAccountPromptForNetworkWhenOffline":
+		return &DeviceLocalAccountPromptForNetworkWhenOffline{}, nil
+	case "SAMLOfflineSigninTimeLimit":
+		return &SAMLOfflineSigninTimeLimit{}, nil
+	case "VirtualKeyboardEnabled":
+		return &VirtualKeyboardEnabled{}, nil
+	case "DeviceLoginScreenDefaultVirtualKeyboardEnabled":
+		return &DeviceLoginScreenDefaultVirtualKeyboardEnabled{}, nil
+	case "PowerManagementIdleSettings":
+		return &PowerManagementIdleSettings{}, nil
+	case "ScreenLockDelays":
+		return &ScreenLockDelays{}, nil
+	case "KeyboardDefaultToFunctionKeys":
+		return &KeyboardDefaultToFunctionKeys{}, nil
+	case "WPADQuickCheckEnabled":
+		return &WPADQuickCheckEnabled{}, nil
+	case "WallpaperImage":
+		return &WallpaperImage{}, nil
+	case "RemoteAccessHostAllowRelayedConnection":
+		return &RemoteAccessHostAllowRelayedConnection{}, nil
+	case "RemoteAccessHostUdpPortRange":
+		return &RemoteAccessHostUdpPortRange{}, nil
+	case "DeviceBlockDevmode":
+		return &DeviceBlockDevmode{}, nil
+	case "RegisteredProtocolHandlers":
+		return &RegisteredProtocolHandlers{}, nil
+	case "TouchVirtualKeyboardEnabled":
+		return &TouchVirtualKeyboardEnabled{}, nil
+	case "DeviceTransferSAMLCookies":
+		return &DeviceTransferSAMLCookies{}, nil
+	case "EasyUnlockAllowed":
+		return &EasyUnlockAllowed{}, nil
+	case "NetworkPredictionOptions":
+		return &NetworkPredictionOptions{}, nil
+	case "SessionLocales":
+		return &SessionLocales{}, nil
+	case "BrowserGuestModeEnabled":
+		return &BrowserGuestModeEnabled{}, nil
+	case "BrowserAddPersonEnabled":
+		return &BrowserAddPersonEnabled{}, nil
+	case "ExtensionSettings":
+		return &ExtensionSettings{}, nil
+	case "SSLVersionMin":
+		return &SSLVersionMin{}, nil
+	case "ForceGoogleSafeSearch":
+		return &ForceGoogleSafeSearch{}, nil
+	case "ForceYouTubeSafetyMode":
+		return &ForceYouTubeSafetyMode{}, nil
+	case "DeviceRebootOnShutdown":
+		return &DeviceRebootOnShutdown{}, nil
+	case "ReportDeviceHardwareStatus":
+		return &ReportDeviceHardwareStatus{}, nil
+	case "ReportDeviceSessionStatus":
+		return &ReportDeviceSessionStatus{}, nil
+	case "ReportUploadFrequency":
+		return &ReportUploadFrequency{}, nil
+	case "HeartbeatEnabled":
+		return &HeartbeatEnabled{}, nil
+	case "HeartbeatFrequency":
+		return &HeartbeatFrequency{}, nil
+	case "CaptivePortalAuthenticationIgnoresProxy":
+		return &CaptivePortalAuthenticationIgnoresProxy{}, nil
+	case "ExtensionCacheSize":
+		return &ExtensionCacheSize{}, nil
+	case "DeviceLoginScreenDomainAutoComplete":
+		return &DeviceLoginScreenDomainAutoComplete{}, nil
+	case "ForceMaximizeOnFirstRun":
+		return &ForceMaximizeOnFirstRun{}, nil
+	case "SSLErrorOverrideAllowed":
+		return &SSLErrorOverrideAllowed{}, nil
+	case "QuicAllowed":
+		return &QuicAllowed{}, nil
+	case "KeyPermissions":
+		return &KeyPermissions{}, nil
+	case "LogUploadEnabled":
+		return &LogUploadEnabled{}, nil
+	case "UnifiedDesktopEnabledByDefault":
+		return &UnifiedDesktopEnabledByDefault{}, nil
+	case "DefaultPrinterSelection":
+		return &DefaultPrinterSelection{}, nil
+	case "AllowDinosaurEasterEgg":
+		return &AllowDinosaurEasterEgg{}, nil
+	case "DisplayRotationDefault":
+		return &DisplayRotationDefault{}, nil
+	case "RemoteAccessHostClientDomain":
+		return &RemoteAccessHostClientDomain{}, nil
+	case "ArcEnabled":
+		return &ArcEnabled{}, nil
+	case "ArcPolicy":
+		return &ArcPolicy{}, nil
+	case "AllowKioskAppControlChromeVersion":
+		return &AllowKioskAppControlChromeVersion{}, nil
+	case "DefaultWebBluetoothGuardSetting":
+		return &DefaultWebBluetoothGuardSetting{}, nil
+	case "LoginAuthenticationBehavior":
+		return &LoginAuthenticationBehavior{}, nil
+	case "DeviceAllowBluetooth":
+		return &DeviceAllowBluetooth{}, nil
+	case "SuppressUnsupportedOSWarning":
+		return &SuppressUnsupportedOSWarning{}, nil
+	case "DeviceQuirksDownloadEnabled":
+		return &DeviceQuirksDownloadEnabled{}, nil
+	case "SystemTimezoneAutomaticDetection":
+		return &SystemTimezoneAutomaticDetection{}, nil
+	case "TaskManagerEndProcessEnabled":
+		return &TaskManagerEndProcessEnabled{}, nil
+	case "LoginVideoCaptureAllowedUrls":
+		return &LoginVideoCaptureAllowedUrls{}, nil
+	case "AllowScreenLock":
+		return &AllowScreenLock{}, nil
+	case "ArcCertificatesSyncMode":
+		return &ArcCertificatesSyncMode{}, nil
+	case "AllowedDomainsForApps":
+		return &AllowedDomainsForApps{}, nil
+	case "EnableMediaRouter":
+		return &EnableMediaRouter{}, nil
+	case "CertificateTransparencyEnforcementDisabledForUrls":
+		return &CertificateTransparencyEnforcementDisabledForUrls{}, nil
+	case "DeviceLoginScreenExtensions":
+		return &DeviceLoginScreenExtensions{}, nil
+	case "WebRtcUdpPortRange":
+		return &WebRtcUdpPortRange{}, nil
+	case "ComponentUpdatesEnabled":
+		return &ComponentUpdatesEnabled{}, nil
+	case "ExternalStorageReadOnly":
+		return &ExternalStorageReadOnly{}, nil
+	case "ForceYouTubeRestrict":
+		return &ForceYouTubeRestrict{}, nil
+	case "ReportArcStatusEnabled":
+		return &ReportArcStatusEnabled{}, nil
+	case "QuickUnlockTimeout":
+		return &QuickUnlockTimeout{}, nil
+	case "PinUnlockMinimumLength":
+		return &PinUnlockMinimumLength{}, nil
+	case "PinUnlockMaximumLength":
+		return &PinUnlockMaximumLength{}, nil
+	case "PinUnlockWeakPinsAllowed":
+		return &PinUnlockWeakPinsAllowed{}, nil
+	case "DeviceWallpaperImage":
+		return &DeviceWallpaperImage{}, nil
+	case "NewTabPageLocation":
+		return &NewTabPageLocation{}, nil
+	case "ShowCastIconInToolbar":
+		return &ShowCastIconInToolbar{}, nil
+	case "DeviceLoginScreenLocales":
+		return &DeviceLoginScreenLocales{}, nil
+	case "DeviceLoginScreenInputMethods":
+		return &DeviceLoginScreenInputMethods{}, nil
+	case "InstantTetheringAllowed":
+		return &InstantTetheringAllowed{}, nil
+	case "RemoteAccessHostDomainList":
+		return &RemoteAccessHostDomainList{}, nil
+	case "RemoteAccessHostClientDomainList":
+		return &RemoteAccessHostClientDomainList{}, nil
+	case "DownloadRestrictions":
+		return &DownloadRestrictions{}, nil
+	case "DeviceSecondFactorAuthentication":
+		return &DeviceSecondFactorAuthentication{}, nil
+	case "CastReceiverEnabled":
+		return &CastReceiverEnabled{}, nil
+	case "CastReceiverName":
+		return &CastReceiverName{}, nil
+	case "AutofillCreditCardEnabled":
+		return &AutofillCreditCardEnabled{}, nil
+	case "NtlmV2Enabled":
+		return &NtlmV2Enabled{}, nil
+	case "PromptForDownloadLocation":
+		return &PromptForDownloadLocation{}, nil
+	case "DeviceLoginScreenAutoSelectCertificateForUrls":
+		return &DeviceLoginScreenAutoSelectCertificateForUrls{}, nil
+	case "UnaffiliatedArcAllowed":
+		return &UnaffiliatedArcAllowed{}, nil
+	case "IsolateOrigins":
+		return &IsolateOrigins{}, nil
+	case "SitePerProcess":
+		return &SitePerProcess{}, nil
+	case "DefaultDownloadDirectory":
+		return &DefaultDownloadDirectory{}, nil
+	case "SecurityKeyPermitAttestation":
+		return &SecurityKeyPermitAttestation{}, nil
+	case "DeviceHostnameTemplate":
+		return &DeviceHostnameTemplate{}, nil
+	case "AbusiveExperienceInterventionEnforce":
+		return &AbusiveExperienceInterventionEnforce{}, nil
+	case "SpellcheckLanguage":
+		return &SpellcheckLanguage{}, nil
+	case "SecondaryGoogleAccountSigninAllowed":
+		return &SecondaryGoogleAccountSigninAllowed{}, nil
+	case "SpellcheckEnabled":
+		return &SpellcheckEnabled{}, nil
+	case "AdsSettingForIntrusiveAdsSites":
+		return &AdsSettingForIntrusiveAdsSites{}, nil
+	case "PasswordProtectionWarningTrigger":
+		return &PasswordProtectionWarningTrigger{}, nil
+	case "DeviceKerberosEncryptionTypes":
+		return &DeviceKerberosEncryptionTypes{}, nil
+	case "DeviceUserPolicyLoopbackProcessingMode":
+		return &DeviceUserPolicyLoopbackProcessingMode{}, nil
+	case "RelaunchNotification":
+		return &RelaunchNotification{}, nil
+	case "RelaunchNotificationPeriod":
+		return &RelaunchNotificationPeriod{}, nil
+	case "VirtualMachinesAllowed":
+		return &VirtualMachinesAllowed{}, nil
+	case "PasswordProtectionLoginURLs":
+		return &PasswordProtectionLoginURLs{}, nil
+	case "PasswordProtectionChangePasswordURL":
+		return &PasswordProtectionChangePasswordURL{}, nil
+	case "DeviceMachinePasswordChangeRate":
+		return &DeviceMachinePasswordChangeRate{}, nil
+	case "DeviceRollbackAllowedMilestones":
+		return &DeviceRollbackAllowedMilestones{}, nil
+	case "DeviceRollbackToTargetVersion":
+		return &DeviceRollbackToTargetVersion{}, nil
+	case "SafeBrowsingExtendedReportingEnabled":
+		return &SafeBrowsingExtendedReportingEnabled{}, nil
+	case "AutoplayAllowed":
+		return &AutoplayAllowed{}, nil
+	case "DefaultWebUsbGuardSetting":
+		return &DefaultWebUsbGuardSetting{}, nil
+	case "CertificateTransparencyEnforcementDisabledForCas":
+		return &CertificateTransparencyEnforcementDisabledForCas{}, nil
+	case "CertificateTransparencyEnforcementDisabledForLegacyCas":
+		return &CertificateTransparencyEnforcementDisabledForLegacyCas{}, nil
+	case "MediaRouterCastAllowAllIPs":
+		return &MediaRouterCastAllowAllIPs{}, nil
+	case "WebUsbAskForUrls":
+		return &WebUsbAskForUrls{}, nil
+	case "WebUsbBlockedForUrls":
+		return &WebUsbBlockedForUrls{}, nil
+	case "DeveloperToolsAvailability":
+		return &DeveloperToolsAvailability{}, nil
+	case "AllowedLanguages":
+		return &AllowedLanguages{}, nil
+	case "ArcAppInstallEventLoggingEnabled":
+		return &ArcAppInstallEventLoggingEnabled{}, nil
+	case "UsageTimeLimit":
+		return &UsageTimeLimit{}, nil
+	case "ArcBackupRestoreServiceEnabled":
+		return &ArcBackupRestoreServiceEnabled{}, nil
+	case "ArcGoogleLocationServicesEnabled":
+		return &ArcGoogleLocationServicesEnabled{}, nil
+	case "EnableSyncConsent":
+		return &EnableSyncConsent{}, nil
+	case "DeviceAutoUpdateTimeRestrictions":
+		return &DeviceAutoUpdateTimeRestrictions{}, nil
+	case "PromotionalTabsEnabled":
+		return &PromotionalTabsEnabled{}, nil
+	case "SafeSitesFilterBehavior":
+		return &SafeSitesFilterBehavior{}, nil
+	case "AllowedInputMethods":
+		return &AllowedInputMethods{}, nil
+	case "OverrideSecurityRestrictionsOnInsecureOrigin":
+		return &OverrideSecurityRestrictionsOnInsecureOrigin{}, nil
+	case "DeviceUpdateStagingSchedule":
+		return &DeviceUpdateStagingSchedule{}, nil
+	case "AutofillAddressEnabled":
+		return &AutofillAddressEnabled{}, nil
+	case "UrlKeyedAnonymizedDataCollectionEnabled":
+		return &UrlKeyedAnonymizedDataCollectionEnabled{}, nil
+	case "NetworkFileSharesAllowed":
+		return &NetworkFileSharesAllowed{}, nil
+	case "WebRtcEventLogCollectionAllowed":
+		return &WebRtcEventLogCollectionAllowed{}, nil
+	case "PowerSmartDimEnabled":
+		return &PowerSmartDimEnabled{}, nil
+	case "CoalesceH2ConnectionsWithClientCertificatesForHosts":
+		return &CoalesceH2ConnectionsWithClientCertificatesForHosts{}, nil
+	case "NetBiosShareDiscoveryEnabled":
+		return &NetBiosShareDiscoveryEnabled{}, nil
+	case "WebAppInstallForceList":
+		return &WebAppInstallForceList{}, nil
+	case "SmsMessagesAllowed":
+		return &SmsMessagesAllowed{}, nil
+	case "PrintingAllowedColorModes":
+		return &PrintingAllowedColorModes{}, nil
+	case "PrintingAllowedDuplexModes":
+		return &PrintingAllowedDuplexModes{}, nil
+	case "PrintingColorDefault":
+		return &PrintingColorDefault{}, nil
+	case "PrintingDuplexDefault":
+		return &PrintingDuplexDefault{}, nil
+	case "PrintingPaperSizeDefault":
+		return &PrintingPaperSizeDefault{}, nil
+	case "PrintHeaderFooter":
+		return &PrintHeaderFooter{}, nil
+	case "CrostiniAllowed":
+		return &CrostiniAllowed{}, nil
+	case "DeviceUnaffiliatedCrostiniAllowed":
+		return &DeviceUnaffiliatedCrostiniAllowed{}, nil
+	case "EnterpriseHardwarePlatformAPIEnabled":
+		return &EnterpriseHardwarePlatformAPIEnabled{}, nil
+	case "ReportCrostiniUsageEnabled":
+		return &ReportCrostiniUsageEnabled{}, nil
+	case "VpnConfigAllowed":
+		return &VpnConfigAllowed{}, nil
+	case "WebUsbAllowDevicesForUrls":
+		return &WebUsbAllowDevicesForUrls{}, nil
+	case "SmartLockSigninAllowed":
+		return &SmartLockSigninAllowed{}, nil
+	case "NTLMShareAuthenticationEnabled":
+		return &NTLMShareAuthenticationEnabled{}, nil
+	case "NetworkFileSharesPreconfiguredShares":
+		return &NetworkFileSharesPreconfiguredShares{}, nil
+	case "AllowWakeLocks":
+		return &AllowWakeLocks{}, nil
+	case "ScreenBrightnessPercent":
+		return &ScreenBrightnessPercent{}, nil
+	case "CloudReportingEnabled":
+		return &CloudReportingEnabled{}, nil
+	case "DeviceWiFiFastTransitionEnabled":
+		return &DeviceWiFiFastTransitionEnabled{}, nil
+	case "DeviceDisplayResolution":
+		return &DeviceDisplayResolution{}, nil
+	case "PluginVmAllowed":
+		return &PluginVmAllowed{}, nil
+	case "PluginVmImage":
+		return &PluginVmImage{}, nil
+	case "PrintingSendUsernameAndFilenameEnabled":
+		return &PrintingSendUsernameAndFilenameEnabled{}, nil
+	case "ParentAccessCodeConfig":
+		return &ParentAccessCodeConfig{}, nil
+	case "DeviceGpoCacheLifetime":
+		return &DeviceGpoCacheLifetime{}, nil
+	case "DeviceAuthDataCacheLifetime":
+		return &DeviceAuthDataCacheLifetime{}, nil
+	case "ReportDevicePowerStatus":
+		return &ReportDevicePowerStatus{}, nil
+	case "ReportDeviceStorageStatus":
+		return &ReportDeviceStorageStatus{}, nil
+	case "ReportDeviceBoardStatus":
+		return &ReportDeviceBoardStatus{}, nil
+	case "ClientCertificateManagementAllowed":
+		return &ClientCertificateManagementAllowed{}, nil
+	case "DeviceRebootOnUserSignout":
+		return &DeviceRebootOnUserSignout{}, nil
+	case "SchedulerConfiguration":
+		return &SchedulerConfiguration{}, nil
+	case "CrostiniExportImportUIAllowed":
+		return &CrostiniExportImportUIAllowed{}, nil
+	case "PrintingAllowedPinModes":
+		return &PrintingAllowedPinModes{}, nil
+	case "PrintingPinDefault":
+		return &PrintingPinDefault{}, nil
+	case "VoiceInteractionContextEnabled":
+		return &VoiceInteractionContextEnabled{}, nil
+	case "AuthNegotiateDelegateByKdcPolicy":
+		return &AuthNegotiateDelegateByKdcPolicy{}, nil
+	case "VoiceInteractionHotwordEnabled":
+		return &VoiceInteractionHotwordEnabled{}, nil
+	case "DeviceWilcoDtcAllowed":
+		return &DeviceWilcoDtcAllowed{}, nil
+	case "DeviceWilcoDtcConfiguration":
+		return &DeviceWilcoDtcConfiguration{}, nil
+	case "DeviceWiFiAllowed":
+		return &DeviceWiFiAllowed{}, nil
+	case "DevicePowerPeakShiftEnabled":
+		return &DevicePowerPeakShiftEnabled{}, nil
+	case "DevicePowerPeakShiftBatteryThreshold":
+		return &DevicePowerPeakShiftBatteryThreshold{}, nil
+	case "DevicePowerPeakShiftDayConfig":
+		return &DevicePowerPeakShiftDayConfig{}, nil
+	case "DeviceBootOnAcEnabled":
+		return &DeviceBootOnAcEnabled{}, nil
+	case "SignedHTTPExchangeEnabled":
+		return &SignedHTTPExchangeEnabled{}, nil
+	case "DeviceQuickFixBuildToken":
+		return &DeviceQuickFixBuildToken{}, nil
+	case "SamlInSessionPasswordChangeEnabled":
+		return &SamlInSessionPasswordChangeEnabled{}, nil
+	case "DeviceDockMacAddressSource":
+		return &DeviceDockMacAddressSource{}, nil
+	case "DeviceAdvancedBatteryChargeModeEnabled":
+		return &DeviceAdvancedBatteryChargeModeEnabled{}, nil
+	case "DeviceAdvancedBatteryChargeModeDayConfig":
+		return &DeviceAdvancedBatteryChargeModeDayConfig{}, nil
+	case "DeviceBatteryChargeMode":
+		return &DeviceBatteryChargeMode{}, nil
+	case "DeviceBatteryChargeCustomStartCharging":
+		return &DeviceBatteryChargeCustomStartCharging{}, nil
+	case "DeviceBatteryChargeCustomStopCharging":
+		return &DeviceBatteryChargeCustomStopCharging{}, nil
+	case "DeviceUsbPowerShareEnabled":
+		return &DeviceUsbPowerShareEnabled{}, nil
+	case "PolicyListMultipleSourceMergeList":
+		return &PolicyListMultipleSourceMergeList{}, nil
+	case "SamlPasswordExpirationAdvanceWarningDays":
+		return &SamlPasswordExpirationAdvanceWarningDays{}, nil
+	case "DeviceScheduledUpdateCheck":
+		return &DeviceScheduledUpdateCheck{}, nil
+	case "KerberosEnabled":
+		return &KerberosEnabled{}, nil
+	case "KerberosRememberPasswordEnabled":
+		return &KerberosRememberPasswordEnabled{}, nil
+	case "KerberosAddAccountsAllowed":
+		return &KerberosAddAccountsAllowed{}, nil
+	case "KerberosAccounts":
+		return &KerberosAccounts{}, nil
+	case "StickyKeysEnabled":
+		return &StickyKeysEnabled{}, nil
+	case "PolicyDictionaryMultipleSourceMergeList":
+		return &PolicyDictionaryMultipleSourceMergeList{}, nil
+	case "RelaunchHeadsUpPeriod":
+		return &RelaunchHeadsUpPeriod{}, nil
+	case "StartupBrowserWindowLaunchSuppressed":
+		return &StartupBrowserWindowLaunchSuppressed{}, nil
+	case "UserFeedbackAllowed":
+		return &UserFeedbackAllowed{}, nil
+	case "DevicePowerwashAllowed":
+		return &DevicePowerwashAllowed{}, nil
+	case "ExternalPrintServers":
+		return &ExternalPrintServers{}, nil
+	case "SelectToSpeakEnabled":
+		return &SelectToSpeakEnabled{}, nil
+	case "CrostiniRootAccessAllowed":
+		return &CrostiniRootAccessAllowed{}, nil
+	case "VmManagementCliAllowed":
+		return &VmManagementCliAllowed{}, nil
+	case "CACertificateManagementAllowed":
+		return &CACertificateManagementAllowed{}, nil
+	case "PasswordLeakDetectionEnabled":
+		return &PasswordLeakDetectionEnabled{}, nil
+	case "LockScreenMediaPlaybackEnabled":
+		return &LockScreenMediaPlaybackEnabled{}, nil
+	case "DnsOverHttpsMode":
+		return &DnsOverHttpsMode{}, nil
+	case "PolicyAtomicGroupsEnabled":
+		return &PolicyAtomicGroupsEnabled{}, nil
+	case "DictationEnabled":
+		return &DictationEnabled{}, nil
+	case "KeyboardFocusHighlightEnabled":
+		return &KeyboardFocusHighlightEnabled{}, nil
+	case "CursorHighlightEnabled":
+		return &CursorHighlightEnabled{}, nil
+	case "CaretHighlightEnabled":
+		return &CaretHighlightEnabled{}, nil
+	case "MonoAudioEnabled":
+		return &MonoAudioEnabled{}, nil
+	case "AutoclickEnabled":
+		return &AutoclickEnabled{}, nil
+	case "DeviceLoginScreenLargeCursorEnabled":
+		return &DeviceLoginScreenLargeCursorEnabled{}, nil
+	case "HSTSPolicyBypassList":
+		return &HSTSPolicyBypassList{}, nil
+	case "ReportDeviceOsUpdateStatus":
+		return &ReportDeviceOsUpdateStatus{}, nil
+	case "DeviceLoginScreenWebUsbAllowDevicesForUrls":
+		return &DeviceLoginScreenWebUsbAllowDevicesForUrls{}, nil
+	case "DeviceLoginScreenSpokenFeedbackEnabled":
+		return &DeviceLoginScreenSpokenFeedbackEnabled{}, nil
+	case "DeviceLoginScreenHighContrastEnabled":
+		return &DeviceLoginScreenHighContrastEnabled{}, nil
+	case "DeviceLoginScreenVirtualKeyboardEnabled":
+		return &DeviceLoginScreenVirtualKeyboardEnabled{}, nil
+	case "CloudExtensionRequestEnabled":
+		return &CloudExtensionRequestEnabled{}, nil
+	case "DeviceLoginScreenSystemInfoEnforced":
+		return &DeviceLoginScreenSystemInfoEnforced{}, nil
+	case "SharedClipboardEnabled":
+		return &SharedClipboardEnabled{}, nil
+	case "DeviceLoginScreenDictationEnabled":
+		return &DeviceLoginScreenDictationEnabled{}, nil
+	case "DeviceLoginScreenSelectToSpeakEnabled":
+		return &DeviceLoginScreenSelectToSpeakEnabled{}, nil
+	case "DeviceLoginScreenCursorHighlightEnabled":
+		return &DeviceLoginScreenCursorHighlightEnabled{}, nil
+	case "DeviceLoginScreenCaretHighlightEnabled":
+		return &DeviceLoginScreenCaretHighlightEnabled{}, nil
+	case "DeviceLoginScreenMonoAudioEnabled":
+		return &DeviceLoginScreenMonoAudioEnabled{}, nil
+	case "DeviceLoginScreenAutoclickEnabled":
+		return &DeviceLoginScreenAutoclickEnabled{}, nil
+	case "DeviceLoginScreenStickyKeysEnabled":
+		return &DeviceLoginScreenStickyKeysEnabled{}, nil
+	case "DeviceLoginScreenKeyboardFocusHighlightEnabled":
+		return &DeviceLoginScreenKeyboardFocusHighlightEnabled{}, nil
+	case "ShelfAlignment":
+		return &ShelfAlignment{}, nil
+	case "PrintingAllowedBackgroundGraphicsModes":
+		return &PrintingAllowedBackgroundGraphicsModes{}, nil
+	case "PrintingBackgroundGraphicsDefault":
+		return &PrintingBackgroundGraphicsDefault{}, nil
+	case "LegacySameSiteCookieBehaviorEnabledForDomainList":
+		return &LegacySameSiteCookieBehaviorEnabledForDomainList{}, nil
+	case "PrintJobHistoryExpirationPeriod":
+		return &PrintJobHistoryExpirationPeriod{}, nil
+	case "DeviceLoginScreenScreenMagnifierType":
+		return &DeviceLoginScreenScreenMagnifierType{}, nil
+	case "DefaultInsecureContentSetting":
+		return &DefaultInsecureContentSetting{}, nil
+	case "InsecureContentAllowedForUrls":
+		return &InsecureContentAllowedForUrls{}, nil
+	case "InsecureContentBlockedForUrls":
+		return &InsecureContentBlockedForUrls{}, nil
+	case "DeviceWebBasedAttestationAllowedUrls":
+		return &DeviceWebBasedAttestationAllowedUrls{}, nil
+	case "DeviceShowNumericKeyboardForPassword":
+		return &DeviceShowNumericKeyboardForPassword{}, nil
+	case "CrostiniAnsiblePlaybook":
+		return &CrostiniAnsiblePlaybook{}, nil
+	case "WebRtcLocalIpsAllowedUrls":
+		return &WebRtcLocalIpsAllowedUrls{}, nil
+	case "PerAppTimeLimits":
+		return &PerAppTimeLimits{}, nil
+	case "DnsOverHttpsTemplates":
+		return &DnsOverHttpsTemplates{}, nil
+	case "GloballyScopeHTTPAuthCacheEnabled":
+		return &GloballyScopeHTTPAuthCacheEnabled{}, nil
+	case "ClickToCallEnabled":
+		return &ClickToCallEnabled{}, nil
+	case "DeviceLoginScreenShowOptionsInSystemTrayMenu":
+		return &DeviceLoginScreenShowOptionsInSystemTrayMenu{}, nil
+	case "PrinterTypeDenyList":
+		return &PrinterTypeDenyList{}, nil
+	case "SyncTypesListDisabled":
+		return &SyncTypesListDisabled{}, nil
+	case "AmbientAuthenticationInPrivateModesEnabled":
+		return &AmbientAuthenticationInPrivateModesEnabled{}, nil
+	case "PaymentMethodQueryEnabled":
+		return &PaymentMethodQueryEnabled{}, nil
+	case "NTPCustomBackgroundEnabled":
+		return &NTPCustomBackgroundEnabled{}, nil
+	case "DNSInterceptionChecksEnabled":
+		return &DNSInterceptionChecksEnabled{}, nil
+	case "PrimaryMouseButtonSwitch":
+		return &PrimaryMouseButtonSwitch{}, nil
+	case "ReportDeviceCpuInfo":
+		return &ReportDeviceCpuInfo{}, nil
+	case "DeviceLoginScreenPrimaryMouseButtonSwitch":
+		return &DeviceLoginScreenPrimaryMouseButtonSwitch{}, nil
+	case "AccessibilityShortcutsEnabled":
+		return &AccessibilityShortcutsEnabled{}, nil
+	case "ReportDeviceGraphicsStatus":
+		return &ReportDeviceGraphicsStatus{}, nil
+	case "DeviceLoginScreenAccessibilityShortcutsEnabled":
+		return &DeviceLoginScreenAccessibilityShortcutsEnabled{}, nil
+	case "ReportDeviceCrashReportInfo":
+		return &ReportDeviceCrashReportInfo{}, nil
+	case "ScreenCaptureAllowed":
+		return &ScreenCaptureAllowed{}, nil
+	case "DeviceMinimumVersion":
+		return &DeviceMinimumVersion{}, nil
+	case "ReportDeviceTimezoneInfo":
+		return &ReportDeviceTimezoneInfo{}, nil
+	case "SystemProxySettings":
+		return &SystemProxySettings{}, nil
+	case "DeviceChromeVariations":
+		return &DeviceChromeVariations{}, nil
+	case "DeviceLoginScreenPrivacyScreenEnabled":
+		return &DeviceLoginScreenPrivacyScreenEnabled{}, nil
+	case "PrivacyScreenEnabled":
+		return &PrivacyScreenEnabled{}, nil
+	case "ForceLogoutUnauthenticatedUserEnabled":
+		return &ForceLogoutUnauthenticatedUserEnabled{}, nil
+	case "RequiredClientCertificateForUser":
+		return &RequiredClientCertificateForUser{}, nil
+	case "RequiredClientCertificateForDevice":
+		return &RequiredClientCertificateForDevice{}, nil
+	case "ReportDeviceMemoryInfo":
+		return &ReportDeviceMemoryInfo{}, nil
+	case "SafeBrowsingProtectionLevel":
+		return &SafeBrowsingProtectionLevel{}, nil
+	case "AdvancedProtectionAllowed":
+		return &AdvancedProtectionAllowed{}, nil
+	case "ReportDeviceBacklightInfo":
+		return &ReportDeviceBacklightInfo{}, nil
+	case "ScrollToTextFragmentEnabled":
+		return &ScrollToTextFragmentEnabled{}, nil
+	case "SystemFeaturesDisableList":
+		return &SystemFeaturesDisableList{}, nil
+	case "CrostiniArcAdbSideloadingAllowed":
+		return &CrostiniArcAdbSideloadingAllowed{}, nil
+	case "FloatingAccessibilityMenuEnabled":
+		return &FloatingAccessibilityMenuEnabled{}, nil
+	case "PrintingMaxSheetsAllowed":
+		return &PrintingMaxSheetsAllowed{}, nil
+	case "OnFileAttachedEnterpriseConnector":
+		return &OnFileAttachedEnterpriseConnector{}, nil
+	case "DeviceCrostiniArcAdbSideloadingAllowed":
+		return &DeviceCrostiniArcAdbSideloadingAllowed{}, nil
+	case "OnFileDownloadedEnterpriseConnector":
+		return &OnFileDownloadedEnterpriseConnector{}, nil
+	case "OnBulkDataEntryEnterpriseConnector":
+		return &OnBulkDataEntryEnterpriseConnector{}, nil
+	case "PluginVmUserId":
+		return &PluginVmUserId{}, nil
+	case "OnSecurityEventEnterpriseConnector":
+		return &OnSecurityEventEnterpriseConnector{}, nil
+	case "AutoOpenFileTypes":
+		return &AutoOpenFileTypes{}, nil
+	case "LoginDisplayPasswordButtonEnabled":
+		return &LoginDisplayPasswordButtonEnabled{}, nil
+	case "ReportDeviceAppInfo":
+		return &ReportDeviceAppInfo{}, nil
+	case "AccessibilityImageLabelsEnabled":
+		return &AccessibilityImageLabelsEnabled{}, nil
+	case "UserPluginVmAllowed":
+		return &UserPluginVmAllowed{}, nil
+	case "AutoOpenAllowedForURLs":
+		return &AutoOpenAllowedForURLs{}, nil
+	case "ReportDeviceBluetoothInfo":
+		return &ReportDeviceBluetoothInfo{}, nil
+	case "ReportDeviceFanInfo":
+		return &ReportDeviceFanInfo{}, nil
+	case "ReportDeviceVpdInfo":
+		return &ReportDeviceVpdInfo{}, nil
+	case "EnableExperimentalPolicies":
+		return &EnableExperimentalPolicies{}, nil
+	case "PluginVmDataCollectionAllowed":
+		return &PluginVmDataCollectionAllowed{}, nil
+	case "IntensiveWakeUpThrottlingEnabled":
+		return &IntensiveWakeUpThrottlingEnabled{}, nil
+	case "DeviceMinimumVersionAueMessage":
+		return &DeviceMinimumVersionAueMessage{}, nil
+	case "DefaultSearchProviderContextMenuAccessAllowed":
+		return &DefaultSearchProviderContextMenuAccessAllowed{}, nil
+	case "CrostiniPortForwardingAllowed":
+		return &CrostiniPortForwardingAllowed{}, nil
+	case "VirtualKeyboardFeatures":
+		return &VirtualKeyboardFeatures{}, nil
+	case "PinUnlockAutosubmitEnabled":
+		return &PinUnlockAutosubmitEnabled{}, nil
+	case "LockScreenReauthenticationEnabled":
+		return &LockScreenReauthenticationEnabled{}, nil
+	case "DeletePrintJobHistoryAllowed":
+		return &DeletePrintJobHistoryAllowed{}, nil
+	case "EmojiSuggestionEnabled":
+		return &EmojiSuggestionEnabled{}, nil
+	case "ManagedGuestSessionPrivacyWarningsEnabled":
+		return &ManagedGuestSessionPrivacyWarningsEnabled{}, nil
+	case "PluginVmRequiredFreeDiskSpace":
+		return &PluginVmRequiredFreeDiskSpace{}, nil
+	case "SuggestedContentEnabled":
+		return &SuggestedContentEnabled{}, nil
+	case "EnterpriseRealTimeUrlCheckMode":
+		return &EnterpriseRealTimeUrlCheckMode{}, nil
+	case "AssistantOnboardingMode":
+		return &AssistantOnboardingMode{}, nil
+	case "DeviceExternalPrintServers":
+		return &DeviceExternalPrintServers{}, nil
+	case "DeviceExternalPrintServersAllowlist":
+		return &DeviceExternalPrintServersAllowlist{}, nil
+	case "SafeBrowsingAllowlistDomains":
+		return &SafeBrowsingAllowlistDomains{}, nil
+	case "DevicePrintersAccessMode":
+		return &DevicePrintersAccessMode{}, nil
+	case "DevicePrintersBlocklist":
+		return &DevicePrintersBlocklist{}, nil
+	case "DevicePrintersAllowlist":
+		return &DevicePrintersAllowlist{}, nil
+	case "URLBlocklist":
+		return &URLBlocklist{}, nil
+	case "URLAllowlist":
+		return &URLAllowlist{}, nil
+	case "ExtensionInstallAllowlist":
+		return &ExtensionInstallAllowlist{}, nil
+	case "ShowFullUrlsInAddressBar":
+		return &ShowFullUrlsInAddressBar{}, nil
+	case "ExtensionInstallBlocklist":
+		return &ExtensionInstallBlocklist{}, nil
+	case "ReportDeviceSystemInfo":
+		return &ReportDeviceSystemInfo{}, nil
+	case "AutoplayAllowlist":
+		return &AutoplayAllowlist{}, nil
+	case "DevicePrinters":
+		return &DevicePrinters{}, nil
+	case "AuthNegotiateDelegateAllowlist":
+		return &AuthNegotiateDelegateAllowlist{}, nil
+	case "AuthServerAllowlist":
+		return &AuthServerAllowlist{}, nil
+	case "InsecureFormsWarningsEnabled":
+		return &InsecureFormsWarningsEnabled{}, nil
+	case "SpellcheckLanguageBlocklist":
+		return &SpellcheckLanguageBlocklist{}, nil
+	case "ExternalPrintServersAllowlist":
+		return &ExternalPrintServersAllowlist{}, nil
+	case "DefaultSerialGuardSetting":
+		return &DefaultSerialGuardSetting{}, nil
+	case "SerialAskForUrls":
+		return &SerialAskForUrls{}, nil
+	case "SerialBlockedForUrls":
+		return &SerialBlockedForUrls{}, nil
+	case "DefaultSensorsSetting":
+		return &DefaultSensorsSetting{}, nil
+	case "SensorsAllowedForUrls":
+		return &SensorsAllowedForUrls{}, nil
+	case "SensorsBlockedForUrls":
+		return &SensorsBlockedForUrls{}, nil
+	case "DeviceChannelDowngradeBehavior":
+		return &DeviceChannelDowngradeBehavior{}, nil
+	case "NoteTakingAppsLockScreenAllowlist":
+		return &NoteTakingAppsLockScreenAllowlist{}, nil
+	case "NearbyShareAllowed":
+		return &NearbyShareAllowed{}, nil
+	case "PerAppTimeLimitsAllowlist":
+		return &PerAppTimeLimitsAllowlist{}, nil
+	case "DeviceShowLowDiskSpaceNotification":
+		return &DeviceShowLowDiskSpaceNotification{}, nil
+	case "DeviceUserAllowlist":
+		return &DeviceUserAllowlist{}, nil
+	case "UsbDetachableAllowlist":
+		return &UsbDetachableAllowlist{}, nil
+	case "InsecurePrivateNetworkRequestsAllowed":
+		return &InsecurePrivateNetworkRequestsAllowed{}, nil
+	case "InsecurePrivateNetworkRequestsAllowedForUrls":
+		return &InsecurePrivateNetworkRequestsAllowedForUrls{}, nil
+	case "UserPrintersAllowed":
+		return &UserPrintersAllowed{}, nil
+	case "Printers":
+		return &Printers{}, nil
+	case "PrintersBulkConfiguration":
+		return &PrintersBulkConfiguration{}, nil
+	case "DeviceReleaseLtsTag":
+		return &DeviceReleaseLtsTag{}, nil
+	case "PrintersBulkAccessMode":
+		return &PrintersBulkAccessMode{}, nil
+	case "DefaultFileSystemReadGuardSetting":
+		return &DefaultFileSystemReadGuardSetting{}, nil
+	case "DefaultFileSystemWriteGuardSetting":
+		return &DefaultFileSystemWriteGuardSetting{}, nil
+	case "FileSystemReadAskForUrls":
+		return &FileSystemReadAskForUrls{}, nil
+	case "FileSystemReadBlockedForUrls":
+		return &FileSystemReadBlockedForUrls{}, nil
+	case "FileSystemWriteAskForUrls":
+		return &FileSystemWriteAskForUrls{}, nil
+	case "FileSystemWriteBlockedForUrls":
+		return &FileSystemWriteBlockedForUrls{}, nil
+	case "PrintersBulkBlocklist":
+		return &PrintersBulkBlocklist{}, nil
+	case "PrintersBulkAllowlist":
+		return &PrintersBulkAllowlist{}, nil
+	case "LookalikeWarningAllowlistDomains":
+		return &LookalikeWarningAllowlistDomains{}, nil
+	case "PrintingAPIExtensionsAllowlist":
+		return &PrintingAPIExtensionsAllowlist{}, nil
+	case "QuickUnlockModeAllowlist":
+		return &QuickUnlockModeAllowlist{}, nil
+	case "AttestationExtensionAllowlist":
+		return &AttestationExtensionAllowlist{}, nil
+	case "DataLeakPreventionRulesList":
+		return &DataLeakPreventionRulesList{}, nil
+	case "WebRtcAllowLegacyTLSProtocols":
+		return &WebRtcAllowLegacyTLSProtocols{}, nil
+	case "MediaRecommendationsEnabled":
+		return &MediaRecommendationsEnabled{}, nil
+	case "DeviceFamilyLinkAccountsAllowed":
+		return &DeviceFamilyLinkAccountsAllowed{}, nil
+	case "EduCoexistenceToSVersion":
+		return &EduCoexistenceToSVersion{}, nil
+	case "BrowsingDataLifetime":
+		return &BrowsingDataLifetime{}, nil
+	case "IntranetRedirectBehavior":
+		return &IntranetRedirectBehavior{}, nil
+	case "DeviceArcDataSnapshotHours":
+		return &DeviceArcDataSnapshotHours{}, nil
+	case "PhoneHubAllowed":
+		return &PhoneHubAllowed{}, nil
+	case "PhoneHubNotificationsAllowed":
+		return &PhoneHubNotificationsAllowed{}, nil
+	case "PhoneHubTaskContinuationAllowed":
+		return &PhoneHubTaskContinuationAllowed{}, nil
+	case "WifiSyncAndroidAllowed":
+		return &WifiSyncAndroidAllowed{}, nil
+	case "SecurityTokenSessionBehavior":
+		return &SecurityTokenSessionBehavior{}, nil
+	case "SecurityTokenSessionNotificationSeconds":
+		return &SecurityTokenSessionNotificationSeconds{}, nil
+	case "FullscreenAlertEnabled":
+		return &FullscreenAlertEnabled{}, nil
+	case "NTPCardsVisible":
+		return &NTPCardsVisible{}, nil
+	case "BasicAuthOverHttpEnabled":
+		return &BasicAuthOverHttpEnabled{}, nil
+	case "SystemFeaturesDisableMode":
+		return &SystemFeaturesDisableMode{}, nil
+	case "ClearBrowsingDataOnExitList":
+		return &ClearBrowsingDataOnExitList{}, nil
+	case "ProfilePickerOnStartupAvailability":
+		return &ProfilePickerOnStartupAvailability{}, nil
+	case "ManagedConfigurationPerOrigin":
+		return &ManagedConfigurationPerOrigin{}, nil
+	case "BrowserLabsEnabled":
+		return &BrowserLabsEnabled{}, nil
+	case "DeviceAllowMGSToStoreDisplayProperties":
+		return &DeviceAllowMGSToStoreDisplayProperties{}, nil
+	case "SSLErrorOverrideAllowedForOrigins":
+		return &SSLErrorOverrideAllowedForOrigins{}, nil
+	case "GaiaOfflineSigninTimeLimitDays":
+		return &GaiaOfflineSigninTimeLimitDays{}, nil
+	case "DeviceSystemWideTracingEnabled":
+		return &DeviceSystemWideTracingEnabled{}, nil
+	case "DevicePciPeripheralDataAccessEnabled":
+		return &DevicePciPeripheralDataAccessEnabled{}, nil
+	case "ContextAwareAccessSignalsAllowlist":
+		return &ContextAwareAccessSignalsAllowlist{}, nil
+	case "FetchKeepaliveDurationSecondsOnShutdown":
+		return &FetchKeepaliveDurationSecondsOnShutdown{}, nil
+	case "SuppressDifferentOriginSubframeDialogs":
+		return &SuppressDifferentOriginSubframeDialogs{}, nil
+	case "DeviceBorealisAllowed":
+		return &DeviceBorealisAllowed{}, nil
+	case "UserBorealisAllowed":
+		return &UserBorealisAllowed{}, nil
+	case "LacrosSecondaryProfilesAllowed":
+		return &LacrosSecondaryProfilesAllowed{}, nil
+	case "GaiaLockScreenOfflineSigninTimeLimitDays":
+		return &GaiaLockScreenOfflineSigninTimeLimitDays{}, nil
+	case "SamlLockScreenOfflineSigninTimeLimitDays":
+		return &SamlLockScreenOfflineSigninTimeLimitDays{}, nil
+	case "ReportDevicePrintJobs":
+		return &ReportDevicePrintJobs{}, nil
+	case "SerialAllowAllPortsForUrls":
+		return &SerialAllowAllPortsForUrls{}, nil
+	case "SerialAllowUsbDevicesForUrls":
+		return &SerialAllowUsbDevicesForUrls{}, nil
+	case "ForcedLanguages":
+		return &ForcedLanguages{}, nil
+	case "CECPQ2Enabled":
+		return &CECPQ2Enabled{}, nil
+	case "WebRtcIPHandling":
+		return &WebRtcIPHandling{}, nil
+	case "PdfAnnotationsEnabled":
+		return &PdfAnnotationsEnabled{}, nil
+	case "DeviceAllowedBluetoothServices":
+		return &DeviceAllowedBluetoothServices{}, nil
+	case "ExplicitlyAllowedNetworkPorts":
+		return &ExplicitlyAllowedNetworkPorts{}, nil
+	case "DeviceDebugPacketCaptureAllowed":
+		return &DeviceDebugPacketCaptureAllowed{}, nil
+	case "SuggestLogoutAfterClosingLastWindow":
+		return &SuggestLogoutAfterClosingLastWindow{}, nil
+	case "SharedArrayBufferUnrestrictedAccessAllowed":
+		return &SharedArrayBufferUnrestrictedAccessAllowed{}, nil
+	case "RelaunchWindow":
+		return &RelaunchWindow{}, nil
+	case "LacrosAvailability":
+		return &LacrosAvailability{}, nil
+	case "DataLeakPreventionReportingEnabled":
+		return &DataLeakPreventionReportingEnabled{}, nil
+	case "AdditionalDnsQueryTypesEnabled":
+		return &AdditionalDnsQueryTypesEnabled{}, nil
+	case "ManagedAccountsSigninRestriction":
+		return &ManagedAccountsSigninRestriction{}, nil
+	case "DeviceScheduledReboot":
+		return &DeviceScheduledReboot{}, nil
+	case "ReportDeviceLoginLogout":
+		return &ReportDeviceLoginLogout{}, nil
+	case "RemoteDebuggingAllowed":
+		return &RemoteDebuggingAllowed{}, nil
+	case "DeviceAttributesAllowedForOrigins":
+		return &DeviceAttributesAllowedForOrigins{}, nil
+	case "DefaultJavaScriptJitSetting":
+		return &DefaultJavaScriptJitSetting{}, nil
+	case "JavaScriptJitAllowedForSites":
+		return &JavaScriptJitAllowedForSites{}, nil
+	case "JavaScriptJitBlockedForSites":
+		return &JavaScriptJitBlockedForSites{}, nil
+	case "HttpsOnlyMode":
+		return &HttpsOnlyMode{}, nil
+	case "ReportDeviceAudioStatus":
+		return &ReportDeviceAudioStatus{}, nil
+	case "DeviceHostnameUserConfigurable":
+		return &DeviceHostnameUserConfigurable{}, nil
+	case "ReportDeviceNetworkConfiguration":
+		return &ReportDeviceNetworkConfiguration{}, nil
+	case "ReportDeviceNetworkStatus":
+		return &ReportDeviceNetworkStatus{}, nil
+	case "DataLeakPreventionClipboardCheckSizeLimit":
+		return &DataLeakPreventionClipboardCheckSizeLimit{}, nil
+	case "RestrictedManagedGuestSessionExtensionCleanupExemptList":
+		return &RestrictedManagedGuestSessionExtensionCleanupExemptList{}, nil
+	case "ScreenCaptureAllowedByOrigins":
+		return &ScreenCaptureAllowedByOrigins{}, nil
+	case "WindowCaptureAllowedByOrigins":
+		return &WindowCaptureAllowedByOrigins{}, nil
+	case "TabCaptureAllowedByOrigins":
+		return &TabCaptureAllowedByOrigins{}, nil
+	case "SameOriginTabCaptureAllowedByOrigins":
+		return &SameOriginTabCaptureAllowedByOrigins{}, nil
+	case "AssistantVoiceMatchEnabledDuringOobe":
+		return &AssistantVoiceMatchEnabledDuringOobe{}, nil
+	case "LensRegionSearchEnabled":
+		return &LensRegionSearchEnabled{}, nil
+	case "ArcAppToWebAppSharingEnabled":
+		return &ArcAppToWebAppSharingEnabled{}, nil
+	case "EnhancedNetworkVoicesInSelectToSpeakAllowed":
+		return &EnhancedNetworkVoicesInSelectToSpeakAllowed{}, nil
+	case "PrintRasterizePdfDpi":
+		return &PrintRasterizePdfDpi{}, nil
+	case "DeviceTargetVersionSelector":
+		return &DeviceTargetVersionSelector{}, nil
+	case "DeviceRestrictedManagedGuestSessionEnabled":
+		return &DeviceRestrictedManagedGuestSessionEnabled{}, nil
+	case "PrintPdfAsImageDefault":
+		return &PrintPdfAsImageDefault{}, nil
+	case "FullRestoreEnabled":
+		return &FullRestoreEnabled{}, nil
+	case "GhostWindowEnabled":
+		return &GhostWindowEnabled{}, nil
+	case "ReportDeviceSecurityStatus":
+		return &ReportDeviceSecurityStatus{}, nil
+	case "DeviceLoginScreenPromptOnMultipleMatchingCertificates":
+		return &DeviceLoginScreenPromptOnMultipleMatchingCertificates{}, nil
+	case "PromptOnMultipleMatchingCertificates":
+		return &PromptOnMultipleMatchingCertificates{}, nil
+	case "SideSearchEnabled":
+		return &SideSearchEnabled{}, nil
+	case "AccessCodeCastEnabled":
+		return &AccessCodeCastEnabled{}, nil
+	case "AccessCodeCastDeviceDuration":
+		return &AccessCodeCastDeviceDuration{}, nil
+	case "DeskTemplatesEnabled":
+		return &DeskTemplatesEnabled{}, nil
+	case "PreconfiguredDeskTemplates":
+		return &PreconfiguredDeskTemplates{}, nil
+	case "FastPairEnabled":
+		return &FastPairEnabled{}, nil
+	case "SandboxExternalProtocolBlocked":
+		return &SandboxExternalProtocolBlocked{}, nil
+	case "ReportDeviceNetworkTelemetryCollectionRateMs":
+		return &ReportDeviceNetworkTelemetryCollectionRateMs{}, nil
+	case "ReportDeviceNetworkTelemetryEventCheckingRateMs":
+		return &ReportDeviceNetworkTelemetryEventCheckingRateMs{}, nil
+	case "KioskCRXManifestUpdateURLIgnored":
+		return &KioskCRXManifestUpdateURLIgnored{}, nil
+	case "QuickAnswersEnabled":
+		return &QuickAnswersEnabled{}, nil
+	case "QuickAnswersDefinitionEnabled":
+		return &QuickAnswersDefinitionEnabled{}, nil
+	case "QuickAnswersTranslationEnabled":
+		return &QuickAnswersTranslationEnabled{}, nil
+	case "QuickAnswersUnitConversionEnabled":
+		return &QuickAnswersUnitConversionEnabled{}, nil
+	case "CORSNonWildcardRequestHeadersSupport":
+		return &CORSNonWildcardRequestHeadersSupport{}, nil
+	case "RemoteAccessHostClipboardSizeBytes":
+		return &RemoteAccessHostClipboardSizeBytes{}, nil
+	case "RemoteAccessHostAllowRemoteSupportConnections":
+		return &RemoteAccessHostAllowRemoteSupportConnections{}, nil
+	case "UserAgentClientHintsGREASEUpdateEnabled":
+		return &UserAgentClientHintsGREASEUpdateEnabled{}, nil
+	case "DeviceI18nShortcutsEnabled":
+		return &DeviceI18nShortcutsEnabled{}, nil
+	case "HistoryClustersVisible":
+		return &HistoryClustersVisible{}, nil
+	case "ChromadToCloudMigrationEnabled":
+		return &ChromadToCloudMigrationEnabled{}, nil
+	case "CopyPreventionSettings":
+		return &CopyPreventionSettings{}, nil
+	case "ReportDeviceAudioStatusCheckingRateMs":
+		return &ReportDeviceAudioStatusCheckingRateMs{}, nil
+	case "KeepFullscreenWithoutNotificationUrlAllowList":
+		return &KeepFullscreenWithoutNotificationUrlAllowList{}, nil
+	case "OnPrintEnterpriseConnector":
+		return &OnPrintEnterpriseConnector{}, nil
+	case "UserAgentReduction":
+		return &UserAgentReduction{}, nil
+	case "OriginAgentClusterDefaultEnabled":
+		return &OriginAgentClusterDefaultEnabled{}, nil
+	case "DeviceLoginScreenWebUILazyLoading":
+		return &DeviceLoginScreenWebUILazyLoading{}, nil
+	case "ProjectorEnabled":
+		return &ProjectorEnabled{}, nil
+	case "PhoneHubCameraRollAllowed":
+		return &PhoneHubCameraRollAllowed{}, nil
+	case "EcheAllowed":
+		return &EcheAllowed{}, nil
+	case "DeviceKeylockerForStorageEncryptionEnabled":
+		return &DeviceKeylockerForStorageEncryptionEnabled{}, nil
+	case "ReportCRDSessions":
+		return &ReportCRDSessions{}, nil
+	case "DeviceRunAutomaticCleanupOnLogin":
+		return &DeviceRunAutomaticCleanupOnLogin{}, nil
+	case "NTPMiddleSlotAnnouncementVisible":
+		return &NTPMiddleSlotAnnouncementVisible{}, nil
+	case "CloudProfileReportingEnabled":
+		return &CloudProfileReportingEnabled{}, nil
+	case "DefaultWebHidGuardSetting":
+		return &DefaultWebHidGuardSetting{}, nil
+	case "WebHidAskForUrls":
+		return &WebHidAskForUrls{}, nil
+	case "WebHidBlockedForUrls":
+		return &WebHidBlockedForUrls{}, nil
+	case "PasswordDismissCompromisedAlertEnabled":
+		return &PasswordDismissCompromisedAlertEnabled{}, nil
+	case "ExemptDomainFileTypePairsFromFileTypeDownloadWarnings":
+		return &ExemptDomainFileTypePairsFromFileTypeDownloadWarnings{}, nil
+	case "FirstPartySetsEnabled":
+		return &FirstPartySetsEnabled{}, nil
+	case "ForceMajorVersionToMinorPositionInUserAgent":
+		return &ForceMajorVersionToMinorPositionInUserAgent{}, nil
+	case "AllHttpAuthSchemesAllowedForOrigins":
+		return &AllHttpAuthSchemesAllowedForOrigins{}, nil
+	case "DefaultWindowPlacementSetting":
+		return &DefaultWindowPlacementSetting{}, nil
+	case "ReportDevicePeripherals":
+		return &ReportDevicePeripherals{}, nil
+	case "WebHidAllowAllDevicesForUrls":
+		return &WebHidAllowAllDevicesForUrls{}, nil
+	case "WebHidAllowDevicesForUrls":
+		return &WebHidAllowDevicesForUrls{}, nil
+	case "WebHidAllowDevicesWithHidUsagesForUrls":
+		return &WebHidAllowDevicesWithHidUsagesForUrls{}, nil
+	case "SecondaryGoogleAccountUsage":
+		return &SecondaryGoogleAccountUsage{}, nil
+	case "DeviceEncryptedReportingPipelineEnabled":
+		return &DeviceEncryptedReportingPipelineEnabled{}, nil
+	case "IsolatedAppsDeveloperModeAllowed":
+		return &IsolatedAppsDeveloperModeAllowed{}, nil
+	case "FloatingWorkspaceEnabled":
+		return &FloatingWorkspaceEnabled{}, nil
+	case "WindowPlacementAllowedForUrls":
+		return &WindowPlacementAllowedForUrls{}, nil
+	case "WindowPlacementBlockedForUrls":
+		return &WindowPlacementBlockedForUrls{}, nil
+	case "CloudReportingUploadFrequency":
+		return &CloudReportingUploadFrequency{}, nil
+	case "WebAuthnFactors":
+		return &WebAuthnFactors{}, nil
+	case "WebAuthenticationRemoteProxiedRequestsAllowed":
+		return &WebAuthenticationRemoteProxiedRequestsAllowed{}, nil
+	case "WebSQLAccess":
+		return &WebSQLAccess{}, nil
+	case "FirstPartySetsOverrides":
+		return &FirstPartySetsOverrides{}, nil
+	case "DownloadBubbleEnabled":
+		return &DownloadBubbleEnabled{}, nil
+	case "DevicePowerAdaptiveChargingEnabled":
+		return &DevicePowerAdaptiveChargingEnabled{}, nil
+	case "GetDisplayMediaSetSelectAllScreensAllowedForUrls":
+		return &GetDisplayMediaSetSelectAllScreensAllowedForUrls{}, nil
+	case "SystemTerminalSshAllowed":
+		return &SystemTerminalSshAllowed{}, nil
+	case "InsightsExtensionEnabled":
+		return &InsightsExtensionEnabled{}, nil
+	case "DefaultLocalFontsSetting":
+		return &DefaultLocalFontsSetting{}, nil
+	case "LocalFontsAllowedForUrls":
+		return &LocalFontsAllowedForUrls{}, nil
+	case "LocalFontsBlockedForUrls":
+		return &LocalFontsBlockedForUrls{}, nil
+	case "ProjectorDogfoodForFamilyLinkEnabled":
+		return &ProjectorDogfoodForFamilyLinkEnabled{}, nil
+	case "DefaultClipboardSetting":
+		return &DefaultClipboardSetting{}, nil
+	case "ClipboardAllowedForUrls":
+		return &ClipboardAllowedForUrls{}, nil
+	case "ClipboardBlockedForUrls":
+		return &ClipboardBlockedForUrls{}, nil
+	case "OsColorMode":
+		return &OsColorMode{}, nil
+	case "OnFileTransferEnterpriseConnector":
+		return &OnFileTransferEnterpriseConnector{}, nil
+	case "NewWindowsInKioskAllowed":
+		return &NewWindowsInKioskAllowed{}, nil
+	case "EncryptedClientHelloEnabled":
+		return &EncryptedClientHelloEnabled{}, nil
+	case "DeviceAutofillSAMLUsername":
+		return &DeviceAutofillSAMLUsername{}, nil
+	case "KerberosDomainAutocomplete":
+		return &KerberosDomainAutocomplete{}, nil
+	case "KerberosDefaultConfiguration":
+		return &KerberosDefaultConfiguration{}, nil
+	case "DeviceLoginScreenContextAwareAccessSignalsAllowlist":
+		return &DeviceLoginScreenContextAwareAccessSignalsAllowlist{}, nil
+	case "HighEfficiencyModeEnabled":
+		return &HighEfficiencyModeEnabled{}, nil
+	case "DevicePrintingClientNameTemplate":
+		return &DevicePrintingClientNameTemplate{}, nil
+	case "ReportDeviceSignalStrengthEventDrivenTelemetry":
+		return &ReportDeviceSignalStrengthEventDrivenTelemetry{}, nil
+	case "BatterySaverModeAvailability":
+		return &BatterySaverModeAvailability{}, nil
+	case "TabDiscardingExceptions":
+		return &TabDiscardingExceptions{}, nil
+	case "AssistantWebEnabled":
+		return &AssistantWebEnabled{}, nil
+	case "LacrosDataBackwardMigrationMode":
+		return &LacrosDataBackwardMigrationMode{}, nil
+	case "StrictMimetypeCheckForWorkerScriptsEnabled":
+		return &StrictMimetypeCheckForWorkerScriptsEnabled{}, nil
+	case "RecoveryFactorBehavior":
+		return &RecoveryFactorBehavior{}, nil
+	case "CalendarIntegrationEnabled":
+		return &CalendarIntegrationEnabled{}, nil
+	case "DeviceReportXDREvents":
+		return &DeviceReportXDREvents{}, nil
+	case "TrashEnabled":
+		return &TrashEnabled{}, nil
+	case "ShoppingListEnabled":
+		return &ShoppingListEnabled{}, nil
+	case "DeskAPIThirdPartyAccessEnabled":
+		return &DeskAPIThirdPartyAccessEnabled{}, nil
+	case "DefaultHandlersForFileExtensions":
+		return &DefaultHandlersForFileExtensions{}, nil
+	case "IsolatedWebAppInstallForceList":
+		return &IsolatedWebAppInstallForceList{}, nil
+	case "DeskAPIThirdPartyAllowlist":
+		return &DeskAPIThirdPartyAllowlist{}, nil
+	case "HindiInscriptLayoutEnabled":
+		return &HindiInscriptLayoutEnabled{}, nil
+	case "DeviceKeyboardBacklightColor":
+		return &DeviceKeyboardBacklightColor{}, nil
+	case "LensDesktopNTPSearchEnabled":
+		return &LensDesktopNTPSearchEnabled{}, nil
+	case "AccessControlAllowMethodsInCORSPreflightSpecConformant":
+		return &AccessControlAllowMethodsInCORSPreflightSpecConformant{}, nil
+	case "AllowWebAuthnWithBrokenTlsCerts":
+		return &AllowWebAuthnWithBrokenTlsCerts{}, nil
+	case "ExtensionManifestV2Availability":
+		return &ExtensionManifestV2Availability{}, nil
+	case "BruschettaVMConfiguration":
+		return &BruschettaVMConfiguration{}, nil
+	default:
+		return nil, errors.New("Unknown policy " + name)
+	}
+}
+
+// ****************************************************************************
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
