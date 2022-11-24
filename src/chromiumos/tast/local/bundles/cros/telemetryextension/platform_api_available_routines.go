@@ -78,8 +78,13 @@ func PlatformAPIAvailableRoutines(ctx context.Context, s *testing.State) {
 		"cpu_stress",
 		"cpu_floating_point_accuracy",
 		"cpu_prime_search",
+		"dns_resolution",
+		"dns_resolver_present",
+		"gateway_can_be_pinged",
 		"lan_connectivity",
 		"memory",
+		"sensitive_sensor",
+		"signal_strength",
 	}
 
 	for _, want := range wantRoutines {

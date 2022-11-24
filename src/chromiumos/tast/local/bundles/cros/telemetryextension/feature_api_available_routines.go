@@ -48,12 +48,32 @@ func init() {
 				Val:  "cpu_prime_search",
 			},
 			{
+				Name: "dns_resolver_present",
+				Val:  "dns_resolver_present",
+			},
+			{
+				Name: "dns_resolution",
+				Val:  "dns_resolution",
+			},
+			{
+				Name: "gateway_can_be_pinged",
+				Val:  "gateway_can_be_pinged",
+			},
+			{
 				Name: "lan_connectivity",
 				Val:  "lan_connectivity",
 			},
 			{
 				Name: "memory",
 				Val:  "memory",
+			},
+			{
+				Name: "sensitive_sensor",
+				Val:  "sensitive_sensor",
+			},
+			{
+				Name: "signal_strength",
+				Val:  "signal_strength",
 			},
 			// Depend on a battery.
 			{
@@ -72,20 +92,38 @@ func init() {
 				Name: "battery_charge",
 				Val:  "battery_charge",
 			},
+			// Depend on an eMMC disk
+			{
+				Name: "emmc_lifetime",
+				Val:  "emmc_lifetime",
+			},
 			// Depend on an NVMe capable disk.
 			{
 				Name: "nvme_wear_level",
 				Val:  "nvme_wear_level",
+			},
+			{
+				Name: "nvme_self_test",
+				Val:  "nvme_self_test",
 			},
 			// Depend on SMART support.
 			{
 				Name: "smart_ctl_check",
 				Val:  "smartctl_check",
 			},
+			{
+				Name: "smartctl_check_with_percentage_used",
+				Val:  "smartctl_check_with_percentage_used",
+			},
 			// Depend on FIO support.
 			{
 				Name: "disk_read",
 				Val:  "disk_read",
+			},
+			// Depend on corresponding sensor
+			{
+				Name: "fingerprint_alive",
+				Val:  "fingerprint_alive",
 			},
 		},
 	})
