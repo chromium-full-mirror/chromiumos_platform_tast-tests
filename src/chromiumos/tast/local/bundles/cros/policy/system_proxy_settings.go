@@ -25,11 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting the SystemProxySettings policy by checking if the System-proxy daemon and worker processes are running",
 		Contacts: []string{
-			"acostinas@google.com",
-			"hugobenichi@chromium.org",
-			"omorsi@chromium.org",
-			"pmarko@chromium.org",
+			"chromeos-commercial-networking@google.com", // Team
+			"acostinas@google.com",                      // Test author
 		},
+		BugComponent: "b:1000044",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,

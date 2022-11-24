@@ -20,7 +20,11 @@ func init() {
 		Func:         ProxyResolutionService,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the ProxyResolutionService in Chrome works as expected",
-		Contacts:     []string{"acostinas@google.com", "chromeos-commercial-networking@google.com"},
+		Contacts: []string{
+			"chromeos-commercial-networking@google.com", // Team
+			"acostinas@google.com",                      // Test author
+		},
+		BugComponent: "b:1000044",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})

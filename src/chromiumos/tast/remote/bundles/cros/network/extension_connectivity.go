@@ -21,9 +21,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that extensions work behind a firewall configured according to our support page",
 		Contacts: []string{
-			"acostinas@google.com", // Test author
-			"chromeos-commercial-networking@google.com",
+			"chromeos-commercial-networking@google.com", // Team
+			"acostinas@google.com",                      // Test author
 		},
+		BugComponent: "b:1000044",
 		Attr:         []string{},
 		Data:         []string{"allowlist_ssl_inspection.json"},
 		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},

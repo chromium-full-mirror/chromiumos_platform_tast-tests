@@ -25,10 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that ARC++ apps can successfully connect to the remote host through the system-proxy daemon",
 		Contacts: []string{
-			"acostinas@google.com", // Test author
-			"hugobenichi@google.com",
-			"chromeos-commercial-networking@google.com",
+			"chromeos-commercial-networking@google.com", // Team
+			"acostinas@google.com",                      // Test author
 		},
+		BugComponent: "b:1000044",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "chromeEnrolledLoggedInARC",

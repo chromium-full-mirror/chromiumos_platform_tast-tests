@@ -15,10 +15,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     TestProxyServer,
-		Desc:     "Basic test for proxy.Server",
-		Contacts: []string{"acostinas@google.com", "hugobenichi@google.com", "cros-networking@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func: TestProxyServer,
+		Desc: "Basic test for proxy.Server",
+		Contacts: []string{
+			"chromeos-commercial-networking@google.com", // Team
+			"acostinas@google.com",                      // Test author
+		},
+		BugComponent: "b:1000044",
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

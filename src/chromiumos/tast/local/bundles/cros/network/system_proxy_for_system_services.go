@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that tlsdated can successfully connect to a web endpoint through the system-proxy daemon",
 		Contacts: []string{
-			"acostinas@google.com", // Test author
-			"chromeos-commercial-networking@google.com",
+			"chromeos-commercial-networking@google.com", // Team
+			"acostinas@google.com",                      // Test author
 		},
+		BugComponent: "b:1000044",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "chromeEnrolledLoggedIn",
