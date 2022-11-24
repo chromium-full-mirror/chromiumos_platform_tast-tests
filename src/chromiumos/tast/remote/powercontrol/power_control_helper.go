@@ -40,6 +40,9 @@ func ChromeOSLogin(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) 
 }
 
 // ValidatePrevSleepState sleep state from cbmem command output.
+// NOTE: This method currently is only valid on Intel SoCs, as they are the
+// only SoC that output prev_sleep_state from cbmem - See b/252884546#6 for
+// the details.
 func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue int) error {
 	// Command to check previous sleep state.
 	const cmd = "cbmem -c | grep 'prev_sleep_state' | tail -1"
