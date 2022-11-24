@@ -115,7 +115,7 @@ func init() {
 			}, {
 				Name:              "basic_lacros_youtube_app",
 				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           10 * time.Minute,
+				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{youtubeApkName},
 				Val: videoCUJParam{
@@ -146,7 +146,7 @@ func init() {
 			}, {
 				Name:              "premium_lacros_youtube_app",
 				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           10 * time.Minute,
+				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{youtubeApkName},
 				Val: videoCUJParam{

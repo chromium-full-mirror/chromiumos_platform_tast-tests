@@ -229,6 +229,7 @@ func (y *YtApp) switchQuality(ctx context.Context, resolution string) error {
 	const (
 		qualityText       = "Quality"
 		advancedText      = "Advanced"
+		optionsClassName  = "android.support.v7.widget.RecyclerView"
 		qualityClassName  = "android.view.ViewGroup"
 		moreOptions       = youtubePkg + ":id/player_overflow_button"
 		touchOutsideID    = youtubePkg + ":id/touch_outside"
@@ -277,14 +278,17 @@ func (y *YtApp) switchQuality(ctx context.Context, resolution string) error {
 		}
 
 		// There might be two different arc dump hierarchies that affect how nodes are captured.
-		testing.ContextLogf(ctx, "Select %q option with resource id: %v", qualityText, qualityListItemID)
-		qualityButton := y.d.Object(androidui.ID(qualityListItemID), androidui.Text(qualityText))
-		if err := cuj.FindAndClick(qualityButton, uiWaitTime)(ctx); err != nil {
+		options := y.d.Object(androidui.ClassName(optionsClassName))
+		var qualityButton *androidui.Object
+		if options.Exists(ctx) == nil {
 			testing.ContextLogf(ctx, "Select %q option with class name: %v", qualityText, qualityClassName)
-			qualityButton = y.d.Object(androidui.ClassName(qualityClassName), androidui.Clickable(true), androidui.Index(qualityButtonIndex))
-			if err := cuj.FindAndClick(qualityButton, uiWaitTime)(ctx); err != nil {
-				return err
-			}
+			qualityButton = y.d.Object(androidui.ClassName(qualityClassName), androidui.Index(qualityButtonIndex), androidui.Clickable(true))
+		} else {
+			testing.ContextLogf(ctx, "Select %q option with resource id: %v", qualityText, qualityListItemID)
+			qualityButton = y.d.Object(androidui.ID(qualityListItemID), androidui.Text(qualityText))
+		}
+		if err := cuj.FindAndClick(qualityButton, uiWaitTime)(ctx); err != nil {
+			return err
 		}
 
 		// Capture screenshots after clicking the "Quality" option.
@@ -317,14 +321,14 @@ func (y *YtApp) waitForLoadingComplete(ctx context.Context) error {
 		titleID               = youtubePkg + ":id/title"
 		shareBtnText          = "Share"
 		shareBtnTextID        = youtubePkg + ":id/button_text"
-		sidebarID             = youtubePkg + ":id/video_metadata_layout"
+		watchListID           = youtubePkg + ":id/watch_list"
 		alternateElementClass = "android.view.ViewGroup"
 		alternateTitleDesc    = "Expand description"
 		alternateExpandDesc   = "Expand Mini Player"
 	)
 	videoTitle := y.d.Object(androidui.ID(titleID))
 	shareBtn := y.d.Object(androidui.Text(shareBtnText), androidui.ID(shareBtnTextID))
-	sidebar := y.d.Object(androidui.ID(sidebarID))
+	watchList := y.d.Object(androidui.ID(watchListID))
 	// An alternate video title and share button are added here to support the two versions of UI trees observed across DUTs.
 	// For details, please refer to b/206011393.
 	alternateVideoTitle := y.d.Object(androidui.ClassName(alternateElementClass), androidui.Description(alternateTitleDesc))
@@ -333,22 +337,20 @@ func (y *YtApp) waitForLoadingComplete(ctx context.Context) error {
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if err := videoTitle.Exists(ctx); err != nil {
-			testing.ContextLog(ctx, "Unable to find video title with expected UI tree: ", err)
 			if alternateVideoTitle.Exists(ctx) != nil && alternateExpandMenu.Exists(ctx) != nil {
-				return errors.New("still loading... video title not rendered")
+				return errors.New("failed to wait for video title to render")
 			}
 		}
 		if err := shareBtn.Exists(ctx); err != nil {
-			testing.ContextLog(ctx, "Unable to find share button with expected UI tree: ", err)
 			if err2 := alternateShareBtn.Exists(ctx); err2 != nil {
-				return errors.New("still loading... share button not rendered")
+				return errors.New("failed to wait for share button to render")
 			}
 		}
-		if err := sidebar.Exists(ctx); err != nil {
-			return errors.Wrap(err, "still loading... sidebar not rendered")
+		if err := watchList.Exists(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for watch list to render")
 		}
 		return nil
-	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 30 * time.Second})
+	}, &testing.PollOptions{Timeout: time.Minute})
 }
 
 func (y *YtApp) isPremiumAccount() bool {

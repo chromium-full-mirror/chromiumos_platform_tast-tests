@@ -57,7 +57,7 @@ func init() {
 			}, {
 				Name:              "essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           10 * time.Minute,
+				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{youtubeApkName},
 				Val: videoStreamingAppParam{
@@ -77,7 +77,7 @@ func init() {
 			}, {
 				Name:              "advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           10 * time.Minute,
+				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{youtubeApkName},
 				Val: videoStreamingAppParam{
