@@ -30,10 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of RequiredClientCertificateForDevice/User policies, check if a certificate is issued when the respective policy is set",
 		Contacts: []string{
-			"alexanderhartl@google.com", // Test author
-			"pmarko@google.com",         // Feature owner
-			"miersh@google.com",         // Feature owner
+			"chromeos-commercial-networking@google.com", // Team
+			"pmarko@google.com",                         // Feature owner
+			"miersh@google.com",                         // Feature owner
 		},
+		BugComponent: "b:1000044",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
