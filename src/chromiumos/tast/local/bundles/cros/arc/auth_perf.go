@@ -27,7 +27,6 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/cpu"
-	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
@@ -41,7 +40,6 @@ type testParam struct {
 	// maxErrorBootCount is the number of maximum allowed boot errors.
 	maxErrorBootCount int
 	chromeArgs        []string
-	dropCaches        bool
 }
 
 var resultPropRegexp = regexp.MustCompile(`OK,(\d+)`)
@@ -87,30 +85,22 @@ func init() {
 				maxErrorBootCount: 1,
 			},
 		}, {
-			Name:              "unmanaged_ureadahead_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
-			Val: testParam{
-				maxErrorBootCount: 3,
-				dropCaches:        true,
-			},
-		}, {
 			Name:              "unmanaged_no_guest_ureadahead_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
 			Val: testParam{
+				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--arcvm-ureadahead-mode=disabled"},
-				dropCaches:        true,
 			},
 		}, {
 			Name:              "unmanaged_no_host_ureadahead_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
 			Val: testParam{
+				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--arc-disable-ureadahead", "--arcvm-ureadahead-mode=readahead"},
-				dropCaches:        true,
 			},
 		}, {
 			Name:              "unmanaged_lacros",
@@ -386,13 +376,6 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	s.Log("Waiting for ARC to stop")
 	if err := waitForARCStopped(ctx); err != nil {
 		return v, err
-	}
-
-	// Drop host OS caches if test config requires it for predictable results.
-	if s.Param().(testParam).dropCaches {
-		if err := disk.DropCaches(ctx); err != nil {
-			return v, errors.Wrap(err, "failed to drop caches")
-		}
 	}
 
 	if err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
