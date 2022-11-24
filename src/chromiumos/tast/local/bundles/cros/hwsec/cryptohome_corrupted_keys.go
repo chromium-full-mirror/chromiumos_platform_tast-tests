@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
@@ -17,6 +18,23 @@ import (
 
 type testParam struct {
 	pinWeaverSupported bool
+}
+
+// mountVaultWithPin authenticates a new auth session via the new added pin auth factor and mounts the user.
+func mountVaultWithPin(ctx context.Context, s *testing.State, cryptohome *hwsec.CryptohomeClient) error {
+	_, authSessionID, err := cryptohome.StartAuthSession(ctx, util.FirstUsername, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	if err != nil {
+		return err
+	}
+	defer cryptohome.InvalidateAuthSession(ctx, authSessionID)
+
+	if _, err = cryptohome.AuthenticatePinAuthFactor(ctx, authSessionID, util.PinLabel, util.FirstPin); err != nil {
+		return err
+	}
+	if _, err = cryptohome.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {
@@ -33,9 +51,17 @@ func init() {
 		Params: []testing.Param{
 			{
 				// We only support the pin_weaver corrupted version now.
-				Name:              "pin_weaver",
+				Name:              "pin_weaver_with_uss",
 				ExtraSoftwareDeps: []string{"pinweaver"},
 				Val:               testParam{pinWeaverSupported: true},
+				Fixture:           "ussAuthSessionFixture",
+			},
+			{
+				// We only support the pin_weaver corrupted version now.
+				Name:              "pin_weaver_with_vk",
+				ExtraSoftwareDeps: []string{"pinweaver"},
+				Val:               testParam{pinWeaverSupported: true},
+				Fixture:           "vkAuthSessionFixture",
 			},
 		},
 	})
@@ -49,6 +75,8 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
+	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
+
 	daemonController := helper.DaemonController()
 	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
 
@@ -62,8 +90,6 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 	pinSupported := s.Param().(testParam).pinWeaverSupported
 
 	passConfig := hwsec.NewPassAuthConfig(user, goodPassword)
-
-	pinConfig := hwsec.NewPassAuthConfig(user, goodPin)
 
 	defer func(ctx context.Context) {
 		// Ensure we remove the user account after the test.
@@ -86,11 +112,22 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 	if err := checkExpectUserMountInfo(ctx, mountInfo, user, true); err != nil {
 		s.Fatal("User mount point check failed after create account: ", err)
 	}
-
-	// Add a PIN login.
-	if err := cryptohome.AddVaultKey(ctx, user, goodPassword, util.PasswordLabel, goodPin, util.PinLabel, pinSupported); err != nil {
-		s.Fatal("Failed to add pin user vault: ", err)
-	}
+	func() {
+		// Start an Auth session and get an authSessionID.
+		_, authSessionID, err := cryptohome.StartAuthSession(ctx, user, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+		if err != nil {
+			s.Fatal("Failed to start Auth session: ", err)
+		}
+		defer cryptohome.InvalidateAuthSession(ctx, authSessionID)
+		// Authenticate the AuthFactor to add a Pin login factor
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, util.PasswordLabel, goodPassword); err != nil {
+			s.Fatal("Failed to authenticate with password AuthFactor: ", err)
+		}
+		// Add a PIN login factor.
+		if err := cryptohome.AddPinAuthFactor(ctx, authSessionID, util.PinLabel, goodPin); err != nil {
+			s.Fatal("Failed to add pin user AuthFactor: ", err)
+		}
+	}()
 
 	// Unmount the vault.
 	if _, err := cryptohome.Unmount(ctx, user); err != nil {
@@ -102,21 +139,17 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("User mount point check failed after unmount: ", err)
 	}
 
-	// Mount with PIN.
-	if err := cryptohome.MountVault(ctx, util.PinLabel, pinConfig, false, hwsec.NewVaultConfig()); err != nil {
-		s.Fatal("Failed to mount user vault: ", err)
+	if err := mountVaultWithPin(ctx, s, cryptohome); err != nil {
+		s.Fatal("Failed to authenticate with pin: ", err)
 	}
-
+	defer cryptohome.Unmount(ctx, user)
 	// Check the mount point information.
 	if err := checkExpectUserMountInfo(ctx, mountInfo, user, true); err != nil {
 		s.Fatal("User mount point check failed after login with PIN: ", err)
 	}
-
-	// Unmount the vault.
 	if _, err := cryptohome.Unmount(ctx, user); err != nil {
 		s.Fatal("Failed to unmount: ", err)
 	}
-
 	// Check the mount point information.
 	if err := checkExpectUserMountInfo(ctx, mountInfo, user, false); err != nil {
 		s.Fatal("User mount point check failed after unmount: ", err)
@@ -140,7 +173,7 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 		}()
 
 		// Mount with PIN should fail.
-		err := cryptohome.MountVault(ctx, util.PinLabel, pinConfig, false, hwsec.NewVaultConfig())
+		err := mountVaultWithPin(ctx, s, cryptohome)
 		var exitErr *hwsec.CmdExitError
 		if !errors.As(err, &exitErr) {
 			s.Fatalf("Unexpected mount error: got %q; want *hwsec.CmdExitError", err)
