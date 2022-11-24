@@ -163,7 +163,7 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 			ui.LeftClick(handwritingInputItem),
 			// The privacy dialog does not appear on all devices.
 			uiauto.IfSuccessThen(
-				ui.WithTimeout(2*time.Second).WaitUntilExists(handwritingPrivacyConfirmButton),
+				ui.WithTimeout(5*time.Second).WaitUntilExists(handwritingPrivacyConfirmButton),
 				ui.DoDefaultUntil(handwritingPrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(handwritingPrivacyConfirmButton)),
 			),
 			func(ctx context.Context) error {
