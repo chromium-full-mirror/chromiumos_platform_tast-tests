@@ -40,6 +40,10 @@ func init() {
 		Timeout: gaiaEnrollmentTimeout,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
+			// Enroll devices for production testing (COM_ONB_CUJ6_TASK5_WF1).
+			Value: "screenplay-89d51ff3-0264-477a-ac03-754fa6a8eb41",
+		}, {
+			Key: "feature_id",
 			// Enroll devices manually (COM_ONB_CUJ7_TASK5_WF1).
 			Value: "screenplay-2de3fdfc-26eb-4fe5-9959-91cbfed05acb",
 		}},
