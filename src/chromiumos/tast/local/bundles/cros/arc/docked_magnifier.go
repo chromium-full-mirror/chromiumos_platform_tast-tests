@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
+	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/screenshot"
@@ -31,7 +32,7 @@ func init() {
 		BugComponent: "b:153260",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithoutUIAutomator",
+		Fixture:      "arcBooted",
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -75,17 +76,23 @@ func DockedMagnifier(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start activity: ", err)
 	}
 
-	if err := testMaximizedWindow(ctx, tconn, cr, activity); err != nil {
+	pc, err := pointer.NewTouch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create a touch controller: ", err)
+	}
+	defer pc.Close()
+
+	if err := testMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		s.Error("Failed to run test for maximized window: ", err)
 	}
 }
 
-func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, activity *arc.Activity) error {
+func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, activity *arc.Activity, pc pointer.Context) error {
 	// Maximize the window
 	if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, activity.PackageName(), ash.WindowStateMaximized); err != nil {
 		return errors.Wrap(err, "failed to set window state to maximized")
 	}
-	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity); err != nil {
+	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		return errors.Wrap(err, "failed to verify window bounds and content resize properly after maximizing the window")
 	}
 
@@ -94,7 +101,7 @@ func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 		return errors.Wrap(err, "failed to enable Docked Magnifier feature")
 	}
 	defer a11y.SetFeatureEnabled(ctx, tconn, a11y.DockedMagnifier, false)
-	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity); err != nil {
+	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		return errors.Wrap(err, "failed to verify window bounds and content resize properly after enabling Docked Magnifier")
 	}
 
@@ -102,7 +109,7 @@ func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.DockedMagnifier, false); err != nil {
 		return errors.Wrap(err, "failed to disable Docked Magnifier feature")
 	}
-	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity); err != nil {
+	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		return errors.Wrap(err, "failed to verify window bounds and content resize properly after disabling Docked Magnifier")
 	}
 
@@ -110,7 +117,7 @@ func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 }
 
 // checkWindowBoundsAndContentForMaximizedWindow checks if the bounds of a maximized window is the same as workArea and the content of it is properly rendered.
-func checkWindowBoundsAndContentForMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, activity *arc.Activity) error {
+func checkWindowBoundsAndContentForMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, activity *arc.Activity, pc pointer.Context) error {
 	const (
 		coloredPixelPercentThreshold = 97
 		boundsComparingMargin        = 1
@@ -128,6 +135,12 @@ func checkWindowBoundsAndContentForMaximizedWindow(ctx context.Context, tconn *c
 	var bounds coords.Rect
 	var captionHeight int
 
+	// In tablet mode, the caption bar is auto-hidden. But sometimes it's shown due to cursor at the top of the window.
+	// Here we perform a click in the center of the window(same bounds as the WorkArea) to make sure that the caption bar is hidden.
+	if err := pc.ClickAt(coords.NewPoint(primaryDisplayInfo.WorkArea.CenterX(), primaryDisplayInfo.WorkArea.CenterY()))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the center of WorkArea to ensure no caption bar for tablet mode")
+	}
+
 	// Check if window bounds is the same as workArea(when docked magnifier is enabled, the workArea is the bottom part of the display below the magnifier).
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		windowInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, activity.PackageName())
@@ -140,7 +153,17 @@ func checkWindowBoundsAndContentForMaximizedWindow(ctx context.Context, tconn *c
 			return errors.Errorf("invalid window bounds comparing to display work area, window: %s, work area: %s", bounds, primaryDisplayInfo.WorkArea)
 		}
 
-		captionHeight = windowInfo.CaptionHeight
+		tabletMode, err := ash.TabletModeEnabled(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to check if table mode is enabled")
+		}
+		// When it's in tabletMode there should not be caption.
+		if tabletMode {
+			captionHeight = 0
+		} else {
+			captionHeight = windowInfo.CaptionHeight
+		}
+
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return err
@@ -172,10 +195,10 @@ func checkWindowBoundsAndContentForMaximizedWindow(ctx context.Context, tconn *c
 	// Check if the window content is properly rendered by checking the percentage of the colored pixels(the upper half of the app has a blue background, while the bottom half has a red background).
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := screenshotAndCheckColoredPercent(ctx, cr, blueBoundsPx, color.RGBA{0, 0, 255, 255}, coloredPixelPercentThreshold); err != nil {
-			return err
+			return errors.Wrap(err, "failed to verify blue pixels")
 		}
 		if err := screenshotAndCheckColoredPercent(ctx, cr, redBoundsPx, color.RGBA{255, 0, 0, 255}, coloredPixelPercentThreshold); err != nil {
-			return err
+			return errors.Wrap(err, "failed to verify red pixels")
 		}
 
 		return nil
@@ -197,7 +220,7 @@ func screenshotAndCheckColoredPercent(ctx context.Context, cr *chrome.Chrome, bo
 	coloredPercent := coloredPixels * 100 / totalPixels
 
 	if coloredPercent < threshold {
-		return errors.Errorf("failed to verify the number of the %s colored pixels exceeds the threshold (%d%%); contains %d / %d (%d%%) colored pixels", clr, threshold, coloredPixels, totalPixels, coloredPercent)
+		return errors.Errorf("failed to verify the number of the %v colored pixels exceeds the threshold (%d%%); contains %d / %d (%d%%) colored pixels in bounds %s", clr, threshold, coloredPixels, totalPixels, coloredPercent, bounds)
 	}
 
 	return nil
