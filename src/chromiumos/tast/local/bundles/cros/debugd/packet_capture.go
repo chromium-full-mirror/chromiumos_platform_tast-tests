@@ -32,9 +32,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies network packet capture works and can be controlled by policy",
 		Contacts: []string{
-			"iremuguz@google.com", // Test author
-			"chromeos-commercial-networking@google.com",
+			"chromeos-commercial-supportability@google.com", // Team
+			"iremuguz@google.com",                           // Test author
 		},
+		BugComponent: "b:1111615",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeEnrolledLoggedIn",
