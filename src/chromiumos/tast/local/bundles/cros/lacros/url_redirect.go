@@ -155,7 +155,7 @@ func URLRedirect(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, tc.subtest, func(ctx context.Context, s *testing.State) {
-			testURLRedirect(ctx, s, tc.params)
+			testURLRedirect(ctx, s, tc.params, tc.subtest)
 		})
 	}
 }
@@ -163,7 +163,7 @@ func URLRedirect(ctx context.Context, s *testing.State) {
 // testURLRedirect is a basic test for lacros's internal url redirect handling.
 // It will open Lacros and navigate to a URL which should get either redirected
 // to Ash, navigated to in Lacros, fail to navigate to or get even blocked.
-func testURLRedirect(ctx context.Context, s *testing.State, params urlRedirectParams) {
+func testURLRedirect(ctx context.Context, s *testing.State, params urlRedirectParams, test string) {
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -201,7 +201,7 @@ func testURLRedirect(ctx context.Context, s *testing.State, params urlRedirectPa
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
 	defer kb.Close()
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, params.url)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, test)
 
 	s.Log("Navigating in Lacros to the test URL: ", params.url)
 	if err := navigateSingleTabToURLInLacros(ctx, params.url, l, atconn, kb); err != nil {
@@ -321,19 +321,27 @@ func testURLRedirect(ctx context.Context, s *testing.State, params urlRedirectPa
 		defer conn.Close()
 
 		// Verify proper navigation.
-		targets, err := l.FindTargets(ctx, chrome.MatchTargetURL(params.url))
-		if err != nil {
-			s.Fatal("Error when finding / matching Lacros window: ", err)
-		}
-		if len(targets) == 0 {
-			s.Fatal("There should have been at least one suitable target")
-		}
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			targets, err := l.FindTargets(ctx, chrome.MatchTargetURL(params.url))
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "cannot find matching Lacros window"))
+			}
+			if len(targets) == 0 {
+				return errors.New("there should have been at least one suitable target")
+			}
+			if len(targets) > 1 {
+				return testing.PollBreak(errors.New("there was more than one suitable target"))
+			}
 
-		if !targets[0].Attached {
-			s.Fatal("Navigation failed to: ", params.url)
-		}
-		if targets[0].URL != params.url {
-			s.Fatal("Incorrect navigation to ", params.url)
+			if !targets[0].Attached {
+				return testing.PollBreak(errors.Wrap(err, "navigation failed"))
+			}
+			if targets[0].URL != params.url {
+				return testing.PollBreak(errors.Wrap(err, "incorrect navigation"))
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			s.Fatal("Navigation did not lead to proper title: ", err)
 		}
 
 		// To make sure that nothing else went wrong (blocked or unreachable
