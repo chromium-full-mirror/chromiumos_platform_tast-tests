@@ -30,10 +30,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded, // TODO(b/223493879): Migrate when the feature is complete for Lacros.
 		Desc:         "Checks live caption works",
 		Contacts: []string{
+			"ml-service-team@google.com",
 			"alanlxl@chromium.org",
 			"amoylan@chromium.org",
-			"chrome-knowledge-eng@google.com",
 		},
+		// Software > Machine Intelligence > libsoda & ChromeOS Live Caption
+		BugComponent: "b:1116342",
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
 		Attr:         []string{"group:mainline"},
