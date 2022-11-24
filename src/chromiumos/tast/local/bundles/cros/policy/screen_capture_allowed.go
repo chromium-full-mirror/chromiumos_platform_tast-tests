@@ -117,9 +117,9 @@ func ScreenCaptureAllowed(ctx context.Context, s *testing.State) {
 					}
 
 					mediaPicker := nodewith.Role(role.Window).ClassName("DesktopMediaPickerDialogView")
-					screenTab := nodewith.Name("Entire Screen").ClassName("Tab").Ancestor(mediaPicker)
+					screenTab := nodewith.Name("Entire Screen").ClassName("TabbedPaneTab").Ancestor(mediaPicker)
 					shareTarget := nodewith.ClassName("DesktopMediaSourceView").First()
-					shareButton := nodewith.Name("Share").Role(role.Button)
+					shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(mediaPicker)
 
 					ui := uiauto.New(tconn)
 

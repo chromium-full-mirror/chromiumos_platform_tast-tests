@@ -152,9 +152,9 @@ func WindowCaptureAllowedByOrigins(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+tc.name)
 
 			mediaPicker := nodewith.Role(role.Window).ClassName("DesktopMediaPickerDialogView")
-			screenTab := nodewith.Name("Entire Screen").ClassName("Tab").Ancestor(mediaPicker)
-			windowTab := nodewith.Name("Window").ClassName("Tab").Ancestor(mediaPicker)
-			tabTab := nodewith.NameRegex(regexp.MustCompile("(Chrome|Chromium) Tab")).ClassName("Tab").Ancestor(mediaPicker)
+			screenTab := nodewith.Name("Entire Screen").ClassName("TabbedPaneTab").Ancestor(mediaPicker)
+			windowTab := nodewith.Name("Window").ClassName("TabbedPaneTab").Ancestor(mediaPicker)
+			tabTab := nodewith.NameRegex(regexp.MustCompile("(Chrome|Chromium) Tab")).ClassName("TabbedPaneTab").Ancestor(mediaPicker)
 			timeout := 5 * time.Second
 
 			if tc.wantCaptureBlocked {
