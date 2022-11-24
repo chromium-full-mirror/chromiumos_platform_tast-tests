@@ -169,18 +169,36 @@ func (e *Env) Cleanup(ctx context.Context) error {
 		updateLastErrAndLog(errors.Wrap(err, "failed removing chroot filesystem"))
 	}
 
-	// Wait until veth pair is removed. It should happen once we remove the netns,
-	// but it may take up to 2 seconds (on a local DUT) to finish.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := net.InterfaceByName(e.VethOutName); err == nil {
-			return errors.Errorf("veth %s still exists", e.VethOutName)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		updateLastErrAndLog(errors.Wrapf(err, "failed to wait for veth %s disappeared", e.VethOutName))
+	// Wait until veth pair is removed. It should happen once we remove the netns.
+	if err := waitForInterfaceRemoved(ctx, e.VethOutName); err != nil {
+		updateLastErrAndLog(errors.Wrapf(err, "failed to wait for veth %s removal", e.VethOutName))
 	}
 
 	return lastErr
+}
+
+// waitForInterfaceRemoved waits until interface of given name is removed, which may take up
+// to 2 seconds (on a local DUT) to finish.
+func waitForInterfaceRemoved(ctx context.Context, name string) error {
+	if name == "" {
+		return errors.New("interface name is invalid")
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ift, err := net.Interfaces()
+		if err != nil {
+			return errors.Wrap(err, "failed to get interfaces")
+		}
+		for _, ifi := range ift {
+			if name == ifi.Name {
+				return errors.Errorf("interface %s still exists", name)
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return errors.Wrapf(err, "failed to wait for interface %s disappeared", name)
+	}
+	return nil
 }
 
 // StartServer starts a server inside this Env. This Env object will take care
@@ -443,6 +461,12 @@ func (e *Env) makeNetNS(ctx context.Context) error {
 		if _, ok := err.(*exec.ExitError); !ok {
 			return errors.Wrapf(err, "failed to delete leftover namespace %s", e.NetNSName)
 		}
+	}
+
+	// Wait until veth pair is removed. It should happen once we remove the netns, but
+	// may fail to wait for removal during clean up. So we wait once again in set up.
+	if err := waitForInterfaceRemoved(ctx, e.VethOutName); err != nil {
+		return errors.Wrapf(err, "failed to wait for veth %s removal", e.VethOutName)
 	}
 
 	// Create new namespace.
