@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:156085",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "vpnShillResetWithChromeLoggedIn",
+		Fixture:      "vpnShillReset",
 		Params: []testing.Param{{
 			Name: "openvpn",
 			Val: vpn.Config{
