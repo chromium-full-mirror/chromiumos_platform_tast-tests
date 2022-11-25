@@ -166,7 +166,10 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 		// Launch Visual Studio Code.
 		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testNewFile)),
 		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File")),
+		// b/252698065: it always fail to find "File" on model jinlon, find "Terminal" instead.
+		uiauto.IfFailThen(
+			uda.WaitUntilExists(uidetection.Word("File")),
+			uda.WaitUntilExists(uidetection.Word("Terminal"))),
 		// Left click the app window to focus.
 		ui.LeftClick(appWindow),
 		// Press ctrl+Q to exit window.
