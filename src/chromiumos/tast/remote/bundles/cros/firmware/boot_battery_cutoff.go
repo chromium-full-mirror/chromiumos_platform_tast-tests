@@ -335,7 +335,22 @@ func wakeDUTS0(ctx context.Context, h *firmware.Helper) error {
 	// Check if DUT is at G3. If DUT is in G3, use power button to boot it into S0.
 	testing.ContextLog(retryCtx, "Checking if power state is at G3 or S5")
 	if err := h.WaitForPowerStates(retryCtx, firmware.PowerStateInterval, 1*time.Minute, "G3", "S5"); err != nil {
-		return errors.Wrap(err, "unable to get power state at G3 or S5. DUT disconnected due to other reasons")
+		// For debugging purposes, if EC power state is found to be S0, check for the AP state.
+		checkPowerState := func() string {
+			testing.ContextLog(ctx, "Checking for the DUT's power state")
+			state, err := h.Servo.GetECSystemPowerState(ctx)
+			if err != nil {
+				testing.ContextLog(ctx, "Error getting power state: ", err)
+				return "unknown"
+			}
+			return state
+		}
+		value := checkPowerState()
+		if value == "S0" {
+			apState := verifyAPOn(ctx, h)
+			return errors.Wrapf(err, "found DUT's power state at S0, status of ap: %s", apState)
+		}
+		return errors.Wrapf(err, "DUT disconnected due to other reasons, found power state %s", value)
 	}
 	testing.ContextLogf(retryCtx, "Pressing power button for %s to wake DUT into S0 from G3 or S5", h.Config.HoldPwrButtonPowerOn)
 	if err := h.Servo.KeypressWithDuration(retryCtx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
@@ -362,4 +377,25 @@ func verifyECSoftwareWPStatus(ctx context.Context, s *testing.State, expected st
 	}
 	testing.ContextLog(ctx, "WARNING: ectool returned a non-zero exit, but the wp status changed as expected")
 	return nil
+}
+
+// verifyAPOn checks for the AP state by running ccdstate
+// in the cr50 console.
+func verifyAPOn(ctx context.Context, h *firmware.Helper) string {
+	cmd := "ccdstate"
+	regex := []string{`AP:\s*(on|off)\s\((\w*)\)`}
+	matches, err := h.Servo.RunCR50CommandGetOutput(ctx, cmd, regex)
+	if err != nil || len(matches) == 0 {
+		return "unknown"
+	}
+	if matches[0][1] != "on" {
+		return fmt.Sprintf("ap is not \"on\" after plugging in charger, got: %s", matches[0][1])
+	}
+	if matches[0][2] == "K" {
+		return "dut might be at the log-in screen"
+	}
+	if matches[0][2] == "F" {
+		return "dut might be stuck at a firmware screen"
+	}
+	return fmt.Sprintf("got DUT AP state: %s", matches[0][2])
 }
