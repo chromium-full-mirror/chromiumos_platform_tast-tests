@@ -27,6 +27,9 @@ service EthernetService {
 
   // DownloadPath returns the download path from cryptohome.
   rpc DownloadPath (google.protobuf.Empty) returns (DownloadPathResponse) {}
+
+   // WaitForEthernet checks whether Ethernet is connected.
+   rpc WaitForEthernet(google.protobuf.Empty) returns (google.protobuf.Empty){}
 }
 
 message BrowseRequest {

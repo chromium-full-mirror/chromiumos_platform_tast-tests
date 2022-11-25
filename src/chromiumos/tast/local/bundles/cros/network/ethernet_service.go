@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -109,4 +110,24 @@ func (e *EthernetService) DownloadPath(ctx context.Context, req *empty.Empty) (*
 		return nil, errors.Wrap(err, "failed to get Downloads path")
 	}
 	return &network.DownloadPathResponse{DownloadPath: downloadsPath}, nil
+}
+
+// WaitForEthernet checks whether Ethernet is connected.
+func (e *EthernetService) WaitForEthernet(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a Shill Manager")
+	}
+
+	var ethProperties = map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeEthernet,
+		shillconst.ServicePropertyIsConnected: true,
+	}
+
+	testing.ContextLog(ctx, "Waiting for an Ethernet Service")
+	_, err = manager.WaitForServiceProperties(ctx, ethProperties, 10*time.Second)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for an ethernet service")
+	}
+	return &empty.Empty{}, nil
 }
