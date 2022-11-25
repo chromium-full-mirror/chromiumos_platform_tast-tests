@@ -6,7 +6,9 @@ package wifi
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -24,6 +26,7 @@ import (
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
 )
 
@@ -38,11 +41,12 @@ type handlePassphrasesParam struct {
 }
 
 type passphraseTestCase struct {
-	name              string
-	passphraseLength  int
-	genPassphrase     func(int) (string, error)
-	verifications     func(context.Context, *grpc.ClientConn, *wificell.WifiClient, bool, string) error
-	extraVerification func(context.Context, *grpc.ClientConn, *wificell.WifiClient, string) error
+	name                   string
+	passphraseLength       int
+	genPassphrase          func(int) (string, error)
+	shouldAttemptToConnect bool
+	verifications          func(context.Context, *grpc.ClientConn, *wificell.WifiClient, bool, string) error
+	extraVerification      func(context.Context, *grpc.ClientConn, *wificell.WifiClient, string) error
 }
 
 func init() {
@@ -54,6 +58,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"cj.tsai@cienet.com",
 			"toby.leung@cienet.com",
+			"edgar.chang@cienet.com",
 			"cienet-development@googlegroups.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
@@ -63,6 +68,7 @@ func init() {
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
 			"tast.cros.ui.AutomationService",
+			"tast.cros.wifi.WifiService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 			wifiutil.FaillogServiceName,
 		),
@@ -71,32 +77,60 @@ func init() {
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{
 			{
-				Name: "logged_in_wpa",
+				Name: "logged_in_hidden_wpa",
 				Val: &handlePassphrasesParam{
 					isLoggedIn:     true,
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
 				},
 			}, {
-				Name: "oobe_wpa",
+				Name: "logged_in_open_wpa",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     true,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
+				},
+			}, {
+				Name: "oobe_hidden_wpa",
 				Val: &handlePassphrasesParam{
 					isLoggedIn:     false,
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
-					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Encrypted_WiFi_"))},
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi")), hostapd.Hidden()},
 				},
 			}, {
-				Name: "logged_in_wpa2",
+				Name: "oobe_open_wpa",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     false,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
+				},
+			}, {
+				Name: "logged_in_hidden_wpa2",
 				Val: &handlePassphrasesParam{
 					isLoggedIn:     true,
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
 				},
 			}, {
-				Name: "oobe_wpa2",
+				Name: "logged_in_open_wpa2",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     true,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
+				},
+			}, {
+				Name: "oobe_hidden_wpa2",
 				Val: &handlePassphrasesParam{
 					isLoggedIn:     false,
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
-					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Encrypted_WiFi_"))},
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
+				},
+			}, {
+				Name: "oobe_open_wpa2",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     false,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
 			},
 		},
@@ -163,14 +197,22 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 			name:             "incorrect_passphrase_with_8_characters",
 			passphraseLength: 8,
 			genPassphrase:    wpa.GenPassphrase,
+			// Expect ChromeOS attempt to connect to the network for a valid passphrase.
+			shouldAttemptToConnect: true,
 			// For an incorrect but valid passphrase, expecting a notification that alerts "Bad password" will appear.
 			verifications: expectIncorrectPassphrase,
+			// The network should be memorized despite the passphrase is incorrect.
+			extraVerification: expectNetworkRemembered,
 		}, {
 			name:             "incorrect_passphrase_with_26_characters",
 			passphraseLength: 26,
 			genPassphrase:    wpa.GenPassphrase,
+			// Expect ChromeOS attempt to connect to the network for a valid passphrase.
+			shouldAttemptToConnect: true,
 			// For an incorrect but valid passphrase, expecting a notification that alerts "Bad password" will appear.
 			verifications: expectIncorrectPassphrase,
+			// The network should be memorized despite the passphrase is incorrect.
+			extraVerification: expectNetworkRemembered,
 		}, {
 			name:             "invalid_passphrase_with_0_characters",
 			passphraseLength: 0,
@@ -191,12 +233,16 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 			genPassphrase:    wpa.GenInvalidPassphrase,
 			// An invalid passphrase should be notified with a "bad password" prompt by "Join WiFi Network" dialog.
 			verifications: expectBadPasswordPrompted,
+			// The network should be memorized despite the passphrase is incorrect.
+			extraVerification: expectNetworkRemembered,
 		}, {
 			name:             "invalid_passphrase_with_64_characters",
 			passphraseLength: 64,
 			genPassphrase:    wpa.GenInvalidPassphrase,
 			// An invalid passphrase should be notified with a "bad password" prompt by "Join WiFi Network" dialog.
 			verifications: expectBadPasswordPrompted,
+			// The network should be memorized despite the passphrase is incorrect.
+			extraVerification: expectNetworkRemembered,
 		}, {
 			name:          "correct_passphrase",
 			genPassphrase: func(int) (string, error) { return correctPassphrase, nil },
@@ -219,6 +265,14 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 			defer wifiutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, test.name)
 			if err != nil {
 				s.Fatal("Failed to join WiFi: ", err)
+			}
+			// tf.CleanDisconnectDUTFromWifi cannot be used, it only clears a connected network but tests here require any specified network to be cleared.
+			defer removeWifiFromDUT(cleanupCtx, wifiSvc, ap.Config().SSID)
+
+			if test.shouldAttemptToConnect {
+				if err := expectAttemptToConnect(ctx, rpcClient.Conn, ap.Config().SSID); err != nil {
+					s.Fatal("Failed to verify that the device is attempting to connect to WiFi: ", err)
+				}
 			}
 			if err := test.verifications(ctx, rpcClient.Conn, wifiSvc, param.isLoggedIn, ap.Config().SSID); err != nil {
 				s.Fatal("Failed to verify that UI prompt correctly: ", err)
@@ -289,7 +343,7 @@ func expectIncorrectPassphraseNotification(ctx context.Context, conn *grpc.Clien
 	return nil
 }
 
-// expectIncorrectPassphraseMessage verifies the incorrect passphrase message appears in specific SSID 'Join Wi-Fi Network' dialog on OOBE.
+// expectIncorrectPassphraseMessage verifies the incorrect passphrase message appears in specific SSID 'Join WiFi Network' dialog on OOBE.
 func expectIncorrectPassphraseMessage(ctx context.Context, conn *grpc.ClientConn, wifiSvc *wificell.WifiClient, ssid string) error {
 	uiSvc := ui.NewAutomationServiceClient(conn)
 	quickSettingsSvc := quicksettings.NewQuickSettingsServiceClient(conn)
@@ -345,9 +399,64 @@ func verifyDisconnectButton(ctx context.Context, conn *grpc.ClientConn, wifiSvc 
 	return nil
 }
 
+// expectNetworkRemembered verifies if the WiFi network is remembered.
+func expectNetworkRemembered(ctx context.Context, conn *grpc.ClientConn, _ *wificell.WifiClient, ssid string) error {
+	wifiSvc := wifi.NewWifiServiceClient(conn)
+	if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
+		Ssids:   []string{ssid},
+		Control: wifi.KnownNetworksControlsRequest_WaitUntilExist,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to find the WiFi %q is in Known Networks page", ssid)
+	}
+
+	return nil
+}
+
+// expectAttemptToConnect verifies that the ChromeOS is attempting to connect to the specified network and then the action will eventually stop.
+func expectAttemptToConnect(ctx context.Context, conn *grpc.ClientConn, ssid string) error {
+	uiSvc := ui.NewAutomationServiceClient(conn)
+
+	wifiIcon := ui.Node().NameRegex(fmt.Sprintf("^Connecting to %s$", ssid)).Role(ui.Role_ROLE_IMAGE).HasClass("NetworkTrayView").Finder()
+	// Verify the ChromeOS is attempting to connect to the network by checking UI.
+	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
+		Finder: wifiIcon,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to wait until device attempt to connect WiFi network %q", ssid)
+	}
+
+	// Verify the WiFi icon in the system tray stops oscillating.
+	if _, err := uiSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{
+		Finder:  wifiIcon,
+		Timeout: &durationpb.Duration{Seconds: int64(shillconst.DefaultTimeout.Seconds())},
+	}); err != nil {
+		return errors.Wrap(err, "failed to wait until WiFi icon stop oscillating")
+	}
+
+	return nil
+}
+
 func openNetworkDetailPageRequest(ssid string) *ossettings.OpenNetworkDetailPageRequest {
 	return &ossettings.OpenNetworkDetailPageRequest{
 		NetworkName: ssid,
 		NetworkType: ossettings.OpenNetworkDetailPageRequest_WIFI,
 	}
+}
+
+// removeWifiFromDUT removes the specified WiFi from the DUT.
+func removeWifiFromDUT(ctx context.Context, wifiSvc *wificell.WifiClient, ssid string) error {
+	props := map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeWifi,
+		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+	}
+
+	servicePath, err := wifiSvc.GetServicePath(ctx, props)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get %q WiFi network Service Path", ssid)
+	}
+
+	if _, err := wifiSvc.Disconnect(ctx, &wifi.DisconnectRequest{ServicePath: servicePath, RemoveProfile: true}); err != nil {
+		return errors.Wrap(err, "failed to disconnect and remove the profile")
+	}
+
+	return nil
 }

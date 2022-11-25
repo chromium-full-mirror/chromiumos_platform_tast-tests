@@ -228,18 +228,22 @@ func (cli *WifiClient) ExpectShillProperty(ctx context.Context, objectPath strin
 	return waitForProperties, nil
 }
 
-// WaitForConnected waits for the shill property "ServicePropertyIsConnected" of the specified network to be the expected value.
-// It can be used for checking if a network is connected or disconnected.
-// Note that the network has to be a known network from DUT, for checking disconnected without specifying
-// the network, consider using AssureDisconnect instead.
+// WaitForConnected queries a WiFi service with specified |ssid|, and waits for
+// its shill property: "ServicePropertyIsConnected" to be the same as |expectedValue|.
+// Note that the network needs to be added in advance, this function will not attempt to add any network.
 func (cli *WifiClient) WaitForConnected(ctx context.Context, ssid string, expectedValue bool) error {
 	props := map[string]interface{}{
 		shillconst.ServicePropertyType:        shillconst.TypeWifi,
 		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
 	}
-	servicePath, err := cli.GetServicePath(ctx, props)
-	if err != nil {
-		return errors.Wrap(err, "failed to get service path")
+
+	var servicePath string
+	// The service path may not be found immediately after the network is added.
+	if err := testing.Poll(ctx, func(ctx context.Context) (err error) {
+		servicePath, err = cli.GetServicePath(ctx, props)
+		return err
+	}, &testing.PollOptions{Timeout: shillconst.DefaultTimeout, Interval: time.Second}); err != nil {
+		return err
 	}
 
 	req := []*ShillProperty{{
