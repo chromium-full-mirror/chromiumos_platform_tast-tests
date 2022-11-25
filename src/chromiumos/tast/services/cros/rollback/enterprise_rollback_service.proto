@@ -4,28 +4,17 @@
 
 syntax = "proto3";
 
-package tast.cros.autoupdate;
+package tast.cros.rollback;
 
-import "google/protobuf/empty.proto";
+option go_package = "chromiumos/tast/services/cros/rollback";
 
-option go_package = "chromiumos/tast/services/cros/autoupdate";
-
-// RollbackService provides functions to set up and verify enterprise rollback.
-service RollbackService {
-  // SetUpPskNetwork is deprecated and replaced by SetUpNetworks.
-  rpc SetUpPskNetwork (google.protobuf.Empty) returns (SetUpPskResponse) {
-    option deprecated = true;
-  }
+// EnterpriseRollbackService provides functions to set up and verify enterprise rollback.
+service EnterpriseRollbackService {
   // SetUpNetworks sets various networks supported by rollback automatically.
   rpc SetUpNetworks (SetUpNetworksRequest) returns (SetUpNetworksResponse);
   // VerifyRollback verifies that oobe ends up on the enrollment screen after
   // rollback and that the networks provided still exists.
   rpc VerifyRollback (VerifyRollbackRequest) returns (VerifyRollbackResponse);
-}
-
-message SetUpPskResponse {
-  option deprecated = true;
-  string guid = 1;
 }
 
 message NetworkInformation {

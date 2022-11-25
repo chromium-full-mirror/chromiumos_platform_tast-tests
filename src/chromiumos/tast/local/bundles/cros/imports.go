@@ -97,6 +97,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/quicksettings"
 	_ "chromiumos/tast/local/bundles/cros/quickstart"
 	_ "chromiumos/tast/local/bundles/cros/rgbkbd"
+	_ "chromiumos/tast/local/bundles/cros/rollback"
 	_ "chromiumos/tast/local/bundles/cros/runtimeprobe"
 	_ "chromiumos/tast/local/bundles/cros/scanapp"
 	_ "chromiumos/tast/local/bundles/cros/scanner"

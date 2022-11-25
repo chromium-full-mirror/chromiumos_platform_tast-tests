@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package autoupdate
+package rollback
 
 import (
 	"context"
@@ -34,8 +34,8 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.NebraskaService",
-			"tast.cros.autoupdate.RollbackService",
 			"tast.cros.autoupdate.UpdateService",
+			"tast.cros.rollback.EnterpriseRollbackService",
 			"tast.cros.hwsec.OwnershipService",
 		},
 		Timeout: updateutil.UpdateTimeout + 12*time.Minute,

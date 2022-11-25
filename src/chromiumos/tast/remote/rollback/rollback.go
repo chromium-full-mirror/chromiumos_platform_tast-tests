@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
 	"chromiumos/tast/rpc"
-	aupb "chromiumos/tast/services/cros/autoupdate"
+	rpb "chromiumos/tast/services/cros/rollback"
 	"chromiumos/tast/testing"
 )
 
@@ -70,7 +70,7 @@ func DUTInfo(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) (*Devi
 }
 
 // ConfigureNetworks sets up the networks supported by rollback.
-func ConfigureNetworks(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) ([]*aupb.NetworkInformation, error) {
+func ConfigureNetworks(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) ([]*rpb.NetworkInformation, error) {
 	client, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
@@ -78,8 +78,8 @@ func ConfigureNetworks(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 	defer client.Close(ctx)
 
 	// Configure networks to check preservation across rollback.
-	rollbackService := aupb.NewRollbackServiceClient(client.Conn)
-	response, err := rollbackService.SetUpNetworks(ctx, &aupb.SetUpNetworksRequest{})
+	rollbackService := rpb.NewEnterpriseRollbackServiceClient(client.Conn)
+	response, err := rollbackService.SetUpNetworks(ctx, &rpb.SetUpNetworksRequest{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure networks on client")
 	}
@@ -164,7 +164,7 @@ func CheckImageVersion(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 // VerifyRollbackData ensures that sensitive data was not accidentally logged
 // during rollback but certain data, like network configuration, has been
 // preserved.
-func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, networks []*aupb.NetworkInformation, sensitive string) error {
+func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, networks []*rpb.NetworkInformation, sensitive string) error {
 	// Ensure that the sensitive data was not logged.
 	logsAndCrashes := []string{"/var/log", "/var/spool/crash", "/home/chronos/crash", "/mnt/stateful_partition/unencrypted/preserve/crash", "/run/crash_reporter/crash"}
 	for _, folder := range logsAndCrashes {
@@ -180,8 +180,8 @@ func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 	}
 	defer client.Close(ctx)
 
-	rollbackService := aupb.NewRollbackServiceClient(client.Conn)
-	response, err := rollbackService.VerifyRollback(ctx, &aupb.VerifyRollbackRequest{Networks: networks})
+	rollbackService := rpb.NewEnterpriseRollbackServiceClient(client.Conn)
+	response, err := rollbackService.VerifyRollback(ctx, &rpb.VerifyRollbackRequest{Networks: networks})
 	if err != nil {
 		return errors.Wrap(err, "failed to verify rollback on client")
 	}

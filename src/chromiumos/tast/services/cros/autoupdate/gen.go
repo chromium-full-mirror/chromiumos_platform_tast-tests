@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. nebraska_service.proto
-//go:generate protoc -I . --go_out=plugins=grpc:../../../../.. rollback_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. update_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. update_ui_service.proto
 

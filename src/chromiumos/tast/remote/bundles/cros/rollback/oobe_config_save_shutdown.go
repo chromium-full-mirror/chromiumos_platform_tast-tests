@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package rollback
 
 import (
 	"context"
@@ -22,6 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that oobe_config_save runs successfully on reboot",
 		Contacts: []string{
+			// DO NOT modify these tests without approval from a test contact.
 			"mpolzer@google.com", // Test author
 			"crisguerrero@chromium.com",
 			"chromeos-commercial-remote-management@google.com",

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package rollback
 
 import (
 	"context"
@@ -26,35 +26,39 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RollbackWithOmaha,
+		Func:         EnterpriseRollbackWithOmaha,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example test for the enterprise rollback update",
 		Contacts: []string{
 			"gabormagda@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1031231",
 		Attr:         []string{}, // Manual execution only.
-		VarDeps:      []string{"policy.RollbackWithOmaha.confirm", "policy.RollbackWithOmaha.sourceVersion", "policy.RollbackWithOmaha.targetVersion"},
+		VarDeps:      []string{"rollback.EnterpriseRollbackWithOmaha.confirm", "rollback.EnterpriseRollbackWithOmaha.sourceVersion", "rollback.EnterpriseRollbackWithOmaha.targetVersion"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.autoupdate.UpdateService"},
 		Timeout:      5 * time.Minute,
 	})
 }
 
-// RollbackWithOmaha test must be provided the source and target image versions.
+// EnterpriseRollbackWithOmaha test must be provided the source and target image versions.
 // The source version should be a full version string. The target can be
 // just a prefix. Furthermore, test should be started with
-//   -var=policy.RollbackWithOmaha.confirm=ICanRollbackMyDUT
+//
+//	-var=rollback.EnterpriseRollbackWithOmaha.confirm=ICanRollbackMyDUT
+//
 // to avoid accidental execution of the test.
 //
 // For example, to run a rollback from M96 to M94:
 // tast run
-//   -var=policy.RollbackWithOmaha.confirm=ICanRollbackMyDUT
-//   -var=policy.RollbackWithOmaha.sourceVersion=14244.0.0
-//   -var=policy.RollbackWithOmaha.targetVersion=14092.
-//   <ip> policy.RollbackWithOmaha
-func RollbackWithOmaha(ctx context.Context, s *testing.State) {
-	if s.RequiredVar("policy.RollbackWithOmaha.confirm") != "ICanRollbackMyDUT" {
+//
+//	-var=rollback.EnterpriseRollbackWithOmaha.confirm=ICanRollbackMyDUT
+//	-var=rollback.EnterpriseRollbackWithOmaha.sourceVersion=14244.0.0
+//	-var=rollback.EnterpriseRollbackWithOmaha.targetVersion=14092.
+//	<ip> rollback.EnterpriseRollbackWithOmaha
+func EnterpriseRollbackWithOmaha(ctx context.Context, s *testing.State) {
+	if s.RequiredVar("rollback.EnterpriseRollbackWithOmaha.confirm") != "ICanRollbackMyDUT" {
 		s.Log("You should only run this example test if you have manual access to your DUT")
 		s.Log("After the update, you can restore the previous partition with the following command:")
 		s.Log("\tupdate_engine_client --rollback --nopowerwash")
@@ -123,7 +127,7 @@ func RollbackWithOmaha(ctx context.Context, s *testing.State) {
 		}
 		defer policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{})
 
-		targetVersion := s.RequiredVar("policy.RollbackWithOmaha.targetVersion")
+		targetVersion := s.RequiredVar("rollback.EnterpriseRollbackWithOmaha.targetVersion")
 
 		// Set update policies.
 		rollbackPolicies := []policy.Policy{
@@ -155,7 +159,7 @@ func RollbackWithOmaha(ctx context.Context, s *testing.State) {
 			}
 		}(cleanupCtx)
 
-		sourceVersion := s.RequiredVar("policy.RollbackWithOmaha.sourceVersion")
+		sourceVersion := s.RequiredVar("rollback.EnterpriseRollbackWithOmaha.sourceVersion")
 
 		// Update DUT with an update from the official prod server.
 		// The server is given explicitly because self-built images may not have

@@ -2,39 +2,38 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package autoupdate
+package rollback
 
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/errors"
-	nws "chromiumos/tast/local/bundles/cros/autoupdate/rollbacknetworks"
+	nws "chromiumos/tast/local/bundles/cros/rollback/rollbacknetworks"
 	"chromiumos/tast/local/chrome"
 	nc "chromiumos/tast/local/network/netconfig"
-	aupb "chromiumos/tast/services/cros/autoupdate"
+	rpb "chromiumos/tast/services/cros/rollback"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			aupb.RegisterRollbackServiceServer(srv, &RollbackService{s: s})
+			rpb.RegisterEnterpriseRollbackServiceServer(srv, &EnterpriseRollbackService{s: s})
 		},
 	})
 }
 
-// RollbackService implements tast.cros.autoupdate.RollbackService.
-type RollbackService struct {
+// EnterpriseRollbackService implements tast.cros.rollback.EnterpriseRollbackService.
+type EnterpriseRollbackService struct {
 	s *testing.ServiceState
 }
 
 // SetUpNetworks sets up a series of network configuration on the device that
 // are supported by rollback.
 // The device needs to be in a state so that chrome://network may be opened.
-func (r *RollbackService) SetUpNetworks(ctx context.Context, request *aupb.SetUpNetworksRequest) (*aupb.SetUpNetworksResponse, error) {
+func (r *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, request *rpb.SetUpNetworksRequest) (*rpb.SetUpNetworksResponse, error) {
 	testing.ContextLog(ctx, "setting up networks supported by rollback")
 	// Open chrome and create a connection to the network configuration api.
 	// This is needed to set up each network without having to create a connection
@@ -52,7 +51,7 @@ func (r *RollbackService) SetUpNetworks(ctx context.Context, request *aupb.SetUp
 	defer api.Close(ctx)
 
 	// Set up the supported networks.
-	var networks []*aupb.NetworkInformation
+	var networks []*rpb.NetworkInformation
 	for _, nw := range nws.SupportedNetworks {
 		nwInfo, err := setUpNetwork(ctx, api, nw.Config)
 		if err != nil {
@@ -61,7 +60,7 @@ func (r *RollbackService) SetUpNetworks(ctx context.Context, request *aupb.SetUp
 		networks = append(networks, nwInfo)
 	}
 
-	networksResponse := &aupb.SetUpNetworksResponse{
+	networksResponse := &rpb.SetUpNetworksResponse{
 		Networks: networks,
 	}
 
@@ -70,20 +69,20 @@ func (r *RollbackService) SetUpNetworks(ctx context.Context, request *aupb.SetUp
 }
 
 // setUpNetwork sets up a network configuration on the device.
-func setUpNetwork(ctx context.Context, api *nc.CrosNetworkConfig, properties nc.ConfigProperties) (*aupb.NetworkInformation, error) {
+func setUpNetwork(ctx context.Context, api *nc.CrosNetworkConfig, properties nc.ConfigProperties) (*rpb.NetworkInformation, error) {
 	guid, err := api.ConfigureNetwork(ctx, properties, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure network")
 	}
-	networkResponse := &aupb.NetworkInformation{
+	networkResponse := &rpb.NetworkInformation{
 		Guid: guid,
 	}
 	return networkResponse, nil
 }
 
 // verifyNetworks checks the networks set are the expected ones.
-func verifyNetworks(ctx context.Context, networks []*aupb.NetworkInformation, api *nc.CrosNetworkConfig) (*aupb.VerifyRollbackResponse, error) {
-	response := &aupb.VerifyRollbackResponse{
+func verifyNetworks(ctx context.Context, networks []*rpb.NetworkInformation, api *nc.CrosNetworkConfig) (*rpb.VerifyRollbackResponse, error) {
+	response := &rpb.VerifyRollbackResponse{
 		Successful:          true,
 		VerificationDetails: "",
 	}
@@ -118,7 +117,7 @@ func verifyNetworks(ctx context.Context, networks []*aupb.NetworkInformation, ap
 // logs in as a normal user and verifies the networks again.
 // VerifyRollbackRequest needs to contain the unchanged NetworkInformation from
 // SetUpNetworksResponse.
-func (r *RollbackService) VerifyRollback(ctx context.Context, request *aupb.VerifyRollbackRequest) (*aupb.VerifyRollbackResponse, error) {
+func (r *EnterpriseRollbackService) VerifyRollback(ctx context.Context, request *rpb.VerifyRollbackRequest) (*rpb.VerifyRollbackResponse, error) {
 	// Chrome would send an auto re-enrollment request to the real DMServer
 	// which will fail because the device wasn't enrolled at all.
 	// Try to prevent that by setting DMServer URL to nonsense.
@@ -169,9 +168,4 @@ func (r *RollbackService) VerifyRollback(ctx context.Context, request *aupb.Veri
 	}
 
 	return response, nil
-}
-
-// SetUpPskNetwork is deprecated. Use SetUpNetworks instead.
-func (r *RollbackService) SetUpPskNetwork(ctx context.Context, req *empty.Empty) (*aupb.SetUpPskResponse, error) {
-	return nil, errors.New("use of deprecated SetUpPskNetwork; SetUpNetworks should be used instead")
 }

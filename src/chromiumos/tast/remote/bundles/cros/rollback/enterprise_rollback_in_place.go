@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package rollback
 
 import (
 	"context"
@@ -21,6 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check the enterprise rollback data restore mechanism while faking a rollback on one image",
 		Contacts: []string{
+			// DO NOT modify these tests without approval from a test contact.
 			"mpolzer@google.com", // Test author
 			"crisguerrero@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
@@ -30,7 +31,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
-			"tast.cros.autoupdate.RollbackService",
+			"tast.cros.rollback.EnterpriseRollbackService",
 		},
 		Timeout: 10 * time.Minute,
 	})

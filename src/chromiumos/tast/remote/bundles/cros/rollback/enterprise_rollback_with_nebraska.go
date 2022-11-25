@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package rollback
 
 import (
 	"context"
@@ -34,13 +34,14 @@ type update struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RollbackWithNebraska,
+		Func:         EnterpriseRollbackWithNebraska,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example test for the enterprise rollback update using Nebraska and test images",
 		Contacts: []string{
 			"gabormagda@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1031231",
 		Attr:         []string{}, // Manual execution only.
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
@@ -80,7 +81,7 @@ const (
 	updateFolder = "/mnt/stateful_partition/"
 )
 
-func RollbackWithNebraska(ctx context.Context, s *testing.State) {
+func EnterpriseRollbackWithNebraska(ctx context.Context, s *testing.State) {
 	params, ok := s.Param().(update)
 	if !ok {
 		s.Fatal("Failed to convert test parameters to the desired type")
