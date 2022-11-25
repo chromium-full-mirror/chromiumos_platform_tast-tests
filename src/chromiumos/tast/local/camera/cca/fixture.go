@@ -106,6 +106,32 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedWithFakeCameraFinchOn",
+		Desc:            "Launched CCA with fake camera input with finch field trial config enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{fakeCamera: true, launchCCA: true, fieldTrialConfig: "enable"},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedWithFakeCameraFinchOff",
+		Desc:            "Launched CCA with fake camera input with finch field trial config disabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{fakeCamera: true, launchCCA: true, fieldTrialConfig: "disable"},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReady",
 		Desc:            "Set up test bridge for CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
@@ -291,6 +317,7 @@ type fixture struct {
 	enableFeatures         []feature
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
+	fieldTrialConfig       string
 }
 
 func (f *fixture) cameraType() testutil.UseCameraType {
@@ -310,6 +337,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	for _, f := range f.disableFeatures {
 		chromeOpts = append(chromeOpts, chrome.DisableFeatures(string(f)))
 	}
+	chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(f.fieldTrialConfig))
 
 	// Always enable doc scan DLC flag for testing.
 	// TODO(b/226262670): Remove this line once the doc scan DLC is completely enabled.

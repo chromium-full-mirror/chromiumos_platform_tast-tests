@@ -31,6 +31,13 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name: "finch_on",
+			Val:  "enable",
+		}, {
+			Name: "finch_off",
+			Val:  "disable",
+		}},
 	})
 }
 
@@ -56,7 +63,9 @@ func CloseLid(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	cr, err := chrome.New(ctx,
+		chrome.FieldTrialConfig(s.Param().(string)),
+		chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}

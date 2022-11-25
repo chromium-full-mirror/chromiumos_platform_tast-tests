@@ -43,8 +43,12 @@ func init() {
 			ExtraAttr: []string{"group:camera-postsubmit", "informational"},
 			Val:       none,
 		}, {
-			Name:    "fake",
-			Fixture: "ccaLaunchedWithFakeCamera",
+			Name:    "fake_finch_on",
+			Fixture: "ccaLaunchedWithFakeCameraFinchOn",
+			Val:     none,
+		}, {
+			Name:    "fake_finch_off",
+			Fixture: "ccaLaunchedWithFakeCameraFinchOff",
 			Val:     none,
 		}, {
 			Name:    "photo_fake",

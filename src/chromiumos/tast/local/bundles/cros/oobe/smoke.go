@@ -26,11 +26,20 @@ func init() {
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		Params: []testing.Param{{
+			Name: "finch_on",
+			Val:  "enable",
+		}, {
+			Name: "finch_off",
+			Val:  "disable",
+		}},
 	})
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.NoLogin())
+	cr, err := chrome.New(ctx,
+		chrome.FieldTrialConfig(s.Param().(string)),
+		chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

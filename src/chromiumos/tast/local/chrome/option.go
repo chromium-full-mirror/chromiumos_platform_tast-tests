@@ -540,3 +540,12 @@ func EnableStackSampledMetrics() Option {
 		return nil
 	}
 }
+
+// FieldTrialConfig returns an Option that can be passed to New to set finch
+// field trial config to [enable|disable|default].
+func FieldTrialConfig(value string) Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.FieldTrialConfig = value
+		return nil
+	}
+}

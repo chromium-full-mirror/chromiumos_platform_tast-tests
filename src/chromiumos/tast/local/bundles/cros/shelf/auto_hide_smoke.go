@@ -22,9 +22,10 @@ import (
 )
 
 type autoHideTestType struct {
-	tabletMode bool
-	underRTL   bool // If true, the system UI is adapted to right-to-left languages.
-	bt         browser.Type
+	tabletMode       bool
+	underRTL         bool // If true, the system UI is adapted to right-to-left languages.
+	bt               browser.Type
+	fieldTrialConfig string
 }
 
 func init() {
@@ -42,11 +43,20 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name: "clamshell_mode",
+			Name: "clamshell_mode_finch_on",
 			Val: autoHideTestType{
-				tabletMode: false,
-				underRTL:   false,
-				bt:         browser.TypeAsh,
+				tabletMode:       false,
+				underRTL:         false,
+				bt:               browser.TypeAsh,
+				fieldTrialConfig: "enable",
+			},
+		}, {
+			Name: "clamshell_mode_finch_off",
+			Val: autoHideTestType{
+				tabletMode:       false,
+				underRTL:         false,
+				bt:               browser.TypeAsh,
+				fieldTrialConfig: "disable",
 			},
 		}, {
 			Name: "clamshell_mode_rtl",
@@ -132,6 +142,7 @@ func AutoHideSmoke(ctx context.Context, s *testing.State) {
 	if isUnderRTL {
 		opts = append(opts, chrome.ExtraArgs("--force-ui-direction=rtl"))
 	}
+	opts = append(opts, chrome.FieldTrialConfig(testType.fieldTrialConfig))
 	if bt == browser.TypeLacros {
 		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		if err != nil {

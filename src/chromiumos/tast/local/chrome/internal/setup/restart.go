@@ -30,8 +30,10 @@ import (
 // https://source.corp.google.com/chromeos_public/src/platform2/libbrillo/brillo/cryptohome.cc;l=83
 var obfuscatedUsernameRegexp = regexp.MustCompile(`^[\da-f]{40}$`)
 
-// Finch experiements in fieldtrial_testing_config.json are enabled by default
-// for chromium-branded builds, but disabled by default for chrome-branded.
+// Finch experiements in fieldtrial_testing_config.json are enabled in certain builds.
+// https://source.chromium.org/chromium/chromium/src/+/main:testing/variations/README.md
+// This var allows you to enable, disable or use the default for your build. Tests can
+// also set enable or disable via `chrome.FieldTrialConfig()` which overrides this var.
 var fieldTrialConfig = testing.RegisterVarString(
 	"setup.FieldTrialConfig",
 	"default",
@@ -211,12 +213,16 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	}
 	args = append(args, stackProfilerArg)
 
-	if fieldTrialConfig.Value() == "enable" {
+	var fieldTrialConfigValue = cfg.FieldTrialConfig()
+	if fieldTrialConfigValue == "" {
+		fieldTrialConfigValue = fieldTrialConfig.Value()
+	}
+	if fieldTrialConfigValue == "enable" {
 		args = append(args, "--enable-field-trial-config")
-	} else if fieldTrialConfig.Value() == "disable" {
+	} else if fieldTrialConfigValue == "disable" {
 		args = append(args, "--disable-field-trial-config")
-	} else if fieldTrialConfig.Value() != "default" {
-		return errors.Errorf("unexpected value for `%v`: %v", fieldTrialConfig.Name(), fieldTrialConfig.Value())
+	} else if fieldTrialConfigValue != "default" {
+		return errors.Errorf("unexpected value for `%v`: %v", fieldTrialConfig.Name(), fieldTrialConfigValue)
 	}
 
 	// Lacros features and additional args used to launch lacros-chrome should be delimited by
