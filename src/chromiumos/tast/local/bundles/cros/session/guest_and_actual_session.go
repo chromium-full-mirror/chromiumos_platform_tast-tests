@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/testing"
@@ -22,7 +23,11 @@ func init() {
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
+		BugComponent: "b:1207311",
+		Attr:         []string{"group:mainline"},
+		SoftwareDeps: []string{"tpm"},
+		Fixture:      fixture.CleanOwnership,
 	})
 }
 
