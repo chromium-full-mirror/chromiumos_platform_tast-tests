@@ -26,6 +26,7 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
+		BugComponent: "b:1256717",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"reboot", "vm_host", "wilco", "chrome"},
 		Fixture:      "wilcoDTCAllowed",

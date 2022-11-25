@@ -21,6 +21,7 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
+		BugComponent: "b:1256717",
 		Attr:         []string{"group:telemetry_extension_hw"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.TelemetryExtension,

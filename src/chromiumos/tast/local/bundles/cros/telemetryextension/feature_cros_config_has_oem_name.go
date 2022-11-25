@@ -20,7 +20,8 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
-		Attr: []string{"group:telemetry_extension_hw"},
+		BugComponent: "b:1256717",
+		Attr:         []string{"group:telemetry_extension_hw"},
 	})
 }
 
