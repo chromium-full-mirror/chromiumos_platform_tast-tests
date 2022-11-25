@@ -158,6 +158,24 @@ func (uda *Context) RightClick(s *Finder) uiauto.Action {
 	return uda.click(s, mouse.RightButton)
 }
 
+// DoubleClick returns an action that double-clicks a finder.
+func (uda *Context) DoubleClick(s *Finder) uiauto.Action {
+	return action.Retry(uda.options.Retries, func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			loc, err := uda.Location(ctx, s)
+			if err != nil {
+				return errors.Wrapf(err, "failed to find the location of %q", s.desc)
+			}
+
+			if err := mouse.Move(uda.tconn, loc.CenterPoint(), 250*time.Millisecond)(ctx); err != nil {
+				return errors.Wrap(err, "failed to move the mouse into position")
+			}
+
+			return mouse.DoubleClick(uda.tconn, loc.CenterPoint(), 50*time.Millisecond)(ctx)
+		}, &uda.pollOpts)
+	}, uda.options.RetryInterval)
+}
+
 // Tap performs a single touchscreen tap.
 func (uda *Context) Tap(s *Finder) uiauto.Action {
 	return action.Retry(uda.options.Retries, func(ctx context.Context) error {
