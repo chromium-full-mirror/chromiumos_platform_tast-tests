@@ -111,7 +111,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Type password "x2Zg m" to cover letters, capitals, numbers and space.
+	// Type password "x2Zg  m" to cover letters, capitals, numbers and space.
 	// Note: Any keys with accent popup are not used due to b/246622721.
 	passwordText := uidetection.TextBlock([]string{"x2Zg", "m"})
 
@@ -125,7 +125,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 				vkbCtx.WaitForKeysExist([]string{"Z"}),
 			)),
 			vkbCtx.TapKey("Z"), // pwd: x2Z
-			vkbCtx.TapKeysIgnoringCase([]string{"g", "space", "m"}), // pwd: x2Zg m
+			vkbCtx.TapKeysIgnoringCase([]string{"g", "space", "space", "m"}), // pwd: x2Zg  m
 			uiauto.Retry(5, uiauto.NamedCombine(
 				"Show password and validate text",
 				ui.DoDefault(nodewith.Name("Show password")),
