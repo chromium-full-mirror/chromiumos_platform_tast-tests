@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/terminalapp"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/testing"
 )
@@ -144,7 +145,11 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.LeftClick(finishButton),
 		ud.LeftClick(uidetection.TextBlock(strings.Split("Start a new Android Studio project", " "))),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Project Template", " "))),
-		ud.LeftClick(nextButton.WithinA11yNode(nodewith.Name("Create New Project").HasClass("Widget"))),
+		// b/252698065, it always fail to find button Next in this step in voxel.
+		// Press enter to replacing clicking Next as Next is the default button on the page.
+		uiauto.IfFailThen(
+			ud.LeftClick(nextButton.WithinA11yNode(nodewith.Name("Create New Project").HasClass("Widget"))),
+			pressEnter(keyboard)),
 		ud.LeftClick(finishButton),
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(newProjectWindow),
 	)(ctx); err != nil {
@@ -152,4 +157,10 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	}
 
 	//TODO(jinrongwu): UI test on android studio code.
+}
+
+func pressEnter(keyboard *input.KeyboardEventWriter) uiauto.Action {
+	return uiauto.Combine("press Enter to select Next",
+		uiauto.Sleep(2*time.Second),
+		keyboard.AccelAction("Enter"))
 }
