@@ -12,7 +12,6 @@ import (
 
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
@@ -124,7 +123,7 @@ func ARCBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Waiting for packages to uninstall")
-		if err := waitForUninstall(ctx, a, testPackage); err != nil {
+		if err := arcent.WaitForUninstall(ctx, a, testPackage); err != nil {
 			return rl.Exit("package not uninstalled", err)
 		}
 
@@ -132,15 +131,4 @@ func ARCBlockedAppUninstall(ctx context.Context, s *testing.State) {
 	}, nil); err != nil {
 		s.Fatal("Blocked app uninstall test failed: ", err)
 	}
-}
-
-func waitForUninstall(ctx context.Context, a *arc.ARC, blockedPackage string) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		if installed, err := a.PackageInstalled(ctx, blockedPackage); err != nil {
-			return testing.PollBreak(err)
-		} else if installed {
-			return errors.New("Package not yet uninstalled")
-		}
-		return nil
-	}, &testing.PollOptions{Interval: 1 * time.Second})
 }

@@ -98,5 +98,4 @@ func WaitForProvisioning(ctx context.Context, a *arc.ARC, attempt int) error {
 		return err
 	}
 	return nil
-
 }
