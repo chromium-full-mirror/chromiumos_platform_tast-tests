@@ -22,8 +22,9 @@ import (
 type operation string
 
 const (
-	installApp operation = "install"
-	updateApp  operation = "update"
+	installApp       operation = "install"
+	updateApp        operation = "update"
+	playStorePackage           = "com.android.vending"
 )
 
 // Options contains options used when installing or updating an app.
@@ -72,6 +73,11 @@ func OpenAppPage(ctx context.Context, a *arc.ARC, pkgName string) error {
 	}
 
 	return nil
+}
+
+// Close closes Play Store.
+func Close(ctx context.Context, a *arc.ARC) error {
+	return a.Command(ctx, "am", "force-stop", playStorePackage).Run(testexec.DumpLogOnError)
 }
 
 // printPercentageOfAppInstalled func prints the percentage of app installed so far.
@@ -377,7 +383,6 @@ func InstallOrUpdateAppAndClose(ctx context.Context, tconn *chrome.TestConn, a *
 // LaunchAssetBrowserActivity starts the activity that displays the available apps.
 func LaunchAssetBrowserActivity(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC) (*arc.Activity, error) {
 	const (
-		playStorePackage     = "com.android.vending"
 		assetBrowserActivity = "com.android.vending.AssetBrowserActivity"
 	)
 

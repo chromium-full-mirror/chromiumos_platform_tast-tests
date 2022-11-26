@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -171,8 +170,8 @@ func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, t
 		err := assertFn(ctx)
 
 		if err != nil {
-			optin.ClosePlayStore(ctx, tconn)
 			testing.ContextLogf(ctx, "App page for %q not in desired state: %s", testPackage, err)
+			playstore.Close(ctx, a)
 		}
 		return err
 	}, &testing.PollOptions{Timeout: timeout, Interval: 10 * time.Second})
@@ -260,7 +259,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		}, &testing.PollOptions{Interval: time.Second, Timeout: 30 * time.Second})
 
 		if err != nil {
-			optin.ClosePlayStore(ctx, tconn)
+			playstore.Close(ctx, a)
 		}
 		return err
 	}, &testing.PollOptions{Interval: 10 * time.Second})
