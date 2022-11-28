@@ -199,6 +199,19 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 			if err := settings.NavigateToPageURL(ctx, res.cr, pageShortURL, condition); err != nil {
 				return &emptypb.Empty{}, err
 			}
+		case wifi.KnownNetworksControlsRequest_Connect:
+			if err := uiauto.Combine("connect to known network",
+				res.ui.LeftClick(networkItem),
+				res.ui.LeftClick(settingsNodeFinder.Name("Connect").Role(role.Button)),
+				res.ui.WaitUntilExists(settingsNodeFinder.NameStartingWith("Connected").Role(role.StaticText)),
+			)(ctx); err != nil {
+				return &emptypb.Empty{}, err
+			}
+			// The connect control clicks on the network and navigate to another page.
+			// Need to navigate back to "Known Networks" for the next iteration.
+			if err := settings.NavigateToPageURL(ctx, res.cr, pageShortURL, condition); err != nil {
+				return &emptypb.Empty{}, err
+			}
 		default:
 			return &emptypb.Empty{}, errors.Errorf("unrecognized control type %d", req.Control)
 		}

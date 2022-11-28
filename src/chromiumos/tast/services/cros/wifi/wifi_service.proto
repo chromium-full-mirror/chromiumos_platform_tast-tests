@@ -39,6 +39,7 @@ message KnownNetworksControlsRequest {
     WaitUntilGone = 1;
     Forget = 2;
     Disconnect = 3;
+    Connect = 4;
   }
 
   repeated string ssids = 1;
