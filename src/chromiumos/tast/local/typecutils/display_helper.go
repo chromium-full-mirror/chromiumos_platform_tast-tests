@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
@@ -239,6 +240,60 @@ func VerifyAudioRoute(ctx context.Context, deviceName string) error {
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
 		return errors.Wrapf(err, "timeout waiting for %q", deviceName)
+	}
+	return nil
+}
+
+// VerifyWindowOnDisplay verifies active window on display.
+func VerifyWindowOnDisplay(ctx context.Context, tconn *chrome.TestConn, pkgName, dispID string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		windowInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, pkgName)
+		if err != nil {
+			return errors.Wrap(err, "failed to get arc app window info")
+		}
+		if windowInfo.DisplayID != dispID {
+			return errors.Errorf("invalid display ID; go %q, want %q", windowInfo.DisplayID, dispID)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to verify window on display")
+	}
+	return nil
+}
+
+// VerifyMirrorMode verifies whether DUT is set to mirror mode or not.
+func VerifyMirrorMode(ctx context.Context, tconn *chrome.TestConn) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		info, err := display.GetInfo(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get extrenal display info")
+		}
+
+		if info[0].MirroringSourceID == "" {
+			return errors.Wrap(err, "DUT is not in mirror mode")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "failed to verify mirror display")
+	}
+	return nil
+}
+
+// VerifyEdpPrimary verifies whether external display is in extended mode or not.
+func VerifyEdpPrimary(ctx context.Context, tconn *chrome.TestConn) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		info, err := display.GetPrimaryInfo(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get primary display info")
+		}
+
+		if (!info.IsPrimary) && (!info.IsInternal) {
+			return errors.New("failed to verify EDP as primary and internal display")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "failed to verify extended mode display")
 	}
 	return nil
 }

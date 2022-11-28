@@ -152,3 +152,33 @@ func CableConnectedPortNumber(ctx context.Context, dut *dut.DUT, connector strin
 	}
 	return portNum[1], nil
 }
+
+// VerifyTXSpeed verfies TX speed of TBT Device.
+func VerifyTXSpeed(ctx context.Context, dut *dut.DUT, device, port string) (bool, error) {
+	deviceNameFile := fmt.Sprintf("/sys/bus/thunderbolt/devices/%s/tx_speed", port)
+	out, err := linuxssh.ReadFile(ctx, dut.Conn(), deviceNameFile)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to read %q file", deviceNameFile)
+	}
+
+	if strings.TrimSpace(string(out)) != device {
+		return false, errors.New("failed to verify TX speed")
+	}
+
+	return true, nil
+}
+
+// VerifyRXSpeed verfies TX speed of TBT Device.
+func VerifyRXSpeed(ctx context.Context, dut *dut.DUT, device, port string) (bool, error) {
+	deviceNameFile := fmt.Sprintf("/sys/bus/thunderbolt/devices/%s/rx_speed", port)
+	out, err := linuxssh.ReadFile(ctx, dut.Conn(), deviceNameFile)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to read %q file", deviceNameFile)
+	}
+
+	if strings.TrimSpace(string(out)) != device {
+		return false, errors.New("failed to verify RX speed")
+	}
+
+	return true, nil
+}

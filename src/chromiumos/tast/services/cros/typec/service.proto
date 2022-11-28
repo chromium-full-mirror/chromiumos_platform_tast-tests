@@ -14,6 +14,17 @@ option go_package = "chromiumos/tast/services/cros/typec";
 // then log in to a Chrome session as a fake user.
 service Service {
     rpc NewChromeLoginWithPeripheralDataAccess(KeyPath) returns (google.protobuf.Empty) {}
+    rpc SetMirrorModeDisplay(KeyPath) returns (google.protobuf.Empty) {}
+    rpc VerifyWindowOnDisplay(KeyPath) returns (google.protobuf.Empty){}
+    rpc PlayLocalVideo(KeyPath) returns (google.protobuf.Empty){}
+    rpc DownloadsPath(google.protobuf.Empty) returns (TypecResponse){}
+    rpc VerifyMirrorMode(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    rpc PlayVideo(KeyPath) returns (google.protobuf.Empty){}
+    rpc VerifyEdpPrimary(google.protobuf.Empty) returns (google.protobuf.Empty){} 
+    rpc SetActiveNodeByUI(KeyPath) returns (google.protobuf.Empty){} 
+    rpc DisplayName(KeyPath) returns (TypecResponse){}
+    rpc AudioCrasSelectedOutputDevice(google.protobuf.Empty) returns (TypecResponse){}
+    rpc VerifyFirstRunningDevice(KeyPath) returns (google.protobuf.Empty){} 
 }
 
 // The service modifies the device policy while logging in to enable peripheral data access. In order to do
@@ -21,4 +32,15 @@ service Service {
 // to store the modified policy (and which should be copied over to the target device by the test code).
 message KeyPath {
     string path = 1;
+    bool setMode = 2;
+    int64 displayInfo = 3;
+    string audioNode = 4;
+}
+
+message TypecResponse {
+   string DownloadsPath = 1;
+   string Info = 2;
+   string DeviceName = 3;
+   string DeviceType = 4;
+   string DisplayName =5;
 }
