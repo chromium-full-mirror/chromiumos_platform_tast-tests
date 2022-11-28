@@ -15,6 +15,14 @@ import (
 func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 	const (
 		classTestOutputSine = `"org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity"`
+
+		performanceModeNone        = `arcaudio.PerformanceModeNone`
+		performanceModeLowLatency  = `arcaudio.PerformanceModeLowLatency`
+		performanceModePowerSaving = `arcaudio.PerformanceModePowerSaving`
+
+		channelConfigOutStereo  = `arcaudio.ChannelConfigOutStereo`
+		channelConfigOutQuad    = `arcaudio.ChannelConfigOutQuad`
+		channelConfigOut5Point1 = `arcaudio.ChannelConfigOut5Point1`
 	)
 	type valMember struct {
 		Key   string
@@ -44,8 +52,8 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 		testcases = append(testcases, testcase{
 			Class:           classTestOutputSine,
 			SampleRate:      sampleRate,
-			ChannelConfig:   `arcaudio.ChannelConfigOutStereo`,
-			PerformanceMode: `arcaudio.PerformanceModeNone`,
+			ChannelConfig:   channelConfigOutStereo,
+			PerformanceMode: performanceModeNone,
 		})
 	}
 
@@ -53,14 +61,33 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 	testcases = append(testcases, testcase{
 		Class:           classTestOutputSine,
 		SampleRate:      48000,
-		ChannelConfig:   `arcaudio.ChannelConfigOutStereo`,
-		PerformanceMode: `arcaudio.PerformanceModePowerSaving`,
+		ChannelConfig:   channelConfigOutStereo,
+		PerformanceMode: performanceModePowerSaving,
 	})
 	testcases = append(testcases, testcase{
 		Class:           classTestOutputSine,
 		SampleRate:      48000,
-		ChannelConfig:   `arcaudio.ChannelConfigOutStereo`,
-		PerformanceMode: `arcaudio.PerformanceModeLowLatency`,
+		ChannelConfig:   channelConfigOutStereo,
+		PerformanceMode: performanceModeLowLatency,
+	})
+
+	// Different channels configuration
+
+	// 5.1 channels with different sample rates
+	for _, sampleRate := range []int{8000, 11025, 16000, 22050, 32000, 44100, 48000} {
+		testcases = append(testcases, testcase{
+			Class:           classTestOutputSine,
+			SampleRate:      sampleRate,
+			ChannelConfig:   channelConfigOut5Point1,
+			PerformanceMode: performanceModeNone,
+		})
+	}
+	// Quad channels
+	testcases = append(testcases, testcase{
+		Class:           classTestOutputSine,
+		SampleRate:      48000,
+		ChannelConfig:   channelConfigOutQuad,
+		PerformanceMode: performanceModeNone,
 	})
 
 	generateName := func(tierName string, tc testcase) string {
@@ -68,12 +95,22 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 		if tierName != "" {
 			name = append(name, tierName)
 		}
-		name = append(name, "stereo")
+
+		switch tc.ChannelConfig {
+		case channelConfigOutStereo:
+			name = append(name, "stereo")
+		case channelConfigOutQuad:
+			name = append(name, "quad")
+		case channelConfigOut5Point1:
+			name = append(name, "5point1")
+		}
+
 		name = append(name, strconv.Itoa(tc.SampleRate))
+
 		switch tc.PerformanceMode {
-		case `arcaudio.PerformanceModeLowLatency`:
+		case performanceModeLowLatency:
 			name = append(name, "lowlatency")
-		case `arcaudio.PerformanceModePowerSaving`:
+		case performanceModePowerSaving:
 			name = append(name, "powersaving")
 		}
 		return strings.Join(name, "_")

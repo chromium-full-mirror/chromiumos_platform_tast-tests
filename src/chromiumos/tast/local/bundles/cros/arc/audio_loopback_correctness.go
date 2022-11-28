@@ -175,6 +175,110 @@ func init() {
 				},
 			},
 			{
+				Name:              "5point1_8000",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      8000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "5point1_11025",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      11025,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "5point1_16000",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      16000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "5point1_22050",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      22050,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "5point1_32000",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      32000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "5point1_44100",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      44100,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "5point1_48000",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "quad_48000",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutQuad,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
 				Name:              "unstable_stereo_8000",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
 				Val: audioLoopbackCorrectnessVal{
@@ -287,6 +391,110 @@ func init() {
 						SampleRate:      48000,
 						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
 						PerformanceMode: arcaudio.PerformanceModeLowLatency,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_8000",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      8000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_11025",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      11025,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_16000",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      16000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_22050",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      22050,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_32000",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      32000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_44100",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      44100,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_5point1_48000",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+			},
+			{
+				Name:              "unstable_quad_48000",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutQuad,
+						PerformanceMode: arcaudio.PerformanceModeNone,
 					},
 					incorrectSlicesLimit: 50,
 				},
