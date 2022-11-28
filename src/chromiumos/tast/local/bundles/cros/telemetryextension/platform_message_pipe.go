@@ -24,7 +24,7 @@ func init() {
 			"lamzin@google.com",
 		},
 		BugComponent: "b:1256717",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
@@ -35,16 +35,19 @@ func init() {
 			{
 				Name:              "non_stable",
 				Fixture:           fixture.TelemetryExtension,
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: dep.NonStableModels(),
 			},
 			{
 				Name:              "stable_lacros",
 				Fixture:           fixture.TelemetryExtensionLacros,
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: dep.StableModels(),
 			},
 			{
 				Name:              "non_stable_lacros",
 				Fixture:           fixture.TelemetryExtensionLacros,
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: dep.NonStableModels(),
 			},
 		},
