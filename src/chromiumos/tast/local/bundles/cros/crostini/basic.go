@@ -51,7 +51,6 @@ func init() {
 				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "buster_stable_manatee",
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"dlc", "manatee"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",

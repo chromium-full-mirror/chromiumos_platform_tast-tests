@@ -410,7 +410,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			if isManatee {
 				testParam.Name = combineName(name, "manatee")
-				testParam.ExtraAttr = append(testParam.ExtraAttr, "informational")
 				testParam.ExtraSoftwareDeps = append(extraSoftwareDeps, "manatee")
 			}
 
