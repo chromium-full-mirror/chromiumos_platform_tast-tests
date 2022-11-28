@@ -41,6 +41,7 @@ type NodeHelper struct {
 	hasClass       string
 	ancestor       *Finder
 	nth            int32
+	expanded       bool
 
 	mask int
 }
@@ -59,6 +60,7 @@ func (n *NodeHelper) copy() *NodeHelper {
 		hasClass:       n.hasClass,
 		ancestor:       n.ancestor,
 		nth:            n.nth,
+		expanded:       n.expanded,
 		mask:           n.mask,
 	}
 }
@@ -71,6 +73,7 @@ const (
 	maskHasClass
 	maskAncestor
 	maskNth
+	maskExpanded
 )
 
 // Name sets a specified name to NodeHelper.
@@ -129,6 +132,14 @@ func (n *NodeHelper) Nth(i int32) *NodeHelper {
 	return c
 }
 
+// Expanded sets a specified Expanded state to NodeHelper.
+func (n *NodeHelper) Expanded(expanded bool) *NodeHelper {
+	c := n.copy()
+	c.expanded = expanded
+	c.mask |= maskExpanded
+	return c
+}
+
 // Finder returns the Finder.
 func (n *NodeHelper) Finder() *Finder {
 	var nodeWiths []*NodeWith
@@ -159,6 +170,10 @@ func (n *NodeHelper) Finder() *Finder {
 
 	if n.mask&maskNth != 0 {
 		nodeWiths = append(nodeWiths, &NodeWith{Value: &NodeWith_Nth{Nth: int32(n.nth)}})
+	}
+
+	if n.mask&maskExpanded != 0 {
+		nodeWiths = append(nodeWiths, &NodeWith{Value: &NodeWith_Expanded{Expanded: n.expanded}})
 	}
 
 	return &Finder{NodeWiths: nodeWiths}

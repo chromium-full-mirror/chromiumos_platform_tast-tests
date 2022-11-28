@@ -215,6 +215,26 @@ func (svc *AutomationService) EnsureFocused(ctx context.Context, req *pb.EnsureF
 	return &empty.Empty{}, nil
 }
 
+// WaitUntilCheckedState waits until the node found by the input finder reaches the expected state.
+func (svc *AutomationService) WaitUntilCheckedState(ctx context.Context, req *pb.WaitUntilCheckedStateRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ui.WaitUntilCheckedState(finder, req.ExpectedState)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling WaitUntilCheckedState with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
 // WaitUntilExists waits until the node found by the input finder exists.
 func (svc *AutomationService) WaitUntilExists(ctx context.Context, req *pb.WaitUntilExistsRequest) (*empty.Empty, error) {
 	svc.sharedObject.ChromeMutex.Lock()

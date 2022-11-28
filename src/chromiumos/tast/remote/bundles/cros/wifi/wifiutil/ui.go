@@ -6,8 +6,10 @@ package wifiutil
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/errors"
@@ -190,6 +192,56 @@ func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, security
 
 	if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: ConnectButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to click connect button")
+	}
+
+	return nil
+}
+
+// StableNodeInfo waits until the given node finder exists and returns its information.
+func StableNodeInfo(ctx context.Context, uiSvc ui.AutomationServiceClient, finder *ui.Finder) (*ui.InfoResponse, error) {
+	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: finder}); err != nil {
+		return nil, err
+	}
+
+	nodeInfo, err := uiSvc.Info(ctx, &ui.InfoRequest{Finder: finder})
+	if err != nil {
+		return nil, err
+	}
+	return nodeInfo, nil
+}
+
+// StableCheckIsNodeFound waits for the given node finder and returns if the node is found or not.
+func StableCheckIsNodeFound(ctx context.Context, uiSvc ui.AutomationServiceClient, finder *ui.Finder) (bool, error) {
+	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
+		Finder:  finder,
+		Timeout: durationpb.New(5 * time.Second),
+	}); err != nil {
+		// The error might be caused due to finder not exists or other types of error.
+		// Do an immediately check again to ensure the finder's existence.
+		res, err := uiSvc.IsNodeFound(ctx, &ui.IsNodeFoundRequest{Finder: finder})
+		if err != nil {
+			return false, errors.Wrap(err, "failed to check if the node exists")
+		}
+		return res.Found, nil
+	}
+	return true, nil
+}
+
+// EnsureNodeExpanded ensures the given node finder is expanded.
+func EnsureNodeExpanded(ctx context.Context, uiSvc ui.AutomationServiceClient, finder *ui.NodeHelper) error {
+	expendedNode := finder.Expanded(true).Finder()
+	found, err := StableCheckIsNodeFound(ctx, uiSvc, expendedNode)
+	if err != nil {
+		return errors.Wrap(err, "failed to check if the node exists")
+	}
+
+	if !found {
+		if _, err := uiSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: finder.Finder()}); err != nil {
+			return errors.Wrap(err, "failed to click the node")
+		}
+		if _, err = uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: expendedNode}); err != nil {
+			return errors.Wrap(err, "failed to ensure the node section is expended")
+		}
 	}
 
 	return nil

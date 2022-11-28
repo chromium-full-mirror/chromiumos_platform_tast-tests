@@ -6,6 +6,7 @@ syntax = "proto3";
 
 package tast.cros.chrome.uiauto.ossettings;
 
+import "google/protobuf/struct.proto";
 import "google/protobuf/empty.proto";
 
 option go_package = "chromiumos/tast/services/cros/chrome/uiauto/ossettings";
@@ -16,6 +17,9 @@ service OsSettingsService {
   // LaunchAtNetwork will launch the OS Settings application at Network page.
   rpc LaunchAtNetwork(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+  // LaunchAtWifiPage will launch the OS Settings application at Wi-Fi page.
+  rpc LaunchAtWifiPage(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // OpenNetworkDetailPage will open the OS Settings application and navigate
   // to the detail page for the specified network.
   rpc OpenNetworkDetailPage(OpenNetworkDetailPageRequest) returns (google.protobuf.Empty) {}
@@ -24,8 +28,14 @@ service OsSettingsService {
   // It does nothing if the option is already expected.
   rpc SetToggleOption(SetToggleOptionRequest) returns (google.protobuf.Empty) {}
 
+  // WaitUntilToggleOption waits until the toggle option enabled or disabled.
+  rpc WaitUntilToggleOption(WaitUntilToggleOptionRequest) returns (google.protobuf.Empty) {}
+
   // Close will close the open OS Settings application.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // EvalJSWithShadowPiercer executes javascript in Settings app web page.
+  rpc EvalJSWithShadowPiercer(EvalJSWithShadowPiercerRequest) returns (google.protobuf.Value) {}
 }
 
 message OpenNetworkDetailPageRequest {
@@ -41,10 +51,23 @@ message OpenNetworkDetailPageRequest {
   NetworkType network_type = 2;
 }
 
-message SetToggleOptionRequest{
+message SetToggleOptionRequest {
   // The name of the toggle option.
   string toggle_option_name = 1;
 
   // The expected value of the toggle option is on or off.
   bool enabled = 2;
+}
+
+message WaitUntilToggleOptionRequest {
+  // The name of the toggle option.
+  string toggle_option_name = 1;
+
+  // The expected value of the toggle option is on or off.
+  bool enabled = 2;
+}
+
+message EvalJSWithShadowPiercerRequest {
+  // The javascript expression going to be executed.
+  string expression = 1;
 }

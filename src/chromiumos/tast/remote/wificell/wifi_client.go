@@ -380,6 +380,14 @@ func (cli *WifiClient) SetWifiEnabled(ctx context.Context, enabled bool) error {
 	return err
 }
 
+// GetWifiEnabled checks if Wifi is an enabled technology on shill.
+// This call will wait for WiFi to appear in available technologies so we
+// can get correct enabled setting.
+func (cli *WifiClient) GetWifiEnabled(ctx context.Context) (bool, error) {
+	res, err := cli.ShillServiceClient.GetWifiEnabled(ctx, &empty.Empty{})
+	return res.Enabled, err
+}
+
 // SetPortalDetectionEnabled persistently enables/disables PortalDection via shill.
 func (cli *WifiClient) SetPortalDetectionEnabled(ctx context.Context, enabled bool) error {
 	req := &wifi.SetPortalDetectionEnabledRequest{Enabled: enabled}

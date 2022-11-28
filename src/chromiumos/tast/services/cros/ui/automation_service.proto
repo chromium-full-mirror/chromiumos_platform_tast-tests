@@ -41,6 +41,10 @@ service AutomationService {
   // EnsureFocused ensures the found node is focused.
   rpc EnsureFocused(EnsureFocusedRequest) returns (google.protobuf.Empty) {}
 
+  // WaitUntilCheckedState waits until the node found by the input finder
+  // reaches the expected state.
+  rpc WaitUntilCheckedState(WaitUntilCheckedStateRequest) returns (google.protobuf.Empty) {}
+
   // WaitUntilExists waits until the node found by the input finder exists.
   rpc WaitUntilExists(WaitUntilExistsRequest) returns (google.protobuf.Empty) {}
 
@@ -108,6 +112,11 @@ message MouseClickAtLocationRequest {
 
 message EnsureFocusedRequest {
   Finder finder = 1;
+}
+
+message WaitUntilCheckedStateRequest {
+  Finder finder = 1;
+  bool expected_state = 2;
 }
 
 message WaitUntilExistsRequest {

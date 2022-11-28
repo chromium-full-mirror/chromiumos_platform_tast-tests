@@ -9,13 +9,15 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/network/netconfig"
+	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	"chromiumos/tast/testing"
 )
@@ -45,7 +47,7 @@ func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest
 	return 0, errors.New("Network type must be Cellular or WiFi")
 }
 
-// LaunchAtNetwork will launch the OS Settings application at Wi-Fi page.
+// LaunchAtNetwork will launch the OS Settings application at Network page.
 func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
 		_, err := Launch(ctx, tconn)
@@ -57,6 +59,22 @@ func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*empty
 			return &emptypb.Empty{}, errors.Wrap(err, `failed to navigate to sub page "Network"`)
 		}
 
+		return &emptypb.Empty{}, nil
+	})
+}
+
+// LaunchAtWifiPage will launch the OS Settings application at Wi-Fi page.
+func (s *Service) LaunchAtWifiPage(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
+	}
+
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		condition := uiauto.New(tconn).Exists(nodewith.Name("Wi-Fi subpage back button").Ancestor(WindowFinder))
+		if _, err := LaunchAtPageURL(ctx, tconn, cr, "networks?type=WiFi", condition); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS-Settings and navigate to Wi-Fi")
+		}
 		return &emptypb.Empty{}, nil
 	})
 }
@@ -98,12 +116,47 @@ func (s *Service) SetToggleOption(ctx context.Context, req *pb.SetToggleOptionRe
 	})
 }
 
+// WaitUntilToggleOption waits until the toggle option enabled or disabled.
+func (s *Service) WaitUntilToggleOption(ctx context.Context, req *pb.WaitUntilToggleOptionRequest) (*emptypb.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		cr := s.sharedObject.Chrome
+		if cr == nil {
+			return &emptypb.Empty{}, errors.New("Chrome has not been started")
+		}
+
+		osSettings := New(tconn)
+		if err := osSettings.WaitUntilToggleOption(cr, "Wi-Fi enable", req.Enabled)(ctx); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to check if toggle state is enabled")
+		}
+
+		return &emptypb.Empty{}, nil
+	})
+}
+
 // Close will close the open OS Settings application.
 func (s *Service) Close(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		if err := apps.Close(ctx, tconn, apps.Settings.ID); err != nil {
+		if err := New(tconn).Close(ctx); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to close OS Settings")
 		}
 		return &emptypb.Empty{}, nil
+	})
+}
+
+// EvalJSWithShadowPiercer executes javascript in Settings app web page.
+func (s *Service) EvalJSWithShadowPiercer(ctx context.Context, req *ossettings.EvalJSWithShadowPiercerRequest) (*structpb.Value, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *structpb.Value, retErr error) {
+		cr := s.sharedObject.Chrome
+		if cr == nil {
+			return &structpb.Value{}, errors.New("Chrome has not been started")
+		}
+
+		var out interface{}
+		osSettings := New(tconn)
+		if err := osSettings.EvalJSWithShadowPiercer(ctx, cr, req.Expression, &out); err != nil {
+			return &structpb.Value{}, errors.Wrap(err, "failed to execute javascript expression")
+		}
+
+		return structpb.NewValue(out)
 	})
 }
