@@ -59,13 +59,43 @@ func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, tes
 	return testErr, svrErr
 }
 
-// GenerateOptionMap returns a minimum workable OptionMap for DHCP. Lease time
-// is 24 hours by default.
-func GenerateOptionMap(gatewayIP, clientIP net.IP) OptionMap {
-	return OptionMap{
+// OptionMapOpt is the function type to configure a OptionMap. OptionMap is of
+// type map so this function type takes its value instead of pointer as the
+// argument.
+type OptionMapOpt func(OptionMap)
+
+// WithOptionLeaseTime specifies the lease time in second (DHCP option 51).
+func WithOptionLeaseTime(t uint32) OptionMapOpt {
+	return func(m OptionMap) {
+		m[ipLeaseTime] = t
+	}
+}
+
+// WithOptionT1 specifies the renewal time in second (DHCP option 58).
+func WithOptionT1(t uint32) OptionMapOpt {
+	return func(m OptionMap) {
+		m[renewalT1TimeValue] = t
+	}
+}
+
+// WithOptionT2 specifies the rebinding time in second (DHCP option 59).
+func WithOptionT2(t uint32) OptionMapOpt {
+	return func(m OptionMap) {
+		m[rebindingT2TimeValue] = t
+	}
+}
+
+// NewOptionMap returns a workable OptionMap for DHCP. Lease time is 24 hours by
+// default.
+func NewOptionMap(gatewayIP, clientIP net.IP, opts ...OptionMapOpt) OptionMap {
+	m := OptionMap{
 		serverID:    gatewayIP.String(),
 		subnetMask:  "255.255.255.0",
 		ipLeaseTime: uint32(86400), // 86400 seconds
 		requestedIP: clientIP.String(),
 	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
 }

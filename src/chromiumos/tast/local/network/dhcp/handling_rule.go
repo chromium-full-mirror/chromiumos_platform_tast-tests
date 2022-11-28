@@ -5,6 +5,8 @@
 package dhcp
 
 import (
+	"time"
+
 	"chromiumos/tast/errors"
 )
 
@@ -94,6 +96,11 @@ type HandlingRule struct {
 	nakFirst bool
 	// respCounter is the number of responses this rule has handled.
 	respCounter int
+
+	// targetTimeFrom is the earliest expected time of a packet. 0 means do not check.
+	targetTimeFrom time.Time
+	// targetTimeTo is the latest expected time of a packet. 0 means do not check.
+	targetTimeTo time.Time
 }
 
 // SetIsFinalHandler sets isFinalHandler in d.
@@ -101,11 +108,26 @@ func (d *HandlingRule) SetIsFinalHandler(val bool) {
 	d.isFinalHandler = val
 }
 
+// SetTargetTime sets the expected time for this rule. If set, only packets
+// arrived between from and to will be matched.
+func (d *HandlingRule) SetTargetTime(from, to time.Time) {
+	d.targetTimeFrom = from
+	d.targetTimeTo = to
+}
+
 // handle is called by the test server to ask a handling rule whether it wants
 // to take some action in response to a packet. The handler should return some
 // combination of response* bits as described above.
 func (d *HandlingRule) handle(queryPacket *dhcpPacket) response {
 	if !d.isOurMsgType(queryPacket) {
+		return noAction
+	}
+
+	now := time.Now()
+	if !d.targetTimeFrom.IsZero() && now.Before(d.targetTimeFrom) {
+		return noAction
+	}
+	if !d.targetTimeTo.IsZero() && now.After(d.targetTimeTo) {
 		return noAction
 	}
 
@@ -123,7 +145,14 @@ func (d *HandlingRule) handle(queryPacket *dhcpPacket) response {
 	if d.ruleType == respondToRequest ||
 		d.ruleType == respondToPostT2Request ||
 		d.ruleType == rejectAndRespondToRequest {
-		if queryPacket.option(requestedIP) != d.expReqIP {
+		reqIP := queryPacket.option(requestedIP)
+		// When DHCP client is in the RENEWING state, it should set the ciaddr field
+		// in the REQUEST packet instead of the "requested IP address" option. It's
+		// better to verify them separately.
+		if reqIP == nil {
+			reqIP = queryPacket.field(clientIP)
+		}
+		if reqIP != d.expReqIP {
 			return noAction
 		}
 	}

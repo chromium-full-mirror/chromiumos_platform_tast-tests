@@ -91,9 +91,9 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	}
 
 	discoveryRule := dhcp.NewRespondToDiscovery(intendedIP.String(), gatewayIP.String(),
-		dhcp.GenerateOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true /*shouldRespond*/)
+		dhcp.NewOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true /*shouldRespond*/)
 	requestRule := dhcp.NewRespondToRequest(intendedIP.String(), gatewayIP.String(),
-		dhcp.GenerateOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true, /*shouldRespond*/
+		dhcp.NewOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true, /*shouldRespond*/
 		gatewayIP.String(), intendedIP.String(), true /*expSvrIPSet*/)
 	requestRule.SetIsFinalHandler(true)
 
@@ -121,7 +121,7 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	// server id must not be included in the request. See RFC 2131 for more
 	// details.
 	requestRule = dhcp.NewRespondToPostT2Request(intendedIP.String(), gatewayIP.String(),
-		dhcp.GenerateOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true /*shouldRespond*/, intendedIP.String())
+		dhcp.NewOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true /*shouldRespond*/, intendedIP.String())
 	requestRule.SetIsFinalHandler(true)
 	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*requestRule}, func(ctx context.Context) error {
 		if err := wifi.Service.Connect(ctx); err != nil {
