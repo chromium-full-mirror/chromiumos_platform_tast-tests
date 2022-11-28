@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
@@ -26,7 +27,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedInClamshellMode",
+		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
@@ -37,6 +38,11 @@ func init() {
 }
 
 func WindowOutsideDisplay(ctx context.Context, s *testing.State) {
+	// Reserve 10 seconds for cleaning up state
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	p := s.FixtValue().(*arc.PreData)
 	cr := p.Chrome
 	a := p.ARC
@@ -45,6 +51,12 @@ func WindowOutsideDisplay(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure the device is in clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	const (
 		apk          = "ArcKeyboardTest.apk"
@@ -68,7 +80,7 @@ func WindowOutsideDisplay(ctx context.Context, s *testing.State) {
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the settings activity: ", err)
 	}
-	defer act.Stop(ctx, tconn)
+	defer act.Stop(cleanupCtx, tconn)
 
 	window, err := ash.FindWindow(ctx, tconn, func(window *ash.Window) bool {
 		return window.ARCPackageName == pkg
