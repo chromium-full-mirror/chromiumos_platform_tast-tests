@@ -57,7 +57,7 @@ func SelectCollectionWithScrolling(ctx context.Context, ui *uiauto.Context, coll
 	}
 	defer mew.Close()
 
-	loadedCollections := nodewith.Role(role.ListBoxOption).HasClass("photo-inner-container").NameRegex(regexp.MustCompile(`.*\d+\s[iI]mages`))
+	loadedCollections := nodewith.Role(role.ListBoxOption).NameRegex(regexp.MustCompile(`.*\d+\s[iI]mages`))
 	desiredCollection := loadedCollections.NameStartingWith(collection)
 
 	// move mouse to the collections container so that we can scroll the mouse.
