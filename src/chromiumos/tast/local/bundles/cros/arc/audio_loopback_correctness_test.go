@@ -85,12 +85,12 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 		name                 string
 		hwdep                string
 		incorrectSlicesLimit int
-	}{{ // Normal device tier
-		hwdep:                `hwdep.D(hwdep.SkipOnModel(lowPerformanceModel...))`,
-		incorrectSlicesLimit: 25,
-	}, { // Low performance device tier
-		name:                 "lowperf",
-		hwdep:                `hwdep.D(hwdep.Model(lowPerformanceModel...))`,
+	}{{ // Stable device tier
+		hwdep:                `hwdep.D(hwdep.Model(stableModel...))`,
+		incorrectSlicesLimit: 50,
+	}, { // Unstable device tier (Default for new devices)
+		name:                 "unstable",
+		hwdep:                `hwdep.D(hwdep.SkipOnModel(stableModel...))`,
 		incorrectSlicesLimit: 50,
 	}} {
 		for _, tc := range testcases {
