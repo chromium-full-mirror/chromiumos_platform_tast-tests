@@ -238,7 +238,7 @@ func parseStream(file string) (width, height, bitDepth, frameRate int, prof Prof
 }
 
 func genMD5FFMPEG(file string) ([]string, error) {
-	out, err := exec.Command("ffmpeg", "-f", "framemd5", "-", "-i", file).Output()
+	out, err := exec.Command("ffmpeg", "-i", file, "-noautoscale", "-f", "framemd5", "-").Output()
 	if err != nil {
 		return []string{}, errors.Wrap(err, "failed executing ffmpeg")
 	}
