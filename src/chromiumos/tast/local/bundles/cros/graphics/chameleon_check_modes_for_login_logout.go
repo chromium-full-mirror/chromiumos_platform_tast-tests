@@ -23,9 +23,16 @@ func init() {
 		Func:         ChameleonCheckModesForLoginLogout,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "To check the display mode is preserved after sign out and signin",
-		Contacts:     []string{"chromeos-gfx-display@google.com", "markyacoub@google.com"},
+		Contacts: []string{
+			"chromeos-gfx-display@google.com",
+			"markyacoub@google.com",
+		},
 		BugComponent: "TBA",
-		Attr:         []string{"group:graphics", "graphics_chameleon_igt"},
+		Attr: []string{
+			"group:graphics",
+			"graphics_chameleon_igt",
+			"graphics_nightly",
+		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"graphics.chameleon_ip"},
 		Timeout:      chrome.LoginTimeout + time.Minute,
