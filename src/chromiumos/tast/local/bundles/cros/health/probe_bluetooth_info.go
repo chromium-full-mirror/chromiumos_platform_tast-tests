@@ -6,11 +6,16 @@ package health
 
 import (
 	"context"
+	"sort"
+
+	"github.com/godbus/dbus/v5"
+	"github.com/google/go-cmp/cmp"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/croshealthd"
+	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/jsontypes"
 	"chromiumos/tast/local/set"
 	"chromiumos/tast/testing"
@@ -18,15 +23,15 @@ import (
 )
 
 type deviceInfo struct {
-	Address           string   `json:"address"`
-	Name              string   `json:"name"`
-	Type              string   `json:"type"`
-	Appearance        uint16   `json:"appearance"`
-	Modalias          string   `json:"modalias"`
-	MTU               int16    `json:"mtu"`
-	RSSI              uint16   `json:"rssi"`
-	UUIDs             []string `json:"uuids"`
-	BatteryPercentage []string `json:"battery_percentage"`
+	Address           string    `json:"address"`
+	Name              *string   `json:"name"`
+	Type              *string   `json:"type"`
+	Appearance        *uint16   `json:"appearance"`
+	Modalias          *string   `json:"modalias"`
+	MTU               *uint16   `json:"mtu"`
+	RSSI              *int16    `json:"rssi"`
+	UUIDs             *[]string `json:"uuids"`
+	BatteryPercentage *uint8    `json:"battery_percentage"`
 }
 
 type capabilitiesInfo struct {
@@ -68,7 +73,7 @@ func init() {
 	})
 }
 
-var targetAllowedServices = []string{"110d", "110c", "110b"}
+var targetAllowedServices = []string{"1108", "110b", "110c", "110d", "110e", "111e", "1200", "1800", "1801", "180a", "180f", "1812"}
 
 // resetBluetoothAdapterData clean the preset properties in adapter.
 func resetBluetoothAdapterData(ctx context.Context) error {
@@ -101,8 +106,8 @@ func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo) erro
 		return err
 	}
 
-	if len(adapters) != 1 {
-		return errors.Errorf("unexpected Bluetooth adapters count: got %d; want 1", len(adapters))
+	if len(info.Adapters) != len(adapters) {
+		return errors.Errorf("unexpected Bluetooth adapters count: got %d; want %d", len(info.Adapters), len(adapters))
 	}
 
 	if len(info.Adapters[0].ConnectedDevices) != int(info.Adapters[0].NumConnectedDevices) {
@@ -204,9 +209,100 @@ func validateAdvertising(ctx context.Context, info *bluetoothInfo, adapter *blue
 	return nil
 }
 
+// validateConnectedDevices validate the property of connected devices of adapter.
+func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
+	// Get Bluetooth device values to compare to the output of cros_healthd.
+	devices, err := bluez.Devices(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Get battery percentage for each D-Bus object.
+	batteryPercentages := make(map[dbus.ObjectPath]uint8)
+	batteries, err := bluez.Batteries(ctx)
+	if err != nil {
+		return err
+	}
+	for _, battery := range batteries {
+		percentage, err := battery.Percentage(ctx)
+		if err != nil {
+			return err
+		}
+		batteryPercentages[battery.Path()] = percentage
+	}
+
+	expected := make([]deviceInfo, 0)
+	for _, device := range devices {
+		if connected, err := device.Connected(ctx); err != nil {
+			return err
+		} else if !connected {
+			continue
+		}
+
+		// The following are required properties.
+		address, err := device.Address(ctx)
+		if err != nil {
+			return err
+		}
+		info := deviceInfo{Address: address}
+
+		// The following are optional properties.
+		if name, err := device.Name(ctx); err == nil {
+			info.Name = &name
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if deviceType, err := device.Type(ctx); err == nil {
+			info.Type = &deviceType
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if appearance, err := device.Appearance(ctx); err == nil {
+			info.Appearance = &appearance
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if modalias, err := device.Modalias(ctx); err == nil {
+			info.Modalias = &modalias
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if mtu, err := device.MTU(ctx); err == nil {
+			info.MTU = &mtu
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if rssi, err := device.RSSI(ctx); err == nil {
+			info.RSSI = &rssi
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if uuids, err := device.UUIDs(ctx); err == nil {
+			info.UUIDs = &uuids
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+
+		// Checks if the battery percentage exists for the D-Bus object path.
+		if percentage, ok := batteryPercentages[device.Path()]; ok {
+			info.BatteryPercentage = &percentage
+		}
+		expected = append(expected, info)
+	}
+
+	sort.Slice(expected, func(i, j int) bool { return expected[i].Address < expected[j].Address })
+	sort.Slice(got, func(i, j int) bool { return got[i].Address < got[j].Address })
+
+	if diff := cmp.Diff(expected, got); diff != "" {
+		return errors.Errorf("connected devices attributes mismatch (-expected + got): %s", diff)
+	}
+
+	return nil
+}
+
 func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 	if err := initiateBluetoothAdapterData(ctx); err != nil {
-		s.Fatalf("Failed to initiate bluetooth adapter data, err [%v]", err)
+		s.Fatal("Failed to initiate bluetooth adapter data: ", err)
 	}
 
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryBluetooth}
@@ -215,11 +311,21 @@ func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Bluetooth telemetry info: ", err)
 	}
 
+	if len(info.Adapters) == 0 {
+		s.Fatal("Failed to get Bluetooth adapter data: empty adapters slice")
+	}
+
 	if err := validateBluetoothAdapterData(ctx, &info); err != nil {
-		s.Fatalf("Failed to validate bluetooth adapter data, err [%v]", err)
+		s.Fatal("Failed to validate bluetooth adapter data: ", err)
 	}
 
 	if err := resetBluetoothAdapterData(ctx); err != nil {
-		s.Fatalf("Failed to reset bluetooth adapter data, err [%v]", err)
+		s.Fatal("Failed to reset bluetooth adapter data: ", err)
+	}
+
+	// Note that this validation does not mean we have test coverage of Bluetooth
+	// devices. There are currently no Bluetooth devices available in the lab.
+	if err := validateConnectedDevices(ctx, info.Adapters[0].ConnectedDevices); err != nil {
+		s.Fatal("Failed to validate bluetooth device data: ", err)
 	}
 }

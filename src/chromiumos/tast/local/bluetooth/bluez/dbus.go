@@ -21,6 +21,7 @@ const (
 	bluezAdapterIface              = bluezService + ".Adapter1"
 	bluezAgentIface                = bluezService + ".Agent1"
 	bluezAgentManagerIface         = bluezService + ".AgentManager1"
+	bluezBatteryIface              = bluezService + ".Battery1"
 	bluezDeviceIface               = bluezService + ".Device1"
 	bluezLEAdvertisingManagerIface = bluezService + ".LEAdvertisingManager1"
 	bluezAdminPolicyStatusIface    = bluezService + ".AdminPolicyStatus1"

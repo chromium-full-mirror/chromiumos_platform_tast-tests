@@ -70,6 +70,36 @@ func (d *Device) Alias(ctx context.Context) (string, error) {
 	return d.dbus.PropertyString(ctx, "Alias")
 }
 
+// Type returns the type of the bluetooth remote device.
+func (d *Device) Type(ctx context.Context) (string, error) {
+	return d.dbus.PropertyString(ctx, "Type")
+}
+
+// Appearance returns the appearance of the bluetooth remote device.
+func (d *Device) Appearance(ctx context.Context) (uint16, error) {
+	return d.dbus.PropertyUint16(ctx, "Appearance")
+}
+
+// UUIDs returns the uuids of the bluetooth remote device.
+func (d *Device) UUIDs(ctx context.Context) ([]string, error) {
+	return d.dbus.PropertyStrings(ctx, "UUIDs")
+}
+
+// Modalias returns the modalias of the bluetooth remote device.
+func (d *Device) Modalias(ctx context.Context) (string, error) {
+	return d.dbus.PropertyString(ctx, "Modalias")
+}
+
+// MTU returns the mtu of the bluetooth remote device.
+func (d *Device) MTU(ctx context.Context) (uint16, error) {
+	return d.dbus.PropertyUint16(ctx, "MTU")
+}
+
+// RSSI returns the rssi of the bluetooth remote device.
+func (d *Device) RSSI(ctx context.Context) (int16, error) {
+	return d.dbus.PropertyInt16(ctx, "RSSI")
+}
+
 // Connected returns true if the bluetooth remote device is connected.
 func (d *Device) Connected(ctx context.Context) (bool, error) {
 	return d.dbus.PropertyBool(ctx, "Connected")
