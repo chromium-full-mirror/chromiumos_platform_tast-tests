@@ -36,6 +36,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 		Name              string
 		Val               val
 		ExtraHardwareDeps string
+		ExtraAttr         string
 	}
 
 	type testcase struct {
@@ -121,6 +122,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 	for _, tier := range []struct {
 		name                 string
 		hwdep                string
+		attr                 string
 		incorrectSlicesLimit int
 	}{{ // Stable device tier
 		hwdep:                `hwdep.D(hwdep.Model(stableModel...))`,
@@ -128,6 +130,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 	}, { // Unstable device tier (Default for new devices)
 		name:                 "unstable",
 		hwdep:                `hwdep.D(hwdep.SkipOnModel(stableModel...))`,
+		attr:                 `[]string{"informational"}`,
 		incorrectSlicesLimit: 50,
 	}} {
 		for _, tc := range testcases {
@@ -155,6 +158,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 					IncorrectSlicesLimit: tier.incorrectSlicesLimit,
 				},
 				ExtraHardwareDeps: tier.hwdep,
+				ExtraAttr:         tier.attr,
 			})
 		}
 	}
@@ -162,6 +166,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		ExtraHardwareDeps: {{ .ExtraHardwareDeps }},
+		{{if .ExtraAttr}} ExtraAttr: {{ .ExtraAttr }}, {{end}}
 		Val: audioLoopbackCorrectnessVal{
 			arcaudioTestParams: arcaudio.TestParameters{
 				{{ range .Val.ArcaudioTestParams }}{{ .Key }}: {{ .Value }},
