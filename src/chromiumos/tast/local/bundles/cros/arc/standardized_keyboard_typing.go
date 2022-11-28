@@ -27,6 +27,8 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,
+		// Disabled temporarily on Kukui Devices due to test flakiness with FakeKeyboardHeuristic (b/245854219).
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kakadu", "katsu", "kodama")),
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardTypingTest),
