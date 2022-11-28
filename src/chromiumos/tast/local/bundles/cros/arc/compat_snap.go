@@ -34,7 +34,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      4 * time.Minute,
-		Fixture:      "arcBootedInClamshellMode",
+		Fixture:      "arcBooted",
 	})
 }
 
@@ -147,6 +147,12 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating test API connection Failed: ", err)
 	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure the device is in clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close()
