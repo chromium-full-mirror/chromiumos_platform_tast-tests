@@ -15,11 +15,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
@@ -137,16 +137,13 @@ func createFileWithEmacs(ctx context.Context, keyboard *input.KeyboardEventWrite
 	}
 
 	ui := uiauto.New(tconn)
+	uda := uidetection.NewDefault(tconn)
 	window := nodewith.Name("emacs@penguin").Role(role.Window).First()
-	// Left click left-top of the emacs window.
-	loc, err := ui.Location(ctx, window)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the location of Emacs window")
-	}
 
 	if err := uiauto.Combine("Click, input, save and exit Emacs",
-		// Click left top to focus on the input area.
-		ui.MouseClickAtLocation(0, coords.Point{X: loc.Left, Y: loc.Top}),
+		// Sometimes the first character got lost if input immediately.
+		// Wait until the menu exists, indicating the window is launched.
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(window)),
 		// Type string.
 		keyboard.TypeAction(testString),
 		// Press ctrl+x and ctrl+s to save.
