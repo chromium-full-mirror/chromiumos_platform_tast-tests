@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/testing"
@@ -54,6 +55,8 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 		// Start up ACUITI.
 		uda := uidetection.NewDefault(params.TestConn).WithOptions(uidetection.Retries(3)).WithScreenshotStrategy(uidetection.ImmediateScreenshot).WithTimeout(time.Minute)
 
+		appWindow := nodewith.Name("ARC Input Overlay Test").Role(role.Window).HasClass("RootView")
+
 		// CUJ: Hide game overlay.
 		s.Log("Display CUJ #1: hide game overlay")
 		if err := uiauto.Combine("hide game overlay",
@@ -76,7 +79,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.WaitUntilExists(nodewith.Name("m").HasClass("LabelButtonLabel")),
 			ui.WaitUntilExists(nodewith.Name("w").HasClass("LabelButtonLabel")),
 			// Exit out.
-			uda.Tap(uidetection.Word("Cancel")),
+			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
 		)(ctx); err != nil {
 			s.Error("Failed to verify game overlay hidden: ", err)
 			// Reset activity.

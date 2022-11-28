@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/testing"
@@ -55,6 +56,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		uda := uidetection.NewDefault(params.TestConn).WithOptions(uidetection.Retries(3)).WithTimeout(time.Minute)
 
 		editButton := nodewith.Name("Edit").HasClass("PillButton")
+		appWindow := nodewith.Name("ARC Input Overlay Test").Role(role.Window).HasClass("RootView")
 
 		// CUJ: Attempts to change binding to illegal keys.
 		s.Log("Editor CUJ #1: key mappings changed to illegal keys")
@@ -80,7 +82,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			// Verify illegal mapping.
 			waitForMultiple(uda, "following", "supported", "Volume"),
 			// Close out.
-			uda.Tap(uidetection.Word("Cancel")),
+			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
 		)(ctx); err != nil {
 			s.Error("Failed to verify illegal keys: ", err)
 			// Reset activity.
@@ -98,7 +100,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			// Change mapping of "n" to "l".
 			ui.LeftClick(nodewith.Name("n").HasClass("LabelButtonLabel")),
 			kb.TypeAction("l"),
-			uda.Tap(uidetection.Word("Cancel")),
+			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
 			// Verify old mapping still exists.
 			ui.WaitUntilExists(nodewith.Name("n").HasClass("LabelButtonLabel")),
 		)(ctx); err != nil {
