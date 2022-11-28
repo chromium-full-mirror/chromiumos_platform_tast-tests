@@ -140,6 +140,16 @@ func RunSubtestsPerInputMethodAndMessage(ctx context.Context, uc *useractions.Us
 
 			s.Run(ctx, testName, subtest(testName, inputData))
 		}
+
+		// Remove the input method after testing if it is not the default one.
+		// Installing too many input methods on low-end devices may cause VK
+		// crash.
+		if im != ime.DefaultInputMethod {
+			s.Logf("Remove current input method: %q", im)
+			if err := im.Remove(uc.TestAPIConn())(ctx); err != nil {
+				s.Logf("Failed to remove input method %q: %v: ", im, err)
+			}
+		}
 	}
 }
 
@@ -162,6 +172,16 @@ func RunSubtestsPerInputMethodAndModalidy(ctx context.Context, uc *useractions.U
 			testName := fmt.Sprintf("%s-%s-%s", im.Name, modality, inputData.ExpectedText)
 
 			s.Run(ctx, testName, subtest(testName, modality, inputData))
+		}
+
+		// Remove the input method after testing if it is not the default one.
+		// Installing too many input methods on low-end devices may cause VK
+		// crash.
+		if im != ime.DefaultInputMethod {
+			s.Logf("Remove current input method: %q", im)
+			if err := im.Remove(uc.TestAPIConn())(ctx); err != nil {
+				s.Logf("Failed to remove input method %q: %v: ", im, err)
+			}
 		}
 	}
 }
