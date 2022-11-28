@@ -75,7 +75,12 @@ func UseTconnMaybeLacros[T any](ctx context.Context, so *SharedObjectsForService
 		return nil, err
 	}
 
-	tconn, err := br.TestAPIConn(ctx)
+	// When in OOBE, use SigninProfileTestAPIConn to create the test connection.
+	testAPIConn := br.TestAPIConn
+	if so.Chrome.LoginMode() == "NoLogin" {
+		testAPIConn = so.Chrome.SigninProfileTestAPIConn
+	}
+	tconn, err := testAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
