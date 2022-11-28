@@ -52,7 +52,6 @@ var UnstableModels = []string{
 	"pompom",
 	// http://b/233817342
 	"lars",
-	"cave",
 	"chell",
 }
 
