@@ -33,10 +33,16 @@ func init() {
 			"jintaolin@google.com",            // Test author
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
-		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
-		Fixture:      "wificellFixtCompanionDut",
+		Attr:        []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
+		ServiceDeps: []string{wificell.TFServiceName},
+		Fixture:     "wificellFixtCompanionDut",
+		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
+			// Skip test on devices that don't support AP/STA concurrency.
+			// TODO(b/223075313) We don't do this globally, because AVL hasn't changed (yet) and we don't want to impact SAPCaps test.
+			hwdep.SkipOnWifiDevice(
+				hwdep.Realtek8822CPCIE, hwdep.Realtek8852APCIE,
+				hwdep.QualcommWCN6855,
+			)),
 		Params: []testing.Param{
 			{
 				// Verifies that Soft AP DUT can accept connection from a station with no encryption in low band and high band.
