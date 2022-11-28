@@ -319,15 +319,25 @@ var RemoveConfirmDialog = removeConfirmDialogStruct{
 
 // ClickRemove clicks Remove to launch the delete.
 func (s *Settings) ClickRemove() uiauto.Action {
-	return s.ui.DoDefaultUntil(removeLinuxButton, s.ui.WithTimeout(shortUITimeout).WaitUntilExists(RemoveConfirmDialog.Self))
+	return s.ui.DoDefaultUntil(
+		removeLinuxButton,
+		uiauto.IfFailThen(
+			s.ui.WithTimeout(shortUITimeout).WaitUntilExists(RemoveConfirmDialog.Self),
+			s.ui.WithTimeout(shortUITimeout).WaitUntilExists(RemoveLinuxAlert)),
+	)
 }
 
 // Remove removes Crostini.
 func (s *Settings) Remove() uiauto.Action {
 	return uiauto.Combine("remove Linux",
 		s.ClickRemove(),
-		s.ui.LeftClickUntil(RemoveConfirmDialog.Delete, s.ui.WithTimeout(shortUITimeout).WaitUntilGone(RemoveConfirmDialog.Self)),
-		s.ui.WithTimeout(time.Minute).WaitUntilExists(TurnOnButton))
+		uiauto.IfSuccessThen(
+			s.ui.WithTimeout(shortUITimeout).WaitUntilExists(RemoveConfirmDialog.Self),
+			s.ui.LeftClickUntil(
+				RemoveConfirmDialog.Delete,
+				s.ui.WithTimeout(shortUITimeout).WaitUntilGone(RemoveConfirmDialog.Self),
+			)),
+		s.ui.WithTimeout(2*time.Minute).WaitUntilExists(TurnOnButton))
 }
 
 type resizeDiskDialogStruct struct {
