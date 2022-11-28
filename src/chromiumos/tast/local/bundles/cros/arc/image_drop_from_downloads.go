@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
@@ -31,7 +32,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Fixture:      "arcBootedInClamshellMode",
+		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"capybara.jpg"},
 		Timeout:      4 * time.Minute,
@@ -39,6 +40,11 @@ func init() {
 }
 
 func ImageDropFromDownloads(ctx context.Context, s *testing.State) {
+	// Reserve 10 seconds for cleaning up state
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	d := s.FixtValue().(*arc.PreData).UIDevice
@@ -64,6 +70,12 @@ func ImageDropFromDownloads(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed creating test API connection: ", err)
 	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure the device is in clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
