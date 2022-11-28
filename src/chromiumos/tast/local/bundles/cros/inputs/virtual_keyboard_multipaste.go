@@ -69,11 +69,11 @@ func VirtualKeyboardMultipaste(ctx context.Context, s *testing.State) {
 	uc := s.FixtValue().(fixture.FixtData).UserContext
 
 	cleanupCtx := ctx
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	// Use a shortened context for test operations to reserve time for cleanup.
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Launch inputs test web server.
 	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)

@@ -114,7 +114,7 @@ func VirtualKeyboardChangeInput(ctx context.Context, s *testing.State) {
 		its.ClickFieldUntilVKShown(inputField),
 		ui.LeftClick(vkLanguageMenuFinder),
 		ui.LeftClick(inputMethodOption),
-		ui.WaitUntilExists(vkb.NodeFinder.Name(inputMethod.ShortLabel).Role(role.StaticText)),
+		ui.WaitUntilExists(vkb.NodeFinder.NameRegex(regexp.MustCompile(fmt.Sprintf("%s|%s", inputMethod.ShortLabel, inputMethod.Name))).Role(role.StaticText)),
 
 		// Validate current input method change.
 		inputMethod.WaitUntilActivated(tconn),
