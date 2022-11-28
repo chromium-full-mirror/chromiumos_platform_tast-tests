@@ -27,8 +27,7 @@ type extendedDisplayFunctionTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExtendedDisplayFunctionality,
-		Desc:         "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
+		Func: ExtendedDisplayFunctionality, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
@@ -162,9 +161,17 @@ func ExtendedDisplayFunctionality(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed detecting external display after %q: %v", testOpt.powerMode, err)
 	}
 
-	// Perfoming prev_sleep_state check.
-	if err := powercontrol.ValidatePrevSleepState(ctx, dut, testOpt.expectedPrevSleepState); err != nil {
-		s.Fatal("Failed to validate previous sleep state: ", err)
+	// Performing prev_sleep_state check.
+	valid, err := powercontrol.IsPrevSleepStateAvailable(ctx, dut)
+
+	if err != nil {
+		s.Fatal("Failed to determine if prev_sleep_state is available: ", err)
+	}
+
+	if valid {
+		if err := powercontrol.ValidatePrevSleepState(ctx, dut, testOpt.expectedPrevSleepState); err != nil {
+			s.Fatal("Failed to validate previous sleep state: ", err)
+		}
 	}
 }
 

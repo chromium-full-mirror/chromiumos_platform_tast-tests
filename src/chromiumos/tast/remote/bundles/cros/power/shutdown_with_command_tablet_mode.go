@@ -113,7 +113,15 @@ func ShutdownWithCommandTabletMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wake up DUT: ", err)
 	}
 
-	if err := powercontrol.ValidatePrevSleepState(ctx, dut, cbmemSleepStateValue); err != nil {
-		s.Fatalf("Failed Previous Sleep state is not %v: %v", cbmemSleepStateValue, err)
+	valid, err := powercontrol.IsPrevSleepStateAvailable(ctx, dut)
+
+	if err != nil {
+		s.Fatal("Failed to determine if prev_sleep_state is available: ", err)
+	}
+
+	if valid {
+		if err := powercontrol.ValidatePrevSleepState(ctx, dut, cbmemSleepStateValue); err != nil {
+			s.Fatalf("Failed Previous Sleep state is not %v: %v", cbmemSleepStateValue, err)
+		}
 	}
 }

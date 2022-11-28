@@ -172,9 +172,17 @@ func OnboardKeyboardFunctionalityCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Verifies prev_sleep_state is 5 for coldboot.
-			cbmemSleepState := 5
-			if err := powercontrol.ValidatePrevSleepState(ctx, dut, cbmemSleepState); err != nil {
-				s.Fatal("Failed to validate previous sleep state: ", err)
+			valid, err := powercontrol.IsPrevSleepStateAvailable(ctx, dut)
+
+			if err != nil {
+				s.Fatal("Failed to determine if prev_sleep_state is available: ", err)
+			}
+
+			if valid {
+				cbmemSleepState := 5
+				if err := powercontrol.ValidatePrevSleepState(ctx, dut, cbmemSleepState); err != nil {
+					s.Fatal("Failed to validate previous sleep state: ", err)
+				}
 			}
 		}
 	}

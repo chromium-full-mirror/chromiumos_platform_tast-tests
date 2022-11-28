@@ -134,8 +134,16 @@ func ShutdownPwrbuttonStress(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to login to chrome: ", err)
 		}
 
-		if err := powercontrol.ValidatePrevSleepState(ctx, dut, 5); err != nil {
-			s.Fatal("Previous Sleep state is not 5: ", err)
+		valid, err := powercontrol.IsPrevSleepStateAvailable(ctx, dut)
+
+		if err != nil {
+			s.Fatal("Failed to determine if prev_sleep_state is available: ", err)
+		}
+
+		if valid {
+			if err := powercontrol.ValidatePrevSleepState(ctx, dut, 5); err != nil {
+				s.Fatal("Previous Sleep state is not 5: ", err)
+			}
 		}
 	}
 }

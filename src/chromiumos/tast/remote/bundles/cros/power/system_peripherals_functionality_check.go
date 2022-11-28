@@ -158,10 +158,18 @@ func SystemPeripheralsFunctionalityCheck(ctx context.Context, s *testing.State) 
 				s.Fatal("Failed to detect connected peripherals devices after cold boot: ", err)
 			}
 
-			// Perfoming prev_sleep_state check.
-			expectedPrevSleepState := 5
-			if err := powercontrol.ValidatePrevSleepState(ctx, dut, expectedPrevSleepState); err != nil {
-				s.Fatal("Failed to validate previous sleep state: ", err)
+			valid, err := powercontrol.IsPrevSleepStateAvailable(ctx, dut)
+
+			if err != nil {
+				s.Fatal("Failed to determine if prev_sleep_state is available: ", err)
+			}
+
+			if valid {
+				// Performing prev_sleep_state check.
+				expectedPrevSleepState := 5
+				if err := powercontrol.ValidatePrevSleepState(ctx, dut, expectedPrevSleepState); err != nil {
+					s.Fatal("Failed to validate previous sleep state: ", err)
+				}
 			}
 		}
 	}

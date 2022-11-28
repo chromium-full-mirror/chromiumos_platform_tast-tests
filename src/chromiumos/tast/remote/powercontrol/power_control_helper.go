@@ -39,6 +39,24 @@ func ChromeOSLogin(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) 
 	return nil
 }
 
+// IsPrevSleepStateAvailable performas a basic check that cbmem returns a value for
+// prev_sleep_state in its output. Not all platforms return prev_sleep_state, so
+// we can't use ValidatePrevSleepState in tests on those platforms. Here we introduce
+// a check that prev_sleep_state is included in cbmem output so we can check the
+// values on platforms that do support it.
+func IsPrevSleepStateAvailable(ctx context.Context, dut *dut.DUT) (bool, error) {
+	// Command to check previous sleep state.
+	const cmd = "cbmem -c | grep 'prev_sleep_state' | tail -1"
+	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to execute %q command", cmd)
+	}
+
+	got := strings.TrimSpace(string(out))
+
+	return len(got) > 0, nil
+}
+
 // ValidatePrevSleepState sleep state from cbmem command output.
 // NOTE: This method currently is only valid on Intel SoCs, as they are the
 // only SoC that output prev_sleep_state from cbmem - See b/252884546#6 for
