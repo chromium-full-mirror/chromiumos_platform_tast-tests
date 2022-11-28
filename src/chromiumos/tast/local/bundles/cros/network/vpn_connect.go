@@ -25,8 +25,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     VPNConnect,
 		Desc:     "Ensure that we can connect to a VPN",
-		Contacts: []string{"jiejiang@google.com", "cros-networking@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline", "informational"},
 		// Note that this test does not involve Chrome by intention, but for VPN
 		// services with certificates, Chrome may change the cert properties of them
 		// proactively, and thus we need Chrome is logged-in as the same user with

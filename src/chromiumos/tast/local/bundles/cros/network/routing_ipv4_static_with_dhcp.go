@@ -22,9 +22,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingIPv4StaticWithDHCP,
-		Desc:         "Verify the shill behavior and routing semantics when the network has DHCP and static config for IPv4 but no IPv6",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingIPv4StaticWithDHCP,
+		Desc:     "Verify the shill behavior and routing semantics when the network has DHCP and static config for IPv4 but no IPv6",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

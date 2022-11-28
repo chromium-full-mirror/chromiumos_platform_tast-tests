@@ -16,9 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingIPv6Only,
-		Desc:         "Verify the shill behavior and routing semantics in an IPv6-only environment",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingIPv6Only,
+		Desc:     "Verify the shill behavior and routing semantics in an IPv6-only environment",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

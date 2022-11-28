@@ -17,9 +17,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingNoIP,
-		Desc:         "Verify the shill and routing behavior that there is a new network but no IP is provided on it",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingNoIP,
+		Desc:     "Verify the shill and routing behavior that there is a new network but no IP is provided on it",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

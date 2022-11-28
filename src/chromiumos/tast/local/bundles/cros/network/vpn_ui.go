@@ -23,9 +23,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VPNUI,
-		Desc:         "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     VPNUI,
+		Desc:     "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "vpnShillResetWithChromeLoggedIn",

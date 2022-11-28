@@ -21,9 +21,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingIPv4Static,
-		Desc:         "Verify the shill behavior and routing semantics when the network does not have DHCP or SLAAC but only static IPv4 config",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingIPv4Static,
+		Desc:     "Verify the shill behavior and routing semantics when the network does not have DHCP or SLAAC but only static IPv4 config",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{

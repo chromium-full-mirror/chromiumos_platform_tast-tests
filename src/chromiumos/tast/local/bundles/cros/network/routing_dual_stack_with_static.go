@@ -19,9 +19,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingDualStackWithStatic,
-		Desc:         "Verify the shill behavior and routing semantics when the network is dual-stack with DHCP and SLAAC, configure static IP on it",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingDualStackWithStatic,
+		Desc:     "Verify the shill behavior and routing semantics when the network is dual-stack with DHCP and SLAAC, configure static IP on it",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

@@ -16,9 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingLowPriority,
-		Desc:         "Verify the routing semantics in the case that there is a dual-stack network and then another network with lower priority shows up",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingLowPriority,
+		Desc:     "Verify the routing semantics in the case that there is a dual-stack network and then another network with lower priority shows up",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

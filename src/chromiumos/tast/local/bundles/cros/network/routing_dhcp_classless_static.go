@@ -21,9 +21,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutingDHCPClasslessStatic,
-		Desc:         "Verify the shill behavior and routing semantics in a DHCP environment with classless static routes (option 121)",
-		Contacts:     []string{"jiejiang@google.com", "cros-networking@google.com"},
+		Func:     RoutingDHCPClasslessStatic,
+		Desc:     "Verify the shill behavior and routing semantics in a DHCP environment with classless static routes (option 121)",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

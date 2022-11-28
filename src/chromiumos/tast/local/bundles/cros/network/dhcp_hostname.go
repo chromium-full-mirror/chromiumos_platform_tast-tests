@@ -21,8 +21,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DHCPHostname,
 		Desc:     "Verify the hostname option sent by the DHCP client",
-		Contacts: []string{"jiejiang@google.com", "cros-networking@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline", "informational"},
 		// DHCP hostname property is written into the default profile but not user
 		// profile. Use shillReset to guarantee it is clean before and after the
 		// test.

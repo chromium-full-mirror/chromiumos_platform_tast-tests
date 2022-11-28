@@ -21,12 +21,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DHCPInitBound,
-		Desc: "Verifies DHCP negotiation behavior on a WiFi network",
-		Contacts: []string{
-			"jiejiang@google.com",
-			"cros-networking@google.com",
-		},
+		Func:     DHCPInitBound,
+		Desc:     "Verifies DHCP negotiation behavior on a WiFi network",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
