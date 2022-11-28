@@ -571,7 +571,6 @@ type Application struct {
 
 type ArcPolicyValue struct {
 \tApplications\t[]Application\t`json:"applications"`
-\tPlayLocalPolicyEnabled\tbool\t`json:"playLocalPolicyEnabled"`
 \tPlayEmmApiInstallDisabled\tbool\t`json:"playEmmApiInstallDisabled"`
 \tPlayStoreMode\tstring\t`json:"playStoreMode"`
 \tDpsInteractionsDisabled\tbool\t`json:"dpsInteractionsDisabled"`

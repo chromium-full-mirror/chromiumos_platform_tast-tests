@@ -133,7 +133,6 @@ func CreateArcPolicyWithApps(packages []string, installType string) *policy.ArcP
 		Val: &policy.ArcPolicyValue{
 			Applications:              appsInPolicy,
 			PlayStoreMode:             PlayStoreModeAllowList,
-			PlayLocalPolicyEnabled:    true,
 			DpsInteractionsDisabled:   true,
 			PlayEmmApiInstallDisabled: true,
 		},
