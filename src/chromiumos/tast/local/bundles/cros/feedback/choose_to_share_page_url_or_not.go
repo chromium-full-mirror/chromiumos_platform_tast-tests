@@ -32,13 +32,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify user can choose to share page url or not",
 		Contacts: []string{
-			"wangdanny@google.com",
-			"zhangwenyu@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
 		Fixture:      "chromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 	})

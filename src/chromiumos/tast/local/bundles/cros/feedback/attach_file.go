@@ -29,12 +29,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify user can attach a file",
 		Contacts: []string{
-			"zhangwenyu@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
 		Fixture:      "chromeLoggedInWithOsFeedback",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Data:         []string{fa.PngFile, fa.PdfFile},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

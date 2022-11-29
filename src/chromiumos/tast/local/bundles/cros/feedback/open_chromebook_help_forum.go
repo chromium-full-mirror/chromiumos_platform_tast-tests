@@ -27,12 +27,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "User is able to open chromebook help forum",
 		Contacts: []string{
-			"wangdanny@google.com",
-			"zhangwenyu@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:185624798",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{

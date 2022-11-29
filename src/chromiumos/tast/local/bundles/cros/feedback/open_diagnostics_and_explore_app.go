@@ -32,12 +32,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "User is able to open diagnostics and explore app",
 		Contacts: []string{
-			"zhangwenyu@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
 		Fixture:      "chromeLoggedInWithOsFeedback",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{

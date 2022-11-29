@@ -24,15 +24,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "User is able to launch the old feedback app from OOBE",
 		Contacts: []string{
-			"swifton@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
-		Timeout: 3 * time.Minute,
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
+		Timeout:      3 * time.Minute,
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }

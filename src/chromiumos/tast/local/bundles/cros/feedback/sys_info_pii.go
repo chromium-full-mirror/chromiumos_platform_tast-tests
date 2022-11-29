@@ -40,7 +40,12 @@ func init() {
 		Func:         SysInfoPII,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify that known-sensitive data doesn't show up in feedback reports",
-		Contacts:     []string{"xiangdongkong@google.com", "cros-feedback-app@google.com"},
+		Contacts: []string{
+			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
+		},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

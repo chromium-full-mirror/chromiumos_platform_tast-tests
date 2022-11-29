@@ -29,12 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Suggested help content is updated as user enters issue description",
 		Contacts: []string{
-			"wangdanny@google.com",
-			"zhangwenyu@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
