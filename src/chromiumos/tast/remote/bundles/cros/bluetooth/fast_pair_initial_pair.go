@@ -17,7 +17,10 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const testVarFastPairAntispoofingKeyPem = "fast_pair_antispoofing_key_pem"
+// This variable can be overridden by specifying a custom value in the command
+// line, "--vars=bluetooth.FastPairAntispoofingKeyPem=XXXX", which can be used
+// for local testing. Otherwise uses the default value.
+const testVarFastPairAntispoofingKeyPem = "bluetooth.FastPairAntispoofingKeyPem"
 
 func init() {
 	testing.AddTest(&testing.Test{

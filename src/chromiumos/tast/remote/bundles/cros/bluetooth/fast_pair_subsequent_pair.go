@@ -17,7 +17,10 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const testVarFastPairAccountKey = "fast_pair_account_key"
+// This variable can be overridden by specifying a custom value in the command
+// line, "--vars=bluetooth.FastPairAccountKey=XXXX", which can be used
+// for local testing. Otherwise uses the default value.
+const testVarFastPairAccountKey = "bluetooth.FastPairAccountKey"
 
 func init() {
 	testing.AddTest(&testing.Test{

@@ -38,10 +38,14 @@ const (
 
 	fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
 
-	fixtureVarChromeUsername = "chrome_username"
-	fixtureVarChromePassword = "chrome_password"
+	// These variable can be overridden by specifying a custom value in the command
+	// line, e.g. "--vars=bluetooth.FastPairChromeUsername=XXXX", which can be used
+	// for local testing. Otherwise uses the default value for GAIA login.
+	fixtureVarFastPairChromeUsername = "bluetooth.FastPairChromeUsername"
+	fixtureVarFastPairChromePassword = "bluetooth.FastPairChromePassword"
 )
 
+// Used for Fake login for the Bluetooth UI tests.
 const (
 	defaultChromeUsername = "testuser@gmail.com"
 	defaultChromePassword = "testpass"
@@ -204,15 +208,15 @@ func init() {
 		Impl: newFixture(&fixtureFeatures{
 			BTPeerCount:             1,
 			BluetoothAdapterEnabled: true,
-			EnableFeatures:          []string{"FastPair"},
+			EnableFeatures:          []string{"FastPair", "FastPairSavedDevices"},
 			DisableFeatures:         []string{},
 			LoginMode:               chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
-			RequireChromeUserVars:   true,
+			RequireFastPairUserVars: true,
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
-			fixtureVarChromeUsername,
-			fixtureVarChromePassword,
+			fixtureVarFastPairChromeUsername,
+			fixtureVarFastPairChromePassword,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
@@ -245,9 +249,10 @@ type fixtureFeatures struct {
 	// EnableHidScreenOnOobe enables HID detection screen when in OOBE.
 	EnableHidScreenOnOobe bool
 
-	// RequireChromeUserVars enables retrieving chrome user credentials from
-	// fixture vars, and requires that they are provided.
-	RequireChromeUserVars bool
+	// RequireFastPairUserVars enables retrieving chrome user credentials from
+	// fixture vars, and requires that they are provided. Required for all Fast
+	// Pair tests that use a GAIA login.
+	RequireFastPairUserVars bool
 }
 
 // FixtValue is the value of the test fixture accessible within a test. All
@@ -317,13 +322,20 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 
 	// Start Chrome with the features and login mode provided by the test fixture.
 	var chromeUsername, chromePassword string
-	if tf.features.RequireChromeUserVars {
-		chromeUsername = s.RequiredVar(fixtureVarChromeUsername)
-		chromePassword = s.RequiredVar(fixtureVarChromePassword)
+	if tf.features.RequireFastPairUserVars {
+		// Fast Pair tests require GAIA credentials to be provided, which can be
+		// passed via CLI or will use the default credentials.
+		chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
+		chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
+		s.Log("Logging in as Fast Pair test user: ", chromeUsername)
 	} else {
+		// By default, use the default username/password used for Fake login.
 		chromeUsername = defaultChromeUsername
 		chromePassword = defaultChromePassword
+		s.Log("Logging in with default fake credentials")
 	}
+
+	// Start Chrome with the features and login mode provided by the test fixture.
 	if _, err := tf.fv.ChromeService.New(ctx, &chromeService.NewRequest{
 		LoginMode:       tf.features.LoginMode,
 		EnableFeatures:  tf.features.EnableFeatures,
