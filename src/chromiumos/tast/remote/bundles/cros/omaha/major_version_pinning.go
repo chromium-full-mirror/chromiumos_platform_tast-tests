@@ -20,9 +20,10 @@ func init() {
 		Func: MajorVersionPinning,
 		Desc: "Check if an appropriate versions are served when pinning to a major version",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com", // Test author
 		},
+		BugComponent: "b:1031231",
 		Attr:         []string{"group:omaha"},
 		SoftwareDeps: []string{"auto_update_stable"},
 		Fixture:      fixture.Omaha,

@@ -19,9 +19,10 @@ func init() {
 		Func: Stable,
 		Desc: "Check if an appropriate stable version is being served",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com", // Test author
 		},
+		BugComponent: "b:1031231",
 		Attr:         []string{"group:omaha"},
 		SoftwareDeps: []string{"auto_update_stable"},
 		Fixture:      fixture.Omaha,
