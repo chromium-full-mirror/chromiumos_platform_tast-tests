@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"cros-arc-te@google.com", "cpiao@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
+		Attr:         []string{"group:arc", "arc_core", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
