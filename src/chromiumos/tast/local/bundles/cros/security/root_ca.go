@@ -29,10 +29,10 @@ func init() {
 		Func: RootCA,
 		Desc: "Ensures that the built-in root CAs match a baseline",
 		Contacts: []string{
-			"jorgelo@chromium.org",  // Security team
-			"ejcaruso@chromium.org", // Tast port author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Data: []string{rootCABaselinePath},
 		Attr: []string{"group:mainline"},
 	})

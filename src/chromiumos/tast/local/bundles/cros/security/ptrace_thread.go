@@ -19,9 +19,10 @@ func init() {
 		Func: PtraceThread,
 		Desc: "Checks that the kernel restricts ptrace between threads",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr: []string{"group:mainline"},
 	})
 }

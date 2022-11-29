@@ -19,9 +19,10 @@ func init() {
 		Func: MountSymlink,
 		Desc: "Verifies that the chromiumos LSM prevents paths with symlinks from being mounted",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"no_symlink_mount"},
 		Attr:         []string{"group:mainline"},
 	})

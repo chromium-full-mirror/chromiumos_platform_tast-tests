@@ -17,9 +17,10 @@ func init() {
 		Func: ProtocolFamilies,
 		Desc: "Compares available network protocol (address) families against a baseline",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr: []string{"group:mainline"},
 	})
 }

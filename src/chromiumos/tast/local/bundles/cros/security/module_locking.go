@@ -26,9 +26,10 @@ func init() {
 		Func: ModuleLocking,
 		Desc: "Checks that kernel modules can't be loaded from outside the root filesystem",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr: []string{"group:mainline"},
 	})
 }

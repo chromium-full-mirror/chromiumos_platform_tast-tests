@@ -21,9 +21,10 @@ func init() {
 		Func: Mprotect,
 		Desc: "Verifies that mprotect with PROT_EXEC works on noexec mounts",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr: []string{"group:mainline"},
 	})
 }

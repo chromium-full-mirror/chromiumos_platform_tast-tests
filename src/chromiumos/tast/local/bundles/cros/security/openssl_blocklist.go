@@ -22,9 +22,10 @@ func init() {
 		Func: OpenSSLBlocklist,
 		Desc: "Verifies that OpenSSL certificate blocklisting works",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Data: []string{
 			"openssl_blocklist_ca.pem",
 			"openssl_blocklist_cert.key",
