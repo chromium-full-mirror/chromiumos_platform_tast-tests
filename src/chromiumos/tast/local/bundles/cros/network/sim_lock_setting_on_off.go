@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -76,6 +77,14 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to find PUK code for ICCID : %s, skipping the test", iccid)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		helper.ClearSIMLock(ctx, currentPin, currentPuk)
+	}(cleanupCtx)
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
@@ -112,9 +121,5 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(ossettings.LockSimToggle.Focusable().Focused()),
 	)(ctx); err != nil {
 		s.Fatal("Failed at ToggleOff in UI: ", err)
-	}
-
-	if helper.IsSimLockEnabled(ctx) {
-		s.Fatal("Failed to turn off PIN lock")
 	}
 }
