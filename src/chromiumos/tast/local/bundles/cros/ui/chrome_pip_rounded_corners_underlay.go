@@ -51,8 +51,8 @@ func init() {
 		Data:         []string{"180p_60fps_600frames.h264.mp4", "pip_video.html"},
 		Params: []testing.Param{{
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
-			// TODO(b/255636769): Remove rusty and steelix when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("cave", "chell", "rusty", "steelix")),
+			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("cave", "chell", "rusty", "steelix", "tentacruel")),
 			Fixture:           "chromeGraphics",
 			Val:               browser.TypeAsh,
 		}, {
@@ -65,8 +65,8 @@ func init() {
 		}, {
 			Name: "failing",
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
-			// TODO(b/255636769): Remove rusty and steelix when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell", "rusty", "steelix")),
+			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell", "rusty", "steelix", "tentacruel")),
 			Fixture:           "chromeGraphics",
 			Val:               browser.TypeAsh,
 		}, {
