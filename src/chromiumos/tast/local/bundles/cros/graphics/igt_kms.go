@@ -407,20 +407,6 @@ func init() {
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"graphics_nightly"},
 		}, {
-			Name: "vgem_basic",
-			Val: graphics.IgtTest{
-				Exe: "vgem_basic",
-			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
-		}, {
-			Name: "vgem_slow",
-			Val: graphics.IgtTest{
-				Exe: "vgem_slow",
-			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
-		}, {
 			Name: "template",
 			Val: graphics.IgtTest{
 				Exe: "template",
