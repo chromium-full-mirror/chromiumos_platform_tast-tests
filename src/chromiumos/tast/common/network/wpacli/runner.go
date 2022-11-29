@@ -134,6 +134,11 @@ func (r *Runner) RemoveAllNetworks(ctx context.Context) error {
 	return r.run(ctx, "OK", "remove_network", "all")
 }
 
+// RemoveNetwork removes a network with network ID.
+func (r *Runner) RemoveNetwork(ctx context.Context, netID int) error {
+	return r.run(ctx, "OK", "remove_network", strconv.Itoa(netID))
+}
+
 // TDLSDiscover runs tdls_discover command.
 func (r *Runner) TDLSDiscover(ctx context.Context, mac string) error {
 	return r.run(ctx, "OK", "tdls_discover", mac)
@@ -362,23 +367,32 @@ func (r *Runner) P2PFlush(ctx context.Context) error {
 }
 
 // P2PAddGONetwork adds the GO network in the client device.
-func (r *Runner) P2PAddGONetwork(ctx context.Context, ssid, passphrase string) error {
+func (r *Runner) P2PAddGONetwork(ctx context.Context, ssid, passphrase string) (int, error) {
+	successfulRun := false
 	networkID, err := r.addNetwork(ctx)
 	if err != nil {
-		return err
+		return -1, err
 	}
+	defer func(ctx context.Context) {
+		if !successfulRun {
+			if err := r.RemoveNetwork(ctx, networkID); err != nil {
+				testing.ContextLog(ctx, "Failed to remove the network: ", err)
+			}
+		}
+	}(ctx)
 	if err := r.setNetwork(ctx, networkID, "ssid", strconv.Quote(ssid)); err != nil {
-		return err
+		return -1, err
 	}
 	if err := r.setNetwork(ctx, networkID, "psk", strconv.Quote(passphrase)); err != nil {
-		return err
+		return -1, err
 	}
 	// disabled=2: Indicate special network block use as a P2P persistent group information.
 	if err := r.setNetwork(ctx, networkID, "disabled", "2"); err != nil {
-		return err
+		return -1, err
 	}
+	successfulRun = true
 
-	return nil
+	return networkID, nil
 }
 
 func (r *Runner) fetchANQP(ctx context.Context) error {

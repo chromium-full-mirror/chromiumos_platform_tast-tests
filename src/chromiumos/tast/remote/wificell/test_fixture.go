@@ -252,6 +252,7 @@ type TestFixture struct {
 	p2pGroupSSID       string
 	p2pGroupPassphrase string
 	p2pClientIface     string
+	p2pClientNetID     int
 
 	// Group simple option flags here as they started to grow.
 	option struct {
@@ -1748,7 +1749,8 @@ func (tf *TestFixture) P2PConfigureClient(ctx context.Context, device P2PDevice)
 	if err := wpar.DiscoverNetwork(ctx, tf.duts[PeerDUT].dut.Conn(), tf.p2pGroupSSID); err != nil {
 		return err
 	}
-	if err := wpar.P2PAddGONetwork(ctx, tf.p2pGroupSSID, tf.p2pGroupPassphrase); err != nil {
+	tf.p2pClientNetID, err = wpar.P2PAddGONetwork(ctx, tf.p2pGroupSSID, tf.p2pGroupPassphrase)
+	if err != nil {
 		return err
 	}
 	testing.ContextLog(ctx, "P2P Client: Configured")
@@ -1836,12 +1838,6 @@ func (tf *TestFixture) P2PDeleteIPRoute(ctx context.Context) error {
 		return err
 	}
 	if err := iprPeer.DeleteIP(ctx, tf.p2pClientIface, net.ParseIP(p2pClientIPAddress), 24); err != nil {
-		return err
-	}
-	if err := iprDUT.SetLinkDown(ctx, tf.p2pGOIface); err != nil {
-		return err
-	}
-	if err := iprPeer.SetLinkDown(ctx, tf.p2pClientIface); err != nil {
 		return err
 	}
 
@@ -1947,7 +1943,7 @@ func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
 func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) error {
 	wpa := remotewpacli.NewRemoteRunner(tf.p2pGO.Conn())
 
-	if err := wpa.RemoveAllNetworks(ctx); err != nil {
+	if err := wpa.P2PGroupRemove(ctx, tf.p2pGOIface); err != nil {
 		return err
 	}
 	if err := wpa.P2PFlush(ctx); err != nil {
@@ -1965,7 +1961,7 @@ func (tf *TestFixture) P2PDeconfigureClient(ctx context.Context) error {
 	if err := wpa.P2PGroupRemove(ctx, tf.p2pClientIface); err != nil {
 		return err
 	}
-	if err := wpa.RemoveAllNetworks(ctx); err != nil {
+	if err := wpa.RemoveNetwork(ctx, tf.p2pClientNetID); err != nil {
 		return err
 	}
 	if err := wpa.P2PFlush(ctx); err != nil {
