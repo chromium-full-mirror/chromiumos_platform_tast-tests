@@ -200,10 +200,14 @@ func InstallCrostini(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chr
 		return 0, errors.Wrap(err, "failed to run autotestPrivate.registerComponent")
 	}
 
+	installer := New(tconn)
+
 	if err := settings.OpenLinuxInstallerAndClickNext(ctx, tconn, cr); err != nil {
+		if message, _ := installer.checkErrorMessage(ctx); message != "" {
+			return 0, errors.Errorf("error in installer dialog: %s", message)
+		}
 		return 0, errors.Wrap(err, "failed to launch crostini installation from Settings")
 	}
-	installer := New(tconn)
 	var resultDiskSize uint64
 	if iOptions.MinDiskSize != 0 {
 		resultDiskSize, err = installer.SetDiskSize(ctx, cr, iOptions.MinDiskSize, iOptions.IsSoftMinimum)
