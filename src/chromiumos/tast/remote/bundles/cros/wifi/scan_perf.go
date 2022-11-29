@@ -19,8 +19,19 @@ import (
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 	"chromiumos/tast/testing/wlan"
 )
+
+// TODO(b/260276685): The following chipsets are known to fail the first bg scan with dtim=1.
+// Separate those chipsets from dtim1 subtest and move into dtim1unstable subtest.
+var deviceWithUnstableDTIM1BgScan = []wlan.DeviceID{
+	wlan.QualcommAtherosQCA6174,
+	wlan.QualcommAtherosQCA6174SDIO,
+	wlan.QualcommWCN3990,
+	wlan.MediaTekMT7921PCIE,
+	wlan.MediaTekMT7921SDIO,
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -40,8 +51,15 @@ func init() {
 				Val: []ap.Option{},
 			},
 			{
-				Name: "dtim1",
-				Val:  []ap.Option{ap.DTIMPeriod(1)},
+				Name:              "dtim1",
+				Val:               []ap.Option{ap.DTIMPeriod(1)},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(deviceWithUnstableDTIM1BgScan...)),
+			},
+			{
+				Name:              "dtim1unstable",
+				Val:               []ap.Option{ap.DTIMPeriod(1)},
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(deviceWithUnstableDTIM1BgScan...)),
 			},
 		},
 	})
