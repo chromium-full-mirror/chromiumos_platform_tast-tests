@@ -109,20 +109,29 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		defer act.Stop(cleanupCtx, tconn)
 
 		// Click the Search icon.
-		if err := d.Object(
+		searchIcon := d.Object(
 			ui.ClassName("android.widget.ImageView"),
 			ui.Description("Search"),
 			ui.PackageName(ytAppPkgName),
-		).Click(ctx); err != nil {
+		)
+		const uiTimeout = 15 * time.Second
+		if err := searchIcon.WaitForExists(ctx, uiTimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for Search icon")
+		}
+		if err := searchIcon.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click Search")
 		}
 
 		// Put 862r3XS2YB0 in the search box, because we want this video: https://www.youtube.com/watch?v=862r3XS2YB0
-		if err := d.Object(
+		searchQueryField := d.Object(
 			ui.Text("Search YouTube"),
 			ui.ClassName("android.widget.EditText"),
 			ui.PackageName(ytAppPkgName),
-		).SetText(ctx, "862r3XS2YB0"); err != nil {
+		)
+		if err := searchQueryField.WaitForExists(ctx, uiTimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for Search query field")
+		}
+		if err := searchQueryField.SetText(ctx, "862r3XS2YB0"); err != nil {
 			return errors.Wrap(err, "failed to set search query")
 		}
 
@@ -132,11 +141,15 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		// Click the desired video.
-		if err := d.Object(
+		video := d.Object(
 			ui.ClassName("android.view.ViewGroup"),
 			ui.DescriptionMatches("Google I/O 2016 - Keynote - 1 hour, 54 minutes - Go to channel - Google Developers .+ - play video"),
 			ui.PackageName(ytAppPkgName),
-		).Click(ctx); err != nil {
+		)
+		if err := video.WaitForExists(ctx, uiTimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for search results")
+		}
+		if err := video.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click for video")
 		}
 
