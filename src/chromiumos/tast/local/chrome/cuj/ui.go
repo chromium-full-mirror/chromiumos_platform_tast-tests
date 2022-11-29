@@ -407,3 +407,15 @@ func EnableTabletMode(ctx context.Context, tconn *chrome.TestConn, testCaseVar f
 	testing.ContextLog(ctx, "Running test with tablet mode: ", tabletMode)
 	return tabletMode, cleanup, nil
 }
+
+// DismissCriticalSecurityAlert closes the critical security alert, if
+// that alert is found on screen.
+func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
+	alertContainer := nodewith.NameStartingWith("Critical security alert").Role(role.Dialog)
+	close := nodewith.NameStartingWith("Close").Ancestor(alertContainer)
+	return uiauto.IfSuccessThen(
+		ui.WaitUntilExists(alertContainer),
+		uiauto.Combine("close security alert", ui.LeftClick(close), ui.WaitUntilGone(close)),
+	)(ctx)
+}

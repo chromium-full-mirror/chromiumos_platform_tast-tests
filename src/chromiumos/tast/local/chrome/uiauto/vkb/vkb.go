@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/touch"
 	"chromiumos/tast/local/chrome/useractions"
@@ -723,5 +724,70 @@ func (vkbCtx *VirtualKeyboardContext) TapScreenTriggerVK(touchCtx *touch.Context
 		touchCtx.Tap(contentArea),
 		touchCtx.Tap(contentArea),
 		vkbCtx.ui.WaitForLocation(vkRootFinder),
+	)
+}
+
+// TypeIgnoreCaseAction returns an action that types out the lower case
+// version of the string |s| using the virtual keyboard. Each character
+// in |s| must be visible without pressing the shift key. This function
+// differs from TapKeysIgnoringCase by allowing for touch input using
+// a touch pointer, and for parsing through a variable length string
+// for simplicity.
+func (vkbCtx *VirtualKeyboardContext) TypeIgnoreCaseAction(pc pointer.Context, tconn *chrome.TestConn, s string) uiauto.Action {
+	ac := uiauto.New(tconn)
+
+	_, touch := pc.(*pointer.TouchContext)
+
+	var actions []uiauto.Action
+	for _, c := range strings.Split(strings.ToLower(s), "") {
+		// The ui tree contains the word "space", rather than " ".
+		if c == " " {
+			c = "space"
+		}
+		keyNode := KeyFinder.Name(c)
+
+		actions = append(actions, uiauto.Combine(
+			fmt.Sprintf("tap %s", c),
+			// Use pc.ClickAt instead of pc.Click, so we can use
+			// ImmediateLocation instead of Location. Sometimes, the
+			// key location doesn't stabilize within the fixed amount
+			// of time, but since the keyboard isn't moving, it's valid
+			// to just use the location without waiting for stability.
+			func(ctx context.Context) error {
+				possibleKeys, err := ac.NodesInfo(ctx, keyNode)
+				if err != nil {
+					return errors.Wrapf(err, "failed to find node %v", keyNode)
+				}
+
+				if len(possibleKeys) == 0 {
+					return errors.Errorf("no nodes matching %v", keyNode)
+				}
+
+				// Click on the last key found, to ignore any
+				// autocomplete suggestions.
+				key := possibleKeys[len(possibleKeys)-1].Location.CenterPoint()
+
+				// If |pc| is a touch pointer, simply emulate a user
+				// moving their finger to the correct button by
+				// sleeping. Otherwise, actually move the mouse to the
+				// correct button.
+				if touch {
+					if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
+						return errors.Wrap(err, "failed to sleep")
+					}
+				} else {
+					if err := mouse.Move(tconn, key, 100*time.Millisecond)(ctx); err != nil {
+						return errors.Wrapf(err, "failed to move mouse to %v", key)
+					}
+				}
+
+				return pc.ClickAt(key)(ctx)
+			},
+			uiauto.Sleep(50*time.Millisecond),
+		))
+	}
+	return uiauto.Combine(
+		fmt.Sprintf("type %s", s),
+		actions...,
 	)
 }
