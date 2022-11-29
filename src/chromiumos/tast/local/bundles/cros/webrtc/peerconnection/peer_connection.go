@@ -15,6 +15,8 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/media/logging"
@@ -88,11 +90,14 @@ type RTCTestParams struct {
 	VideoGridFile      string // Name of the video file to fill up the grid with, if needed.
 	// The array each element of which is true iff -th smaller resolution should be a hardware encoder implementation.
 	SimulcastHWEncs []bool
+	// BrowserType indicates the type of Chrome browser to be used,
+	// Ash Chrome or Lacros Chrome.
+	BrowserType browser.Type
 }
 
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
 // VerifyHWAcceleratorMode codec is hardware accelerated if profile is not NoVerifyHWAcceleratorUsed.
-func RunRTCPeerConnection(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSystem, params RTCTestParams) error {
+func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, params RTCTestParams) error {
 	// verifyMode VerifyHWAcceleratorMode, profile string, simulcast bool, svc string, displayMediaType DisplayMediaType)
 	if params.Simulcasts > 1 && params.Svc != "" {
 		return errors.New("|simulcast| and |svc| cannot be set simultaneously")
@@ -126,7 +131,7 @@ func RunRTCPeerConnection(ctx context.Context, cr *chrome.Chrome, fileSystem htt
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
-	conn, err := cr.NewConn(ctx, server.URL+"/"+LoopbackFile)
+	conn, err := cs.NewConn(ctx, server.URL+"/"+LoopbackFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to open video page")
 	}

@@ -10,7 +10,8 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/webrtc/peerconnection"
-	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -18,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RTCPeerConnectionPerf,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures WebRTC decode performance in terms of CPU usage and decode time with and without hardware acceleration",
 		Contacts: []string{
 			"hiroh@chromium.org",
@@ -35,9 +36,14 @@ func init() {
 			Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		}, {
 			Name:              "h264_hw",
-			Val:               peerconnection.MakeHWTestParams("H264", 1280, 720),
+			Val:               peerconnection.MakeHWTestParams("H264", 1280, 720, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "h264_hw_lacros",
+			Val:               peerconnection.MakeHWTestParams("H264", 1280, 720, browser.TypeLacros),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:              "h264_sw",
 			Val:               peerconnection.MakeSWTestParams("H264", 1280, 720),
@@ -45,25 +51,35 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		}, {
 			Name:              "vp8_hw",
-			Val:               peerconnection.MakeHWTestParams("VP8", 1280, 720),
+			Val:               peerconnection.MakeHWTestParams("VP8", 1280, 720, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "vp8_hw_lacros",
+			Val:               peerconnection.MakeHWTestParams("VP8", 1280, 720, browser.TypeLacros),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:    "vp8_sw",
 			Val:     peerconnection.MakeSWTestParams("VP8", 1280, 720),
 			Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		}, {
 			Name:              "vp9_hw",
-			Val:               peerconnection.MakeHWTestParams("VP9", 1280, 720),
+			Val:               peerconnection.MakeHWTestParams("VP9", 1280, 720, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "vp9_hw_lacros",
+			Val:               peerconnection.MakeHWTestParams("VP9", 1280, 720, browser.TypeLacros),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:    "vp9_sw",
 			Val:     peerconnection.MakeSWTestParams("VP9", 1280, 720),
 			Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		}, {
 			Name:              "vp9_hw_1080p",
-			Val:               peerconnection.MakeHWTestParams("VP9", 1920, 1080),
+			Val:               peerconnection.MakeHWTestParams("VP9", 1920, 1080, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -158,7 +174,7 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 		}, {
 			Name:              "h264_180p_hw",
-			Val:               peerconnection.MakeHWTestParams("H264", 320, 180),
+			Val:               peerconnection.MakeHWTestParams("H264", 320, 180, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -168,7 +184,7 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			Name:              "vp8_180p_hw",
-			Val:               peerconnection.MakeHWTestParams("VP8", 320, 180),
+			Val:               peerconnection.MakeHWTestParams("VP8", 320, 180, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -178,7 +194,7 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			Name:              "vp9_180p_hw",
-			Val:               peerconnection.MakeHWTestParams("VP9", 320, 180),
+			Val:               peerconnection.MakeHWTestParams("VP9", 320, 180, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -188,9 +204,14 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			Name:              "h264_360p_hw",
-			Val:               peerconnection.MakeHWTestParams("H264", 640, 360),
+			Val:               peerconnection.MakeHWTestParams("H264", 640, 360, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "h264_360p_hw_lacros",
+			Val:               peerconnection.MakeHWTestParams("H264", 640, 360, browser.TypeLacros),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:              "h264_360p_sw",
 			Val:               peerconnection.MakeSWEncoderTestParams("H264", 640, 360),
@@ -198,9 +219,14 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			Name:              "vp8_360p_hw",
-			Val:               peerconnection.MakeHWTestParams("VP8", 640, 360),
+			Val:               peerconnection.MakeHWTestParams("VP8", 640, 360, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "vp8_360p_hw_lacros",
+			Val:               peerconnection.MakeHWTestParams("VP8", 640, 360, browser.TypeLacros),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:              "vp8_360p_sw",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP8", 640, 360),
@@ -208,9 +234,14 @@ func init() {
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			Name:              "vp9_360p_hw",
-			Val:               peerconnection.MakeHWTestParams("VP9", 640, 360),
+			Val:               peerconnection.MakeHWTestParams("VP9", 640, 360, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "vp9_360p_hw_lacros",
+			Val:               peerconnection.MakeHWTestParams("VP9", 640, 360, browser.TypeLacros),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name:              "vp9_360p_sw",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP9", 640, 360),
@@ -294,7 +325,13 @@ func init() {
 // RTCPeerConnectionPerf opens a WebRTC loopback page that loops a given capture stream to measure decode time and CPU usage.
 func RTCPeerConnectionPerf(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(peerconnection.RTCTestParams)
-	if err := peerconnection.RunRTCPeerConnectionPerf(ctx, s.FixtValue().(*chrome.Chrome), s.DataFileSystem(), s.OutDir(), testParams); err != nil {
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testParams.BrowserType)
+	if err != nil {
+		s.Fatal("Failed to initialize test: ", err)
+	}
+	defer lacros.CloseLacros(ctx, l)
+
+	if err := peerconnection.RunRTCPeerConnectionPerf(ctx, cs, cr, s.DataFileSystem(), s.OutDir(), testParams); err != nil {
 		s.Error("Failed to measure performance: ", err)
 	}
 }

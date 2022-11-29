@@ -9,7 +9,8 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/webrtc/peerconnection"
-	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -22,7 +23,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RTCPeerConnection,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that WebRTC RTCPeerConnection works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
 			"mcasas@chromium.org", // Test author.
@@ -40,6 +41,7 @@ func init() {
 				Profile:           "H264",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -51,6 +53,7 @@ func init() {
 				Profile:           "VP8",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
@@ -62,6 +65,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Simulcasts:        3,
+				BrowserType:       browser.TypeAsh,
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
@@ -72,6 +76,7 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
@@ -82,6 +87,7 @@ func init() {
 				Profile:           "H264",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -93,6 +99,7 @@ func init() {
 				Profile:           "H264",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
@@ -104,6 +111,7 @@ func init() {
 				Profile:           "VP8",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -115,6 +123,7 @@ func init() {
 				Profile:           "VP8",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
@@ -126,6 +135,7 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -137,6 +147,7 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
@@ -148,6 +159,7 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       1920,
 				StreamHeight:      1080,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -162,6 +174,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L1T2",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
@@ -176,6 +189,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L1T3",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
@@ -190,6 +204,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L3T3_KEY",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
@@ -205,6 +220,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L3T3_KEY",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
@@ -217,9 +233,22 @@ func init() {
 				Profile:           "H264",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name: "h264_enc_lacros",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "H264",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeLacros,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name: "h264_enc_cam",
 			Val: peerconnection.RTCTestParams{
@@ -228,6 +257,7 @@ func init() {
 				Profile:           "H264",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeCameraPerf",
@@ -239,9 +269,22 @@ func init() {
 				Profile:           "VP8",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name: "vp8_enc_lacros",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "VP8",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeLacros,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name: "vp8_enc_cam",
 			Val: peerconnection.RTCTestParams{
@@ -250,6 +293,7 @@ func init() {
 				Profile:           "VP8",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
 			Fixture:           "chromeCameraPerf",
@@ -262,6 +306,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Simulcasts:        3,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -274,6 +319,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				DisplayMediaType:  peerconnection.CaptureMonitor,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
@@ -287,6 +333,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				DisplayMediaType:  peerconnection.CaptureWindow,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeWindowCapture",
@@ -299,6 +346,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				DisplayMediaType:  peerconnection.CaptureTab,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeTabCapture",
@@ -313,6 +361,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L1T2",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
@@ -327,6 +376,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L1T3",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
@@ -338,9 +388,22 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name: "vp9_enc_lacros",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeLacros,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			Name: "vp9_enc_1080p",
 			Val: peerconnection.RTCTestParams{
@@ -349,6 +412,7 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       1920,
 				StreamHeight:      1080,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
@@ -360,6 +424,7 @@ func init() {
 				Profile:           "VP9",
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP9},
 			Fixture:           "chromeCameraPerf",
@@ -374,6 +439,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L1T2",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
@@ -388,6 +454,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L1T3",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
@@ -402,6 +469,7 @@ func init() {
 				StreamWidth:       defaultRTCStreamWidth,
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "L3T3_KEY",
+				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
@@ -413,8 +481,15 @@ func init() {
 // specified, verifies it uses accelerated encoding / decoding.
 func RTCPeerConnection(ctx context.Context, s *testing.State) {
 	params := s.Param().(peerconnection.RTCTestParams)
+
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.BrowserType)
+	if err != nil {
+		s.Fatal("Failed to initialize test: ", err)
+	}
+	defer lacros.CloseLacros(ctx, l)
+
 	if err := peerconnection.RunRTCPeerConnection(
-		ctx, s.FixtValue().(*chrome.Chrome), s.DataFileSystem(), params); err != nil {
+		ctx, cs, cr, s.DataFileSystem(), params); err != nil {
 		s.Error("Failed to run RunRTCPeerConnection: ", err)
 	}
 }

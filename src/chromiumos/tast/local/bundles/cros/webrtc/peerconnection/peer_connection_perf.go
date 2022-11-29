@@ -17,6 +17,8 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/graphics"
 	mediacpu "chromiumos/tast/local/media/cpu"
@@ -42,7 +44,7 @@ const (
 
 // makePerfRTCTestParams creates RTCTestParams for profile, width, height,
 // verifyDecoderMode and verifyEncoderMode.
-func makePerfRTCTestParams(profile string, width, height int, verifyDecoderMode VerifyDecoderMode, verifyEncoderMode VerifyEncoderMode) RTCTestParams {
+func makePerfRTCTestParams(profile string, width, height int, verifyDecoderMode VerifyDecoderMode, verifyEncoderMode VerifyEncoderMode, browserType browser.Type) RTCTestParams {
 	return RTCTestParams{
 		VerifyDecoderMode:  verifyDecoderMode,
 		VerifyEncoderMode:  verifyEncoderMode,
@@ -50,25 +52,26 @@ func makePerfRTCTestParams(profile string, width, height int, verifyDecoderMode 
 		StreamWidth:        width,
 		StreamHeight:       height,
 		VideoGridDimension: 1,
+		BrowserType:        browserType,
 	}
 }
 
 // MakeHWTestParams creates RTCTestParams for profile, width and height and with
 // HW Encoding/Decoding enabled.
-func MakeHWTestParams(profile string, width, height int) RTCTestParams {
-	return makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed)
+func MakeHWTestParams(profile string, width, height int, browserType browser.Type) RTCTestParams {
+	return makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed, browserType)
 }
 
 // MakeSWEncoderTestParams creates RTCTestParams for profile, width and height and
 // with HW Decoding and SW Encoding.
 func MakeSWEncoderTestParams(profile string, width, height int) RTCTestParams {
-	return makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifySWEncoderUsed)
+	return makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifySWEncoderUsed, browser.TypeAsh)
 }
 
 // MakeSWTestParams creates RTCTestParams for profile, width and height and
 // with HW Encoding/Decoding disabled.
 func MakeSWTestParams(profile string, width, height int) RTCTestParams {
-	return makePerfRTCTestParams(profile, width, height, VerifySWDecoderUsed, VerifySWEncoderUsed)
+	return makePerfRTCTestParams(profile, width, height, VerifySWDecoderUsed, VerifySWEncoderUsed, browser.TypeAsh)
 }
 
 // MakeSimulcastTestParams creates RTCTestParams for profile, width and height.
@@ -79,7 +82,7 @@ func MakeSimulcastTestParams(profile string, width, height int, hwEncs []bool) R
 		verifyEncoderMode = VerifyHWEncoderUsed
 	}
 
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, verifyEncoderMode)
+	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, verifyEncoderMode, browser.TypeAsh)
 	params.Svc = "" // L1T3?
 	params.Simulcasts = len(hwEncs)
 	params.SimulcastHWEncs = hwEncs
@@ -94,7 +97,7 @@ func MakeHWTestParamsWithSVC(profile string, width, height int, svc string, hwEn
 	if hwEnc {
 		verifyEncoderMode = VerifyHWEncoderUsed
 	}
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, verifyEncoderMode)
+	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, verifyEncoderMode, browser.TypeAsh)
 	params.Svc = svc
 	return params
 }
@@ -103,7 +106,7 @@ func MakeHWTestParamsWithSVC(profile string, width, height int, svc string, hwEn
 // height with HW Encoding/Decoding enabled and embedding the RTCPeerConnection
 // in a grid of videoGridDimension x videoGridDimension videoGridFiles.
 func MakeHWTestParamsWithVideoGrid(profile string, width, height, videoGridDimension int, videoGridFile string) RTCTestParams {
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed)
+	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed, browser.TypeAsh)
 	params.VideoGridDimension = videoGridDimension
 	params.VideoGridFile = videoGridFile
 	return params
@@ -112,7 +115,7 @@ func MakeHWTestParamsWithVideoGrid(profile string, width, height, videoGridDimen
 // MakeCaptureTestParams creates RTCTestParams for profile, width, height and displayMediaType
 // and with HW Encoding/Decoding enabled.
 func MakeCaptureTestParams(profile string, width, height int, displayMediaType DisplayMediaType) RTCTestParams {
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed)
+	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed, browser.TypeAsh)
 	params.DisplayMediaType = displayMediaType
 	return params
 }
@@ -287,7 +290,7 @@ func measureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, stream
 // statistics. If videoGridDimension is larger than 1, then the real time <video>
 // is plugged into a videoGridDimension x videoGridDimension grid with copies
 // of videoURL being played, similar to a mosaic video call.
-func peerConnectionPerf(ctx context.Context, cr *chrome.Chrome, loopbackURL, videoURL, outDir string, params RTCTestParams, p *perf.Values) error {
+func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, loopbackURL, videoURL, outDir string, params RTCTestParams, p *perf.Values) error {
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to become idle")
 	}
@@ -298,7 +301,7 @@ func peerConnectionPerf(ctx context.Context, cr *chrome.Chrome, loopbackURL, vid
 
 	// The page repeatedly plays a loopback video stream.
 	// To stop it, we defer conn.CloseTarget() to close the tab.
-	conn, err := cr.NewConn(shortCtx, loopbackURL)
+	conn, err := cs.NewConn(shortCtx, loopbackURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", loopbackURL)
 	}
@@ -374,7 +377,7 @@ func peerConnectionPerf(ctx context.Context, cr *chrome.Chrome, loopbackURL, vid
 
 // RunRTCPeerConnectionPerf starts a Chrome instance (with or without hardware video decoder and encoder),
 // opens a WebRTC loopback page and collects performance measures in p.
-func RunRTCPeerConnectionPerf(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSystem, outDir string, params RTCTestParams) error {
+func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, outDir string, params RTCTestParams) error {
 	// Time reserved for cleanup.
 	const cleanupTime = 5 * time.Second
 
@@ -397,7 +400,7 @@ func RunRTCPeerConnectionPerf(ctx context.Context, cr *chrome.Chrome, fileSystem
 		videoGridURL = server.URL + "/" + params.VideoGridFile
 	}
 	p := perf.NewValues()
-	if err := peerConnectionPerf(ctx, cr, loopbackURL, videoGridURL, outDir, params, p); err != nil {
+	if err := peerConnectionPerf(ctx, cs, cr, loopbackURL, videoGridURL, outDir, params, p); err != nil {
 		return err
 	}
 
