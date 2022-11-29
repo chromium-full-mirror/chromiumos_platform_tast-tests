@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that usb_bouncer works as intended",
 		SoftwareDeps: []string{"chrome", "usbguard"},
+		BugComponent: "b:1048474", // ChromeOS > Security > Usb_bouncer/Usbguard
 		Contacts: []string{
+			"chromeos-security@google.com",
 			"allenwebb@chromium.org",
 			"jorgelo@chromium.org",
-			"chromeos-security@google.com",
 		},
 		Params: []testing.Param{{
 			Name:      "check_seccomp",

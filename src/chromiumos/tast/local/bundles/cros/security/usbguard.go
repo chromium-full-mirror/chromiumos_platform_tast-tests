@@ -30,10 +30,11 @@ func init() {
 		Desc:         "Check that USBGuard-related feature flags work as intended",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "usbguard"},
+		BugComponent: "b:1048474", // ChromeOS > Security > Usb_bouncer/Usbguard
 		Contacts: []string{
+			"chromeos-security@google.com",
 			"allenwebb@chromium.org",
 			"jorgelo@chromium.org",
-			"chromeos-security@google.com",
 		},
 	})
 }
