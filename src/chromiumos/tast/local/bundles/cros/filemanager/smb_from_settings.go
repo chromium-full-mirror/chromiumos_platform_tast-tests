@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
@@ -73,13 +74,6 @@ func SMBFromSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
 	defer kb.Close()
-
-	// Launch the files application.
-	files, err := filesapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Launching the Files App failed: ", err)
-	}
-	defer files.Close(cleanupCtx)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	ui := uiauto.New(tconn)
@@ -91,9 +85,19 @@ func SMBFromSettings(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("add guestshare via OS Settings",
 		ui.LeftClick(addFileShareButton),
 		smb.AddFileShareAction(ui, kb, true /*=rememberPassword*/, smb.GuestShareName, "" /*=username*/, "" /*=password*/),
+	)(ctx); err != nil {
+		s.Fatal("Failed to add SMB share via OS Settings: ", err)
+	}
+
+	files, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
+	if err != nil {
+		s.Fatal("Failed to connect to existing Files app: ", err)
+	}
+
+	if err := uiauto.Combine("ensure smb test file is visible",
 		files.OpenPath(filesapp.FilesTitlePrefix+smb.GuestShareName, smb.GuestShareName),
 		files.WaitForFile(textFile),
 	)(ctx); err != nil {
-		s.Fatal("Failed to add SMB share via OS Settings: ", err)
+		s.Fatal("Failed to ensure SMB test file is visible: ", err)
 	}
 }
