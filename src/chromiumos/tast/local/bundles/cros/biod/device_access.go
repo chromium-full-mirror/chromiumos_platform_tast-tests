@@ -19,9 +19,11 @@ func init() {
 		Func: DeviceAccess,
 		Desc: "Checks that /dev/cros_fp can be accessed by the biod user",
 		Contacts: []string{
-			"hesling@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"hesling@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),

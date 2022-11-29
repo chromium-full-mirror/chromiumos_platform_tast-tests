@@ -17,9 +17,11 @@ func init() {
 		Func: CrosConfig,
 		Desc: "Checks that the fingerprint cros-config is reasonable",
 		Contacts: []string{
-			"hesling@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"hesling@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr: []string{"group:mainline", "informational"},
 		// We omit any dependencies on fingerprint so that we can ensure that
 		// the the fingerprint cros-config section is always reasonable.

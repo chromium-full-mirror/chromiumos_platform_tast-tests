@@ -20,10 +20,12 @@ func init() {
 		Func: BioCryptoInitSuccess,
 		Desc: "Checks that bio crypto init finishes gracefully without violations and that FPMCU seed is set",
 		Contacts: []string{
+			"chromeos-fingerprint@google.com",
 			"josienordrum@google.com", // Test Author
 			"hesling@chromium.org",
-			"chromeos-fingerprint@google.com",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),

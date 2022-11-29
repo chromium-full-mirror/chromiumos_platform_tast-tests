@@ -17,9 +17,11 @@ func init() {
 		Func: Running,
 		Desc: "Checks that biod is running on devices with fingerprint sensor",
 		Contacts: []string{
-			"tomhughes@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"tomhughes@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "group:fingerprint-cq"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),

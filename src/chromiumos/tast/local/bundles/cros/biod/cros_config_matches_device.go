@@ -22,9 +22,11 @@ func init() {
 		Func: CrosConfigMatchesDevice,
 		Desc: "Checks that fingerprint support in cros-config agrees with the device/driver",
 		Contacts: []string{
-			"hesling@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"hesling@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr: []string{"group:mainline", "informational"},
 		// Note that hwdep for fingerprint relies on cros-config.
 		// We omit any dependencies on hwdep fingerprint so that we can detect
