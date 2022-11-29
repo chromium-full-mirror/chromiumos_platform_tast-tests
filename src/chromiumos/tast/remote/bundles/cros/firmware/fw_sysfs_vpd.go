@@ -31,9 +31,13 @@ func generateRandomString() string {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     FWSysfsVPD,
-		Desc:     "Basic check for reading VPD data through sysfs",
-		Contacts: []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: FWSysfsVPD,
+		Desc: "Basic check for reading VPD data through sysfs",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/194910939): Add back to firmware_unstable once this test actually works.
 		Attr:         []string{},
 		Fixture:      fixture.DevMode,

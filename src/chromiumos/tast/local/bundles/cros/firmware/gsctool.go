@@ -20,11 +20,12 @@ func init() {
 		Func: GSCtool,
 		Desc: "Checks that gsctool can communicate with the GSC",
 		Contacts: []string{
-			"kmshelton@chromium.org",       // Test Author
-			"mruthven@chromium.org",        // GSC Firmware Developer
-			"chromeos-gsc@google.com",      // GSC Firmware Developers
-			"chromeos-firmware@google.com", // Remainder of CrOS Firmware Developers
+			"chromeos-faft@google.com",
+			"kmshelton@chromium.org",  // Test Author
+			"mruthven@chromium.org",   // GSC Firmware Developer
+			"chromeos-gsc@google.com", // GSC Firmware Developers
 		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"gsc"},
 		Attr:         []string{"group:mainline", "group:labqual"},
 	})

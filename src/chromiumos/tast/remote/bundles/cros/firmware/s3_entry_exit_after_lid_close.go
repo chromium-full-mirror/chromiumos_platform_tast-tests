@@ -31,9 +31,14 @@ type lidCloseTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         S3EntryExitAfterLidClose,
-		Desc:         "Verifies DUT S3 entry exit after Lid close and open",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Func: S3EntryExitAfterLidClose,
+		Desc: "Verifies DUT S3 entry exit after Lid close and open",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pathan.jilani@intel.com",
+			"intel-chrome-system-automation-team@intel.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService", "tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.

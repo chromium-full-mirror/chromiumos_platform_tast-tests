@@ -26,9 +26,13 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CR50ECReset,
-		Desc:         "Make sure 'cr50 ecrst' works as intended. EC_RST_L needs to be able to wake the EC from hibernate and hold the EC in reset",
-		Contacts:     []string{"pf@semihalf.com", "chromeos-firmware@google.com"},
+		Func: CR50ECReset,
+		Desc: "Make sure 'cr50 ecrst' works as intended. EC_RST_L needs to be able to wake the EC from hibernate and hold the EC in reset",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pf@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.DevMode,

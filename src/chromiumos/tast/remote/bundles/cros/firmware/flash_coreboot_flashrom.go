@@ -30,7 +30,12 @@ func init() {
 		Func:         FlashCorebootFlashrom,
 		Desc:         "Coreboot: Flash newer coreboot version using flashrom",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"ambalavanan.m.m@intel.com",
+			"intel-chrome-system-automation-team@intel.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"flashrom", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Vars:         []string{"firmware.CBPath"},

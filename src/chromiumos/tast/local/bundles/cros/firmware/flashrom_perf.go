@@ -26,10 +26,10 @@ func init() {
 		Func: FlashromPerf,
 		Desc: "Flashrom SPI flash E2E tests",
 		Contacts: []string{
-			"quasisec@chromium.org",        // Test Author
-			"quasisec@chromium.org",        // CrOS Flashrom Maintainer
-			"chromeos-firmware@google.com", // CrOS Firmware Developers
+			"chromeos-faft@google.com",
+			"quasisec@chromium.org",
 		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"flashrom"},

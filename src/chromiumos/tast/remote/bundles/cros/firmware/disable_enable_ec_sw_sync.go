@@ -38,9 +38,14 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisableEnableECSWSync,
-		Desc:         "Flash EC using flashrom and enable disable EC SW sync",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Func: DisableEnableECSWSync,
+		Desc: "Flash EC using flashrom and enable disable EC SW sync",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"ambalavanan.m.m@intel.com",
+			"intel-chrome-system-automation-team@intel.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},

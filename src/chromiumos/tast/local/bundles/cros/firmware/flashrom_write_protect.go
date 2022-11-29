@@ -15,9 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FlashromWriteProtect,
-		Desc:         "Checks that flashrom supports writeprotect commands on the device's flash IC",
-		Contacts:     []string{"nartemiev@google.com", "chromeos-firmware@google.com"},
+		Func: FlashromWriteProtect,
+		Desc: "Checks that flashrom supports writeprotect commands on the device's flash IC",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"nartemiev@google.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"flashrom", "chromeos_firmware"},
 		Timeout:      3 * time.Minute,

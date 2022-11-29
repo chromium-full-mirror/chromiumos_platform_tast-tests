@@ -27,9 +27,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DUTWakeS3UsingPowerButton,
-		Desc:         "Verifies waking DUT from S3 using power button press",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Func: DUTWakeS3UsingPowerButton,
+		Desc: "Verifies waking DUT from S3 using power button press",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"pathan.jilani@intel.com",
+			"intel-chrome-system-automation-team@intel.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Vars:         []string{"servo"},

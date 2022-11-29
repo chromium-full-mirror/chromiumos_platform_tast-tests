@@ -15,9 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ECADC,
-		Desc:     "Basic check for EC ADC temperature",
-		Contacts: []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: ECADC,
+		Desc: "Basic check for EC ADC temperature",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/194908031): Add back to firmware_unstable and firmware_bringup once this test actually works.
 		Attr:         []string{},
 		Fixture:      fixture.NormalMode,

@@ -19,9 +19,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     FWCorruptRecoveryCache,
-		Desc:     "Corrupt recovery cache and then check it's rebuilt",
-		Contacts: []string{"js@semihalf.com", "chromeos-firmware@google.com"},
+		Func: FWCorruptRecoveryCache,
+		Desc: "Corrupt recovery cache and then check it's rebuilt",
+		Contacts: []string{
+			"chromeos-faft@google.com",
+			"js@semihalf.com",
+		},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/194907751): Add back to firmware_unstable once this test actually works.
 		Attr:        []string{},
 		Fixture:     fixture.DevModeGBB,
