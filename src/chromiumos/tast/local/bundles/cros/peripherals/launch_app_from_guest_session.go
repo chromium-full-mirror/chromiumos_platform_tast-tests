@@ -31,6 +31,8 @@ func init() {
 			"zentaro@google.com",
 			"cros-peripherals@google.com",
 		},
+		// ChromeOS > Software > System Services > Peripherals
+		BugComponent: "b:1150827",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInGuest",
