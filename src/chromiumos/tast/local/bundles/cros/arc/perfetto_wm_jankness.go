@@ -23,6 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Detects jank while an ARC window changes its size",
 		Contacts:     []string{"yukashu@google.com", "sstan@google.com", "brpol@google.com", "arc-framework+tast@google.com"},
+		BugComponent: "b:537272",
 		// This test currently only work for ARC T, due to no ARC T board running tast
 		// test, not add this test to any group.
 		// TODO(sstan): Add it to mainline once ARC T launched.
