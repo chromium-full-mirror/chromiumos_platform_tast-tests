@@ -19,17 +19,22 @@ import (
 type codecAPI string
 
 const (
-	software codecAPI = "sw"
-	vaapi    codecAPI = "vaapi"
+	software     codecAPI = "sw"
+	vaapi        codecAPI = "vaapi"
+	v4l2Stateful codecAPI = "v4l2sf"
 	// TODO(b/251256531): Add other codecs and APIs.
 )
 
 func isHardwareAPI(api codecAPI) bool {
-	return api == vaapi
+	return api == vaapi || api == v4l2Stateful
 }
 
 func isSoftwareAPI(api codecAPI) bool {
 	return !isHardwareAPI(api)
+}
+
+func isMixedHardwareAPIs(encoder, decoder codecAPI) bool {
+	return isHardwareAPI(encoder) && isHardwareAPI(decoder) && decoder != encoder
 }
 
 func getEncoderBinaryAndParams(encoder codecAPI, codec string) (binary, paramGenerator string) {
@@ -48,6 +53,8 @@ func getEncoderBinaryAndParams(encoder codecAPI, codec string) (binary, paramGen
 		} else if codec == "h264" {
 			return "h264encode", "h264argsVAAPI"
 		}
+	case v4l2Stateful:
+		return "v4l2_stateful_encoder", "argsV4L2"
 	}
 	return
 }
@@ -71,6 +78,8 @@ func getDecoderBinaryAndParams(decoder codecAPI, codec string) (binary, paramGen
 		} else if codec == "h264" {
 			return decodeTestBinary, "h264decodeVAAPIargs"
 		}
+	case v4l2Stateful:
+		return "v4l2_stateful_decoder", "v4l2StatefulDecodeArgs"
 	}
 	return
 }
@@ -79,6 +88,9 @@ func getSoftwareDeps(codec string, encoder, decoder codecAPI) []string {
 	var deps []string
 	if decoder == vaapi || encoder == vaapi {
 		deps = append(deps, "vaapi")
+	}
+	if decoder == v4l2Stateful || encoder == v4l2Stateful {
+		deps = append(deps, "v4l2_codec")
 	}
 	if isHardwareAPI(encoder) {
 		if codec == "vp8" {
@@ -101,6 +113,13 @@ func getSoftwareDeps(codec string, encoder, decoder codecAPI) []string {
 	return deps
 }
 
+func getHardwareDeps(decoder codecAPI) string {
+	if decoder == v4l2Stateful {
+		return "hwdep.SupportsV4L2StatefulVideoDecoding()"
+	}
+	return ""
+}
+
 func TestPlatformInteropParamParams(t *testing.T) {
 	type paramData struct {
 		TestCaseName          string
@@ -112,6 +131,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 		DecoderCommand        string
 		DecoderArgsBuilder    string
 		SoftwareDeps          []string
+		HardwareDeps          string
 		Data                  []string
 	}
 	var params []paramData
@@ -130,13 +150,17 @@ func TestPlatformInteropParamParams(t *testing.T) {
 	}}
 
 	var codecs = []string{"vp8", "vp9", "h264"}
-	var encoders = []codecAPI{software, vaapi}
-	var decoders = []codecAPI{software, vaapi}
+	var encoders = []codecAPI{software, vaapi, v4l2Stateful}
+	var decoders = []codecAPI{software, vaapi, v4l2Stateful}
 	for _, codec := range codecs {
 		for _, encoder := range encoders {
 			for _, decoder := range decoders {
 				if isSoftwareAPI(encoder) && isSoftwareAPI(decoder) {
 					// No need to verify interoperability of the SW reference implementation.
+					continue
+				}
+				if isMixedHardwareAPIs(decoder, encoder) {
+					// Skip mixing HW APIs.
 					continue
 				}
 
@@ -153,6 +177,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 						DecoderCommand:        decoderBinary,
 						DecoderArgsBuilder:    decoderParamsGenerator,
 						SoftwareDeps:          getSoftwareDeps(codec, encoder, decoder),
+						HardwareDeps:          getHardwareDeps(decoder),
 						Data:                  []string{sourceFile.Name},
 					}
 					params = append(params, param)
@@ -175,7 +200,10 @@ func TestPlatformInteropParamParams(t *testing.T) {
 		ExtraData: {{ .Data | fmt }},
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
- 		{{ end }}
+		{{ end }}
+		{{ if .HardwareDeps }}
+		ExtraHardwareDeps: hwdep.D({{ .HardwareDeps }}),
+		{{ end }}
 	},
 	{{ end }}`, params)
 	genparams.Ensure(t, "platform_interop.go", code)

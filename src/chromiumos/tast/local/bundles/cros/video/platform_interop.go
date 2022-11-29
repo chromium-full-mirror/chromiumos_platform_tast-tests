@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 // platformInteropParam is used to describe the config used to run each test.
@@ -57,6 +58,21 @@ func init() {
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp8_1080_30"},
 			},
 			{
+				Name: "vp8_180_sw_to_v4l2sf",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "vpxenc",
+					encoderCommandBuilder: argsVpxenc,
+					decoderCommand:        "v4l2_stateful_decoder",
+					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_vp8_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+			},
+			{
 				Name: "vp8_180_vaapi_to_sw",
 				Val: platformInteropParam{
 					filename:              "gipsrestat-320x180.vp9.webm",
@@ -85,6 +101,35 @@ func init() {
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
 			},
 			{
+				Name: "vp8_180_v4l2sf_to_sw",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: argsV4L2,
+					decoderCommand:        "vpxdec",
+					decoderArgsBuilder:    vpxDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp8_1080_30"},
+			},
+			{
+				Name: "vp8_180_v4l2sf_to_v4l2sf",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: argsV4L2,
+					decoderCommand:        "v4l2_stateful_decoder",
+					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+			},
+			{
 				Name: "vp9_180_sw_to_vaapi",
 				Val: platformInteropParam{
 					filename:              "gipsrestat-320x180.vp9.webm",
@@ -97,6 +142,21 @@ func init() {
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
+			},
+			{
+				Name: "vp9_180_sw_to_v4l2sf",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "vpxenc",
+					encoderCommandBuilder: argsVpxenc,
+					decoderCommand:        "v4l2_stateful_decoder",
+					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_vp9_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			},
 			{
 				Name: "vp9_180_vaapi_to_sw",
@@ -127,6 +187,35 @@ func init() {
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
 			},
 			{
+				Name: "vp9_180_v4l2sf_to_sw",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: argsV4L2,
+					decoderCommand:        "vpxdec",
+					decoderArgsBuilder:    vpxDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp9_1080_30"},
+			},
+			{
+				Name: "vp9_180_v4l2sf_to_v4l2sf",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: argsV4L2,
+					decoderCommand:        "v4l2_stateful_decoder",
+					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+			},
+			{
 				Name: "h264_180_sw_to_vaapi",
 				Val: platformInteropParam{
 					filename:              "gipsrestat-320x180.vp9.webm",
@@ -139,6 +228,21 @@ func init() {
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_h264_1080_30"},
+			},
+			{
+				Name: "h264_180_sw_to_v4l2sf",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "openh264enc",
+					encoderCommandBuilder: argsOpenh264enc,
+					decoderCommand:        "v4l2_stateful_decoder",
+					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_h264_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			},
 			{
 				Name: "h264_180_vaapi_to_sw",
@@ -167,6 +271,35 @@ func init() {
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
+			},
+			{
+				Name: "h264_180_v4l2sf_to_sw",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: argsV4L2,
+					decoderCommand:        "openh264dec",
+					decoderArgsBuilder:    openh264DecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_h264_1080_30"},
+			},
+			{
+				Name: "h264_180_v4l2sf_to_v4l2sf",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: argsV4L2,
+					decoderCommand:        "v4l2_stateful_decoder",
+					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			},
 		},
 	})
