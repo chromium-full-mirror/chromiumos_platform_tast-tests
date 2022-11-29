@@ -38,7 +38,7 @@ func init() {
 		},
 		// TODO(crbug/1380920): Remove when this bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel(
-			[]string{"rusty", "steelix", "tentacruel", "lazor", "pompom"}...)),
+			[]string{"rusty", "steelix", "tentacruel", "lazor", "pompom", "limozeen", "pazquel"}...)),
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
