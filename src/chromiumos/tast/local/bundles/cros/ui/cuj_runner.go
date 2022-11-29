@@ -18,7 +18,11 @@ func init() {
 		Func:         CUJRunner,
 		LacrosStatus: testing.LacrosVariantUnneeded, // disabled experimental test, review this again when re-enabled
 		Desc:         "Run a CUJ json config and measure performance",
-		Contacts:     []string{"xiyuan@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome", "arc"},
 		Fixture:      "loggedInToCUJUser",
 		Timeout:      30 * time.Minute,

@@ -43,7 +43,11 @@ func init() {
 		Func:         VideoCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of a critical user journey for YouTube web",
-		Contacts:     []string{"xiyuan@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		// TODO(b/234063928): Remove crosbolt attributes when VideoCUJ runs stably on suite cuj.
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "arc"},

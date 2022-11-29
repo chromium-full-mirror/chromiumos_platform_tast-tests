@@ -43,7 +43,12 @@ func init() {
 		Func:         IdlePerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the CPU usage while the desktop is idle",
-		Contacts:     []string{"xiyuan@chromium.org", "yichenz@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+			"yichenz@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},

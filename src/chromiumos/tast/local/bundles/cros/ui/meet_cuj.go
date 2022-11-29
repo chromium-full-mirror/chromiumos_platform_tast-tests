@@ -84,7 +84,11 @@ func init() {
 		Func:         MeetCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of critical user journey for Google Meet",
-		Contacts:     []string{"yichenz@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"yichenz@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		HardwareDeps: hwdep.D(
 			hwdep.SkipOnModel("kaisa"),
 			hwdep.SkipOnModel("kench"),

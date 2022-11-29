@@ -30,7 +30,11 @@ func init() {
 		Func:         WindowStateTransitionsCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of critical user journey for window state transitions",
-		Contacts:     []string{"amusbach@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"amusbach@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"animation.html", "animation.js", cujrecorder.SystemTraceConfigFile},

@@ -33,7 +33,11 @@ func init() {
 		Func:         StadiaGameplayCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of critical user journey for game playing on Stadia",
-		Contacts:     []string{"yichenz@chromium.org"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"yichenz@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		// TODO(http://crbug/1144356): Test is disabled until it can be fixed
 		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},

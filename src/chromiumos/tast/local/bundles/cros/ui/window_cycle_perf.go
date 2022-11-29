@@ -31,7 +31,12 @@ func init() {
 		Func:         WindowCyclePerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the animation smoothness of window cycle animations when alt + tabbing",
-		Contacts:     []string{"yjliu@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+			"chromeos-wmp@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		// TODO(b/255632291): Remove crosbolt after M111.
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:cuj"},
 		SoftwareDeps: []string{"chrome"},

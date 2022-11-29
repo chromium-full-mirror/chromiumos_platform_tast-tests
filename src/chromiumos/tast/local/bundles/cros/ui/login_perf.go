@@ -51,10 +51,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Measures performance and UI smoothness of ChromeOS login",
 		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"chromeos-wmp@google.com",
 			"alemate@google.com",
 			"oshima@google.com",
-			"chromeos-wmp@google.com",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",

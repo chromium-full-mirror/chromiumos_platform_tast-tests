@@ -30,7 +30,13 @@ func init() {
 		Func:         OverviewPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of entering/exiting the overview mode",
-		Contacts:     []string{"amusbach@chromium.org", "oshima@chromium.org", "chromeos-perf@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"amusbach@chromium.org",
+			"oshima@chromium.org",
+			"xiyuan@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		// TODO(b/255632291): Remove crosbolt after M111.
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:cuj"},
 		SoftwareDeps: []string{"chrome"},

@@ -32,7 +32,11 @@ func init() {
 		Func:         ExampleCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Example of using the CUJ Recorder",
-		Contacts:     []string{"ramsaroop@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"ramsaroop@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},

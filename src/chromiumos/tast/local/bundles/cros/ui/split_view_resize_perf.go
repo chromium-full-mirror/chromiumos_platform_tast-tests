@@ -43,7 +43,12 @@ func init() {
 		Func:         SplitViewResizePerf,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Measures smoothness of resizing split view windows",
-		Contacts:     []string{"mukai@chromium.org", "sammiequon@chromium.org", "amusbach@chromium.org", "chromeos-perf@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"sammiequon@chromium.org",
+			"amusbach@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

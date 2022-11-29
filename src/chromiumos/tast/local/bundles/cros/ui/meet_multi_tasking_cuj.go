@@ -37,7 +37,11 @@ func init() {
 		Func:         MeetMultiTaskingCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the total performance of multi-tasking with video conferencing CUJ",
-		Contacts:     []string{"yichenz@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"yichenz@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
