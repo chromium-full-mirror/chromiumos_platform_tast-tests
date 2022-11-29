@@ -39,8 +39,8 @@ type PeerConnection struct {
 
 // Statistic represents an entry in the Stats field of PeerConnection.
 type Statistic struct {
-	StartTime TimeWithNanoseconds       `json:"startTime"`
-	EndTime   TimeWithNanoseconds       `json:"endTime"`
+	StartTime string                    `json:"startTime"`
+	EndTime   string                    `json:"endTime"`
 	StatsType string                    `json:"statsType"`
 	Values    SliceWithJSONQuotedString `json:"values"`
 }
@@ -49,7 +49,7 @@ type Statistic struct {
 // timestamp is unmarshaled based on the assumption that the dump was
 // downloaded from chrome://webrtc-internals in the local time zone.
 type Update struct {
-	Time  TimeWithJSLocaleString `json:"time"`
-	Type  string                 `json:"type"`
-	Value string                 `json:"value"`
+	Time  string `json:"time"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
