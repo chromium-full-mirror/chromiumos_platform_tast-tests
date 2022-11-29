@@ -101,9 +101,10 @@ func init() {
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file copy to USB restriction",
 		Timeout:      20 * time.Minute,
 		Contacts: []string{
-			"poromov@google.com",
 			"chromeos-dlp@google.com",
+			"poromov@google.com",
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:mainline",

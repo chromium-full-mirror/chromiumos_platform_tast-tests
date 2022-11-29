@@ -36,11 +36,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction by drag and drop",
 		Contacts: []string{
-			"ayaelattar@google.com",
 			"chromeos-dlp@google.com",
+			"ayaelattar@google.com",
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,

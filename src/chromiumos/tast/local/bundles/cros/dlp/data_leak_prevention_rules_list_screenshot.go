@@ -105,11 +105,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with screenshot restrictions",
 		Contacts: []string{
-			"ayaelattar@google.com",
 			"chromeos-dlp@google.com",
+			"ayaelattar@google.com",
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",

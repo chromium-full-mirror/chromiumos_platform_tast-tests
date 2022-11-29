@@ -38,8 +38,9 @@ func init() {
 		Contacts: []string{
 			"chromeos-dlp@google.com", // Feature owners
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
 			Name:    "ash",

@@ -34,11 +34,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with screen sharing restrictions while sharing a window",
 		Contacts: []string{
-			"ayaelattar@google.com",
 			"chromeos-dlp@google.com",
+			"ayaelattar@google.com",
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",

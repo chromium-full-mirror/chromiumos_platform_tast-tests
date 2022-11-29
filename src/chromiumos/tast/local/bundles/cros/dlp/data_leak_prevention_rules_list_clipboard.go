@@ -46,12 +46,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard warning/block restriction by copy and paste",
 		Contacts: []string{
+			"chromeos-dlp@google.com",
 			"ayaelattar@google.com",
 			"accorsi@google.com",
-			"chromeos-dlp@google.com",
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",

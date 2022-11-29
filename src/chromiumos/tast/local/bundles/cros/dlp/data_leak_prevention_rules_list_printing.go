@@ -105,11 +105,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with printing restrictions",
 		Contacts: []string{
-			"ayaelattar@google.com",
 			"chromeos-dlp@google.com",
+			"ayaelattar@google.com",
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Block users from sharing confidential information (printing): COM_DATPROT_CUJ3_TASK1_WF1.

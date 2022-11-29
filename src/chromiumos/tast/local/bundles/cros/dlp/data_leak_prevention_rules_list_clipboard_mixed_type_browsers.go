@@ -38,9 +38,10 @@ func init() {
 		Contacts: []string{
 			"chromeos-dlp@google.com", // Feature owners
 		},
+		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		Fixture:      "lacrosPrimaryPolicyLoggedIn", // TODO(crbug.com/1360034): Rewrite test to use lacrosPolicyLoggedIn fixture.
 		Timeout:      3 * time.Minute,
