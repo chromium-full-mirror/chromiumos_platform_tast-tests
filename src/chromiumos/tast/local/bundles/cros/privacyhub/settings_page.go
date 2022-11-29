@@ -24,7 +24,9 @@ func init() {
 		Func:         SettingsPage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that PrivacyHub settings page exists and that it contains the expected elements",
-		Contacts:     []string{"janlanik@google.com", "privacy-hub@google.com"},
+		Contacts:     []string{"janlanik@google.com", "chromeos-privacyhub@google.com"},
+		// ChromeOS > Privacy > ChromeOS Privacy Feature Development.
+		BugComponent: "b:1178745",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},

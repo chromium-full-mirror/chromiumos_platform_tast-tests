@@ -30,7 +30,9 @@ func init() {
 		Func:         CameraSwitch,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that PrivacyHub camera toggle switches off the camera. Should be used only on VMs where the vivid daemon ensures that there is some colorful pattern present in the camera feed. Also this test assumes default vm resolution when cropping the image, and hence different resolution might lead to spurious results",
-		Contacts:     []string{"janlanik@google.com", "privacy-hub@google.com"},
+		Contacts:     []string{"janlanik@google.com", "chromeos-privacyhub@google.com"},
+		// ChromeOS > Privacy > ChromeOS Privacy Feature Development.
+		BugComponent: "b:1178745",
 		SoftwareDeps: []string{"chrome", "qemu"},
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
