@@ -25,6 +25,7 @@ func init() {
 			"crisguerrero@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1031231",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{

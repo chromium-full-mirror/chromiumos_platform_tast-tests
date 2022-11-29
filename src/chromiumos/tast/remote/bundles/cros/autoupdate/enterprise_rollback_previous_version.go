@@ -29,6 +29,7 @@ func init() {
 			"crisguerrero@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1031231",
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
