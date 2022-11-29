@@ -27,6 +27,8 @@ func init() {
 			"michaelcheco@google.com",
 			"cros-peripherals@google.com",
 		},
+		// ChromeOS > Software > System Services > Peripherals > Keyboard
+		BugComponent: "b:1131926",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

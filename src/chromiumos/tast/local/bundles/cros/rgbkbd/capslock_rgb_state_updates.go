@@ -28,6 +28,8 @@ func init() {
 			"jimmyxgong@chromium.org",
 			"cros-peripherals@google.com",
 		},
+		// ChromeOS > Software > System Services > Peripherals > Keyboard
+		BugComponent: "b:1131926",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
