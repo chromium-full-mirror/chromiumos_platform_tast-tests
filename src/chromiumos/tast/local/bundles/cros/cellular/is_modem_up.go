@@ -1,0 +1,30 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cellular
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         IsModemUp,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that a modem is available",
+		Contacts:     []string{"chromeos-cellular-team@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Fixture:      "cellular",
+		Timeout:      3 * time.Minute,
+	})
+}
+
+// IsModemUp checks if the fixture and pre test executed successfully.
+func IsModemUp(ctx context.Context, s *testing.State) {
+	// The fixture checks if a modem is up during pre test.
+}
