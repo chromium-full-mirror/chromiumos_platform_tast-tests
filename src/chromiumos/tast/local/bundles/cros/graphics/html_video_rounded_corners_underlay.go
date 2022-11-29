@@ -41,9 +41,10 @@ func init() {
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			// TODO(b/254290678): Remove bob, dru, dumo, and kevin when the test can pass on them.
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
 			// TODO(b/255636769): Remove rusty and steelix when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("cave", "chell", "rusty", "steelix")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bob", "cave", "chell", "dru", "dumo", "kevin", "rusty", "steelix")),
 			Fixture:           "chromeGraphicsLacros",
 			Val:               browser.TypeLacros,
 		}, {
@@ -56,9 +57,10 @@ func init() {
 		}, {
 			Name:              "failing_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			// TODO(b/254290678): Remove bob, dru, dumo, and kevin when the test can pass on them.
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
 			// TODO(b/255636769): Remove rusty and steelix when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell", "rusty", "steelix")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("bob", "cave", "chell", "dru", "dumo", "kevin", "rusty", "steelix")),
 			Fixture:           "chromeGraphicsLacros",
 			Val:               browser.TypeLacros,
 		}},
