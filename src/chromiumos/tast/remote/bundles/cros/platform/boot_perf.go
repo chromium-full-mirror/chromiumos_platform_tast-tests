@@ -189,7 +189,7 @@ func ensureChromeLogin(ctx context.Context, s *testing.State, cl *rpc.Client) er
 // Returns true if extra debug info is collected or false if the DUT doesn't have extra debug info, or this function fails to collect the debug info.
 func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) {
 	d := s.DUT()
-	if err := d.Conn().CommandContext(ctx, "/usr/bin/test", "-e", "/var/lib/ureadhead/pack.corrupt").Run(); err == nil {
+	if err := d.Conn().CommandContext(ctx, "/usr/bin/test", "-e", "/var/lib/ureadahead/pack.corrupt").Run(); err != nil {
 		return false, nil
 	}
 
