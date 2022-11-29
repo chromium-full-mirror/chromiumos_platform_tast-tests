@@ -31,8 +31,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of the UserAvatarImage policy when the PersonalizationHub flag is enabled: verify that the user cannot change the device account image when the policy is set, otherwise, the user can change it",
 		Contacts: []string{
-			"pzliu@google.com", // Test author
+			"assistive-eng@google.com",
+			"pzliu@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
