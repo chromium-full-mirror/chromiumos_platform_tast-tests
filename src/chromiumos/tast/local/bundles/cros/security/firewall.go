@@ -19,9 +19,10 @@ func init() {
 		Func: Firewall,
 		Desc: "Checks iptables and ip6tables firewall rules",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"firewall"},
 		Attr:         []string{"group:mainline"},
 	})
