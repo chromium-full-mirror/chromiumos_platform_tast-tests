@@ -136,9 +136,10 @@ const (
 
 // Modem Sar DBus methods
 const (
-	ModemSAREnable = "Enable"
-	SARState       = "State"
-	SARPowerLevel  = "PowerLevel"
+	ModemSAREnable        = "Enable"
+	ModemSARSetPowerLevel = "SetPowerLevel"
+	ModemSARState         = "State"
+	ModemSARPowerLevel    = "PowerLevel"
 )
 
 // Default SIM pin
