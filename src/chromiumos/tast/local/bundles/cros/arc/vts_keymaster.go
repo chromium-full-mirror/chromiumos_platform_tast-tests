@@ -24,7 +24,9 @@ func init() {
 		Func:         VTSKeymaster,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the Android VTS module VtsHalKeymasterV3_0Target",
-		Contacts:     []string{"edman@chromium.org", "arc-eng-muc@google.com"},
+		Contacts:     []string{"arc-commercial@google.com", "vraheja@chromium.org"},
+		// ChromeOS > Software > ARC++ > Commercial > Secret Management
+		BugComponent: "b:1284082",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
@@ -161,11 +163,14 @@ func listTests(ctx context.Context, a *arc.ARC, exec string) ([]string, error) {
 // list of test names. The format of output should be:
 //
 // TestSuiteA.
-//   TestCase1
-//   TestCase2
+//
+//	TestCase1
+//	TestCase2
+//
 // TestSuiteB.
-//   TestCase3
-//   TestCase4
+//
+//	TestCase3
+//	TestCase4
 //
 // etc. The each returned test name is formatted into "TestSuite.TestCase".
 func parseTestList(content string) []string {
