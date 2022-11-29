@@ -20,7 +20,7 @@ func init() {
 		Func:         ShillInitScriptsLoginMultiProfile,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that shill init login script perform as expected",
-		Contacts:     []string{"hugobenichi@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "hugobenichi@google.com"},
 		BugComponent: "b:156085",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:network"},

@@ -47,7 +47,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TrafficCounters,
 		Desc:         "Verify patchpanel traffic counters",
-		Contacts:     []string{"garrick@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "garrick@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,

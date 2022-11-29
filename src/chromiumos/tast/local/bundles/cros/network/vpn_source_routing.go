@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNSourceRouting,
 		Desc:         "Verify traffic from different sources is routed to the correct interface",
-		Contacts:     []string{"garrick@google.com", "cros-networking@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "garrick@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"ikev2"},
