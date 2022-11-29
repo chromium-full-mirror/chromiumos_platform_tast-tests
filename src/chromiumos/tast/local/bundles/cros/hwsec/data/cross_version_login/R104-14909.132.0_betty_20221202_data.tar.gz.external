@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/hwsec/cross_version_login/R104-14909.132.0_betty_20221202_data.tar.gz",
+  "size": 6934943,
+  "sha256sum": "243c704e283d6f078c6e2accbcaa52283840ff84e32c09b7ba5d256309e50149"
+}

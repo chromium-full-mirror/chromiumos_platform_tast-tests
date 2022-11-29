@@ -95,6 +95,10 @@ func init() {
 				"R100-14526.122.0-custombuild20220718_betty_20220719",
 				"R101-14588.134.0-custombuild20220718_betty_20220719",
 				"R102-14695.114.0-custombuild20220718_betty_20220719",
+				"R104-14909.132.0_betty_20221202",
+				"R105-14989.107.0_betty_20221202",
+				"R106-15054.114.0_betty_20221129",
+				"R107-15117.112.0_betty_20221129",
 			},
 			ExtraData: []string{
 				"cross_version_login/R89-13729.85.0-custombuild20220715_betty_20220719_config.json",
@@ -121,6 +125,14 @@ func init() {
 				"cross_version_login/R101-14588.134.0-custombuild20220718_betty_20220719_data.tar.gz",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_betty_20220719_config.json",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_betty_20220719_data.tar.gz",
+				"cross_version_login/R104-14909.132.0_betty_20221202_config.json",
+				"cross_version_login/R104-14909.132.0_betty_20221202_data.tar.gz",
+				"cross_version_login/R105-14989.107.0_betty_20221202_config.json",
+				"cross_version_login/R105-14989.107.0_betty_20221202_data.tar.gz",
+				"cross_version_login/R106-15054.114.0_betty_20221129_config.json",
+				"cross_version_login/R106-15054.114.0_betty_20221129_data.tar.gz",
+				"cross_version_login/R107-15117.112.0_betty_20221129_config.json",
+				"cross_version_login/R107-15117.112.0_betty_20221129_data.tar.gz",
 			},
 		}, {
 			// This test contains a minimal set of "interesting" versions to be tested
@@ -154,6 +166,10 @@ func init() {
 				"R100-14526.122.0-custombuild20220718_reven-vmtest_20220719",
 				"R101-14588.134.0-custombuild20220718_reven-vmtest_20220719",
 				"R102-14695.114.0-custombuild20220718_reven-vmtest_20220719",
+				"R104-14909.132.0_reven-vmtest_20221202",
+				"R105-14989.108.0_reven-vmtest_20221202",
+				"R106-15054.114.0_reven-vmtest_20221129",
+				"R107-15117.112.0_reven-vmtest_20221129",
 			},
 			ExtraData: []string{
 				"cross_version_login/R97-14324.81.0-custombuild20220716_reven-vmtest_20220719_config.json",
@@ -170,6 +186,14 @@ func init() {
 				"cross_version_login/R101-14588.134.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_reven-vmtest_20220719_config.json",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
+				"cross_version_login/R104-14909.132.0_reven-vmtest_20221202_config.json",
+				"cross_version_login/R104-14909.132.0_reven-vmtest_20221202_data.tar.gz",
+				"cross_version_login/R105-14989.108.0_reven-vmtest_20221202_config.json",
+				"cross_version_login/R105-14989.108.0_reven-vmtest_20221202_data.tar.gz",
+				"cross_version_login/R106-15054.114.0_reven-vmtest_20221129_config.json",
+				"cross_version_login/R106-15054.114.0_reven-vmtest_20221129_data.tar.gz",
+				"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_config.json",
+				"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_data.tar.gz",
 			},
 		}, {
 			// To test data migration from the current device to itself. This is for verifying the functionality of hwsec.CrossVersionLogin and hwsec.PrepareCrossVersionLoginData.
