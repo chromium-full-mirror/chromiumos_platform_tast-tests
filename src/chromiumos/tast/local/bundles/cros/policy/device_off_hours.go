@@ -25,9 +25,11 @@ func init() {
 		Func:         DeviceOffHours,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DeviceOffHours policy",
+		// ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
+		BugComponent: "b:1111617",
 		Contacts: []string{
-			"rbock@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"rbock@google.com", // Test author
 		},
 		Attr:         []string{"group:commercial_limited"},
 		SoftwareDeps: []string{"chrome"},
