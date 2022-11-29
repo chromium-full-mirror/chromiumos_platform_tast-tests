@@ -28,16 +28,16 @@ func init() {
 	})
 }
 
-// in alphabetical order
-var chipSizeMap = map[string][]int{
-	"it83xx":          []int{512}, // (512 * 1024) bytes
-	"ite_spi_ccd_i2c": []int{1024},
-	"it8xxx2":         []int{1024},
-	"mec1322":         []int{512, 256},
-	"npcx_int_spi":    []int{512},
-	"npcx_spi":        []int{512},
-	"npcx_uut":        []int{512},
-	"stm32":           []int{256},
+// chipSizeMap is a map of chipName to size of flash in KiB. Please keep items alphabetized.
+var chipSizeMap = map[string]int{
+	"it81302":         1024,
+	"it8320":          512,
+	"ite_spi_ccd_i2c": 1024,
+	"mec1322":         512,
+	"npcx_int_spi":    512,
+	"npcx_spi":        512,
+	"npcx_uut":        512,
+	"stm32":           256,
 }
 
 func ECSize(ctx context.Context, s *testing.State) {
@@ -46,32 +46,28 @@ func ECSize(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	sizeInBytes, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).FlashSize(ctx)
+	ectool := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
+
+	sizeInBytes, err := ectool.FlashSize(ctx)
 	if err != nil {
 		s.Fatal("Failed to get flashinfo from ectool: ", err)
 	}
 	size := sizeInBytes / 1024
 
-	chip, err := h.Servo.GetECChip(ctx)
+	chip, err := ectool.ChipInfo(ctx)
 	if err != nil {
 		s.Fatal("Failed to get ec chip: ", err)
 	}
 
 	s.Logf("Flash size: %d KB", size)
-	s.Log("EC Chip: ", chip)
+	s.Logf("EC Chip name: %s, vendor: %s, revision: %s", chip.Name, chip.Vendor, chip.Revision)
 
-	expSizes, ok := chipSizeMap[chip]
+	expSize, ok := chipSizeMap[chip.Name]
 	if !ok {
-		s.Fatalf("Failed to find ec chip %v in chipSizeMap", chip)
+		s.Fatalf("Failed to find ec chip %v in chipSizeMap", chip.Name)
 	}
-	found := false
-	for _, s := range expSizes {
-		if s == size {
-			found = true
-			break
-		}
-	}
-	if !found {
-		s.Fatalf("Failed to verify EC size, expected one of %v, got %d KB for chip %v", expSizes, size, chip)
+
+	if expSize != size {
+		s.Fatalf("Failed to verify EC size, expected size %d, got %d KB for chip %v", expSize, size, chip)
 	}
 }

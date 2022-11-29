@@ -51,6 +51,7 @@ var (
 	reECHash        = regexp.MustCompile(`hash:\s*(\S+)\s*`)
 	reTabletModeAng = regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
 	reFlashSize     = regexp.MustCompile(`FlashSize\s*(\d+)`)
+	reChipInfo      = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S+)`)
 	reI2CLookup     = regexp.MustCompile(`Bus: I2C; Port: (\S+); Address: (\S+)`)
 )
 
@@ -135,7 +136,7 @@ func (ec *ECTool) ForceTabletModeAngle(ctx context.Context, tabletModeAngle, hys
 	return nil
 }
 
-// FlashSize retireves the flashsize in bytes from the ectool flashinfo command.
+// FlashSize retrieves the flashsize in bytes from the ectool flashinfo command.
 func (ec *ECTool) FlashSize(ctx context.Context) (int, error) {
 	out, err := ec.Command(ctx, "flashinfo").Output()
 	if err != nil {
@@ -146,6 +147,30 @@ func (ec *ECTool) FlashSize(ctx context.Context) (int, error) {
 		return 0, errors.Errorf("failed to match regexp %s in ectool flashinfo output: %s", reFlashSize, string(out))
 	}
 	return strconv.Atoi(string(match[1]))
+}
+
+type chipinfo struct {
+	Vendor   string
+	Name     string
+	Revision string
+}
+
+// ChipInfo retrieves the chipinfo from the ectool chipinfo command.
+func (ec *ECTool) ChipInfo(ctx context.Context) (*chipinfo, error) {
+	out, err := ec.Command(ctx, "chipinfo").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get chipinfo output")
+	}
+	match := reChipInfo.FindSubmatch(out)
+	if match == nil {
+		return nil, errors.Errorf("failed to match regexp %s in ectool chipinfo output: %s", reChipInfo, string(out))
+	}
+	info := chipinfo{
+		Vendor:   string(match[1]),
+		Name:     string(match[2]),
+		Revision: string(match[3]),
+	}
+	return &info, nil
 }
 
 // GpioName type holds commands for 'ectool gpioget'.
