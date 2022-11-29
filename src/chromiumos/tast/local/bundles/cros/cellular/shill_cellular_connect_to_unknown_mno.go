@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/mmconst"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
@@ -77,15 +78,24 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	if _, err = helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
+	cleanupCtx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
+	defer cancel()
+	defer func(ctx context.Context) {
+		// Restart shill after deleting |modbOverrideProto|.
+		if errs := helper.ResetShill(ctx); errs != nil {
+			s.Fatal("Failed to reset shill: ", errs)
+		}
+	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {
 		s.Fatal("Failed to set service providers override: ", err)
 	}
 	defer deferCleanUp()
+
 	errs := helper.ResetShill(ctx)
 	if errs != nil {
-		s.Fatal("Failed to reset shill: ", err)
+		s.Fatal("Failed to reset shill: ", errs)
 	}
 
 	if _, err = helper.Enable(ctx); err != nil {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
@@ -102,6 +103,14 @@ func ShillCellularApn(ctx context.Context, s *testing.State) {
 	if _, err = helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
+	cleanupCtx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
+	defer cancel()
+	defer func(ctx context.Context) {
+		// Restart shill after deleting |modbOverrideProto|.
+		if errs := helper.ResetShill(ctx); errs != nil {
+			s.Fatal("Failed to reset shill: ", errs)
+		}
+	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
 	if err != nil {
@@ -110,7 +119,7 @@ func ShillCellularApn(ctx context.Context, s *testing.State) {
 	defer deferCleanUp()
 	errs := helper.ResetShill(ctx)
 	if errs != nil {
-		s.Fatal("Failed to reset shill: ", err)
+		s.Fatal("Failed to reset shill: ", errs)
 	}
 	// b/253665498: Reattach gets triggered on this test because |ResetShill| clears the default
 	// profile and Cellular.UseAttachAPN gets erased.
