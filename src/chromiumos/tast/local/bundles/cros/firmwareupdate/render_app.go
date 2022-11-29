@@ -22,9 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that application launches",
 		Contacts: []string{
+			"cros-peripherals@google.com", // Mailing list
 			"ashleydp@google.com",         // Test author
-			"cros-peripherals@google.com", // Backup mailing list
 		},
+		// ChromeOS > Software > System Services > Peripherals > Firmware Updates
+		BugComponent: "b:1150862",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
