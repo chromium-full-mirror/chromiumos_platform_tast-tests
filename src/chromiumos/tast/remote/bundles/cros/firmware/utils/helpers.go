@@ -7,17 +7,23 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/reporters"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 )
 
@@ -349,4 +355,92 @@ func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "ccd reset failed")
 	}
 	return err
+}
+
+// BackupAndRestoreAPFirmwareAndWriteProtect makes a backup of AP firmware.
+// Returns a context derived from ctx with time reserved for cleanup. Returns a
+// closure for restoring the AP firmware and resetting hardware and software
+// write protect to the off state. Returns a path to the firmware backup file on
+// the DUT disk.
+func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT, servoCon *servo.Servo) (context.Context, func(s *testing.State), *string, error) {
+	// /var/tmp is used, as /tmp will be cleared on reboot.
+	// Reboot is often required as asurada cannot change write protect without a reboot.
+	backupTmpFileStdout, err := DUT.Conn().CommandContext(ctx, "mktemp", "--tmpdir=/var/tmp", "tast.firmware.APFW.XXXXXXXXXX").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create a temp file")
+	}
+	backupTmpFile := strings.TrimSpace(string(backupTmpFileStdout))
+
+	if err := APFirmwareRead(ctx, DUT.Conn(), backupTmpFile); err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create a AP firmware backup")
+	}
+
+	// Reserve time for the backup to be restored if the test times out.
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
+	return ctx, func(s *testing.State) {
+		s.Log("Disable hardware write protect")
+		if err := servoCon.SetFWWPState(cleanupContext, servo.FWWPStateOff); err != nil {
+			s.Error("Failed to disable hardware write protect: ", err)
+		}
+
+		s.Log("Disable software write protect")
+		if err := APSoftwareWriteProtectDisable(cleanupContext, DUT.Conn()); err != nil {
+			s.Error("Failed to disable software write protect: ", err)
+		}
+
+		s.Log("Restore AP firmware")
+		if err := APFirmwareWrite(cleanupContext, DUT.Conn(), backupTmpFile); err != nil {
+			s.Error("Failed to restore AP firmware backup: ", err)
+		}
+
+		DUT.Conn().CommandContext(cleanupContext, "rm", backupTmpFile).Output(ssh.DumpLogOnError)
+
+		cancel()
+	}, &backupTmpFile, nil
+}
+
+// APSoftwareWriteProtectDisable disables software write protect and sets the range to 0,0.
+func APSoftwareWriteProtectDisable(ctx context.Context, conn *ssh.Conn) error {
+	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--wp-disable", "--wp-range=0,0").Output(ssh.DumpLogOnError)
+	return err
+}
+
+// APSoftwareWriteProtectEnable enables software write protect and sets the range to 0,size.
+func APSoftwareWriteProtectEnable(ctx context.Context, conn *ssh.Conn) error {
+	flashSize, err := APFirmwareSize(ctx, conn)
+	if err != nil {
+		return err
+	}
+	_, err = conn.CommandContext(ctx, "flashrom", "-p", "host", "--wp-enable", fmt.Sprintf("--wp-range=0,%d", flashSize)).Output(ssh.DumpLogOnError)
+	return err
+}
+
+// APFirmwareRead reads the AP firmware flash to the file at path.
+// path is a file on the same remote DUT as conn.
+func APFirmwareRead(ctx context.Context, conn *ssh.Conn, path string) error {
+	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "-r", path).Output(ssh.DumpLogOnError)
+	return err
+}
+
+// APFirmwareWrite writes the file at path to the AP firmware flash.
+// path is a file on the same remote DUT as conn.
+func APFirmwareWrite(ctx context.Context, conn *ssh.Conn, path string) error {
+	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--noverify", "-w", path).Output(ssh.DumpLogOnError)
+	return err
+}
+
+// APFirmwareSize returns the size in bytes of the AP firmware flash.
+func APFirmwareSize(ctx context.Context, conn *ssh.Conn) (int64, error) {
+	stdout, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--flash-size").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return -1, err
+	}
+	// The size is printed as the last line.
+	lastLineStart := bytes.LastIndexByte(stdout[:len(stdout)-1], '\n') + 1
+	size, err := strconv.ParseInt(string(stdout[lastLineStart:len(stdout)-1]), 10, 0)
+	if err != nil {
+		return -1, err
+	}
+	return size, nil
 }
