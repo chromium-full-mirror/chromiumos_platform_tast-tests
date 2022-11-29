@@ -20,6 +20,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-hibernate@google.com", // Test owners
 		},
+		BugComponent: "b:167191",
 		SoftwareDeps: []string{"hiberman"},
 		Attr:         []string{"group:mainline", "informational"},
 	})
