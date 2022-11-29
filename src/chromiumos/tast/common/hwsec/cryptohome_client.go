@@ -28,7 +28,6 @@ const (
 	listKeysExLabelPrefix                  = "Label: "
 	addKeyExSuccessMessage                 = "Key added."
 	removeKeyExSuccessMessage              = "Key removed."
-	migrateKeyExSucessMessage              = "Key migration succeeded."
 	shadowHome                             = "/home/.shadow"
 )
 
@@ -624,22 +623,6 @@ func (u *CryptohomeClient) RemoveVaultKey(ctx context.Context, username, passwor
 	if !strings.Contains(output, removeKeyExSuccessMessage) {
 		testing.ContextLogf(ctx, "Incorrect RemoveKeyEx message; got %q, want %q", output, removeKeyExSuccessMessage)
 		return errors.Errorf("incorrect message from RemoveKeyEx; got %q, want %q", output, removeKeyExSuccessMessage)
-	}
-
-	return nil
-}
-
-// ChangeVaultPassword changes the vault for user username with label and password to newPassword. nil is returned iff the operation is successful.
-func (u *CryptohomeClient) ChangeVaultPassword(ctx context.Context, username, password, label, newPassword string) error {
-	binaryOutput, err := u.binary.migrateKeyEx(ctx, username, password, label, newPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to call MigrateKeyEx")
-	}
-
-	output := string(binaryOutput)
-	if !strings.Contains(output, migrateKeyExSucessMessage) {
-		testing.ContextLogf(ctx, "Incorrect MigrateKeyEx message; got %q, want %q", output, migrateKeyExSucessMessage)
-		return errors.Errorf("incorrect message from MigrateKeyEx; got %q, want %q", output, migrateKeyExSucessMessage)
 	}
 
 	return nil

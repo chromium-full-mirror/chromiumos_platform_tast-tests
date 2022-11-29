@@ -327,28 +327,37 @@ func testAddRemoveKey(ctx context.Context, cryptohome *hwsec.CryptohomeClient, u
 	return nil
 }
 
-// testMigrateKey tests that ChangeVaultPassword() works as expected
+// testMigrateKey tests that changing the password works as expected.
 func testMigrateKey(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, oldPassword, label, changedPassword, invalidPassword string) error {
-	if err := cryptohome.ChangeVaultPassword(ctx, username, invalidPassword, label, changedPassword); err == nil {
-		return errors.New("unexpectedly can change vault password with invalid password")
+	// Run one session to change the password.
+	if err := cryptohome.WithAuthSession(ctx, username, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, invalidPassword); err == nil {
+			return errors.New("unexpectedly authenticated with the wrong password")
+		}
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, oldPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate user")
+		}
+		if err := cryptohome.UpdatePasswordAuthFactor(ctx, authSessionID, label, label, changedPassword); err != nil {
+			return errors.Wrap(err, "failed to update user password")
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "failed in first session to change password")
 	}
-	if err := cryptohome.ChangeVaultPassword(ctx, username, oldPassword, label, changedPassword); err != nil {
-		return errors.Wrap(err, "failed to change vault password")
-	}
-	if err := testCheckKey(ctx, cryptohome, username, util.NewVaultKeyInfo(changedPassword, label, false), oldPassword); err != nil {
-		return errors.Wrap(err, "failed to properly check key after password is changed")
-	}
-	if err := testAuthFactor(ctx, cryptohome, username, util.NewVaultKeyInfo(changedPassword, label, false), oldPassword); err != nil {
-		return errors.Wrap(err, "failed to test AuthFactor after password is changed")
-	}
-	if err := cryptohome.ChangeVaultPassword(ctx, username, changedPassword, label, oldPassword); err != nil {
-		return errors.Wrap(err, "failed to change vault password back")
-	}
-	if err := testCheckKey(ctx, cryptohome, username, util.NewVaultKeyInfo(oldPassword, label, false), changedPassword); err != nil {
-		return errors.Wrap(err, "failed to properly check key after password is changed back")
-	}
-	if err := testAuthFactor(ctx, cryptohome, username, util.NewVaultKeyInfo(oldPassword, label, false), changedPassword); err != nil {
-		return errors.Wrap(err, "failed to test AuthFactor after password is changed back")
+	// Then run a second session to change the password back.
+	if err := cryptohome.WithAuthSession(ctx, username, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, oldPassword); err == nil {
+			return errors.New("unexpectedly authenticated with the old password")
+		}
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, changedPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate user with the new password")
+		}
+		if err := cryptohome.UpdatePasswordAuthFactor(ctx, authSessionID, label, label, oldPassword); err != nil {
+			return errors.Wrap(err, "failed to update user password back to the old password")
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "failed in second session to revert to original password")
 	}
 	return nil
 }

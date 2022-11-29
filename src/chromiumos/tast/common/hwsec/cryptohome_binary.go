@@ -186,11 +186,6 @@ func (c *cryptohomeBinary) removeKeyEx(ctx context.Context, username, password, 
 	return c.call(ctx, "--action=remove_key_ex", "--user="+username, "--password="+password, "--remove_key_label="+removeLabel)
 }
 
-// migrateKeyEx calls "cryptohome --action=migrate_key_ex".
-func (c *cryptohomeBinary) migrateKeyEx(ctx context.Context, username, password, label, newPassword string) ([]byte, error) {
-	return c.call(ctx, "--action=migrate_key_ex", "--user="+username, "--old_password="+password, "--key_label="+label, "--password="+newPassword)
-}
-
 // remove calls "cryptohome --action=remove".
 func (c *cryptohomeBinary) remove(ctx context.Context, username string) ([]byte, error) {
 	return c.call(ctx, "--action=remove", "--user="+username, "--force")

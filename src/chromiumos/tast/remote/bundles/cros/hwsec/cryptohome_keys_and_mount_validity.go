@@ -198,55 +198,6 @@ func testAddRemoveKeyEx(ctx context.Context, utility *hwsec.CryptohomeClient, hf
 	return nil
 }
 
-// testMigrateKeyEx tests that MigrateKeyEx() works correctly.
-// Note: MigrateKeyEx() changes the vault password.
-func testMigrateKeyEx(ctx context.Context, utility *hwsec.CryptohomeClient, hf *files.HomedirFiles) error {
-	// MigrateKeyEx should work, and check if both new and old password behave as expected.
-	if err := utility.ChangeVaultPassword(ctx, util.FirstUsername, util.FirstPassword1, util.Password1Label, util.FirstChangedPassword); err != nil {
-		return errors.Wrap(err, "failed to change vault password")
-	}
-	if err := testCheckKeyEx(ctx, utility, util.FirstUsername, util.Password1Label, util.FirstChangedPassword, util.FirstPassword1); err != nil {
-		return errors.Wrap(err, "incorrect CheckKeyEx behaviour right after MigrateKeyEx")
-	}
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), false, hwsec.NewVaultConfig()); err == nil {
-		return errors.New("still can mount vault with old password")
-	}
-
-	// Mount with new password and try MigrateKeyEx() again.
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstChangedPassword), false, hwsec.NewVaultConfig()); err != nil {
-		return errors.Wrap(err, "failed to mount with new password")
-	}
-	if err := checkMountState(ctx, utility, hf, true); err != nil {
-		return errors.Wrap(err, "vault not mounted after mounting with changed password")
-	}
-	if err := utility.ChangeVaultPassword(ctx, util.FirstUsername, util.FirstChangedPassword, util.Password1Label, util.FirstPassword1); err != nil {
-		return errors.Wrap(err, "failed to change vault password back when mounted")
-	}
-	if err := checkMountState(ctx, utility, hf, true); err != nil {
-		return errors.Wrap(err, "vault not mounted after changing password while mounted")
-	}
-
-	// Calling CheckKeyEx(), which tries to authenticate with the new secret,
-	// should be effective immediately without a remount.
-	if err := testCheckKeyEx(ctx, utility, util.FirstUsername, util.Password1Label, util.FirstPassword1, util.FirstChangedPassword); err != nil {
-		return errors.Wrap(err, "incorrect CheckKeyEx behaviour right after password is changed back")
-	}
-
-	// The new secret should continue to work when we try to authenticate
-	// through CheckKeyEx() API, even after we unmount.
-	if err := unmountTestVault(ctx, utility, hf); err != nil {
-		return errors.Wrap(err, "failed to unmount")
-	}
-	if err := checkMountState(ctx, utility, hf, false); err != nil {
-		return errors.Wrap(err, "vault mounted after unmounting while testing MigrateKeyEx")
-	}
-	if err := testCheckKeyEx(ctx, utility, util.FirstUsername, util.Password1Label, util.FirstPassword1, util.FirstChangedPassword); err != nil {
-		return errors.Wrap(err, "incorrect CheckKeyEx behaviour after the password is changed back")
-	}
-
-	return nil
-}
-
 // checkUserVault checks that the vault/keys related API works correctly.
 func checkUserVault(ctx context.Context, utility *hwsec.CryptohomeClient, hf *files.HomedirFiles) error {
 	if err := testCheckKeyEx(ctx, utility, util.FirstUsername, util.Password1Label, util.FirstPassword1, util.IncorrectPassword); err != nil {
@@ -259,10 +210,6 @@ func checkUserVault(ctx context.Context, utility *hwsec.CryptohomeClient, hf *fi
 
 	if err := testAddRemoveKeyEx(ctx, utility, hf); err != nil {
 		return errors.Wrap(err, "test on AddKeyEx/RemoveKeyEx failed")
-	}
-
-	if err := testMigrateKeyEx(ctx, utility, hf); err != nil {
-		return errors.Wrap(err, "test on MigrateKeyEx failed")
 	}
 
 	return nil
