@@ -76,17 +76,6 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to power on and off correctly with GBBFlag_DISABLE_LID_SHUTDOWN set: ", err)
 	}
 
-	s.Log("Resetting DUT after test")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		s.Fatal("Failed to reset DUT: ", err)
-	}
-
-	s.Log("Reconnecting to DUT")
-	h.DisconnectDUT(ctx)
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to connect to DUT: ", err)
-	}
-
 	s.Log("Clear flag then go to recovery mode, expect G3 after lid close")
 	if err := setFlagBeforeRecMode(ctx, h, false); err != nil {
 		s.Fatal("Failed to power on and off correctly with GBBFlag_DISABLE_LID_SHUTDOWN not set: ", err)
@@ -94,7 +83,12 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 }
 
 func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (reterr error) {
+	testing.ContextLog(ctx, "Resetting DUT")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "powering off DUT")
+	}
 	testing.ContextLog(ctx, "Reconnecting to DUT")
+	h.DisconnectDUT(ctx)
 	if err := h.WaitConnect(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
