@@ -24,6 +24,7 @@ func init() {
 			"chromeos-flex-eng@google.com",
 			"nicholasbishop@google.com",
 		},
+		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.osinstall.OsInstallService"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
