@@ -63,9 +63,11 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.InternalDisplay(), hwdep.TouchScreen()),
 		Params: []testing.Param{{
-			Name:      "chrome_clamshell",
-			ExtraData: []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
-			Fixture:   "chromeLoggedIn",
+			Name: "chrome_clamshell",
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
+			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
+			Fixture:           "chromeLoggedIn",
 			Val: fastInkTestParams{
 				arc:         false,
 				browserType: browser.TypeAsh,
@@ -82,9 +84,11 @@ func init() {
 					ash.WindowStateFullscreen,
 				}},
 		}, {
-			Name:      "chrome_tablet",
-			ExtraData: []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
-			Fixture:   "chromeLoggedIn",
+			Name: "chrome_tablet",
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
+			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
+			Fixture:           "chromeLoggedIn",
 			Val: fastInkTestParams{
 				arc:         false,
 				browserType: browser.TypeAsh,
@@ -102,6 +106,8 @@ func init() {
 		}, {
 			Name:              "chrome_clamshell_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
 			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 			Fixture:           "lacros",
 			Val: fastInkTestParams{
@@ -123,6 +129,8 @@ func init() {
 
 			Name:              "chrome_tablet_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
 			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 			Fixture:           "lacros",
 			Val: fastInkTestParams{
@@ -179,6 +187,8 @@ func init() {
 		}, {
 			Name:              "arc_clamshell_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
 			ExtraData:         []string{fastInkAPK},
 			Fixture:           "arcBootedInClamshellMode",
 			Val: fastInkTestParams{
@@ -198,6 +208,134 @@ func init() {
 		}, {
 			Name:              "arc_tablet_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
+			ExtraData:         []string{fastInkAPK},
+			Fixture:           "arcBootedInTabletMode",
+			Val: fastInkTestParams{
+				arc:    true,
+				tablet: true,
+				displayRotations: []display.RotationAngle{
+					display.Rotate0,
+					display.Rotate180,
+				},
+				wStates: []ash.WindowStateType{
+					ash.WindowStateLeftSnapped,
+					ash.WindowStateMaximized,
+					ash.WindowStateRightSnapped,
+					ash.WindowStateFullscreen,
+				}},
+		}, {
+			Name: "failing_chrome_clamshell",
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
+			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
+			Fixture:           "chromeLoggedIn",
+			Val: fastInkTestParams{
+				arc:         false,
+				browserType: browser.TypeAsh,
+				tablet:      false,
+				displayRotations: []display.RotationAngle{
+					display.Rotate0,
+					display.Rotate90,
+					display.Rotate180,
+					display.Rotate270,
+				},
+				wStates: []ash.WindowStateType{
+					ash.WindowStateNormal,
+					ash.WindowStateMaximized,
+					ash.WindowStateFullscreen,
+				}},
+		}, {
+			Name: "failing_chrome_tablet",
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
+			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
+			Fixture:           "chromeLoggedIn",
+			Val: fastInkTestParams{
+				arc:         false,
+				browserType: browser.TypeAsh,
+				tablet:      true,
+				displayRotations: []display.RotationAngle{
+					display.Rotate0,
+					display.Rotate90,
+					display.Rotate180,
+					display.Rotate270,
+				},
+				wStates: []ash.WindowStateType{
+					ash.WindowStateMaximized,
+					ash.WindowStateFullscreen,
+				}},
+		}, {
+			Name:              "failing_chrome_clamshell_lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
+			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
+			Fixture:           "lacros",
+			Val: fastInkTestParams{
+				arc:         false,
+				browserType: browser.TypeLacros,
+				tablet:      false,
+				displayRotations: []display.RotationAngle{
+					display.Rotate0,
+					display.Rotate90,
+					display.Rotate180,
+					display.Rotate270,
+				},
+				wStates: []ash.WindowStateType{
+					ash.WindowStateNormal,
+					ash.WindowStateMaximized,
+					ash.WindowStateFullscreen,
+				}},
+		}, {
+
+			Name:              "failing_chrome_tablet_lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
+			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
+			Fixture:           "lacros",
+			Val: fastInkTestParams{
+				arc:         false,
+				browserType: browser.TypeLacros,
+				tablet:      true,
+				displayRotations: []display.RotationAngle{
+					display.Rotate0,
+					display.Rotate90,
+					display.Rotate180,
+					display.Rotate270,
+				},
+				wStates: []ash.WindowStateType{
+					ash.WindowStateMaximized,
+					ash.WindowStateFullscreen,
+				}},
+		}, {
+			Name:              "failing_arc_clamshell_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
+			ExtraData:         []string{fastInkAPK},
+			Fixture:           "arcBootedInClamshellMode",
+			Val: fastInkTestParams{
+				arc:    true,
+				tablet: false,
+				displayRotations: []display.RotationAngle{
+					display.Rotate0,
+					display.Rotate180,
+				},
+				wStates: []ash.WindowStateType{
+					ash.WindowStateNormal,
+					ash.WindowStateLeftSnapped,
+					ash.WindowStateMaximized,
+					ash.WindowStateRightSnapped,
+					ash.WindowStateFullscreen,
+				}},
+		}, {
+			Name:              "failing_arc_tablet_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/247879931): Remove dooly when the test can pass on it.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
 			ExtraData:         []string{fastInkAPK},
 			Fixture:           "arcBootedInTabletMode",
 			Val: fastInkTestParams{
