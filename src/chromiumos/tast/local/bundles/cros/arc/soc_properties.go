@@ -46,7 +46,19 @@ func init() {
 		// TODO(b/225373614): Merge with BuildProperties once all SOCs
 		// can be detected, which will make this testcase
 		// non-informational and CQ-blocking.
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:mainline"},
+
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_qemu"},
+		},
+		{
+			// VMs may not have valid ro.soc.* values. It is often unfeasible to find the exact
+			// CPU model as /proc/cpuinfo may have generic information. So we only populate
+			// values for them as best effort.
+			Name: "betty",
+			ExtraSoftwareDeps: []string{"qemu"},
+			ExtraAttr: []string{"informational"},
+		}},
 	})
 }
 
