@@ -17,11 +17,9 @@ func init() {
 		Func:         FileSystemXattrs,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies filesystem extended attributes for ARC container",
-		Contacts: []string{
-			"kroot@chromium.org", // Original author.
-			"arc-core@google.com",
-			"hidehiko@chromium.org", // Tast port author.
-		},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Fixture:      "arcBooted",

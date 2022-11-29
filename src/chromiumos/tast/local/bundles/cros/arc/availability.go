@@ -25,8 +25,9 @@ func init() {
 		Func:         Availability,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that ARC is available after update of GMS Core",
-		Contacts:     []string{"timkovich@chromium.org", "arc-eng@google.com"},
-
+		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

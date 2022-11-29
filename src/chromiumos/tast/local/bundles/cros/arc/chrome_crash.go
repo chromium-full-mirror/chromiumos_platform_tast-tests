@@ -24,7 +24,9 @@ func init() {
 		Func:         ChromeCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ash chrome crash handling of ARC",
-		Contacts:     []string{"hashimoto@chromium.org", "arc-eng@google.com"},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Val:               false,

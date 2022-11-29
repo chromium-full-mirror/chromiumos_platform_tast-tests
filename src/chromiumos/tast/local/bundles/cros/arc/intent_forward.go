@@ -26,7 +26,9 @@ func init() {
 		Func:         IntentForward,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Android intents are forwarded to Chrome",
-		Contacts:     []string{"djacobo@google.com", "arc-core@google.com"},
+		Contacts:     []string{"arc-core@google.com", "djacobo@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "group:arc-functional"},

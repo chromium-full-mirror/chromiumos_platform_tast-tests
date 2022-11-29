@@ -26,7 +26,9 @@ func init() {
 		Func:         Backup,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "This test ensure that we can backup and restore Android Apps",
-		Contacts:     []string{"rohitbm@google.com", "arc-core@google.com"},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},

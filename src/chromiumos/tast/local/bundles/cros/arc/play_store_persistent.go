@@ -30,7 +30,9 @@ func init() {
 		Func:         PlayStorePersistent,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Makes sure that Play Store remains open after it is fully initialized",
-		Contacts:     []string{"khmel@chromium.org", "jhorwich@chromium.org", "arc-core@google.com"},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Play Store Setup
+		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
 		// 1 min for ARC is provisioned, 4 minutes max waiting for daily hygiene, and

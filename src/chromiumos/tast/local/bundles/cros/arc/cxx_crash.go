@@ -24,7 +24,9 @@ func init() {
 		Func:         CxxCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test handling of a C++ binary crash",
-		Contacts:     []string{"kimiyuki@google.com", "arc-eng@google.com"},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
 		Fixture:      "arcBooted",

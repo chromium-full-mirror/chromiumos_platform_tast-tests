@@ -21,10 +21,9 @@ func init() {
 		Func:         MiniContainer,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures Android mini container is upgraded after login",
-		Contacts: []string{
-			"arc-core@google.com",
-			"nya@chromium.org", // Tast port author.
-		},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Timeout:      4 * time.Minute,

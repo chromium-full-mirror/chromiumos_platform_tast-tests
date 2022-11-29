@@ -60,12 +60,10 @@ func init() {
 		Func:         RestoreData,
 		Desc:         "This verifies SELinux data restore flow in case Android /data folder has corrupted SELinux contexts",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-
-		Contacts: []string{
-			"khmel@chromium.org", // original author
-			"arc-core@google.com",
-		},
-		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		// TODO(b/210155681) enable this for ARCVM once supported.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "android_p"},
 		Timeout:      15 * time.Minute,

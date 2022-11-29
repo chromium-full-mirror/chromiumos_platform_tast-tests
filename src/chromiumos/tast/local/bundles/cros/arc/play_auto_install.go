@@ -28,10 +28,9 @@ func init() {
 		Func:         PlayAutoInstall,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "A functional test that verifies PlayAutoInstall(PAI) flow, It waits PAI is triggered and verifies the minimal set of apps is schedulled for installation",
-		Contacts: []string{
-			"arc-core@google.com",
-			"khmel@chromium.org", // author.
-		},
+		Contacts:     []string{"arc-core@google.com"},
+		// ChromeOS > Software > ARC++ > Core > Play Store Setup
+		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
 		Params: []testing.Param{{

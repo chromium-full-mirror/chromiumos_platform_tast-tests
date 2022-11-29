@@ -37,11 +37,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies cpuset",
 		Contacts: []string{
-			"yusukes@chromium.org",
 			"arc-core@google.com",
-			"arc-storage@google.com",
-			"hidehiko@chromium.org", // Tast port author.
+			"matvore@chromium.org",
 		},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:488493",
 		// "no_qemu" is added for excluding betty from the target board list. b/196907826
 		SoftwareDeps: []string{
 			"chrome",
