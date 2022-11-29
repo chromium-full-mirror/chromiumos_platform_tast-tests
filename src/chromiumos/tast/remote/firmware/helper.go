@@ -566,6 +566,9 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	}
 	if strings.Contains(dutBuilderPath, "-postsubmit") {
 		testing.ContextLogf(ctx, "Current build on DUT (%s) is not a release image, using %s from USB stick", dutBuilderPath, releaseBuilderPath)
+		if releaseBuilderPath == "" {
+			return errors.New("did not find release image path on the USB")
+		}
 		return nil
 	}
 
