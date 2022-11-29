@@ -21,7 +21,12 @@ func init() {
 		Func:         ChromeMlocked,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that at least part of Chrome is mlocked",
-		Contacts:     []string{"gbiv@chromium.org"},
+		Contacts: []string{
+			"chromeos-toolchain@google.com",
+			"gbiv@chromium.org",
+			"denik@chromium.org",
+		},
+		BugComponent: "b:1038090",
 		SoftwareDeps: []string{"chrome", "transparent_hugepage"},
 		Attr:         []string{"group:mainline"},
 	})
