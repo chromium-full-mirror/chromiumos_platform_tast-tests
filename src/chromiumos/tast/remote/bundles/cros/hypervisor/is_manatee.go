@@ -16,7 +16,9 @@ func init() {
 		Func:         IsManatee,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that manatee detection is accurate",
-		Contacts:     []string{"psoberoi@google.com", "manateam@google.com"},
+		Contacts:     []string{"manateam@google.com", "psoberoi@google.com"},
+		// Buganizer: ChromeOS > Platform > Virtualization > ManaTEE
+		BugComponent: "b:773554",
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:              "without_manatee",
