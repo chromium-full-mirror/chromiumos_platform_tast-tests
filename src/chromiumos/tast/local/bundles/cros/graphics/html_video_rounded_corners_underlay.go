@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that HTML <video> rounded corners are implemented with a hardware underlay",
 		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "amusbach@chromium.org", "oshima@chromium.org"},
-		BugComponent: "b:1045832",
+		BugComponent: "b:1021073",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "proprietary_codecs"},
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
