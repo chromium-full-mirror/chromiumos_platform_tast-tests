@@ -42,8 +42,6 @@ var UnstableModels = []string{
 	"basking",
 	// Platform coral
 	"nasher",
-	// Platform kevin
-	"kevin", // crbug.com/1140145
 	// Platform kukui
 	"krane",
 	// Platform nocturne
