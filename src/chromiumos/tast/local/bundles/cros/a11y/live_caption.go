@@ -21,7 +21,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const liveCaptionSubPageURL = "manageAccessibility/captions"
+const liveCaptionSubPageURL = "audioAndCaptions"
 const liveCaptionToggleName = "Live Caption"
 
 func init() {
@@ -73,7 +73,7 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Turn on Live Caption toggle via OS settings.
-	captionsHeading := nodewith.NameStartingWith("Captions").Role(role.Heading).Ancestor(ossettings.WindowFinder)
+	captionsHeading := nodewith.NameStartingWith("Audio and captions").Role(role.Heading).Ancestor(ossettings.WindowFinder)
 	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, liveCaptionSubPageURL, ui.Exists(captionsHeading))
 	if err != nil {
 		s.Fatal("Failed to open setting page: ", err)
