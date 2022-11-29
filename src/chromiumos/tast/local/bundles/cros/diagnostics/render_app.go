@@ -19,6 +19,8 @@ func init() {
 		Func:         RenderApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Diagnostics app launches and renders components",
+		// ChromeOS > Software > System Services > Serviceability > Diagnostics
+		BugComponent: "b:1131925",
 		Contacts: []string{
 			"ashleydp@google.com",
 			"zentaro@google.com",

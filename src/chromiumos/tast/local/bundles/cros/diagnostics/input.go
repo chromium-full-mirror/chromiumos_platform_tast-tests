@@ -19,6 +19,8 @@ func init() {
 		Func:         Input,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can successfully navigate to the Input page",
+		// ChromeOS > Software > System Services > Serviceability > Diagnostics
+		BugComponent: "b:1131925",
 		Contacts: []string{
 			"dpad@google.com",
 			"ashleydp@google.com",
@@ -49,7 +51,7 @@ func Input(ctx context.Context, s *testing.State) {
 
 	// Find the Input navigation item and the keyboard list heading.
 	ui := uiauto.New(tconn)
-	inputTab := da.DxInput.Ancestor(da.DxRootNode)
+	inputTab := da.DxKeyboardTab.Ancestor(da.DxRootNode)
 	keyboardListHeading := da.DxKeyboardHeading.Ancestor(da.DxRootNode)
 	if err := uiauto.Combine("find the keyboard list heading",
 		ui.WaitUntilExists(inputTab),

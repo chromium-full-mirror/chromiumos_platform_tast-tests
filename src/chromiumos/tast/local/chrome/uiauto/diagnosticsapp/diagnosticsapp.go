@@ -79,8 +79,8 @@ var (
 	// DxNetworkList export is used to find the network list.
 	DxNetworkList = nodewith.ClassName("diagnostics-network-list-container").Role(role.GenericContainer)
 
-	// DxInput export is used to find the Input navigation item.
-	DxInput = nodewith.NameContaining("Input").Role(role.GenericContainer)
+	// DxKeyboardTab export is used to find the Input navigation item.
+	DxKeyboardTab = nodewith.NameContaining("Keyboard").Role(role.GenericContainer)
 
 	// DxInternalKeyboardTestButton used to find the internal keyboard test button on the input page.
 	DxInternalKeyboardTestButton = nodewith.NameContaining("Test").Role(role.Button).First()
@@ -196,8 +196,8 @@ func OpenInputPage(ctx context.Context, tconn *chrome.TestConn) error {
 	ClickNavigationMenuButton(ctx, tconn)
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(DxInput),
-		ui.WithPollOpts(defaultPolling).LeftClick(DxInput))(ctx); err != nil {
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(defaultTimeout).WaitUntilExists(DxKeyboardTab),
+		ui.WithPollOpts(defaultPolling).LeftClick(DxKeyboardTab))(ctx); err != nil {
 		return errors.Wrap(err, "input tab click failed")
 	}
 

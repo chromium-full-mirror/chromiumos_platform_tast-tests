@@ -24,6 +24,8 @@ func init() {
 		Func:         InputCheckRegionalKey,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Input page shows expected regional keyboard layout with different region code",
+		// ChromeOS > Software > System Services > Serviceability > Diagnostics
+		BugComponent: "b:1131925",
 		Contacts: []string{
 			"dpad@google.com",
 			"jeff.lin@cienet.com",
@@ -84,7 +86,7 @@ func InputCheckRegionalKey(ctx context.Context, s *testing.State) {
 	if !ok {
 		s.Fatalf("Region code %v has not defined in test button map yet: ", regionCode)
 	}
-	inputTab, ok := da.DxInputButtons[regionCode]
+	inputTab, ok := da.DxKeyboardTabButtons[regionCode]
 	if !ok {
 		s.Fatalf("Region code %v has not defined in input button map yet: ", regionCode)
 	}

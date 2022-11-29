@@ -21,6 +21,8 @@ func init() {
 		Func:         InputTopRowDisrupting,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Pressing several disruptive keys won't disrupt the test and affect other keys' states",
+		// ChromeOS > Software > System Services > Serviceability > Diagnostics
+		BugComponent: "b:1131925",
 		Contacts: []string{
 			"dpad@google.com",
 			"jeff.lin@cienet.com",

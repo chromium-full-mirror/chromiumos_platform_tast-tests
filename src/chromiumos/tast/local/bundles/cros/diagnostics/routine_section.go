@@ -21,6 +21,8 @@ func init() {
 		Func:         RoutineSection,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Diagnostics app routines run successfully",
+		// ChromeOS > Software > System Services > Serviceability > Diagnostics
+		BugComponent: "b:1131925",
 		Contacts: []string{
 			"ashleydp@google.com",
 			"zentaro@google.com",
