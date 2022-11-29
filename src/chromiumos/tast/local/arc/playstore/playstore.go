@@ -8,6 +8,7 @@ package playstore
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/common/android/ui"
@@ -16,6 +17,9 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
 
@@ -396,4 +400,15 @@ func LaunchAssetBrowserActivity(ctx context.Context, tconn *chrome.TestConn, a *
 	}
 
 	return act, nil
+}
+
+// VerifyPlayStoreWindowPresent verifies that Play Store window shows up.
+func VerifyPlayStoreWindowPresent(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration) error {
+	uia := uiauto.New(tconn)
+	classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
+	playStoreUI := nodewith.Name("Play Store").Role(role.Window).ClassNameRegex(classNameRegexp)
+	if err := uia.WithTimeout(timeout).WaitUntilExists(playStoreUI)(ctx); err != nil {
+		return errors.Wrap(err, "failed to see Play Store window")
+	}
+	return nil
 }
