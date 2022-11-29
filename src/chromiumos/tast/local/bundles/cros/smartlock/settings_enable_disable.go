@@ -22,10 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests ability to enable/disable Smart Lock with Settings",
 		Contacts: []string{
-			"cclem@google.com",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"cclem@google.com",
 		},
+		BugComponent: "b:1131772",
 		Attr:         []string{"group:cross-device", "cross-device_smartlock"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"chrome"},

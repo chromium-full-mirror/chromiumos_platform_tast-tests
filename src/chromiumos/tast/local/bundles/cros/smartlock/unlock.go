@@ -22,10 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Signs into ChromeOS, locks device and then unlocks it with Smart Lock",
 		Contacts: []string{
-			"dhaddock@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"dhaddock@chromium.org",
 		},
+		BugComponent: "b:1131772",
 		Attr:         []string{"group:cross-device", "cross-device_smartlock"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
