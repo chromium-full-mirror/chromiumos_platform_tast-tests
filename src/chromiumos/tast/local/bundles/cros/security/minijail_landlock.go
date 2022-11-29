@@ -17,9 +17,11 @@ func init() {
 		Func: MinijailLandlock,
 		Desc: "Verifies minijail0's Landlock enforcement",
 		Contacts: []string{
-			"akhna@google.com",
-			"chromeos-security@google.com",
+			"minijail-dev@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Minijail
+		BugComponent: "b:1099158",
 		SoftwareDeps: []string{"landlock_enabled"},
 		Attr:         []string{"group:mainline"},
 	})

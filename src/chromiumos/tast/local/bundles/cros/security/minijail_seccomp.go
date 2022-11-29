@@ -17,9 +17,11 @@ func init() {
 		Func: MinijailSeccomp,
 		Desc: "Verifies minijail0's seccomp_filter enforcement",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"minijail-dev@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Minijail
+		BugComponent: "b:1099158",
 		Data: []string{
 			minijailSeccompDefaultPolicy,
 			minijailSeccompReadOnlyPolicy,

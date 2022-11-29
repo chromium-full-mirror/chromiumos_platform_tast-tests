@@ -32,9 +32,11 @@ func init() {
 		Func: Minijail,
 		Desc: "Verifies minijail0's basic functionality",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"minijail-dev@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Minijail
+		BugComponent: "b:1099158",
 		Params: []testing.Param{{
 			Name: "dynamic",
 			Val:  dynamicLink,
