@@ -15,10 +15,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillInitScriptsLoginStartShill,
-		Desc:     "Test that shill init scripts perform as expected",
-		Contacts: []string{"hugobenichi@google.com", "cros-networking@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         ShillInitScriptsLoginStartShill,
+		Desc:         "Test that shill init scripts perform as expected",
+		Contacts:     []string{"hugobenichi@google.com", "cros-networking@google.com"},
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

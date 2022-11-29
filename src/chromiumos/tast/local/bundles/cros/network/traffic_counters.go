@@ -48,6 +48,7 @@ func init() {
 		Func:         TrafficCounters,
 		Desc:         "Verify patchpanel traffic counters",
 		Contacts:     []string{"garrick@google.com", "cros-networking@google.com"},
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,

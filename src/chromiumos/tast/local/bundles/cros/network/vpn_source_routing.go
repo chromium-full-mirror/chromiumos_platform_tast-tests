@@ -24,6 +24,7 @@ func init() {
 		Func:         VPNSourceRouting,
 		Desc:         "Verify traffic from different sources is routed to the correct interface",
 		Contacts:     []string{"garrick@google.com", "cros-networking@google.com"},
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"ikev2"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

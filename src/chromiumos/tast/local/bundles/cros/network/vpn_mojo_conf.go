@@ -24,6 +24,7 @@ func init() {
 			"taoyl@google.com",
 			"cros-networking@google.com",
 		},
+		BugComponent: "b:156085",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillReset",
