@@ -24,10 +24,10 @@ func init() {
 		Func: SymlinkRestrictions,
 		Desc: "Verifies that unsafe symlinks are blocked",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1040049",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

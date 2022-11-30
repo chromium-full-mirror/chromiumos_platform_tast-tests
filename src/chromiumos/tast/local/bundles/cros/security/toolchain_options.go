@@ -23,10 +23,9 @@ func init() {
 		Func: ToolchainOptions,
 		Desc: "Verifies that system ELF executables were compiled with a hardened toolchain",
 		Contacts: []string{
-			"jorgelo@chromium.org",     // Security team
-			"kathrelkeld@chromium.org", // Tast port author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"no_asan"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{

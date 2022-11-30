@@ -18,9 +18,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks ownership and permissions of user files for logged-in users",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 		Attr:         []string{"group:mainline"},

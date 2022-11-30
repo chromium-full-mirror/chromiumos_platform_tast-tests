@@ -17,11 +17,10 @@ func init() {
 		Func: RunFiles,
 		Desc: "Checks ownership and permissions of files in /run",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"yusukes@chromium.org", // Initial author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1040049",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

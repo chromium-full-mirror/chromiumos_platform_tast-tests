@@ -23,9 +23,9 @@ func init() {
 		Func: RunOCI,
 		Desc: "Verifies the functionality of the run_oci command",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"oci"},
 		Attr:         []string{"group:mainline"},
 	})

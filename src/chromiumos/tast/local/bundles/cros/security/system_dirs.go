@@ -19,10 +19,10 @@ func init() {
 		Func: SystemDirs,
 		Desc: "Checks permissions of various system directories",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:1040049",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

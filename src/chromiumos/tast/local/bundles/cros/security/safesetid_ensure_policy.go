@@ -20,9 +20,9 @@ func init() {
 		Func: SafesetidEnsurePolicy,
 		Desc: "Runs SafeSetID though various example ID transitions",
 		Contacts: []string{
-			"thomascedeno@google.com",
-			"mortonm@google.com",
+			"chromeos-hardening@google.com",
 		},
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{},
 		Attr:         []string{"group:mainline", "informational"},
 	})

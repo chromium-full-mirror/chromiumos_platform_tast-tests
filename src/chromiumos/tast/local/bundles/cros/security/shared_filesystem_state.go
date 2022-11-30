@@ -33,10 +33,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Reports on the state of the ChromeOS shared filesystem and fails if an unexpected mount is found when not logged in",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"nvaa@google.com",      // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 	})
@@ -44,14 +43,14 @@ func init() {
 
 // SharedFilesystemState test will fail if you are adding a new shared mount to
 // the init mount namespace. If this is the case, follow these steps:
-// 1. Confirm that it is necessary and prepare reasoning for why this mount must
-//    be shared and in the init mount namespace.
-// 2. Add the mount to the appropriate list below (based on whether it exists in
-//    ARCVM/ARC++ and whether it exists when the user is logged in or not).
-// 3. Add short reasoning as a comment above the mount, then add a more detailed
-//    explanation in
-//    https://chrome-internal.googlesource.com/chromeos/docs/+/HEAD/security/shared_filesystem_state.md
-// 4. Add nvaa@ or another chromeos-security@ engineer as a reviewer on the CL.
+//  1. Confirm that it is necessary and prepare reasoning for why this mount must
+//     be shared and in the init mount namespace.
+//  2. Add the mount to the appropriate list below (based on whether it exists in
+//     ARCVM/ARC++ and whether it exists when the user is logged in or not).
+//  3. Add short reasoning as a comment above the mount, then add a more detailed
+//     explanation in
+//     https://chrome-internal.googlesource.com/chromeos/docs/+/HEAD/security/shared_filesystem_state.md
+//  4. Add nvaa@ or another chromeos-security@ engineer as a reviewer on the CL.
 func SharedFilesystemState(ctx context.Context, s *testing.State) {
 	// Names of processes whose children should be ignored. These processes themselves are also ignored.
 	ignoredAncestorNames := make(map[string]struct{})
