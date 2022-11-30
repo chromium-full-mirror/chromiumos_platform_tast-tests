@@ -1,0 +1,260 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package wifi
+
+import (
+	"context"
+	"encoding/hex"
+	"strings"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"chromiumos/tast/common/network/protoutil"
+	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
+	"chromiumos/tast/remote/wificell"
+	"chromiumos/tast/remote/wificell/hostapd"
+	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
+	"chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/services/cros/wifi"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         HiddenNetworkRemainsVisible,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that hidden networks are visible after logging out/logging in and rebooting",
+		Contacts: []string{
+			"cros-connectivity@google.com",
+			"cros-conn-test-team@google.com",
+			"cj.tsai@cienet.com",
+			"cienet-development@googlegroups.com",
+		},
+		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		ServiceDeps: []string{
+			wificell.TFServiceName,
+			wifiutil.FaillogServiceName,
+			"tast.cros.ui.AutomationService",
+			"tast.cros.browser.ChromeService",
+			"tast.cros.wifi.WifiService",
+			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
+		},
+		SoftwareDeps: []string{"chrome", "reboot"},
+		Fixture:      "wificellFixt",
+		Timeout:      7 * time.Minute, // It could take up to 4 minutes to reboot the DUT.
+		Params: []testing.Param{
+			{
+				Name: "hidden_network_migration_disabled",
+				Val:  false, // isHiddenNetworkMigrationEnabled
+			}, {
+				Name: "hidden_network_migration_enabled",
+				Val:  true, // isHiddenNetworkMigrationEnabled
+			},
+		},
+	})
+}
+
+// HiddenNetworkRemainsVisible verifies that hidden networks are visible after logging out/logging in and rebooting.
+func HiddenNetworkRemainsVisible(ctx context.Context, s *testing.State) {
+	tf := s.FixtValue().(*wificell.TestFixture)
+	opts := []hostapd.Option{
+		hostapd.Channel(1),
+		hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")),
+		hostapd.Mode(hostapd.Mode80211g),
+		hostapd.Hidden(),
+	}
+
+	hiddenAp, err := tf.ConfigureAP(ctx, opts, nil)
+	if err != nil {
+		s.Fatal("Failed to configure the AP: ", err)
+	}
+	defer tf.DeconfigAP(ctx, hiddenAp)
+	ctx, cancel := tf.ReserveForDeconfigAP(ctx, hiddenAp)
+	defer cancel()
+
+	anotherAP, err := tf.DefaultOpenNetworkAP(ctx)
+	if err != nil {
+		s.Fatal("Failed to configure the AP: ", err)
+	}
+	defer tf.DeconfigAP(ctx, anotherAP)
+	ctx, cancel = tf.ReserveForDeconfigAP(ctx, anotherAP)
+	defer cancel()
+
+	cleanupCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	startChromeReq := &ui.NewRequest{}
+	isHiddenNetworkMigrationEnabled := s.Param().(bool)
+	if isHiddenNetworkMigrationEnabled {
+		startChromeReq.EnableFeatures = []string{"HiddenNetworkMigration"}
+	} else {
+		startChromeReq.DisableFeatures = []string{"HiddenNetworkMigration"}
+	}
+
+	defer tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT)
+	// Join a hidden network at logged-in state as preparation of upcoming logout test.
+	// Also, test if the hidden network remains visible after the network connection has switched to another network in this logged-in session.
+	// Isolate the steps to leverage `defer` pattern.
+	func(ctx context.Context) {
+		cleanupCtx := ctx
+		ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+
+		crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
+		if _, err := crSvc.New(ctx, startChromeReq); err != nil {
+			s.Fatal("Failed to start Chrome: ", err)
+		}
+		defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
+
+		wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
+		if _, err := wifiSvc.JoinWifiFromQuickSettings(ctx, &wifi.JoinWifiRequest{
+			Ssid:     hiddenAp.Config().SSID,
+			Security: &wifi.JoinWifiRequest_None{},
+		}); err != nil {
+			s.Fatal("Failed to join wifi: ", err)
+		}
+
+		// Manually turn on the "Hidden network" toggle button if the feature "HiddenNetworkMigration" is
+		// enabled so that the service will have the hidden-ssid property.
+		if isHiddenNetworkMigrationEnabled {
+			if err := toggleHiddenNetworkOn(ctx, rpcClient.Conn, hiddenAp.Config().SSID); err != nil {
+				s.Fatal("Failed to turn on 'Hidden network' toggle button: ", err)
+			}
+		}
+
+		// Connect to another network to verify if the added hidden network
+		// remains visible after the connection switched.
+		if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, anotherAP); err != nil {
+			s.Fatal("Failed to connect to another AP: ", err)
+		}
+
+		if err := verifyHiddenNetworkVisible(ctx, rpcClient.Conn, hiddenAp.Config().SSID); err != nil {
+			s.Fatal("Failed to verify hidden WiFi is still visible: ", err)
+		}
+	}(ctx)
+
+	// Logs the DUT out (via starting another Chrome session) to verify if the
+	// added hidden network remains visible after re-login.
+	if err := reLoginAndVerifyHiddenNetworkVisible(ctx, rpcClient.Conn, startChromeReq, hiddenAp.Config().SSID); err != nil {
+		s.Fatal("Failed to verify hidden WiFi is still visible: ", err)
+	}
+
+	// Reboot the DUT to verify if the added hidden network remains visible after reboot.
+	if err := tf.RebootDUT(ctx, wificell.DefaultDUT); err != nil {
+		s.Fatal("Failed to reboot: ", err)
+	}
+	rpcClient = tf.DUTRPC(wificell.DefaultDUT)
+	if err := reLoginAndVerifyHiddenNetworkVisible(ctx, rpcClient.Conn, startChromeReq, hiddenAp.Config().SSID); err != nil {
+		s.Fatal("Failed to verify hidden WiFi is still visible: ", err)
+	}
+}
+
+func reLoginAndVerifyHiddenNetworkVisible(ctx context.Context, conn *grpc.ClientConn, startChromeReq *ui.NewRequest, ssid string) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	startChromeReq.KeepState = true
+	crSvc := ui.NewChromeServiceClient(conn)
+	if _, err := crSvc.New(ctx, startChromeReq); err != nil {
+		return errors.Wrap(err, "failed to start Chrome")
+	}
+	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
+
+	return verifyHiddenNetworkVisible(ctx, conn, ssid)
+}
+
+// verifyHiddenNetworkVisible verifies the hidden network is visible on
+// both Wi-Fi page and Known Networks and the network is a private network.
+func verifyHiddenNetworkVisible(ctx context.Context, conn *grpc.ClientConn, ssid string) error {
+	wifiSvc := wifi.NewWifiServiceClient(conn)
+	if _, err := wifiSvc.WifiPageControl(ctx, &wifi.WifiPageControlRequest{
+		Ssid:    ssid,
+		Control: wifi.WifiPageControlRequest_WaitUntilExist,
+	}); err != nil {
+		return errors.Wrap(err, "failed to find the network on WiFi page")
+	}
+
+	if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
+		Ssids:   []string{ssid},
+		Control: wifi.KnownNetworksControlsRequest_WaitUntilExist,
+	}); err != nil {
+		return errors.Wrap(err, "failed to find the hidden network in the Known Networks")
+	}
+
+	shillService := wifi.NewShillServiceClient(conn)
+	shillVal, err := protoutil.EncodeToShillValMap(map[string]interface{}{
+		shillconst.ServicePropertyType:           shillconst.TypeWifi,
+		shillconst.ServicePropertyWiFiHexSSID:    strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+		shillconst.ServicePropertyWiFiHiddenSSID: true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to encode shill property")
+	}
+
+	path, err := shillService.GetServicePath(ctx, &wifi.ServicePathRequest{Props: shillVal})
+	if err != nil {
+		return errors.Wrap(err, "failed to get service path")
+	}
+
+	if _, err = shillService.QueryService(ctx, &wifi.QueryServiceRequest{Path: path.ServicePath}); err != nil {
+		return errors.Wrap(err, "failed to find the target service")
+	}
+	return nil
+}
+
+func toggleHiddenNetworkOn(ctx context.Context, conn *grpc.ClientConn, ssid string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	osSettingsSvc := ossettings.NewOsSettingsServiceClient(conn)
+	if _, err := osSettingsSvc.OpenNetworkDetailPage(ctx, &ossettings.OpenNetworkDetailPageRequest{
+		NetworkName: ssid,
+		NetworkType: ossettings.OpenNetworkDetailPageRequest_WIFI,
+	}); err != nil {
+		return errors.Wrap(err, "failed to open network detail page")
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			faillog := ui.NewChromeUIServiceClient(conn)
+			faillog.DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{
+				FilePrefix: "network_details_page",
+			})
+		}
+		osSettingsSvc.Close(ctx, &emptypb.Empty{})
+	}(cleanupCtx)
+
+	uiSvc := ui.NewAutomationServiceClient(conn)
+	// The option "Hidden network" will be located on the expandable section when "HiddenNetworkMigration" flag is enabled.
+	if _, err := uiSvc.LeftClick(ctx, &ui.LeftClickRequest{
+		Finder: ui.Node().Name("Show network address settings").Role(ui.Role_ROLE_BUTTON).Finder(),
+	}); err != nil {
+		return errors.Wrap(err, `failed to expand the "Network" section`)
+	}
+
+	// Ensure the "Hidden network" toggle button is visible by focusing on it.
+	if _, err := uiSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{
+		Finder: ui.Node().Name("Hidden network").Role(ui.Role_ROLE_TOGGLE_BUTTON).Finder(),
+	}); err != nil {
+		return errors.Wrap(err, "failed to make node visible")
+	}
+
+	if _, err := osSettingsSvc.SetToggleOption(ctx, &ossettings.SetToggleOptionRequest{
+		ToggleOptionName: "Hidden network",
+		Enabled:          true,
+	}); err != nil {
+		return errors.Wrap(err, "failed to set the 'Hidden network' toggle option")
+	}
+	return nil
+}

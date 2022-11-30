@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"google.golang.org/grpc"
@@ -225,6 +226,47 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 		default:
 			return &emptypb.Empty{}, errors.Errorf("unrecognized control type %d", req.Control)
 		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+// WifiPageControl opens the OS-Settings at "Wi-Fi" page and interacts/controls the WiFi networks.
+func (s *Service) WifiPageControl(ctx context.Context, req *wifi.WifiPageControlRequest) (_ *emptypb.Empty, retErr error) {
+	res, err := s.initializeRuntimeResources(ctx)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	settings, err := ossettings.LaunchAtWiFi(ctx, res.tconn, res.cr)
+	if err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS Settings and navigate to the specific page")
+	}
+	defer settings.Close(cleanupCtx)
+	defer s.dumpUITreeWithScreenshotOnError(cleanupCtx, func() bool { return retErr != nil }, "check_wifi_settings_ui_dump")
+
+	wifiNameRegex := regexp.MustCompile(fmt.Sprintf(`^Network (\d)+ of (\d)+, %s`, req.Ssid))
+	wifiFinder := nodewith.NameRegex(wifiNameRegex).HasClass("layout")
+	switch req.Control {
+	case wifi.WifiPageControlRequest_WaitUntilExist:
+		if err := settings.WaitUntilExists(wifiFinder)(ctx); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to wait until WiFi node exists")
+		}
+	case wifi.WifiPageControlRequest_WaitUntilGone:
+		if err := settings.WaitUntilGone(wifiFinder)(ctx); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to wait until WiFi node gone")
+		}
+	case wifi.WifiPageControlRequest_WaitUntilConnected:
+		connected := nodewith.NameStartingWith("Connected").Role(role.StaticText)
+		if err := settings.WaitUntilExists(connected.Ancestor(wifiFinder))(ctx); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to wait until WiFi connected")
+		}
+	default:
+		return &emptypb.Empty{}, errors.Errorf("unrecognized control type %d", req.Control)
 	}
 
 	return &emptypb.Empty{}, nil

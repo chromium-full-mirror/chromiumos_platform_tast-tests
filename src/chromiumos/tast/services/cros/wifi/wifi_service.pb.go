@@ -85,6 +85,55 @@ func (KnownNetworksControlsRequest_KnownNetworkControl) EnumDescriptor() ([]byte
 	return file_wifi_service_proto_rawDescGZIP(), []int{1, 0}
 }
 
+type WifiPageControlRequest_WifiPageControl int32
+
+const (
+	WifiPageControlRequest_WaitUntilExist     WifiPageControlRequest_WifiPageControl = 0
+	WifiPageControlRequest_WaitUntilGone      WifiPageControlRequest_WifiPageControl = 1
+	WifiPageControlRequest_WaitUntilConnected WifiPageControlRequest_WifiPageControl = 2
+)
+
+// Enum value maps for WifiPageControlRequest_WifiPageControl.
+var (
+	WifiPageControlRequest_WifiPageControl_name = map[int32]string{
+		0: "WaitUntilExist",
+		1: "WaitUntilGone",
+		2: "WaitUntilConnected",
+	}
+	WifiPageControlRequest_WifiPageControl_value = map[string]int32{
+		"WaitUntilExist":     0,
+		"WaitUntilGone":      1,
+		"WaitUntilConnected": 2,
+	}
+)
+
+func (x WifiPageControlRequest_WifiPageControl) Enum() *WifiPageControlRequest_WifiPageControl {
+	p := new(WifiPageControlRequest_WifiPageControl)
+	*p = x
+	return p
+}
+
+func (x WifiPageControlRequest_WifiPageControl) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (WifiPageControlRequest_WifiPageControl) Descriptor() protoreflect.EnumDescriptor {
+	return file_wifi_service_proto_enumTypes[1].Descriptor()
+}
+
+func (WifiPageControlRequest_WifiPageControl) Type() protoreflect.EnumType {
+	return &file_wifi_service_proto_enumTypes[1]
+}
+
+func (x WifiPageControlRequest_WifiPageControl) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use WifiPageControlRequest_WifiPageControl.Descriptor instead.
+func (WifiPageControlRequest_WifiPageControl) EnumDescriptor() ([]byte, []int) {
+	return file_wifi_service_proto_rawDescGZIP(), []int{2, 0}
+}
+
 type JoinWifiRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -242,6 +291,61 @@ func (x *KnownNetworksControlsRequest) GetControl() KnownNetworksControlsRequest
 	return KnownNetworksControlsRequest_WaitUntilExist
 }
 
+type WifiPageControlRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ssid    string                                 `protobuf:"bytes,1,opt,name=ssid,proto3" json:"ssid,omitempty"`
+	Control WifiPageControlRequest_WifiPageControl `protobuf:"varint,2,opt,name=control,proto3,enum=tast.cros.wifi.WifiPageControlRequest_WifiPageControl" json:"control,omitempty"`
+}
+
+func (x *WifiPageControlRequest) Reset() {
+	*x = WifiPageControlRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_wifi_service_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WifiPageControlRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WifiPageControlRequest) ProtoMessage() {}
+
+func (x *WifiPageControlRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_wifi_service_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WifiPageControlRequest.ProtoReflect.Descriptor instead.
+func (*WifiPageControlRequest) Descriptor() ([]byte, []int) {
+	return file_wifi_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *WifiPageControlRequest) GetSsid() string {
+	if x != nil {
+		return x.Ssid
+	}
+	return ""
+}
+
+func (x *WifiPageControlRequest) GetControl() WifiPageControlRequest_WifiPageControl {
+	if x != nil {
+		return x.Control
+	}
+	return WifiPageControlRequest_WaitUntilExist
+}
+
 type JoinWifiRequest_SecurityEapTls struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -254,7 +358,7 @@ type JoinWifiRequest_SecurityEapTls struct {
 func (x *JoinWifiRequest_SecurityEapTls) Reset() {
 	*x = JoinWifiRequest_SecurityEapTls{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_wifi_service_proto_msgTypes[2]
+		mi := &file_wifi_service_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -267,7 +371,7 @@ func (x *JoinWifiRequest_SecurityEapTls) String() string {
 func (*JoinWifiRequest_SecurityEapTls) ProtoMessage() {}
 
 func (x *JoinWifiRequest_SecurityEapTls) ProtoReflect() protoreflect.Message {
-	mi := &file_wifi_service_proto_msgTypes[2]
+	mi := &file_wifi_service_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -338,22 +442,40 @@ var file_wifi_service_proto_rawDesc = []byte{
 	0x69, 0x6c, 0x47, 0x6f, 0x6e, 0x65, 0x10, 0x01, 0x12, 0x0a, 0x0a, 0x06, 0x46, 0x6f, 0x72, 0x67,
 	0x65, 0x74, 0x10, 0x02, 0x12, 0x0e, 0x0a, 0x0a, 0x44, 0x69, 0x73, 0x63, 0x6f, 0x6e, 0x6e, 0x65,
 	0x63, 0x74, 0x10, 0x03, 0x12, 0x0b, 0x0a, 0x07, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x10,
-	0x04, 0x32, 0xc6, 0x01, 0x0a, 0x0b, 0x57, 0x69, 0x66, 0x69, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x12, 0x56, 0x0a, 0x19, 0x4a, 0x6f, 0x69, 0x6e, 0x57, 0x69, 0x66, 0x69, 0x46, 0x72, 0x6f,
-	0x6d, 0x51, 0x75, 0x69, 0x63, 0x6b, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x1f,
-	0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x69, 0x66, 0x69, 0x2e,
-	0x4a, 0x6f, 0x69, 0x6e, 0x57, 0x69, 0x66, 0x69, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
-	0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x5f, 0x0a, 0x15, 0x4b, 0x6e, 0x6f,
-	0x77, 0x6e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f,
-	0x6c, 0x73, 0x12, 0x2c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77,
-	0x69, 0x66, 0x69, 0x2e, 0x4b, 0x6e, 0x6f, 0x77, 0x6e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
-	0x73, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x24, 0x5a, 0x22, 0x63, 0x68,
-	0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65,
-	0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x77, 0x69, 0x66, 0x69,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x04, 0x22, 0xd0, 0x01, 0x0a, 0x16, 0x57, 0x69, 0x66, 0x69, 0x50, 0x61, 0x67, 0x65, 0x43, 0x6f,
+	0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04,
+	0x73, 0x73, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x73, 0x73, 0x69, 0x64,
+	0x12, 0x50, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x36, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x69,
+	0x66, 0x69, 0x2e, 0x57, 0x69, 0x66, 0x69, 0x50, 0x61, 0x67, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x72,
+	0x6f, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x57, 0x69, 0x66, 0x69, 0x50, 0x61,
+	0x67, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x72,
+	0x6f, 0x6c, 0x22, 0x50, 0x0a, 0x0f, 0x57, 0x69, 0x66, 0x69, 0x50, 0x61, 0x67, 0x65, 0x43, 0x6f,
+	0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x12, 0x12, 0x0a, 0x0e, 0x57, 0x61, 0x69, 0x74, 0x55, 0x6e, 0x74,
+	0x69, 0x6c, 0x45, 0x78, 0x69, 0x73, 0x74, 0x10, 0x00, 0x12, 0x11, 0x0a, 0x0d, 0x57, 0x61, 0x69,
+	0x74, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x47, 0x6f, 0x6e, 0x65, 0x10, 0x01, 0x12, 0x16, 0x0a, 0x12,
+	0x57, 0x61, 0x69, 0x74, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74,
+	0x65, 0x64, 0x10, 0x02, 0x32, 0x9b, 0x02, 0x0a, 0x0b, 0x57, 0x69, 0x66, 0x69, 0x53, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x12, 0x56, 0x0a, 0x19, 0x4a, 0x6f, 0x69, 0x6e, 0x57, 0x69, 0x66, 0x69,
+	0x46, 0x72, 0x6f, 0x6d, 0x51, 0x75, 0x69, 0x63, 0x6b, 0x53, 0x65, 0x74, 0x74, 0x69, 0x6e, 0x67,
+	0x73, 0x12, 0x1f, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x69,
+	0x66, 0x69, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x57, 0x69, 0x66, 0x69, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x5f, 0x0a, 0x15,
+	0x4b, 0x6e, 0x6f, 0x77, 0x6e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x43, 0x6f, 0x6e,
+	0x74, 0x72, 0x6f, 0x6c, 0x73, 0x12, 0x2c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
+	0x73, 0x2e, 0x77, 0x69, 0x66, 0x69, 0x2e, 0x4b, 0x6e, 0x6f, 0x77, 0x6e, 0x4e, 0x65, 0x74, 0x77,
+	0x6f, 0x72, 0x6b, 0x73, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x53, 0x0a,
+	0x0f, 0x57, 0x69, 0x66, 0x69, 0x50, 0x61, 0x67, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c,
+	0x12, 0x26, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x69, 0x66,
+	0x69, 0x2e, 0x57, 0x69, 0x66, 0x69, 0x50, 0x61, 0x67, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f,
+	0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x42, 0x24, 0x5a, 0x22, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73,
+	0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
+	0x72, 0x6f, 0x73, 0x2f, 0x77, 0x69, 0x66, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -368,29 +490,34 @@ func file_wifi_service_proto_rawDescGZIP() []byte {
 	return file_wifi_service_proto_rawDescData
 }
 
-var file_wifi_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_wifi_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_wifi_service_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_wifi_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_wifi_service_proto_goTypes = []interface{}{
 	(KnownNetworksControlsRequest_KnownNetworkControl)(0), // 0: tast.cros.wifi.KnownNetworksControlsRequest.KnownNetworkControl
-	(*JoinWifiRequest)(nil),                               // 1: tast.cros.wifi.JoinWifiRequest
-	(*KnownNetworksControlsRequest)(nil),                  // 2: tast.cros.wifi.KnownNetworksControlsRequest
-	(*JoinWifiRequest_SecurityEapTls)(nil),                // 3: tast.cros.wifi.JoinWifiRequest.SecurityEapTls
-	(*anypb.Any)(nil),                                     // 4: google.protobuf.Any
-	(*emptypb.Empty)(nil),                                 // 5: google.protobuf.Empty
+	(WifiPageControlRequest_WifiPageControl)(0),           // 1: tast.cros.wifi.WifiPageControlRequest.WifiPageControl
+	(*JoinWifiRequest)(nil),                               // 2: tast.cros.wifi.JoinWifiRequest
+	(*KnownNetworksControlsRequest)(nil),                  // 3: tast.cros.wifi.KnownNetworksControlsRequest
+	(*WifiPageControlRequest)(nil),                        // 4: tast.cros.wifi.WifiPageControlRequest
+	(*JoinWifiRequest_SecurityEapTls)(nil),                // 5: tast.cros.wifi.JoinWifiRequest.SecurityEapTls
+	(*anypb.Any)(nil),                                     // 6: google.protobuf.Any
+	(*emptypb.Empty)(nil),                                 // 7: google.protobuf.Empty
 }
 var file_wifi_service_proto_depIdxs = []int32{
-	4, // 0: tast.cros.wifi.JoinWifiRequest.none:type_name -> google.protobuf.Any
-	3, // 1: tast.cros.wifi.JoinWifiRequest.eap_tls:type_name -> tast.cros.wifi.JoinWifiRequest.SecurityEapTls
+	6, // 0: tast.cros.wifi.JoinWifiRequest.none:type_name -> google.protobuf.Any
+	5, // 1: tast.cros.wifi.JoinWifiRequest.eap_tls:type_name -> tast.cros.wifi.JoinWifiRequest.SecurityEapTls
 	0, // 2: tast.cros.wifi.KnownNetworksControlsRequest.control:type_name -> tast.cros.wifi.KnownNetworksControlsRequest.KnownNetworkControl
-	1, // 3: tast.cros.wifi.WifiService.JoinWifiFromQuickSettings:input_type -> tast.cros.wifi.JoinWifiRequest
-	2, // 4: tast.cros.wifi.WifiService.KnownNetworksControls:input_type -> tast.cros.wifi.KnownNetworksControlsRequest
-	5, // 5: tast.cros.wifi.WifiService.JoinWifiFromQuickSettings:output_type -> google.protobuf.Empty
-	5, // 6: tast.cros.wifi.WifiService.KnownNetworksControls:output_type -> google.protobuf.Empty
-	5, // [5:7] is the sub-list for method output_type
-	3, // [3:5] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	1, // 3: tast.cros.wifi.WifiPageControlRequest.control:type_name -> tast.cros.wifi.WifiPageControlRequest.WifiPageControl
+	2, // 4: tast.cros.wifi.WifiService.JoinWifiFromQuickSettings:input_type -> tast.cros.wifi.JoinWifiRequest
+	3, // 5: tast.cros.wifi.WifiService.KnownNetworksControls:input_type -> tast.cros.wifi.KnownNetworksControlsRequest
+	4, // 6: tast.cros.wifi.WifiService.WifiPageControl:input_type -> tast.cros.wifi.WifiPageControlRequest
+	7, // 7: tast.cros.wifi.WifiService.JoinWifiFromQuickSettings:output_type -> google.protobuf.Empty
+	7, // 8: tast.cros.wifi.WifiService.KnownNetworksControls:output_type -> google.protobuf.Empty
+	7, // 9: tast.cros.wifi.WifiService.WifiPageControl:output_type -> google.protobuf.Empty
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_wifi_service_proto_init() }
@@ -424,6 +551,18 @@ func file_wifi_service_proto_init() {
 			}
 		}
 		file_wifi_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WifiPageControlRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_wifi_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*JoinWifiRequest_SecurityEapTls); i {
 			case 0:
 				return &v.state
@@ -446,8 +585,8 @@ func file_wifi_service_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_wifi_service_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   3,
+			NumEnums:      2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -480,6 +619,9 @@ type WifiServiceClient interface {
 	// KnownNetworksControls opens the OS-Settings at "Known Networks" page and
 	// interacts/controls the known networks.
 	KnownNetworksControls(ctx context.Context, in *KnownNetworksControlsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// WifiPageControl opens the OS-Settings at "Wi-Fi" page and
+	// interacts/controls the WiFi networks.
+	WifiPageControl(ctx context.Context, in *WifiPageControlRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type wifiServiceClient struct {
@@ -508,6 +650,15 @@ func (c *wifiServiceClient) KnownNetworksControls(ctx context.Context, in *Known
 	return out, nil
 }
 
+func (c *wifiServiceClient) WifiPageControl(ctx context.Context, in *WifiPageControlRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.wifi.WifiService/WifiPageControl", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WifiServiceServer is the server API for WifiService service.
 type WifiServiceServer interface {
 	// JoinWifiFromQuickSettings joins to the specified wifi network from
@@ -516,6 +667,9 @@ type WifiServiceServer interface {
 	// KnownNetworksControls opens the OS-Settings at "Known Networks" page and
 	// interacts/controls the known networks.
 	KnownNetworksControls(context.Context, *KnownNetworksControlsRequest) (*emptypb.Empty, error)
+	// WifiPageControl opens the OS-Settings at "Wi-Fi" page and
+	// interacts/controls the WiFi networks.
+	WifiPageControl(context.Context, *WifiPageControlRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedWifiServiceServer can be embedded to have forward compatible implementations.
@@ -527,6 +681,9 @@ func (*UnimplementedWifiServiceServer) JoinWifiFromQuickSettings(context.Context
 }
 func (*UnimplementedWifiServiceServer) KnownNetworksControls(context.Context, *KnownNetworksControlsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method KnownNetworksControls not implemented")
+}
+func (*UnimplementedWifiServiceServer) WifiPageControl(context.Context, *WifiPageControlRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WifiPageControl not implemented")
 }
 
 func RegisterWifiServiceServer(s *grpc.Server, srv WifiServiceServer) {
@@ -569,6 +726,24 @@ func _WifiService_KnownNetworksControls_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WifiService_WifiPageControl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WifiPageControlRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WifiServiceServer).WifiPageControl(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.wifi.WifiService/WifiPageControl",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WifiServiceServer).WifiPageControl(ctx, req.(*WifiPageControlRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _WifiService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.wifi.WifiService",
 	HandlerType: (*WifiServiceServer)(nil),
@@ -580,6 +755,10 @@ var _WifiService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "KnownNetworksControls",
 			Handler:    _WifiService_KnownNetworksControls_Handler,
+		},
+		{
+			MethodName: "WifiPageControl",
+			Handler:    _WifiService_WifiPageControl_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

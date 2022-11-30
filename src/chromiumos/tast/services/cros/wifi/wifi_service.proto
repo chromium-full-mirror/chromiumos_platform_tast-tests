@@ -21,6 +21,10 @@ service WifiService {
   // KnownNetworksControls opens the OS-Settings at "Known Networks" page and
   // interacts/controls the known networks.
   rpc KnownNetworksControls(KnownNetworksControlsRequest) returns (google.protobuf.Empty) {}
+
+  // WifiPageControl opens the OS-Settings at "Wi-Fi" page and
+  // interacts/controls the WiFi networks.
+  rpc WifiPageControl(WifiPageControlRequest) returns (google.protobuf.Empty) {}
 }
 
 message JoinWifiRequest {
@@ -48,4 +52,15 @@ message KnownNetworksControlsRequest {
 
   repeated string ssids = 1;
   KnownNetworkControl control = 2;
+}
+
+message WifiPageControlRequest {
+  enum WifiPageControl {
+    WaitUntilExist = 0;
+    WaitUntilGone = 1;
+    WaitUntilConnected = 2;
+  }
+
+  string ssid = 1;
+  WifiPageControl control = 2;
 }
