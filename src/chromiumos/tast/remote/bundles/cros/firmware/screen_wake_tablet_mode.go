@@ -654,6 +654,13 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
+	// Towards the beginning of the test, sending 'chan 0xffffffff' helps
+	// with reading information later from the ec console, for example,
+	// during checkAndRunTabletMode.
+	if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
+		s.Fatal("Failed to send 'chan 0xffffffff' to ec: ", err)
+	}
+
 	// Check from a list of names that might be relevant to DUT's screen based on
 	// the ec code, and if one exists, save it for future use in verifying screen state.
 	possibleNames := []firmware.GpioName{
