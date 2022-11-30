@@ -104,6 +104,13 @@ func ShowContinueSection(ctx context.Context, s *testing.State) {
 	}
 
 	for i, filePath := range testFileNames {
+		// Opening continue section task closes launcher, so the launcher needs to
+		// be re-opened for test iterations other than the initial one.
+		if !tabletMode && i > 0 {
+			if err := launcher.OpenProductivityLauncher(ctx, tconn, tabletMode); err != nil {
+				s.Fatal("Failed to open launcher: ", err)
+			}
+		}
 		// If the continue section is shown, then we don't need to try to re open the launcher.
 		fileContent := fmt.Sprintf("Test file %d", i)
 		if err := openFileFromContinueSection(ctx, tconn, tabletMode, filePath, fileContent); err != nil {
@@ -115,17 +122,16 @@ func ShowContinueSection(ctx context.Context, s *testing.State) {
 func openFileFromContinueSection(ctx context.Context, tconn *chrome.TestConn, tabletMode bool, filePath, fileContent string) error {
 	ui := uiauto.New(tconn)
 	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine chrome app")
+	}
+
 	// If the continue section is shown, then we don't need to try to re open the launcher.
 	continueSection := nodewith.ClassName("ContinueSectionView")
-	continueSectionFound, err := ui.IsNodeFound(ctx, continueSection)
-	if err != nil {
-		return errors.Wrap(err, "failed to search for continue section")
+	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(continueSection)(ctx); err != nil {
+		return errors.Wrap(err, "continue section not visible")
 	}
-	if !continueSectionFound {
-		if err := launcher.OpenProductivityLauncher(ctx, tconn, tabletMode); err != nil {
-			return errors.Wrap(err, "failed to open the launcher")
-		}
-	}
+
 	continueTask := nodewith.Ancestor(continueSection).Name(filePath)
 	if err := uiauto.Combine("Open file task",
 		ui.WithTimeout(3*time.Second).WaitUntilExists(continueTask),
