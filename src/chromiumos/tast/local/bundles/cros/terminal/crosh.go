@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify crosh System Web App",
 		Contacts: []string{
-			"joelhockey@chromium.org",
 			"chrome-hterm@google.com",
+			"joelhockey@chromium.org",
 		},
+		BugComponent: "b:1122570",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
