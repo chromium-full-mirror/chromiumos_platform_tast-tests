@@ -37,11 +37,6 @@ func Identifiers(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}
 
-	// Enable and get service to set autoconnect based on test parameters.
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to cellular service")
-	}
-
 	shillImei, err := helper.GetIMEIFromShill(ctx)
 	if err != nil {
 		s.Fatal("Could not get current IMEI from shill: ", err)
@@ -103,8 +98,12 @@ func Identifiers(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read SIM Imsi: ", err)
 	}
-	if err := validateIdentifiers("ServingOperator.Code", servingOperatorCode, operatorCode, 5, 6); err != nil {
-		s.Fatal("ServingOperator.Code validation failed: ", err)
+	// If the modem is not in a registered state, modemmanager will not expose this property.
+	// In that case let's not validate it.
+	if operatorCode != "" {
+		if err := validateIdentifiers("ServingOperator.Code", servingOperatorCode, operatorCode, 5, 6); err != nil {
+			s.Fatal("ServingOperator.Code validation failed: ", err)
+		}
 	}
 }
 
