@@ -26,11 +26,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if CRXManifestUpdateURLIgnored policy is correctly reflected in update mechanism of extensions",
 		Contacts: []string{
-			"zubeil@google.com", // Test author
+			"chromeos-commercial-chrome-apps-and-extensions@google.com", // Test owner
 			"chromeos-kiosk-eng+TAST@google.com",
+			"zubeil@google.com", // Original test author
 		},
+		BugComponent: "b:1253865",
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      7 * time.Minute, // Starting multiple extensions requires longer timeout.
