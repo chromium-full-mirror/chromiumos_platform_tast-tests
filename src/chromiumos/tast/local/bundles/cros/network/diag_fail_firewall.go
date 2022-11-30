@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the http/s firewall network diagnostic test fails when traffic is not allowed on certain ports",
 		Contacts: []string{
-			"khegde@chromium.org",            // test maintainer
-			"cros-network-health@google.com", // network-health team
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
 		},
+		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "networkDiagnosticsShillReset",

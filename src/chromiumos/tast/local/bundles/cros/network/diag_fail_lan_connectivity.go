@@ -19,10 +19,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the LANConnectivity network diagnostic test fails when ethernet is disabled",
 		Contacts: []string{
-			"khegde@chromium.org",            // test maintainer
-			"stevenjb@chromium.org",          // network-health tech lead
-			"cros-network-health@google.com", // network-health team
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
+			"stevenjb@chromium.org",               // network-health tech lead
 		},
+		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/234551696): Re-enable test.
 		Attr:    []string{},

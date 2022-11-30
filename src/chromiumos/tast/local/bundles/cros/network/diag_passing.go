@@ -29,11 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the network diagnostic routines can pass in a normal environment",
 		Contacts: []string{
-			"khegde@chromium.org",            // test maintainer
-			"stevenjb@chromium.org",          // network-health tech lead
-			"cros-network-health@google.com", // network-health team
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
+			"stevenjb@chromium.org",               // network-health tech lead
 		},
 		SoftwareDeps: []string{"chrome", "no_qemu"},
+		BugComponent: "b:1166446",
 		Attr:         []string{"group:mainline"},
 		Fixture:      "networkDiagnostics",
 		Params: []testing.Param{{

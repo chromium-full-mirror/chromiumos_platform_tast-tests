@@ -59,9 +59,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the network diagnostic routine for secure WiFi connection gives correct results with different WiFi security protocols",
 		Contacts: []string{
-			"khegde@chromium.org",            // test maintainer
-			"cros-network-health@google.com", // network-health team
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
 		},
+		BugComponent: "b:1166446",
 		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},

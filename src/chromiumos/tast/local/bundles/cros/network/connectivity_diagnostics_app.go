@@ -20,10 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests launching the connectivity diagnostics UI",
 		Contacts: []string{
-			"khegde@chromium.org",            // test maintainer
-			"stevenjb@chromium.org",          // network-health tech lead
-			"cros-network-health@google.com", // network-health team
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
+			"stevenjb@chromium.org",               // network-health tech lead
 		},
+		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + (30 * time.Second),

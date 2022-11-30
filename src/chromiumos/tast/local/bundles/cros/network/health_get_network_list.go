@@ -21,10 +21,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Validates that NetworkHealth API accurately gets networks",
 		Contacts: []string{
+			"cros-network-health-team@google.com", // network-health team
 			"khegde@chromium.org",                 // test maintainer
 			"stevenjb@chromium.org",               // network-health tech lead
-			"cros-network-health-team@google.com", // network-health team
 		},
+		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillReset",

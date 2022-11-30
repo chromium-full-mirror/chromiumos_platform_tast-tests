@@ -21,10 +21,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the DNS resolution network diagnostic test fails when the DNS cannot resolve requests",
 		Contacts: []string{
-			"khegde@chromium.org",            // test maintainer
-			"stevenjb@chromium.org",          // network-health tech lead
-			"cros-network-health@google.com", // network-health team
+			"cros-network-health-team@google.com", // network-health team
+			"khegde@chromium.org",                 // test maintainer
+			"stevenjb@chromium.org",               // network-health tech lead
 		},
+		BugComponent: "b:1166446",
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "networkDiagnosticsShillReset",
