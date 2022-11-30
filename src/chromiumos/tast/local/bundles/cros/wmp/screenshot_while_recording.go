@@ -23,11 +23,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the screenshot can be performed while doing screen recording",
 		Contacts: []string{
-			"xdai@google.com",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"xdai@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		//  ChromeOS > Software > ScreenCapture
+		BugComponent: "b:1253115",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

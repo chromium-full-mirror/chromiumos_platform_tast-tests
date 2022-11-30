@@ -25,11 +25,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that zero state desks bar in overview works correctly",
 		Contacts: []string{
-			"minch@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
+			"dandersson@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		//  ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})
