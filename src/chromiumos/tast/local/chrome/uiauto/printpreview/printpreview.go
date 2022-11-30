@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -256,5 +257,40 @@ func SetDropdown(ctx context.Context, tconn *chrome.TestConn, name, value string
 	if err := setDropdownInternal(ui, dropdown, value)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select dropdown option")
 	}
+	return nil
+}
+
+// SetCheckboxState sets a checkbox option to checked or unchecked as desired.
+func SetCheckboxState(ctx context.Context, tconn *chrome.TestConn, name string, selected bool) error {
+	// This function takes a bool instead of checked.Checked since you can't put
+	// a checkbox in "mixed" state by clicking on it.
+	var targetState checked.Checked
+	if selected {
+		targetState = checked.True
+	} else {
+		targetState = checked.False
+	}
+
+	checkbox := nodewith.Name(name).Role(role.CheckBox)
+	ui := uiauto.New(tconn)
+
+	// The checkbox could be in "mixed" state, so we might have to click it twice.
+	for {
+		info, err := ui.Info(ctx, checkbox)
+		if err != nil {
+			return err
+		}
+		if info.Checked == targetState {
+			break
+		}
+		if err := uiauto.Combine(fmt.Sprintf("find and toggle checkbox '%s'", name),
+			ui.WithTimeout(10*time.Second).WaitUntilExists(checkbox.Focusable()),
+			ui.EnsureFocused(checkbox),
+			ui.WaitForEvent(checkbox, event.CheckedStateChanged, ui.DoDefault(checkbox)),
+		)(ctx); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
