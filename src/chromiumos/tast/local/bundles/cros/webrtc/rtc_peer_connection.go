@@ -262,6 +262,17 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeCameraPerf",
 		}, {
+			Name: "h264_enc_oopve",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "H264",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
+		}, {
 			Name: "vp8_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
@@ -297,6 +308,17 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
 			Fixture:           "chromeCameraPerf",
+		}, {
+			Name: "vp8_enc_oopve",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "VP8",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 		}, {
 			Name: "vp8_enc_simulcast",
 			Val: peerconnection.RTCTestParams{
@@ -428,6 +450,17 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP9},
 			Fixture:           "chromeCameraPerf",
+		}, {
+			Name: "vp9_enc_oopve",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 		}, {
 			// This is a 2 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
