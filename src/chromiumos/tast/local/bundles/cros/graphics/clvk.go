@@ -45,7 +45,7 @@ func init() {
 				exe: "simple_test",
 			},
 			Timeout:   1 * time.Minute,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline"},
 		}},
 	})
 }
