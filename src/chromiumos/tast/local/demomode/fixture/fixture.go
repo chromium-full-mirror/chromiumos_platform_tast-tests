@@ -25,7 +25,7 @@ const (
 	// PostDemoModeOOBE is the name for the fixture that clicks through Demo Mode OOBE setup
 	PostDemoModeOOBE = "postDemoModeOOBE"
 
-	setUpTimeout    = 150 * time.Second
+	setUpTimeout    = 350 * time.Second
 	tearDownTimeout = 25 * time.Second
 )
 
