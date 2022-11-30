@@ -28,10 +28,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks enabling Instant Tether through Quick Settings",
 		Contacts: []string{
-			"polner@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"polner@chromium.org",
 		},
+		// ChromeOS > Software > System Services > Cross Device > Instant Tethering
+		BugComponent: "b:1131910",
 		Attr:         []string{"group:cross-device", "cross-device_instanttether", "cross-device_cellular"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceOnboardedAllFeatures",
