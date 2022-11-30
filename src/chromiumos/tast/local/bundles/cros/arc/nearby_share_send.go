@@ -40,14 +40,21 @@ const (
 	checkBoxMediumFileID = "checkBoxMediumFile"
 	// Id of the check box for using the large sized file.
 	checkBoxLargeFileID = "checkBoxLargeFile"
+	// Id of the check box for using the x-large sized file.
+	checkBoxXLargeFileID = "checkBoxXLargeFile"
 
 	// Large file generation additional UI timeout.
 	largeFileTimeout = 40 * time.Second
+	// X-Large file generation additional UI timeout.
+	xlargeFileTimeout = 1 * time.Minute
 	// nearbycommon.DetectionTimeout + additional test time needed for ARC setup.
 	baseArcTestTime = nearbycommon.DetectionTimeout + 2*time.Minute
 	// ExtraLargeFileOnlineTransferTimeout is for 30MB, add 7 more minutes for the
 	// extra 70MBs needed to transfer an ArcShareTestApp large file.
 	largeFileExtraBufferTime = 10 * time.Minute
+	// ExtraLargeFileOnlineTransferTimeout is for 30MB, add 12 more minutes for the
+	// extra 220MBs needed to transfer an ArcShareTestApp x-large file.
+	xlargeFileExtraBufferTime = 15 * time.Minute
 )
 
 type arcNearbyShareParams struct {
@@ -176,6 +183,32 @@ func init() {
 					},
 				},
 				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileTimeout + largeFileExtraBufferTime,
+			},
+			{
+				Name:              "dataonline_noone_xlarge_file",
+				ExtraSoftwareDeps: []string{"android_p"},
+				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
+				Val: arcNearbyShareParams{
+					TestData: nearbycommon.TestData{
+						Filename:        checkBoxXLargeFileID,
+						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
+						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
+					},
+				},
+				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileTimeout + xlargeFileExtraBufferTime,
+			},
+			{
+				Name:              "dataonline_noone_xlarge_file_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
+				Val: arcNearbyShareParams{
+					TestData: nearbycommon.TestData{
+						Filename:        checkBoxXLargeFileID,
+						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
+						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
+					},
+				},
+				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileTimeout + xlargeFileExtraBufferTime,
 			},
 			{
 				Name:              "dataonline_noone_multiple_files",
