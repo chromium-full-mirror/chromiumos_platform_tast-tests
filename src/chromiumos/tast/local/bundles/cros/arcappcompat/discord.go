@@ -7,19 +7,13 @@ package arcappcompat
 
 import (
 	"context"
-	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arcappcompat/pre"
 	"chromiumos/tast/local/bundles/cros/arcappcompat/testutil"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -162,123 +156,57 @@ func Discord(ctx context.Context, s *testing.State) {
 // verify Discord reached main activity page of the app.
 func launchAppForDiscord(ctx context.Context, s *testing.State, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, appPkgName, appActivity string) {
 	const (
-		textEditClassName      = "android.widget.EditText"
-		enterEmailText         = "Email"
-		emailOrPhoneNumberText = "Email or Phone Number"
-		enterPasswordText      = "Password"
-		homeIconID             = "com.discord:id/tabs_host_bottom_nav_friends_item"
-		notNowID               = "android:id/autofill_save_no"
-		verifyText             = "Verify"
-		loginID                = "login_submit_button"
-		neverButtonID          = "com.google.android.gms:id/credential_save_reject"
-		captchaWord            = "skip"
-		loginText              = "Log In"
-		// The inputs rendered by Discord are not immediately active after being clicked
-		// so wait a moment for the engine to make the input active before interacting with it.
-		waitForActiveInputTime = time.Second * 10
+		homeIconID          = "com.discord:id/tabs_host_bottom_nav_friends_item"
+		logInButtonText     = "Log In"
+		logInButtonClass    = "android.widget.TextView"
+		emailTextFieldID    = "login_login_input"
+		passwordTextFieldID = "login_password_input"
+		skipButtonText      = "Skip Challenge"
+		skipButtonClass     = "android.widget.Button"
 	)
 
-	loginBtn := uidetection.TextBlock(strings.Split(loginText, " "))
-	ud := uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	if err := uiauto.Combine("Check for login button",
-		ud.WaitUntilExists(loginBtn),
-		ud.Tap(loginBtn),
-		action.Sleep(waitForActiveInputTime),
-	)(ctx); err != nil {
-		s.Fatal("Failed to find login button: ", err)
-	}
-
-	// Click on emailid text field until the emailid text field is focused.
-	enterEmailAddress := d.Object(ui.ClassName(textEditClassName), ui.Text(enterEmailText))
-	if err := enterEmailAddress.WaitForExists(ctx, testutil.ShortUITimeout); err != nil {
-		s.Log("enterEmailAddress doesn't exist: ", err)
-		enterEmailAddress = d.Object(ui.ClassName(textEditClassName), ui.Text(emailOrPhoneNumberText))
-		if err := enterEmailAddress.WaitForExists(ctx, testutil.ShortUITimeout); err != nil {
-			s.Error("enterEmailAddress doesn't exist: ", err)
-		}
-	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if emailIDFocused, err := enterEmailAddress.IsFocused(ctx); err != nil {
-			return errors.New("email text field not focused yet")
-		} else if !emailIDFocused {
-			enterEmailAddress.Click(ctx)
-			return errors.New("email text field not focused yet")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: testutil.ShortUITimeout}); err != nil {
-		s.Fatal("Failed to focus EmailId: ", err)
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	defer kb.Close()
-
-	emailID := s.RequiredVar("arcappcompat.Discord.emailid")
-	if err := kb.Type(ctx, emailID); err != nil {
-		s.Fatal("Failed to enter emailID: ", err)
-	}
-	s.Log("Entered EmailAddress")
-
-	// Click on password text field until the password text field is focused.
-	enterPassword := d.Object(ui.ClassName(textEditClassName), ui.Text(enterPasswordText))
-	if err := enterPassword.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Error("enterPassword doesn't exist: ", err)
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if pwdFocused, err := enterPassword.IsFocused(ctx); err != nil {
-			return errors.New("password text field not focused yet")
-		} else if !pwdFocused {
-			enterPassword.Click(ctx)
-			return errors.New("Password text field not focused yet")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: testutil.ShortUITimeout}); err != nil {
-		s.Fatal("Failed to focus password: ", err)
-	}
-
+	email := s.RequiredVar("arcappcompat.Discord.emailid")
 	password := s.RequiredVar("arcappcompat.Discord.password")
-	if err := kb.Type(ctx, password); err != nil {
-		s.Fatal("Failed to enter password: ", err)
-	}
-	s.Log("Entered password")
 
-	// Click on login button.
-	loginButton := d.Object(ui.ID(loginID))
-	if err := loginButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Error("Login Button doesn't exist: ", err)
-	} else if err := loginButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on loginButton: ", err)
-	}
-	// Click on never button.
-	neverButton := d.Object(ui.ID(neverButtonID))
-	if err := neverButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Log("Never Button doesn't exist: ", err)
-	} else if err := neverButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on neverButton: ", err)
-	}
-	// Click on not now button.
-	notNowButton := d.Object(ui.ID(notNowID))
-	if err := notNowButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Log("notNowButton doesn't exists: ", err)
-	} else if err := notNowButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on notNowButton: ", err)
+	logInButton := d.Object(ui.ClassName(logInButtonClass), ui.Text(logInButtonText))
+	if err := logInButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+		s.Fatal("Button Log In doesn't exists: ", err)
+	} else if err := logInButton.Click(ctx); err != nil {
+		s.Fatal("Failed to click on Log In: ", err)
 	}
 
-	// Check for captcha.
-	ud = uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	captchaPage := uidetection.Word(captchaWord).First()
-	if err := uiauto.Combine("Check for captcha page",
-		ud.WithTimeout(testutil.ShortUITimeout).WaitUntilExists(captchaPage),
-	)(ctx); err == nil {
-		s.Log("Captcha page does exist")
+	emailTextField := d.Object(ui.ID(emailTextFieldID))
+	if err := emailTextField.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+		s.Fatal("Email text field doesn't exists: ", err)
+	} else if err := emailTextField.SetText(ctx, email); err != nil {
+		s.Fatal("Failed to set text on email text field: ", err)
+	}
+
+	passwordTextField := d.Object(ui.ID(passwordTextFieldID))
+	if err := passwordTextField.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+		s.Fatal("Password text field doesn't exists: ", err)
+	} else if err := passwordTextField.SetText(ctx, password); err != nil {
+		s.Fatal("Failed to set text on password text field: ", err)
+	}
+
+	// Need to click Log In button again once we input email and password.
+	if err := logInButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+		s.Fatal("Button Log In doesn't exists after entering credential: ", err)
+	} else if err := logInButton.Click(ctx); err != nil {
+		s.Fatal("Failed to click on Log In after entering credential: ", err)
+	}
+
+	// Check for captcha and pass the test once we see the captcha.
+	skipButton := d.Object(ui.ClassName(skipButtonClass), ui.Text(skipButtonText))
+	if err := skipButton.WaitForExists(ctx, testutil.DefaultUITimeout); err == nil {
+		s.Log("Captcha page exists")
 		return
 	}
 
+	// Deal with the dialog boxes if we don't see captcha.
 	testutil.HandleDialogBoxes(ctx, s, d, appPkgName)
-	// Check for homePageVerifier.
+
+	// Check for homePageVerifier after login .
 	homePageVerifier := d.Object(ui.ID(homeIconID))
 	if err := homePageVerifier.WaitForExists(ctx, testutil.LongUITimeout); err != nil {
 		s.Fatal("homePageVerifier doesn't exist: ", err)
