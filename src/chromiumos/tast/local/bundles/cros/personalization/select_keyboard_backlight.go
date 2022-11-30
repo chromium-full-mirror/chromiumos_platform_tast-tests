@@ -25,10 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test selecting keyboard backlight color in personalization hub app",
 		Contacts: []string{
+			"assistive-eng@google.com",
 			"thuongphan@google.com",
 			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model(personalization.RgbSupportedModels...)),

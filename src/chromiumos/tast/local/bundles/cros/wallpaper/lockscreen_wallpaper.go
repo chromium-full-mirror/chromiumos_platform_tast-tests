@@ -29,10 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test verifying wallpaper on lock screen",
 		Contacts: []string{
+			"assistive-eng@google.com",
 			"jasontt@google.com",
 			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{constants.LockscreenWallpaperFileName},
 		SoftwareDeps: []string{"chrome"},

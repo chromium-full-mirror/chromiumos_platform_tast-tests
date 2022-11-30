@@ -25,11 +25,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting online wallpapers in the new wallpaper app for a child user",
 		Contacts: []string{
-			"thuongphan@google.com",
-			"cros-families-eng+test@google.com",
-			"chromeos-sw-engprod@google.com",
 			"assistive-eng@google.com",
+			"cros-families-eng+test@google.com",
+			"thuongphan@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"unicorn.wallpaperCategory", "unicorn.wallpaperName"},

@@ -26,10 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test opening personalization hub app from Dark theme Quick Settings",
 		Contacts: []string{
+			"assistive-eng@google.com",
 			"thuongphan@google.com",
 			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

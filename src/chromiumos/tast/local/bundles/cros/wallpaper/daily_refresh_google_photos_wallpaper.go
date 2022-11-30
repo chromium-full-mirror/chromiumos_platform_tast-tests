@@ -26,10 +26,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting Google Photos wallpapers in the wallpaper app",
 		Contacts: []string{
-			"xiaohuic@google.com",
 			"assistive-eng@google.com",
+			"xiaohuic@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

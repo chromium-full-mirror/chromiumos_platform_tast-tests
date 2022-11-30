@@ -28,10 +28,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting guest wallpaper is cleared on next login",
 		Contacts: []string{
+			"assistive-eng@google.com",
 			"cowmoo@google.com",
 			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

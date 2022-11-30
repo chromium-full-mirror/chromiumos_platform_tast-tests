@@ -31,10 +31,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting screensaver in the personalization hub app",
 		Contacts: []string{
+			"assistive-eng@google.com",
 			"thuongphan@google.com",
 			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
 		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"ambient.username", "ambient.password"},
 		SoftwareDeps: []string{"chrome"},
