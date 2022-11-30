@@ -42,7 +42,7 @@ func init() {
 		Func:         ChromePIPEnergyAndPower,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures energy and power usage of Chrome PIP",
-		Contacts:     []string{"chromeos-perf@google.com", "amusbach@chromium.org"},
+		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "amusbach@chromium.org"},
 		BugComponent: "b:1045832",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome", "proprietary_codecs"},
