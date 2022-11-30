@@ -27,6 +27,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/cpu"
+	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
@@ -389,8 +390,13 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 
 	startTime := time.Now()
 
+	// Drop host caches for predictable results.
+	if err := disk.DropCaches(ctx); err != nil {
+		return v, errors.Wrap(err, "failed to drop caches")
+	}
+
 	// Opt in. From performance perspective, optin longer than 90 seconds is failure.
-	// This also aligned with global 20 minute timeout.
+	// This also aligned with global 20 minutes timeout.
 	shorterCtx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
 
