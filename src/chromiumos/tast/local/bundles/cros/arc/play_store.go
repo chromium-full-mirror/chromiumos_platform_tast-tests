@@ -34,7 +34,7 @@ func init() {
 			Val: playStoreTestParams{
 				MaxOptinAttempts: 2,
 			},
-			ExtraSoftwareDeps: []string{"android_p", "chrome"},
+			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 		}, {
 			Name: "vm",
 			Val: playStoreTestParams{
