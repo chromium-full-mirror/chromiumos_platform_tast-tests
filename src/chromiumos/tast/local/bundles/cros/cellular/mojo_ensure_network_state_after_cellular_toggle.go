@@ -21,7 +21,7 @@ func init() {
 		Func:         MojoEnsureNetworkStateAfterCellularToggle,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enable/disable Cellular service using Mojo and check WiFi/Ethernet are not affected",
-		Contacts:     []string{"cros-network-health@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
+		Contacts:     []string{"cros-network-health-team@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},

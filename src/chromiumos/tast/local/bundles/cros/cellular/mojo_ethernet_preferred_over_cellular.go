@@ -21,7 +21,7 @@ func init() {
 		Func:         MojoEthernetPreferredOverCellular,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Confirm Ethernet is preferred over cellular when both are enabled and wifi is disabled",
-		Contacts:     []string{"cros-network-health@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
+		Contacts:     []string{"cros-network-health-team@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},

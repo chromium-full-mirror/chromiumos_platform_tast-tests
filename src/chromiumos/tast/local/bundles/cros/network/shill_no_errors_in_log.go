@@ -24,8 +24,7 @@ func init() {
 		Func: ShillNoErrorsInLog,
 		Desc: "Checks that Shill does not produce any unexpected error logs",
 		Contacts: []string{
-			"sangchun@google.com",
-			"cros-network-health@google.com",
+			"cros-network-health-team@google.com",
 		},
 		Attr: []string{"group:mainline", "informational"},
 	})

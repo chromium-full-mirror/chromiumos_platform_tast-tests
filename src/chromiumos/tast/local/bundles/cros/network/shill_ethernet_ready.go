@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ShillEthernetReady,
 		Desc:     "Verifies that Shill is running and an Ethernet Device and Service is available",
-		Contacts: []string{"stevenjb@google.com", "cros-network-health@google.com"},
+		Contacts: []string{"cros-network-health-team@google.com", "stevenjb@google.com"},
 		Attr:     []string{"group:mainline", "informational"},
 	})
 }

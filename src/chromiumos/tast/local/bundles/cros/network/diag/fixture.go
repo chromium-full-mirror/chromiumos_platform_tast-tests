@@ -20,9 +20,9 @@ func init() {
 		Name: "networkDiagnostics",
 		Desc: "A network diagnostics mojo API is ready and available to use",
 		Contacts: []string{
+			"cros-network-health@google.com", // network-health team
 			"khegde@chromium.org",            // network diagnostics author
 			"stevenjb@chromium.org",          // network-health tech lead
-			"cros-network-health@google.com", // network-health team
 		},
 		SetUpTimeout:    chrome.LoginTimeout + (30 * time.Second),
 		ResetTimeout:    5 * time.Second,
@@ -34,9 +34,9 @@ func init() {
 		Name: "networkDiagnosticsShillReset",
 		Desc: "A network diagnostics mojo API is ready and available to use. This fixture also sets shill in a default state and resets any modifications",
 		Contacts: []string{
-			"khegde@chromium.org",            // network diagnostics author
-			"stevenjb@chromium.org",          // network-health tech lead
-			"cros-network-health@google.com", // network-health team
+			"khegde@chromium.org",                 // network diagnostics author
+			"stevenjb@chromium.org",               // network-health tech lead
+			"cros-network-health-team@google.com", // network-health team
 		},
 		SetUpTimeout:    chrome.LoginTimeout + (1 * time.Minute),
 		ResetTimeout:    5 * time.Second,

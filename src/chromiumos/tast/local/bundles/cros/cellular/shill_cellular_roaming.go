@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillCellularRoaming,
 		Desc:         "Verifies that AllowRoaming is respected by Shill",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "pholla@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_roaming"},
 		Fixture:      "cellular",

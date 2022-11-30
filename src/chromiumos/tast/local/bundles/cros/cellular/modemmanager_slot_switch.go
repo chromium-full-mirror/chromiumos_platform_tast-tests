@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemmanagerSlotSwitch,
 		Desc:         "Verifies that modemmanager switches SIM slot",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "srikanthkumar@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
 		Fixture:      "cellularModemManager",

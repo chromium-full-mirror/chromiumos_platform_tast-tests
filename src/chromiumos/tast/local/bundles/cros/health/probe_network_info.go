@@ -43,9 +43,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that we can probe cros_healthd for network info",
 		Contacts: []string{
+			"cros-network-health-team@google.com",
 			"cros-tdm-tpe-eng@google.com",
 			"khegde@google.com",
-			"cros-network-health@google.com",
 		},
 		BugComponent: "b:982097",
 		Attr:         []string{"group:mainline"},

@@ -21,7 +21,7 @@ func init() {
 		Func:         APBrowseInternet,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "WiFi AP connect and browse internet",
-		Contacts:     []string{"pathan.jilani@intel.com", "cros-network-health@google.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"cros-network-health-team@google.com", "pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{},
 		Vars:         []string{"wifissid", "wifipassword"},
