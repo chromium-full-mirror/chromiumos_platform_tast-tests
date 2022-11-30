@@ -80,7 +80,7 @@ func (l *Lacros) Close(ctx context.Context) error {
 			testing.ContextLog(ctx, "Error creating lacros log directory: ", err)
 		}
 
-		pattern := filepath.Join(lacros.UserDataDir, "lacros.log*")
+		pattern := filepath.Join(lacros.UserDataDir, "lacros*.log*")
 		if files, err := filepath.Glob(pattern); err != nil {
 			testing.ContextLogf(ctx, "Failed to list files with pattern %v: %v", pattern, err)
 		} else {
