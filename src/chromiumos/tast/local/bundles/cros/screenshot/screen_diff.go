@@ -28,7 +28,8 @@ func init() {
 		Func:         ScreenDiff,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test to confirm that the screen diffing library works as intended",
-		Contacts:     []string{"msta@google.com", "chrome-engprod@google.com"},
+		Contacts:     []string{"chromeos-engprod-syd@google.com", "msta@google.com"},
+		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("eve")),
 		// Disabled due to <1% pass rate over 30 days. See b/241943743
