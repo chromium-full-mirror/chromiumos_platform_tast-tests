@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
+	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
 )
@@ -28,6 +29,7 @@ func init() {
 		SetUpTimeout:    15 * time.Second,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
 		PostTestTimeout: 5 * time.Second,
 	})
 
@@ -41,6 +43,7 @@ func init() {
 		SetUpTimeout:    15 * time.Second,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
 		PostTestTimeout: 5 * time.Second,
 		Parent:          fixture.Enrolled,
 	})
@@ -53,6 +56,8 @@ type fakeDMSFixture struct {
 	fdmsDir string
 	// importState is the path to an existing state file for FakeDMS.
 	importState string
+	// Marker for per-test log.
+	logMarker *logsaver.Marker
 }
 
 func (f *fakeDMSFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -101,6 +106,13 @@ func (f *fakeDMSFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.fakeDMS != nil {
 		f.fakeDMS.Stop(ctx)
 	}
+
+	// Copy full FakeDMS log to OutDir.
+	src := filepath.Join(f.fdmsDir, fakedms.LogFile)
+	dst := filepath.Join(s.OutDir(), fakedms.LogFile)
+	if err := fsutil.CopyFile(src, dst); err != nil {
+		s.Error("Failed to copy FakeDMS logs: ", err)
+	}
 }
 
 func (f *fakeDMSFixture) Reset(ctx context.Context) error {
@@ -117,23 +129,29 @@ func (f *fakeDMSFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *fakeDMSFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
-func (f *fakeDMSFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if ctx.Err() != nil {
-		s.Fatal("Context already expired: ", ctx.Err())
+func (f *fakeDMSFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.logMarker != nil {
+		s.Error("A log marker is already created but not cleaned up")
 	}
-
-	// Copy FakeDMS log to the current tests OutDir.
-	src := filepath.Join(f.fdmsDir, fakedms.LogFile)
-	dst := filepath.Join(s.OutDir(), fakedms.LogFile)
-	if err := fsutil.CopyFile(src, dst); err != nil {
-		s.Error("Failed to copy FakeDMS logs: ", err)
+	logMarker, err := logsaver.NewMarker(filepath.Join(f.fdmsDir, fakedms.LogFile))
+	if err != nil {
+		s.Error("Failed to start the log saver: ", err)
+	} else {
+		f.logMarker = logMarker
+	}
+}
+func (f *fakeDMSFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.logMarker != nil {
+		if err := f.logMarker.Save(filepath.Join(s.OutDir(), "fakedms.log")); err != nil {
+			s.Error("Failed to store per-test log data: ", err)
+		}
+		f.logMarker = nil
 	}
 
 	// Copy FakeDMS policies to the current tests OutDir.
 	// Add prefix to avoid conflic with the Chrome fixture.
-	src = filepath.Join(f.fdmsDir, fakedms.PolicyFile)
-	dst = filepath.Join(s.OutDir(), "fakedms_"+fakedms.PolicyFile)
+	src := filepath.Join(f.fdmsDir, fakedms.PolicyFile)
+	dst := filepath.Join(s.OutDir(), "fakedms_"+fakedms.PolicyFile)
 	if err := fsutil.CopyFile(src, dst); err != nil {
 		s.Error("Failed to copy FakeDMS policies: ", err)
 	}
