@@ -942,7 +942,10 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			// Select the tab to present.
 			if err := action.Combine(
 				"select tab to screenshare",
-				pc.Click(nodewith.NameStartingWith(presentTabTitle).HasClass("AXVirtualView")),
+				// On Lacros tablets, the UI tree improperly calculates
+				// the position of the tab node. A workaround is to
+				// directly focus the node without using its location.
+				ui.FocusAndWait(nodewith.NameStartingWith(presentTabTitle).HasClass("AXVirtualView")),
 				kw.AccelAction("Enter"),
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to select the tab to share")
