@@ -283,11 +283,9 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptoh
 	}
 	config, err = createChallengeResponseData(ctx, lf, cryptohome)
 	if err != nil {
-		// We could not use latest tast to create challenge-response data before R96, so here we only log the error.
-		testing.ContextLog(ctx, "Failed to create challenge-response data: ", err)
-	} else {
-		configList = append(configList, *config)
+		return errors.Wrap(err, "failed to create challenge-response data")
 	}
+	configList = append(configList, *config)
 
 	// Note that if the format of either CrossVersionLoginConfigData or CrossVersionLoginConfig is changed,
 	// the hwsec.CrossVersionLogin should be modified and the generated data should be regenerated.
