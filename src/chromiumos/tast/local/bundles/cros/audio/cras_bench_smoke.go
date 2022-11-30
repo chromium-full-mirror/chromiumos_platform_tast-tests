@@ -1,4 +1,4 @@
-// Copyright 2021 The ChromiumOS Authors
+// Copyright 2022 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,14 +14,14 @@ import (
 )
 
 func init() {
-	// NOTE: when modifying a test here please also mirror the changes to audio.CrasBenchSmoke.
-	// audio.CrasBench uploads results to crosbolt but does not prevent breakage.
+	// NOTE: when modifying a test here please also mirror the changes to audio.CrasBench.
+	// audio.CrasBenchSmoke prevent breakage in CQ but does not upload results to crosbolt.
 	testing.AddTest(&testing.Test{
-		Func:         CrasBench,
-		Desc:         "Micro-benchmarks for the ChromeOS audio server",
+		Func:         CrasBenchSmoke,
+		Desc:         "Smoke test of cras_bench",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:875484",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -45,6 +45,6 @@ func init() {
 	})
 }
 
-func CrasBench(ctx context.Context, s *testing.State) {
+func CrasBenchSmoke(ctx context.Context, s *testing.State) {
 	crasbench.Run(ctx, s)
 }
