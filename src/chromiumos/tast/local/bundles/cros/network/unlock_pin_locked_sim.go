@@ -28,6 +28,7 @@ func init() {
 			"hsuregan@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},
 		// Run test only on cellular capable devices that only have one active SIM.
 		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},

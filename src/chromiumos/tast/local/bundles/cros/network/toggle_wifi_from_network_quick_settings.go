@@ -26,6 +26,7 @@ func init() {
 			"tjohnsonkanu@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWithNetworkRevampEnabled",
