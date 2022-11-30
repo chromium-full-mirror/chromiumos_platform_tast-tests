@@ -1,0 +1,104 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package secagentd tests security event reporting functionality of the
+// secagentd daemon.
+package secagentd
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/policy"
+	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func: XdrPolicyCheck,
+		Desc: "Checks that the daemon adheres to the XDR reporting policy",
+		Contacts: []string{
+			"cros-enterprise-security@google.com",
+		},
+		BugComponent: "b:1208373",
+		Attr:         []string{"group:mainline", "informational"},
+		Timeout:      3 * time.Minute,
+		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		SoftwareDeps: []string{"bpf", "chrome"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
+	})
+}
+
+func setXdrPolicy(ctx context.Context, s *testing.State, v bool) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
+		s.Fatal("Failed to clean up before updating policy: ", err)
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{&policy.DeviceReportXDREvents{Val: v}})
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		s.Fatal("Failed to update policies. Make sure Chrome has API keys and apply go/pavolshack if running on a VM: ", err)
+	}
+
+	// Restart secagentd. Don't pass in the flag that would override policy
+	// checks. But do override the wait for missive to successfully enqueue
+	// an event. Bypassing this wait will make secagentd emit more than one
+	// event and will greatly reduce the chance of a flake.
+	if err := upstart.RestartJob(ctx, "secagentd", upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true")); err != nil {
+		s.Fatal("Failed to restart secagentd: ", err)
+	}
+}
+
+func XdrPolicyCheck(ctx context.Context, s *testing.State) {
+	for _, param := range []struct {
+		name          string
+		policy        bool
+		expectEnqueue bool
+	}{
+		{
+			name:          "xdr_policy_enabled",
+			policy:        true,
+			expectEnqueue: true,
+		},
+		{
+			name:          "xdr_policy_disabled",
+			policy:        false,
+			expectEnqueue: false,
+		},
+	} {
+		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			setXdrPolicy(ctx, s, param.policy)
+			stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx)
+			if err != nil {
+				s.Fatal("Failed to setup dbus monitoring: ", err)
+			}
+
+			// Start an arbitrary process that exits instantaneously. This will
+			// cause Process events to be emitted if permitted by policy.
+			cmd := testexec.CommandContext(ctx, "/bin/echo")
+			cmd.Wait()
+			testing.Sleep(ctx, 3*time.Second)
+
+			calledMethods, err := stop()
+			if err != nil {
+				s.Fatal("Failed to capture EnqueueRecord dbus calls to missive: ", err)
+			}
+			s.Logf("secagentd enqueued %d events", len(calledMethods))
+			if param.expectEnqueue && len(calledMethods) == 0 {
+				s.Fatal("secagentd unexpectedly failed to enqueue any events to missive")
+			} else if !param.expectEnqueue && len(calledMethods) != 0 {
+				s.Fatalf("secagentd unexpectedly enqueued %d events to missive", len(calledMethods))
+			}
+		})
+	}
+}
