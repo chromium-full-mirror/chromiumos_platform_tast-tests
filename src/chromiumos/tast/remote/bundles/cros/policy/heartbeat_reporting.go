@@ -27,12 +27,12 @@ func init() {
 		Desc:         "GAIA Enroll a device and verify heartbeat reporting functionality",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
-			"albertojuarez@google.com",// Test owner
-			"tylergarrett@google.com", // Test owner
+			"albertojuarez@google.com", // Test owner
+			"tylergarrett@google.com",  // Test owner
 			"rzakarian@google.com",
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		Attr:         []string{"group:dpanel-end2end", "group:enterprise-reporting"},
+		Attr:         []string{"group:dmserver-enrollment-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
 		Timeout:      7 * time.Minute,
