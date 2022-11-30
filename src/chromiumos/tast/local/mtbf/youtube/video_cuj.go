@@ -325,40 +325,28 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		tconn           = resources.Tconn
 	)
 
-	openGmailWeb := func(ctx context.Context) error {
+	openGoogleCloud := func(ctx context.Context) error {
 		// If there's a lacros browser, bring it to active.
-		lacrosWin, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		lacrosWindow, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
 			return w.WindowType == ash.WindowTypeLacros
 		})
 		if err != nil && err != ash.ErrWindowNotFound {
 			return errors.Wrap(err, "failed to find lacros window")
 		}
 		if err == nil {
-			if err := lacrosWin.ActivateWindow(ctx, tconn); err != nil {
+			if err := lacrosWindow.ActivateWindow(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to activate lacros window")
 			}
 		}
 
-		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GmailURL, true)
+		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleCloudURL, true)
 		if err != nil {
-			return errors.Wrap(err, "failed to open gmail web page")
+			return errors.Wrap(err, "failed to open Google Cloud documentation")
 		}
 		defer conn.Close()
 		if err := webutil.WaitForQuiescence(ctx, conn, 2*time.Minute); err != nil {
-			return errors.Wrap(err, "failed to wait for gmail page to finish loading")
+			return errors.Wrap(err, "failed to wait for Google Cloud documentation to finish loading")
 		}
-
-		ui := uiauto.New(tconn)
-		// YouTube sometimes pops up a prompt to notice users how to operate YouTube
-		// if there're new features. Dismiss prompt if it exist.
-		gotItPrompt := nodewith.Name("Got it").Role(role.Button)
-		uiauto.IfSuccessThen(
-			ui.WaitUntilExists(gotItPrompt),
-			uiHandler.ClickUntil(
-				gotItPrompt,
-				ui.WithTimeout(2*time.Second).WaitUntilGone(gotItPrompt),
-			),
-		)
 		return nil
 	}
 
@@ -376,10 +364,23 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		return errors.Wrap(err, "failed to verify video is playing")
 	}
 
-	// Open Gmail web.
-	testing.ContextLog(ctx, "Open Gmail web")
-	if err := openGmailWeb(ctx); err != nil {
-		return errors.Wrap(err, "failed to open Gmail website")
+	testing.ContextLog(ctx, "Open Google Cloud documentation")
+	if err := openGoogleCloud(ctx); err != nil {
+		return errors.Wrap(err, "failed to open Google Cloud documentation")
+	}
+
+	// YouTube sometimes pops up a prompt to notice users how to operate YouTube
+	// if there're new features. Dismiss prompt if it exist.
+	ui := uiauto.New(tconn)
+	gotItPrompt := nodewith.Name("Got it").Role(role.Button)
+	if err := uiauto.IfSuccessThen(
+		ui.WaitUntilExists(gotItPrompt),
+		uiHandler.ClickUntil(
+			gotItPrompt,
+			ui.WithTimeout(2*time.Second).WaitUntilGone(gotItPrompt),
+		),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click 'Got it' prompt")
 	}
 
 	ytApp, ok := videoApp.(*YtApp)
