@@ -15,9 +15,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/media/constants"
 	"go.chromium.org/tast-tests/cros/local/media/histogram"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -38,7 +40,7 @@ type pepperVideoDecodeTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PepperVideoDecode,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that simple video playback in Pepper (NaCl) is working",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
@@ -62,12 +64,27 @@ func init() {
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifySWPathWasUsed},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithSWDecoding",
+		}, {
+			Name:              "h264_hw_lacros",
+			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifyMojoVDPathWasUsed},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosNaCl",
+		}, {
+			Name:              "h264_sw_lacros",
+			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeLacros, verifyHWMode: verifySWPathWasUsed},
+			ExtraSoftwareDeps: []string{"proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosNaClWithSWDecoding",
 		}},
 	})
 }
 
 func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	params := s.Param().(pepperVideoDecodeTestParam)
+
+	// Reserve ten seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -79,14 +96,25 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.browserType)
+	if err != nil {
+		s.Fatal("Failed to open the browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
+	}
+
 	hwBehaviourHistogramName := constants.MediaPepperVideoDecoderHardwareAccelerationBehavior
-	initHistogram, err := metrics.GetHistogram(ctx, ctconn, hwBehaviourHistogramName)
+	initHistogram, err := metrics.GetHistogram(ctx, bTconn, hwBehaviourHistogramName)
 	if err != nil {
 		s.Fatal("Failed to get initial histogram: ", err)
 	}
 
 	url := path.Join(server.URL, "pepper/video_decode/video_decode.html")
-	conn, err := cr.NewConn(ctx, url)
+	conn, err := br.NewConn(ctx, url)
 	if err != nil {
 		s.Fatalf("Failed to open %v: %v", url, err)
 	}
@@ -120,7 +148,7 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	}
 
 	// We pass a successCount equal to 2 because the Pepper plugin used in this test has two video decoders.
-	expectedModeUsed, err := histogram.WasHWAccelUsed(ctx, ctconn, initHistogram, hwBehaviourHistogramName, hwBehaviourSucessValue, 2)
+	expectedModeUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, hwBehaviourHistogramName, hwBehaviourSucessValue, 2)
 	if err != nil {
 		s.Fatal("Failed to verify histogram: ", err)
 	}

@@ -120,6 +120,46 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoLacrosNaCl",
+		Desc:     "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled (lacros)",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.ExtraArgs("--enable-nacl"),
+				chrome.LacrosExtraArgs("--enable-nacl"))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoLacrosNaClWithSWDecoding",
+		Desc:     "Similar to chromeVideoNaClWithMojoVideoDecoder but making sure Chrome does not use any potential hardware accelerated decoding (lacros)",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.ExtraArgs("--enable-nacl"),
+				chrome.ExtraArgs("--disable-accelerated-video-decode"),
+				chrome.LacrosExtraArgs("--enable-nacl"),
+				chrome.LacrosExtraArgs("--disable-accelerated-video-decode"))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeCameraPerfLacros",
 		Desc:     "Logged into a user session on Lacros without verbose logging that can affect the performance",
 		Contacts: []string{"chromeos-camera-eng@google.com"},
