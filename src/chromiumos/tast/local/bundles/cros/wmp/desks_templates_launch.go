@@ -28,11 +28,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks desks templates can be launched",
 		Contacts: []string{
-			"yzd@chromium.org",
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
+			"yzd@chromium.org",
 		},
+		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
+		BugComponent: "b:1020793",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,

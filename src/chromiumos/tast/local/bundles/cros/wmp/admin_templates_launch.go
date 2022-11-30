@@ -33,11 +33,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks admin templates can be launched",
 		Contacts: []string{
-			"zhumatthew@google.com",
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
+			"zhumatthew@google.com",
 		},
+		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
+		BugComponent: "b:1020793",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,

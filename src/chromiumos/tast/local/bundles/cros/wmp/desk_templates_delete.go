@@ -27,13 +27,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks desk templates can be delete",
 		Contacts: []string{
-			"yongshun@chromium.org",
-			"yzd@chromium.org",
-			"zhumatthew@chromium.org",
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
+			"yongshun@chromium.org",
+			"yzd@chromium.org",
+			"zhumatthew@chromium.org",
 		},
+		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
+		BugComponent: "b:1020793",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm", "no_kernel_upstream"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,

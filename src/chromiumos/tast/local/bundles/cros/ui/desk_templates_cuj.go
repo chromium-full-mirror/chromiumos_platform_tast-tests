@@ -31,12 +31,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of desks templates",
 		Contacts: []string{
-			"yzd@chromium.org",
-			"aprilzhou@chromium.org",
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
+			"yzd@chromium.org",
+			"aprilzhou@chromium.org",
 		},
+		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
+		BugComponent: "b:1020793",
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
