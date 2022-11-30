@@ -1114,10 +1114,6 @@ async function webauthnRegistration(config: WebauthnRegistrationConfig):
     }
   }
 
-  if (config.authenticatorAttachment && attachment !== config.authenticatorAttachment) {
-    throw 'Reported attachment is not ' + config.authenticatorAttachment + ' but ' + attachment;
-  }
-
   if (config.uv === "required" && !uv) {
     throw 'UV is required but not provided';
   }

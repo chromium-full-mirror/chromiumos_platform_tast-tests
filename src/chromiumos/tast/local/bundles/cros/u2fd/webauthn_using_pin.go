@@ -42,6 +42,10 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "gsc"},
 		Timeout:      5 * time.Minute,
+		Data: []string{
+			"webauthn.html",
+			"bundle.js",
+		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
@@ -59,6 +63,9 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	server := u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
+	defer server.Close(cleanupCtx)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -88,11 +95,10 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatalf("Failed to open the %v browser: %v", bt, err)
+		s.Fatal("Failed to get test API connection")
 	}
-	defer closeBrowser(cleanupCtx)
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
@@ -128,8 +134,14 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	// TODO(b/210418148): Use an internal site for testing to prevent flakiness.
-	if err := u2fd.WebAuthnInWebAuthnIo(ctx, cr, br, authCallback); err != nil {
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/webauthn.html")
+	if err != nil {
+		s.Fatalf("Failed to open the %v browser: %v", bt, err)
+	}
+	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+
+	if err := u2fd.WebAuthnInLocalSite(ctx, conn, tconn, authCallback); err != nil {
 		s.Fatal("Failed to perform WebAuthn: ", err)
 	}
 }

@@ -34,6 +34,10 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		Data: []string{
+			"webauthn.html",
+			"bundle.js",
+		},
 		Params: []testing.Param{{
 			Name:              "tpm",
 			ExtraSoftwareDeps: []string{"tpm", "no_gsc"},
@@ -69,6 +73,9 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	server := u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
+	defer server.Close(cleanupCtx)
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	bt := s.Param().(browser.Type)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
@@ -77,11 +84,17 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("u2fd isn't started: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/webauthn.html")
 	if err != nil {
 		s.Fatalf("Failed to open the %v browser: %v", bt, err)
 	}
 	defer closeBrowser(cleanupCtx)
+	defer conn.Close()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get test API connection")
+	}
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
@@ -101,8 +114,7 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	// TODO(b/210418148): Use an internal site for testing to prevent flakiness.
-	if err := u2fd.WebAuthnInWebAuthnIo(ctx, cr, br, authCallback); err != nil {
+	if err := u2fd.WebAuthnInLocalSite(ctx, conn, tconn, authCallback); err != nil {
 		s.Fatal("Failed to perform WebAuthn: ", err)
 	}
 }
