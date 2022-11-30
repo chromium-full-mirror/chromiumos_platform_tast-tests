@@ -29,7 +29,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Virtualization > VM Technology
 		BugComponent: "b:930563",
-		Attr:         []string{"group:crosbolt"},
+		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome", "arc"},
 		ServiceDeps:  []string{"tast.cros.arc.PowerPerfService"},
