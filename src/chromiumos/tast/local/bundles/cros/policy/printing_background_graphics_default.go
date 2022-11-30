@@ -32,10 +32,19 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checking if the 'Background graphics' option is set by default depending on the value of this policy",
 		Contacts: []string{
-			"cmfcmf@google.com", // Test author
+			"chromeos-commercial-printing@google.com",
+			"project-bolton@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:mainline",
+			"group:paper-io",
+			"paper-io_printing",
+			"informational",
+			"group:hw_agnostic",
+		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
