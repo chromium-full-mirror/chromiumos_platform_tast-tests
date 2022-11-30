@@ -35,6 +35,7 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
+		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"wilco", "chrome"},
 		Timeout:      25 * time.Minute,
 		// Disabled due to <1% pass rate over 30 days. See b/241942929

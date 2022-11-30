@@ -42,6 +42,7 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
+		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"chrome", "wilco"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{

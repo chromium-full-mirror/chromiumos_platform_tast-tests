@@ -35,6 +35,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"wilco", "chrome"},
 		Timeout:      25 * time.Minute,
+		BugComponent: "b:1256717",
 		// Disabled due to <1% pass rate over 30 days. See b/241942929
 		//Attr:         []string{"group:wilco_bve"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
