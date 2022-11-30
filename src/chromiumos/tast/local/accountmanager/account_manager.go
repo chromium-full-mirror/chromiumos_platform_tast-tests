@@ -413,7 +413,7 @@ func OpenARCAccountsInARCSettings(ctx context.Context, tconn *chrome.TestConn, d
 	scrollLayout := d.Object(androidui.ClassName(scrollClassName),
 		androidui.Scrollable(true))
 	accounts := d.Object(androidui.ClassName("android.widget.TextView"),
-		androidui.TextMatches("(?i)Accounts"), androidui.Enabled(true))
+		androidui.TextMatches("(?i)(Accounts|Passwords & accounts)"), androidui.Enabled(true))
 	if err := scrollLayout.WaitForExists(ctx, DefaultUITimeout); err == nil {
 		if scrollErr := scrollLayout.ScrollTo(ctx, accounts); scrollErr != nil {
 			return errors.Wrap(scrollErr, "failed to scroll to accounts button")
