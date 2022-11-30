@@ -32,13 +32,23 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		Fixture:      fixture.PostDemoModeOOBE,
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
 		// is only shown for chrome-branded builds when the device is ARC-capable.
 		SoftwareDeps: []string{"chrome", "arc", "tpm", "play_store"},
 		Timeout:      10 * time.Minute,
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"informational"},
+			}},
 	})
 }
 
@@ -51,7 +61,9 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
+		chrome.UnRestrictARCCPU(),
 		chrome.KeepEnrollment(),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 		// Force devtools on regardless of policy (devtools is disabled in
 		// Demo Mode policy) to support connecting to the test API extension.
 		chrome.ExtraArgs("--force-devtools-available"))
