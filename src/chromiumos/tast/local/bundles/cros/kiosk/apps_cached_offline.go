@@ -6,19 +6,15 @@ package kiosk
 
 import (
 	"context"
-	"net/url"
-	"strconv"
 	"time"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/kioskmode"
-	"chromiumos/tast/local/network"
-	local_firewall "chromiumos/tast/local/network/firewall"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
 )
@@ -47,9 +43,17 @@ func init() {
 	})
 }
 
+type helper struct {
+	Manager            *shill.Manager
+	enableEthernetFunc func(ctx context.Context)
+	enableWifiFunc     func(ctx context.Context)
+	enableCellularFunc func(ctx context.Context)
+}
+
 func AppsCachedOffline(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	chromeOptions := s.Param().(chrome.Option)
+	cleanUpCtx := ctx
 	kiosk, _, err := kioskmode.New(
 		ctx,
 		fdms,
@@ -70,69 +74,96 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Trying to launch Kiosk app offline")
-	restartAndLaunchKiosk := func(ctx context.Context) error {
-		reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-		if err != nil {
-			return errors.Wrap(err, "failed to start log reader")
-		}
-		defer reader.Close()
 
-		// Additionally block access to FakeDMS to make Chrome think it's offline.
-		firewallRunner := local_firewall.NewLocalRunner()
-		fdmsURL, err := url.Parse(fdms.URL)
-		if err != nil {
-			return errors.Wrap(err, "failed to parse FakeDMS URL")
-		}
-		fdmsPort, err := strconv.Atoi(fdmsURL.Port())
-		if err != nil {
-			return errors.Wrap(err, "failed to parse port from FakeDMS URL")
-		}
+	restartAndLaunchKiosk(ctx, cleanUpCtx, kiosk, s, fdms)
+}
 
-		commonRuleArgs := []firewall.RuleOption{
-			firewall.OptionProto(firewall.L4ProtoTCP),
-			firewall.OptionUIDOwner("chronos"),
-			firewall.OptionDPort(fdmsPort),
-			firewall.OptionJumpTarget(firewall.TargetDrop),
-		}
-		ruleArgs := []firewall.RuleOption{firewall.OptionAppendRule(firewall.OutputChain)}
-		ruleArgs = append(ruleArgs, commonRuleArgs...)
-		if err := firewallRunner.ExecuteCommand(ctx, ruleArgs...); err != nil {
-			return errors.Wrap(err, "failed to block access to FakeDMS")
-		}
+func restartAndLaunchKiosk(ctx, cleanUpCtxs context.Context, kiosk *kioskmode.Kiosk, s *testing.State, fdms *fakedms.FakeDMS) {
+	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
+	chromeOptions := s.Param().(chrome.Option)
+	if err != nil {
+		s.Fatal("Failed to start log reader: ", err)
+	}
+	defer reader.Close()
 
-		// Reserve 3 seconds to resume firewall settings.
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-		defer cancel()
-
-		defer func(cleanupCtx context.Context) {
-			ruleArgs := []firewall.RuleOption{firewall.OptionDeleteRule(firewall.OutputChain)}
-			ruleArgs = append(ruleArgs, commonRuleArgs...)
-			if err := firewallRunner.ExecuteCommand(ctx, ruleArgs...); err != nil {
-				s.Fatal("Failed to restore access to FakeDMS: ", err)
-			}
-		}(cleanupCtx)
-
-		_, err = kiosk.RestartChromeWithOptions(
-			ctx,
-			chrome.DMSPolicy(fdms.URL),
-			chrome.NoLogin(),
-			chrome.KeepState(),
-			chromeOptions,
-		)
-		if err != nil {
-			return errors.Wrap(err, "failed to restart Chrome")
-		}
-
-		if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
-			return errors.Wrap(err, "kiosk is not started after restarting Chrome")
-		}
-
-		return nil
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Manager object: ", err)
+	}
+	h := helper{Manager: manager}
+	defer h.restoreAllNetworkInterfaces(cleanUpCtxs)
+	if err := h.disableAllNetworkInterfaces(ctx); err != nil {
+		s.Fatal("Failed to disable non cellular interface: ", err)
 	}
 
-	// Launch kiosk in offline mode.
-	if err := network.ExecFuncOnChromeOffline(ctx, restartAndLaunchKiosk); err != nil {
-		s.Fatal("Failed to launch kiosk app offline: ", err)
+	// GetEnabledTechnologies returns a list of all enabled shill networking technologies.
+	enabledTechnologies, err := manager.GetEnabledTechnologies(ctx)
+	if err != nil {
+		s.Fatal("Failed to retrieve enabled shill networking technologies: ", err)
 	}
+
+	s.Log("List of all enabled shill networking technologies ", enabledTechnologies)
+
+	_, err = kiosk.RestartChromeWithOptions(
+		ctx,
+		chrome.DMSPolicy(fdms.URL),
+		chrome.NoLogin(),
+		chrome.KeepState(),
+		chromeOptions,
+	)
+	if err != nil {
+		s.Fatal("Failed to restart Chrome: ", err)
+	}
+
+	if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
+		s.Fatal("Kiosk is not started after restarting Chrome: ", err)
+	}
+}
+
+func (h *helper) disableAllNetworkInterfaces(ctx context.Context) error {
+	ctx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime*2)
+	defer cancel()
+
+	// Disable Ethernet if present and maybe re-enabling.
+	ethernetFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
+	if err != nil {
+		return errors.Wrap(err, "unable to disable Ethernet")
+	}
+
+	// Disable  Cellular if present and maybe re-enabling.
+	cellularFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular)
+	if err != nil {
+		return errors.Wrap(err, "unable to disable Cellular")
+	}
+
+	// Disable Wifi if present and maybe re-enabling.
+	wifiFunc, err := h.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyWifi)
+	if err != nil {
+		return errors.Wrap(err, "unable to disable Wifi")
+	}
+
+	h.enableEthernetFunc = ethernetFunc
+	h.enableWifiFunc = wifiFunc
+	h.enableCellularFunc = cellularFunc
+
+	return nil
+}
+
+// restoreAllNetworkInterfaces enable previously disabled interfaces.
+func (h *helper) restoreAllNetworkInterfaces(ctx context.Context) {
+	if h.enableEthernetFunc != nil {
+		h.enableEthernetFunc(ctx)
+	}
+
+	if h.enableWifiFunc != nil {
+		h.enableWifiFunc(ctx)
+	}
+
+	if h.enableCellularFunc != nil {
+		h.enableWifiFunc(ctx)
+	}
+
+	h.enableEthernetFunc = nil
+	h.enableWifiFunc = nil
+	h.enableCellularFunc = nil
 }
