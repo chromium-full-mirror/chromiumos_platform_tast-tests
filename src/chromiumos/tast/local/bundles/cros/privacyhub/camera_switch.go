@@ -54,11 +54,11 @@ func isCameraEnabled(ctx context.Context, tconn *browser.TestConn) (bool, error)
 	defer settings.Close(ctx)
 
 	ui := uiauto.New(tconn)
-	privacyMenu := nodewith.Name("Privacy controls")
+	privacyMenu := nodewith.NameStartingWith("Privacy controls")
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
 		return false, err
 	}
-	cameraLabel := nodewith.Name("Camera").Role(role.ToggleButton)
+	cameraLabel := nodewith.NameStartingWith("Camera").Role(role.ToggleButton)
 	// Wait for the camera toggle to appear.
 	if err := uiauto.Combine("Access camera toggle in Privacy Hub",
 		ui.DoDefault(privacyMenu),
@@ -94,12 +94,12 @@ func clickCameraToggle(ctx context.Context, tconn *browser.TestConn) error {
 	defer settings.Close(ctx)
 
 	var ui *uiauto.Context = uiauto.New(tconn)
-	privacyMenu := nodewith.Name("Privacy controls")
+	privacyMenu := nodewith.NameStartingWith("Privacy controls")
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
 		return err
 	}
 	// Check that the Privacy Hub section contains the required buttons.
-	cameraLabel := nodewith.Name("Camera").Role(role.ToggleButton)
+	cameraLabel := nodewith.NameStartingWith("Camera").Role(role.ToggleButton)
 	// Wait for the camera toggle to appear.
 	if err := uiauto.Combine("Access camera toggle in Privacy Hub",
 		ui.DoDefault(privacyMenu),
