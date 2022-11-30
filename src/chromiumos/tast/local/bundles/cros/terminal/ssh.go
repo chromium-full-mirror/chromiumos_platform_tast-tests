@@ -74,7 +74,10 @@ func SSH(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to run command in ssh2: ", err)
 	}
-	if err := ta1.ExitSSH()(ctx); err != nil {
+	if err := uiauto.Combine("exit ssh1",
+		ui.LeftClick(nodewith.Name("ssh1$").Role(role.StaticText).First()),
+		ta1.ExitSSH(),
+	)(ctx); err != nil {
 		s.Fatal("Failed to exit ssh1: ", err)
 	}
 }
