@@ -31,10 +31,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Assign apps to all desks",
 		Contacts: []string{
+			"chromeos-wms@google.com",
 			"hongyulong@chromium.org",
-			"chromeos-wmp@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      120 * time.Second,
