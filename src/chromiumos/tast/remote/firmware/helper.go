@@ -935,7 +935,7 @@ func (h *Helper) VerifyCCDIsOpen(ctx context.Context) error {
 }
 
 // OpenCCDNoTestlab opens CCD when it's locked and testlab disabled.
-// From observation, this process would generally take 8 minutes.
+// From observation, this process would generally take 11 minutes.
 // Servo micro is required in order to open CCD without testlab enabled.
 func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 	// Check if there is micro-servo connected.
@@ -1046,7 +1046,7 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 	if openNoTPMWipe != "Y" {
 		// Wait for DUT to reconnect if OpenNoTPMWipe is not accessible (i.e. !="Y").
 		testing.ContextLog(ctx, "Reconnecting to DUT")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 6*time.Minute)
 		defer cancelWaitConnect()
 
 		if err := h.WaitConnect(waitConnectCtx); err != nil {

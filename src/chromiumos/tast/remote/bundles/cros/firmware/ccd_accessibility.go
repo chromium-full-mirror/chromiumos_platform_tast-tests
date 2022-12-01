@@ -30,6 +30,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_trial"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
+		SoftwareDeps: []string{"gsc"},
 		Timeout:      60 * time.Minute, // Long timeout to account for the long PP sequence.
 	})
 }
