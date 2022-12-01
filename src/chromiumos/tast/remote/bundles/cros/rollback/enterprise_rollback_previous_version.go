@@ -61,9 +61,7 @@ func init() {
 				// rolled back and data preserved (rollback_target: n-2).
 				Value: "screenplay-1288b024-ca3e-4581-b0bc-d09299a552b3",
 			}},
-		},
-		/* Disabled due to <1% pass rate over 30 days. See b/246818326
-		{
+		}, {
 			Name: "rollback_3_versions",
 			Val: testParam{
 				previousVersionTarget: 3,
@@ -74,8 +72,7 @@ func init() {
 				// rolled back and data preserved (rollback_target: n-3).
 				Value: "screenplay-3fffe816-a79c-4c27-8c08-7783563f38fa",
 			}},
-		}
-		*/
+		},
 		},
 		Fixture: fixture.Autoupdate,
 	})
