@@ -6,18 +6,27 @@ package wwcb
 
 import (
 	"context"
+	"image"
+	"io/ioutil"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wwcb/utils"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto/checked"
+	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/common"
+	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/services/cros/wwcb"
 	"chromiumos/tast/testing"
 )
@@ -261,6 +270,243 @@ func (ds *DisplayService) VerifyDisplayCount(ctx context.Context, req *wwcb.Quer
 		return nil
 	}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
 		return &empty.Empty{}, err
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// ChangeResolution changes the given display's resolution, respectively low, medium and high resolution.
+func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryRequest) (*empty.Empty, error) {
+	cr := ds.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	infos, err := display.GetInfo(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get external display info")
+	}
+
+	if int(req.DisplayIndex) >= len(infos) {
+		return nil, errors.New("display index is out of range")
+	}
+
+	// Set the given display's low, medium and high resolution.
+	info := infos[req.DisplayIndex]
+	if len(info.Modes) < 3 {
+		return nil, errors.New("display modes are not enough")
+	}
+
+	low := info.Modes[0]
+	medium := info.Modes[(len(info.Modes)-1)/2]
+	high := info.Modes[len(info.Modes)-1]
+
+	for _, param := range []struct {
+		displayMode display.DisplayMode
+	}{
+		{*low}, {*medium}, {*high},
+	} {
+		setWidth := param.displayMode.Width
+		setHeight := param.displayMode.Height
+		testing.ContextLogf(ctx, "Setting resolution: %d x %d", setWidth, setHeight)
+
+		p := display.DisplayProperties{DisplayMode: &param.displayMode}
+		if err := display.SetDisplayProperties(ctx, tconn, info.ID, p); err != nil {
+			return nil, errors.Wrap(err, "failed to set display properties")
+		}
+
+		// Poll is required as completion of display.SetDisplayProperties.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			infos, err := display.GetInfo(ctx, tconn)
+			if err != nil {
+				return errors.Wrap(err, "failed to get display info")
+			}
+
+			if int(req.DisplayIndex) >= len(infos) {
+				return errors.New("display index is out of range")
+			}
+
+			changedInfo := infos[req.DisplayIndex]
+			if changedInfo.Bounds.Width != setWidth || changedInfo.Bounds.Height != setHeight {
+				return errors.New("the display mode has not changed yet")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
+			return nil, errors.Wrap(err, "failed to verfiy display properties")
+		}
+
+		// Compare display mode with screenshot of external display.
+		fd, err := ioutil.TempFile("", "screenshot")
+		if err != nil {
+			return nil, errors.Wrap(err, "error opening screenshot file")
+		}
+		defer os.Remove(fd.Name())
+		defer fd.Close()
+
+		if err := screenshot.CaptureChromeForDisplay(ctx, cr, info.ID, fd.Name()); err != nil {
+			return nil, errors.Wrap(err, "failed to capture screenshot")
+		}
+
+		img, _, err := image.Decode(fd)
+		if err != nil {
+			return nil, errors.Wrap(err, "error decoding image")
+		}
+		imgWidth := img.Bounds().Dx()
+		imgHeight := img.Bounds().Dy()
+
+		if imgWidth != setWidth || imgHeight != setHeight {
+			return nil, errors.Errorf("unexpected resolution, got: %dx%d, want: %dx%d", imgWidth, imgHeight, setWidth, setHeight)
+		}
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// ChangeRelativePosition changes position of external display relative to Chromebook and check window is still on external display.
+func (ds *DisplayService) ChangeRelativePosition(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	cr := ds.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a keyboard")
+	}
+	defer kb.Close()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Open any window to for testing requirement.
+	files, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch filesapp")
+	}
+	defer files.Close(cleanupCtx)
+
+	if err := utils.SwitchWindowToDisplay(ctx, tconn, kb, true)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to switch window to external display")
+	}
+
+	infos, err := utils.GetInternalAndExternalDisplays(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get internal and external display info")
+	}
+	extDispInfo := infos.External
+	intDispInfo := infos.Internal
+
+	// Relayout external display and make sure the windows will not move their positions or show black background.
+	for _, relayout := range []struct {
+		name   string
+		offset coords.Point
+	}{
+		{"Relayout external display on top of internal display", coords.NewPoint(0, -extDispInfo.Bounds.Height)},
+		{"Relayout external display on bottom of internal display", coords.NewPoint(0, intDispInfo.Bounds.Height)},
+		{"Relayout external display to the left side of internal display", coords.NewPoint(-extDispInfo.Bounds.Width, 0)},
+		{"Relayout external display to the right side of internal display", coords.NewPoint(intDispInfo.Bounds.Width, 0)},
+	} {
+		p := display.DisplayProperties{BoundsOriginX: &relayout.offset.X, BoundsOriginY: &relayout.offset.Y}
+		if err := display.SetDisplayProperties(ctx, tconn, extDispInfo.ID, p); err != nil {
+			return nil, errors.Wrap(err, "failed to set display properties")
+		}
+
+		// Poll is required as completion of display.SetDisplayProperties.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			extDispInfo, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return info.IsInternal == false })
+			if err != nil {
+				return errors.Wrap(err, "failed to find external display")
+			}
+			if extDispInfo.Bounds.Left != relayout.offset.X || extDispInfo.Bounds.Top != relayout.offset.Y {
+				return errors.New("display origin has not been updated")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
+			return nil, err
+		}
+
+		w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+			return strings.HasPrefix(w.Title, filesapp.FilesTitlePrefix)
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to find filesapp window")
+		}
+		if w.DisplayID != extDispInfo.ID {
+			return nil, errors.Errorf("window shows on wrong display, got: %s, want: %s", w.DisplayID, extDispInfo.ID)
+		}
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// VerifyAfterLidClose verifies that display resolution is still okay after lid close & windows are all still displayed.
+func (ds *DisplayService) VerifyAfterLidClose(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	cr := ds.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Open any window to for testing requirement.
+	files, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch filesapp")
+	}
+	defer files.Close(cleanupCtx)
+
+	before, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return info.IsInternal == false })
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find external display info")
+	}
+
+	// Close display power as an alternative way to close lid.
+	if err := power.SetDisplayPower(ctx, power.DisplayPowerInternalOffExternalOn); err != nil {
+		return nil, errors.Wrap(err, "failed to set display power")
+	}
+	defer power.SetDisplayPower(cleanupCtx, power.DisplayPowerAllOn)
+
+	// Poll is required as display response and window jump.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Compare external display resolution before and after lid close.
+		after, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return info.IsInternal == false })
+		if err != nil {
+			return errors.Wrap(err, "failed to find external display info after lid close")
+		}
+
+		if before.Bounds.Width != after.Bounds.Width || before.Bounds.Height != after.Bounds.Height {
+			return errors.Errorf("resolution is different, original: %dx%d, after close lid: %dx%d", before.Bounds.Width, before.Bounds.Height, after.Bounds.Width, before.Bounds.Height)
+		}
+
+		// Check window bounds on external display.
+		w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+			return strings.HasPrefix(w.Title, filesapp.FilesTitlePrefix)
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to find filesapp window")
+		}
+
+		if w.DisplayID != after.ID {
+			return errors.Errorf("window shows on wrong display, got: %s, want: %s", w.DisplayID, after.ID)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
+		return nil, errors.Wrap(err, "failed to verify window and display resolution")
 	}
 
 	return &empty.Empty{}, nil

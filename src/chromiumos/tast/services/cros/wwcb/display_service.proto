@@ -20,13 +20,22 @@ service DisplayService {
   rpc SetPrimaryDisplay (QueryRequest) returns (google.protobuf.Empty){}
 
   // SwitchWindowToDisplay finds the window with given title then switch it to the expected display.
-  rpc SwitchWindowToDisplay(QueryRequest) returns (google.protobuf.Empty) {} 
+  rpc SwitchWindowToDisplay(QueryRequest) returns (google.protobuf.Empty) {}
 
   // VerifyWindowOnDisplay finds the window with given title then verify it is showing on the expected display or not.
-  rpc VerifyWindowOnDisplay(QueryRequest) returns (google.protobuf.Empty) {} 
+  rpc VerifyWindowOnDisplay(QueryRequest) returns (google.protobuf.Empty) {}
 
   // VerifyDisplayCount verifies the given  display count to compare with the current numbers of display that system detected.
-  rpc VerifyDisplayCount(QueryRequest) returns (google.protobuf.Empty) {} 
+  rpc VerifyDisplayCount(QueryRequest) returns (google.protobuf.Empty) {}
+
+  // ChangeResolution changes the given display's resolution, respectively low, medium and high resolution.
+  rpc ChangeResolution(QueryRequest) returns (google.protobuf.Empty) {}
+
+  // ChangeRelativePosition changes position of external display relative to Chromebook.
+  rpc ChangeRelativePosition(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // VerifyAfterLidClose verifies that display resolution is still okay after lid close & windows are all still displayed.
+  rpc VerifyAfterLidClose (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message QueryRequest{

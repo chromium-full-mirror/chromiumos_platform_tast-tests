@@ -116,7 +116,7 @@ var file_display_service_proto_rawDesc = []byte{
 	0x16, 0x0a, 0x06, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52,
 	0x06, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x77, 0x69, 0x6e, 0x64, 0x6f,
 	0x77, 0x5f, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x77,
-	0x69, 0x6e, 0x64, 0x6f, 0x77, 0x54, 0x69, 0x74, 0x6c, 0x65, 0x32, 0x99, 0x03, 0x0a, 0x0e, 0x44,
+	0x69, 0x6e, 0x64, 0x6f, 0x77, 0x54, 0x69, 0x74, 0x6c, 0x65, 0x32, 0xfa, 0x04, 0x0a, 0x0e, 0x44,
 	0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x4a, 0x0a,
 	0x10, 0x53, 0x65, 0x74, 0x4d, 0x69, 0x72, 0x72, 0x6f, 0x72, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61,
 	0x79, 0x12, 0x1c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x77,
@@ -142,10 +142,24 @@ var file_display_service_proto_rawDesc = []byte{
 	0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x77, 0x63, 0x62, 0x2e,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x24, 0x5a, 0x22, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69,
-	0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x77, 0x77, 0x63, 0x62, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4a, 0x0a, 0x10, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65,
+	0x52, 0x65, 0x73, 0x6f, 0x6c, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1c, 0x2e, 0x74, 0x61, 0x73,
+	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x77, 0x63, 0x62, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x12, 0x4a, 0x0a, 0x16, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x52, 0x65, 0x6c, 0x61,
+	0x74, 0x69, 0x76, 0x65, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
+	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x47,
+	0x0a, 0x13, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x41, 0x66, 0x74, 0x65, 0x72, 0x4c, 0x69, 0x64,
+	0x43, 0x6c, 0x6f, 0x73, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x24, 0x5a, 0x22, 0x63, 0x68, 0x72, 0x6f, 0x6d,
+	0x69, 0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x77, 0x77, 0x63, 0x62, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -171,13 +185,19 @@ var file_display_service_proto_depIdxs = []int32{
 	0, // 2: tast.cros.wwcb.DisplayService.SwitchWindowToDisplay:input_type -> tast.cros.wwcb.QueryRequest
 	0, // 3: tast.cros.wwcb.DisplayService.VerifyWindowOnDisplay:input_type -> tast.cros.wwcb.QueryRequest
 	0, // 4: tast.cros.wwcb.DisplayService.VerifyDisplayCount:input_type -> tast.cros.wwcb.QueryRequest
-	1, // 5: tast.cros.wwcb.DisplayService.SetMirrorDisplay:output_type -> google.protobuf.Empty
-	1, // 6: tast.cros.wwcb.DisplayService.SetPrimaryDisplay:output_type -> google.protobuf.Empty
-	1, // 7: tast.cros.wwcb.DisplayService.SwitchWindowToDisplay:output_type -> google.protobuf.Empty
-	1, // 8: tast.cros.wwcb.DisplayService.VerifyWindowOnDisplay:output_type -> google.protobuf.Empty
-	1, // 9: tast.cros.wwcb.DisplayService.VerifyDisplayCount:output_type -> google.protobuf.Empty
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
+	0, // 5: tast.cros.wwcb.DisplayService.ChangeResolution:input_type -> tast.cros.wwcb.QueryRequest
+	1, // 6: tast.cros.wwcb.DisplayService.ChangeRelativePosition:input_type -> google.protobuf.Empty
+	1, // 7: tast.cros.wwcb.DisplayService.VerifyAfterLidClose:input_type -> google.protobuf.Empty
+	1, // 8: tast.cros.wwcb.DisplayService.SetMirrorDisplay:output_type -> google.protobuf.Empty
+	1, // 9: tast.cros.wwcb.DisplayService.SetPrimaryDisplay:output_type -> google.protobuf.Empty
+	1, // 10: tast.cros.wwcb.DisplayService.SwitchWindowToDisplay:output_type -> google.protobuf.Empty
+	1, // 11: tast.cros.wwcb.DisplayService.VerifyWindowOnDisplay:output_type -> google.protobuf.Empty
+	1, // 12: tast.cros.wwcb.DisplayService.VerifyDisplayCount:output_type -> google.protobuf.Empty
+	1, // 13: tast.cros.wwcb.DisplayService.ChangeResolution:output_type -> google.protobuf.Empty
+	1, // 14: tast.cros.wwcb.DisplayService.ChangeRelativePosition:output_type -> google.protobuf.Empty
+	1, // 15: tast.cros.wwcb.DisplayService.VerifyAfterLidClose:output_type -> google.protobuf.Empty
+	8, // [8:16] is the sub-list for method output_type
+	0, // [0:8] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -244,6 +264,12 @@ type DisplayServiceClient interface {
 	VerifyWindowOnDisplay(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// VerifyDisplayCount verifies the given  display count to compare with the current numbers of display that system detected.
 	VerifyDisplayCount(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ChangeResolution changes the given display's resolution, respectively low, medium and high resolution.
+	ChangeResolution(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ChangeRelativePosition changes position of external display relative to Chromebook.
+	ChangeRelativePosition(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// VerifyAfterLidClose verifies that display resolution is still okay after lid close & windows are all still displayed.
+	VerifyAfterLidClose(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type displayServiceClient struct {
@@ -299,6 +325,33 @@ func (c *displayServiceClient) VerifyDisplayCount(ctx context.Context, in *Query
 	return out, nil
 }
 
+func (c *displayServiceClient) ChangeResolution(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.wwcb.DisplayService/ChangeResolution", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *displayServiceClient) ChangeRelativePosition(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.wwcb.DisplayService/ChangeRelativePosition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *displayServiceClient) VerifyAfterLidClose(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.wwcb.DisplayService/VerifyAfterLidClose", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DisplayServiceServer is the server API for DisplayService service.
 type DisplayServiceServer interface {
 	// SetMirrorDisplay sets the mirror display settings.
@@ -311,6 +364,12 @@ type DisplayServiceServer interface {
 	VerifyWindowOnDisplay(context.Context, *QueryRequest) (*emptypb.Empty, error)
 	// VerifyDisplayCount verifies the given  display count to compare with the current numbers of display that system detected.
 	VerifyDisplayCount(context.Context, *QueryRequest) (*emptypb.Empty, error)
+	// ChangeResolution changes the given display's resolution, respectively low, medium and high resolution.
+	ChangeResolution(context.Context, *QueryRequest) (*emptypb.Empty, error)
+	// ChangeRelativePosition changes position of external display relative to Chromebook.
+	ChangeRelativePosition(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// VerifyAfterLidClose verifies that display resolution is still okay after lid close & windows are all still displayed.
+	VerifyAfterLidClose(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedDisplayServiceServer can be embedded to have forward compatible implementations.
@@ -331,6 +390,15 @@ func (*UnimplementedDisplayServiceServer) VerifyWindowOnDisplay(context.Context,
 }
 func (*UnimplementedDisplayServiceServer) VerifyDisplayCount(context.Context, *QueryRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyDisplayCount not implemented")
+}
+func (*UnimplementedDisplayServiceServer) ChangeResolution(context.Context, *QueryRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeResolution not implemented")
+}
+func (*UnimplementedDisplayServiceServer) ChangeRelativePosition(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeRelativePosition not implemented")
+}
+func (*UnimplementedDisplayServiceServer) VerifyAfterLidClose(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyAfterLidClose not implemented")
 }
 
 func RegisterDisplayServiceServer(s *grpc.Server, srv DisplayServiceServer) {
@@ -427,6 +495,60 @@ func _DisplayService_VerifyDisplayCount_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DisplayService_ChangeResolution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DisplayServiceServer).ChangeResolution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.wwcb.DisplayService/ChangeResolution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DisplayServiceServer).ChangeResolution(ctx, req.(*QueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DisplayService_ChangeRelativePosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DisplayServiceServer).ChangeRelativePosition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.wwcb.DisplayService/ChangeRelativePosition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DisplayServiceServer).ChangeRelativePosition(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DisplayService_VerifyAfterLidClose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DisplayServiceServer).VerifyAfterLidClose(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.wwcb.DisplayService/VerifyAfterLidClose",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DisplayServiceServer).VerifyAfterLidClose(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DisplayService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.wwcb.DisplayService",
 	HandlerType: (*DisplayServiceServer)(nil),
@@ -450,6 +572,18 @@ var _DisplayService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyDisplayCount",
 			Handler:    _DisplayService_VerifyDisplayCount_Handler,
+		},
+		{
+			MethodName: "ChangeResolution",
+			Handler:    _DisplayService_ChangeResolution_Handler,
+		},
+		{
+			MethodName: "ChangeRelativePosition",
+			Handler:    _DisplayService_ChangeRelativePosition_Handler,
+		},
+		{
+			MethodName: "VerifyAfterLidClose",
+			Handler:    _DisplayService_VerifyAfterLidClose_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
