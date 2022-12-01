@@ -109,13 +109,13 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 	}
 
 	red := color.RGBA{255, 0, 0, 255}
-	blue := color.RGBA{0, 255, 0, 255}
-	green := color.RGBA{0, 0, 255, 255}
+	green := color.RGBA{0, 255, 0, 255}
+	blue := color.RGBA{0, 0, 255, 255}
 	threshold := float64(10)
 
 	redDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(50, 50), red))
-	blueDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(lockScreenshot.Bounds().Dx()-50, 50), blue))
-	greenDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(50, lockScreenshot.Bounds().Dy()-50), green))
+	greenDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(lockScreenshot.Bounds().Dx()-50, 50), green))
+	blueDistance := float64(wallpaper.ColorDistance(lockScreenshot.At(50, lockScreenshot.Bounds().Dy()-50), blue))
 
 	// The shield is applied evenly so we expect the color distance of the original color and the shielded color to be relatively the same for all three zones.
 	if math.Abs(redDistance-blueDistance) > threshold || math.Abs(redDistance-greenDistance) > threshold || math.Abs(blueDistance-greenDistance) > threshold {
