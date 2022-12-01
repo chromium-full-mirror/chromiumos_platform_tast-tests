@@ -58,7 +58,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that fast ink is working as evidenced by a hardware overlay",
 		Contacts:     []string{"chromeos-wmp@google.com", "amusbach@chromium.org", "oshima@chromium.org"},
-		BugComponent: "b:1045832",
+		BugComponent: "b:189315", // ChromeOS > Platform > Services > Input > Stylus
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.InternalDisplay(), hwdep.TouchScreen()),
