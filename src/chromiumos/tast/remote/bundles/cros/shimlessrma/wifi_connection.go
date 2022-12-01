@@ -29,7 +29,7 @@ func init() {
 			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",
 		},
-		BugComponent: "b:240206289",
+		BugComponent: "b:1002147",
 		Attr:         []string{"group:shimless_rma", "shimless_rma_experimental"},
 		Vars:         []string{"router"},
 		VarDeps: []string{
