@@ -13,9 +13,12 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -44,8 +47,12 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "pinweaver"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data: []string{
+			"webauthn/webauthn.html",
+			"webauthn/bundle.js",
+		},
 		Params: []testing.Param{
 			{
 				Val: webauthnTestParam{fingerprintSupported: false},
@@ -72,10 +79,13 @@ func init() {
 // 2. WebAuthnFactors disabled will disable using the auth method for "webauthn" even if all other
 // policies enabled it, but will not disable "setup" for that auth method.
 func WebauthnFactors(ctx context.Context, s *testing.State) {
-	// TODO(b/210418148): The external site we currently use keeps record for a registered username for a while,
-	// so re-using a username will result in non-identical requests from the server. So for now we need truly
-	// random values for username strings so that different test runs don't affect each other.
-	rand.Seed(time.Now().UnixNano())
+	// Reserve ten seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	server := u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
+	defer server.Close(cleanupCtx)
 
 	type testCase struct {
 		name            string
@@ -258,7 +268,14 @@ func WebauthnFactors(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to wait for PIN confirmation dialog to disappear: ", err)
 				}
 
-				if err := verifyInSessionAuthDialog(ctx, cr, tconn, pinCapabilities.webAuthn); err != nil {
+				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn/webauthn.html")
+				if err != nil {
+					s.Fatal("Failed to open the browser: ", err)
+				}
+				defer closeBrowser(cleanupCtx)
+				defer conn.Close()
+
+				if err := verifyInSessionAuthDialog(ctx, conn, tconn, pinCapabilities.webAuthn); err != nil {
 					s.Fatal("Failed to verify in session auth dialog: ", err)
 				}
 
@@ -305,44 +322,21 @@ func getExpectedWebAuthnCapabilities(quickUnlockModeAllowlist *policy.QuickUnloc
 	}
 }
 
-func verifyInSessionAuthDialog(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, pinEnabled bool) error {
-	// TODO(b/210418148): Use an internal site for testing to prevent flakiness.
-	// Navigate to "logout" path first to clear leftover sessions from previous tests.
-	conn, err := cr.NewConn(ctx, "https://webauthn.io/logout")
-	if err != nil {
-		return errors.Wrap(err, "failed to navigate to test website")
-	}
-	if err = conn.Navigate(ctx, "https://webauthn.io/"); err != nil {
-		return errors.Wrap(err, "failed to navigate to test website")
-	}
+func verifyInSessionAuthDialog(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, pinEnabled bool) error {
+	u2fd.InitiateMakeCredentialInLocalSite(ctx, conn, u2fd.WebAuthnRegistrationConfig{Uv: "preferred"})
 
-	name := randomUsername()
-	if err = u2fd.SetUsernameInWebAuthnIo(ctx, conn, name); err != nil {
+	if err := u2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
 		return err
 	}
-
-	if err = u2fd.PressButtonInWebAuthnIo(ctx, conn, u2fd.WebAuthnIoRegisterButton); err != nil {
+	if err := u2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
 		return err
 	}
 
 	ui := uiauto.New(tconn)
 
-	// If authenticator type is "Platform", there's only platform option so we don't have to manually click "This device".
-	// Choose platform authenticator.
-	platformAuthenticatorButton := nodewith.Role(role.Button).Name("This device")
-	if err := ui.WithTimeout(2 * time.Second).WaitUntilExists(platformAuthenticatorButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to select platform authenticator from transport selection sheet")
-	}
-	if err := ui.LeftClick(platformAuthenticatorButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click button for platform authenticator")
-	}
-
-	if pinEnabled {
-		// Wait for ChromeOS WebAuthn dialog.
-		dialog := nodewith.ClassName("AuthDialogWidget")
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(dialog)(ctx); err != nil {
-			return errors.Wrap(err, "ChromeOS dialog did not show up")
-		}
+	err := ui.Exists(nodewith.ClassName("LoginPinView"))(ctx)
+	if (err == nil) != pinEnabled {
+		return errors.Errorf("PIN pad existence not expected: want %v, get %v", pinEnabled, err == nil)
 	}
 
 	return nil
