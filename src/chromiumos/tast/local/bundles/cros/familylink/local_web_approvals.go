@@ -23,7 +23,13 @@ func init() {
 		Func:         LocalWebApprovals,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks that parent can approve blocked sites locally",
-		Contacts:     []string{"courtneywong@chromium.org", "cros-families-eng+test@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"courtneywong@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

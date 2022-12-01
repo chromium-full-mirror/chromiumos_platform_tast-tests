@@ -28,7 +28,13 @@ func init() {
 		Func:         DailyTimeLimit,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify the daily time limit works correctly for Family Link account",
-		Contacts:     []string{"xiqiruan@chromium.org", "cros-families-eng+test@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"xiqiruan@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

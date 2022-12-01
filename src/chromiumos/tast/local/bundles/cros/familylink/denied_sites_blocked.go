@@ -27,7 +27,13 @@ func init() {
 		Func:         DeniedSitesBlocked,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that parent-blocked sites are blocked for Unicorn users",
-		Contacts:     []string{"danan@chromium.org", "cros-families-eng+test@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"danan@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

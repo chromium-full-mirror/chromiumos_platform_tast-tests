@@ -21,7 +21,13 @@ func init() {
 		Func:         PolicyLogin,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks if Unicorn login with policy setup is working",
-		Contacts:     []string{"xiqiruan@chromium.org", "cros-families-eng+test@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"xiqiruan@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

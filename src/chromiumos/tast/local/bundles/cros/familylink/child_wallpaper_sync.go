@@ -21,10 +21,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Unicorn users can sync the wallpaper",
 		Contacts: []string{
-			"tobyhuang@chromium.org",
 			"cros-families-eng+test@google.com",
 			"chromeos-sw-engprod@google.com",
+			"zork@chromium.org",
 		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,

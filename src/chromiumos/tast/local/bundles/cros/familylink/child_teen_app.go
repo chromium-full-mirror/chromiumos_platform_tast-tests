@@ -32,11 +32,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that clicking the 'Parental controls' link in the Accounts page in Settings launches the Child & Teen version of the Family Link app",
 		Contacts: []string{
-			"sun.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
 			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"cienet-development@googlegroups.com",
+			"sun.tsai@cienet.com",
 		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Params: []testing.Param{

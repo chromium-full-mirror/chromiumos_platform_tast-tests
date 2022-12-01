@@ -20,10 +20,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that you can add a Unicorn user through the Add Person flow",
 		Contacts: []string{
-			"tobyhuang@chromium.org",
 			"cros-families-eng+test@google.com",
 			"chromeos-sw-engprod@google.com",
+			"zork@chromium.org",
 		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

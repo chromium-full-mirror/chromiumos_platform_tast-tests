@@ -25,7 +25,12 @@ func init() {
 		Func:         EducoexistenceArc,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks ARC behavior for account added via in-session EDU Coexistence flow",
-		Contacts:     []string{"anastasiian@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"anastasiian@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

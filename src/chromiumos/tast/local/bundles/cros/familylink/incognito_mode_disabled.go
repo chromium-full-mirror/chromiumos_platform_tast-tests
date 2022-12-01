@@ -25,7 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that incognito mode is disabled for Unicorn users",
 		Contacts: []string{
-			"tobyhuang@chromium.org", "cros-families-eng+test@google.com", "chromeos-sw-engprod@google.com"},
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"zork@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      time.Minute,

@@ -23,8 +23,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that multiple sign-in is disabled for Unicorn users. Geller users should behave similarly",
 		Contacts: []string{
-			"tobyhuang@chromium.org", "cros-families-eng+test@google.com", "chromeos-sw-engprod@google.com",
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"zork@chromium.org",
 		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

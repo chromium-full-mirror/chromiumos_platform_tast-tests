@@ -23,7 +23,12 @@ func init() {
 		Func:         NonEducoexistenceInsession,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Unicorn account trying to add a non-EDU secondary account fails",
-		Contacts:     []string{"tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"zork@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + 5*time.Minute,

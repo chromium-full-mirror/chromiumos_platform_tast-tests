@@ -22,7 +22,14 @@ func init() {
 		Func:         UnicornExtensions,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Unicorn user can add extension with parent permission",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-oac@google.com", "galenemco@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"cros-oac@google.com",
+			"galenemco@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		// This test has a long timeout because syncing settings can occasionally

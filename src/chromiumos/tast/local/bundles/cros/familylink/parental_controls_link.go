@@ -27,11 +27,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify 'Parental controls' setting opens https://families.google.com/families when Play Store is disabled",
 		Contacts: []string{
-			"victor.chen@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
 			"cros-families-eng+test@google.com ",
+			"chromeos-sw-engprod@google.com",
+			"cienet-development@googlegroups.com",
+			"victor.chen@cienet.com",
 		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      time.Minute,

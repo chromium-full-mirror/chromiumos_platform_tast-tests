@@ -20,7 +20,12 @@ func init() {
 		Func:         EducoexistenceInsession,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if in-session EDU Coexistence flow is working",
-		Contacts:     []string{"agawronska@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"agawronska@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + 5*time.Minute,
