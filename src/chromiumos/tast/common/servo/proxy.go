@@ -399,7 +399,7 @@ func (p *Proxy) runCommandImpl(ctx context.Context, dumpLogOnError, asRoot bool,
 	}
 	if p.isLocal() {
 		if p.isDockerized() {
-			_, err := p.dockerExec(ctx, nil, name, args...)
+			_, _, err := p.dockerExec(ctx, nil, name, args...)
 			return err
 		}
 		if asRoot {
@@ -429,7 +429,8 @@ func (p *Proxy) RunCommandQuiet(ctx context.Context, asRoot bool, name string, a
 func (p *Proxy) OutputCommand(ctx context.Context, asRoot bool, name string, args ...string) ([]byte, error) {
 	if p.isLocal() {
 		if p.isDockerized() {
-			return p.dockerExec(ctx, nil, name, args...)
+			out, _, err := p.dockerExec(ctx, nil, name, args...)
+			return out, err
 		}
 		if asRoot {
 			sudoargs := append([]string{name}, args...)
@@ -444,11 +445,40 @@ func (p *Proxy) OutputCommand(ctx context.Context, asRoot bool, name string, arg
 	return p.hst.CommandContext(ctx, name, args...).Output(ssh.DumpLogOnError)
 }
 
+// SeparatedOutputCommand execs a command as the root user,
+// and returns stdout, stderr and err.
+func (p *Proxy) SeparatedOutputCommand(ctx context.Context, asRoot bool, name string, args ...string) ([]byte, []byte, error) {
+	var stdoutBuf, stderrBuf bytes.Buffer
+	if p.isLocal() {
+		if p.isDockerized() {
+			return p.dockerExec(ctx, nil, name, args...)
+		}
+		cmd := testexec.CommandContext(ctx, name, args...)
+		if asRoot {
+			sudoargs := append([]string{name}, args...)
+			testing.ContextLog(ctx, "Running sudo ", sudoargs)
+			cmd = testexec.CommandContext(ctx, "sudo", sudoargs...)
+		}
+		cmd.Stdout = &stdoutBuf
+		cmd.Stderr = &stderrBuf
+		err := cmd.Run()
+		return stdoutBuf.Bytes(), stderrBuf.Bytes(), err
+	}
+	if err := p.connectSSH(ctx); err != nil {
+		return nil, nil, err
+	}
+	cmd := p.hst.CommandContext(ctx, name, args...)
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+	err := cmd.Run()
+	return stdoutBuf.Bytes(), stderrBuf.Bytes(), err
+}
+
 // InputCommand execs a command and redirects stdin.
 func (p *Proxy) InputCommand(ctx context.Context, asRoot bool, stdin io.Reader, name string, args ...string) error {
 	if p.isLocal() {
 		if p.isDockerized() {
-			_, err := p.dockerExec(ctx, stdin, name, args...)
+			_, _, err := p.dockerExec(ctx, stdin, name, args...)
 			if err != nil {
 				return err
 			}
@@ -566,7 +596,7 @@ func (p *Proxy) PutFiles(ctx context.Context, asRoot bool, fileMap map[string]st
 func (p *Proxy) GetPort() int { return p.port }
 
 // dockerExec execs a command with Docker SDK.
-func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, args ...string) ([]byte, error) {
+func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, args ...string) ([]byte, []byte, error) {
 	execConfig := types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -576,7 +606,7 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 	// Attach stdin if provided.
 	if stdin != nil {
 		err := errors.New("cannot direct input to docker exec command")
-		return nil, err
+		return nil, nil, err
 	}
 
 	// The only user within servod container is root, no sudo needed.
@@ -585,7 +615,7 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 	testing.ContextLog(ctx, "Running docker command ", execConfig.Cmd)
 	r, err := p.dcl.ContainerExecCreate(ctx, p.sdc, execConfig)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var wg sync.WaitGroup
@@ -605,7 +635,7 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 		}
 	}(p.dcl)
 
-	var out []byte
+	var out, stderr []byte
 	wg.Add(1)
 	// Get the stdout of the cmd.
 	go func(dcl *client.Client) {
@@ -617,6 +647,7 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 		defer hRes.Close()
 		var outBuf, errBuf bytes.Buffer
 		stdcopy.StdCopy(&outBuf, &errBuf, hRes.Reader)
+		stderr = errBuf.Bytes()
 		out = outBuf.Bytes()
 	}(p.dcl)
 
@@ -627,7 +658,7 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 		out = []byte(validatedOutput)
 	}
 
-	return out, err
+	return out, stderr, err
 }
 
 // Proxied returns true if the servo host is connected via ssh proxy.

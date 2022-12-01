@@ -1127,16 +1127,30 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	if usbdev == "" {
 		return "", errors.New("no USB key detected")
 	}
-	var fdiskOutput []byte
+	/*
+		Some USBs would drop connection after a short period of time.
+		Wait for 2 minutes before listing usb content to ensure that
+		full information would be captured. If the usb disconnected,
+		running fdisk would likely output an error similar to the
+		following: 'fdisk: cannot open /dev/sdb: No such file or directory'
+	*/
+	testing.ContextLog(ctx, "Sleeping 120 seconds before listing usb content")
+	if err := testing.Sleep(ctx, 120*time.Second); err != nil {
+		return "", errors.Wrap(err, "failed to sleep for 120 seconds")
+	}
+	var fdiskOutput, stderr []byte
 	// Verify that the device really exists on the servo host.
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		fdiskOutput, err = h.ServoProxy.OutputCommand(ctx, true, "fdisk", "-l", usbdev)
+		fdiskOutput, stderr, err = h.ServoProxy.SeparatedOutputCommand(ctx, true, "fdisk", "-l", usbdev)
 		return err
 	}, &testing.PollOptions{
 		Timeout:  10 * time.Second,
 		Interval: 1 * time.Second,
 	})
 	if err != nil {
+		if stderr != nil {
+			return "", errors.Errorf("validate usb key at %q, got stderr: %s", usbdev, stderr)
+		}
 		return "", errors.Wrapf(err, "validate usb key at %q", usbdev)
 	}
 	testing.ContextLogf(ctx, "Output from fdisk -l %q: %s", usbdev, fdiskOutput)
@@ -1154,9 +1168,15 @@ func (h *Helper) FormatUSB(ctx context.Context, usbdev string) error {
 		return errors.New("no USB key detected. Please run CheckUSBOnServoHost")
 	}
 	testing.ContextLog(ctx, "Formatting the USB device")
-	if err := h.ServoProxy.RunCommand(ctx, true, "mkfs.vfat", "-I", usbdev); err != nil {
+	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "mkfs.vfat", "-I", usbdev); err != nil {
+		if strings.Contains(string(stderr), "Read-only file system") {
+			return errors.New("found usb device as read-only file system")
+		}
 		if err := h.validateUSBConn(ctx); err != nil {
 			return errors.Wrap(err, "failed while verifying usb connection to DUT")
+		}
+		if stderr != nil {
+			return errors.Errorf("found stderr %s", stderr)
 		}
 		return errors.Wrap(err, "failed to format the usb device, but usb connection verified")
 	}
@@ -1212,6 +1232,17 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 	if strings.Contains(deviceDiff, "+") {
 		return errors.Errorf("Device %s disappeared after a short delay", strings.TrimPrefix(deviceDiff, "+ "))
 	}
+	reUSBDriverName := regexp.MustCompile(`Driver=usb-storage`)
+	testing.ContextLog(ctx, "Checking if usb driver really exists")
+	driverOutput, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", "lsusb -t").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to check for lsusb")
+	}
+	matches := reUSBDriverName.FindAllStringSubmatch(string(driverOutput), -1)
+	if len(matches) == 0 {
+		return errors.New("usb device does not exist")
+	}
+	testing.ContextLogf(ctx, "%d usb device(s) found", len(matches))
 	return nil
 }
 
