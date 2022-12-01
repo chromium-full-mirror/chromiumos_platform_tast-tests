@@ -27,8 +27,12 @@ func init() {
 			"chromeos-kiosk-eng+TAST@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
+		Fixture: fixture.FakeDMSEnrolled,
 	})
 }
 

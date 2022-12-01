@@ -28,7 +28,11 @@ func init() {
 			"anqing@google.com",      // Test author - Lacros.
 			"chromeos-kiosk-eng+TAST@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
 		Params: []testing.Param{
