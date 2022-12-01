@@ -34,7 +34,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{
@@ -54,7 +54,9 @@ func init() {
 const (
 	// Output from ec console for gpioget or ioexget looks like:
 	// "0* EN_USB_A0_5V" for gpio, or "1* O H EN_USB_A0_5V" for ioex.
-	reECUSBPortGet string = `(?i)(0|1)[^\r\n]*%s`
+	reECUSBPortGet           string        = `(?i)(0|1)[^\r\n]*%s`
+	usbPortStatePollTimeout  time.Duration = 15 * time.Second
+	usbPortStatePollInterval time.Duration = 5 * time.Second
 )
 
 func ECUSBPorts(ctx context.Context, s *testing.State) {
@@ -72,15 +74,15 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to probe usb ports: ", err)
 	}
 
-	if err := h.DUT.Reboot(ctx); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
-	}
-
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to sleep for 5 seconds: ", err)
-	}
-
 	s.Log("Check that ports are initially enabled")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := checkUSBAPortEnabled(ctx, h, enablePins, 1); err != nil {
+			return errors.Wrap(err, "failed to check usb ports")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: usbPortStatePollTimeout, Interval: usbPortStatePollInterval}); err != nil {
+		s.Fatal("Expected USB Ports to be enabled: ", err)
+	}
 	if err := checkUSBAPortEnabled(ctx, h, enablePins, 1); err != nil {
 		s.Fatal("Expected USB Ports to be enabled: ", err)
 	}
@@ -90,10 +92,35 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 		if err := testPortsAfterShutdown(ctx, h, enablePins); err != nil {
 			s.Fatal("Some USB Ports enabled after shutdown: ", err)
 		}
+		defer func() {
+			s.Log("Reopen DUT lid in case it was left closed at test end")
+			if err := h.Servo.OpenLid(ctx); err != nil {
+				s.Fatal("Failed to make sure lid is open after test end: ", err)
+			}
+		}()
 	case testUSBOnLidClose:
 		if err := testPortsAfterLidClose(ctx, h, enablePins); err != nil {
 			s.Fatal("Some USB Ports enabled after lidclose: ", err)
 		}
+		defer func() {
+			s.Log("Reset DUT after test end in case it was left powered off")
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+				s.Fatal("Failed to make sure DUT is booted after test end: ", err)
+			}
+			if err := h.WaitConnect(ctx); err != nil {
+				s.Fatal("Failed to reconnect to DUT after test end: ", err)
+			}
+		}()
+	}
+
+	s.Log("Poll for USB ports re enabled")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := checkUSBAPortEnabled(ctx, h, enablePins, 1); err != nil {
+			return errors.Wrap(err, "failed to check usb ports")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: usbPortStatePollTimeout, Interval: usbPortStatePollInterval}); err != nil {
+		s.Fatal("Not all usb ports enabled after again: ", err)
 	}
 }
 
@@ -107,11 +134,15 @@ func testPortsAfterLidClose(ctx context.Context, h *firmware.Helper, enablePins 
 		return errors.Wrap(err, "failed to get G3 powerstate")
 	}
 
-	testing.ContextLog(ctx, "Check that ports have state 0")
-	if err := checkUSBAPortEnabled(ctx, h, enablePins, 0); err != nil {
-		return errors.Wrap(err, "failed to check usb ports")
+	testing.ContextLog(ctx, "Poll for disabled USB ports")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := checkUSBAPortEnabled(ctx, h, enablePins, 0); err != nil {
+			return errors.Wrap(err, "failed to check usb ports")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: usbPortStatePollTimeout, Interval: usbPortStatePollInterval}); err != nil {
+		return errors.Wrap(err, "not all usb ports disabled")
 	}
-
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return errors.Wrap(err, "failed to open lid")
 	}
@@ -141,9 +172,14 @@ func testPortsAfterShutdown(ctx context.Context, h *firmware.Helper, enablePins 
 		return errors.Wrap(err, "failed to get G3 powerstate")
 	}
 
-	testing.ContextLog(ctx, "Check that ports have state 0")
-	if err := checkUSBAPortEnabled(ctx, h, enablePins, 0); err != nil {
-		return errors.Wrap(err, "failed to check usb ports")
+	testing.ContextLog(ctx, "Poll for disabled USB ports")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := checkUSBAPortEnabled(ctx, h, enablePins, 0); err != nil {
+			return errors.Wrap(err, "failed to check usb ports")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: usbPortStatePollTimeout, Interval: usbPortStatePollInterval}); err != nil {
+		return errors.Wrap(err, "not all usb ports disabled")
 	}
 
 	testing.ContextLog(ctx, "Power DUT back on with short press of the power button")
