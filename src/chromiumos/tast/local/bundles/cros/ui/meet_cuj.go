@@ -1157,6 +1157,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if hists, err := webRTCMetricsRecorder.Histogram(ctx, tconn); err != nil {
 		s.Error("Failed to gather WebRTC metrics for video streams: ", err)
 	} else {
+		expectedInboundCount := int64(meet.num)
 		for _, hist := range hists {
 			count := hist.TotalCount()
 			if count == 0 {
@@ -1164,25 +1165,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			info := webRTCMetricInfo[hist.Name]
-			var expectedCount int64
-			if info.outbound {
-				expectedCount = 1
-			} else {
-				expectedCount = int64(meet.num)
-			}
-			if count != expectedCount {
-				s.Errorf("Unexpected sample count on %s: got %d; expected %d", hist.Name, count, expectedCount)
-				continue
-			}
-
-			total := float64(hist.Sum)
-			if info.outbound {
-				pv.Set(perf.Metric{
-					Name:      hist.Name,
-					Unit:      info.unit,
-					Direction: info.direction,
-				}, total)
-				continue
+			if !info.outbound && count != expectedInboundCount {
+				s.Errorf("Unexpected sample count on %s: got %d; expected %d", hist.Name, count, expectedInboundCount)
 			}
 
 			var bucketMinima []float64
@@ -1193,6 +1177,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					bucketMaxima = append(bucketMaxima, float64(bucket.Max))
 				}
 			}
+			total := float64(hist.Sum)
 			pv.Set(perf.Metric{
 				Name:      hist.Name,
 				Variant:   "bucket_minima",
