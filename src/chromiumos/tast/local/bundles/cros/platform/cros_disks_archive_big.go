@@ -39,7 +39,7 @@ func init() {
 		Contacts:     []string{"chromeos-files-syd@google.com"},
 		Attr:         []string{"group:mainline"},
 		Data:         preparedArchives,
-		Timeout:      10 * time.Minute,
+		Timeout:      20 * time.Minute,
 	})
 }
 
