@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 const (
@@ -82,6 +83,7 @@ func init() {
 					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					pmfRequiredAP1: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 			},
 			{
 				// Verifies that DUT can roam from a BSS with SAE key management to a BSS with PSK key management and back.
@@ -92,6 +94,7 @@ func init() {
 					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					pmfRequiredAP0: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 			},
 		},
 	})
