@@ -71,7 +71,6 @@ func init() {
 					CorrectWord:  "hello",
 					UndoMethod:   autocorrect.ViaPopupUsingPK,
 				},
-				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name:              "en_us_2_lacros",

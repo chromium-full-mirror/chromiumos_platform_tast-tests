@@ -85,7 +85,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Val:               typingTestIMEs,
 				Fixture:           fixture.LacrosTabletVK,
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"lacros_stable"},
 			},
 		},

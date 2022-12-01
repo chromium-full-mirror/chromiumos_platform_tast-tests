@@ -108,7 +108,6 @@ func init() {
 					expectedTypingResult: "´",
 				},
 				ExtraSoftwareDeps: []string{"lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
 			},
 		},

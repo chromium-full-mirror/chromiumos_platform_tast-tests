@@ -57,7 +57,6 @@ func init() {
 			},
 			{
 				Name:              "guest_lacros",
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"lacros_stable"},
 				Fixture:           fixture.LacrosAnyVKInGuest,
 			},

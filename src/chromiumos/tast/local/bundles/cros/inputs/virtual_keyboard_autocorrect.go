@@ -153,7 +153,6 @@ func init() {
 			{
 				Name:              "es_es_a11y_lacros",
 				Fixture:           fixture.LacrosClamshellVK,
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"lacros_stable"},
 				Val: autocorrect.TestCase{
 					InputMethod:  ime.SpanishSpain,
