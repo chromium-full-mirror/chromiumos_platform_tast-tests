@@ -22,8 +22,7 @@ import (
 // TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.
 // TODO(b/256522810) : remove "steelix" when b/256522810 is fixed.
 // TODO(b/256523120) : remove "gimble" when b/256523120 is fixed.
-// TODO(b/256534123) : remove "treeya360" when b/256534123 is fixed.
-var crasRecordQualityUnstableModels = []string{"sasukette", "steelix", "gimble", "treeya360"}
+var crasRecordQualityUnstableModels = []string{"sasukette", "steelix", "gimble"}
 
 func init() {
 	testing.AddTest(&testing.Test{
