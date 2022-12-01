@@ -245,6 +245,46 @@ func checkPowerSupplyChange(ctx context.Context, rm *resourced.Client) (resErr e
 	return nil
 }
 
+func checkSetMemoryMargins(ctx context.Context, rm *resourced.Client) (resErr error) {
+	// Query the original memory margins for comparison.
+	marginBefore, err := rm.MemoryMarginsKB(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to query memory margins")
+	}
+
+	// Set the new memory margins.
+	const (
+		defaultCritical uint32 = 520
+		defaultModerate uint32 = 4000
+		newCritical     uint32 = defaultCritical * 2
+		newModerate     uint32 = defaultModerate * 2
+	)
+	if err = rm.SetMemoryMarginsBps(ctx, newCritical, newModerate); err != nil {
+		return errors.Wrap(err, "failed to set memory margins")
+	}
+
+	// Query the new memory margin after setting.
+	marginAfter, err := rm.MemoryMarginsKB(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to query memory margins")
+	}
+
+	// Restore to the default memory margins.
+	if err = rm.SetMemoryMarginsBps(ctx, defaultCritical, defaultModerate); err != nil {
+		return errors.Wrap(err, "failed to set memory margins to default")
+	}
+
+	// The new memory margins should be larger.
+	if marginAfter.CriticalKB <= marginBefore.CriticalKB {
+		return errors.Errorf("unexpected critical margin after setting, before: %d, after: %d", marginBefore.CriticalKB, marginAfter.CriticalKB)
+	}
+	if marginAfter.ModerateKB <= marginBefore.ModerateKB {
+		return errors.Errorf("unexpected moderate margin after setting, before: %d, after: %d", marginBefore.ModerateKB, marginAfter.ModerateKB)
+	}
+
+	return nil
+}
+
 func Resourced(ctx context.Context, s *testing.State) {
 	rm, err := resourced.NewClient(ctx)
 	if err != nil {
@@ -285,4 +325,7 @@ func Resourced(ctx context.Context, s *testing.State) {
 	}
 
 	// New tests will be added here. Stable tests are promoted to baseline.
+	if err := checkSetMemoryMargins(ctx, rm); err != nil {
+		s.Fatal("Setting memory margins failed: ", err)
+	}
 }

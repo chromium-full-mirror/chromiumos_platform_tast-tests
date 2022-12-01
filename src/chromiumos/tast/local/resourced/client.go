@@ -255,6 +255,14 @@ func (c *Client) PowerSupplyChange(ctx context.Context) error {
 	return nil
 }
 
+// SetMemoryMarginsBps sets the memory margins measured in basis points.
+func (c *Client) SetMemoryMarginsBps(ctx context.Context, critical, moderate uint32) error {
+	if err := c.obj.Call(ctx, "SetMemoryMarginsBps", critical, moderate).Err; err != nil {
+		return errors.Wrap(err, "failed to call method SetMemoryMarginsBps")
+	}
+	return nil
+}
+
 // NewClient makes a new D-Bus wrapper object for communicating with Resource
 // Manager.
 func NewClient(ctx context.Context) (*Client, error) {
