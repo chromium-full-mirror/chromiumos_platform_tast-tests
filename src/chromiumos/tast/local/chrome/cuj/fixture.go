@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
@@ -500,13 +501,24 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 	}()
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get the test conn: ", err)
+	}
+
+	// Set shelf behavior explicitly to prevent unpredictability in
+	// the shelf state at the start of each test.
+	info, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to find the primary display info: ", err)
+	}
+	if err := ash.SetShelfBehavior(ctx, tconn, info.ID, ash.ShelfBehaviorNeverAutoHide); err != nil {
+		s.Fatal("Failed to set the shelf behavior to 'never auto-hide' for display ID ", info.ID)
+	}
+
 	enablePlayStore := true
 	if f.keepState {
 		// Check whether the play store has been enabled.
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect Test API: ", err)
-		}
 		st, err := arc.GetState(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to get ARC state: ", err)
@@ -522,10 +534,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 			// Optin to Play Store.
 			s.Log("Opting into Play Store")
-			tconn, err := cr.TestAPIConn(ctx)
-			if err != nil {
-				s.Fatal("Failed to get the test conn: ", err)
-			}
 			maxAttempts := 2
 			if err := optin.PerformWithRetry(ctx, cr, maxAttempts); err != nil {
 				s.Fatal("Failed to optin to Play Store: ", err)
