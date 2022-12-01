@@ -40,13 +40,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      3*chrome.LoginTimeout + 3*time.Minute,
-		Params: []testing.Param{{
-			Name: "auth_factor_experiment_on",
-			Val:  []chrome.Option{chrome.EnableFeatures("UseAuthFactors")},
-		}, {
-			Name: "auth_factor_experiment_off",
-			Val:  []chrome.Option{chrome.DisableFeatures("UseAuthFactors")},
-		}},
 	})
 }
 
@@ -72,14 +65,11 @@ func SignOutAll(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	testParamOpts := s.Param().([]chrome.Option)
-	opts := append(testParamOpts,
+	cr, err := chrome.New(ctx,
 		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
 		chrome.FakeLogin(creds[len(creds)-1]),
 		chrome.KeepState(),
 	)
-
-	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to login last user: ", err)
 	}
