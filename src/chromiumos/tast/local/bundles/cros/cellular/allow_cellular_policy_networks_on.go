@@ -30,6 +30,7 @@ func init() {
 			"nikhilcn@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_e2e_unstable", "cellular_sim_test_esim"},
 		Fixture:      fixture.FakeDMSEnrolled,

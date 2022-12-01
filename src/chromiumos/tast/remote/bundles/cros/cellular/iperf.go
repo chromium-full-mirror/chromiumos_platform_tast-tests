@@ -34,6 +34,7 @@ func init() {
 			"jstanko@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1108821",
 		Attr:         []string{"group:cellular", "cellular_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},

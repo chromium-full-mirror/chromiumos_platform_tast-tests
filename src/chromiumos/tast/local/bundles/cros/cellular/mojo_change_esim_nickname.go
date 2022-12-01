@@ -22,6 +22,7 @@ func init() {
 			"jstanko@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:979102",
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWithMojoTestEuicc",

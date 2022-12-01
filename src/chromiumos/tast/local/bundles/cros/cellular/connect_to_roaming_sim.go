@@ -26,6 +26,7 @@ func init() {
 			"nikhilcn@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_roaming"},
 		Timeout:      3 * time.Minute,

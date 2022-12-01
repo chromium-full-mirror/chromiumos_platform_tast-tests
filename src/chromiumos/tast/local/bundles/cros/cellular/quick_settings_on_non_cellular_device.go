@@ -23,6 +23,7 @@ func init() {
 			"nikhilcn@chromium.org",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.NoCellular()),
 		Attr:         []string{"group:wificell", "wificell_unstable"},
