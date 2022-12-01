@@ -44,11 +44,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that reordering desk by drag & drop and keyboard shortcuts works well",
 		Contacts: []string{
-			"yongshun@chromium.org",
-			"zxdan@chromium.org",
 			"chromeos-wmp@google.com",
+			"yongshun@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{

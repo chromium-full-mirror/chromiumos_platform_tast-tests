@@ -27,12 +27,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the behavior of renaming desks",
 		Contacts: []string{
+			"chromeos-wms@google.com",
 			"yongshun@chromium.org",
-			"zxdan@chromium.org",
-			"chromeos-wmp@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		// ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
+		Attr:         []string{"group:mainline", "informational"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Rename desks.
