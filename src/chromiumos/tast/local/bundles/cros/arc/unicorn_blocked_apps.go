@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/unicorn"
+	"chromiumos/tast/local/retry"
 	"chromiumos/tast/testing"
 )
 
@@ -51,10 +52,14 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 		blockedPackage      = "com.google.android.apps.youtube.creator"
 	)
 
-	childUser := s.RequiredVar(unicorn.ChildUserVar)
-	packages := []string{blockedPackage}
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
 
-	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
+	childUser := s.RequiredVar(unicorn.ChildUserVar)
+	arcPolicy := arcent.CreateArcPolicyWithApps([]string{blockedPackage}, arcent.InstallTypeBlocked)
 	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
@@ -69,68 +74,76 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	}
 	defer fdms.Stop(cleanupCtx)
 
-	cr, err := unicorn.StartChromeWithARC(ctx,
-		childUser,
-		s.RequiredVar(unicorn.ChildPasswordVar),
-		s.RequiredVar(unicorn.ParentUserVar),
-		s.RequiredVar(unicorn.ParentPasswordVar),
-		fdms.URL)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API Connection: ", err)
-	}
-
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
-	if err != nil {
-		s.Fatal("Failed to connect to ARC: ", err)
-	}
-	defer a.Close(cleanupCtx)
-
-	if err := arcent.ConfigureProvisioningLogs(ctx, a); err != nil {
-		s.Fatal("Failed to configure provisioning logs: ", err)
-	}
-
-	if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
-		s.Fatal("Failed to wait for provisioning: ", err)
-	}
-
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
-	}
-	defer d.Close(cleanupCtx)
-
-	defer arcent.DumpBugReportOnError(cleanupCtx, s.HasError, a, filepath.Join(s.OutDir(), "bugreport.zip"))
-
-	if err := arcent.PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
-		installButton, err := arcent.WaitForInstallButton(ctx, d)
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		cr, err := unicorn.StartChromeWithARC(ctx,
+			childUser,
+			s.RequiredVar(unicorn.ChildPasswordVar),
+			s.RequiredVar(unicorn.ParentUserVar),
+			s.RequiredVar(unicorn.ParentPasswordVar),
+			fdms.URL)
 		if err != nil {
-			return errors.Wrap(err, "failed to find the install button")
+			return rl.Retry("start Chrome", err)
+		}
+		defer cr.Close(cleanupCtx)
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return rl.Retry("create test API Connection", err)
 		}
 
-		enabled, err := installButton.IsEnabled(ctx)
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
 		if err != nil {
-			return errors.Wrap(err, "failed to check the install button state")
+			return rl.Retry("connect to ARC", err)
+		}
+		defer a.Close(cleanupCtx)
+
+		if err := arcent.ConfigureProvisioningLogs(ctx, a); err != nil {
+			return rl.Exit("configure provisioning logs", err)
 		}
 
-		if !enabled {
-			testing.ContextLog(ctx, "Install button is disabled")
+		if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
+			return rl.Retry("wait for provisioning", err)
+		}
+
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return rl.Exit("initialize UI Automator", err)
+		}
+		defer d.Close(cleanupCtx)
+
+		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
+			return retErr != nil
+		}, a, filepath.Join(s.OutDir(), "bugreport.zip"))
+
+		if err := arcent.PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
+			installButton, err := arcent.WaitForInstallButton(ctx, d)
+			if err != nil {
+				return errors.Wrap(err, "failed to find the install button")
+			}
+
+			enabled, err := installButton.IsEnabled(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to check the install button state")
+			}
+
+			if !enabled {
+				testing.ContextLog(ctx, "Install button is disabled")
+				return nil
+			}
+
+			if err := validateAutoUninstall(ctx, a, installButton, blockedPackage); err != nil {
+				testing.PollBreak(err)
+			}
+
+			testing.ContextLog(ctx, "Blocked app uninstalled")
 			return nil
+		}, time.Minute); err != nil {
+			return rl.Exit("verify blocked app uninstall", err)
 		}
 
-		if err := validateAutoUninstall(ctx, a, installButton, blockedPackage); err != nil {
-			testing.PollBreak(err)
-		}
-
-		testing.ContextLog(ctx, "Blocked app uninstalled")
 		return nil
-	}, time.Minute); err != nil {
-		s.Fatal("Blocked app verification failed: ", err)
+	}, nil); err != nil {
+		s.Fatal("Failed to verify blocked apps flow: ", err)
 	}
 }
 
