@@ -388,12 +388,12 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		s.Error("Energy status is not available for this board")
 	}
 
-	startTime := time.Now()
-
 	// Drop host caches for predictable results.
 	if err := disk.DropCaches(ctx); err != nil {
 		return v, errors.Wrap(err, "failed to drop caches")
 	}
+
+	startTime := time.Now()
 
 	// Opt in. From performance perspective, optin longer than 90 seconds is failure.
 	// This also aligned with global 20 minutes timeout.
