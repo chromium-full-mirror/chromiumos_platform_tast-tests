@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/arc/version"
@@ -328,13 +330,19 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		shortCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
-		// TODO(b/259450728): kukui-arc-r devices are failing Uprev due to missing ureadahead
-		// cache (b/259433794). Current suspicion is ureadhead generation is not running to completion
-		// before SIGTERM interrupt stopping the service. kukui-arc-r is a really slow device
-		// so we are looking into moving to more up-to-date ARM device like herobrine or corsola.
+		// Limit running in PFQ for VM devices to 8GB+ RAM spec only. For local
+		// test configs (upload=false) and non-VM, there are no restrictions.
+		// It is known issue that 4GB devices experience memory pressure during the
+		// opt in. This leads to the situation when FS page caches are reclaimed
+		// and captured result does not properly reflect actual FS usage. Don't
+		// upload caches to server for devices lower than 8GB.
 		if param.vmEnabled && param.upload {
-			if desc.ModelType == "kukui" {
-				testing.ContextLogf(shortCtx, "Model type %s not supported for VM ureadahead, skipping generate", desc.ModelType)
+			response, err := service.CheckMinMemory(shortCtx, &empty.Empty{})
+			if err != nil {
+				return errors.Wrap(err, "ureadaheadPackService.CheckMinMemory returned an error")
+			}
+			if response.Result == false {
+				testing.ContextLog(shortCtx, "Did not meet minimum memory requirement for ureadahead, skipping generate")
 				return nil
 			}
 		}
