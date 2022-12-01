@@ -30,7 +30,7 @@ const (
 	// minute until it subsides. TODO(crbug.com/1047840): Remove when not needed.
 	coolDownTimeAfterLogin = 30 * time.Second
 	// Amount of graphics objects for a given resolution considered bad, regardless of codec.
-	maxGraphicsObjects = 25
+	maxGraphicsObjects = 35
 )
 
 // Size represents a Width x Height pair, for example for a video resolution.
