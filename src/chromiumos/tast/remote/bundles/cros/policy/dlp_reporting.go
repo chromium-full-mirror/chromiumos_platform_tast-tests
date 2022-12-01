@@ -46,7 +46,7 @@ func init() {
 			"chromeos-dlp@google.com",
 		},
 		BugComponent: "b:892101",
-		Attr:         []string{"group:dpanel-end2end"},
+		Attr:         []string{"group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
