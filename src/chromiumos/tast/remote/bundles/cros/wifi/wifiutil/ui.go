@@ -102,6 +102,7 @@ func OpenJoinWiFiDialogFromQuickSettings(ctx context.Context, conn *grpc.ClientC
 		return func(ctx context.Context) {}, errors.Wrap(err, "failed to navigate to the detailed Network within QuickSettings")
 	}
 
+	uiauto := ui.NewAutomationServiceClient(conn)
 	cleanup := func(ctx context.Context) { quicksettings.Hide(ctx, &emptypb.Empty{}) }
 
 	// Ensure WiFi is enabled before joining to a new network.
@@ -110,7 +111,6 @@ func OpenJoinWiFiDialogFromQuickSettings(ctx context.Context, conn *grpc.ClientC
 		return cleanup, errors.Wrap(err, "could not enable Wi-Fi using Shill")
 	}
 
-	uiauto := ui.NewAutomationServiceClient(conn)
 	joinWiFiButton := ui.Node().Name("Join other Wi-Fi networks").Role(ui.Role_ROLE_BUTTON).Finder()
 	if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: joinWiFiButton}); err != nil {
 		return cleanup, errors.Wrap(err, "failed to click the join button")
@@ -120,7 +120,15 @@ func OpenJoinWiFiDialogFromQuickSettings(ctx context.Context, conn *grpc.ClientC
 		return cleanup, errors.Wrap(err, `failed to find the "Join Wi-Fi" dialog`)
 	}
 
-	return cleanup, nil
+	// The QuickSettings should be dismissed once the dialog been opened, replace the cleanup with close-dialog.
+	return func(ctx context.Context) {
+		exists, err := StableCheckIsNodeFound(ctx, uiauto, JoinWiFiNetworkDialogFinder)
+		if err != nil || !exists {
+			return
+		}
+		closeDialogButton := ui.Node().Name("Cancel").Role(ui.Role_ROLE_BUTTON).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
+		uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: closeDialogButton})
+	}, nil
 }
 
 // OpenJoinWiFiDialogFromOSSettings opens the "Join Wi-Fi network" dialog from the OS-Settings.

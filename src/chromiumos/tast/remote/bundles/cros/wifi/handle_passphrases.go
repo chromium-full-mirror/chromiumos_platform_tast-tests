@@ -6,6 +6,7 @@ package wifi
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"google.golang.org/grpc"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -20,15 +22,26 @@ import (
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
+	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 )
+
+// handlePassphrasesParam is the parameter for the test.
+type handlePassphrasesParam struct {
+	// isLoggedIn indicates the login mode.
+	isLoggedIn bool
+	// securityConfig holds the configurations of WiFi AP.
+	securityConfig security.ConfigFactory
+	// apOption holds the specify options of the config.
+	apOption []hostapd.Option
+}
 
 type passphraseTestCase struct {
 	name              string
 	passphraseLength  int
 	genPassphrase     func(int) (string, error)
-	verifications     func(context.Context, *grpc.ClientConn, *wificell.WifiClient, string) error
+	verifications     func(context.Context, *grpc.ClientConn, *wificell.WifiClient, bool, string) error
 	extraVerification func(context.Context, *grpc.ClientConn, *wificell.WifiClient, string) error
 }
 
@@ -40,9 +53,10 @@ func init() {
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cj.tsai@cienet.com",
+			"toby.leung@cienet.com",
 			"cienet-development@googlegroups.com",
 		},
-		BugComponent: "b:1131912",
+		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: append(
 			wifiutil.JoinWifiServiceNames,
@@ -54,10 +68,45 @@ func init() {
 		),
 
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
-		Timeout:      6 * time.Minute,
+		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		Params: []testing.Param{
+			{
+				Name: "logged_in_wpa",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     true,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
+				},
+			}, {
+				Name: "oobe_wpa",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     false,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Encrypted_WiFi_"))},
+				},
+			}, {
+				Name: "logged_in_wpa2",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     true,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
+				},
+			}, {
+				Name: "oobe_wpa2",
+				Val: &handlePassphrasesParam{
+					isLoggedIn:     false,
+					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
+					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Encrypted_WiFi_"))},
+				},
+			},
+		},
+		Fixture: "wificellFixt",
+		Timeout: 6 * time.Minute,
 	})
 }
+
+// correctPassphrase is the correct passphrase of the WiFi AP.
+const correctPassphrase = "WiFi_t1e2s3t4"
 
 // HandlePassphrases verifies ChromeOS handles passphrases (including correct, incorrect-valid and incorrect-invalid ones)
 // gracefully and displays error messages or UI prompts correctly.
@@ -65,16 +114,13 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 	wifiSvc := tf.DUTWifiClient(wificell.DefaultDUT)
-	correctPassphrase := "WiFi_t1e2s3t4"
-	opts := []hostapd.Option{
+	param := s.Param().(*handlePassphrasesParam)
+	param.apOption = append(param.apOption,
 		hostapd.Channel(1),
-		hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")),
 		hostapd.Mode(hostapd.Mode80211g),
-		hostapd.Hidden(),
-	}
-	securityConfig := wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP))
+	)
 
-	ap, err := tf.ConfigureAP(ctx, opts, securityConfig)
+	ap, err := tf.ConfigureAP(ctx, param.apOption, param.securityConfig)
 	if err != nil {
 		s.Fatal("Failed to configure the AP: ", err)
 	}
@@ -93,7 +139,14 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
-	if _, err := crSvc.New(ctx, &ui.NewRequest{}); err != nil {
+	uiRequest := ui.NewRequest{}
+	if !param.isLoggedIn {
+		uiRequest = ui.NewRequest{
+			LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
+			SigninProfileTestExtensionId: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+		}
+	}
+	if _, err := crSvc.New(ctx, &uiRequest); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
@@ -111,13 +164,13 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 			passphraseLength: 8,
 			genPassphrase:    wpa.GenPassphrase,
 			// For an incorrect but valid passphrase, expecting a notification that alerts "Bad password" will appear.
-			verifications: expectIncorrectPassphraseNotification,
+			verifications: expectIncorrectPassphrase,
 		}, {
 			name:             "incorrect_passphrase_with_26_characters",
 			passphraseLength: 26,
 			genPassphrase:    wpa.GenPassphrase,
 			// For an incorrect but valid passphrase, expecting a notification that alerts "Bad password" will appear.
-			verifications: expectIncorrectPassphraseNotification,
+			verifications: expectIncorrectPassphrase,
 		}, {
 			name:             "invalid_passphrase_with_0_characters",
 			passphraseLength: 0,
@@ -167,22 +220,20 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to join WiFi: ", err)
 			}
-
-			if err := test.verifications(ctx, rpcClient.Conn, wifiSvc, ap.Config().SSID); err != nil {
+			if err := test.verifications(ctx, rpcClient.Conn, wifiSvc, param.isLoggedIn, ap.Config().SSID); err != nil {
 				s.Fatal("Failed to verify that UI prompt correctly: ", err)
 			}
-			if test.extraVerification != nil {
+			if test.extraVerification != nil && param.isLoggedIn {
 				if err := test.extraVerification(ctx, rpcClient.Conn, wifiSvc, ap.Config().SSID); err != nil {
 					s.Fatal("Failed to verify that UI prompt correctly: ", err)
 				}
 			}
-
 		})
 	}
 }
 
 // expectConnectButtonDisabled verifies the "Connect" button on "Join WiFi Network" dialog should be disabled.
-func expectConnectButtonDisabled(ctx context.Context, conn *grpc.ClientConn, _ *wificell.WifiClient, ssid string) error {
+func expectConnectButtonDisabled(ctx context.Context, conn *grpc.ClientConn, _ *wificell.WifiClient, _ bool, ssid string) error {
 	uiSvc := ui.NewAutomationServiceClient(conn)
 	connectButton := wifiutil.ConnectButtonFinder
 	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: connectButton}); err != nil {
@@ -201,13 +252,23 @@ func expectConnectButtonDisabled(ctx context.Context, conn *grpc.ClientConn, _ *
 }
 
 // expectBadPasswordPrompted verifies a message "Bad password" should show on the "Join WiFi Network" dialog.
-func expectBadPasswordPrompted(ctx context.Context, conn *grpc.ClientConn, _ *wificell.WifiClient, _ string) error {
+func expectBadPasswordPrompted(ctx context.Context, conn *grpc.ClientConn, _ *wificell.WifiClient, _ bool, _ string) error {
 	uiSvc := ui.NewAutomationServiceClient(conn)
 	passwordErrorMsg := ui.Node().Name("Bad password").Role(ui.Role_ROLE_STATIC_TEXT).Ancestor(wifiutil.JoinWiFiNetworkDialogFinder).Finder()
 	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: passwordErrorMsg}); err != nil {
 		return errors.Wrap(err, "failed to find the expected error message")
 	}
 	return nil
+}
+
+func expectIncorrectPassphrase(ctx context.Context, conn *grpc.ClientConn, wifiSvc *wificell.WifiClient, isLoggedIn bool, ssid string) error {
+	// The UI presents the message/notification differently depending on the login status.
+	// Expecting the message of incorrect passphrase shows next time attempt to connect to the target network if DUT hasn't logged in.
+	if !isLoggedIn {
+		return expectIncorrectPassphraseMessage(ctx, conn, wifiSvc, ssid)
+	}
+	// Expecting the notification of incorrect passphrase shows if the DUT is logged in.
+	return expectIncorrectPassphraseNotification(ctx, conn, wifiSvc, ssid)
 }
 
 // expectIncorrectPassphraseNotification verifies the incorrect passphrase message appears in notification center.
@@ -228,9 +289,28 @@ func expectIncorrectPassphraseNotification(ctx context.Context, conn *grpc.Clien
 	return nil
 }
 
+// expectIncorrectPassphraseMessage verifies the incorrect passphrase message appears in specific SSID 'Join Wi-Fi Network' dialog on OOBE.
+func expectIncorrectPassphraseMessage(ctx context.Context, conn *grpc.ClientConn, wifiSvc *wificell.WifiClient, ssid string) error {
+	uiSvc := ui.NewAutomationServiceClient(conn)
+	quickSettingsSvc := quicksettings.NewQuickSettingsServiceClient(conn)
+	if _, err := quickSettingsSvc.NavigateToNetworkDetailedView(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
+	}
+
+	networkFinder := ui.Node().Name(fmt.Sprintf("Connect to %s", ssid)).Role(ui.Role_ROLE_BUTTON).Finder()
+	if err := wifiSvc.WaitForConnected(ctx, ssid, false /* expectedValue */); err != nil {
+		return errors.Wrap(err, "failed to wait for the network connect failed")
+	}
+	if _, err := uiSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: networkFinder}); err != nil {
+		return errors.Wrap(err, "failed to click the network from detail list")
+	}
+
+	return expectBadPasswordPrompted(ctx, conn, wifiSvc, false, ssid)
+}
+
 // expectConnected waits the specified network is connected.
-func expectConnected(ctx context.Context, conn *grpc.ClientConn, wifiSvc *wificell.WifiClient, ssid string) error {
-	return wifiSvc.WaitForConnected(ctx, ssid, true)
+func expectConnected(ctx context.Context, conn *grpc.ClientConn, wifiSvc *wificell.WifiClient, _ bool, ssid string) error {
+	return wifiSvc.WaitForConnected(ctx, ssid, true /* expectedValue */)
 }
 
 // verifyDisconnectButton verifies that the "Disconnect" button on the network detail page triggers disconnect to happen
