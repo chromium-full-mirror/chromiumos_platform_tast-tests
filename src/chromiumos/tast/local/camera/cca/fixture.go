@@ -40,7 +40,8 @@ const (
 type feature string
 
 const (
-	multiPageDocScan feature = "CameraAppMultiPageDocScan"
+	lowStorageWarning feature = "CameraAppLowStorageWarning"
+	multiPageDocScan  feature = "CameraAppMultiPageDocScan"
 )
 
 var (
@@ -229,6 +230,18 @@ func init() {
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{forceEnableAutoFraming: true},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	// TODO(b/244261957): Remove this fixture once low storage warning flag is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithLowStorageEnabled",
+		Desc:            "Set up test bridge for CCA with low storage warning flag enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{enableFeatures: []feature{lowStorageWarning}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,

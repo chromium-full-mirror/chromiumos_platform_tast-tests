@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      3 * time.Minute,
-		Fixture:      "ccaTestBridgeReady",
+		Fixture:      "ccaTestBridgeReadyWithLowStorageEnabled",
 		BugComponent: "b:978428",
 	})
 }
