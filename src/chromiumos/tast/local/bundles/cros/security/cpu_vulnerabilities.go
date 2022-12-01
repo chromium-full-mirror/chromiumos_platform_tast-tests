@@ -18,9 +18,10 @@ func init() {
 		Func: CPUVulnerabilities,
 		Desc: "Confirm CPU vulnerabilities are mitigated",
 		Contacts: []string{
-			"swboyd@chromium.org", // Tast author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"cpu_vuln_sysfs", "no_qemu"},
 	})

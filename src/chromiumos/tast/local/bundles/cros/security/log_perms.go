@@ -22,10 +22,11 @@ func init() {
 		Func: LogPerms,
 		Desc: "Checks permissions of logging-related files",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

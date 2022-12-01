@@ -21,10 +21,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify Chrome's sandbox status",
 		Contacts: []string{
-			"jorgelo@chromium.org",  // Security team
-			"hidehiko@chromium.org", // Tast port author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

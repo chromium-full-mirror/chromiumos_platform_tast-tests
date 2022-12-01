@@ -20,10 +20,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify GPU sandbox status",
 		Contacts: []string{
-			"jorgelo@chromium.org",  // Security team
-			"hidehiko@chromium.org", // Tast port author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome", "gpu_sandboxing"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

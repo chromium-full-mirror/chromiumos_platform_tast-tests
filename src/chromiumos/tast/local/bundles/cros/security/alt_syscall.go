@@ -16,11 +16,11 @@ func init() {
 		Func: AltSyscall,
 		Desc: "Verifies that alt_syscall allows/blocks syscalls as expected",
 		Contacts: []string{
-			"jorgelo@chromium.org",  // Security team
-			"ejcaruso@chromium.org", // Tast port author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

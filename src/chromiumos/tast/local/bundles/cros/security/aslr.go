@@ -26,10 +26,10 @@ func init() {
 		Func: ASLR,
 		Desc: "Verifies that address space is randomized between runs",
 		Contacts: []string{
-			"jorgelo@chromium.org",  // Security team
-			"ejcaruso@chromium.org", // Tast port author
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"aslr"},
 		Attr:         []string{"group:mainline"},
 	})
