@@ -28,10 +28,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual desks works correctly",
 		Contacts: []string{
+			"chromeos-wms@google.com",
 			"dandersson@chromium.org",
-			"chromeos-wmp@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
