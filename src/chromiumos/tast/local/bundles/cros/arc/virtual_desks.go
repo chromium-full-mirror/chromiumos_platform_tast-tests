@@ -27,8 +27,15 @@ func init() {
 		Func:         VirtualDesks,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests the placement of an ARC app in a virtual desk",
-		Contacts:     []string{"afakhry@chromium.org", "arc-framework+tast@google.com", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts: []string{
+			"chromeos-wms@google.com",
+			"dandersson@chromium.org",
+			"arc-framework+tast@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		// ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
