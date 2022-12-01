@@ -14,11 +14,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ModemmanagerSlots,
-		Desc:     "Verifies that modemmanager reports multiple SIM slots",
-		Contacts: []string{"stevenjb@google.com", "cros-network-health@google.com", "chromeos-cellular-team@google.com"},
-		Attr:     []string{"group:cellular", "cellular_sim_active", "cellular_cq"},
-		Fixture:  "cellular",
+		Func:         ModemmanagerSlots,
+		Desc:         "Verifies that modemmanager reports multiple SIM slots",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq"},
+		Fixture:      "cellular",
 	})
 }
 

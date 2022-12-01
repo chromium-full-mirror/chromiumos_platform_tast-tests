@@ -29,13 +29,11 @@ func init() {
 		Func:         ShillCellularSuspendResumeAutoconnect,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that cellular maintains autoconnect state around Suspend/Resume",
-		Contacts: []string{
-			"danielwinkler@google.com",
-			"chromeos-cellular-team@google.com",
-		},
-		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Fixture: "cellular",
-		Timeout: 2 * time.Minute,
+		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Fixture:      "cellular",
+		Timeout:      2 * time.Minute,
 		// TODO(b/217106877): Skip on herobrine as S/R is unstable
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("herobrine")),
 		SoftwareDeps: []string{"chrome"},

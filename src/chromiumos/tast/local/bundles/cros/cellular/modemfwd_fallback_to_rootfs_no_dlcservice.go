@@ -21,7 +21,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemfwdFallbackToRootfsNoDlcservice,
 		Desc:         "Verifies that modemfwd can fallback to the rootfs FW images when dlcservice is not running",
-		Contacts:     []string{"andrewlassalle@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_unstable"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},

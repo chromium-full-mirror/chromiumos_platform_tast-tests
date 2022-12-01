@@ -17,12 +17,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: HermesESIMUpdate,
-		Desc: "Tests the ESIM OS update flow",
-		Contacts: []string{
-			"pholla@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Func:         HermesESIMUpdate,
+		Desc:         "Tests the ESIM OS update flow",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Data: []string{
 			"third_party/Test_multiscript_chrome_v1.xml",
 		},

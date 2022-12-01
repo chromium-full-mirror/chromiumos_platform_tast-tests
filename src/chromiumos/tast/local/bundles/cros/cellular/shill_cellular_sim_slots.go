@@ -25,11 +25,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCellularSimSlots,
-		Desc:     "Verifies that Shill receives SimSlot information from ModemManager and can set the primary sim slot",
-		Contacts: []string{"stevenjb@google.com", "cros-network-health@google.com", "chromeos-cellular-team@google.com"},
-		Attr:     []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
-		Fixture:  "cellular",
+		Func:         ShillCellularSimSlots,
+		Desc:         "Verifies that Shill receives SimSlot information from ModemManager and can set the primary sim slot",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
+		Fixture:      "cellular",
 	})
 }
 

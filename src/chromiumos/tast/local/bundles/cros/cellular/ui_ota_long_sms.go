@@ -29,7 +29,8 @@ func init() {
 		Func:         UIOtaLongSms,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that MT Long SMS is received appears as notificatoin on UI",
-		Contacts:     []string{"srikanthkumar@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_na"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"chrome"},

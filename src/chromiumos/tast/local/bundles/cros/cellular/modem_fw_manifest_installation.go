@@ -22,7 +22,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemFWManifestInstallation,
 		Desc:         "Verifies that all modem FWs compatible with a device can be installed",
-		Contacts:     []string{"andrewlassalle@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_modem_fw"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},

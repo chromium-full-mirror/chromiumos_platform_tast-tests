@@ -22,7 +22,8 @@ func init() {
 		Func:         CrostiniCellularNetworkConnectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Crostini has network connectivity via cellular interface",
-		Contacts:     []string{"madhavadas@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: crostini.CrostiniMinDiskSize,

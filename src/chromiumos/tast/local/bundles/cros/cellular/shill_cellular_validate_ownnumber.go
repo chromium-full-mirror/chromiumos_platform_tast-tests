@@ -17,11 +17,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCellularValidateOwnnumber,
-		Desc:     "Verifies that Cellular Device could fetch same OwnNumbers property from modemmanager and shill device",
-		Contacts: []string{"srikanthkumar@google.com", "chromeos-cellular-team@google.com"},
-		Attr:     []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Fixture:  "cellular",
+		Func:         ShillCellularValidateOwnnumber,
+		Desc:         "Verifies that Cellular Device could fetch same OwnNumbers property from modemmanager and shill device",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Fixture:      "cellular",
 	})
 }
 

@@ -15,15 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: HermesSMDS,
-		Desc: "Perform SMDS eSIM operations on test eSIM",
-		Contacts: []string{
-			"srikanthkumar@google.com",
-			"chromeos-cellular-team@google.com",
-		},
-		Attr:    []string{"group:cellular", "cellular_sim_test_esim"},
-		Fixture: "cellular",
-		Timeout: 5 * time.Minute,
+		Func:         HermesSMDS,
+		Desc:         "Perform SMDS eSIM operations on test eSIM",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
+		Fixture:      "cellular",
+		Timeout:      5 * time.Minute,
 	})
 }
 

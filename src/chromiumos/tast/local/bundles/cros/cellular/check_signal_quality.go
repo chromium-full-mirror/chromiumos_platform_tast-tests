@@ -17,7 +17,8 @@ func init() {
 		Func:         CheckSignalQuality,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that host has signal quality above threshold via cellular interface",
-		Contacts:     []string{"nmarupaka@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "nmarupaka@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Fixture:      "cellular",
 		Timeout:      3 * time.Minute,

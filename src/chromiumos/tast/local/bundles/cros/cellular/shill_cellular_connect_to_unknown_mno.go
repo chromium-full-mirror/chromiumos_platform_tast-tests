@@ -27,13 +27,11 @@ type unknownMNOTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShillCellularConnectToUnknownMno,
-		Desc: "Verifies that traffic can be sent over the Cellular network",
-		Contacts: []string{
-			"andrewlassalle@google.com",
-			"chromeos-cellular-team@google.com",
-		},
-		Attr: []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Func:         ShillCellularConnectToUnknownMno,
+		Desc:         "Verifies that traffic can be sent over the Cellular network",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{{
 			Name:      "unknown_carrier",
 			Val:       unknownMNOTestParam{"callbox_unknown_carrier.pbf", "callbox-default-attach", "callbox-ipv4", map[string]interface{}{"apn": "wrong_attach", "ip-type": mmconst.BearerIPFamilyIPv4}, map[string]interface{}{"apn": "callbox-ipv4", "ip-type": mmconst.BearerIPFamilyIPv4}},

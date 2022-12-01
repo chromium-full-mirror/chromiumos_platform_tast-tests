@@ -18,15 +18,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShillCellularCustomApn,
-		Desc: "Verifies that the device can connect to cellular when using custom APNs",
-		Contacts: []string{
-			"andrewlassalle@google.com",
-			"chromeos-cellular-team@google.com",
-		},
-		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Data:    []string{"test_no_apns.pbf"},
-		Fixture: "cellular",
+		Func:         ShillCellularCustomApn,
+		Desc:         "Verifies that the device can connect to cellular when using custom APNs",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Data:         []string{"test_no_apns.pbf"},
+		Fixture:      "cellular",
 	})
 }
 

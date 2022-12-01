@@ -19,7 +19,8 @@ func init() {
 		Func:         Identifiers,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a modem returns valid identifiers",
-		Contacts:     []string{"madhavadas@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "cellular",

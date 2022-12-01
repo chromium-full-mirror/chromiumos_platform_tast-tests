@@ -16,11 +16,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCellularSim,
-		Desc:     "Verifies that Cellular Device and Service properties match ModemManager SIM properties",
-		Contacts: []string{"stevenjb@google.com", "chromeos-cellular-team@google.com"},
-		Attr:     []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
-		Fixture:  "cellular",
+		Func:         ShillCellularSim,
+		Desc:         "Verifies that Cellular Device and Service properties match ModemManager SIM properties",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
+		Fixture:      "cellular",
 	})
 }
 

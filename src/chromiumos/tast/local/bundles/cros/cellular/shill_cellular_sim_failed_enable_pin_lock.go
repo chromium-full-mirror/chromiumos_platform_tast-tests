@@ -17,13 +17,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCellularSimFailedEnablePinLock,
-		Desc:     "Verifies that cellular device SIM lock can't be enabled with incorrect PIN",
-		Contacts: []string{"srikanthkumar@google.com", "chromeos-cellular-team@google.com"},
-		Attr:     []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock"},
-		Fixture:  "cellular",
-		Timeout:  5 * time.Minute,
-		Vars:     []string{"autotest_host_info_labels"},
+		Func:         ShillCellularSimFailedEnablePinLock,
+		Desc:         "Verifies that cellular device SIM lock can't be enabled with incorrect PIN",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock"},
+		Fixture:      "cellular",
+		Timeout:      5 * time.Minute,
+		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 

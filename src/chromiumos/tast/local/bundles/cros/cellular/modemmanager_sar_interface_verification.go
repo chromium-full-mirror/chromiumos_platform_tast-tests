@@ -19,7 +19,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemmanagerSARInterfaceVerification,
 		Desc:         "Verifies that modemmanager SAR interface enable, disable succeeds",
-		Contacts:     []string{"madhavadas@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active"},
 		HardwareDeps: hwdep.D(hwdep.CellularSoftwareDynamicSar()),
 		Fixture:      "cellular",

@@ -18,7 +18,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemfwdSmoke,
 		Desc:         "Verifies that modemfwd initializes without errors",
-		Contacts:     []string{"andrewlassalle@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_unstable"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},

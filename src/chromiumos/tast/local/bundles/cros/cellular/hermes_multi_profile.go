@@ -15,15 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: HermesMultiProfile,
-		Desc: "Iterates over profiles in an eUICC and enables them. At least 1 profile must be preinstalled",
-		Contacts: []string{
-			"pholla@google.com",
-			"chromeos-cellular-team@google.com",
-		},
-		Attr:    []string{"group:cellular", "cellular_sim_prod_esim"},
-		Fixture: "cellular",
-		Timeout: 10 * time.Minute,
+		Func:         HermesMultiProfile,
+		Desc:         "Iterates over profiles in an eUICC and enables them. At least 1 profile must be preinstalled",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
+		Fixture:      "cellular",
+		Timeout:      10 * time.Minute,
 	})
 }
 

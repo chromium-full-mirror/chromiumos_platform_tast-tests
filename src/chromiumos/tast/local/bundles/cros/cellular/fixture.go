@@ -26,12 +26,9 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "cellular",
-		Desc: "Cellular tests are safe to run",
-		Contacts: []string{
-			"stevenjb@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Name:            "cellular",
+		Desc:            "Cellular tests are safe to run",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
@@ -40,12 +37,9 @@ func init() {
 		Impl:            &cellularFixture{modemfwdStopped: false},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "cellularWithFakeDMSEnrolled",
-		Desc: "Cellular tests are safe to run and a fake DMS (for managed eSIM profiles) is running",
-		Contacts: []string{
-			"jiajunzhang@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Name:            "cellularWithFakeDMSEnrolled",
+		Desc:            "Cellular tests are safe to run and a fake DMS (for managed eSIM profiles) is running",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunzhang@google.com"},
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,

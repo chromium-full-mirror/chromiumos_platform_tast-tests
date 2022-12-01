@@ -22,7 +22,8 @@ func init() {
 		Func:         HostCellularSpeedtest,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs Speedtest on cellular interface",
-		Contacts:     []string{"madhavadas@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      4 * time.Minute,

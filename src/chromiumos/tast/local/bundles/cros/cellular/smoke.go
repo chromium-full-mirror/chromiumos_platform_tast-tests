@@ -21,15 +21,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Smoke,
-		Desc: "Verifies that traffic can be sent over the Cellular network",
-		Contacts: []string{
-			"stevenjb@google.com",
-			"chromeos-cellular-team@google.com",
-		},
-		Attr:    []string{"group:cellular", "cellular_sim_active"},
-		Fixture: "cellular",
-		Timeout: 5 * time.Minute,
+		Func:         Smoke,
+		Desc:         "Verifies that traffic can be sent over the Cellular network",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Fixture:      "cellular",
+		Timeout:      5 * time.Minute,
 	})
 }
 
