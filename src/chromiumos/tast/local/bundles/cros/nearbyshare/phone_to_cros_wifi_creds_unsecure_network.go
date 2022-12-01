@@ -20,9 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ChromeOS rejects unsecure Wi-Fi credentials received from Android",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"crisrael@google.com",
 		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

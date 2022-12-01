@@ -20,9 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that CrOS can receive Wi-Fi credentials from Android to CrOS",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"crisrael@google.com",
 		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

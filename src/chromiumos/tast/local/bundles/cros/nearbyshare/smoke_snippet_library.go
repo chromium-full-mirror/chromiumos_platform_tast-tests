@@ -18,8 +18,10 @@ func init() {
 		Func: SmokeSnippetLibrary,
 		Desc: "Checks that we can successfully run the Nearby Snippet on the Android device",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1131838",
 		Attr:    []string{"group:cross-device", "cross-device_nearbyshare"},
 		Data:    []string{nearbysnippet.ZipName},
 		Timeout: 3 * time.Minute,

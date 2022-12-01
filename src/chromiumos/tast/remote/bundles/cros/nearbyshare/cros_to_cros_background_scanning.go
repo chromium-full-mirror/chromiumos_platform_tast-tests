@@ -22,7 +22,12 @@ func init() {
 		Func:         CrosToCrosBackgroundScanning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Nearby Device is trying to share notification shows up, clicking the notification enables high-vis mode and the receive flow is successful",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "hansenmichael@google.com"},
+		Contacts:     []string{
+			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"hansenmichael@google.com",
+		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},

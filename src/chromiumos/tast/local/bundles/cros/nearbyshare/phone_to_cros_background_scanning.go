@@ -29,9 +29,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that \"Nearby Device is trying to share\" notification shows up, clicking the notification enables high-vis mode and the receive flow is successful",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"hansenmichael@google.com",
 		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

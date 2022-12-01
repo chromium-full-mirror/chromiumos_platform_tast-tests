@@ -20,9 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Nearby Share can be enabled from the initial page of onboarding workflow",
 		Contacts: []string{
-			"pushi@google.com",
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
+			"pushi@google.com",
 		},
+		BugComponent: "b:1131838",
 		// Use this variable to preserve user accounts on the DUT when running locally,
 		// i.e. tast run -var=keepState=true <dut> nearbyshare.OnboardingSinglePageUI
 		Vars:         []string{nearbycommon.KeepStateVar},

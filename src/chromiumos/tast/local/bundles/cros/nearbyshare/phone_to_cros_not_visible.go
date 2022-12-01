@@ -24,9 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that CrOS device won't be found based on its visibility setting",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"kyleshima@chromium.org",
 		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

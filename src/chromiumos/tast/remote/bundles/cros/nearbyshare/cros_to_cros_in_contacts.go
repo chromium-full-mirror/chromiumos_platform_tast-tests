@@ -19,7 +19,11 @@ func init() {
 		Func:         CrosToCrosInContacts,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks we can successfully send files from one Cros device to another when they are in each other's contacts list",
-		Contacts:     []string{"chromeos-sw-engprod@google.com"},
+		Contacts:     []string{
+			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},

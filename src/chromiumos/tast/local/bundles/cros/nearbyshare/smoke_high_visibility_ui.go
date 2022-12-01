@@ -21,8 +21,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Nearby Share high-visibility receiving can be initiated from Quick Settings",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1131838",
 		// Use this variable to preserve user accounts on the DUT when running locally,
 		// i.e. tast run -var=keepState=true <dut> nearbyshare.SmokeHighVisibilityUI
 		Vars:         []string{nearbycommon.KeepStateVar},

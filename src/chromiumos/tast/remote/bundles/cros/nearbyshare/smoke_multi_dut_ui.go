@@ -23,7 +23,11 @@ func init() {
 		Func:         SmokeMultiDUTUI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks we can enable Nearby Share high-vis receving on two DUTs at once",
-		Contacts:     []string{"chromeos-sw-engprod@google.com"},
+		Contacts:     []string{
+			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1131838",
 		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare", "cross-device-remote_cq"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
