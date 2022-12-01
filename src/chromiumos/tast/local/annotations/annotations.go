@@ -57,26 +57,26 @@ func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) e
 }
 
 // StopLoggingCheckLogs clicks the "Stop logging" button on the net export page and checks logs for given annotation.
-func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotation string) error {
+func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotation string) (foundAnnotation bool, err error) {
 	// Open the net-export page.
 	netConn, err := br.NewConn(ctx, "chrome://net-export")
 	if err != nil {
-		errors.Wrap(err, "failed to load chrome://net-export")
+		return false, errors.Wrap(err, "failed to load chrome://net-export")
 	}
 
 	// Click Stop Logging button.
 	stopLoggingBtn := `document.getElementById("stop-logging")`
 	if err := netConn.WaitForExpr(ctx, stopLoggingBtn); err != nil {
-		errors.Wrap(err, "failed to wait for the Stop Logging button to load")
+		return false, errors.Wrap(err, "failed to wait for the Stop Logging button to load")
 	}
 	if err := netConn.Eval(ctx, stopLoggingBtn+`.click()`, nil); err != nil {
-		errors.Wrap(err, "failed to click the Stop Logging button to load")
+		return false, errors.Wrap(err, "failed to click the Stop Logging button to load")
 	}
 
 	// Get the net export log file.
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
-		errors.Wrap(err, "failed to get user's Download path")
+		return false, errors.Wrap(err, "failed to get user's Download path")
 	}
 	downloadName := "chrome-net-export-log.json"
 	downloadLocation := filepath.Join(downloadsPath, downloadName)
@@ -84,14 +84,13 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	// Read the net export log file.
 	logFile, err := ioutil.ReadFile(downloadLocation)
 	if err != nil {
-		errors.Wrap(err, "failed to open logfile")
+		return false, errors.Wrap(err, "failed to open logfile")
 	}
 	// Check if the traffic annotation exists in the log file.
-	// Specifically checking for autofill_query:88863520.
-	isExist, _ := regexp.Match(fmt.Sprintf("\"traffic_annotation\":%s", annotation), logFile)
-	if !isExist {
-		errors.Wrap(err, "failed to locate traffic annotation in logfile")
+	isExist, err := regexp.Match(fmt.Sprintf("\"traffic_annotation\":%s", annotation), logFile)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to search annotation logfile")
 	}
 
-	return nil
+	return isExist, nil
 }

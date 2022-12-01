@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
@@ -41,6 +42,8 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	br := cr.Browser()
+
 	ui := uiauto.New(tconn)
 
 	s.Log("Start testing calendar view from date tray")
@@ -48,6 +51,11 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 
 	// Comparing the time before and after opening the calendar view just in case this test is run at the very end of a year, e.g. Dec 31 23:59:59.
 	beforeOpeningCalendarYear := time.Now().Year()
+
+	// Open the net-export page and start logging.
+	if err := annotations.StartLogging(ctx, cr, br); err != nil {
+		s.Fatal("Failed to start logging: ", err)
+	}
 
 	// Opens calendar view.
 	if err := ui.DoDefault(dateTray)(ctx); err != nil {
@@ -204,5 +212,17 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	outsideCalendarPt := coords.NewPoint(calendarViewBounds.Right()+2, calendarViewBounds.Top-5)
 	if err := mouse.Click(tconn, outsideCalendarPt, mouse.LeftButton)(ctx); err != nil {
 		s.Fatal("Failed to click outside of the calendar view: ", err)
+	}
+
+	// Stop logging and check the logs for the annotation
+	didFindAnnotation := false
+	if foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, "86429515"); err != nil {
+		s.Fatal("Failed to stop logging and check logs: ", err)
+	} else if foundAnnotation == true {
+		didFindAnnotation = true
+	}
+
+	if didFindAnnotation == false {
+		s.Fatal("Did not find calendar_get_events annotation")
 	}
 }

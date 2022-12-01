@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/bundles/cros/policy/annotations"
+	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -111,7 +111,7 @@ func TrafficAnnotationSample(ctx context.Context, s *testing.State) {
 			defer conn.Close()
 
 			// Stop logging and check the logs for given annotation.
-			if err := annotations.StopLoggingCheckLogs(ctx, cr, br, "88863520"); err != nil {
+			if _, err := annotations.StopLoggingCheckLogs(ctx, cr, br, "88863520"); err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}
 		})
