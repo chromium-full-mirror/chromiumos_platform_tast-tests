@@ -151,7 +151,7 @@ func init() {
 			Name:              "arc_clamshell",
 			ExtraSoftwareDeps: []string{"android_p"},
 			ExtraData:         []string{fastInkAPK},
-			Fixture:           "arcBootedInClamshellMode",
+			Fixture:           "arcBooted",
 			Val: fastInkTestParams{
 				arc:    true,
 				tablet: false,
@@ -190,7 +190,7 @@ func init() {
 			// TODO(b/247879931): Remove dooly when the test can pass on it.
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
 			ExtraData:         []string{fastInkAPK},
-			Fixture:           "arcBootedInClamshellMode",
+			Fixture:           "arcBooted",
 			Val: fastInkTestParams{
 				arc:    true,
 				tablet: false,
@@ -316,7 +316,7 @@ func init() {
 			// TODO(b/247879931): Remove dooly when the test can pass on it.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
 			ExtraData:         []string{fastInkAPK},
-			Fixture:           "arcBootedInClamshellMode",
+			Fixture:           "arcBooted",
 			Val: fastInkTestParams{
 				arc:    true,
 				tablet: false,
