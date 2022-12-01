@@ -112,7 +112,13 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.Fatalf("Not enough time until global timeout: have %s; need %s", diff, enrollmentSetupTimeout)
 	}
 
-	if err := s.DUT().Health(ctx); err != nil {
+	// Make sure the DUT is connected at the beginning.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := s.DUT().Health(ctx); err != nil {
+			return err
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed DUT connection check at the beginning: ", err)
 	}
 
