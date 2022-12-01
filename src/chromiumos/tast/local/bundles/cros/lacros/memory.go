@@ -38,7 +38,8 @@ func init() {
 		Func:         Memory,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests lacros memory usage",
-		Contacts:     []string{"erikchen@chromium.org", "hidehiko@chromium.org", "edcourtney@chromium.org", "lacros-team@google.com"},
+		Contacts:     []string{"lacros-team@google.com", "erikchen@chromium.org", "hidehiko@chromium.org", "edcourtney@chromium.org"},
+		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      60 * time.Minute,
 		Params: []testing.Param{{

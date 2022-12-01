@@ -35,11 +35,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test Ash-to-Lacros profile migration handles extension states",
 		Contacts: []string{
+			"lacros-team@google.com",
 			"ythjkt@google.com", // Test author
 			"neis@google.com",
 			"hidehiko@google.com",
-			"lacros-team@google.com",
 		},
+		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         extensionFiles,

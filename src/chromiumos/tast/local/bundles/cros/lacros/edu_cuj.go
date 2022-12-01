@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs Edu user CUJ in Lacros including installing apps and open webpages with authentication",
 		Contacts:     []string{"lacros-team@google.com", "yjt@google.com"},
-		BugComponent: "TBA",
+		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosEduGaiaLogin",
