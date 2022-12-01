@@ -26,7 +26,8 @@ type BatteryInfoTracker struct {
 	batteryChargeEnd     float64
 	batteryCapacityStart float64
 	batteryCapacityEnd   float64
-	energy               float64 // Total energy consumed.
+	energy               float64   // Total energy consumed.
+	power                []float64 // Power reading every |batteryCheckInterval|.
 	energyFullDesign     float64
 	collecting           chan bool
 	collectingErr        chan error
@@ -107,6 +108,8 @@ func (t *BatteryInfoTracker) Start(ctx context.Context) error {
 				tNew := time.Now()
 				t.energy += watt * tNew.Sub(tOld).Seconds()
 				tOld = tNew
+
+				t.power = append(t.power, watt)
 			case <-ctx.Done():
 				t.collectingErr <- ctx.Err()
 				return
@@ -206,4 +209,11 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
 	}, t.batteryCapacityStart-t.batteryCapacityEnd)
+
+	pv.Set(perf.Metric{
+		Name:      t.prefix + "PowerTimeline",
+		Unit:      "watt",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, t.power...)
 }
