@@ -37,7 +37,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "arcBootedInClamshellModeWithArcUpdateO4CListViaA2C2",
+		Fixture:      "arcBootedWithArcUpdateO4CListViaA2C2",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      5 * time.Minute,
 	})
@@ -106,6 +106,12 @@ func ResizeLockA2C2(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 	d := s.FixtValue().(*arc.PreData).UIDevice
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
