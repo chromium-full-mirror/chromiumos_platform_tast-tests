@@ -7,11 +7,36 @@
 package secagentdprocfsscraper
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
+	"syscall"
+
+	"google.golang.org/protobuf/proto"
 
 	"chromiumos/tast/errors"
+	xdr "chromiumos/xdr/reporting"
+)
+
+var (
+	procNsRe     = regexp.MustCompile("(?m)^[a-z]+:\\[(?P<nsId>[[:digit:]]+)\\]")
+	procStatusRe = regexp.MustCompile(
+		"(?m)^Name:[[:blank:]]+(?P<name>[A-Za-z0-9_-]+)[[:blank:]]*[\\n\\r]+" +
+			"^Umask:[[:blank:]]+(?P<umask>[[:digit:]]+)[[:blank:]]*[\\n\\r]+" +
+			"^State:[[:blank:]]+(?P<state>[[:alpha:]]).*[\\n\\r]+" +
+			"^Tgid:.*[\\n\\r]+" +
+			"^Ngid:.*[\\n\\r]+" +
+			"^Pid:[[:blank:]]+(?P<pid>[[:digit:]]+)[[:blank:]]*[\\n\\r]+" +
+			"^PPid:[[:blank:]]+(?P<ppid>[[:digit:]]+)[[:blank:]]*[\\n\\r]+" +
+			"^TracerPid:.*[\\n\\r]+" +
+			"^Uid:[[:blank:]]+(?P<real_uid>[[:digit:]]+)[[:blank:]]*.*[\\n\\r]+" +
+			"^Gid:[[:blank:]]+(?P<real_gid>[[:digit:]]+)[[:blank:]]*.*[\\n\\r]+")
 )
 
 // GetCmdLineParts returns a list of cmdline arguments for the given pid.
@@ -32,9 +57,112 @@ func GetCmdLine(pid uint64) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	quotedParts := make([]string, len(parts))
+	var quotedParts []string
 	for _, part := range parts {
+		if part == "" {
+			continue
+		}
 		quotedParts = append(quotedParts, fmt.Sprintf("'%s'", part))
 	}
 	return strings.Join(quotedParts, " "), nil
+}
+
+// FillNamespaces populates the given XDR proto with process namespace
+// info for the requested pid.
+func FillNamespaces(pid uint64, ns *xdr.Namespaces) error {
+	validNamespaces := map[string]**uint64{
+		"cgroup": &ns.CgroupNs, "ipc": &ns.IpcNs, "mnt": &ns.MntNs,
+		"net": &ns.NetNs, "pid": &ns.PidNs,
+		"user": &ns.UserNs, "uts": &ns.UtsNs}
+	dirs, err := ioutil.ReadDir(fmt.Sprintf("/proc/%d/ns", pid))
+	if err != nil {
+		return err
+	}
+	for _, f := range dirs {
+		field, ok := validNamespaces[f.Name()]
+		if !ok {
+			continue
+		}
+		nsSymlink := fmt.Sprintf("/proc/%d/ns/%s", pid, f.Name())
+		rawNamespaceID, err := os.Readlink(nsSymlink)
+		if err != nil {
+			return err
+		}
+		m := procNsRe.FindStringSubmatch(rawNamespaceID)
+		if m == nil {
+			return errors.Errorf("unrecognized namespace ID format %s in symlink %s", rawNamespaceID, nsSymlink)
+		}
+
+		nsID := m[procNsRe.SubexpIndex("nsId")]
+		val, err := strconv.ParseUint(nsID, 10, 64)
+		if err != nil {
+			return err
+		}
+		*field = proto.Uint64(val)
+	}
+	return nil
+}
+
+// FillImage populates the given XDR proto with process image information
+// for the given pid.
+func FillImage(pid, mntNs uint64, i *xdr.FileImage) error {
+	exeFilename := fmt.Sprintf("/proc/%d/exe", pid)
+	imagePath, err := filepath.EvalSymlinks(exeFilename)
+	if err != nil {
+		return err
+	}
+	i.Pathname = proto.String(imagePath)
+	image, err := ioutil.ReadFile(imagePath)
+	if err != nil {
+		return err
+	}
+
+	csum := sha256.New()
+	if _, err := csum.Write(image); err != nil {
+		return err
+	}
+	i.Sha256 = proto.String(strings.ToUpper(hex.EncodeToString(csum.Sum(nil))))
+
+	fileInfo, err := os.Stat(imagePath)
+	if err != nil {
+		return nil
+	}
+	stat, ok := fileInfo.Sys().(*syscall.Stat_t)
+	if !ok {
+		return errors.Errorf("failed to stat %s", imagePath)
+	}
+	i.CanonicalGid = proto.Uint64(uint64(stat.Gid))
+	i.CanonicalUid = proto.Uint64(uint64(stat.Uid))
+	i.Inode = proto.Uint64(stat.Ino)
+	i.InodeDeviceId = proto.Uint64(stat.Dev)
+	i.Mode = proto.Uint32(stat.Mode)
+	i.MntNs = proto.Uint64(mntNs)
+
+	return nil
+}
+
+// FillProcStatus popuates the given XDR proto with process status information
+// for the given pid.
+func FillProcStatus(pid uint64, p *xdr.Process) (uint64, error) {
+	statusFilename := fmt.Sprintf("/proc/%d/status", pid)
+	buff, err := ioutil.ReadFile(statusFilename)
+	if err != nil {
+		return 0, err
+	}
+	m := procStatusRe.FindStringSubmatch(string(buff))
+	if m == nil {
+		return 0, errors.Errorf("unable to match {%s} using regex {%s}",
+			string(buff), procStatusRe)
+	}
+	ppid, err := strconv.ParseUint(m[procStatusRe.SubexpIndex("ppid")], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	uid, err := strconv.ParseUint(m[procStatusRe.SubexpIndex("real_uid")], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	p.CanonicalUid = proto.Uint64(uid)
+	p.CanonicalPid = proto.Uint64(pid)
+	return ppid, nil
 }
