@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/testing"
 )
@@ -25,12 +27,17 @@ func init() {
 		BugComponent: "b:537221",
 		Attr:         []string{"informational", "group:mainline"},
 		SoftwareDeps: []string{"android_p", "chrome"},
-		Fixture:      "arcBootedInClamshellMode",
+		Fixture:      "arcBooted",
 		Timeout:      4 * time.Minute,
 	})
 }
 
 func ConfigChanges(ctx context.Context, s *testing.State) {
+	// Reserver 10 seconds for various cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	p := s.FixtValue().(*arc.PreData)
 	cr := p.Chrome
 	a := p.ARC
@@ -40,6 +47,12 @@ func ConfigChanges(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	infos, err := display.GetInfo(ctx, tconn)
 	if err != nil {
@@ -66,7 +79,7 @@ func ConfigChanges(ctx context.Context, s *testing.State) {
 		}
 		// Restore the initial rotation.
 		defer func() {
-			if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation}); err != nil {
+			if err := display.SetDisplayProperties(cleanupCtx, tconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation}); err != nil {
 				s.Fatal("Failed to restore the initial display rotation: ", err)
 			}
 		}()
@@ -93,7 +106,7 @@ func ConfigChanges(ctx context.Context, s *testing.State) {
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed starting app: ", err)
 	}
-	defer act.Stop(ctx, tconn)
+	defer act.Stop(cleanupCtx, tconn)
 
 	const (
 		resumeCountID = "org.chromium.arc.testapp.configchanges:id/resume_count"
