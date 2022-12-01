@@ -73,16 +73,15 @@ func ConfigChanges(ctx context.Context, s *testing.State) {
 	}
 
 	if info.Bounds.Height > info.Bounds.Width {
-		rot := 90
-		if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{Rotation: &rot}); err != nil {
+		originalAngle, err := display.RotationToAngle(info.Rotation)
+		if err != nil {
+			s.Fatal("Original display rotation info is invalid: ", err)
+		}
+		if err := display.SetDisplayRotationSync(ctx, tconn, info.ID, display.Rotate90); err != nil {
 			s.Fatal("Failed to rotate display: ", err)
 		}
 		// Restore the initial rotation.
-		defer func() {
-			if err := display.SetDisplayProperties(cleanupCtx, tconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation}); err != nil {
-				s.Fatal("Failed to restore the initial display rotation: ", err)
-			}
-		}()
+		defer display.SetDisplayRotationSync(cleanupCtx, tconn, info.ID, originalAngle)
 	}
 
 	const (
