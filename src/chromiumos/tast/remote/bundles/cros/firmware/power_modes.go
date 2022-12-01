@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type powerModeTestParams struct {
@@ -43,6 +44,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Chromeslate, hwdep.Detachable)),
 		Vars: []string{"servo",
 			"firmware.mode", // Optional. Expecting "tablet". By default firmware.mode will be "clamshell".
 		},
