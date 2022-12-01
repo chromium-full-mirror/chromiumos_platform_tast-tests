@@ -45,6 +45,18 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithMojoVideoDecoder",
+		}, {
+			Name:              "h264_hw_nopepper3dimage",
+			Val:               browser.TypeAsh,
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoNaClWithoutPepper3DImage",
+		}, {
+			Name:              "h264_hw_mojovd_nopepper3dimage",
+			Val:               browser.TypeAsh,
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoNaClWithMojoVideoDecoderWithoutPepper3DImage",
 		}},
 	})
 }
@@ -66,7 +78,7 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 		s.Fatal("The NaCl app did not load in time: ", err)
 	}
 
-	// Maximize browser window. Needed to trigger the video playback.
+	// Minimize and maximize browser window. Needed to trigger the video playback.
 	// TODO(pmolinalopez): remove when crbug.com/1376105 is solved.
 	ctconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -75,6 +87,9 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	w, err := ash.WaitForAnyWindowWithTitle(ctx, ctconn, "Pepper video decoder")
 	if err != nil {
 		s.Fatal("Failed to find the window that contains the NaCl app: ", err)
+	}
+	if err := ash.SetWindowStateAndWait(ctx, ctconn, w.ID, ash.WindowStateMinimized); err != nil {
+		s.Fatal("Failed to minimize the window that contains the NaCl app: ", err)
 	}
 	if err := ash.SetWindowStateAndWait(ctx, ctconn, w.ID, ash.WindowStateMaximized); err != nil {
 		s.Fatal("Failed to maximize the window that contains the NaCl app: ", err)
