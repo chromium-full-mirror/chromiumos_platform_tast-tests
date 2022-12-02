@@ -36,7 +36,7 @@ func init() {
 			"vsuley@chromium.org",
 			"hidehiko@chromium.org", // Tast port author
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:cq-minimal", "group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"no_qemu"},
 		Fixture:      "gpuWatchHangs",
