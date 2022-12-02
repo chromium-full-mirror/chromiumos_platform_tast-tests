@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/modemmanager"
@@ -46,44 +45,6 @@ func SetRoamingPolicy(ctx context.Context, allowRoaming, autoConnect bool) error
 	_, err = helper.InitServiceProperty(ctx, shillconst.ServicePropertyCellularAllowRoaming, allowRoaming)
 	if err != nil {
 		return errors.Wrap(err, "could not set AllowRoaming property to true")
-	}
-
-	return nil
-}
-
-// ConnectToCellularNetwork connects to a cellular network if there isn't an active network
-func ConnectToCellularNetwork(ctx context.Context) error {
-	modem, err := modemmanager.NewModemWithSim(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not find MM dbus object with a valid sim")
-	}
-
-	helper, err := NewHelper(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create cellular.Helper")
-	}
-
-	service, err := helper.FindServiceForDevice(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not find default service for device")
-	}
-
-	isConnected, err := service.IsConnected(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not check if service is connected")
-	}
-	if isConnected {
-		if err := service.Disconnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to disconnect from roaming network prior to starting the actual test")
-		}
-	}
-
-	if err := modem.WaitForState(ctx, mmconst.ModemStateRegistered, time.Minute); err != nil {
-		return errors.Wrap(err, "Modem is not registered")
-	}
-
-	if err := helper.ConnectToService(ctx, service); err != nil {
-		return errors.Wrap(err, "Unable to connect to roaming service")
 	}
 
 	return nil

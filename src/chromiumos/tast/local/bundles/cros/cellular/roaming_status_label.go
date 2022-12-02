@@ -67,9 +67,9 @@ func RoamingStatusLabel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
 
-	err = cellular.ConnectToCellularNetwork(ctx)
+	_, err = cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
-		s.Fatal("Failed to set roaming property: ", err)
+		s.Fatal("Failed to connect to a cellular network: ", err)
 	}
 
 	networkName, err := cellular.GetCellularNetwork(ctx)
