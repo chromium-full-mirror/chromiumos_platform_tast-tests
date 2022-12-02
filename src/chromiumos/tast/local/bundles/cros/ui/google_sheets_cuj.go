@@ -103,8 +103,6 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
-
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to detect it is in tablet-mode or not: ", err)
@@ -195,6 +193,8 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the primary display info: ", err)
 	}
 
+	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
+
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open Google Sheets file.
 		sheetConn, err := cs.NewConn(ctx, sheetURL, browser.WithNewWindow())
@@ -202,7 +202,6 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open the Google Sheets website")
 		}
 		defer sheetConn.Close()
-		defer sheetConn.CloseTarget(closeCtx)
 		s.Log("Creating a Google Sheets window")
 
 		// Pop-up content regarding view history privacy might show up.

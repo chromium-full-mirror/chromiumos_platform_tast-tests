@@ -170,7 +170,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// Use faillog.DumpUITreeWithScreenshotOnError to capture the
 	// device state at the time of a failure. A screenshot and a text
 	// file containing the ui tree are stored in the test out directory.
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "failure_screenshot")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// recorder.Run runs the provided function, and collects metrics
 	// during its execution.

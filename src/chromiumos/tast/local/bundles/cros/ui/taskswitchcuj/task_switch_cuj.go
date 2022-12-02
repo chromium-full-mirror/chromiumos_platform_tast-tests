@@ -214,7 +214,7 @@ func Run(ctx context.Context, s *testing.State) {
 	// bunch of tabs within the same window).
 	defer browser.CloseAllTabs(closeCtx, bTconn)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "failure_screenshot")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	s.Log("Installing packages")
 	packages := getPackages(ctx, tconn, d)

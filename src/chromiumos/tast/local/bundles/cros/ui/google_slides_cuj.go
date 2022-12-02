@@ -151,17 +151,14 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer pc.Close()
 
+	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
+
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-		hasError := func() bool { return retErr != nil }
 		slidesConn, err := cs.NewConn(ctx, slidesURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open the google slides website")
 		}
 		defer slidesConn.Close()
-		defer slidesConn.CloseTarget(closeCtx)
-
-		defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), hasError, tconn)
-		defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), hasError, cr, "ui_dump")
 
 		// Go through the Slides deck.
 		s.Logf("Going through the Google Slides file for %s", slidesScrollTimeout)
