@@ -23,7 +23,7 @@ func init() {
 			"chromeos-platform-ml-accelerators@google.com",
 			"shafron@google.com",
 		},
-		BugComponent: "b:255451722",
+		BugComponent: "b:1140118",
 		Attr:         []string{"group:ml_service"},
 		Fixture:      fixture.EffectsPipelineInstalled,
 		SoftwareDeps: []string{"camera_feature_effects"},
