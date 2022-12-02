@@ -146,6 +146,12 @@ executable("security.AltSyscall.read") {
   ]
 }
 
+executable("security.MemoryFileExecTelemetry.memfd_fexecve") {
+  sources = [
+    "security.MemoryFileExecTelemetry.memfd_fexecve.c",
+  ]
+}
+
 executable("security.Minijail.staticbashexec") {
   ldflags = [ "-static" ]
   sources = [
@@ -184,6 +190,7 @@ executable("security.PtraceThread.thread-prctl") {
   libs = [ "pthread" ]
 }
 
+
 group("all") {
   deps = [
     ":crash.Seccomp.brk",
@@ -198,6 +205,7 @@ group("all") {
     ":security.AltSyscall.clock_adjtime",
     ":security.AltSyscall.mmap",
     ":security.AltSyscall.read",
+    ":security.MemoryFileExecTelemetry.memfd_fexecve",
     ":security.MinijailSeccomp.fail",
     ":security.MinijailSeccomp.ok",
     ":security.MinijailSeccomp.open",
