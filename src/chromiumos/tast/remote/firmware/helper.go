@@ -274,9 +274,9 @@ func (h *Helper) RequireRPCClient(ctx context.Context) error {
 	testing.ContextLog(ctx, "Opening RPCClient connection")
 	var cl *rpc.Client
 	const rpcConnectTimeout = 5 * time.Minute
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if !h.DUT.Connected(ctx) {
-			if err := h.DUT.Connect(ctx); err != nil {
+	if err := testing.Poll(ctx, func(innerCtx context.Context) error {
+		if !h.DUT.Connected(innerCtx) {
+			if err := h.DUT.Connect(innerCtx); err != nil {
 				return err
 			}
 		}
