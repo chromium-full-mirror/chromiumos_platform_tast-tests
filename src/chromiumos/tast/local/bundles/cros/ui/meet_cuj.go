@@ -97,7 +97,6 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Vars: []string{
 			"mute",
-			"record",
 			"ui.MeetCUJ.doc",
 		},
 		VarDeps: []string{
@@ -553,12 +552,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
 
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to ensure we capture any bots that drop during

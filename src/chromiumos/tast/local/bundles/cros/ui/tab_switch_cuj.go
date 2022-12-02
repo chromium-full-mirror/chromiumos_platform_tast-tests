@@ -34,7 +34,6 @@ func init() {
 		Timeout:      22*time.Minute + cuj.CPUStablizationTimeout,
 		Vars: []string{
 			"mute",
-			"record",
 		},
 		Params: []testing.Param{{
 			ExtraData: []string{tabswitchcuj.WPRArchiveName},

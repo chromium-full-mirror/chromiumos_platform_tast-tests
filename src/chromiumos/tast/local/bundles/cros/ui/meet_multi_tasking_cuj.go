@@ -47,9 +47,6 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      10 * time.Minute,
-		Vars: []string{
-			"record",
-		},
 		VarDeps: []string{
 			"ui.bond_credentials",
 		},
@@ -300,12 +297,6 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Hide notifications so that they won't overlap with other UI components.

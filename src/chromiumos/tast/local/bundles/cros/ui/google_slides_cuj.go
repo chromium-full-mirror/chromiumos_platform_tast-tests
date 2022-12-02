@@ -45,7 +45,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      20 * time.Minute,
-		Vars:         []string{"record"},
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "loggedInToCUJUser",
@@ -111,12 +110,6 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
 
 	// Add an empty screenshot recorder.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {

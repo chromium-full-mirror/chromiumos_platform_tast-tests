@@ -6,8 +6,6 @@ package ui
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -44,7 +42,6 @@ func init() {
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Vars:         []string{"record"},
 		Timeout:      30 * time.Minute,
 		Data:         []string{"shaka_720.webm", "pip.html", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
@@ -124,27 +121,6 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, conns.TestConn)
 	if err != nil {
 		s.Fatal("Failed to create TabCrashChecker: ", err)
-	}
-
-	if _, ok := s.Var("record"); ok {
-		screenRecorder, err := uiauto.NewScreenRecorder(ctx, conns.TestConn)
-		if err != nil {
-			s.Fatal("Failed to create ScreenRecorder: ", err)
-		}
-		defer func() {
-			screenRecorder.Stop(ctx)
-			dir, ok := testing.ContextOutDir(ctx)
-			if ok && dir != "" {
-				if _, err := os.Stat(dir); err == nil {
-					testing.ContextLogf(ctx, "Saving screen record to %s", dir)
-					if err := screenRecorder.SaveInBytes(ctx, filepath.Join(dir, "screen_record.webm")); err != nil {
-						s.Fatal("Failed to save screen record in bytes: ", err)
-					}
-				}
-			}
-			screenRecorder.Release(ctx)
-		}()
-		screenRecorder.Start(ctx, conns.TestConn)
 	}
 
 	// Set up the cujrecorder.Recorder: In clamshell mode, this test will measure the combinations of

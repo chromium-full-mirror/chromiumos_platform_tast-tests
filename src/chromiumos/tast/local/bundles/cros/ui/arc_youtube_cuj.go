@@ -32,7 +32,6 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Fixture:      "loggedInToCUJUser",
 		Timeout:      20 * time.Minute,
-		Vars:         []string{"record"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
@@ -94,12 +93,6 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
 
 	// Add an empty screenshot recorder.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {

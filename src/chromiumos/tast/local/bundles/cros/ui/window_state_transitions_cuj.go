@@ -183,12 +183,6 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	}
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
-
 	// Conduct the performance measurement.
 	if err := recorder.RunFor(ctx, func(ctx context.Context) error {
 		if err := dragUnmaximizeAndMaximize(ctx); err != nil {

@@ -58,6 +58,13 @@ var keepWifi = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to force skipping disabling Wifi for the Recorder",
 )
 
+// screenRecord enables the screen recorder for the Recorder.
+var screenRecord = testing.RegisterVarString(
+	"cujrecorder.record",
+	"",
+	"A boolean string (true/false) signifying whether to record the screen during the test",
+)
+
 // MetricConfig is the configuration for the recorder.
 type MetricConfig struct {
 	// The name of the histogram to be recorded.
@@ -289,10 +296,9 @@ func (r *Recorder) AddCommonMetrics(tconn, bTconn *chrome.TestConn) error {
 	return nil
 }
 
-// AddScreenRecorder creates a screen recorder that will record the
-// device during the execution of recorder.Run. The screen recording is
-// saved with the |testName| as the filename prefix.
-func (r *Recorder) AddScreenRecorder(ctx context.Context, tconn *chrome.TestConn, testName string) error {
+// addScreenRecorder creates a screen recorder that will record the
+// device during the execution of recorder.Run.
+func (r *Recorder) addScreenRecorder(ctx context.Context, tconn *chrome.TestConn) error {
 	dir, ok := testing.ContextOutDir(ctx)
 	if !ok || dir == "" {
 		return errors.New("failed to get the out directory to save the screen recording")
@@ -314,7 +320,7 @@ func (r *Recorder) AddScreenRecorder(ctx context.Context, tconn *chrome.TestConn
 		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 			testing.ContextLog(ctx, "Failed to sleep")
 		}
-		uiauto.ScreenRecorderStopSaveRelease(ctx, screenRecorder, filepath.Join(dir, fmt.Sprintf("%s-record.webm", testName)))
+		uiauto.ScreenRecorderStopSaveRelease(ctx, screenRecorder, filepath.Join(dir, "record.webm"))
 	}
 	return nil
 }
@@ -509,6 +515,12 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	// just in case Chrome was started with different parameters.
 	if err := r.loginEventRecorder.Prepare(ctx, r.tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to start recording login event data")
+	}
+
+	if strings.ToLower(screenRecord.Value()) == "true" {
+		if err := r.addScreenRecorder(ctx, r.tconn); err != nil {
+			return nil, errors.Wrap(err, "failed to add the screen recorder")
+		}
 	}
 
 	success = true

@@ -31,7 +31,6 @@ func init() {
 		Timeout:      25 * time.Minute,
 		Vars: []string{
 			"mute",
-			"record",
 		},
 		Params: []testing.Param{
 			{

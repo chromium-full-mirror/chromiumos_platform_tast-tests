@@ -120,12 +120,6 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 
 	vars.recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 
-	if _, ok := s.Var("record"); ok {
-		if err := vars.recorder.AddScreenRecorder(ctx, vars.tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
-
 	// Add an empty screenshot recorder.
 	if err := vars.recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
 		s.Log("Failed to add screenshot recorder: ", err)

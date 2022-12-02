@@ -41,7 +41,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      15 * time.Minute,
-		Vars:         []string{"record"},
 		Params: []testing.Param{
 			{
 				Fixture: "loggedInToCUJUser",
@@ -109,15 +108,6 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// recorder with recorder.AddCommonMetrics.
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
-	}
-
-	// [Optional] Add the screen recorder to the recorder to capture
-	//  a video of the test, only if the "record" flag is passed as a
-	// command line argument.
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
 	}
 
 	// Ensure we are in clamshell mode, because this example

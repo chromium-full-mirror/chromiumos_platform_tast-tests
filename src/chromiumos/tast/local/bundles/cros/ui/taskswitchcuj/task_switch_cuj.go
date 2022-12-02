@@ -119,12 +119,6 @@ func Run(ctx context.Context, s *testing.State) {
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 	defer recorder.Close(closeCtx)
 
-	if _, ok := s.Var("record"); ok {
-		if err := recorder.AddScreenRecorder(ctx, tconn, s.TestName()); err != nil {
-			s.Fatal("Failed to add screen recorder: ", err)
-		}
-	}
-
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to try to capture at least 2 screenshots in each
 	// of the task switching workflows.
