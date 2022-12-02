@@ -418,6 +418,22 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	f.cr = cr
 
+	// Capture chrome logs during fixture setup to have more context into onboarding/setup fails.
+	logMarker, err := logsaver.NewMarker(f.cr.LogFilename())
+	if err == nil {
+		f.logMarker = logMarker
+	} else {
+		s.Log("Failed to start the log saver: ", err)
+	}
+	defer func() {
+		if f.logMarker != nil {
+			if err := f.logMarker.Save(filepath.Join(s.OutDir(), "crossdevice-fixture-chrome.log")); err != nil {
+				s.Log("Failed to store per-fixture log data: ", err)
+			}
+			f.logMarker = nil
+		}
+	}()
+
 	var tconn *chrome.TestConn
 	if f.noSignIn {
 		tconn, err = cr.SigninProfileTestAPIConn(ctx)
