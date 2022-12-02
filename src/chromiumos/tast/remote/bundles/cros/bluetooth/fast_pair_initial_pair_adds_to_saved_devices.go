@@ -14,29 +14,31 @@ import (
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
 	pb "chromiumos/tast/services/cros/bluetooth"
+	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FastPairInitialPair,
+		Func:         FastPairInitialPairAddsToSavedDevices,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the Fast Pair initial pairing scenario",
+		Desc:         "Tests that Saved Devices subpage shows a newly added Saved Device after the Fast Pair initial pairing scenario",
 		Contacts: []string{
-			"jaredbennett@google.com",
-			"cros-connectivity@google.com",
+			"dclasson@google.com",
+			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
 		},
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService", "tast.cros.ui.ChromeUIService"},
 		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
 		Timeout:      3 * time.Minute,
 		Vars:         []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 	})
 }
 
-// FastPairInitialPair tests the Fast Pair initial pairing scenario.
-func FastPairInitialPair(ctx context.Context, s *testing.State) {
+// FastPairInitialPairAddsToSavedDevices tests the Fast Pair initial pairing scenario.
+func FastPairInitialPairAddsToSavedDevices(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
 	// Parse antispoofing key pem from test var.
@@ -44,6 +46,23 @@ func FastPairInitialPair(ctx context.Context, s *testing.State) {
 	antispoofingKeyPem, err := base64.StdEncoding.DecodeString(antispoofingKeyPemBase64)
 	if err != nil {
 		s.Fatalf("Failed to decode %q from base64 string: %v", bluetooth.TestVarFastPairAntispoofingKeyPem, err)
+	}
+
+	crUISvc := ui.NewChromeUIServiceClient(fv.DUTRPCClient.Conn)
+	defer func() {
+		if !s.HasError() {
+			return
+		}
+		if _, err := crUISvc.DumpUITree(ctx, &emptypb.Empty{}); err != nil {
+			testing.ContextLog(ctx, "Failed to dump UI tree: ", err)
+		}
+	}()
+
+	// Open the Saved Devices subpage and confirm that its empty.
+	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, &pb.ConfirmSavedDevicesStateRequest{
+		DeviceNames: []string{},
+	}); err != nil {
+		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)
 	}
 
 	// Configure btpeer as a fast pair device.
@@ -71,5 +90,14 @@ func FastPairInitialPair(ctx context.Context, s *testing.State) {
 	}
 	if !resp.IsPaired {
 		s.Fatal("Fast pair device not paired as expected")
+	}
+
+	// Re-open the Saved Devices subpage to refresh the results and confirm the device was added.
+	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, &pb.ConfirmSavedDevicesStateRequest{
+		DeviceNames: []string{
+			"Autotest Test Device",
+		},
+	}); err != nil {
+		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)
 	}
 }

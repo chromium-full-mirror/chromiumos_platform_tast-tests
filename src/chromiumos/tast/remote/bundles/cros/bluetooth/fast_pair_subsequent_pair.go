@@ -17,11 +17,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// This variable can be overridden by specifying a custom value in the command
-// line, "--vars=bluetooth.FastPairAccountKey=XXXX", which can be used
-// for local testing. Otherwise uses the default value.
-const testVarFastPairAccountKey = "bluetooth.FastPairAccountKey"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FastPairSubsequentPair,
@@ -36,7 +31,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
 		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
 		Timeout:      3 * time.Minute,
-		Vars:         []string{testVarFastPairAccountKey},
+		Vars:         []string{bluetooth.TestVarFastPairAccountKey},
 	})
 }
 
@@ -45,10 +40,10 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
 	// Parse account key from test var.
-	accountKeyBase64 := s.RequiredVar(testVarFastPairAccountKey)
+	accountKeyBase64 := s.RequiredVar(bluetooth.TestVarFastPairAccountKey)
 	accountKey, err := base64.StdEncoding.DecodeString(accountKeyBase64)
 	if err != nil {
-		s.Fatalf("Failed to decode %q from base64 string: %v", testVarFastPairAccountKey, err)
+		s.Fatalf("Failed to decode %q from base64 string: %v", bluetooth.TestVarFastPairAccountKey, err)
 	}
 
 	// Configure btpeer as a fast pair device.

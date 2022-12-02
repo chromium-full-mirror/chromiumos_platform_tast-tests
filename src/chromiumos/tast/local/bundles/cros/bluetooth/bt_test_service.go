@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/bluetooth"
@@ -130,8 +131,7 @@ func (bts *BTTestService) discoverDeviceByAddress(ctx context.Context, targetDev
 			devicesStr[i] = device.String()
 		}
 		sort.Strings(devicesStr)
-		return nil, errors.Wrapf(
-			pollErr,
+		return nil, errors.Wrapf(pollErr,
 			"timeout waiting for discover device with address %q. Found %d other devices (%v)",
 			targetDeviceAddress,
 			len(devices),
@@ -442,5 +442,110 @@ func (bts *BTTestService) CloseNotifications(ctx context.Context, empty *emptypb
 	if err := ash.CloseNotifications(ctx, tConn); err != nil {
 		return nil, errors.Wrap(err, "failed to close all notifications")
 	}
+	return &emptypb.Empty{}, nil
+}
+
+// ConfirmSavedDevicesState will attempt to confirm the state of Saved Devices on the Saved
+// Devices subpage. The array of devices should be in the expected order. Fails if the list
+// of Saved Devices doesn't match the one provided.
+func (bts *BTTestService) ConfirmSavedDevicesState(ctx context.Context, request *pb.ConfirmSavedDevicesStateRequest) (*emptypb.Empty, error) {
+	cr := bts.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+	}
+
+	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn, cr)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
+	}
+
+	defer app.Close(ctx)
+	testing.ContextLog(ctx, "Opened Bluetooth Saved Devices subpage")
+
+	ui := uiauto.New(tconn)
+
+	if len(request.DeviceNames) == 0 {
+		// Enforce that no devices are saved on the Saved Devices subpage.
+		if err := ui.WaitUntilExists(ossettings.SavedDevicesNoDevicesText)(ctx); err != nil {
+			return nil, errors.Wrap(err, "found a non-empty Saved Devices subpage")
+		}
+	} else {
+		// Enforce that the devices are displayed on the Saved Devices subpage in the
+		// order that they were passed.
+		for i, name := range request.DeviceNames {
+			if err := ui.WaitUntilExists(nodewith.NameContaining(name).Ancestor(ossettings.SavedDeviceRows.Nth(i)))(ctx); err != nil {
+				return nil, errors.Wrapf(err, "failed to find an expected saved device with name %s", name)
+			}
+		}
+	}
+
+	testing.ContextLogf(ctx, "Confirmed the state of the Saved Devices subpage with %d devices", len(request.DeviceNames))
+	return &emptypb.Empty{}, nil
+}
+
+// RemoveAllSavedDevices will attempt to remove all of the devices from the Saved Devices subpage.
+func (bts *BTTestService) RemoveAllSavedDevices(ctx context.Context, request *emptypb.Empty) (*emptypb.Empty, error) {
+	cr := bts.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+	}
+
+	app, err := ossettings.NavigateToBluetoothSavedDevicesSubpage(ctx, tconn, cr)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
+	}
+
+	defer app.Close(ctx)
+	testing.ContextLog(ctx, "Opened Bluetooth Saved Devices subpage")
+
+	ui := uiauto.New(tconn)
+
+	// The Saved Devices page waits for a network call to resolve to update the UI,
+	// so we poll for devices. If there are no saved devices, return early.
+	opts := testing.PollOptions{Timeout: 5 * time.Second, Interval: 300 * time.Millisecond}
+	if err := ui.WithPollOpts(opts).WaitUntilExists(ossettings.SavedDeviceRows.First())(ctx); err != nil {
+		testing.ContextLog(ctx, "Saved Devices subpage contains no devices")
+		return &emptypb.Empty{}, nil
+	}
+
+	devices, err := ui.NodesInfo(ctx, ossettings.SavedDeviceRows)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get info for Saved Device rows")
+	}
+
+	count := 0
+	for count < len(devices) {
+		device := ossettings.SavedDeviceRows.First()
+
+		// We have to refresh node info after every removal since the name changes
+		// depending on the device's order in the list.
+		info, err := ui.Info(ctx, device)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get info for first Saved Device row")
+		}
+
+		// We use a different finder to confirm the device is gone after clicking
+		// "remove" since First() can match to the next device in the list.
+		if err := uiauto.Combine("Find the first saved device, remove it, and wait for it to disappear from the subpage.",
+			ui.LeftClick(ossettings.SavedDeviceMoreActionsBtn.Ancestor(device)),
+			ui.LeftClick(ossettings.SavedDeviceRemoveMenuItem),
+			ui.LeftClick(ossettings.SavedDeviceConfirmRemovalBtn),
+			ui.WaitUntilGone(ossettings.SavedDeviceRows.Name(info.Name)),
+		)(ctx); err != nil {
+			return nil, errors.Wrapf(err, "failed to remove a saved device, removed %d of %d devices", count, len(devices))
+		}
+
+		count++
+	}
+
+	testing.ContextLogf(ctx, "Removed %d of %d saved devices from Saved Devices subpage", count, len(devices))
 	return &emptypb.Empty{}, nil
 }

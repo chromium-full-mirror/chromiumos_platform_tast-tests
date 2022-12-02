@@ -38,11 +38,22 @@ const (
 
 	fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
 
-	// These variable can be overridden by specifying a custom value in the command
+	// These variables can be overridden by specifying a custom value in the command
 	// line, e.g. "--vars=bluetooth.FastPairChromeUsername=XXXX", which can be used
 	// for local testing. Otherwise uses the default value for GAIA login.
 	fixtureVarFastPairChromeUsername = "bluetooth.FastPairChromeUsername"
 	fixtureVarFastPairChromePassword = "bluetooth.FastPairChromePassword"
+
+	fixtureVarFastPairSavedDevicesFeature = "FastPairSavedDevices"
+)
+
+// Public test variable keys that are used in multiple tests
+const (
+	// These variable can be overridden by specifying a custom value in the command
+	// line, "--vars=bluetooth.FastPairAntispoofingKeyPem=XXXX", which can be used
+	// for local testing. Otherwise uses the default value.
+	TestVarFastPairAntispoofingKeyPem = "bluetooth.FastPairAntispoofingKeyPem"
+	TestVarFastPairAccountKey         = "bluetooth.FastPairAccountKey"
 )
 
 // Used for Fake login for the Bluetooth UI tests.
@@ -208,7 +219,7 @@ func init() {
 		Impl: newFixture(&fixtureFeatures{
 			BTPeerCount:             1,
 			BluetoothAdapterEnabled: true,
-			EnableFeatures:          []string{"FastPair", "FastPairSavedDevices"},
+			EnableFeatures:          []string{"FastPair", fixtureVarFastPairSavedDevicesFeature},
 			DisableFeatures:         []string{},
 			LoginMode:               chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 			RequireFastPairUserVars: true,
@@ -623,6 +634,17 @@ func (tf *fixture) clearDutBluetoothDevices(ctx context.Context) error {
 	}
 	if _, err := tf.fv.BTS.RemoveAllDevices(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to remove all bluetooth devices")
+	}
+
+	// If the Saved Devices flag is enabled, we'll open up the Saved Devices subpage
+	// and remove all Saved Devices from the page between tests.
+	for _, feature := range tf.features.EnableFeatures {
+		if feature == fixtureVarFastPairSavedDevicesFeature {
+			if _, err := tf.fv.BTS.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to remove saved Fast Pair devices")
+			}
+			break
+		}
 	}
 	return nil
 }

@@ -121,6 +121,27 @@ var searchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Sea
 // networkFinder is the finder for the Network page UI in OS setting.
 var networkFinder = nodewith.Name("Network").Role(role.Link).Ancestor(WindowFinder)
 
+// SavedDevicesSubpageLink is a subpage link on the Bluetooth Settings subpage.
+var SavedDevicesSubpageLink = nodewith.Role(role.Link).NameStartingWith("Devices saved to your account").Focusable()
+
+// Elements in "Saved devices subpage"
+var (
+	// SavedDeviceRows is the finder for saved device rows in the Saved devices subpage.
+	SavedDeviceRows = nodewith.NameRegex(regexp.MustCompile("^Device [0-9] of [0-9],.*")).HasClass("list-item")
+
+	// SavedDeviceMoreActionsBtn is the finder for the more actions buttons on the Saved devices subpage.
+	SavedDeviceMoreActionsBtn = nodewith.HasClass("icon-more-vert").Role(role.Button)
+
+	// SavedDeviceRemoveMenuItem is the finder for the Remove menu item on a first saved device in the Saved devices subpage.
+	SavedDeviceRemoveMenuItem = nodewith.HasClass("dropdown-item").Role(role.MenuItem)
+
+	// SavedDeviceConfirmRemovalBtn is the finder for the "Confirm" button on the Remove pop-up in the Saved devices subpage.
+	SavedDeviceConfirmRemovalBtn = nodewith.HasClass("action-button").Role(role.Button)
+
+	// SavedDevicesNoDevicesText is the finder for the text box displayed on the Saved devices subpage when there are no saved devices.
+	SavedDevicesNoDevicesText = nodewith.NameRegex(regexp.MustCompile("^No devices saved to .*")).Role(role.StaticText)
+)
+
 // mobileButton is the finder for the Mobile Data page button UI in network page.
 var mobileButton = nodewith.Name("Mobile data").Role(role.Button)
 
