@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
@@ -294,6 +295,43 @@ func VerifyEdpPrimary(ctx context.Context, tconn *chrome.TestConn) error {
 		return nil
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
 		return errors.Wrap(err, "failed to verify extended mode display")
+	}
+	return nil
+}
+
+// CheckFrameDrops validates the frame drops of playing video.
+func CheckFrameDrops(ctx context.Context, conn *chrome.Conn, videoElement, savePath string) error {
+	var decodedFrameCount, droppedFrameCount int64
+	if err := conn.Eval(ctx, videoElement+".getVideoPlaybackQuality().totalVideoFrames", &decodedFrameCount); err != nil {
+		return errors.Wrap(err, "failed to get number of decoded frames")
+	}
+	if err := conn.Eval(ctx, videoElement+".getVideoPlaybackQuality().droppedVideoFrames", &droppedFrameCount); err != nil {
+		return errors.Wrap(err, "failed to get number of dropped frames")
+	}
+
+	droppedFramePercent := float64(0)
+	if decodedFrameCount != 0 {
+		droppedFramePercent = 100.0 * float64(droppedFrameCount) / float64(decodedFrameCount)
+	} else if droppedFrameCount > 0 {
+		testing.ContextLog(ctx, "No decoded frames; setting dropped percent to 100")
+		droppedFramePercent = 100.0
+	}
+
+	p := perf.NewValues()
+	p.Set(perf.Metric{
+		Name:      "dropped_frames",
+		Unit:      "frames",
+		Direction: perf.SmallerIsBetter,
+	}, float64(droppedFrameCount))
+	p.Set(perf.Metric{
+		Name:      "dropped_frames_percent",
+		Unit:      "percent",
+		Direction: perf.SmallerIsBetter,
+	}, droppedFramePercent)
+	testing.ContextLogf(ctx, "Dropped frames: %d (%f%%)", droppedFrameCount, droppedFramePercent)
+	if err := p.Save(savePath); err != nil {
+		return errors.Wrap(err, "failed saving perf data")
+
 	}
 	return nil
 }
