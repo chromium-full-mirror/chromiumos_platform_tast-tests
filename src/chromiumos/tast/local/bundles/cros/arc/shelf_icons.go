@@ -28,7 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that ARC++ windows are represented in the shelf correctly, including grouping of windows and custom icons",
 		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
-		BugComponent: "TBA",
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

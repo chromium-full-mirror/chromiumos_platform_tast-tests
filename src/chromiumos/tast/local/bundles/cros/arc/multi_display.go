@@ -85,6 +85,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Mutli-display ARC window management tests",
 		Contacts:     []string{"ruanc@chromium.org", "niwa@chromium.org", "arc-framework+tast@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Multi-Monitor
+		BugComponent: "b:536705",
 		// TODO(ruanc): There is no hardware dependency for multi-display. Move back to the mainline group once it is supported.
 		SoftwareDeps: []string{"arc", "chrome"},
 		Timeout:      arc.BootTimeout + 2*time.Minute,

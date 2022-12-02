@@ -29,6 +29,8 @@ func init() {
 			"vishal38785@gmail.com", // Test author
 			"chromeos-dlp@google.com",
 			"arc-framework+tast@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "fakeDMS",
