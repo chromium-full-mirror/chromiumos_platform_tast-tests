@@ -6,6 +6,7 @@ package launcher
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -85,11 +86,11 @@ func ShortcutSearch(ctx context.Context, s *testing.State) {
 	subtests := []shortcutSearchTestCase{
 		{
 			searchKeyword: "Lock Screen",
-			result:        "Lock screen, Shortcuts, Search+ l",
+			result:        "Lock screen, Shortcuts, (Search|Launcher)\\+ l",
 		},
 		{
 			searchKeyword: "Launcher",
-			result:        "Open/close the launcher, Shortcuts, Search",
+			result:        "Open/close the launcher, Shortcuts, (Search|Launcher)",
 		},
 		{
 			searchKeyword: "Overview",
@@ -97,15 +98,15 @@ func ShortcutSearch(ctx context.Context, s *testing.State) {
 		},
 		{
 			searchKeyword: "new window",
-			result:        "Open new window, Shortcuts, Ctrl+ n",
+			result:        "Open new window, Shortcuts, Ctrl\\+ n",
 		},
 		{
 			searchKeyword: "new window",
-			result:        "Open a new window in Incognito mode, Shortcuts, Ctrl+ Shift+ n",
+			result:        "Open a new window in Incognito mode, Shortcuts, Ctrl\\+ Shift\\+ n",
 		},
 		{
 			searchKeyword: "incognito",
-			result:        "Open a new window in Incognito mode, Shortcuts, Ctrl+ Shift+ n",
+			result:        "Open a new window in Incognito mode, Shortcuts, Ctrl\\+ Shift\\+ n",
 		},
 	}
 
@@ -117,7 +118,7 @@ func ShortcutSearch(ctx context.Context, s *testing.State) {
 			defer ui.LeftClick(clearSearchButton)(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(subtest.searchKeyword))
 
-			resultFinder := launcher.SearchResultListItemFinder.Name(subtest.result)
+			resultFinder := launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile(subtest.result))
 			if err := uiauto.Combine("search launcher",
 				launcher.Open(tconn),
 				launcher.Search(tconn, kb, subtest.searchKeyword),
@@ -126,8 +127,8 @@ func ShortcutSearch(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to search: ", err)
 			}
 
-			if err := kb.TypeKeyAction(input.KEY_ENTER)(ctx); err != nil {
-				s.Fatal("Failed to launch first search result: ", err)
+			if err := ui.LeftClick(resultFinder)(ctx); err != nil {
+				s.Fatal("Failed to launch the search result: ", err)
 			}
 
 			if err := ash.WaitForApp(ctx, tconn, apps.KeyboardSV.ID, time.Minute); err != nil {
