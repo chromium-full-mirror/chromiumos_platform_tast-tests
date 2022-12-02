@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
@@ -175,6 +176,10 @@ func (g *guestSessionFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 		ExtraChromeOptions(opts...),
 	)
 	if err != nil {
+		path := filepath.Join(s.OutDir(), "mgs_fixture_failure.png")
+		if err := screenshot.Capture(ctx, path); err != nil {
+			s.Error("Failed to take screenshot: ", err)
+		}
 		s.Fatal("Failed to start Chrome on Signin screen with default MGS account: ", err)
 	}
 
