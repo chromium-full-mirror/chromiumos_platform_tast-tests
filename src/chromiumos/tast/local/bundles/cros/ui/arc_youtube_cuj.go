@@ -61,7 +61,17 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
-	defer d.Close(cleanupCtx)
+	closedUIDevice := false
+	closeUIDevice := func(ctx context.Context) {
+		if closedUIDevice {
+			return
+		}
+		closedUIDevice = true
+		if err := d.Close(ctx); err != nil {
+			s.Log("Failed closing UI Automator: ", err)
+		}
+	}
+	defer closeUIDevice(cleanupCtx)
 
 	const ytAppPkgName = "com.google.android.youtube"
 	if err := playstore.InstallApp(ctx, a, d, ytAppPkgName, &playstore.Options{}); err != nil {
@@ -101,12 +111,17 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		s.Log("Failed to add screenshot recorder: ", err)
 	}
 
-	if err := recorder.Run(ctx, func(ctx context.Context) error {
+	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Launch the ARC YouTube app.
 		if err := act.Start(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to start ARC++ YouTube app")
 		}
 		defer act.Stop(cleanupCtx, tconn)
+		// Dump the ARC UI hierarchy before closing the ARC YouTube app.
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool { return retErr != nil })
+		// Close the ARC UI automator before dumping the UI hierarchy. Then the
+		// hierarchy dump will not be ruined by UI automator errors like status 137.
+		defer closeUIDevice(cleanupCtx)
 		// Take a screenshot before closing the ARC YouTube app.
 		defer recorder.CustomScreenshot(cleanupCtx)
 
