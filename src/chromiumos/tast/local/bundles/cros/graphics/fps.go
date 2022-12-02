@@ -5,21 +5,12 @@
 package graphics
 
 import (
-	"bufio"
 	"context"
-	"io/ioutil"
-	"math"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -52,73 +43,8 @@ func init() {
 	})
 }
 
-func float64Stats(data []float64) (float64, float64) {
-	var sum float64
-	var sum2 float64
-	for _, x := range data {
-		sum += x
-		sum2 += x * x
-	}
-	n := float64(len(data))
-	mean := sum / n
-	stddev := math.Sqrt((sum2 / n) - (mean * mean))
-
-	return mean, stddev
-}
-
-// parseTrace parses trace file in tracePath.
-func parseTrace(tracePath string) ([][]float64, error) {
-	// Line format:
-	// <proc> [000] d.h1 87154.652132: drm_vblank_event: crtc=0, seq=49720
-	// TODO(b/172225622): Do we need to care about seq?
-	re := regexp.MustCompile(`^.* ([0-9\.]+): drm_vblank_event: crtc=(\d+).*$`)
-
-	trace, err := os.Open(tracePath)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open trace file")
-	}
-	defer trace.Close()
-
-	var data [][]float64
-	lastEvent := 0.0
-	scanner := bufio.NewScanner(trace)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if matches := re.FindStringSubmatch(line); matches != nil {
-			matchedCrtc, err := strconv.Atoi(matches[2])
-			if err != nil {
-				return nil, errors.Wrap(err, "error converting crtc to int")
-			}
-
-			for len(data) <= matchedCrtc {
-				data = append(data, make([]float64, 0))
-			}
-
-			event, err := strconv.ParseFloat(matches[1], 64)
-			if err != nil {
-				return nil, errors.Wrap(err, "error converting time to float")
-			}
-			if lastEvent != 0.0 {
-				data[matchedCrtc] = append(data[matchedCrtc], 1.0/(event-lastEvent))
-			}
-			lastEvent = event
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, errors.Wrap(err, "error reading trace file")
-	}
-
-	if len(data) == 0 {
-		return nil, errors.New("no data in trace file")
-	}
-
-	return data, nil
-}
-
 func FPS(ctx context.Context, s *testing.State) {
 	const (
-		tracingPath = "/sys/kernel/tracing"
-
 		// Collect statistics for 5 seconds.
 		collectTime = 5 * time.Second
 
@@ -197,38 +123,14 @@ func FPS(ctx context.Context, s *testing.State) {
 			}
 
 			// Clear trace file.
-			tracePath := filepath.Join(tracingPath, "trace")
-			if err := ioutil.WriteFile(tracePath, nil, 0644); err != nil {
-				s.Fatal("Cannot clear trace buffer: ", err)
+			if err := graphics.ClearTraceBuffer(); err != nil {
+				s.Fatal("Failed to clear trace buffer: ", err)
 			}
-			defer ioutil.WriteFile(tracePath, nil, 0644)
+			defer graphics.ClearTraceBuffer()
 
-			// Enable vblank events.
-			vblankPath := filepath.Join(tracingPath,
-				"events/drm/drm_vblank_event/enable")
-			if err := ioutil.WriteFile(vblankPath, []byte("1"), 0644); err != nil {
-				s.Fatal("Cannot enable drm vblank event tracing: ", err)
-			}
-			defer ioutil.WriteFile(vblankPath, []byte("0"), 0644)
-
-			// Collect trace data.
-			tracingOnPath := filepath.Join(tracingPath, "tracing_on")
-			if err := ioutil.WriteFile(tracingOnPath, []byte("1"), 0644); err != nil {
-				s.Fatal("Cannot enable tracing: ", err)
-			}
-			defer ioutil.WriteFile(tracingOnPath, []byte("0"), 0644)
-
-			s.Log("Collecting vblank event samples")
-			if err := testing.Sleep(ctx, collectTime); err != nil {
-				s.Fatal("Cannot sleep: ", err)
-			}
-
-			ioutil.WriteFile(tracingOnPath, []byte("0"), 0644)
-
-			// Save trace file in output directory.
 			outputPath := filepath.Join(s.OutDir(), "trace.txt")
-			if err := fsutil.CopyFile(tracePath, outputPath); err != nil {
-				s.Fatal("Failed to copy trace file: ", err)
+			if err := graphics.CollectFPSTrace(ctx, collectTime, outputPath); err != nil {
+				s.Fatal("Failed to collect fps trace: ", err)
 			}
 
 			crtcs, err := graphics.ModetestCrtcs(ctx)
@@ -237,7 +139,7 @@ func FPS(ctx context.Context, s *testing.State) {
 			}
 
 			// Parse trace file and compute statistics.
-			fullFpsData, err := parseTrace(outputPath)
+			fullFpsData, err := graphics.ParseFPSTrace(outputPath)
 			if err != nil {
 				s.Fatal("Cannot parse trace: ", err)
 			}
@@ -260,33 +162,28 @@ func FPS(ctx context.Context, s *testing.State) {
 					continue
 				}
 
-				fpsData := fullFpsData[index]
-
-				sort.Float64s(fpsData)
-				mean, stddev := float64Stats(fpsData)
+				// Log untrimmed stats.
+				fpsStats := graphics.CalculateFPSStats(fullFpsData[index], 0)
 				s.Logf("%d total samples, mean: %f, stddev: %f (min/max %f/%f)",
-					len(fpsData), mean, stddev, fpsData[0],
-					fpsData[len(fpsData)-1])
+					fpsStats.NumSamples, fpsStats.Mean, fpsStats.Stddev, fpsStats.Min,
+					fpsStats.Max)
 
-				// Trim outliers on each side.
-				trim := len(fpsData) * trimPercent / 100
-				fpsData = fpsData[trim : len(fpsData)-trim]
-
-				mean, stddev = float64Stats(fpsData)
+				// Check results after trimming outliers.
+				fpsStats = graphics.CalculateFPSStats(fullFpsData[index], trimPercent)
 				s.Logf("%d trimmed samples, mean: %f, stddev: %f (min/max %f/%f)",
-					len(fpsData), mean, stddev, fpsData[0],
-					fpsData[len(fpsData)-1])
+					fpsStats.NumSamples, fpsStats.Mean, fpsStats.Stddev, fpsStats.Min,
+					fpsStats.Max)
 
 				// Check results.
-				if mean > targetFPS+margin || mean < targetFPS-margin {
+				if fpsStats.Mean > targetFPS+margin || fpsStats.Mean < targetFPS-margin {
 					s.Fatalf("Mean FPS %f out of expected range %f +/- %f",
-						mean, targetFPS, margin)
+						fpsStats.Mean, targetFPS, margin)
 				}
 
 				// TODO(b/172225622): re-enable stddev check if we can find
 				// meaningful bounds.
-				if stddev > maxStddev {
-					s.Logf("FPS standard deviation %f too large (> %f)", stddev,
+				if fpsStats.Stddev > maxStddev {
+					s.Logf("FPS standard deviation %f too large (> %f)", fpsStats.Stddev,
 						maxStddev)
 				}
 			}
