@@ -31,7 +31,7 @@ func init() {
 			"chungsheng@google.com",
 		},
 		BugComponent: "b:606088",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"racc"},
 		Params: []testing.Param{{
 			Val: verifySandboxTestParams{
@@ -54,18 +54,21 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"tcpc"},
 				}}},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "battery",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"generic_battery"},
 				}}},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "network",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"generic_network"},
 				}}},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "storage",
 			Val: verifySandboxTestParams{
@@ -78,6 +81,7 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"gpu"},
 				}}},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
