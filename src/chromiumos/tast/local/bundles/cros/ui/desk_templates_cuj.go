@@ -34,8 +34,9 @@ func init() {
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"yzd@chromium.org",
-			"aprilzhou@chromium.org",
+			"zhumatthew@google.com",
+			"yzd@google.com",
+			"aprilzhou@google.com",
 		},
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
