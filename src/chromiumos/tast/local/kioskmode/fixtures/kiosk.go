@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 )
 
@@ -127,6 +128,10 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	kiosk, cr, err := kioskmode.New(ctx, fdms, options...)
 	if err != nil {
+		path := filepath.Join(s.OutDir(), "kiosk_fixture_failure.png")
+		if err := screenshot.Capture(ctx, path); err != nil {
+			s.Error("Failed to take screenshot: ", err)
+		}
 		s.Fatal("Failed to create Chrome in kiosk mode: ", err)
 	}
 
