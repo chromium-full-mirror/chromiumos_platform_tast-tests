@@ -24,6 +24,7 @@ func init() {
 		},
 		BugComponent: "b:1093480",
 		Attr:         []string{"group:mainline", "group:camera-usb-qual", "informational"},
+		SoftwareDeps: []string{"uvc_compliant"},
 	})
 }
 
