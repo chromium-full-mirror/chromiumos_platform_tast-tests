@@ -72,17 +72,6 @@ func AllowCellularPolicyNetworksOn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ServeAndRefresh ONC policy: ", err)
 	}
 
-	app, err := ossettings.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch OS Settings: ", err)
-	}
-
-	defer app.Close(ctx)
-
-	if err := app.SetToggleOption(cr, "Mobile data enable", true)(ctx); err != nil {
-		s.Fatal("Failed to enable mobile data in UI: ", err)
-	}
-
 	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
@@ -90,6 +79,13 @@ func AllowCellularPolicyNetworksOn(ctx context.Context, s *testing.State) {
 	if err := helper.WaitForEnabledState(ctx, true); err != nil {
 		s.Fatal("Failed to enable Cellular state: ", err)
 	}
+
+	app, err := ossettings.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch OS Settings: ", err)
+	}
+
+	defer app.Close(ctx)
 
 	_, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
