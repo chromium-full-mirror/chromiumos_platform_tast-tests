@@ -67,7 +67,7 @@ func float64Stats(data []float64) (float64, float64) {
 }
 
 // parseTrace parses trace file in tracePath.
-func parseTrace(tracePath string, crtc int) ([]float64, error) {
+func parseTrace(tracePath string) ([][]float64, error) {
 	// Line format:
 	// <proc> [000] d.h1 87154.652132: drm_vblank_event: crtc=0, seq=49720
 	// TODO(b/172225622): Do we need to care about seq?
@@ -79,7 +79,7 @@ func parseTrace(tracePath string, crtc int) ([]float64, error) {
 	}
 	defer trace.Close()
 
-	var data []float64
+	var data [][]float64
 	lastEvent := 0.0
 	scanner := bufio.NewScanner(trace)
 	for scanner.Scan() {
@@ -89,8 +89,9 @@ func parseTrace(tracePath string, crtc int) ([]float64, error) {
 			if err != nil {
 				return nil, errors.Wrap(err, "error converting crtc to int")
 			}
-			if matchedCrtc != crtc {
-				continue
+
+			for len(data) <= matchedCrtc {
+				data = append(data, make([]float64, 0))
 			}
 
 			event, err := strconv.ParseFloat(matches[1], 64)
@@ -98,7 +99,7 @@ func parseTrace(tracePath string, crtc int) ([]float64, error) {
 				return nil, errors.Wrap(err, "error converting time to float")
 			}
 			if lastEvent != 0.0 {
-				data = append(data, 1.0/(event-lastEvent))
+				data[matchedCrtc] = append(data[matchedCrtc], 1.0/(event-lastEvent))
 			}
 			lastEvent = event
 		}
@@ -233,6 +234,12 @@ func FPS(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to read crtcs from modetest: ", err)
 			}
 
+			// Parse trace file and compute statistics.
+			fullFpsData, err := parseTrace(outputPath)
+			if err != nil {
+				s.Fatal("Cannot parse trace: ", err)
+			}
+
 			// Check trace data for each crtc at its respective refresh rate.
 			for index, crtc := range crtcs {
 				if crtc.Mode == nil {
@@ -245,11 +252,7 @@ func FPS(ctx context.Context, s *testing.State) {
 				}
 				s.Logf("Checking crtc=%d at %fHz", index, targetFPS)
 
-				// Parse trace file and compute statistics.
-				fpsData, err := parseTrace(outputPath, index)
-				if err != nil {
-					s.Fatal("Cannot parse trace: ", err)
-				}
+				fpsData := fullFpsData[index]
 
 				sort.Float64s(fpsData)
 				mean, stddev := float64Stats(fpsData)
