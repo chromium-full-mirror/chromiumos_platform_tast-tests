@@ -128,6 +128,8 @@ func FPS(ctx context.Context, s *testing.State) {
 		margin = 0.2
 		// Accept up to 0.2 fps standard deviation.
 		maxStddev = 0.2
+		// Minimum number of fps samples required
+		minSamples = 30
 	)
 
 	// Open web page with constantly changing content to defeat PSR.
@@ -251,6 +253,12 @@ func FPS(ctx context.Context, s *testing.State) {
 					continue
 				}
 				s.Logf("Checking crtc=%d at %fHz", index, targetFPS)
+
+				// If there are few samples due to i.e. PSR, skip this crtc.
+				if len(fullFpsData) <= index || len(fullFpsData[index]) < minSamples {
+					s.Logf("Not enough fps samples for crtc=%d", index)
+					continue
+				}
 
 				fpsData := fullFpsData[index]
 
