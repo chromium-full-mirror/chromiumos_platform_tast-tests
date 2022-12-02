@@ -27,11 +27,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Alt+Tab and Alt+Shift+Tab functionality for cycling windows for each desk",
 		Contacts: []string{
+			"chromeos-wms@google.com",
 			"hongyulong@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"chromeos-wmp@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		//  ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
