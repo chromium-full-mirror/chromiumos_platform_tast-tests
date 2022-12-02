@@ -6,11 +6,16 @@ package u2fd
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -50,16 +55,30 @@ type WebauthnService struct {
 	conn     *chrome.Conn
 	srv      *u2fd.WebAuthnHTTPServer
 
+	fakeDMS    *fakedms.FakeDMS
+	fakeDMSDir string
+
 	cfg      webauthnConfig
 	password string
 }
 
 func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empty.Empty, error) {
+	ok := false
+
+	ctxForCleanUp := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		return nil, errors.Wrap(err, "failed to restart ui job")
 	}
 
-	c.srv = u2fd.NewWebAuthnHTTPServer(ctx, http.Dir(req.GetDataPath()))
+	srv := u2fd.NewWebAuthnHTTPServer(ctx, http.Dir(req.GetDataPath()))
+	defer func(ctx context.Context) {
+		if !ok {
+			srv.Close(ctx)
+		}
+	}(ctxForCleanUp)
 
 	var bt browser.Type
 	if req.GetBrowserType() == hwsec.BrowserType_ASH {
@@ -72,50 +91,130 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyboard")
 	}
+	defer func(ctx context.Context) {
+		if !ok {
+			if err := keyboard.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close keyboard")
+			}
+		}
+	}(ctxForCleanUp)
 
-	var opts []chrome.Option
+	tmpdir, err := ioutil.TempDir("", "fdms-")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create temp dir")
+	}
+	defer func(ctx context.Context) {
+		if !ok {
+			if err := os.RemoveAll(tmpdir); err != nil {
+				testing.ContextLogf(ctx, "Failed to delete %s: %v", tmpdir, err)
+			}
+		}
+	}(ctxForCleanUp)
+
+	fdms, err := fakedms.New(c.s.ServiceContext(), tmpdir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start FakeDMS")
+	}
+	defer func(ctx context.Context) {
+		if !ok {
+			fdms.Stop(ctx)
+		}
+	}(ctxForCleanUp)
+
+	opts := []chrome.Option{chrome.DMSPolicy(fdms.URL)}
 	if req.GetKeepState() {
 		opts = append(opts, chrome.KeepState())
 	}
 
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
-		keyboard.Close()
 		return nil, errors.Wrapf(err, "failed to log in by Chrome with %v browser", bt)
 	}
-	conn, err := br.NewConn(ctx, c.srv.URL+"/webauthn.html")
+	defer func(ctx context.Context) {
+		if !ok {
+			if err := closeBrowser(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close browser")
+			}
+			if err := cr.Close(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close Chrome")
+			}
+		}
+	}(ctxForCleanUp)
+
+	conn, err := br.NewConn(ctx, srv.URL+"/webauthn.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to test website")
 	}
-	c.keyboard = keyboard
+	defer func(ctx context.Context) {
+		if !ok {
+			if err := conn.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close connection")
+			}
+		}
+	}(ctxForCleanUp)
+
 	c.cr = cr
 	c.br = br
 	c.closeBrowser = closeBrowser
+	c.keyboard = keyboard
 	c.conn = conn
+	c.srv = srv
 
+	c.fakeDMS = fdms
+	c.fakeDMSDir = tmpdir
+
+	ok = true
 	return &empty.Empty{}, nil
 }
 
 func (c *WebauthnService) Close(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	var lastErr error
+
 	if c.conn != nil {
-		c.conn.Close()
+		if err := c.conn.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close connection: ", err)
+			lastErr = err
+		}
 		c.conn = nil
 	}
 	if c.closeBrowser != nil {
-		c.closeBrowser(ctx)
+		if err := c.closeBrowser(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close browser: ", err)
+			lastErr = err
+		}
 		c.br = nil
 	}
 	if c.cr != nil {
-		c.cr.Close(ctx)
+		if err := c.cr.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close Chrome: ", err)
+			lastErr = err
+		}
 		c.cr = nil
 	}
 	if c.keyboard != nil {
-		c.keyboard.Close()
+		if err := c.keyboard.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close keyboard: ", err)
+			lastErr = err
+		}
 		c.keyboard = nil
+	}
+	if c.fakeDMS != nil {
+		c.fakeDMS.Stop(ctx)
+		c.fakeDMS = nil
+	}
+	if c.fakeDMSDir != "" {
+		if err := os.RemoveAll(c.fakeDMSDir); err != nil {
+			testing.ContextLogf(ctx, "Failed to delete %s: %v", c.fakeDMSDir, err)
+			lastErr = err
+		}
+		c.fakeDMSDir = ""
 	}
 	if c.srv != nil {
 		c.srv.Close(ctx)
 		c.srv = nil
+	}
+	if lastErr != nil {
+		return nil, lastErr
 	}
 	return &empty.Empty{}, nil
 }
