@@ -19,7 +19,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -32,8 +31,7 @@ func init() {
 		Desc:         "Switch between VT-2 shell and GUI multiple times",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
-		//TODO(198837833): Remove hwdep.InternalKeyboard() and use argument to frecon to do vt switching instead of typing keys.
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.InternalKeyboard()),
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeGraphics",
 		Params: []testing.Param{{
 			Name:      "smoke",
@@ -49,32 +47,34 @@ func init() {
 }
 
 const (
-	waitTime      = 5 * time.Second
-	samenessRatio = 0.05
+	waitTime          = 5 * time.Second
+	samenessRatio     = 0.05
+	vt2Path           = "/run/frecon/vt1"
+	escapeCodeVT1     = "\\033]switchvt:0\\a"
+	escapeCodeVT2     = "\\033]switchvt:1\\a"
+	freconCurrentPath = "/run/frecon/current"
 )
 
 var (
 	perceptualDiffRe = regexp.MustCompile((`(\d+) pixels are different`))
 )
 
-func inputCheck(ctx context.Context) (*input.KeyboardEventWriter, error) {
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open the keyboard")
-	}
-	return kb, nil
-}
-
 func openVT1(ctx context.Context) error {
+	// If link does not exist we do not need to switch
+	if _, err := os.Stat(freconCurrentPath); err != nil {
+		return nil
+	}
+	/* Frecon needs quotes around the command see the following:
+	 * https://source.corp.google.com/chromeos_public/src/platform/frecon/README.md
+	 */
 	testing.ContextLog(ctx, "Switching to VT1")
-	kb, err := inputCheck(ctx)
+	cmd := "printf \"" + escapeCodeVT1 + "\" > \"" + freconCurrentPath + "\""
+	err := testexec.CommandContext(ctx, "bash", "-c", cmd).Run(testexec.DumpLogOnError)
 	if err != nil {
-		return errors.Wrap(err, "failed to open VT1")
+		return errors.Wrap(err, "failed to switch to VT1 through frecon escape code")
 	}
-	keyboardKey := "ctrl+alt+back"
-	if err = kb.Accel(ctx, keyboardKey); err != nil {
-		return errors.Wrapf(err, "failed to press key %q", keyboardKey)
-	}
+	// Delete link
+	os.Remove(freconCurrentPath)
 	// Allowing some wait time for switching to happen.
 	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
 	if err = testing.Sleep(ctx, waitTime); err != nil {
@@ -84,14 +84,18 @@ func openVT1(ctx context.Context) error {
 }
 
 func openVT2(ctx context.Context) error {
+	/* Frecon needs quotes around the command see the following:
+	 * https://source.corp.google.com/chromeos_public/src/platform/frecon/README.md
+	 */
+	cmd := "printf \"" + escapeCodeVT2 + "\" > \"" + freconCurrentPath + "\""
+	err := testexec.CommandContext(ctx, "ln", "-s", vt2Path, freconCurrentPath).Run(testexec.DumpLogOnError)
 	testing.ContextLog(ctx, "Switching to VT2")
-	kb, err := inputCheck(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to open VT2")
+		return errors.Wrap(err, "failed to link VT2 through frecon")
 	}
-	keyboardKey := "ctrl+alt+refresh"
-	if err = kb.Accel(ctx, keyboardKey); err != nil {
-		return errors.Wrapf(err, "failed to press key %q", keyboardKey)
+	err = testexec.CommandContext(ctx, "bash", "-c", cmd).Run(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to switch to VT2 through frecon escape code")
 	}
 	// Allowing some wait time for switching to happen.
 	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
@@ -168,7 +172,11 @@ func max(first, second float64) float64 {
 
 // VTSwitch will switch between VT-1 and VT-2 for multiple times.
 func VTSwitch(ctx context.Context, s *testing.State) {
-
+	/* Clean up link in case it exists otherwise test will not work,
+	 * we can ignore the error since it simply means the link does not
+	 * exist
+	 */
+	testexec.CommandContext(ctx, "rm", "-rf", freconCurrentPath).Run(testexec.DumpLogOnError)
 	iterations := s.Param().(int)
 	s.Logf("No. of iterations: %d", iterations)
 	numErrors := 0
@@ -266,6 +274,12 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 		captureAndCompare(2, i, vt2Screenshot)
 	}
 
+	// Switch back to main screen
+	if err := openVT1(ctx); err != nil {
+		s.Fatal("Failed to open VT1: ", err)
+	}
+	// Clean up link in case it exists
+	defer os.Remove(freconCurrentPath)
 	savePerf(100.00*maxDifferenceRatio[1], "percent_VT1_screenshot_max_difference", "percent", pv)
 	savePerf(100.00*maxDifferenceRatio[2], "percent_VT2_screenshot_max_difference", "percent", pv)
 	savePerf(float64(identicalScreenshots[1]), "num_identical_vt1_screenshots", "count", pv)
