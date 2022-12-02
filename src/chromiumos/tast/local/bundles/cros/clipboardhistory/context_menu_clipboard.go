@@ -37,7 +37,7 @@ func init() {
 		// menu.
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the clipboard option in the context menu is working properly within several apps by left-clicking an option",
-		BugComponent: "crbug:UI>Shell>EnhancedClipboard",
+		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{
 			"multipaste-eng@google.com",
 			"cros-system-ui-eng@google.com",

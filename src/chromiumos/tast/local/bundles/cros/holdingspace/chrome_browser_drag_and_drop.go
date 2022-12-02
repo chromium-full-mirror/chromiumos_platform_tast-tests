@@ -37,7 +37,7 @@ func init() {
 		Func:         ChromeBrowserDragAndDrop,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests dragging and dropping files from Holding Space to Chrome Browser",
-		BugComponent: "crbug:UI>Shell>HoldingSpace",
+		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",

@@ -27,7 +27,7 @@ func init() {
 		Func:         DiagnosticsApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Diagnostics app logs appear in holding space",
-		BugComponent: "crbug:UI>Shell>HoldingSpace",
+		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",

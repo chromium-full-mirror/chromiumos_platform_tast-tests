@@ -35,7 +35,7 @@ func init() {
 		Func:         ArcDownload,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that ARC downloads are shown in holding space",
-		BugComponent: "crbug:UI>Shell>HoldingSpace",
+		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",

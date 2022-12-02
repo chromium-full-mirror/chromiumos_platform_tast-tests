@@ -37,7 +37,7 @@ func init() {
 		Func:         FilesAppContextMenuPinAndUnpin,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that pinning to Holding Space from the Files app works",
-		BugComponent: "crbug:UI>Shell>HoldingSpace",
+		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",

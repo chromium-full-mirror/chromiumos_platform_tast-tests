@@ -24,7 +24,7 @@ func init() {
 		Func:         ScanApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that scanned files saved from Scan App appear in Holding Space",
-		BugComponent: "crbug:UI>Shell>HoldingSpace",
+		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",

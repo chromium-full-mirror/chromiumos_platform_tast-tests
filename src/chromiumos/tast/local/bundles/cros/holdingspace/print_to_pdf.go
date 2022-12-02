@@ -35,7 +35,7 @@ func init() {
 		Func:         PrintToPDF,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies print to pdf file appears in holding space",
-		BugComponent: "crbug:UI>Shell>HoldingSpace",
+		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{
 			"tote-eng@google.com",
 			"cros-system-ui-eng@google.com",

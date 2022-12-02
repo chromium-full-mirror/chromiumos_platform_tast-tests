@@ -32,7 +32,7 @@ func init() {
 		Func:         Paste,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies different methods for pasting from clipboard history",
-		BugComponent: "crbug:UI>Shell>EnhancedClipboard",
+		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{
 			"multipaste-eng@google.com",
 			"cros-system-ui-eng@google.com",
