@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome/internal/config"
@@ -404,6 +405,11 @@ func clearUserData(ctx context.Context, cfg *config.Config) error {
 		if _, err := os.Stat(chronosName); err != nil && os.IsNotExist(err) {
 			if err := os.RemoveAll(shadowName); err != nil {
 				testing.ContextLogf(ctx, "Failed to remove %q: %v", shadowName, err)
+			}
+			// Remove any LVM partitions that exist, now that shadow dir has been cleaned.
+			if err := testexec.CommandContext(ctx, "bash", "-c", "vgchange -ay && lvremove -ff /dev/*/cryptohome-"+file.Name()[0:8]+"-*").Run(testexec.DumpLogOnError); err != nil {
+				// Ignore errors on failure, it is possible that the device doesn't support LVM or doesn't have any dm-crypt user crpytohomes.
+				testing.ContextLog(ctx, "Failed to remove user logical volumes (this might be expected if the device doesn't support LVM): ", err)
 			}
 		}
 	}
