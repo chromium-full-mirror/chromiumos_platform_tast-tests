@@ -9,25 +9,12 @@ import (
 	"strconv"
 	"time"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/testing"
 )
-
-// checkKeyPerfParam contains the test parameters which are different
-// between the types of CheckKeyPerf test.
-type checkKeyPerfParam struct {
-	// Specifies which mount flow to use - AuthSession+Split Call or legacy MountEx.
-	legacyMountFlow bool
-	// Specifies the name of metric to log checkKey duration with.
-	checkKeyDurationMetric string
-	// Specifies the name of metric to log checkKey with WebAuthn duration with.
-	checkKeyDurationWithWebAuthnMetric string
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -41,21 +28,6 @@ func init() {
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		Vars:         []string{"hwsec.CheckKeyPerf.iterations"},
-		Params: []testing.Param{{
-			Name: "legacy_mountex",
-			Val: checkKeyPerfParam{
-				legacyMountFlow:                    true,
-				checkKeyDurationMetric:             "check_key_ex_duration",
-				checkKeyDurationWithWebAuthnMetric: "check_key_ex_unlock_webauthn_secret_duration",
-			},
-		}, {
-			Name: "auth_session_split_mount",
-			Val: checkKeyPerfParam{
-				legacyMountFlow:                    false,
-				checkKeyDurationMetric:             "auth_session_setup_check_key_ex_duration",
-				checkKeyDurationWithWebAuthnMetric: "auth_session_setup_check_key_ex_unlock_webauthn_secret_duration",
-			},
-		}},
 	})
 }
 
@@ -67,15 +39,14 @@ func CheckKeyPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Helper creation error: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	userParam := s.Param().(checkKeyPerfParam)
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthSessionMountAPI})
 
 	// Reset TPM
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)
 	}
-
-	if err := setupUser(ctx, userParam.legacyMountFlow, helper); err != nil {
-		s.Fatal("Failed to setup user: ", err)
+	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true /* createVault */, hwsec.NewVaultConfig()); err != nil {
+		s.Fatal("Failed to create user: ", err)
 	}
 
 	// Cleanup upon finishing
@@ -112,7 +83,7 @@ func CheckKeyPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to CheckKeyEx() with the correct username and password: ", err)
 		}
 		value.Append(perf.Metric{
-			Name:      userParam.checkKeyDurationMetric,
+			Name:      "auth_session_setup_check_key_ex_duration",
 			Unit:      "us",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
@@ -131,7 +102,7 @@ func CheckKeyPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to CheckKeyEx() (with unlocking webauthn secret) with the correct username and password: ", err)
 		}
 		value.Append(perf.Metric{
-			Name:      userParam.checkKeyDurationWithWebAuthnMetric,
+			Name:      "auth_session_setup_check_key_ex_unlock_webauthn_secret_duration",
 			Unit:      "us",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
@@ -141,38 +112,4 @@ func CheckKeyPerf(ctx context.Context, s *testing.State) {
 	if err := value.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf-results: ", err)
 	}
-}
-
-func setupUser(ctx context.Context, useLegacyMountFlow bool, helper *hwsecremote.CmdHelperRemote) error {
-	utility := helper.CryptohomeClient()
-
-	if useLegacyMountFlow {
-		// Create and Mount vault.
-		createVault := true
-		if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), createVault, hwsec.NewVaultConfig()); err != nil {
-			return errors.Wrap(err, "failed to create user")
-		}
-	} else {
-		// Start an Auth session and get an authSessionID.
-		isEphemeral := false
-		_, authSessionID, err := utility.StartAuthSession(ctx, util.FirstUsername, isEphemeral, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-		if err != nil {
-			return errors.Wrap(err, "failed to start auth session")
-		}
-		defer utility.InvalidateAuthSession(ctx, authSessionID)
-
-		if err := utility.CreatePersistentUser(ctx, authSessionID); err != nil {
-			return errors.Wrap(err, "failed to create persistent user")
-		}
-
-		if _, err := utility.PreparePersistentVault(ctx, authSessionID, false); err != nil {
-			return errors.Wrap(err, "failed to prepare persistent vault")
-		}
-
-		isKioskUser := false
-		if err := utility.AddCredentialsWithAuthSession(ctx, util.FirstUsername, util.FirstPassword1, util.Password1Label, authSessionID, isKioskUser); err != nil {
-			return errors.Wrap(err, "failed to add credentials with AuthSession")
-		}
-	}
-	return nil
 }
