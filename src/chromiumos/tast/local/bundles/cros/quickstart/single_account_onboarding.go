@@ -22,6 +22,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
 		},
+		BugComponent: "b:1155263",
 		// Attr:         []string{"group:cross-device"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceNoSignIn",
