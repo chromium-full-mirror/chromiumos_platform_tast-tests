@@ -6,9 +6,12 @@ package perf
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
@@ -18,20 +21,21 @@ const batteryCheckInterval = time.Second
 
 // BatteryInfoTracker is a helper to collect battery info.
 type BatteryInfoTracker struct {
-	prefix               string
-	batteryPath          string
-	chargeFullDesign     float64
-	voltageMinDesign     float64
-	batteryChargeStart   float64
-	batteryChargeEnd     float64
-	batteryCapacityStart float64
-	batteryCapacityEnd   float64
-	energy               float64   // Total energy consumed.
-	power                []float64 // Power reading every |batteryCheckInterval|.
-	energyFullDesign     float64
-	collecting           chan bool
-	collectingErr        chan error
-	err                  error
+	prefix                    string
+	batteryPath               string
+	chargeFullDesign          float64
+	voltageMinDesign          float64
+	lowBatteryShutdownPercent float64
+	batteryChargeStart        float64
+	batteryChargeEnd          float64
+	batteryCapacityStart      float64
+	batteryCapacityEnd        float64
+	energy                    float64   // Total energy consumed.
+	power                     []float64 // Power reading every |batteryCheckInterval|.
+	energyFullDesign          float64
+	collecting                chan bool
+	collectingErr             chan error
+	err                       error
 }
 
 // NewBatteryInfoTracker creates a new instance of BatteryInfoTracker. If battery is not
@@ -55,12 +59,21 @@ func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryIn
 	if err != nil {
 		return nil, err
 	}
+	output, err := testexec.CommandContext(ctx, "check_powerd_config", "--low_battery_shutdown_percent").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, err
+	}
+	lowBatteryShutdownPercent, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 64)
+	if err != nil {
+		return nil, err
+	}
 
 	return &BatteryInfoTracker{
-		prefix:           metricPrefix,
-		batteryPath:      batteryPath,
-		chargeFullDesign: chargeFullDesign,
-		voltageMinDesign: voltageMinDesign,
+		prefix:                    metricPrefix,
+		batteryPath:               batteryPath,
+		chargeFullDesign:          chargeFullDesign,
+		voltageMinDesign:          voltageMinDesign,
+		lowBatteryShutdownPercent: lowBatteryShutdownPercent,
 	}, nil
 }
 
@@ -167,7 +180,6 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 	if t == nil || t.err != nil {
 		return
 	}
-
 	pv.Set(perf.Metric{
 		Name:      t.prefix + "Battery.Charge.usage",
 		Unit:      "microAh",
@@ -203,6 +215,11 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
 		}, t.energy/t.energyFullDesign*100)
+		pv.Set(perf.Metric{
+			Name:      t.prefix + "Power.usagePercentage2",
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+		}, t.energy/(t.energyFullDesign*(1-t.lowBatteryShutdownPercent/100))*100)
 	}
 	pv.Set(perf.Metric{
 		Name:      t.prefix + "Battery.Capacity.change",
