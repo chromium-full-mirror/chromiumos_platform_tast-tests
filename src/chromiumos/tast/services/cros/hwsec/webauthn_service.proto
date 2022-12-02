@@ -48,6 +48,14 @@ enum AuthenticatorType {
   CROSS_PLATFORM = 2;
 }
 
+enum AttestationType {
+  NOT_SPECIFIED = 0;
+  NONE = 1;
+  INDIRECT = 2;
+  DIRECT = 3;
+  ENTERPRISE= 4;
+}
+
 message NewRequest {
   reserved 1 to 3;
   BrowserType browser_type = 4;
@@ -57,6 +65,9 @@ message NewRequest {
   // The test should copy those files into a tempdir on the DUT for the
   // service to access.
   string data_path = 6;
+  // AllowEnterpriseAttestation controls whether the local test site
+  // is allowed to send enterprise attestation requests.
+  bool allow_enterprise_attestation = 7;
 }
 
 message EnterPasswordRequest {
@@ -66,7 +77,8 @@ message EnterPasswordRequest {
 message StartWebauthnRequest {
   UserVerification user_verification = 1;
   AuthenticatorType authenticator_type = 2;
-  bool has_dialog = 3;
+  AttestationType attestation_type = 3;
+  bool has_dialog = 4;
 }
 
 message PublicKey {

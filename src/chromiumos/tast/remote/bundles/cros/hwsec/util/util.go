@@ -13,7 +13,9 @@ import (
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/dutfs"
 	hwsecremote "chromiumos/tast/remote/hwsec"
+	"chromiumos/tast/remote/u2fd"
 	"chromiumos/tast/testing"
 )
 
@@ -134,5 +136,14 @@ func EnsureChapsSlotsInitialized(ctx context.Context, chaps *pkcs11.Chaps) error
 	}, &testing.PollOptions{
 		Timeout:  30 * time.Second,
 		Interval: time.Second,
+	})
+}
+
+// CopyFilesToRemote is a convenient helper to call u2fd.CopyFilesToRemote
+// using known data constants.
+func CopyFilesToRemote(ctx context.Context, s *testing.State, cl *dutfs.Client) (string, error) {
+	return u2fd.CopyFilesToRemote(ctx, s.DUT(), cl, map[string]string{
+		s.DataPath("webauthn.html"): "webauthn.html",
+		s.DataPath("bundle.js"):     "bundle.js",
 	})
 }

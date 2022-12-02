@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -40,6 +41,7 @@ func init() {
 type webauthnConfig struct {
 	userVerification  hwsec.UserVerification
 	authenticatorType hwsec.AuthenticatorType
+	attestationType   hwsec.AttestationType
 	hasDialog         bool
 }
 
@@ -121,9 +123,21 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		}
 	}(ctxForCleanUp)
 
-	opts := []chrome.Option{chrome.DMSPolicy(fdms.URL)}
+	var opts []chrome.Option
 	if req.GetKeepState() {
 		opts = append(opts, chrome.KeepState())
+	}
+
+	if req.GetAllowEnterpriseAttestation() {
+		pb := policy.NewBlob()
+		pb.AddPolicies([]policy.Policy{
+			&policy.SecurityKeyPermitAttestation{Val: []string{"localhost"}},
+		})
+		if err := fdms.WritePolicyBlob(pb); err != nil {
+			return nil, errors.Wrap(err, "failed to write policies to FakeDMS")
+		}
+		opts = append(opts, chrome.DMSPolicy(fdms.URL))
+		opts = append(opts, chrome.FakeLogin(chrome.Creds{User: "tast-user@managedchrome.com", Pass: "testpass"}))
 	}
 
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
@@ -223,6 +237,7 @@ func (c *WebauthnService) StartWebauthn(ctx context.Context, req *hwsec.StartWeb
 	c.cfg = webauthnConfig{
 		userVerification:  req.GetUserVerification(),
 		authenticatorType: req.GetAuthenticatorType(),
+		attestationType:   req.GetAttestationType(),
 		hasDialog:         req.GetHasDialog(),
 	}
 	return &empty.Empty{}, nil
@@ -241,10 +256,10 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *empty.Em
 	}
 
 	config := u2fd.WebAuthnRegistrationConfig{
-		Attestation: "none",
-		Uv:          uvToString(c.cfg.userVerification),
+		Uv: uvToString(c.cfg.userVerification),
 	}
 	fillAuthenticatorAttachment(&config, c.cfg.authenticatorType)
+	fillAttestation(&config, c.cfg.attestationType)
 	channel := u2fd.InitiateMakeCredentialInLocalSite(ctx, c.conn, config)
 
 	var res u2fd.MakeCredentialResult
@@ -367,6 +382,20 @@ func fillAuthenticatorAttachment(config *u2fd.WebAuthnRegistrationConfig, t hwse
 		config.AuthenticatorAttachment = "cross-platform"
 	case hwsec.AuthenticatorType_PLATFORM:
 		config.AuthenticatorAttachment = "platform"
+	}
+}
+
+func fillAttestation(config *u2fd.WebAuthnRegistrationConfig, t hwsec.AttestationType) {
+	// Ignore "NOT_SPECIFIED" and unknown types.
+	switch t {
+	case hwsec.AttestationType_NONE:
+		config.Attestation = "none"
+	case hwsec.AttestationType_INDIRECT:
+		config.Attestation = "indirect"
+	case hwsec.AttestationType_DIRECT:
+		config.Attestation = "direct"
+	case hwsec.AttestationType_ENTERPRISE:
+		config.Attestation = "enterprise"
 	}
 }
 

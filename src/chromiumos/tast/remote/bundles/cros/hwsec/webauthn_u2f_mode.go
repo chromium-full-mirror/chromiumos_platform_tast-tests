@@ -84,13 +84,6 @@ func init() {
 	})
 }
 
-func copyFilesToRemote(ctx context.Context, s *testing.State, cl *dutfs.Client) (string, error) {
-	return u2fd.CopyFilesToRemote(ctx, s.DUT(), cl, map[string]string{
-		s.DataPath("webauthn.html"): "webauthn.html",
-		s.DataPath("bundle.js"):     "bundle.js",
-	})
-}
-
 func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 	const password = "testpass"
 
@@ -114,7 +107,7 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 
 	dutfsClient := dutfs.NewClient(cl.Conn)
-	dataPath, err := copyFilesToRemote(ctx, s, dutfsClient)
+	dataPath, err := util.CopyFilesToRemote(ctx, s, dutfsClient)
 	if err != nil {
 		s.Fatal("Failed to put files to remote")
 	}
