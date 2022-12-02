@@ -525,7 +525,7 @@ func waitForWindowInfoSaved(ctx context.Context) {
 func optinAndLaunchPlayStore(ctx context.Context, cr *chrome.Chrome) error {
 	// Optin to Play Store.
 	testing.ContextLog(ctx, "Opting into Play Store")
-	maxAttempts := 1
+	const maxAttempts = 3
 
 	if err := optin.PerformWithRetry(ctx, cr, maxAttempts); err != nil {
 		return errors.Wrap(err, "failed to optin to Play Store")
