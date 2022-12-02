@@ -107,6 +107,8 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to start ARC++ YouTube app")
 		}
 		defer act.Stop(cleanupCtx, tconn)
+		// Take a screenshot before closing the ARC YouTube app.
+		defer recorder.CustomScreenshot(cleanupCtx)
 
 		// Click the Search icon.
 		searchIcon := d.Object(
@@ -224,9 +226,6 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Take a screenshot at the end of recorder.Run, before
-		// the ARC YouTube app closes.
-		recorder.CustomScreenshot(ctx)
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to conduct the performance measurement: ", err)
