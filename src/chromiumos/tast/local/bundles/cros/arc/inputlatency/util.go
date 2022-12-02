@@ -27,7 +27,11 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const arcHostClockFmt = "arc-host-clock-client_%s_20200923"
+const (
+	arcHostClockFmt = "arc-host-clock-client_%s_20200923"
+	// InputLatencyPkgName is the package name for the input latency test application.
+	inputLatencyPkgName = "org.chromium.arc.testapp.inputlatency"
+)
 
 var supportedArchs = []string{
 	"x86",
@@ -109,9 +113,9 @@ func CalculateMetrics(events []InputEvent, getValue func(int) float64) (mean, me
 
 // WaitForEvents polls until the counter in the app UI is equal to count, then
 // returns the input events from the helper app.
-func WaitForEvents(ctx context.Context, d *ui.Device, count int) (string, error) {
+func WaitForEvents(ctx context.Context, d *ui.Device, count int, pkgName string) (string, error) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		v := d.Object(ui.ID("org.chromium.arc.testapp.inputlatency:id/event_count"))
+		v := d.Object(ui.ID(fmt.Sprintf("%s:id/event_count", pkgName)))
 		txt, err := v.GetText(ctx)
 		if err != nil {
 			return err
@@ -135,7 +139,7 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int) (string, error)
 
 	var txt string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		v := d.Object(ui.ID("org.chromium.arc.testapp.inputlatency:id/event_json"))
+		v := d.Object(ui.ID(fmt.Sprintf("%s:id/event_json", pkgName)))
 		var err error
 		txt, err = v.GetText(ctx)
 		if err != nil {
@@ -152,14 +156,22 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int) (string, error)
 }
 
 // WaitForClearUI clears the event data in ArcInputLatencyTest.apk to get ready for next event tracing.
-func WaitForClearUI(ctx context.Context, d *ui.Device) error {
+func WaitForClearUI(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
+	var pkgName string
+	// Use default package name if nil.
+	if pkgNamePtr != nil {
+		pkgName = *pkgNamePtr
+	} else {
+		pkgName = inputLatencyPkgName
+	}
+
 	if err := d.PressKeyCode(ctx, ui.KEYCODE_DEL, 0x0); err != nil {
 		return err
 	}
 
 	// Check whether events are cleared.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		v := d.Object(ui.ID("org.chromium.arc.testapp.inputlatency:id/event_count"))
+		v := d.Object(ui.ID(fmt.Sprintf("%s:id/event_count", pkgName)))
 		txt, err := v.GetText(ctx)
 		if err != nil {
 			return err
@@ -180,9 +192,18 @@ func WaitForClearUI(ctx context.Context, d *ui.Device) error {
 
 // EvaluateLatency gets event data, calculates the latency, and adds the result to performance metrics.
 func EvaluateLatency(ctx context.Context, s *testing.State, d *ui.Device,
-	numEvents int, eventTimes []int64, perfName string, pv *perf.Values) error {
+	numEvents int, eventTimes []int64, perfName string, pkgNamePtr *string, pv *perf.Values) error {
 	s.Log("Collecting results")
-	txt, err := WaitForEvents(ctx, d, numEvents)
+
+	var pkgName string
+	// Use default package name if nil.
+	if pkgNamePtr != nil {
+		pkgName = *pkgNamePtr
+	} else {
+		pkgName = inputLatencyPkgName
+	}
+
+	txt, err := WaitForEvents(ctx, d, numEvents, pkgName)
 	if err != nil {
 		return errors.Wrap(err, "unable to wait for events")
 	}

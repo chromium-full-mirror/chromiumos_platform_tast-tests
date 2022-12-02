@@ -127,11 +127,11 @@ func GamepadPerf(ctx context.Context, s *testing.State) {
 
 	pv := perf.NewValues()
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, repeat*2, eventTimes, "avgGamepadButtonLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, repeat*2, eventTimes, "avgGamepadButtonLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -157,11 +157,11 @@ func GamepadPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, repeat*2, eventTimes, "avgGamepadStickLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, repeat*2, eventTimes, "avgGamepadStickLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -197,7 +197,7 @@ func GamepadPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, repeat*4, eventTimes, "avgGamepadMixLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, repeat*4, eventTimes, "avgGamepadMixLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 

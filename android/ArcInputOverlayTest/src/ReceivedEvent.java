@@ -11,6 +11,9 @@ import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 // ReceivedEvent includes the input event readable info received by the app.
 class ReceivedEvent {
   public Long eventTime;
@@ -96,5 +99,14 @@ class ReceivedEvent {
     }
     return "N/A action_button";
   }
+
+  public JSONObject toJSON() throws JSONException {
+      return new JSONObject()
+              .put("source", source)
+              .put("code", code)
+              .put("action", action)
+              .put("receiveTimeNs", receiveTimeNs);
+  }
+
 
 }

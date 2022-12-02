@@ -114,7 +114,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 	if err := stw.Move(x, y); err != nil {
 		s.Fatal("Unable to inject touch event: ", err)
 	}
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -136,7 +136,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 
 	pv := perf.NewValues()
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgTouchscreenMoveLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgTouchscreenMoveLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 
@@ -145,7 +145,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to release touch: ", err)
 	}
 
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -166,7 +166,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgTouchscreenPressLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgTouchscreenPressLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 

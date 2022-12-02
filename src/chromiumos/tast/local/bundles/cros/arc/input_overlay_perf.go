@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -25,8 +24,8 @@ const (
 	numEvents     = 50
 	numMoveEvents = 100
 	// TODO(b/258229512): reduce the wait times after the inputlatency package issues are resolved.
-	tapWaitMs  = 500
-	moveWaitMs = 1000
+	tapWaitMs  = 250
+	moveWaitMs = 250
 )
 
 func init() {
@@ -71,6 +70,9 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "could not install arc-host-clock-client")
 		}
 
+		// Store page name in variable.
+		var pkgName string = "org.chromium.arc.testapp.inputoverlay"
+
 		// Click to close educational dialogue.
 		if err := ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel"))(ctx); err != nil {
 			return errors.Wrap(err, "failed to click educational dialog")
@@ -96,16 +98,19 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 
 		// Calculate input latency and save metrics.
 		pv := perf.NewValues()
-		tapRe := regexp.MustCompile(`ACTION_DOWN|ACTION_UP`)
-		if err := evaluateLatency(ctx, params, tapEventTimes, numEvents, "avgInputOverlayKeyboardTouchTapLatency", pv, tapRe); err != nil {
-			return errors.Wrap(err, "failed to evaluate")
+		if err := inputlatency.EvaluateLatency(ctx, s, params.Device, numEvents, tapEventTimes, "avgInputOverlayKeyboardTouchTapLatency", &pkgName, pv); err != nil {
+			s.Fatal("Failed to evaluate: ", err)
+		}
+
+		if err := inputlatency.WaitForClearUI(ctx, params.Device, &pkgName); err != nil {
+			s.Fatal("Failed to clear UI: ", err)
 		}
 
 		// Inject the described number of move events.
 		// For this simulation, we alternate between pressing the "w" key and the "a"
 		// key, while keeping at least one key pressed at all times, to continually
 		// inject "ACTION_MOVE" events.
-		moveEventTimes := make([]int64, 0, numEvents)
+		moveEventTimes := make([]int64, 0, numEvents+2)
 		recordEventTime := func() action.Action {
 			return func(ctx context.Context) error {
 				if err := inputlatency.WaitForNextEventTime(ctx, params.Arc, &moveEventTimes, moveWaitMs); err != nil {
@@ -114,75 +119,50 @@ func InputOverlayPerf(ctx context.Context, s *testing.State) {
 				return nil
 			}
 		}
+		// Press first key and throw away the first actions.
+		if err := kb.AccelPressAction("w")(ctx); err != nil {
+			return errors.Wrap(err, "failed to press first key")
+		}
+		if err := action.Sleep(5 * time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+		if err := inputlatency.WaitForClearUI(ctx, params.Device, &pkgName); err != nil {
+			s.Fatal("Failed to clear UI: ", err)
+		}
+		// Continue to inject move actions.
 		for i := 0; i < numEvents; i += 4 {
 			if err := uiauto.Combine("Continually inject move actions",
-				// Press "w" key.
-				recordEventTime(),
-				kb.AccelPressAction("w"),
-				func(ctx context.Context) error {
-					if i > 0 {
-						// Lift "a" key.
-						if err := recordEventTime()(ctx); err != nil {
-							return errors.Wrap(err, "failed to generate event time")
-						}
-						if err := kb.AccelRelease(ctx, "a"); err != nil {
-							return errors.Wrap(err, "unable to inject key events")
-						}
-					}
-					return nil
-				},
 				// Press "a" key.
 				recordEventTime(),
 				kb.AccelPressAction("a"),
 				// Lift "w" key.
 				recordEventTime(),
 				kb.AccelReleaseAction("w"),
+				// Press "w" key.
+				recordEventTime(),
+				kb.AccelPressAction("w"),
+				// Lift "a" key.
+				recordEventTime(),
+				kb.AccelReleaseAction("a"),
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to inject move events")
 			}
 		}
-		// Release final "a" key.
-		if err := kb.AccelRelease(ctx, "a"); err != nil {
-			return errors.Wrap(err, "unable to inject key events")
-		}
 
-		moveRe := regexp.MustCompile(`ACTION_MOVE`)
-		if err := evaluateLatency(ctx, params, moveEventTimes, numMoveEvents, "avgInputOverlayKeyboardTouchMoveLatency", pv, moveRe); err != nil {
-			return errors.Wrap(err, "failed to evaluate")
+		if err := inputlatency.EvaluateLatency(ctx, s, params.Device, numEvents+2, moveEventTimes, "avgInputOverlayKeyboardTouchMoveLatency", &pkgName, pv); err != nil {
+			s.Fatal("Failed to evaluate: ", err)
 		}
 		if err := pv.Save(s.OutDir()); err != nil {
 			return errors.Wrap(err, "failed saving perf data")
 		}
 
+		// Release final "w" key.
+		if err := kb.AccelReleaseAction("w")(ctx); err != nil {
+			return errors.Wrap(err, "failed to release last key")
+		}
+
 		return nil
 	})
-}
-
-// evaluateLatency gets event data, calculates the latency, and adds the result to performance metrics.
-// TODO(b/258229512): Modify and use the inputlatency.EvaluateLatency function once the issues with it are resolved.
-func evaluateLatency(ctx context.Context, params gio.TestParams, eventTimes []int64, numLines int, perfName string, pv *perf.Values, regex *regexp.Regexp) error {
-	// Get event received RTC times.
-	events, err := gio.PopulateReceivedTimes(ctx, params, numLines, regex)
-	if err != nil {
-		return errors.Wrap(err, "could not receive event")
-	}
-
-	// Assign event RTC time.
-	for i := range events {
-		events[i].EventTimeNS = eventTimes[i]
-	}
-
-	mean, median, stdDev, max, min := inputlatency.CalculateMetrics(events, func(i int) float64 {
-		return float64(events[i].RecvTimeNS-events[i].EventTimeNS) / 1000000.
-	})
-	testing.ContextLogf(ctx, "Latency (ms): mean %f median %f std %f max %f min %f", mean, median, stdDev, max, min)
-
-	pv.Set(perf.Metric{
-		Name:      perfName,
-		Unit:      "milliseconds",
-		Direction: perf.SmallerIsBetter,
-	}, mean)
-	return nil
 }
 
 // inputOverlayCoolDownConfig returns the config to wait for the machine to cooldown for game performance tests.

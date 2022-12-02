@@ -117,7 +117,7 @@ func KeyboardPerf(ctx context.Context, s *testing.State) {
 	}
 
 	pv := perf.NewValues()
-	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgKeyboardLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgKeyboardLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {

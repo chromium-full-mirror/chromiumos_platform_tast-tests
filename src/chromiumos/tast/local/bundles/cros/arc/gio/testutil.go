@@ -9,7 +9,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -19,7 +18,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/local/bundles/cros/arc/inputlatency"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -32,9 +30,8 @@ import (
 
 const (
 	apk = "ArcInputOverlayTest.apk"
-	pkg = "org.chromium.arc.testapp.inputoverlay"
 	cls = "org.chromium.arc.testapp.inputoverlay.MainActivity"
-
+	pkg = "org.chromium.arc.testapp.inputoverlay"
 	// inputOverlayFilename is the directory where input overlay files are stored.
 	inputOverlayFilename = "google_gio"
 	// cleanupOnErrorTime reserves time for cleanup in case of an error.
@@ -42,6 +39,7 @@ const (
 	// errorMargin denotes the allowable +/- difference from the calculated x and
 	// y coordinate.
 	errorMargin = 3
+
 	// WaitForActiveInputTime reserves time between and for hold-release controls
 	// to ensure stability.
 	WaitForActiveInputTime = time.Second
@@ -239,49 +237,6 @@ func TapOverlayButton(kb *input.KeyboardEventWriter, key string, params *TestPar
 		}
 		return nil
 	}
-}
-
-// PopulateReceivedTimes populates the given array of events with event timestamps,
-// as presented in logcat.
-func PopulateReceivedTimes(ctx context.Context, params TestParams, numLines int, regex *regexp.Regexp) ([]inputlatency.InputEvent, error) {
-	out, err := params.Arc.OutputLogcatGrep(ctx, "InputOverlayPerf")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute logcat command")
-	}
-	lines := strings.Split(strings.Replace(string(out), ",", "", -1), "\n")
-	// Last line can be empty.
-	if len(lines) > 0 && lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
-	}
-	// Make sure that the length of the array is at least as long as expected.
-	if len(lines) < numLines {
-		return nil, errors.Errorf("only %d lines returned by logcat; wanted %d lines", len(lines), numLines)
-	}
-	lines = lines[len(lines)-numLines:]
-
-	/*
-	  An example line is shown below:
-
-	  "09-19 13:01:22.298  4049  4049 V InputOverlayPerf: ACTION_UP 4146633898335"
-
-	  For this test, all we do is to extract the timestamp shown at the end.
-	*/
-
-	events := make([]inputlatency.InputEvent, 0, numLines)
-	for _, line := range lines {
-		// Throw away the line if it does not match the given regex.
-		if len(regex.FindAllString(line, -1)) != 1 {
-			continue
-		}
-
-		lineSplit := strings.Split(line, " ")
-		timestamp, err := strconv.ParseInt(lineSplit[len(lineSplit)-1], 10, 64)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not parse timestamp")
-		}
-		events = append(events, inputlatency.InputEvent{EventTimeNS: 0, RecvTimeNS: timestamp})
-	}
-	return events, nil
 }
 
 // pollTouchedCorrectly makes sure the feedback for a tap touch injection is correct.

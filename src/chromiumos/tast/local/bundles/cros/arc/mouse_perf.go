@@ -110,7 +110,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err := m.Press(); err != nil {
 		s.Fatal("Unable to inject Press mouse event: ", err)
 	}
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 	var x int32 = 10
@@ -130,7 +130,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 
 	pv := perf.NewValues()
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgMouseLeftMoveLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgMouseLeftMoveLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 
@@ -138,7 +138,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to inject Release mouse event: ", err)
 	}
 
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -184,12 +184,12 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := inputlatency.EvaluateLatency(ctx, s, d, numLeftClickEvents, eventTimes, "avgMouseLeftClickLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, numLeftClickEvents, eventTimes, "avgMouseLeftClickLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 
 	// Clear data to start next test.
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -198,7 +198,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err := m.Move(x, y); err != nil {
 		s.Fatal("Unable to inject mouse hover-move event: ", err)
 	}
-	if err := inputlatency.WaitForClearUI(ctx, d); err != nil {
+	if err := inputlatency.WaitForClearUI(ctx, d, nil); err != nil {
 		s.Fatal("Failed to clear UI: ", err)
 	}
 
@@ -216,7 +216,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Unable to inject mouse hover-move event: ", err)
 		}
 	}
-	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgMouseHoverMoveLatency", pv); err != nil {
+	if err := inputlatency.EvaluateLatency(ctx, s, d, numEvents, eventTimes, "avgMouseHoverMoveLatency", nil, pv); err != nil {
 		s.Fatal("Failed to evaluate: ", err)
 	}
 

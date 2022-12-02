@@ -23,18 +23,25 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity {
   final static String TAG = "InputOverlayTest";
-  final static String PERF = "InputOverlayPerf";
 
   private Button mButton;
   private EditText mEdit;
   private ListView mList;
   private EventListAdapter mAdapter;
-  private ArrayList<ReceivedEvent> mEvents;
+  private TextView mEvents;
+  private TextView mCount;
+  private ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+  private ArrayList<ReceivedEvent> mRecvEvents = new ArrayList<>();
   private View mView;
 
   @Override
@@ -45,15 +52,17 @@ public class MainActivity extends Activity {
     mEdit = findViewById(R.id.m_edit);
     mButton = findViewById(R.id.m_button);
     mList = findViewById(R.id.m_list);
-    mEvents = new ArrayList<>();
-    mAdapter = new EventListAdapter(getApplicationContext(), mEvents);
+    mAdapter = new EventListAdapter(getApplicationContext(), mRecvEvents);
     mList.setAdapter(mAdapter);
+    mEvents = findViewById(R.id.event_json);
+    mCount = findViewById(R.id.event_count);
     mView = findViewById(R.id.main_view);
   }
 
   @Override
   public boolean dispatchTouchEvent(MotionEvent ev) {
     printAndDisplayEvent(ev);
+    traceEvent(new ReceivedEvent(ev, SystemClock.elapsedRealtimeNanos()));
     // Stop dispatching gamepad event.
     if (isGameEvent(ev)) {
       return true;
@@ -64,6 +73,14 @@ public class MainActivity extends Activity {
   @Override
   public boolean dispatchKeyEvent(KeyEvent ev) {
     printAndDisplayEvent(ev);
+    if (ev.getKeyCode() == KeyEvent.KEYCODE_ESCAPE) {
+        finishTrace();
+        return false;
+    }
+    if (ev.getKeyCode() == KeyEvent.KEYCODE_DEL) {
+        clearUI();
+        return false;
+    }
     // Stop dispatching gamepad event.
     if (isGameEvent(ev)) {
       return true;
@@ -87,12 +104,36 @@ public class MainActivity extends Activity {
     return super.dispatchTrackballEvent(ev);
   }
 
+  // Finish trace and save the events as JSON to TextView UI.
+  private void finishTrace() {
+      // Serialize events to JSON
+      mExecutor.submit(
+              () -> {
+                  JSONArray arr = new JSONArray();
+                  try {
+                      for (ReceivedEvent ev : mRecvEvents) {
+                          arr.put(ev.toJSON());
+                      }
+                      String json = arr.toString();
+                      int len = arr.length();
+                      runOnUiThread(() -> setEvents(json, len));
+                  } catch (JSONException e) {
+                      Log.e(TAG, "Unable to serialize events to JSON: " + e.getMessage());
+                  }
+              });
+  }
+
+  private void clearUI() {
+      mRecvEvents.clear();
+      mAdapter.notifyDataSetChanged();
+      mExecutor.submit(
+              () -> {
+                  runOnUiThread(() -> setEvents("", 0));
+              });
+  }
+
   private void printAndDisplayEvent(InputEvent event) {
     Log.v(TAG, event.toString());
-    ReceivedEvent ev = new ReceivedEvent(event, SystemClock.elapsedRealtimeNanos());
-    Log.v(PERF, ev.toString());
-    mEvents.add(ev);
-    mAdapter.notifyDataSetChanged();
   }
 
   private boolean isGameEvent(InputEvent event) {
@@ -101,5 +142,27 @@ public class MainActivity extends Activity {
       return true;
     }
     return false;
+  }
+
+  /** Called to record timing of received input events. */
+  private void traceEvent(ReceivedEvent recv) {
+      // Ignore TouchScreen event that is ACTION_CANCEL
+      if (recv.source == "Touchscreen" && recv.action == "ACTION_CANCEL") {
+          return;
+      }
+
+      mRecvEvents.add(recv);
+      mAdapter.notifyDataSetChanged();
+
+      // Record the event numbers.
+      mExecutor.submit(
+              () -> {
+                  runOnUiThread(() -> setEvents("", mRecvEvents.size()));
+              });
+  }
+
+  private void setEvents(String json, Integer count) {
+      mEvents.setText(json);
+      mCount.setText(count.toString());
   }
 }
