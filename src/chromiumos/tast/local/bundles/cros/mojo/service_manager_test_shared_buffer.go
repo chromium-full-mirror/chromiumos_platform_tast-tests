@@ -24,6 +24,8 @@ func init() {
 			"chromeos-mojo-service-manager@google.com",
 			"chungsheng@google.com",
 		},
+		// ChromeOS > Platform > Services > Mojo Service Manager
+		BugComponent: "b:1188058",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      1 * time.Minute,
