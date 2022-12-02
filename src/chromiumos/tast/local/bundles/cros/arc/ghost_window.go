@@ -79,10 +79,6 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Name:              "general",
-			Val:               generalLaunchGwTests,
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
 			Name: "general_r",
 			Val:  generalLaunchGwTests,
 			// Temporarily restrict it only for ARC R, not T or above version.
