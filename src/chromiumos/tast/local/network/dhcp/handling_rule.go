@@ -295,11 +295,15 @@ func NewRespondToDiscovery(intendedIP, svrIP string, options OptionMap, fields F
 }
 
 // NewRejectRequestRule creates a handler that receives a REQUEST packet and
-// responds with a NAK.
-func NewRejectRequestRule() *HandlingRule {
+// responds with a NAK. Server ID option will be ignored in the NAK packets to
+// emulate some DHCP servers (e.g. OpenBSD 4.6), although this option is a MUST
+// according to RFC 2131.
+func NewRejectRequestRule(expReqIP string) *HandlingRule {
 	return &HandlingRule{
 		ruleType:      rejectRequest,
 		msgType:       request,
+		expReqIP:      expReqIP,
+		respPktCnt:    1,
 		shouldRespond: true,
 	}
 }
@@ -337,7 +341,7 @@ func NewRespondToRequest(expReqIP, expSvrIP string, options OptionMap, fields Fi
 // NewRespondToPostT2Request creates a handler similar to respondToRequest
 // except that it expects request packets like those sent after the T2 deadline
 // (see RFC 2131). This is the only time that you can find a request packet
-// without the serverID option. It reseponds to packets in exactly the same way.
+// without the serverID option. It responds to packets in exactly the same way.
 func NewRespondToPostT2Request(expReqIP, responseSvrIP string, options OptionMap, fields FieldMap, shouldRespond bool, responseGrantedIP string) *HandlingRule {
 	rule := NewRespondToRequest(expReqIP, "", options, fields, shouldRespond, responseSvrIP, responseGrantedIP, false)
 	rule.ruleType = respondToPostT2Request
@@ -359,7 +363,7 @@ func NewAcceptRelease(expSvrIP string, options OptionMap, fields FieldMap) *Hand
 }
 
 // NewRejectAndRespondToRequest creates a handler that accepts any REQUEST
-// packet that contains options for serverID and resquestedIP that match
+// packet that contains options for serverID and requestedIP that match
 // expSvrIP and expReqIP respectively. It responds with
 // both an ACKNOWLEDGEMENT packet from a DHCP server as well as a NAK, in order
 // to simulate a network with two conflicting servers.
