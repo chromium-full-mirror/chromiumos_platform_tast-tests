@@ -15,14 +15,8 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
-
-type oobeArcTestOptions struct {
-	consolidatedConsentEnabled bool
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -36,27 +30,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
-			Val: oobeArcTestOptions{
-				consolidatedConsentEnabled: false,
-			},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: oobeArcTestOptions{
-				consolidatedConsentEnabled: false,
-			},
-		}, {
-			Name:              "p_consolidated_consent",
-			ExtraSoftwareDeps: []string{"android_p"},
-			Val: oobeArcTestOptions{
-				consolidatedConsentEnabled: true,
-			},
-		}, {
-			Name:              "vm_consolidated_consent",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: oobeArcTestOptions{
-				consolidatedConsentEnabled: true,
-			},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 10*time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
@@ -64,19 +40,11 @@ func init() {
 }
 
 func OobeArc(ctx context.Context, s *testing.State) {
-	testOptions := s.Param().(oobeArcTestOptions)
-	chromeOptions := []chrome.Option{
+	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-	}
-	if testOptions.consolidatedConsentEnabled {
-		chromeOptions = append(chromeOptions, chrome.EnableFeatures("OobeConsolidatedConsent", "PerUserMetricsConsent"))
-	} else {
-		chromeOptions = append(chromeOptions, chrome.DisableFeatures("OobeConsolidatedConsent", "PerUserMetricsConsent"))
-	}
+		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
 
-	cr, err := chrome.New(ctx, chromeOptions...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -89,14 +57,8 @@ func OobeArc(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 	ui := uiauto.New(tconn)
 
-	if testOptions.consolidatedConsentEnabled {
-		if err := oobeutil.CompleteConsolidatedConsentOnboardingFlow(ctx, ui); err != nil {
-			s.Fatal("Failed to go through the oobe flow: ", err)
-		}
-	} else {
-		if err := oobeutil.CompleteRegularOnboardingFlow(ctx, ui /*reviewArcOptions=*/, true); err != nil {
-			s.Fatal("Failed to go through the oobe flow: ", err)
-		}
+	if err := oobeutil.CompleteOnboardingFlow(ctx, ui); err != nil {
+		s.Fatal("Failed to go through the oobe flow: ", err)
 	}
 
 	if err := oobeutil.CompleteTabletOnboarding(ctx, ui); err != nil {
@@ -115,12 +77,5 @@ func OobeArc(ctx context.Context, s *testing.State) {
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to verify Play Store is On: ", err)
-	}
-
-	if !testOptions.consolidatedConsentEnabled {
-		s.Log("Verify Play Store Settings is Launched")
-		if err := ui.WaitUntilExists(nodewith.Name("Remove Google Play Store").Role(role.Button))(ctx); err != nil {
-			s.Fatal("Failed to Launch Android Settings After OOBE Flow : ", err)
-		}
 	}
 }

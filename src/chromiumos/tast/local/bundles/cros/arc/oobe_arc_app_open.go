@@ -20,10 +20,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type oobeArcAppOpenTestOptions struct {
-	consolidatedConsentEnabled bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OobeArcAppOpen,
@@ -36,27 +32,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
-			Val: oobeArcAppOpenTestOptions{
-				consolidatedConsentEnabled: false,
-			},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: oobeArcAppOpenTestOptions{
-				consolidatedConsentEnabled: false,
-			},
-		}, {
-			Name:              "p_consolidated_consent",
-			ExtraSoftwareDeps: []string{"android_p"},
-			Val: oobeArcAppOpenTestOptions{
-				consolidatedConsentEnabled: true,
-			},
-		}, {
-			Name:              "vm_consolidated_consent",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: oobeArcAppOpenTestOptions{
-				consolidatedConsentEnabled: true,
-			},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 25*time.Minute,
 		VarDeps: []string{"arc.parentUser", "arc.parentPassword"},
@@ -73,23 +51,10 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 	username := s.RequiredVar("arc.parentUser")
 	password := s.RequiredVar("arc.parentPassword")
 
-	testOptions := s.Param().(oobeArcAppOpenTestOptions)
-	chromeOptions := []chrome.Option{
+	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
-		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
-	}
-	if testOptions.consolidatedConsentEnabled {
-		chromeOptions = append(chromeOptions, chrome.EnableFeatures("OobeConsolidatedConsent", "PerUserMetricsConsent"))
-	} else {
-		chromeOptions = append(chromeOptions, chrome.DisableFeatures("OobeConsolidatedConsent", "PerUserMetricsConsent"))
-	}
-
-	cr, err := chrome.New(ctx, chromeOptions...)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}))
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -98,14 +63,8 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 	ui := uiauto.New(tconn)
 
-	if testOptions.consolidatedConsentEnabled {
-		if err := oobeutil.CompleteConsolidatedConsentOnboardingFlow(ctx, ui); err != nil {
-			s.Fatal("Failed to go through the oobe flow: ", err)
-		}
-	} else {
-		if err := oobeutil.CompleteRegularOnboardingFlow(ctx, ui /*reviewArcOptions=*/, false); err != nil {
-			s.Fatal("Failed to go through the oobe flow: ", err)
-		}
+	if err := oobeutil.CompleteOnboardingFlow(ctx, ui); err != nil {
+		s.Fatal("Failed to go through the oobe flow: ", err)
 	}
 
 	if err := oobeutil.CompleteTabletOnboarding(ctx, ui); err != nil {

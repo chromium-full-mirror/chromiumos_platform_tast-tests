@@ -17,8 +17,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 )
 
-// CompleteConsolidatedConsentOnboardingFlow function goes through the onboarding flow screens when the consolidated consent feature is enabled.
-func CompleteConsolidatedConsentOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
+// CompleteOnboardingFlow function goes through the onboarding flow screens.
+func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	consolidatedConsentHeader := nodewith.Name("Review these terms and control your data").Role(role.Dialog)
 	if err := ui.WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
 		return err
@@ -48,39 +48,6 @@ func CompleteConsolidatedConsentOnboardingFlow(ctx context.Context, ui *uiauto.C
 		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(syncAccept), ui.LeftClick(syncAccept)),
 		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(skip), ui.LeftClickUntil(skip, ui.Gone(skip))),
 		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(skip), ui.LeftClick(skip)),
-		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(noThanks), ui.LeftClickUntil(noThanks, ui.Gone(noThanks))),
-		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(noThanks), ui.LeftClick(noThanks)),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(next), ui.LeftClick(next)),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(getStarted), ui.LeftClick(getStarted)),
-	)(ctx)
-	return err
-}
-
-// CompleteRegularOnboardingFlow function goes through the onboarding flow screens when the consolidated consent feature is disabled.
-func CompleteRegularOnboardingFlow(ctx context.Context, ui *uiauto.Context, reviewArcOptions bool) error {
-	skip := nodewith.Name("Skip").Role(role.StaticText)
-	noThanks := nodewith.Name("No thanks").Role(role.Button)
-	getStarted := nodewith.Name("Get started").Role(role.Button)
-	syncAccept := nodewith.NameRegex(regexp.MustCompile("Accept and continue|Turn on sync")).Role(role.Button)
-	more := nodewith.Name("More").Role(role.Button)
-	next := nodewith.Name("Next").Role(role.Button)
-	err := uiauto.Combine("go through the onboarding UI prior to ARC ToS acceptance",
-		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(syncAccept), ui.LeftClick(syncAccept)),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(skip), ui.LeftClickUntil(skip, ui.Gone(skip))),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(skip), ui.LeftClick(skip)),
-		ui.WithTimeout(60*time.Second).WaitUntilExists(more),
-		ui.LeftClick(more),
-	)(ctx)
-	if err != nil {
-		return err
-	}
-	if reviewArcOptions {
-		if err := ui.LeftClick(nodewith.Name("Review Google Play options following setup").Role(role.CheckBox))(ctx); err != nil {
-			return err
-		}
-	}
-	err = uiauto.Combine("go through the onboarding flow UI starting from ARC ToS acceptance",
-		ui.LeftClick(nodewith.Name("Accept").Role(role.Button)),
 		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(noThanks), ui.LeftClickUntil(noThanks, ui.Gone(noThanks))),
 		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(noThanks), ui.LeftClick(noThanks)),
 		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(next), ui.LeftClick(next)),
