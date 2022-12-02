@@ -338,35 +338,42 @@ func RunTestCases(ctx context.Context, s *testing.State, appPkgName, appActivity
 			// It is also ok if the package is currently equal the settings package.
 			// This happens when you need to accept permissions.
 			var allowedAppPackage bool
-			currentAppPkg, err := CurrentAppPackage(ctx, d, s)
-			if err != nil {
-				s.Fatal("Failed to get current app package: ", err)
-			}
-			if currentAppPkg == appPkgName {
-				allowedAppPackage = true
-			} else if currentAppPkg != appPkgName {
-				for _, perAppPkg := range []struct {
-					permissionAppPkgNames string
-				}{
-					{"com.google.android.packageinstaller"}, {"com.google.android.gms"},
-					{"com.google.android.permissioncontroller"}, {"com.android.settings"},
-				} {
-					if currentAppPkg == perAppPkg.permissionAppPkgNames {
-						allowedAppPackage = true
-						break
+			if err := uiauto.Retry(2, func(ctx context.Context) error {
+				currentAppPkg, err := CurrentAppPackage(ctx, d, s)
+				if err != nil {
+					return errors.Wrap(err, "failed to get current app package")
+				}
+				if currentAppPkg == appPkgName {
+					allowedAppPackage = true
+				} else if currentAppPkg != appPkgName {
+					for _, perAppPkg := range []struct {
+						permissionAppPkgNames string
+					}{
+						{"com.google.android.packageinstaller"}, {"com.google.android.gms"},
+						{"com.google.android.permissioncontroller"}, {"com.android.settings"},
+					} {
+						if currentAppPkg == perAppPkg.permissionAppPkgNames {
+							allowedAppPackage = true
+							break
+						}
+					}
+
+					// Check if the app failed to launch as time might not be enough for previous
+					// DetectAndHandleCloseCrashOrAppNotResponding to run.
+					// TODO: Add retry in DetectAndHandleCloseCrashOrAppNotResponding to remove extra check below.
+					if currentAppPkg == "android" || currentAppPkg == "org.chromium.arc.home" {
+						DetectAndHandleCloseCrashOrAppNotResponding(ctx, s, d)
+						allowedAppPackage = false
 					}
 				}
-
-				// Check if the app failed to launch as time might not be enough for previous
-				// DetectAndHandleCloseCrashOrAppNotResponding to run.
-				// TODO: Add retry in DetectAndHandleCloseCrashOrAppNotResponding to remove extra check below
-				if currentAppPkg == "android" || currentAppPkg == "org.chromium.arc.home" {
-					DetectAndHandleCloseCrashOrAppNotResponding(ctx, s, d)
-					allowedAppPackage = false
+				if !allowedAppPackage {
+					// Sleep 10 seconds for app to fully launched or next retry.
+					testing.Sleep(ctx, 10*time.Second)
+					return errors.Errorf("failed to launch app: incorrect package(expected: %s, actual: %s)", appPkgName, currentAppPkg)
 				}
-			}
-			if !allowedAppPackage {
-				s.Fatalf("Failed to launch app: incorrect package(expected: %s, actual: %s)", appPkgName, currentAppPkg)
+				return nil
+			})(ctx); err != nil {
+				s.Fatal("Failed to verify the app has been fully launched: ", err)
 			}
 			test.Fn(ctx, s, tconn, a, d, appPkgName, updatedAppActivity)
 		})
