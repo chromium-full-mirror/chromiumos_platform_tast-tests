@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/enterpriseconnectors/signals"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -200,25 +201,25 @@ func getErrorMessage(ctx context.Context, conn *chrome.Conn) (string, error) {
 	return errorMessage, nil
 }
 
-// checkSignals checks in case of a successful Device Trust attestation flow, if transmitted client and server signals are non-empty.
+// checkSignals checks the signals for completeness and validity in case of a successful Device Trust attestation flow.
 func checkSignals(ctx context.Context, conn *chrome.Conn) error {
-	var serverSignals string
-	if err := conn.Call(ctx, &serverSignals, "() => { return document.getElementById('serverSignals').innerText; }"); err != nil {
+	var serverSignalsString string
+	if err := conn.Call(ctx, &serverSignalsString, "() => { return document.getElementById('serverSignals').innerText; }"); err != nil {
 		return errors.Wrap(err, "failed reading server signals")
 	}
-	if serverSignals == "" {
+	if serverSignalsString == "" {
 		return errors.New("Server signals were empty")
 	}
 
-	var clientSignals string
-	if err := conn.Call(ctx, &clientSignals, "() => { return document.getElementById('clientSignals').innerText; }"); err != nil {
+	var clientSignalsString string
+	if err := conn.Call(ctx, &clientSignalsString, "() => { return document.getElementById('clientSignals').innerText; }"); err != nil {
 		return errors.Wrap(err, "failed reading client signals")
 	}
-	if clientSignals == "" {
+	if clientSignalsString == "" {
 		return errors.New("Client signals were empty")
 	}
 
-	return nil
+	return signals.Verify([]byte(serverSignalsString), []byte(clientSignalsString))
 }
 
 // wasDeviceTrustAttestationSuccessful analyzes the current content on the fake IdP site to decide whether the Device Trust attestation flow was successful or not.
