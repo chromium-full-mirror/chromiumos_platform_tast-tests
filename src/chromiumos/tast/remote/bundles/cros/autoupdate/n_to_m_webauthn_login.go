@@ -6,8 +6,6 @@ package autoupdate
 
 import (
 	"context"
-	"math/rand"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -15,6 +13,8 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
+	"chromiumos/tast/remote/dutfs"
+	"chromiumos/tast/remote/u2fd"
 	"chromiumos/tast/rpc"
 	webauthnpb "chromiumos/tast/services/cros/hwsec"
 	"chromiumos/tast/testing"
@@ -39,6 +39,11 @@ func init() {
 			"tast.cros.hwsec.WebauthnService",
 			"tast.cros.autoupdate.NebraskaService",
 			"tast.cros.autoupdate.UpdateService",
+			"tast.cros.baserpc.FileSystem",
+		},
+		Data: []string{
+			"webauthn.html",
+			"bundle.js",
 		},
 		Params: []testing.Param{{
 			Name:              "tpm1",
@@ -52,17 +57,20 @@ func init() {
 	})
 }
 
+func copyFilesToRemote(ctx context.Context, s *testing.State, cl *dutfs.Client) (string, error) {
+	return u2fd.CopyFilesToRemote(ctx, s.DUT(), cl, map[string]string{
+		s.DataPath("webauthn.html"): "webauthn.html",
+		s.DataPath("bundle.js"):     "bundle.js",
+	})
+}
+
 func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 	env, err := util.NewHwsecEnv(s.DUT())
 	if err != nil {
 		s.Fatal("Failed to create hwsec env: ", err)
 	}
 
-	// We need truly random values for username strings so that different test runs don't affect each other.
-	rand.Seed(time.Now().UnixNano())
-
-	username := randomUsername()
-
+	var cred webauthnpb.WebAuthnCredential
 	ops := &util.Operations{
 		PreUpdate: func(ctx context.Context) error {
 			return util.ClearTpm(ctx, env)
@@ -73,7 +81,12 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 			}
 			defer cl.Close(ctx)
-			return createUserAndMakeCredential(ctx, env, cl.Conn, username)
+			dutfsClient := dutfs.NewClient(cl.Conn)
+			dataPath, err := copyFilesToRemote(ctx, s, dutfsClient)
+			if err != nil {
+				s.Fatal("Failed to put files to remote")
+			}
+			return createUserAndMakeCredential(ctx, env, cl.Conn, dataPath, &cred)
 		},
 		PostRollback: func(ctx context.Context) error {
 			cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -81,7 +94,12 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 			}
 			defer cl.Close(ctx)
-			return loginUserAndGetAssertion(ctx, env, cl.Conn, username)
+			dutfsClient := dutfs.NewClient(cl.Conn)
+			dataPath, err := copyFilesToRemote(ctx, s, dutfsClient)
+			if err != nil {
+				s.Fatal("Failed to put files to remote")
+			}
+			return loginUserAndGetAssertion(ctx, env, cl.Conn, dataPath, &cred)
 		},
 	}
 
@@ -90,85 +108,69 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 	}
 }
 
-func passwordAuth(ctx context.Context, cr webauthnpb.WebauthnServiceClient) error {
+func passwordAuth(ctx context.Context, client webauthnpb.WebauthnServiceClient) error {
 	// Type password into ChromeOS WebAuthn dialog.
-	if _, err := cr.EnterPassword(ctx, &webauthnpb.EnterPasswordRequest{Password: util.ChromeDefaultPassword}); err != nil {
+	if _, err := client.EnterPassword(ctx, &webauthnpb.EnterPasswordRequest{Password: util.ChromeDefaultPassword}); err != nil {
 		return errors.Wrap(err, "failed to type password into ChromeOS auth dialog")
 	}
 	return nil
 }
 
-func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, username string) error {
-	cr := webauthnpb.NewWebauthnServiceClient(conn)
+func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, dataPath string, cred *webauthnpb.WebAuthnCredential) error {
+	client := webauthnpb.NewWebauthnServiceClient(conn)
 
 	// Login Chrome and create a WebAuthn credential.
-	if _, err := cr.New(ctx, &webauthnpb.NewRequest{
+	if _, err := client.New(ctx, &webauthnpb.NewRequest{
 		BrowserType: webauthnpb.BrowserType_ASH,
+		DataPath:    dataPath,
 	}); err != nil {
 		return errors.Wrap(err, "failed to start Chrome")
 	}
-	defer cr.Close(ctx, &empty.Empty{})
+	defer client.Close(ctx, &empty.Empty{})
 
-	if _, err := cr.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
+	if _, err := client.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
 		UserVerification:  webauthnpb.UserVerification_DISCOURAGED,
 		AuthenticatorType: webauthnpb.AuthenticatorType_UNSPECIFIED,
 		HasDialog:         true,
 	}); err != nil {
 		return errors.Wrap(err, "failed to start WebAuthn flow")
 	}
-	defer cr.EndWebauthn(ctx, &empty.Empty{})
 
-	if _, err := cr.StartMakeCredential(ctx, &webauthnpb.StartMakeCredentialRequest{Username: username}); err != nil {
+	authCallback := func(ctx context.Context) error {
+		return passwordAuth(ctx, client)
+	}
+	cred, err := u2fd.RemoteMakeCredentialInLocalSite(ctx, client, authCallback)
+	if err != nil {
 		return errors.Wrap(err, "failed to perform MakeCredential flow")
 	}
-	if err := passwordAuth(ctx, cr); err != nil {
-		return errors.Wrap(err, "failed to perform password auth")
-	}
-	if _, err := cr.CheckMakeCredential(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to complete MakeCredential")
-	}
-
 	return nil
 }
 
-func loginUserAndGetAssertion(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, username string) error {
-	cr := webauthnpb.NewWebauthnServiceClient(conn)
+func loginUserAndGetAssertion(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, dataPath string, cred *webauthnpb.WebAuthnCredential) error {
+	client := webauthnpb.NewWebauthnServiceClient(conn)
 
 	// Login Chrome to see if we can still authenticate the relying party using the WebAuthn credential.
-	if _, err := cr.New(ctx, &webauthnpb.NewRequest{KeepState: true}); err != nil {
+	if _, err := client.New(ctx, &webauthnpb.NewRequest{
+		KeepState: true,
+		DataPath:  dataPath,
+	}); err != nil {
 		return errors.Wrap(err, "failed to start Chrome")
 	}
-	defer cr.Close(ctx, &empty.Empty{})
+	defer client.Close(ctx, &empty.Empty{})
 
-	if _, err := cr.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
+	if _, err := client.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
 		UserVerification:  webauthnpb.UserVerification_DISCOURAGED,
 		AuthenticatorType: webauthnpb.AuthenticatorType_UNSPECIFIED,
 		HasDialog:         true,
 	}); err != nil {
 		return errors.Wrap(err, "failed to start WebAuthn flow")
 	}
-	defer cr.EndWebauthn(ctx, &empty.Empty{})
 
-	if _, err := cr.StartGetAssertion(ctx, &webauthnpb.StartGetAssertionRequest{Username: username}); err != nil {
+	authCallback := func(ctx context.Context) error {
+		return passwordAuth(ctx, client)
+	}
+	if err := u2fd.RemoteGetAssertionInLocalSite(ctx, client, cred, authCallback); err != nil {
 		return errors.Wrap(err, "failed to perform GetAssertion flow")
 	}
-	if err := passwordAuth(ctx, cr); err != nil {
-		return errors.Wrap(err, "failed to perform password auth")
-	}
-	if _, err := cr.CheckGetAssertion(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to complete GetAssertion")
-	}
-
 	return nil
-}
-
-func randomUsername() string {
-	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	ret := make([]byte, 10)
-	for i := range ret {
-		ret[i] = letters[rand.Intn(len(letters))]
-	}
-
-	return string(ret)
 }

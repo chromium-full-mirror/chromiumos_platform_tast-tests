@@ -6,8 +6,7 @@ package u2fd
 
 import (
 	"context"
-	"fmt"
-	"time"
+	"net/http"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -18,8 +17,6 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/local/upstart"
@@ -51,6 +48,7 @@ type WebauthnService struct {
 	// Keeping keyboard in state instead of creating it each time because it takes about 5 seconds to create a keyboard.
 	keyboard *input.KeyboardEventWriter
 	conn     *chrome.Conn
+	srv      *u2fd.WebAuthnHTTPServer
 
 	cfg      webauthnConfig
 	password string
@@ -60,6 +58,8 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		return nil, errors.Wrap(err, "failed to restart ui job")
 	}
+
+	c.srv = u2fd.NewWebAuthnHTTPServer(ctx, http.Dir(req.GetDataPath()))
 
 	var bt browser.Type
 	if req.GetBrowserType() == hwsec.BrowserType_ASH {
@@ -83,15 +83,24 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		keyboard.Close()
 		return nil, errors.Wrapf(err, "failed to log in by Chrome with %v browser", bt)
 	}
+	conn, err := br.NewConn(ctx, c.srv.URL+"/webauthn.html")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to navigate to test website")
+	}
 	c.keyboard = keyboard
 	c.cr = cr
 	c.br = br
 	c.closeBrowser = closeBrowser
+	c.conn = conn
 
 	return &empty.Empty{}, nil
 }
 
 func (c *WebauthnService) Close(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if c.conn != nil {
+		c.conn.Close()
+		c.conn = nil
+	}
 	if c.closeBrowser != nil {
 		c.closeBrowser(ctx)
 		c.br = nil
@@ -104,6 +113,10 @@ func (c *WebauthnService) Close(ctx context.Context, req *empty.Empty) (*empty.E
 		c.keyboard.Close()
 		c.keyboard = nil
 	}
+	if c.srv != nil {
+		c.srv.Close(ctx)
+		c.srv = nil
+	}
 	return &empty.Empty{}, nil
 }
 
@@ -113,140 +126,130 @@ func (c *WebauthnService) StartWebauthn(ctx context.Context, req *hwsec.StartWeb
 		authenticatorType: req.GetAuthenticatorType(),
 		hasDialog:         req.GetHasDialog(),
 	}
-	// TODO(b/210418148): Use an internal site for testing to prevent flakiness.
-	// Navigate to "logout" path first to clear leftover sessions from previous tests.
-	conn, err := c.br.NewConn(ctx, "https://webauthn.io/logout")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to test website")
-	}
-	if err = conn.Navigate(ctx, "https://webauthn.io/?"+getQueryStringByConfiguration(c.cfg)); err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to test website")
-	}
-	c.conn = conn
-
 	return &empty.Empty{}, nil
 }
 
-func (c *WebauthnService) EndWebauthn(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if c.conn != nil {
-		c.conn.Close()
-		c.conn = nil
-	}
-	return &empty.Empty{}, nil
-}
-
-func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *hwsec.StartMakeCredentialRequest) (*empty.Empty, error) {
-	// Perform MakeCredential on the test website.
-
+func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *empty.Empty) (*hwsec.WebAuthnCredential, error) {
 	tconn, err := c.cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get test API connection")
 	}
 
-	if err = u2fd.SetUsernameInWebAuthnIo(ctx, c.conn, req.GetUsername()); err != nil {
-		return nil, err
-	}
-
-	ui := uiauto.New(tconn)
-
-	popupMessageNode := nodewith.ClassName("MessagePopupView")
-
 	if !c.cfg.hasDialog {
-		// If we will check the popup alert dialog later, wait for existing popup dialog
-		// to disappear first.
-		if err := ui.WaitUntilGone(popupMessageNode)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait for power button press prompt gone")
+		if err := u2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
+			return nil, err
 		}
 	}
 
-	// Press "Register" button.
-	if err = u2fd.PressButtonInWebAuthnIo(ctx, c.conn, u2fd.WebAuthnIoRegisterButton); err != nil {
-		return nil, err
+	config := u2fd.WebAuthnRegistrationConfig{
+		Attestation: "none",
+		Uv:          uvToString(c.cfg.userVerification),
+	}
+	fillAuthenticatorAttachment(&config, c.cfg.authenticatorType)
+	channel := u2fd.InitiateMakeCredentialInLocalSite(ctx, c.conn, config)
+
+	var res u2fd.MakeCredentialResult
+	select {
+	case res = <-channel:
+		break
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	if res.Err != nil {
+		return nil, res.Err
 	}
 
-	// If authenticator type is "Platform", there's only platform option so we don't have to manually click "This device".
+	cred := hwsec.WebAuthnCredential{
+		CredentialIdB64: res.Cred.CredentialIDB64,
+		PublicKey: &hwsec.PublicKey{
+			DataB64: res.Cred.PublicKey.DataB64,
+			KeyType: res.Cred.PublicKey.KeyType,
+		},
+	}
+	return &cred, nil
+}
+
+func (c *WebauthnService) DoMakeCredential(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get test API connection")
+	}
+
+	// If authenticator type is "Platform", there's only platform option so
+	// we don't have to manually click "This device".
 	if c.cfg.authenticatorType != hwsec.AuthenticatorType_PLATFORM {
-		// Choose platform authenticator.
-		platformAuthenticatorButton := nodewith.Role(role.Button).Name("This device")
-		if err := ui.WithTimeout(2 * time.Second).WaitUntilExists(platformAuthenticatorButton)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to select platform authenticator from transport selection sheet")
-		}
-		if err := ui.DoDefault(platformAuthenticatorButton)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to click button for platform authenticator")
+		if err := u2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
+			return nil, err
 		}
 	}
 
 	if c.cfg.hasDialog {
-		// Wait for ChromeOS WebAuthn dialog.
-		dialog := nodewith.ClassName("AuthDialogWidget")
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(dialog)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait for the ChromeOS dialog")
+		if err := u2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
+			return nil, err
 		}
 	} else {
-		// Wait for popup alert dialog prompting for power button press.
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(popupMessageNode)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait for power button press prompt")
+		if err := u2fd.WaitForPopup(ctx, tconn); err != nil {
+			return nil, err
 		}
 	}
-	return &empty.Empty{}, nil
-}
 
-func (c *WebauthnService) CheckMakeCredential(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if err := u2fd.CheckMakeCredentialSuccessInWebAuthnIo(ctx, c.conn); err != nil {
-		return nil, errors.Wrap(err, "failed to perform MakeCredential")
-	}
 	return &empty.Empty{}, nil
 }
 
 func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.StartGetAssertionRequest) (*empty.Empty, error) {
-	// Perform GetAssertion on the test website.
-
 	tconn, err := c.cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get test API connection")
 	}
 
-	err = c.conn.Eval(ctx, fmt.Sprintf(`document.getElementById('input-email')._x_model.set("%s")`, req.GetUsername()), nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute JS expression to set username")
-	}
-
-	ui := uiauto.New(tconn)
-
-	popupMessageNode := nodewith.ClassName("MessagePopupView")
-
 	if !c.cfg.hasDialog {
-		// If we will check the popup alert dialog later, wait for existing popup dialog
-		// to disappear first.
-		if err := ui.WaitUntilGone(popupMessageNode)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait for power button press prompt gone")
+		if err := u2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
+			return nil, err
 		}
 	}
 
-	// Press "Login" button.
-	if err = u2fd.PressButtonInWebAuthnIo(ctx, c.conn, u2fd.WebAuthnIoAuthenticateButton); err != nil {
-		return nil, err
+	cred := req.GetCred()
+	config := u2fd.WebAuthnAssertionConfig{
+		Keys: []u2fd.WebAuthnCredential{
+			{
+				CredentialIDB64: cred.CredentialIdB64,
+				PublicKey: u2fd.PublicKey{
+					DataB64: cred.PublicKey.DataB64,
+					KeyType: cred.PublicKey.KeyType,
+				},
+			},
+		},
+		Uv: uvToString(c.cfg.userVerification),
+	}
+	channel := u2fd.InitiateGetAssertionInLocalSite(ctx, c.conn, config)
+
+	select {
+	case err := <-channel:
+		if err != nil {
+			return nil, err
+		}
+		return &empty.Empty{}, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+func (c *WebauthnService) DoGetAssertion(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get test API connection")
 	}
 
 	if c.cfg.hasDialog {
-		// Wait for ChromeOS WebAuthn dialog.
-		dialog := nodewith.ClassName("AuthDialogWidget")
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(dialog)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait for the ChromeOS dialog")
+		if err := u2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
+			return nil, err
 		}
 	} else {
-		// Wait for popup alert dialog prompting for power button press.
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(popupMessageNode)(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait for power button press prompt")
+		if err := u2fd.WaitForPopup(ctx, tconn); err != nil {
+			return nil, err
 		}
 	}
-	return &empty.Empty{}, nil
-}
 
-func (c *WebauthnService) CheckGetAssertion(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if err := u2fd.CheckGetAssertionSuccessInWebAuthnIo(ctx, c.conn); err != nil {
-		return nil, errors.Wrap(err, "failed to perform GetAssertion")
-	}
 	return &empty.Empty{}, nil
 }
 
@@ -257,25 +260,25 @@ func (c *WebauthnService) EnterPassword(ctx context.Context, req *hwsec.EnterPas
 	return &empty.Empty{}, nil
 }
 
-func authenticatorTypeToValue(t hwsec.AuthenticatorType) string {
+func fillAuthenticatorAttachment(config *u2fd.WebAuthnRegistrationConfig, t hwsec.AuthenticatorType) {
+	// Ignore "UNSPECIFIED" and unknown types.
 	switch t {
-	case hwsec.AuthenticatorType_UNSPECIFIED:
-		return ""
 	case hwsec.AuthenticatorType_CROSS_PLATFORM:
-		return "cross_platform"
+		config.AuthenticatorAttachment = "cross-platform"
 	case hwsec.AuthenticatorType_PLATFORM:
-		return "platform"
+		config.AuthenticatorAttachment = "platform"
 	}
-	return "unknown"
 }
 
-func getQueryStringByConfiguration(cfg webauthnConfig) string {
-	requireUv := cfg.userVerification == hwsec.UserVerification_REQUIRED
-	return fmt.Sprintf(
-		"regRequireUserVerification=%t"+
-			"&attestation=none"+
-			"&attachment=%s"+
-			"&algES256=true&algRS256=true"+
-			"&authRequireUserVerification=%t",
-		requireUv, authenticatorTypeToValue(cfg.authenticatorType), requireUv)
+func uvToString(uv hwsec.UserVerification) string {
+	switch uv {
+	case hwsec.UserVerification_DISCOURAGED:
+		return "discouraged"
+	case hwsec.UserVerification_PREFERRED:
+		return "preferred"
+	case hwsec.UserVerification_REQUIRED:
+		return "required"
+	}
+	// Fallback to "preferred", the default state.
+	return "preferred"
 }

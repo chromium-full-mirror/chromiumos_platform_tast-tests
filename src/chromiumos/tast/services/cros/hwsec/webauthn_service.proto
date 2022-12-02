@@ -20,15 +20,13 @@ service WebauthnService {
 
   rpc StartWebauthn (StartWebauthnRequest) returns (google.protobuf.Empty) {}
 
-  rpc EndWebauthn (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc StartMakeCredential (google.protobuf.Empty) returns (WebAuthnCredential) {}
 
-  rpc StartMakeCredential (StartMakeCredentialRequest) returns (google.protobuf.Empty) {}
-
-  rpc CheckMakeCredential (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc DoMakeCredential (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc StartGetAssertion (StartGetAssertionRequest) returns (google.protobuf.Empty) {}
 
-  rpc CheckGetAssertion (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc DoGetAssertion (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc EnterPassword (EnterPasswordRequest) returns (google.protobuf.Empty) {}
 }
@@ -55,6 +53,10 @@ message NewRequest {
   BrowserType browser_type = 4;
   // KeepState controls whether to keep existing user profiles.
   bool keep_state = 5;
+  // DataPath is the path that contains data files that the test needs.
+  // The test should copy those files into a tempdir on the DUT for the
+  // service to access.
+  string data_path = 6;
 }
 
 message EnterPasswordRequest {
@@ -67,10 +69,16 @@ message StartWebauthnRequest {
   bool has_dialog = 3;
 }
 
-message StartMakeCredentialRequest {
-  string username = 1;
+message PublicKey {
+  string data_b64 = 1;
+  string key_type = 2;
+}
+
+message WebAuthnCredential {
+  string credential_id_b64 = 1;
+  PublicKey public_key = 2;
 }
 
 message StartGetAssertionRequest {
-  string username = 1;
+  WebAuthnCredential cred = 1;
 }

@@ -6,8 +6,6 @@ package hwsec
 
 import (
 	"context"
-	"math/rand"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
@@ -16,7 +14,9 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
+	"chromiumos/tast/remote/dutfs"
 	hwsecremote "chromiumos/tast/remote/hwsec"
+	"chromiumos/tast/remote/u2fd"
 	"chromiumos/tast/rpc"
 	webauthnpb "chromiumos/tast/services/cros/hwsec"
 	"chromiumos/tast/testing"
@@ -42,6 +42,11 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.hwsec.WebauthnService",
 			"tast.cros.hwsec.AttestationDBusService",
+			"tast.cros.baserpc.FileSystem",
+		},
+		Data: []string{
+			"webauthn.html",
+			"bundle.js",
 		},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:firmware", "firmware_cr50"},
@@ -79,11 +84,15 @@ func init() {
 	})
 }
 
+func copyFilesToRemote(ctx context.Context, s *testing.State, cl *dutfs.Client) (string, error) {
+	return u2fd.CopyFilesToRemote(ctx, s.DUT(), cl, map[string]string{
+		s.DataPath("webauthn.html"): "webauthn.html",
+		s.DataPath("bundle.js"):     "bundle.js",
+	})
+}
+
 func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 	const password = "testpass"
-
-	// We need truly random values for username strings so that different test runs don't affect each other.
-	rand.Seed(time.Now().UnixNano())
 
 	// Create hwsec helper.
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
@@ -104,16 +113,23 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
+	dutfsClient := dutfs.NewClient(cl.Conn)
+	dataPath, err := copyFilesToRemote(ctx, s, dutfsClient)
+	if err != nil {
+		s.Fatal("Failed to put files to remote")
+	}
+
 	bt := s.Param().(webauthnU2fModeParam).browserType
 
 	// u2fd reads files from the user's home dir, so we need to log in.
-	cr := webauthnpb.NewWebauthnServiceClient(cl.Conn)
-	if _, err := cr.New(ctx, &webauthnpb.NewRequest{
+	client := webauthnpb.NewWebauthnServiceClient(cl.Conn)
+	if _, err := client.New(ctx, &webauthnpb.NewRequest{
 		BrowserType: bt,
+		DataPath:    dataPath,
 	}); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx, &empty.Empty{})
+	defer client.Close(ctx, &empty.Empty{})
 
 	// Ensure TPM is prepared for enrollment.
 	if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
@@ -153,7 +169,7 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 
 	passwordAuthCallback := func(ctx context.Context) error {
 		// Type password into ChromeOS WebAuthn dialog.
-		if _, err := cr.EnterPassword(ctx, &webauthnpb.EnterPasswordRequest{Password: password}); err != nil {
+		if _, err := client.EnterPassword(ctx, &webauthnpb.EnterPasswordRequest{Password: password}); err != nil {
 			return errors.Wrap(err, "failed to type password into ChromeOS auth dialog")
 		}
 		return nil
@@ -229,59 +245,23 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 			authCallback:      passwordAuthCallback,
 		},
 	} {
-		// TODO(b/210418148): Use an internal site for testing as webauthn.io no longer
-		// supports UserVerification = preferred.
-		if tc.userVerification == webauthnpb.UserVerification_PREFERRED {
-			continue
-		}
-		result := s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
-			if _, err := cr.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
+		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+			if _, err := client.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
 				UserVerification:  tc.userVerification,
 				AuthenticatorType: tc.authenticatorType,
 				HasDialog:         tc.hasDialog,
 			}); err != nil {
 				s.Fatal("Failed to start WebAuthn flow: ", err)
 			}
-			defer cr.EndWebauthn(ctx, &empty.Empty{})
 
-			username := randomUsername()
-
-			if _, err := cr.StartMakeCredential(ctx, &webauthnpb.StartMakeCredentialRequest{Username: username}); err != nil {
+			cred, err := u2fd.RemoteMakeCredentialInLocalSite(ctx, client, tc.authCallback)
+			if err != nil {
 				s.Fatal("Failed to perform MakeCredential flow: ", err)
 			}
-			if err := tc.authCallback(ctx); err != nil {
-				s.Fatal("Failed to call the auth callback: ", err)
-			}
-			if _, err := cr.CheckMakeCredential(ctx, &empty.Empty{}); err != nil {
-				s.Fatal("Failed to complete MakeCredential: ", err)
-			}
-			if _, err := cr.StartGetAssertion(ctx, &webauthnpb.StartGetAssertionRequest{Username: username}); err != nil {
+			if err := u2fd.RemoteGetAssertionInLocalSite(ctx, client, cred, tc.authCallback); err != nil {
 				s.Fatal("Failed to perform GetAssertion flow: ", err)
 			}
-			if err := tc.authCallback(ctx); err != nil {
-				s.Fatal("Failed to call the auth callback: ", err)
-			}
-			if _, err := cr.CheckGetAssertion(ctx, &empty.Empty{}); err != nil {
-				s.Fatal("Failed to complete GetAssertion: ", err)
-			}
 		})
-		// The failed state of the website dialog / u2fd causes the results in upcoming subtests
-		// not meaningful. The chrome screenshot also becomes not useful.
-		if !result {
-			break
-		}
 	}
 
-}
-
-// randomUsername returns a random username of length 10.
-func randomUsername() string {
-	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	ret := make([]byte, 10)
-	for i := range ret {
-		ret[i] = letters[rand.Intn(len(letters))]
-	}
-
-	return string(ret)
 }
