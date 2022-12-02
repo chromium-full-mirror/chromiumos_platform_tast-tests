@@ -30,10 +30,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Records the animation smoothness for shelf scroll animation",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
 			"andrewxu@chromium.org",
 			"newcomer@chromium.org",
 		},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		BugComponent: "TBA",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeLoggedInWith100FakeApps",

@@ -21,11 +21,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the shelf is auto-hidden after launching an immersive ARC application",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"yulunwu@chromium.org",
 			"tbarzic@chromium.org",
-			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "TBA",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

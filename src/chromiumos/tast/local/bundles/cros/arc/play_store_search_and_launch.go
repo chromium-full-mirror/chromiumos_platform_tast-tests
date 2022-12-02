@@ -36,6 +36,7 @@ func init() {
 			"arc-core@google.com",
 			"cros-system-ui-eng@google.com",
 			"yulunwu@google.com",
+			"tbarzic@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",

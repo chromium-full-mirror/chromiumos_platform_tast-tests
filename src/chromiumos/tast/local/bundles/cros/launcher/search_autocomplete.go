@@ -26,10 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks Autocomplete behavior in Launcher Search",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"yulunwu@chromium.org",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "TBA",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

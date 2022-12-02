@@ -28,7 +28,12 @@ func init() {
 		Func:         HotseatDrag,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Measures the presentation time of dragging the hotseat in tablet mode",
-		Contacts:     []string{"newcomer@chromium.org", "manucornet@chromium.org", "cros-shelf-prod-notifications@google.com"},
+		Contacts: []string{
+			"cros-system-ui-eng@google.com",
+			"tbarzic@chromium.org",
+			"cros-shelf-prod-notifications@google.com",
+		},
+		BugComponent: "TBA",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
