@@ -178,6 +178,20 @@ func APSupportedRates(ctx context.Context, s *testing.State) {
 			if l := p.Layer(layers.LayerTypeDot11MgmtProbeReq); l != nil {
 				return false
 			}
+			// Skip Action frames sent by the DUT. See b/261235103 for context.
+			// Against some APs, DUT may send action frames for time sync mechanism.
+			// This looks to be generally sent at the lowest data rate (6mbps on 5ghz band)
+			// Because these are management frames, we allow these to be sent at not the requested
+			// data rate.
+                  	// The 80211 spec doesn't dictate what rates these action frames must be sent
+                  	// at and many vendors will send these management frames at the lowest rate.
+                  	// The iwl7000 driver will explicitly send management frames at the lowest rate
+                  	// (6Mbps).
+                  	// See b/261235103#comment3 and b/261235103#comment4 for more details.
+
+			if l := p.Layer(layers.LayerTypeDot11MgmtAction); l != nil {
+				return false
+			}
 			return true
 		},
 		// TODO: skip BlockAcks, etc.? The original test did so (see
