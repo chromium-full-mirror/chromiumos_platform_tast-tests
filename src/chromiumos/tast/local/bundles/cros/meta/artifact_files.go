@@ -15,8 +15,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ArtifactFiles,
 		Desc:         "Demonstrates how to use artifact data files",
-		Contacts:     []string{"tast-owners@chromium.org", "nya@chromium.org"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@chromium.org", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"artifact_files_partial_metadata_json"},
 	})

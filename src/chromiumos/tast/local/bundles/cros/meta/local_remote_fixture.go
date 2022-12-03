@@ -14,8 +14,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalRemoteFixture,
 		Desc:         "Tests local tests can depend on remote fixtures",
-		Contacts:     []string{"tast-owners@google.com", "oka@chromium.org"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Fixture:      "metaRemote",
 	})
 }

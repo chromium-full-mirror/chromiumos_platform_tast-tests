@@ -15,7 +15,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RemoteSkip,
 		Desc:         "Always skips",
-		Contacts:     []string{"tast-owners@google.com"},
+		Contacts:     []string{"tast-core@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		HardwareDeps: hwdep.D(hwdep.Model()),
 	})
 }

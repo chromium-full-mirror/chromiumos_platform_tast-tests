@@ -17,10 +17,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteFixtureDUTFeature,
-		Desc:     "Test to check whether remote fixture can access DUT features",
-		Contacts: []string{"seewaifu@chromium.org", "tast-owners@google.com"},
-		Fixture:  "metaRemoteFixtureDUTFeature",
+		Func:         RemoteFixtureDUTFeature,
+		Desc:         "Test to check whether remote fixture can access DUT features",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Fixture:      "metaRemoteFixtureDUTFeature",
 	})
 }
 

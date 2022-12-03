@@ -16,10 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ListTests,
-		Desc:     "Verifies that the tast command can list tests",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline", "group:meta"},
+		Func:         ListTests,
+		Desc:         "Verifies that the tast command can list tests",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline", "group:meta"},
 	})
 }
 

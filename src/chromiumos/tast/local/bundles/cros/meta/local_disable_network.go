@@ -24,8 +24,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalDisableNetwork,
 		Desc:         "Disable network temporary and then reenable it",
-		Contacts:     []string{"tast-owners@google.com", "seewaifu@google.com"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Timeout:      time.Minute * 4,
 	})
 }

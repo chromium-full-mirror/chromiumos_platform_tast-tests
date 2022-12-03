@@ -15,8 +15,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalReboot,
 		Desc:         "Triggers an intentional reboot",
-		Contacts:     []string{"tast-owners@google.com"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

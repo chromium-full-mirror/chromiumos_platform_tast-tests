@@ -16,10 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RunTestsKillStaleBundles,
-		Desc:     "Verifies that Tast run kills already running local bundles",
-		Attr:     []string{"group:mainline", "informational"},
-		Contacts: []string{"oka@chromium.org", "tast-core@google.com"},
+		Func:         RunTestsKillStaleBundles,
+		Desc:         "Verifies that Tast run kills already running local bundles",
+		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

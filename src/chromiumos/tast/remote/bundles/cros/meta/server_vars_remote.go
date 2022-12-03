@@ -14,9 +14,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ServerVarsRemote,
-		Desc:     "Demonstrate how to get server variable values in remote tests",
-		Contacts: []string{"seewaifu@chromium.org", "tast-owners@google.com"},
+		Func:         ServerVarsRemote,
+		Desc:         "Demonstrate how to get server variable values in remote tests",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

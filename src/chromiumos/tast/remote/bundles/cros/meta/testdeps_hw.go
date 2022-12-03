@@ -19,8 +19,9 @@ func init() {
 			"":    hwdep.D(hwdep.Model("sparky360")),
 			"cd1": hwdep.D(hwdep.Model("hana")),
 		},
-		Desc:     "Ensure DUTs hardware dependencies with Primary:octopus-sparky360 companion:hana-hana will pass, either or both changed will skip",
-		Contacts: []string{"seewaifu@chromium.org", "yichiyan@google.com", "tast-owners@google.com"},
+		Desc:         "Ensure DUTs hardware dependencies with Primary:octopus-sparky360 companion:hana-hana will pass, either or both changed will skip",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com", "yichiyan@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

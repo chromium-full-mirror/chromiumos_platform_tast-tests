@@ -15,8 +15,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PowerOff,
 		Desc:         "Shut down a DUT to simulate a DUT losing connectivity",
-		Contacts:     []string{"tast-owners@google.com", "seewaifu@google.com"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

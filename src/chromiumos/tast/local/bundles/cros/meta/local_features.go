@@ -14,8 +14,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalFeatures,
 		Desc:         "Example to access DUT features from a local test",
-		Contacts:     []string{"tast-owners@google.com", "seewaifu@google.com"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

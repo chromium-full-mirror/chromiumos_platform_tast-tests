@@ -19,10 +19,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RunTestsRemoteFixture,
-		Desc:     "Verifies that Tast can run remote fixtures",
-		Contacts: []string{"oka@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         RunTestsRemoteFixture,
+		Desc:         "Verifies that Tast can run remote fixtures",
+		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline"},
 	})
 }
 

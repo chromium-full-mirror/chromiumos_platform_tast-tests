@@ -8,9 +8,9 @@ import (
 	"context"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/shirou/gopsutil/v3/process"
+	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/testing"
 )
@@ -19,8 +19,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisruptSSH,
 		Desc:         "Terminates the current SSH connection",
-		Contacts:     []string{"tast-owners@google.com"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		// This test always fails.
 	})
 }
@@ -58,7 +58,7 @@ func DisruptSSH(ctx context.Context, s *testing.State) {
 	s.Logf("Killing sshd(%d); expect SSH connection drop", proc.Pid)
 
 	// Terminate the sshd.
-	if err := proc.SendSignal(syscall.SIGKILL); err != nil {
+	if err := proc.SendSignal(unix.SIGKILL); err != nil {
 		s.Fatalf("Failed to send SIGKILL to sshd(%d): %v", proc.Pid, err)
 	}
 

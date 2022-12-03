@@ -13,9 +13,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     CompanionDUTs,
-		Desc:     "Ensure DUT and companion DUTs are accessible",
-		Contacts: []string{"seewaifu@chromium.org", "tast-owners@google.com"},
+		Func:         CompanionDUTs,
+		Desc:         "Ensure DUT and companion DUTs are accessible",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

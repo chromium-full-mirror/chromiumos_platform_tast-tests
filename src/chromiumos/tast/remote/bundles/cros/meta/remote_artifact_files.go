@@ -13,11 +13,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteArtifactFiles,
-		Desc:     "Demonstrates how to use artifact data files for remote test",
-		Contacts: []string{"seewaifu@chromium.org", "tast-owners@chromium.org"},
-		Attr:     []string{"group:mainline", "informational"},
-		Data:     []string{"artifact_files_partial_metadata_json"},
+		Func:         RemoteArtifactFiles,
+		Desc:         "Demonstrates how to use artifact data files for remote test",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline", "informational"},
+		Data:         []string{"artifact_files_partial_metadata_json"},
 	})
 }
 

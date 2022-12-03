@@ -14,8 +14,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
 	"chromiumos/tast/testing"
@@ -28,9 +29,10 @@ import (
 func init() {
 	// This test needs -build=true to run and hence cannot run in CI. Can only be run manually as needed.
 	testing.AddTest(&testing.Test{
-		Func:     RunTestsDebugger,
-		Desc:     "Verifies that Tast can run with a debugger attached",
-		Contacts: []string{"msta@google.com", "tast-owners@google.com"},
+		Func:         RunTestsDebugger,
+		Desc:         "Verifies that Tast can run with a debugger attached",
+		Contacts:     []string{"tast-core@google.com", "msta@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		// Though the debugger should work on all x86 boards, testing it with a VM
 		// and a single board should be sufficient, since it's not a hardware
 		// dependent feature.
@@ -159,7 +161,7 @@ func RunTestsDebugger(ctx context.Context, s *testing.State) {
 			if tc.earlyExit {
 				// Send a control-C to simulate the most likely way for the process to
 				// end early.
-				if err := cmd.Process.Signal(syscall.SIGINT); err != nil {
+				if err := cmd.Process.Signal(unix.SIGINT); err != nil {
 					s.Fatal("Failed to kill process: ", err)
 				}
 				// Ignore the cmd.Wait error, since it's expected, and instead verify

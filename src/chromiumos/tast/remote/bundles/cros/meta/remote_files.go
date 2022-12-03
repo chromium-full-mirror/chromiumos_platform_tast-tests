@@ -14,11 +14,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteFiles,
-		Desc:     "Helper test that uses data and output files",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		Data:     []string{"remote_files_internal.txt", "remote_files_external.txt"},
-		Fixture:  "metaRemoteDataFilesFixture",
+		Func:         RemoteFiles,
+		Desc:         "Helper test that uses data and output files",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Data:         []string{"remote_files_internal.txt", "remote_files_external.txt"},
+		Fixture:      "metaRemoteDataFilesFixture",
 		// This test is called by remote tests in the meta package.
 	})
 }

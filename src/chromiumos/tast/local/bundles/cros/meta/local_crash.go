@@ -14,8 +14,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalCrash,
 		Desc:         "Always crashes",
-		Contacts:     []string{"tast-owners@google.com"},
-		BugComponent: "b:1034625",
+		Contacts:     []string{"tast-core@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

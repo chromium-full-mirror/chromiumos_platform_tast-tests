@@ -14,10 +14,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteVars,
-		Desc:     "Helper test that inspects a runtime variable",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		VarDeps:  []string{"meta.RemoteVars.var"},
+		Func:         RemoteVars,
+		Desc:         "Helper test that inspects a runtime variable",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		VarDeps:      []string{"meta.RemoteVars.var"},
 		// This test is called by remote tests in the meta package.
 	})
 }

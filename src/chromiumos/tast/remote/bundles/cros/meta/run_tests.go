@@ -38,9 +38,10 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RunTests,
-		Desc:     "Verifies that Tast can run tests",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
+		Func:         RunTests,
+		Desc:         "Verifies that Tast can run tests",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Params: []testing.Param{{
 			Name: "faillog",
 			Val: runTestsParam{

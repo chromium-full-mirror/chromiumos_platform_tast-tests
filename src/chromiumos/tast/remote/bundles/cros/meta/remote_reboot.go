@@ -13,9 +13,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteReboot,
-		Desc:     "Reboot a DUT to the tast streaming logs correctly",
-		Contacts: []string{"tast-owners@google.com"},
+		Func:         RemoteReboot,
+		Desc:         "Reboot a DUT to the tast streaming logs correctly",
+		Contacts:     []string{"tast-core@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		// Timeout is set to 8 minutes: 3 for reboot and 5 for sleep.
 		Timeout: time.Minute * 8,
 	})

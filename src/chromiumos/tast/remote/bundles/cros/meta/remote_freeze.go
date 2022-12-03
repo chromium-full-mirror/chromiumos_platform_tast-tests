@@ -13,10 +13,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteFreeze,
-		Desc:     "Always freezes",
-		Contacts: []string{"tast-owners@google.com"},
-		Timeout:  time.Second,
+		Func:         RemoteFreeze,
+		Desc:         "Always freezes",
+		Contacts:     []string{"tast-core@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Timeout:      time.Second,
 	})
 }
 
