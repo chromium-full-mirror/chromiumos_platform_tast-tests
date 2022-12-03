@@ -480,7 +480,7 @@ func (i *impl) closeHelper(ctx context.Context, s *testing.FixtState) {
 		return
 	}
 	if err := i.value.Helper.Close(ctx); err != nil {
-		s.Log("Failed to close helper: ", err)
+		s.Fatal("Failed to close helper: ", err)
 	}
 	i.value.Helper = nil
 }

@@ -472,7 +472,11 @@ At the start of your test body, initialize a `firmware.Helper`. The [`NewHelper`
 func Codelab(ctx context.Context, s *testing.State) {
 	servoSpec, _ := s.Var("servo")
 	h := firmware.NewHelper(s.DUT(), s.RPCHint(), s.DataPath(firmware.ConfigFile), servoSpec, "", "", "", "")
-	defer h.Close(ctx)
+	defer func() {
+		if err := h.Close(ctx); err != nil {
+			s.Fatal("Closing helper: ", err)
+		}
+	}()
 	...
 }
 ```
@@ -693,7 +697,11 @@ The `Fixture` has a built-in `Helper`, so we don't need to create our own. Let's
 	// OLD
 	servoSpec, _ := s.Var("servo")
 	h := firmware.NewHelper(s.DUT(), s.RPCHint(), s.DataPath(firmware.ConfigFile), servoSpec, "", "", "", "")
-	defer h.Close(ctx)
+	defer func() {
+		if err := h.Close(ctx); err != nil {
+			s.Fatal("Closing helper: ", err)
+		}
+	}()
 
 	// NEW
 	h := s.FixtValue().(*fixture.Value).Helper

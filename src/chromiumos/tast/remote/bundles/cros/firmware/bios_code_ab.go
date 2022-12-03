@@ -36,7 +36,11 @@ func init() {
 func BIOSCodeAB(ctx context.Context, s *testing.State) {
 	servoSpec, _ := s.Var("servo")
 	h := firmware.NewHelperWithoutDUT("", servoSpec, s.DUT().KeyFile(), s.DUT().KeyDir())
-	defer h.Close(ctx)
+	defer func() {
+		if err := h.Close(ctx); err != nil {
+			s.Fatal("Closing helper: ", err)
+		}
+	}()
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to require servo: ", err)

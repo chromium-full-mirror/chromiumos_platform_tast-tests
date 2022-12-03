@@ -37,7 +37,11 @@ func init() {
 func Ti50Rescue(ctx context.Context, s *testing.State) {
 	servoSpec := s.RequiredVar("servo")
 	h := firmware.NewHelper(s.DUT(), s.RPCHint(), s.DataPath(firmware.ConfigFile), servoSpec, "", "", "", "")
-	defer h.Close(ctx)
+	defer func() {
+		if err := h.Close(ctx); err != nil {
+			s.Fatal("Closing helper: ", err)
+		}
+	}()
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
