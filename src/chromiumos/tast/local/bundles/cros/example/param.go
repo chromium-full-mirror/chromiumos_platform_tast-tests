@@ -17,10 +17,11 @@ type animal struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Param,
-		Desc:     "Parameterized test example",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         Param,
+		Desc:         "Parameterized test example",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name: "dog",
 			Val: animal{

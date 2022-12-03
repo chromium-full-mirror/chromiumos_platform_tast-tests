@@ -14,9 +14,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: SecretVars,
 		// Document: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/writing_tests.md#secret-variables
-		Desc:     "Secret variables",
-		Contacts: []string{"tast-owners@google.com", "oka@chromium.org"},
-		Attr:     []string{"group:mainline"},
+		Desc:         "Secret variables",
+		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline"},
 		// example.SecretVars.password is defined in tast-tests-private/vars/example.SecretVars.yaml
 		// example.commonVar is defined in tast-tests-private/vars/example.yaml
 		VarDeps: []string{"example.SecretVars.password", "example.commonVar"},

@@ -19,7 +19,8 @@ func init() {
 		Func:         ChromeFixture,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Demonstrates Chrome fixture",
-		Contacts:     []string{"nya@chromium.org", "tast-owners@google.com"},
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

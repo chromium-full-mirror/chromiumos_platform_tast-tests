@@ -26,7 +26,8 @@ func init() {
 		Func:         Keyboard,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Demonstrates injecting keyboard events",
-		Contacts:     []string{"ricardoq@chromium.org", "tast-owners@google.com"},
+		Contacts:     []string{"tast-core@google.com", "hidehiko@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

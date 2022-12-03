@@ -15,7 +15,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Perf,
 		Desc:     "Demonstrates how to emit perf metrics",
-		Contacts: []string{"nya@chromium.org", "tast-owners@chromium.org"},
+		Contacts: []string{"tast-core@google.com", "nya@chromium.org"},
 		Attr:     []string{"group:mainline"},
 	})
 }

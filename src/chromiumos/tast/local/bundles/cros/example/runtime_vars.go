@@ -20,10 +20,11 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RuntimeVars,
-		Desc:     "Runtime variables",
-		Contacts: []string{"tast-owners@google.com", "seewaifu@chromium.org"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func:         RuntimeVars,
+		Desc:         "Runtime variables",
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

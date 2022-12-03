@@ -14,9 +14,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     DataFiles,
-		Desc:     "Demonstrates how to use data files",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
+		Func:         DataFiles,
+		Desc:         "Demonstrates how to use data files",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Data: []string{
 			"data_files_internal.txt",
 			"data_files_external.txt",

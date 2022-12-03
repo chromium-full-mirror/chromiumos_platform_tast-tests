@@ -15,7 +15,7 @@ func init() {
 		Func:         Run,
 		Desc:         "Subtest example, always fails",
 		BugComponent: "b:1034522",
-		Contacts:     []string{"tast-owners@google.com", "vsavu@google.com"},
+		Contacts:     []string{"tast-core@google.com", "vsavu@google.com"},
 	})
 }
 

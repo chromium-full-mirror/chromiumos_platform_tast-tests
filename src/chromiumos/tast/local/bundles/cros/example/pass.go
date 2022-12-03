@@ -12,10 +12,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Pass,
-		Desc:     "Always passes",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline", "group:hw_agnostic"},
+		Func:         Pass,
+		Desc:         "Always passes",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

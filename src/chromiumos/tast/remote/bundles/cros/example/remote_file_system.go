@@ -14,11 +14,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        RemoteFileSystem,
-		Desc:        "Demonstrates how to access remote file system",
-		Contacts:    []string{"nya@chromium.org", "tast-owners@google.com"},
-		Attr:        []string{"group:mainline"},
-		ServiceDeps: []string{dutfs.ServiceName},
+		Func:         RemoteFileSystem,
+		Desc:         "Demonstrates how to access remote file system",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline"},
+		ServiceDeps:  []string{dutfs.ServiceName},
 	})
 }
 

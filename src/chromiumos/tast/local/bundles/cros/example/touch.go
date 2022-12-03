@@ -23,7 +23,8 @@ func init() {
 		Func:         Touch,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Demonstrates injecting touch events",
-		Contacts:     []string{"ricardoq@chromium.org", "tast-owners@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "ricardoq@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen()),

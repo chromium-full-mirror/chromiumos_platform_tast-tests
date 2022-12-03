@@ -16,7 +16,8 @@ func init() {
 		Func:         ARCFixture,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Demonstrates ARC fixture",
-		Contacts:     []string{"nya@chromium.org", "tast-owners@google.com"},
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

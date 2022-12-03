@@ -13,9 +13,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     TestLibs,
-		Desc:     "Demonstrates how to connect to a test lib from tast",
-		Contacts: []string{"kathrelkeld@chromium.org", "tast-owners@chromium.org"},
+		Func:         TestLibs,
+		Desc:         "Demonstrates how to connect to a test lib from tast",
+		Contacts:     []string{"tast-core@google.com", "kathrelkeld@google.com"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

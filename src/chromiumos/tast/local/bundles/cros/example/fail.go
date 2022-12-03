@@ -12,9 +12,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Fail,
-		Desc:     "Always fails",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
+		Func:         Fail,
+		Desc:         "Always fails",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 	})
 }
 

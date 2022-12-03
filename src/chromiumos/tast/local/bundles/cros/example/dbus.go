@@ -16,10 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     DBus,
-		Desc:     "Demonstrates how to use D-Bus",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         DBus,
+		Desc:         "Demonstrates how to use D-Bus",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline"},
 	})
 }
 

@@ -13,11 +13,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ServoEcho,
-		Desc:     "Demonstrates running a test using Servo",
-		Contacts: []string{"nya@chromium.org", "tast-owners@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		VarDeps:  []string{"servo"},
+		Func:         ServoEcho,
+		Desc:         "Demonstrates running a test using Servo",
+		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:mainline", "informational"},
+		VarDeps:      []string{"servo"},
 	})
 }
 

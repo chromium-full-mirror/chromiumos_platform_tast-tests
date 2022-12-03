@@ -17,8 +17,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UIFaillog,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if faillog for the UI tree works",
-		Contacts:     []string{"hidehiko@chromium.org", "tast-owners@google.com"},
+		Contacts:     []string{"tast-core@google.com", "hidehiko@chromium.org"},
+		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
