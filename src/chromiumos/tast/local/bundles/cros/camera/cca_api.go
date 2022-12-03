@@ -51,17 +51,6 @@ func CCAAPI(ctx context.Context, s *testing.State) {
 		s.Error("window.FileSystemHandle is not available on the test page")
 	}
 
-	if err := conn.Eval(ctx, `
-	  (async function() {
-	    await import('/strings.m.js');
-	    return window.loadTimeData !== undefined;
-	  })();
-	`, &result); err != nil {
-		s.Fatal("Failed to evaluate codes on the test page: ", err)
-	} else if !result {
-		s.Error("window.loadTimeData is not available on the test page")
-	}
-
 	inScopeConn, err := cr.NewConn(ctx, "chrome://camera-app/views/untrusted_script_loader.html")
 	if err != nil {
 		s.Fatal("Failed to connect to CCA test page: ", err)
