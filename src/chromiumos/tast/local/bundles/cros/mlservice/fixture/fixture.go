@@ -77,17 +77,8 @@ func (f *mlFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	}
 	f.cr = cr
 
-	// Install required DLCs. Skip if already installed.
+	// Install required DLCs.
 	for _, dlcID := range f.dlcs {
-		isAlreadyInstalled, err := dlc.Installed(ctx, dlcID)
-		if err != nil {
-			s.Fatalf("Failed to check installation status of DLC %q: %v", dlcID, err)
-		}
-		if isAlreadyInstalled {
-			s.Logf("DLC %q is already installed", dlcID)
-			continue
-		}
-
 		if err := dlc.Install(ctx, dlcID, ""); err != nil {
 			s.Fatalf("Failed to install DLC %q: %v", dlcID, err)
 		}
@@ -107,13 +98,6 @@ func (f *mlFixtureImpl) Reset(ctx context.Context) error {
 }
 
 func (f *mlFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Uninstall DLCs to revert setup.
-	for _, dlcID := range f.dlcs {
-		if err := dlc.Uninstall(ctx, dlcID); err != nil {
-			s.Fatalf("Failed to uninstall DLC %q: %v", dlcID, err)
-		}
-	}
-
 	if err := f.cr.Close(ctx); err != nil {
 		s.Log("Failed to close Chrome connection: ", err)
 	}
