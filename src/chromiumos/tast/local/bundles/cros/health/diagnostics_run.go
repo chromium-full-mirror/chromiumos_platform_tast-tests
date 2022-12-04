@@ -130,6 +130,11 @@ func init() {
 			// No special reasons.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon")),
 			ExtraAttr:         []string{"informational"},
+		}, {
+			Name:              "emmc_lifetime",
+			Val:               newRoutineParams(croshealthd.RoutineEMMCLifetime),
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }

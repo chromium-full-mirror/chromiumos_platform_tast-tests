@@ -49,6 +49,7 @@ const (
 	RoutineSensitiveSensor                = "sensitive_sensor"
 	RoutineFingerprint                    = "fingerprint"
 	RoutineFingerprintAlive               = "fingerprint_alive"
+	RoutineEMMCLifetime                   = "emmc_lifetime"
 )
 
 // List of possible routine statuses
