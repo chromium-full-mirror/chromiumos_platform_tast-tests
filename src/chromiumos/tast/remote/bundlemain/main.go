@@ -30,6 +30,8 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const varLogMsgPath = "/var/log/messages"
+
 func hwsecGetDACounter(ctx context.Context, s *testing.TestHookState) (int, error) {
 	cmdRunner := hwsecremote.NewLoglessCmdRunner(s.DUT())
 	tpmManager := hwsec.NewTPMManagerClient(cmdRunner)
@@ -104,9 +106,12 @@ func hwsecCheckTPMState(ctx context.Context, s *testing.TestHookState, origStatu
 func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx context.Context,
 	s *testing.TestHookState) {
 
+	const primaryDUTRole = "" // "" is the name of the role of primary DUT.
 	hwsecDACounter := 0
 	var err error
 	var hwsecTpmStatus *hwsec.NonsensitiveStatusInfo
+
+	varLogMsgLineCounts := make(map[string]*linuxssh.WordCountInfo)
 
 	if s.DUT() != nil {
 		// Store current DA value before running the tast.
@@ -123,6 +128,28 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 			s.Log("Failed to get TPM status: ", err)
 			hwsecTpmStatus = nil
 		}
+
+		// Get current wc information of /var/log/messages for the primary DUT.
+		wcInfo, err := linuxssh.WordCount(ctx, s.DUT().Conn(), varLogMsgPath)
+		if err != nil {
+			s.Logf("Failed to get line count of %s of primary DUT: %v", varLogMsgPath, err)
+		}
+
+		varLogMsgLineCounts[primaryDUTRole] = wcInfo
+	}
+
+	// Get current  wc information of /var/log/messages for companion DUTs
+	for _, role := range s.CompanionDUTRoles() {
+		cdut := s.CompanionDUT(role)
+		if cdut == nil {
+			continue
+		}
+		// Get current  wc information of /var/log/messages for the companion DUT.
+		wcInfo, err := linuxssh.WordCount(ctx, cdut.Conn(), varLogMsgPath)
+		if err != nil {
+			s.Logf("Failed to get line count of %s of companion DUT %s: %v", varLogMsgPath, role, err)
+		}
+		varLogMsgLineCounts[role] = wcInfo
 	}
 
 	return func(ctx context.Context, s *testing.TestHookState) {
@@ -148,13 +175,14 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 				s.Error("Failed to check TPM state: ", err)
 			}
 
-			// Get /var/log/messages from DUTs.
-			if err := downloadVarLogMessages(ctx, dir, dut, s.MaxSysMsgLogSize()); err != nil {
+			// Get /var/log/messages from primary DUT.
+			if err := downloadVarLogMessages(ctx, dir, dut,
+				varLogMsgLineCounts[primaryDUTRole], s.MaxSysMsgLogSize()); err != nil {
 				s.Log("Download /var/log/messages failed from DUT (primary): ", err)
 			}
 		}
 
-		// Get log files from companion DUTs
+		// Get log files from companion DUTs.
 		for _, role := range s.CompanionDUTRoles() {
 			cdut := s.CompanionDUT(role)
 			if cdut == nil {
@@ -162,7 +190,8 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 			}
 			dirName := fmt.Sprintf("%v_%v", role, cdut.HostName())
 			outputDir := filepath.Join(dir, dirName)
-			if err := downloadVarLogMessages(ctx, outputDir, cdut, s.MaxSysMsgLogSize()); err != nil {
+			if err := downloadVarLogMessages(ctx, outputDir, cdut,
+				varLogMsgLineCounts[role], s.MaxSysMsgLogSize()); err != nil {
 				s.Logf("Download /var/log/messages failed from DUT (%v): %v", role, err)
 			}
 
@@ -224,8 +253,11 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 	}
 }
 
-// downloadVarLogMessages downloads /var/log/messages from a DUT.
-func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT, maxSysMsgLogSize int64) error {
+// downloadVarLogMessages downloads a partial /var/log/messages starting from the
+// line number specified by the parameter startLine from a DUT. If the data is bigger
+// than maxSysMsgLogSize, the data at the beginning will truncated.
+func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT,
+	prevWcInfo *linuxssh.WordCountInfo, maxSysMsgLogSize int64) error {
 	if !dut.Connected(ctx) {
 		if err := dut.WaitConnect(ctx); err != nil {
 			return errors.Wrapf(err, "failed to connect to the DUT (%v)", dut.HostName())
@@ -238,9 +270,23 @@ func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT,
 		return errors.Errorf("failed to create directory %q to store /var/log/messages for DUT (%v)", outputDir, dut.HostName())
 	}
 
+	// By default, get everything.
+	startLine := int64(1)
+
+	// Check if the current line count and file size bigger than before. If so, simply get the delta.
+	if newWcInfo, err := linuxssh.WordCount(ctx, dut.Conn(), varLogMsgPath); err == nil {
+		// No change in the line number and the file size means that the file has no new content, we can
+		// just download the delta.
+		if newWcInfo.Lines == prevWcInfo.Lines && newWcInfo.Bytes == prevWcInfo.Bytes {
+			return nil
+		}
+		if newWcInfo.Lines > prevWcInfo.Lines && newWcInfo.Bytes > prevWcInfo.Bytes {
+			startLine = prevWcInfo.Lines + 1
+		}
+	}
+
 	// Transfer messages file base on the maxSysMsgLogSize from DUT to host machine.
-	err := linuxssh.GetFileTail(ctx, dut.Conn(), "/var/log/messages", dst, maxSysMsgLogSize)
-	if err != nil {
+	if err := linuxssh.GetFileTail(ctx, dut.Conn(), varLogMsgPath, dst, startLine, maxSysMsgLogSize); err != nil {
 		return errors.Wrapf(err, "failed to download /var/log/messages from DUT (%v) to %v at local host", dut.HostName(), dst)
 	}
 
