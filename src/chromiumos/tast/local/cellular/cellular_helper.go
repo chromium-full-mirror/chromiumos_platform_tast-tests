@@ -142,15 +142,15 @@ func NewHelperWithConnectedCellular(ctx context.Context) (*Helper, error) {
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		return nil, errors.Wrap(err, "could not find MM dbus object with a valid sim")
 	}
-	helper, err := NewHelper(ctx)
+	h, err := NewHelper(ctx)
 	if err != nil {
 		return nil, err
 	}
-	err = helper.connectAndCheck(ctx)
+	_, err = h.Connect(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to connect to cellular service")
 	}
-	return helper, nil
+	return h, nil
 }
 
 // CheckIfVilbozVerizonAndFixAttachAPN checks if the device is a vilboz with a verizon SIM card,
@@ -1277,14 +1277,14 @@ func (h *Helper) GetLabelCarrierName(ctx context.Context) string {
 	return h.carrierName
 }
 
-// connectAndCheck verifies that cellular is connected and has sufficient signal coverage to run test cases
-func (h *Helper) connectAndCheck(ctx context.Context) error {
+// ConnectAndCheckSignalQuality verifies that cellular is connected and has sufficient signal coverage to run test cases
+func (h *Helper) ConnectAndCheckSignalQuality(ctx context.Context) error {
 	service, err := h.Connect(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to connect to cellular service")
 	}
 	// Poll max 3 times in 30 seconds to ensure service's signal quality matches expectations.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
+	if err = testing.Poll(ctx, func(ctx context.Context) error {
 		signalStrength, err := service.GetSignalStrength(ctx)
 		if err != nil {
 			return errors.Wrap(err, "unable to get service SignalStrength")

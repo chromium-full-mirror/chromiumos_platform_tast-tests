@@ -30,8 +30,13 @@ func init() {
 func CheckSignalQuality(ctx context.Context, s *testing.State) {
 	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create connected cellular.Helper: ", err)
 	}
+
+	if err := helper.ConnectAndCheckSignalQuality(ctx); err != nil {
+		s.Fatal("Failed to check signal quality: ", err)
+	}
+
 	// Nothing else to be done in this test. Creating the helper validates the cellular test environment.
 	// Disconnect cellular before exiting the test
 	if _, err := helper.Disconnect(ctx); err != nil {
