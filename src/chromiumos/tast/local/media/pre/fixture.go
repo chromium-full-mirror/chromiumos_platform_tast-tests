@@ -561,6 +561,40 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	// TODO(b/202926617): Remove once vp8 hardware temporal layer encoding is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithHWVp8TemporalLayerEncoding",
+		Desc:     "Similar to chromeVideo but also enables vp8 hardware temporal layer encoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs("--enable-features=VaapiVp8TemporalLayerEncoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithHWVBREncoding",
+		Desc:     "Similar to chromeVideo but also enables hardware VBR encoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs("--enable-features=ChromeOSHWVBREncoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	// TODO(b/255626192): Remove these *HWAV1Decoding preconditions once the hardware av1 decoder feature is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithHWAV1Decoding",
@@ -672,92 +706,6 @@ func init() {
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
 				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWebCodecs",
-		Desc:     "Similar to chromeVideo fixture but enabling using WebCodecs API",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeWebCodecsArgs...),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWebCodecsOOPVD",
-		Desc:     "Like chromeWebCodecs but with out-of-process video decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeWebCodecsArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWebCodecsLacros",
-		Desc:     "Similar to chromeVideo fixture but enabling using WebCodecs API (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeWebCodecsArgs...),
-				chrome.LacrosExtraArgs(chromeWebCodecsArgs...))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	// TODO(b/202926617): Remove once vp8 hardware temporal layer encoding is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWebCodecsWithHWVp8TemporalLayerEncoding",
-		Desc:     "Similar to chromeVideo fixture but enabling using WebCodecs API and vp8 hardware temporal layer encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeWebCodecsArgs...),
-				chrome.ExtraArgs("--enable-features=VaapiVp8TemporalLayerEncoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeWebCodecsWithHWVBREncoding",
-		Desc:     "Similar to chromeVideo fixture but enabling using WebCodecs API and hardware variable bitrate encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeWebCodecsArgs...),
-				chrome.ExtraArgs("--enable-features=ChromeOSHWVBREncoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
