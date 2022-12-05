@@ -36,6 +36,49 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 		defaultMeetRetryTimeout  = 40 * time.Minute
 		defaultMeetRetryInterval = 2 * time.Minute
 	)
+	varToDuration := func(name string, defaultValue time.Duration) (time.Duration, error) {
+		str, ok := s.Var(name)
+		if !ok {
+			return defaultValue, nil
+		}
+
+		val, err := strconv.Atoi(str)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to parse integer variable %v", name)
+		}
+
+		return time.Duration(val) * time.Minute, nil
+	}
+	meetRetryTimeout, err := varToDuration("spera.meet_url_retry_timeout", defaultMeetRetryTimeout)
+	if err != nil {
+		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryTimeout)
+	}
+	meetRetryInterval, err := varToDuration("spera.meet_url_retry_interval", defaultMeetRetryInterval)
+	if err != nil {
+		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryInterval)
+	}
+	testing.ContextLogf(ctx, "Retry vars: meetRetryTimeout %v, meetRetryInterval %v", meetRetryTimeout, meetRetryInterval)
+
+	var bondEnabled bool
+	bondEnabledStr, ok := s.Var("spera.GoogleMeetCUJ.bond_enabled")
+	if ok && bondEnabledStr == "true" {
+		bondEnabled = true
+	} else {
+		bondEnabled = false
+	}
+	if bondEnabled {
+		bondCreds, ok := s.Var("spera.GoogleMeetCUJ.bond_key")
+		if !ok || len(bondCreds) < 1 {
+			return GoogleMeetConfig{}, errors.New("bond API is enabled via spera.GoogleMeetCUJ.bond_enabled but spera.GoogleMeetCUJ.bond_key is not set")
+		}
+		return GoogleMeetConfig{
+			BondEnabled:   bondEnabled,
+			BondCreds:     []byte(bondCreds),
+			RetryTimeout:  meetRetryTimeout,
+			RetryInterval: meetRetryInterval,
+		}, nil
+	}
+
 	meetAccount, ok := s.Var("spera.meet_account")
 	if !ok {
 		return GoogleMeetConfig{}, errors.New("failed to get variable spera.meet_account")
@@ -46,22 +89,6 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 	if !ok {
 		return GoogleMeetConfig{}, errors.New("failed to get variable spera.meet_password")
 	}
-
-	var bondEnabled bool
-	bondEnabledStr, ok := s.Var("spera.GoogleMeetCUJ.bond_enabled")
-	if ok && bondEnabledStr == "true" {
-		bondEnabled = true
-	} else {
-		bondEnabled = false
-	}
-	bondCreds, ok := s.Var("spera.GoogleMeetCUJ.bond_key")
-	if !ok || len(bondCreds) < 1 {
-		if bondEnabled {
-			return GoogleMeetConfig{}, errors.New("bond API is enabled via spera.GoogleMeetCUJ.bond_enabled but spera.GoogleMeetCUJ.bond_key is not set")
-		}
-		bondCreds = ""
-	}
-
 	var urlVar, urlSeondaryVar string
 	switch roomType {
 	case TwoRoomSize:
@@ -97,7 +124,7 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 		return urls
 	}
 	meetURLs := varToURLs(urlVar, "spera.meet_url")
-	if len(meetURLs) == 0 && bondCreds == "" {
+	if len(meetURLs) == 0 {
 		// Primary meet URL is mandatory.
 		return GoogleMeetConfig{}, errors.New("neither valid primary meet URLs nor BOND credentials are given")
 	}
@@ -110,34 +137,9 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 	meetURLs = append(meetURLs, meetSecURLs...)
 	testing.ContextLog(ctx, "Google meet URLs: ", meetURLs)
 
-	varToDuration := func(name string, defaultValue time.Duration) (time.Duration, error) {
-		str, ok := s.Var(name)
-		if !ok {
-			return defaultValue, nil
-		}
-
-		val, err := strconv.Atoi(str)
-		if err != nil {
-			return 0, errors.Wrapf(err, "failed to parse integer variable %v", name)
-		}
-
-		return time.Duration(val) * time.Minute, nil
-	}
-	meetRetryTimeout, err := varToDuration("spera.meet_url_retry_timeout", defaultMeetRetryTimeout)
-	if err != nil {
-		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryTimeout)
-	}
-	meetRetryInterval, err := varToDuration("spera.meet_url_retry_interval", defaultMeetRetryInterval)
-	if err != nil {
-		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryInterval)
-	}
-	testing.ContextLogf(ctx, "Retry vars: meetRetryTimeout %v, meetRetryInterval %v", meetRetryTimeout, meetRetryInterval)
-
 	return GoogleMeetConfig{
 		Account:       meetAccount,
 		Password:      meetPassword,
-		BondEnabled:   bondEnabled,
-		BondCreds:     []byte(bondCreds),
 		URLs:          meetURLs,
 		RetryTimeout:  meetRetryTimeout,
 		RetryInterval: meetRetryInterval,

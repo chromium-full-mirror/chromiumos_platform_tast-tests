@@ -226,7 +226,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 
 		// Creates a Google Meet conference instance which implements conference.Conference methods
 		// which provides conference operations.
-		gmcli := conference.NewGoogleMeetConference(cr, tconn, kb, uiHandler, tabletMode, req.ExtendedDisplay, bt, roomType, meet.Account, meet.Password, outDir)
+		gmcli := conference.NewGoogleMeetConference(cr, tconn, kb, uiHandler, bt, roomType, meet, outDir, tabletMode, req.ExtendedDisplay)
 		defer gmcli.End(cleanupCtx)
 		// Shorten context a bit to allow for cleanup if Run fails.
 		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
@@ -272,7 +272,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 			testing.ContextLogf(ctx, "BOND API2: Created conference: %+v and added %d bots for the duration of %v", bondMeetingCode, numBots, botsDuration)
 
 			// Make the room created by BOND the first one to try.
-			meet.URLs = append([]string{fmt.Sprintf("https://meet.google.com/%s", bondMeetingCode)}, meet.URLs...)
+			meet.URLs = append([]string{fmt.Sprintf("https://meet.google.com/%s", bondMeetingCode)})
 
 			break
 		}

@@ -36,15 +36,34 @@ type GoogleMeetConference struct {
 	ui                         *uiauto.Context
 	uiHandler                  cuj.UIActionHandler
 	displayAllParticipantsTime time.Duration
-	tabletMode                 bool
-	extendedDisplay            bool
 	bt                         browser.Type
 	roomType                   RoomType
-	networkLostCount           int
-	account                    string
-	password                   string
+	meetConfig                 GoogleMeetConfig
 	outDir                     string
-	room                       string
+	tabletMode                 bool
+	extendedDisplay            bool
+	networkLostCount           int
+}
+
+var _ Conference = (*GoogleMeetConference)(nil)
+
+// NewGoogleMeetConference creates Google Meet conference room instance which implements Conference interface.
+func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, uiHandler cuj.UIActionHandler,
+	bt browser.Type, roomType RoomType, meetConfig GoogleMeetConfig, outDir string, tabletMode, extendedDisplay bool) *GoogleMeetConference {
+	ui := uiauto.New(tconn)
+	return &GoogleMeetConference{
+		cr:              cr,
+		tconn:           tconn,
+		kb:              kb,
+		ui:              ui,
+		uiHandler:       uiHandler,
+		bt:              bt,
+		roomType:        roomType,
+		meetConfig:      meetConfig,
+		tabletMode:      tabletMode,
+		extendedDisplay: extendedDisplay,
+		outDir:          outDir,
+	}
 }
 
 const (
@@ -60,11 +79,8 @@ var meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
 
 // Join joins a new conference room.
 func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur bool) error {
-	tconn := conf.tconn
-	ui := uiauto.New(tconn)
-	kb := conf.kb
-	meetAccount := conf.account
-	conf.room = room
+	tconn, ui, kb, meetConfig := conf.tconn, conf.ui, conf.kb, conf.meetConfig
+	meetAccount, meetPassword, bondEnabled := meetConfig.Account, meetConfig.Password, meetConfig.BondEnabled
 
 	openConference := func(ctx context.Context) error {
 		// Set newWindow to true to launch Google Meet in the first Chrome tab.
@@ -160,7 +176,7 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur 
 			ui.LeftClick(nextButton),
 			// Make sure text area is focused before typing. This is especially necessary on low-end DUTs.
 			ui.LeftClickUntil(passwordField, ui.Exists(passwordField.Focused())),
-			kb.TypeAction(conf.password),
+			kb.TypeAction(meetPassword),
 			ui.LeftClick(nextButton),
 			ui.LeftClickUntil(iAgree, ui.WithTimeout(shortUITimeout).WaitUntilGone(iAgree)),
 		)
@@ -278,10 +294,11 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur 
 			return autoJoinMeeting(ctx)
 		}
 
-		targetMeetAccount := nodewith.Name(conf.account).Role(role.StaticText)
+		targetMeetAccount := nodewith.Name(meetAccount).Role(role.StaticText)
 		joinNowButton := nodewith.Name("Join now").Role(role.Button)
+		// Enabling bond api does not require switching user.
 		// If there is no "Join now" button and no expected account, switch to expected google meet account.
-		if ui.Gone(joinNowButton)(ctx) == nil && ui.Gone(targetMeetAccount)(ctx) == nil {
+		if !bondEnabled && ui.Gone(joinNowButton)(ctx) == nil && ui.Gone(targetMeetAccount)(ctx) == nil {
 			if err := switchUser(ctx); err != nil {
 				return err
 			}
@@ -727,7 +744,7 @@ func (conf *GoogleMeetConference) changeBackgroundOnJoinPage(background string) 
 // the specified application to the conference.
 func (conf *GoogleMeetConference) Presenting(ctx context.Context, application googleApplication) (err error) {
 	tconn := conf.tconn
-	ui := uiauto.New(tconn)
+	ui := conf.ui
 
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
@@ -815,7 +832,7 @@ func (conf *GoogleMeetConference) Presenting(ctx context.Context, application go
 	return nil
 }
 
-// End ends the conference.
+// End closes all windows in the end.
 func (conf *GoogleMeetConference) End(ctx context.Context) error {
 	return cuj.CloseAllWindows(ctx, conf.tconn)
 }
@@ -855,26 +872,4 @@ func (conf *GoogleMeetConference) closeNotifDialog() action.Action {
 	allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notiPerm)
 	// Allow notifications if it popup the dialog.
 	return uiauto.IfSuccessThen(conf.ui.Exists(allowButton), conf.ui.LeftClick(allowButton))
-}
-
-var _ Conference = (*GoogleMeetConference)(nil)
-
-// NewGoogleMeetConference creates Google Meet conference room instance which implements Conference interface.
-func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, uiHandler cuj.UIActionHandler,
-	tabletMode, extendedDisplay bool, bt browser.Type, roomType RoomType, account, password, outDir string) *GoogleMeetConference {
-	ui := uiauto.New(tconn)
-	return &GoogleMeetConference{
-		cr:              cr,
-		tconn:           tconn,
-		kb:              kb,
-		ui:              ui,
-		uiHandler:       uiHandler,
-		tabletMode:      tabletMode,
-		extendedDisplay: extendedDisplay,
-		bt:              bt,
-		roomType:        roomType,
-		account:         account,
-		password:        password,
-		outDir:          outDir,
-	}
 }

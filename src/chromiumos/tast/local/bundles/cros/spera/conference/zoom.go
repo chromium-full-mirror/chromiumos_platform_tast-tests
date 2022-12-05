@@ -58,7 +58,7 @@ const (
 var zoomWebArea = nodewith.NameContaining("Zoom Meeting").Role(role.RootWebArea)
 
 // Join joins a new conference room.
-func (conf *ZoomConference) Join(ctx context.Context, room string, toBlur bool) error {
+func (conf *ZoomConference) Join(ctx context.Context, room string) error {
 	ui := conf.ui
 	openZoomAndSignIn := func(ctx context.Context) (err error) {
 		// Set newWindow to true to launch zoom in the first Chrome tab.

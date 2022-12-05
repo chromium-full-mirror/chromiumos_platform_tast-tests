@@ -28,7 +28,7 @@ const (
 
 // Conference contains user's operation when enter a confernece room.
 type Conference interface {
-	Join(ctx context.Context, room string, toBlur bool) error
+	Join(ctx context.Context, room string) error
 	SetLayoutMax(ctx context.Context) error
 	SetLayoutMin(ctx context.Context) error
 	SwitchTabs(ctx context.Context) error
