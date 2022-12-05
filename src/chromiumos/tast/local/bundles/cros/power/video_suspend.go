@@ -115,7 +115,10 @@ func VideoSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Video not playing even prior to suspend: ", err)
 	}
 
-	if err := suspendForSeconds(ctx, 3); err != nil {
+	// Suspending for less than 3 seconds seem to fairly reliably result in a
+	// suspend failure. Presumably this is due to a race between entering S0ix
+	// and the timer that's supposed to wake us up. We give it 3x this sure.
+	if err := suspendForSeconds(ctx, 9); err != nil {
 		s.Fatal("Failed to suspend: ", err)
 	}
 
