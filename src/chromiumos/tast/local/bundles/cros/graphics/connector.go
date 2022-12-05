@@ -66,6 +66,7 @@ func init() {
 			"pwang@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu"},
+		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{
 			{
 				Name:              "",

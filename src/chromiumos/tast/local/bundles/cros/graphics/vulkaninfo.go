@@ -27,7 +27,8 @@ func init() {
 			"chromeos-gfx@chromium.org",
 			"pwang@chromium.org",
 		},
-		Attr: []string{"group:mainline", "group:graphics", "graphics_perbuild"},
+		Fixture: "gpuWatchHangs",
+		Attr:    []string{"group:mainline", "group:graphics", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name:              "",
 			ExtraSoftwareDeps: []string{"vulkan"},

@@ -26,7 +26,8 @@ func init() {
 		// TODO(b:261224571) Once the test cases are passing on all
 		// supported devices, add to group:mainline to enable CQ
 		// pre-submit testing.
-		Attr: []string{"group:graphics", "graphics_perbuild"},
+		Attr:    []string{"group:graphics", "graphics_perbuild"},
+		Fixture: "gpuWatchHangs",
 		Params: []testing.Param{
 			{
 				Name:    "model",

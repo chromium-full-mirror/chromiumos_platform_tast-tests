@@ -79,20 +79,20 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "2d",
 			Val:     params2d(browser.TypeAsh),
-			Fixture: "chromeLoggedIn",
+			Fixture: "chromeGraphics",
 		}, {
 			Name:    "webgl",
 			Val:     paramsWebgl(browser.TypeAsh),
-			Fixture: "chromeLoggedIn",
+			Fixture: "chromeGraphics",
 		}, {
 			Name:              "2d_lacros",
 			Val:               params2d(browser.TypeLacros),
-			Fixture:           "lacros",
+			Fixture:           "chromeGraphicsLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "webgl_lacros",
 			Val:               paramsWebgl(browser.TypeLacros),
-			Fixture:           "lacros",
+			Fixture:           "chromeGraphicsLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})

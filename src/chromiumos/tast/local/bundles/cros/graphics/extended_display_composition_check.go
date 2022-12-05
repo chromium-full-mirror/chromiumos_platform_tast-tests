@@ -42,9 +42,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// To skip on duffy(Chromebox) with no internal display.
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		Fixture:      "chromeGraphics",
 		Params: []testing.Param{{
-			Name:    "hdmi_clamshell_mode",
-			Fixture: "chromeLoggedIn",
+			Name: "hdmi_clamshell_mode",
 			Val: displayCompositionTestParams{
 				tabletMode: false,
 				displayInfoRe: map[string]*regexp.Regexp{
@@ -53,8 +53,7 @@ func init() {
 				},
 			},
 		}, {
-			Name:    "hdmi_tablet_mode",
-			Fixture: "chromeLoggedIn",
+			Name: "hdmi_tablet_mode",
 			Val: displayCompositionTestParams{
 				tabletMode: true,
 				displayInfoRe: map[string]*regexp.Regexp{
@@ -63,8 +62,7 @@ func init() {
 				},
 			},
 		}, {
-			Name:    "dp_clamshell_mode",
-			Fixture: "chromeLoggedIn",
+			Name: "dp_clamshell_mode",
 			Val: displayCompositionTestParams{
 				tabletMode: false,
 				displayInfoRe: map[string]*regexp.Regexp{
