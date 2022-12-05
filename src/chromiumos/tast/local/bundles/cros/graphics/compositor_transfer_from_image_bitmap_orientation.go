@@ -12,12 +12,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
@@ -26,8 +27,37 @@ import (
 )
 
 type params struct {
+	browserType          browser.Type
 	expectedID, resultID string
 	referenceColors      []color.RGBA
+}
+
+func params2d(bt browser.Type) params {
+	return params{
+		browserType: bt,
+		expectedID:  "expected2d",
+		resultID:    "result2d",
+		referenceColors: []color.RGBA{
+			{255, 0, 0, 255},
+			{0, 0, 255, 255},
+			{0, 128, 0, 255},
+			{255, 255, 255, 255},
+		},
+	}
+}
+
+func paramsWebgl(bt browser.Type) params {
+	return params{
+		browserType: bt,
+		expectedID:  "expectedWebGL",
+		resultID:    "resultWebGL",
+		referenceColors: []color.RGBA{
+			{255, 0, 0, 255},
+			{0, 0, 255, 255},
+			{0, 255, 0, 255},
+			{255, 255, 255, 255},
+		},
+	}
 }
 
 const delayToScreenshot = 7 * time.Second
@@ -35,7 +65,7 @@ const delayToScreenshot = 7 * time.Second
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CompositorTransferFromImageBitmapOrientation,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that transferFromImageBitmap is oriented correctly",
 		Contacts: []string{
 			"chromeos-gfx-compositor@google.com",
@@ -46,31 +76,24 @@ func init() {
 		Data:         []string{"transfer-from-image-bitmap.html"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name: "2d",
-			Val: params{
-				expectedID: "expected2d",
-				resultID:   "result2d",
-				referenceColors: []color.RGBA{
-					{255, 0, 0, 255},
-					{0, 0, 255, 255},
-					{0, 128, 0, 255},
-					{255, 255, 255, 255},
-				},
-			},
+			Name:    "2d",
+			Val:     params2d(browser.TypeAsh),
+			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "webgl",
-			Val: params{
-				expectedID: "expectedWebGL",
-				resultID:   "resultWebGL",
-				referenceColors: []color.RGBA{
-					{255, 0, 0, 255},
-					{0, 0, 255, 255},
-					{0, 255, 0, 255},
-					{255, 255, 255, 255},
-				},
-			},
+			Name:    "webgl",
+			Val:     paramsWebgl(browser.TypeAsh),
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name:              "2d_lacros",
+			Val:               params2d(browser.TypeLacros),
+			Fixture:           "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:              "webgl_lacros",
+			Val:               paramsWebgl(browser.TypeLacros),
+			Fixture:           "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
@@ -81,9 +104,18 @@ func init() {
 func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-	cr := s.FixtValue().(*chrome.Chrome)
+	url := server.URL + "/transfer-from-image-bitmap.html"
 
-	tconn, err := cr.TestAPIConn(ctx)
+	params := s.Param().(params)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(
+		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), params.browserType, url)
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(ctx)
+	defer conn.Close()
+
+	tconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
@@ -92,14 +124,8 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 		s.Fatal("Failed to set display to landscape-primary orientation: ", err)
 	}
 
-	url := path.Join(server.URL, "transfer-from-image-bitmap.html")
-	conn, err := cr.NewConn(ctx, url)
-	if err != nil {
-		s.Fatalf("Failed to open %v: %v", url, err)
-	}
-	defer conn.Close()
 	if err := conn.Call(ctx, nil, "executeDraw"); err != nil {
-		s.Fatal("Failed to execute drawing function")
+		s.Fatal("Failed to execute drawing function: ", err)
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -115,8 +141,9 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 			return nil, errors.Wrapf(err,
 				"failed to set fullscreen event listener on element %v", id)
 		}
-		if err := kb.Type(ctx, "f"); err != nil {
-			return nil, errors.Wrap(err, "failed to inject the 'f' key")
+		if err := kb.TypeSequence(ctx, []string{"Esc", "f"}); err != nil {
+			return nil, errors.Wrap(err,
+				"failed to inject the 'Esc', 'F' key sequence")
 		}
 		// Wait for the fullscreen transition to complete and for the escape message to
 		// disappear before taking the screenshot.
@@ -140,7 +167,6 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 		return img, nil
 	}
 
-	params := s.Param().(params)
 	expectedImg, err := screenshotCanvas(params.expectedID)
 	if err != nil {
 		s.Fatalf("Failed to screenshot canvas %v: %v", params.expectedID, err)
