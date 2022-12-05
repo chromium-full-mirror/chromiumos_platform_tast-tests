@@ -308,7 +308,7 @@ func NewImageToFile(ctx context.Context, section ImageSection, programmer Flashr
 	}
 
 	frArgs := []string{"-p", string(programmer), "-r"}
-	isOneSection := section != "" && section != EmptyImageSection
+	isOneSection := section != EmptyImageSection
 	if isOneSection {
 		frArgs = append(frArgs, "-i", fmt.Sprintf("%s:%s", section, tmpFile.Name()))
 	} else {
