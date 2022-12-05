@@ -111,7 +111,7 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 	if err != nil {
 		return nil, err
 	}
-	return parseOutput(ctx, output)
+	return parseDiagOutput(ctx, output)
 }
 
 // GetDiagRoutines returns a list of valid routines for the device on success,
@@ -147,15 +147,21 @@ func runDiag(ctx context.Context, args []string) (string, error) {
 	return string(out), nil
 }
 
-// parseOutput is a helper function that takes the `raw` output from running a
+// parseDiagOutput is a helper function that takes the `raw` output from running a
 // diagnostic routine and returns a RoutineResult on success, or an error.
-func parseOutput(ctx context.Context, raw string) (*RoutineResult, error) {
+//
+// Some examples for `raw`:
+// "\rProgress: 0\rProgress: 100\rProgress: 100\nStatus: Passed\nStatus message: Routine passed.\n"
+// "\rProgress: 25\nInteractive message.\n\rProgress: 100\rProgress: 100\nStatus: Passed\nStatus message: Routine passed.\n"
+func parseDiagOutput(ctx context.Context, raw string) (*RoutineResult, error) {
 	status := ""
 	progress := 0
 	re := regexp.MustCompile(`([^:]+): (.*)`)
 	testing.ContextLog(ctx, raw)
 
-	for _, line := range strings.Split(strings.TrimSpace(raw), "\n") {
+	// Treat both \n and \r as separators since the purpose of \r is to make the
+	// output more readable in a terminal.
+	for _, line := range regexp.MustCompile(`(\n|\r)`).Split(raw, -1) {
 		match := re.FindStringSubmatch(line)
 		if match == nil {
 			continue
@@ -167,18 +173,11 @@ func parseOutput(ctx context.Context, raw string) (*RoutineResult, error) {
 		case "Status":
 			status = value
 		case "Progress":
-			// Look for just the last progress value. Diag prints a single
-			// line for the progress, which may contain carriage returns.
-			// The line will be formatted as follows, where # is any int:
-			// #\rProgress: #\rProgress: #\rProgress: # ... \rProgress: #
-			// Slicing value after the last space should give us the final
-			// progress percent.
-			percent := value[strings.LastIndex(value, " ")+1:]
-			i, err := strconv.Atoi(percent)
+			i, err := strconv.Atoi(value)
 			if err != nil {
-				testing.ContextLogf(ctx, "Failed to parse progress status: %q", value)
-				return nil, errors.Wrapf(err, "Unable to parse %q value %q as int", key, percent)
+				return nil, errors.Wrapf(err, "Unable to parse Progress value %q as int", value)
 			}
+			// Override the old value because only the last progress will be reported.
 			progress = i
 		}
 	}
