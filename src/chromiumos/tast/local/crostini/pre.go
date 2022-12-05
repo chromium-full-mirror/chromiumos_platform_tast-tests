@@ -81,38 +81,51 @@ var CrostiniUnstable = hwdep.D(CrostiniUnstableCond, CrostiniMinDiskSizeCond)
 // CrostiniAppStable is a hardware dependency limiting the boards on which app testing is run.
 // App testing uses a large container which needs large space. Many DUTs in the lab do not have enough space.
 // The boards listed have enough space.
-var CrostiniAppStable = hwdep.D(hwdep.Model("hatch", "eve", "atlas", "nami", "dragonair", "dratini", "kindred"), CrostiniMinDiskSizeCond)
+var CrostiniAppStable = hwdep.D(hwdep.Model(
+	// hatch board.
+	"hatch",
+	"dragonair",
+	"dratini",
+	"kindred",
+	"helios",
+	"nightfury",
+	// eve board.
+	"eve",
+	// atlas board.
+	"atlas",
+	// nami board.
+	"nami",
+	// volteer board.
+	"chronicler",
+	"collis",
+	"copano",
+	"delbin",
+	"drobit",
+	"eldrid",
+	"elemi",
+	"lindar",
+	"voema",
+	"volta",
+), CrostiniMinDiskSizeCond)
 
 // CrostiniAppUnstable is a hardware dependency in addition to CrostiniAppStable.
 // These models are expected to merge with CrostiniAppStable once approved stable.
 var CrostiniAppUnstable = hwdep.D(hwdep.Model(
 	// hatch board.
 	"akemi",
-	"helios",
 	"jinlon",
 	"kled",
 	"kohaku",
-	"nightfury",
 	// volteer board.
 	"volteer",
-	"chronicler",
-	"collis",
-	"copano",
-	"delbin",
 	"delbing",
-	"drobit",
-	"eldrid",
-	"elemi",
 	"halvor",
 	"lillipup",
-	"lindar",
 	"malefor",
 	"terrador",
 	"todor",
 	"trondo",
-	"voema",
 	"volet",
-	"volta",
 	"voxel",
 ), CrostiniMinDiskSizeCond)
 
