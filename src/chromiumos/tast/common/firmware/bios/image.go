@@ -398,7 +398,7 @@ func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec Image
 		return errors.Wrap(err, "reading image from file")
 	}
 
-	if err := testexec.CommandContext(ctx, "flashrom", "-N", "-p", string(programmer), "-i", fmt.Sprintf("%s:%s", sec, path), "-w").Run(testexec.DumpLogOnError); err != nil {
+	if err := testexec.CommandContext(ctx, "flashrom", "-p", string(programmer), "-i", fmt.Sprintf("%s:%s", sec, path), "-w").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "could not write host image")
 	}
 
