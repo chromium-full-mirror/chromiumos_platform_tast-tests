@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/testing"
@@ -24,9 +23,8 @@ func init() {
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},
-		SoftwareDeps: []string{"chrome", "tpm"},
+		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:asan"},
-		Fixture:      fixture.CleanOwnership,
 	})
 }
 

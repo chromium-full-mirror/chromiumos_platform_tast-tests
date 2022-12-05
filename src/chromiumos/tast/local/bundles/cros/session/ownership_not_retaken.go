@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/session"
@@ -26,12 +25,11 @@ func init() {
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},
-		SoftwareDeps: []string{"chrome", "tpm"},
+		SoftwareDeps: []string{"chrome"},
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		// This test performs 2 logins.
 		Timeout: 2*chrome.LoginTimeout + time.Minute,
-		Fixture: fixture.CleanOwnership,
 	})
 }
 
