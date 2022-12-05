@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/testing"
@@ -17,8 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: VerifyUnrecoverableVaultBehaviour,
-		Desc: "Verifies that the vault is destroyed if unrecoverable",
+		Func: VerifyUnusableVaultBehaviour,
+		Desc: "Verifies that the vault is destroyed if unusable",
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
 			"dlunev@chromium.org",
@@ -30,7 +32,10 @@ func init() {
 	})
 }
 
-func VerifyUnrecoverableVaultBehaviour(ctx context.Context, s *testing.State) {
+func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
+	// CRYPTOHOME_ERROR_UNUSABLE_VAULT is returned by cryptohome UserDataAuth proto binding.
+	const CryptohomeUnusableVaultErrorNumber = 53
+
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 
 	helper, err := hwsecremote.NewHelper(cmdRunner, s.DUT())
@@ -39,6 +44,18 @@ func VerifyUnrecoverableVaultBehaviour(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
+
+	// Disable UserSecretStash to use VaultKeyset.
+	cleanupFunction, err := helper.DisableUserSecretStash(ctx)
+	if err != nil {
+		s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
+	}
+	defer cleanupFunction(ctx)
+
+	// Reserve time for cleanupFunction.
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
 
 	// Resets the TPM and system states before running the tests.
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
@@ -97,22 +114,18 @@ func VerifyUnrecoverableVaultBehaviour(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get username's hash: ", err)
 	}
 	userShadowDir := "/home/.shadow/" + hash
-	userKeysetFile := userShadowDir + "/master.0"
+	userKeysetFile := userShadowDir + "/master.0" // nocheck
 
-	// Remove the keyset file to make decryption fail
+	// Remove the keyset file to make decryption fail.
 	if _, err := cmdRunner.Run(ctx, "rm", "-rf", userKeysetFile); err != nil {
 		s.Fatal("Failed to remove the keyset file: ", err)
 	}
 	// Mount with no valid keyset shall vail...
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true, hwsec.NewVaultConfig()); err == nil {
+	if err = utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true, hwsec.NewVaultConfig()); err == nil {
 		s.Fatal("Mount was expected to fail but succeeded")
 	}
-	// .. and erase the vault
-	_, err = cmdRunner.Run(ctx, "[", "-d", userShadowDir, "]")
-	if err == nil {
-		s.Fatal("Did not remove the unrecoverable vault")
-	}
-	if _, ok := err.(*hwsec.CmdExitError); !ok {
-		s.Fatal("Unexpected error while querying vault existance: ", err)
+	var exitErr *hwsec.CmdExitError
+	if !errors.As(err, &exitErr) || exitErr.ExitCode != CryptohomeUnusableVaultErrorNumber {
+		s.Fatalf("Unexpected mount error: got %q; want exit status %d (CRYPTOHOME_ERROR_UNUSABLE_VAULT)", err, CryptohomeUnusableVaultErrorNumber)
 	}
 }
