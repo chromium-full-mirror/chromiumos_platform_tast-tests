@@ -75,11 +75,6 @@ func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 		if err != nil {
 			return errors.Wrap(err, "failed to open youtube tab")
 		}
-		// Lacros will focus on the search bar after navigating, press Enter to make sure the focus is on the webarea.
-		searchBar := nodewith.Role(role.TextField).Name("Address and search bar").Focused()
-		if err := uiauto.IfSuccessThen(y.ui.Exists(searchBar), y.kb.AccelAction("Enter"))(ctx); err != nil {
-			return err
-		}
 		if err := webutil.WaitForYoutubeVideo(ctx, y.ytConn, 0); err != nil {
 			return errors.Wrap(err, "failed to wait for video element")
 		}
@@ -104,8 +99,21 @@ func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 			return errors.Wrap(err, "failed to instruct device to stay on YouTube web")
 		}
 
-		if err := y.clearNotificationPrompts(ctx); err != nil {
-			return errors.Wrap(err, "failed to clear notification prompts")
+		// In Lacros, it will focus on the search bar after navigating, click on the video title to make sure the focus is on the webarea.
+		videoWebArea := nodewith.NameContaining(video.Title).Role(role.RootWebArea)
+		videoWebAreaFocused := videoWebArea.Focused()
+		videoTitle := nodewith.Name(video.Title).Role(role.Heading).Ancestor(videoWebArea)
+		if err := uiauto.Combine("focus on video",
+			y.clearNotificationPrompts,
+			uiauto.IfFailThen(
+				y.ui.Exists(videoWebAreaFocused),
+				y.uiHdl.ClickUntil(
+					videoTitle,
+					y.ui.WithTimeout(shortUITimeout).WaitUntilExists(videoWebAreaFocused),
+				),
+			),
+		)(ctx); err != nil {
+			return err
 		}
 
 		// Use keyboard to play/pause video and ensure PageLoad.PaintTiming.NavigationToLargestContentfulPaint2
@@ -272,8 +280,11 @@ func (y *YtWeb) ExitFullScreen(ctx context.Context) error {
 // SkipAd skips the ad.
 func (y *YtWeb) SkipAd() uiauto.Action {
 	return func(ctx context.Context) error {
-		testing.ContextLog(ctx, "Checking for YouTube ads")
+		if err := y.clearNotificationPrompts(ctx); err != nil {
+			return err
+		}
 
+		testing.ContextLog(ctx, "Checking for YouTube ads")
 		adText := nodewith.NameContaining("Ad").Role(role.StaticText).Ancestor(videoPlayer).First()
 		skipAdButton := nodewith.NameStartingWith("Skip Ad").Role(role.Button)
 		return testing.Poll(ctx, func(ctx context.Context) error {
@@ -354,7 +365,6 @@ func (y *YtWeb) RestoreWindow(ctx context.Context) error {
 // PauseAndPlayVideo verifies video playback on youtube web.
 func (y *YtWeb) PauseAndPlayVideo(ctx context.Context) error {
 	return uiauto.NamedCombine("pause and play video",
-		y.clearNotificationPrompts,
 		y.SkipAd(),
 		// The video should be playing at this point. However, we'll double check to make sure
 		// as we have seen a few cases where the video became paused automatically.
@@ -366,14 +376,24 @@ func (y *YtWeb) PauseAndPlayVideo(ctx context.Context) error {
 
 // Play returns a function to play the video.
 func (y *YtWeb) Play() uiauto.Action {
-	return uiauto.IfSuccessThen(y.IsPaused(), uiauto.NamedCombine("play video",
-		y.ui.WithTimeout(longUITimeout).RetryUntil(y.kb.TypeAction("k"), y.IsPlaying())))
+	return uiauto.NamedCombine("play video",
+		y.clearNotificationPrompts,
+		uiauto.IfSuccessThen(
+			y.IsPaused(),
+			y.ui.WithTimeout(longUITimeout).RetryUntil(y.kb.TypeAction("k"), y.IsPlaying()),
+		),
+	)
 }
 
 // Pause returns a function to pause the video.
 func (y *YtWeb) Pause() uiauto.Action {
-	return uiauto.IfSuccessThen(y.IsPlaying(), uiauto.NamedCombine("pause video",
-		y.ui.WithTimeout(longUITimeout).RetryUntil(y.kb.TypeAction("k"), y.IsPaused())))
+	return uiauto.NamedCombine("pause video",
+		y.clearNotificationPrompts,
+		uiauto.IfSuccessThen(
+			y.IsPlaying(),
+			y.ui.WithTimeout(longUITimeout).RetryUntil(y.kb.TypeAction("k"), y.IsPaused()),
+		),
+	)
 }
 
 // StartCast casts YouTube video to a specified screen connected to ADT-3.
