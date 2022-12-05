@@ -74,13 +74,13 @@ var (
 	DxCancelledBadge = nodewith.Name("STOPPED").Role(role.StaticText)
 
 	// DxConnectivity export is used to find the Connectivity navigation item.
-	DxConnectivity = nodewith.Name("Connectivity").Role(role.GenericContainer)
+	DxConnectivity = nodewith.Name("Connectivity").Role(role.Button)
 
 	// DxNetworkList export is used to find the network list.
 	DxNetworkList = nodewith.ClassName("diagnostics-network-list-container").Role(role.GenericContainer)
 
 	// DxKeyboardTab export is used to find the Input navigation item.
-	DxKeyboardTab = nodewith.NameContaining("Keyboard").Role(role.GenericContainer)
+	DxKeyboardTab = nodewith.NameContaining("Keyboard").Role(role.Button)
 
 	// DxInternalKeyboardTestButton used to find the internal keyboard test button on the input page.
 	DxInternalKeyboardTestButton = nodewith.NameContaining("Test").Role(role.Button).First()
