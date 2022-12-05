@@ -57,7 +57,8 @@ func init() {
 					Capture:  true,
 				},
 				// b/261363619: Skip "beetley" before b/261363619 is fixed.
-				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("beetley")),
+				// b/261361770: Skip "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne" before b/261361770 is fixed.
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("beetley", "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne")),
 			},
 		},
 	})
