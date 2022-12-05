@@ -147,9 +147,6 @@ var ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Anc
 
 // Elements in "Cellular detail page"
 var (
-	// AutoconnectToggle is the finder for the autoconnect toggle UI in the cellular detail page.
-	AutoconnectToggle = nodewith.Name("Automatically connect to cellular network").Role(role.ToggleButton)
-
 	// ConnectedStatus is the finder for the connected status text UI in the cellular detail page.
 	ConnectedStatus = nodewith.Name("Connected").Role(role.StaticText)
 
@@ -170,6 +167,9 @@ var (
 
 	// RoamingToggle is the finder for the roaming toggle UI in the cellular detail page.
 	RoamingToggle = nodewith.Name("Allow mobile data roaming").Role(role.ToggleButton)
+
+	// AutoconnectToggle is the finder for the autoconnect toggle UI in the cellular detail page.
+	AutoconnectToggle = nodewith.Name("Automatically connect to cellular network").Role(role.ToggleButton)
 
 	// CellularAdvanced is the finder for the button that collpases/expands the advanced section of cellular details page.
 	CellularAdvanced = nodewith.Name("Show advanced network properties").Role(role.Button)
