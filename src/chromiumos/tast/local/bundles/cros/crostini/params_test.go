@@ -251,6 +251,26 @@ func TestAppTestParams(t *testing.T) {
 	}
 }
 
+var appClamshellOnlyTests = []string{
+	"app_maximize_restore_minimize_close.go",
+}
+
+func TestAppClamshellOnlyTestParams(t *testing.T) {
+	for _, filename := range appClamshellOnlyTests {
+		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
+			{
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				UseLargeContainer:   true,
+				TakeSnapshot:        true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.ClamshellMode,
+			}})
+		genparams.Ensure(t, filename, params)
+	}
+}
+
 var appWithSnapshotTests = []string{
 	"app_vscode_uninstall.go",
 }

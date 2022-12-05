@@ -51,6 +51,9 @@ type Options struct {
 	// The maximum allowed different pixels.
 	MaxDifferentPixels int
 
+	// Whether to set the window state regardless of the WindowState is.
+	SkipSetWindowState bool
+
 	// WindowState contains the window state to set the test to. If the window
 	// state is normal, then the window size will need to be explicitly specified.
 	WindowState ash.WindowStateType
@@ -120,6 +123,9 @@ func (o *Options) FillDefaults(d Options) {
 	}
 	if !o.SkipWindowMove {
 		o.SkipWindowMove = d.SkipWindowMove
+	}
+	if !o.SkipSetWindowState {
+		o.SkipSetWindowState = d.SkipSetWindowState
 	}
 }
 
@@ -233,4 +239,9 @@ func Retries(retries int) Option {
 // RetryInterval controls the screenshot test option RetryInterval.
 func RetryInterval(retryInterval time.Duration) Option {
 	return func(o *Options) { o.RetryInterval = retryInterval }
+}
+
+// SkipSetWindowState controls the screenshot test option SkipSetWindowState.
+func SkipSetWindowState(skipSetWindowState bool) Option {
+	return func(o *Options) { o.SkipSetWindowState = skipSetWindowState }
 }

@@ -353,14 +353,16 @@ func SearchAndLaunch(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, appN
 
 // SearchAndLaunchWithQuery return a function that searches a query in the launcher and executes an app from the list.
 func SearchAndLaunchWithQuery(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query, appName string) uiauto.Action {
-	ui := uiauto.New(tconn)
-	return uiauto.Combine(fmt.Sprintf("SearchAndLaunchWithQuery(%s, %s)", query, appName),
-		Open(tconn),
-		Search(tconn, kb, query),
-		func(ctx context.Context) error {
-			return ui.WithInterval(time.Second).DoDefault(CreateAppSearchFinder(ctx, tconn, appName))(ctx)
-		},
-	)
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx,
+			uiauto.Combine(fmt.Sprintf("SearchAndLaunchWithQuery(%s, %s)", query, appName),
+				Open(tconn),
+				Search(tconn, kb, query),
+				func(ctx context.Context) error {
+					return uiauto.New(tconn).WithInterval(time.Second).DoDefault(CreateAppSearchFinder(ctx, tconn, appName))(ctx)
+				},
+			), &testing.PollOptions{Interval: time.Second, Timeout: time.Minute})
+	}
 }
 
 // SearchAndRightClick returns a function that searches a query in the launcher and right click the app from the list.

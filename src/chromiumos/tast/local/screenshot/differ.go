@@ -435,7 +435,7 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 	}
 	windowBoundsDP := window.BoundsInRoot
 
-	if options.WindowState != ash.WindowStateDefault {
+	if options.WindowState != ash.WindowStateDefault && !options.SkipSetWindowState {
 		if err := ash.SetWindowStateAndWait(ctx, d.tconn, window.ID, options.WindowState); err != nil {
 			return testArgs, err
 		}
