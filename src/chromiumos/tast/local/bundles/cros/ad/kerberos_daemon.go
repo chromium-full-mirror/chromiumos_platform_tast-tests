@@ -23,10 +23,13 @@ func init() {
 		Func: KerberosDaemon,
 		Desc: "Verifies that the Kerberos system daemon works as expected",
 		Contacts: []string{
-			"fsandrade@chromium.org",
-			"chromeos-commercial-identity@google.com",
+			"cros-3pidp@google.com",
+			"slutskii@google.com",
+			"fsandrade@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
+		BugComponent: "b:1253670",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

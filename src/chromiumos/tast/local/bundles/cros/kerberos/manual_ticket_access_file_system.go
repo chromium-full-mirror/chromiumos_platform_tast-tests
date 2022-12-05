@@ -28,12 +28,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualTicketAccessFileSystem,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks the behavior of accessing file system secured with Kerberos after adding Kerberos ticket",
+		Desc:         "Checks the behavior of accessing a file system secured with Kerberos after manually adding a Kerberos ticket",
 		Contacts: []string{
-			"kamilszarek@google.com", // Test author
-			"alexanderhartl@google.com",
-			"chromeos-commercial-identity@google.com",
+			"cros-3pidp@google.com",
+			"slutskii@google.com",
+			"fsandrade@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
+		BugComponent: "b:1253670",
 		// TODO(crbug/1380920): Remove when this bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel(
 			[]string{"rusty", "steelix", "tentacruel", "lazor", "pompom", "limozeen", "pazquel"}...)),

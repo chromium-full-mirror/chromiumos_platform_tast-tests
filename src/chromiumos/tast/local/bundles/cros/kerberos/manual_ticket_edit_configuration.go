@@ -31,11 +31,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualTicketEditConfiguration,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that changing kerberos config works properly",
+		Desc:         "Checks that changing Kerberos config works properly",
 		Contacts: []string{
+			"cros-3pidp@google.com",
 			"slutskii@google.com",
-			"chromeos-commercial-identity@google.com",
+			"fsandrade@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
+		BugComponent: "b:1253670",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},

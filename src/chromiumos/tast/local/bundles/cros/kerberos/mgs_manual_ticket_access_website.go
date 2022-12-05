@@ -28,9 +28,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks if Kerberos is working properly in MGS",
 		Contacts: []string{
+			"cros-3pidp@google.com",
 			"slutskii@google.com",
-			"chromeos-commercial-identity@google.com",
+			"fsandrade@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
+		BugComponent: "b:1253670",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},

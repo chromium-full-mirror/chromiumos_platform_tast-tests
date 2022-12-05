@@ -27,12 +27,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AutomaticTicketAccessWebsite,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks the behavior of accessing website secured with kerberos using KerberosAccount policy",
+		Desc:         "Checks the behavior of accessing a website secured with Kerberos using the KerberosAccount policy",
 		Contacts: []string{
-			"kamilszarek@google.com", // Test author
-			"alexanderhartl@google.com",
-			"chromeos-commercial-identity@google.com",
+			"cros-3pidp@google.com",
+			"slutskii@google.com",
+			"fsandrade@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
+		BugComponent: "b:1253670",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
