@@ -13,6 +13,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
@@ -26,13 +27,15 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const cleanupTimeout = 20 * time.Second
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.ChromePolicyLoggedIn,
 		Desc:            "Logged into a user session",
 		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		Impl:            &policyChromeFixture{},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -46,7 +49,7 @@ func init() {
 		Desc:            "Logged into a user session and allow lockscreen to be used",
 		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		Impl:            &policyChromeFixture{},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -62,7 +65,7 @@ func init() {
 				return []chrome.Option{chrome.EnableFeatures("WebAppEnableIsolatedStorage")}, nil
 			},
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -78,7 +81,7 @@ func init() {
 				return []chrome.Option{chrome.EnableFeatures("ChromeLabs")}, nil
 			},
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -95,7 +98,7 @@ func init() {
 				return []chrome.Option{chrome.EnableFeatures("Journeys")}, nil
 			},
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -111,7 +114,7 @@ func init() {
 				return []chrome.Option{chrome.KeepEnrollment()}, nil
 			},
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -129,7 +132,7 @@ func init() {
 			},
 			waitForARC: true,
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -145,7 +148,7 @@ func init() {
 				return []chrome.Option{chrome.EnableFeatures("DesksTemplates")}, nil
 			},
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -220,6 +223,14 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 		s.Fatal("Parent is not a FakeDMS fixture")
 	}
 
+	screenshotCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	faillogCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	p.fdms = fdms
 
 	reader, err := syslog.NewReader(ctx)
@@ -235,7 +246,7 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 				s.Log("Failed to capture screenshot: ", err)
 			}
 		}
-	}(ctx)
+	}(screenshotCtx)
 
 	opts := []chrome.Option{
 		chrome.FakeLogin(chrome.Creds{User: Username, Pass: Password}),
@@ -272,7 +283,7 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 		}
 	}()
 
-	defer uifaillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer uifaillog.DumpUITreeWithScreenshotOnError(faillogCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if p.waitForARC {
 		if arcType, ok := arc.Type(); ok && arcType == arc.Container {

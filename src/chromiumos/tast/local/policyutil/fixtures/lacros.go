@@ -27,7 +27,7 @@ func init() {
 				return lacrosfixt.NewConfig().Opts()
 			},
 		},
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -45,7 +45,7 @@ func init() {
 				return lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)).Opts()
 			},
 		},
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -62,7 +62,7 @@ func init() {
 				return lacrosfixt.NewConfig().Opts()
 			},
 		},
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -79,7 +79,7 @@ func init() {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("Journeys"))).Opts()
 			},
 		},
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -95,7 +95,7 @@ func init() {
 			},
 		},
 		Contacts:        []string{"samicolon@google.com", "chromeos-commercial-remote-management@google.com"},
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
@@ -124,7 +124,7 @@ func init() {
 				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.EnableFeatures("DesksTemplates"))).Opts()
 			},
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
