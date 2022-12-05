@@ -113,13 +113,26 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	// Make sure the DUT is connected at the beginning.
+	// TODO(b/239013478): Clean up the connection checks when the issue is resolved.
+	if err := s.DUT().Health(ctx); err != nil {
+		// Fail the test, but check if the connection can be restored later.
+		s.Error("Failed DUT connection check at the beginning: ", err)
+	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := s.DUT().Health(ctx); err != nil {
 			return err
 		}
 		return nil
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 10 * time.Second}); err != nil {
-		s.Fatal("Failed DUT connection check at the beginning: ", err)
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 30 * time.Second}); err != nil {
+		s.Error("Failed DUT connection check poll at the beginning: ", err)
+
+		waitConnectCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+
+		if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to the DUT at the beginning: ", err)
+		}
 	}
 
 	if err := checkVPDState(ctx, s.DUT()); err != nil {
