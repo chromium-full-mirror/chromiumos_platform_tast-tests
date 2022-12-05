@@ -84,6 +84,18 @@ func getDecoderBinaryAndParams(decoder codecAPI, codec string) (binary, paramGen
 	return
 }
 
+func getReferenceSWDecoder(decoder codecAPI, codec string) string {
+	if isSoftwareAPI(decoder) {
+		return "nil"
+	}
+	if codec == "vp8" || codec == "vp9" {
+		return "genMD5VPX"
+	} else if codec == "h264" {
+		return "genMD5FFMPEG"
+	}
+	return "nil"
+}
+
 func getSoftwareDeps(codec string, encoder, decoder codecAPI) []string {
 	var deps []string
 	if decoder == vaapi || encoder == vaapi {
@@ -130,6 +142,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 		EncoderCommandBuilder string
 		DecoderCommand        string
 		DecoderArgsBuilder    string
+		ReferenceSWDecoder    string
 		SoftwareDeps          []string
 		HardwareDeps          string
 		Data                  []string
@@ -176,6 +189,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 						EncoderCommandBuilder: encoderParamsGenerator,
 						DecoderCommand:        decoderBinary,
 						DecoderArgsBuilder:    decoderParamsGenerator,
+						ReferenceSWDecoder:    getReferenceSWDecoder(decoder, codec),
 						SoftwareDeps:          getSoftwareDeps(codec, encoder, decoder),
 						HardwareDeps:          getHardwareDeps(decoder),
 						Data:                  []string{sourceFile.Name},
@@ -196,6 +210,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 			encoderCommandBuilder: {{ .EncoderCommandBuilder }},
 			decoderCommand:        {{ .DecoderCommand | fmt }},
 			decoderArgsBuilder:    {{ .DecoderArgsBuilder }},
+			referenceSWDecoder:    {{ .ReferenceSWDecoder }},
 		},
 		ExtraData: {{ .Data | fmt }},
 		{{ if .SoftwareDeps }}

@@ -7,8 +7,12 @@ package video
 import (
 	"context"
 	"os"
+	"os/exec"
+	"regexp"
+	"strings"
 	"time"
 
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/video/videovars"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/encoding"
@@ -17,6 +21,9 @@ import (
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
+
+// Function type to generate per-frame MD5SUM reference values for file.
+type referenceSWDecoderFn func(file string) ([]string, error)
 
 // platformInteropParam is used to describe the config used to run each test.
 type platformInteropParam struct {
@@ -27,7 +34,10 @@ type platformInteropParam struct {
 	encoderCommandBuilder commandBuilderFn       // Function to create the encoder command line.
 	decoderCommand        string                 // Command line decoder binary
 	decoderArgsBuilder    commandBuilderDecodeFn // Function to create the decoder command line arguments.
+	referenceSWDecoder    referenceSWDecoderFn   // When specified, function to calculate the reference per-frame MD5SUM values.
 }
+
+var regExpFFMPEGMD5 = regexp.MustCompile(`^\d+, *\d+, *\d+, *\d+, *\d+, *(\S+)$`)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -53,6 +63,7 @@ func init() {
 					encoderCommandBuilder: argsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp8decodeVAAPIargs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp8_1080_30"},
@@ -67,6 +78,7 @@ func init() {
 					encoderCommandBuilder: argsVpxenc,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_vp8_1080_30"},
@@ -82,6 +94,7 @@ func init() {
 					encoderCommandBuilder: vp8argsVAAPI,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
+					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_vp8_1080_30"},
@@ -96,6 +109,7 @@ func init() {
 					encoderCommandBuilder: vp8argsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp8decodeVAAPIargs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
@@ -110,6 +124,7 @@ func init() {
 					encoderCommandBuilder: argsV4L2,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
+					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp8_1080_30"},
@@ -124,6 +139,7 @@ func init() {
 					encoderCommandBuilder: argsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
@@ -139,6 +155,7 @@ func init() {
 					encoderCommandBuilder: argsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp9decodeVAAPIargs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
@@ -153,6 +170,7 @@ func init() {
 					encoderCommandBuilder: argsVpxenc,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_vp9_1080_30"},
@@ -168,6 +186,7 @@ func init() {
 					encoderCommandBuilder: vp9argsVAAPI,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
+					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_vp9_1080_30"},
@@ -182,6 +201,7 @@ func init() {
 					encoderCommandBuilder: vp9argsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp9decodeVAAPIargs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
@@ -196,6 +216,7 @@ func init() {
 					encoderCommandBuilder: argsV4L2,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
+					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp9_1080_30"},
@@ -210,6 +231,7 @@ func init() {
 					encoderCommandBuilder: argsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
@@ -225,6 +247,7 @@ func init() {
 					encoderCommandBuilder: argsOpenh264enc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    h264decodeVAAPIargs,
+					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_h264_1080_30"},
@@ -239,6 +262,7 @@ func init() {
 					encoderCommandBuilder: argsOpenh264enc,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_h264_1080_30"},
@@ -254,6 +278,7 @@ func init() {
 					encoderCommandBuilder: h264argsVAAPI,
 					decoderCommand:        "openh264dec",
 					decoderArgsBuilder:    openh264DecodeArgs,
+					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_h264_1080_30"},
@@ -268,6 +293,7 @@ func init() {
 					encoderCommandBuilder: h264argsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    h264decodeVAAPIargs,
+					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
@@ -282,6 +308,7 @@ func init() {
 					encoderCommandBuilder: argsV4L2,
 					decoderCommand:        "openh264dec",
 					decoderArgsBuilder:    openh264DecodeArgs,
+					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_h264_1080_30"},
@@ -296,6 +323,7 @@ func init() {
 					encoderCommandBuilder: argsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
@@ -335,8 +363,6 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temporary md5 checksum log file. This is needed for decoding.
-	// TODO(b/251256531): Compare the resulting MD5SUM values with the reference
-	// ones, i.e. those decoded by a SW decoder like e.g. vpxdec.
 	f, err := os.CreateTemp("", "frame_checksums.*.md5")
 	if err != nil {
 		s.Fatal("Failed to create md5 checksum log: ", err)
@@ -357,6 +383,42 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to run binary: ", err)
 	}
+
+	// It testOpt.referenceSWDecoder is not specified, we don't need to compare
+	// the generated MD5SUM values with those generated by a reference decoder
+	// implementation.
+	if testOpt.referenceSWDecoder == nil {
+		return
+	}
+	actualMD5SUM, err := os.ReadFile(md5LogPath)
+	if err != nil {
+		s.Fatal("Failed to open md5 checksum log: ", err)
+	}
+	actualMD5SUMs := strings.Split(strings.TrimSpace(string(actualMD5SUM)), "\n")
+	referenceMD5SUMs, err := testOpt.referenceSWDecoder(encodedFile)
+	if err != nil {
+		s.Fatal("Failed generating reference frame hashes: ", err)
+	}
+
+	// Find the intersection of actualMD5SUMs and referenceMD5SUMs.
+	if len(actualMD5SUMs) != len(referenceMD5SUMs) {
+		s.Fatalf("Decoded frame number incorrect. Expected %d, got %d", len(referenceMD5SUMs), len(actualMD5SUMs))
+	}
+
+	const maxFrameMismatches = 5
+	var count int
+	for i, ref := range referenceMD5SUMs {
+		if actualMD5SUMs[i] == ref {
+			continue
+		}
+		count++
+		if count <= maxFrameMismatches {
+			s.Errorf("Frame %d MD5SUM mismatch, got :%s, wanted %s", i, actualMD5SUMs[i], ref)
+		}
+	}
+	if count > 0 {
+		s.Fatalf("%d mismatched hashes", count)
+	}
 }
 
 // vpxDecodeArgs provides the arguments to use with vpxdec decoding binary exe.
@@ -369,4 +431,59 @@ func vpxDecodeArgs(ctx context.Context, filename, md5OutputPath string) []string
 // openh264DecodeArgs provides the arguments to use with openh264dec decoding binary exe.
 func openh264DecodeArgs(ctx context.Context, filename, md5OutputPath string) []string {
 	return []string{filename, filename + ".yuv"}
+}
+
+func genMD5VPX(file string) ([]string, error) {
+	// -o option is necessary for libvpx to output each frame, and with --md5
+	// the md5 of each frame is output but a frame file is not created.
+	out, err := exec.Command("vpxdec", "-o", "output%w_%h_%4.yuv", "--i420", "--md5", file).Output()
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed executing vpxdec")
+	}
+
+	// Example output format:
+	// a6ddd21f5f4e7424b6e7a1f2925fb33b  output320_240_0001.yuv
+	// 41c77adcfd29abfaad62a057855adeaa  output320_240_0002.yuv
+	// afdb44531614034e4a4a90c805a5d3b1  output320_240_0003.yuv
+	var md5s []string
+	for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if len(l) == 0 {
+			continue
+		}
+
+		md5 := strings.Fields(l)[0]
+		if len(md5) != 32 {
+			return []string{}, errors.Errorf("invalid md5 length: %s", md5)
+		}
+
+		md5s = append(md5s, md5)
+	}
+	return md5s, nil
+}
+
+func genMD5FFMPEG(file string) ([]string, error) {
+	out, err := exec.Command("ffmpeg", "-i", file, "-noautoscale", "-f", "framemd5", "-").Output()
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed executing ffmpeg")
+	}
+
+	// Example output format:
+	// 0,          0,          0,        1,   115200, a5dad6170eb13fc5cbc6fe3511d44053
+	// 0,          1,          1,        1,   115200, e056362baaf13dd0f888e67a681ab381
+	// 0,          2,          2,        1,   115200, ee0c33d2b92e0443ca5770bd0c56911f
+	var md5s []string
+	for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		matches := regExpFFMPEGMD5.FindAllStringSubmatch(l, -1)
+		if len(matches) != 1 {
+			continue
+		}
+
+		md5 := matches[0][1]
+		if len(md5) != 32 {
+			return []string{}, errors.Errorf("invalid md5 length: %s", md5)
+		}
+
+		md5s = append(md5s, md5)
+	}
+	return md5s, nil
 }
