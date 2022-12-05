@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_e2e_unstable", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_e2e_unstable", "cellular_sim_pinlock"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      9 * time.Minute,
 		Vars:         []string{"autotest_host_info_labels"},
