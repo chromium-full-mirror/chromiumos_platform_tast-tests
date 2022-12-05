@@ -46,7 +46,7 @@ func init() {
 func SettingsPage(ctx context.Context, s *testing.State) {
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	featureOn := s.Param().(bool)
@@ -78,7 +78,7 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	privacyMenu := nodewith.NameStartingWith("Privacy controls")
 	if featureOn {
-		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
+		if err := ui.WithTimeout(20 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
 			s.Fatal("Failed to find Privacy Hub in OS setting page: ", err)
 		}
 		// Check that the Privacy Hub section contains the required buttons.
@@ -94,7 +94,7 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 	} else {
 		// Check that the Privacy Hub section does not exist if feature flag is not explicitly set.
 		// This will be removed when PrivacyHub is in production.
-		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err == nil {
+		if err := ui.WithTimeout(20 * time.Second).WaitUntilExists(privacyMenu)(ctx); err == nil {
 			s.Fatal("Found Privacy Hub in OS setting page even though the flag is not set: ")
 		}
 	}
