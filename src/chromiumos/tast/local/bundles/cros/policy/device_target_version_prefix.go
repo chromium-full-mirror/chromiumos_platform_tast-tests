@@ -43,9 +43,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that target version prefix policy is respected in auto update",
 		Contacts: []string{
-			"yixie@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"yixie@google.com", // Test author
 		},
+		BugComponent: "b:892153",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "auto_update_stable"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
