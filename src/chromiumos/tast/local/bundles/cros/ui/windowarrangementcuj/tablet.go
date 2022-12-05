@@ -106,13 +106,7 @@ func RunTablet(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uiauto
 	if err != nil {
 		return errors.Wrap(err, "failed to get the primary display info")
 	}
-
-	splitViewDragPoints := []coords.Point{
-		info.WorkArea.CenterPoint(),
-		coords.NewPoint(info.WorkArea.Left+info.WorkArea.Width/4, info.WorkArea.CenterY()),
-		coords.NewPoint(info.WorkArea.Left+info.WorkArea.Width-1, info.WorkArea.CenterY()),
-	}
-	snapRightPoint := coords.NewPoint(info.WorkArea.Right()-1, info.WorkArea.CenterY())
+	splitViewDragPoints, _, snapRightPoint := getSplitViewDragPoints(info)
 
 	tabStripButton := nodewith.Role(role.Button).ClassName("WebUITabCounterButton").First()
 	if err := pc.Click(tabStripButton)(ctx); err != nil {

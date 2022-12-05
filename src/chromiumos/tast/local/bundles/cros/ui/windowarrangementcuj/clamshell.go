@@ -79,14 +79,7 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	if err != nil {
 		return errors.Wrap(err, "failed to get the primary display info")
 	}
-
-	splitViewDragPoints := []coords.Point{
-		info.WorkArea.CenterPoint(),
-		coords.NewPoint(info.WorkArea.Left+info.WorkArea.Width/4, info.WorkArea.CenterY()),
-		coords.NewPoint(info.WorkArea.Left+info.WorkArea.Width-1, info.WorkArea.CenterY()),
-	}
-	snapLeftPoint := coords.NewPoint(info.WorkArea.Left+1, info.WorkArea.CenterY())
-	snapRightPoint := coords.NewPoint(info.WorkArea.Right()-1, info.WorkArea.CenterY())
+	splitViewDragPoints, snapLeftPoint, snapRightPoint := getSplitViewDragPoints(info)
 
 	// Get the browser window.
 	ws, err := getAllNonPipWindows(ctx, tconn)

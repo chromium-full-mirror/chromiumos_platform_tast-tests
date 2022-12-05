@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -288,6 +289,46 @@ func dragAndRestore(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 	}
 
 	return nil
+}
+
+// getSplitViewDragPoints computes points in DIPs, useful for drags related to
+// split view. The points are chosen so that if you convert the coordinates to
+// input.TouchCoord, they will remain inside the display bounds, despite the
+// rounding error in that conversion.
+func getSplitViewDragPoints(info *display.Info) (
+	splitViewDragPoints []coords.Point,
+	snapLeftPoint, snapRightPoint coords.Point,
+) {
+	// The calculation of right can be understood by imagining the work area as
+	// a grid of pixels with info.WorkArea.Right() columns numbered from 0 to
+	// info.WorkArea.Right() - 1. The rightmost x-coordinate is
+	// info.WorkArea.Right() - 1, and we can use info.WorkArea.Right() - 2 to
+	// allow for rounding error in case of conversion to input.TouchCoord.
+	right := info.WorkArea.Right() - 2
+	// All points computed by getSplitViewDragPoints are vertically centered.
+	y := info.WorkArea.CenterY()
+
+	// splitViewDragPoints gives the trajectory for a split view resizing drag.
+	splitViewDragPoints = []coords.Point{
+		// Start from the center, assuming that the split view divider is there.
+		info.WorkArea.CenterPoint(),
+		// Drag to one-quarter position, so that the left snapped window (if
+		// any) will probably reach its minimum size.
+		coords.NewPoint(info.WorkArea.Left+info.WorkArea.Width/4, y),
+		// Drag all the way to the right.
+		coords.NewPoint(right, y),
+		// Dragging back to the first point is implied. See dragAndRestore.
+	}
+	// snapLeftPoint is a point where a window drag can end to snap the dragged
+	// window on the left. info.WorkArea.Left is the leftmost x-coordinate in
+	// the work area, and we can use info.WorkArea.Left + 1 to allow for
+	// rounding error in case of conversion to input.TouchCoord.
+	snapLeftPoint = coords.NewPoint(info.WorkArea.Left+1, y)
+	// snapRightPoint is a point where a window drag can end to snap the
+	// dragged window on the right.
+	snapRightPoint = coords.NewPoint(right, y)
+
+	return
 }
 
 // getAllNonPipWindows calls ash.GetAllWindows and filters out PIP windows
