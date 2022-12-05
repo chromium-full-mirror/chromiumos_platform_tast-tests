@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
@@ -78,6 +77,7 @@ func init() {
 		Impl:            &prepareCUJFixture{},
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
+		Parent:          "gpuWatchHangs",
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cpuIdleForCUJ",
@@ -89,6 +89,7 @@ func init() {
 		Impl:            &cpuIdleForCUJFixture{},
 		PreTestTimeout:  CPUIdleTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
+		Parent:          "gpuWatchHangs",
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cpuIdleForEnrolledCUJ",
@@ -103,7 +104,7 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
-		Parent:          fixture.Enrolled,
+		Parent:          "gpuWatchHangsEnrolled",
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUser",

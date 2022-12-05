@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
@@ -27,8 +28,18 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
+		Name:            "gpuWatchHangsEnrolled",
+		Desc:            "Check if there any GPU related hangs during a test in an enrolled device",
+		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		Impl:            &gpuWatchHangsFixture{},
+		PreTestTimeout:  2 * time.Minute,
+		PostTestTimeout: 2 * time.Minute,
+		Parent:          fixture.Enrolled,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "gpuWatchHangs",
-		Desc:            "Check if there any gpu related hangs during a test",
+		Desc:            "Check if there any GPU related hangs during a test",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
 		PreTestTimeout:  2 * time.Minute,
@@ -37,7 +48,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:            "gpuWatchDog",
-		Desc:            "Check if there any gpu related problems(hangs+crashes) observed during a test",
+		Desc:            "Check if there any GPU related problems(hangs+crashes) observed during a test",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Parent:          "gpuWatchHangs",
 		Impl:            &gpuWatchDogFixture{},
@@ -84,7 +95,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeGraphicsIgt",
 		Desc:            "Stop and later restart services for IGT",
-		Contacts:        []string{"markyacoub@google.com, chromeos-gfx-display@google.com"},
+		Contacts:        []string{"markyacoub@google.com", "chromeos-gfx-display@google.com"},
 		Parent:          "graphicsNoChrome",
 		Impl:            &graphicsIgtFixture{},
 		SetUpTimeout:    upstart.UIRestartTimeout,
