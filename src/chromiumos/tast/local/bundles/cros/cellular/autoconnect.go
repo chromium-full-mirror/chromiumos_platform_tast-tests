@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AautoconnectCellular,
+		Func:         Autoconnect,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that host has network connectivity via cellular interface",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
@@ -30,8 +30,8 @@ func init() {
 	})
 }
 
-// AautoconnectCellular starts with Aa so that this test is scheduled before other tests. This prevents the test from being affected by other tests. It also mimics user experience. Being scheduled first is not necessary, but MAY help improve pass rate.
-func AautoconnectCellular(ctx context.Context, s *testing.State) {
+// Autoconnect checks that shill autoconnects upon login. The test is usually scheduled after a reboot.
+func Autoconnect(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
