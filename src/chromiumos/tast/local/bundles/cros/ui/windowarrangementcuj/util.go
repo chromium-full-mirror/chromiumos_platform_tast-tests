@@ -44,7 +44,7 @@ const (
 	// longPressDuration specifies how long to wait so a touch drag
 	// is initiated with a long press. This is useful for dragging a
 	// window from overview, or a tab from the web UI tab strip.
-	longPressDuration = time.Second
+	longPressDuration = 2 * time.Second
 )
 
 // TestParam holds parameters of window arrangement cuj test variations.
