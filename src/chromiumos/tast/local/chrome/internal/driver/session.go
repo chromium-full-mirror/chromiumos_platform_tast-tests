@@ -210,6 +210,10 @@ func (s *Session) SigninProfileTestAPIConn(ctx context.Context) (*TestConn, erro
 // extID.
 func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID string, autotestPrivateSupported bool) (*TestConn, error) {
 	if *extConn != nil {
+		// Check if the API is still available.
+		if err := (*extConn).WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+			testing.ContextLog(ctx, "Test API extension became unavailable: ", err)
+		}
 		return &TestConn{conn: *extConn}, nil
 	}
 
