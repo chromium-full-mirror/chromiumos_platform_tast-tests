@@ -55,6 +55,8 @@ func Clvk(ctx context.Context, s *testing.State) {
 
 	// Allow to see clvk error and warn messages directly in test logFile.
 	os.Setenv("CLVK_LOG", "2")
+	// Make sure the test has write permission in clvk's temporary folder.
+	os.Setenv("CLVK_COMPILER_TEMP_DIR", os.TempDir())
 
 	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
 	if err != nil {
