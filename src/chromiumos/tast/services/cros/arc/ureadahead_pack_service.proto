@@ -32,6 +32,8 @@ message UreadaheadPackResponse {
   string vm_pack_path = 2;
   // Path to log for ureadahead pack generation.
   string log_path = 3;
+  // Path to log for vm ureadahead pack generation.
+  string vm_log_path = 4;
 }
 
 message CheckMinMemoryResponse {

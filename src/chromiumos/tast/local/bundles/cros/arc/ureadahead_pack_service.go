@@ -66,7 +66,8 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 		tracingRoot = "/sys/kernel/tracing"
 
-		logName = "ureadahead.log"
+		logName   = "ureadahead.log"
+		vmLogName = "vm_ureadahead.log"
 
 		ureadaheadTimeout = 30 * time.Second
 	)
@@ -284,9 +285,12 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	testing.ContextLog(ctx, "Ureadahead pack was generated")
 
 	var vmPackPath string
+	var vmLogPath string
 	if vmEnabled {
+		vmLogPath = filepath.Join(ureadaheadDataDir, vmLogName)
+
 		// Pull and obtain ARCVM pack from guest OS.
-		vmPackPath, err = getGuestPack(ctx)
+		vmPackPath, err = getGuestPack(ctx, vmLogPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain ureadahead pack from ARCVM guest OS")
 		}
@@ -296,6 +300,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		PackPath:   packPath,
 		VmPackPath: vmPackPath,
 		LogPath:    logPath,
+		VmLogPath:  vmLogPath,
 	}
 	return &response, nil
 }
@@ -359,7 +364,7 @@ func (c *UreadaheadPackService) CheckMinMemory(ctx context.Context, req *empty.E
 }
 
 // getGuestPack pulls ureadahead initial pack for requested Chrome login mode from guest OS.
-func getGuestPack(ctx context.Context) (string, error) {
+func getGuestPack(ctx context.Context, logPath string) (string, error) {
 	const (
 		ureadaheadDataDir = "/var/lib/ureadahead"
 
@@ -428,6 +433,19 @@ func getGuestPack(ctx context.Context) (string, error) {
 
 	if err := a.PullFile(ctx, srcPath, packPath); err != nil {
 		return "", errors.Wrapf(err, "failed to pull %s from ARCVM", srcPath)
+	}
+
+	logFile, err := os.Create(logPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create ARCVM log file")
+	}
+	defer logFile.Close()
+
+	// Capture stdout into log file.
+	cmd := a.Command(ctx, "/system/bin/ureadahead", "--dump", "--verbose")
+	cmd.Stdout = logFile
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrap(err, "failed to dump guest ureadahead pack")
 	}
 
 	return packPath, nil

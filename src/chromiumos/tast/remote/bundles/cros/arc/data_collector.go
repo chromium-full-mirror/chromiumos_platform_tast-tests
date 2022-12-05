@@ -256,6 +256,9 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		// change vm_initial_pack -> initial_pack.
 		vmInitialPack = "vm_initial_pack"
 
+		// Name of the log for pack in case of initial boot inside VM.
+		vmInitialPackLog = "vm_initial_pack.log"
+
 		// Number of retries for each flow in case of failure.
 		// Please see b/167697547, b/181832600 for more information. Retries are
 		// needed for occasional OptIn instability on ARC development builds. Only
@@ -371,6 +374,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		if param.vmEnabled {
 			filesToGet[response.VmPackPath] = vmInitialPack
+			filesToGet[response.VmLogPath] = vmInitialPackLog
 		}
 
 		for source, targetShort := range filesToGet {
