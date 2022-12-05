@@ -119,8 +119,14 @@ func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInf
 
 // RestoreImageSection restores image region from temporary file locally and restores fw with it.
 func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectionInfo) (*empty.Empty, error) {
-	if err := bios.WriteImageFromSingleSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer]); err != nil {
-		return nil, errors.Wrapf(err, "could not restore %s region with programmer %s from path %s", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
+	if req.Section != pb.ImageSection_EmptyImageSection {
+		if err := bios.WriteImageFromSingleSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer]); err != nil {
+			return nil, errors.Wrapf(err, "could not restore %q region with programmer %q from path %q", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
+		}
+	} else {
+		if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer]); err != nil {
+			return nil, errors.Wrapf(err, "could not restore %q region with programmer %q from path %q", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
+		}
 	}
 	return &empty.Empty{}, nil
 }
