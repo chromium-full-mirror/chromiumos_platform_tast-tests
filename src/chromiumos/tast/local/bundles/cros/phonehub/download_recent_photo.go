@@ -29,10 +29,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Exercises toggling the Recent Photos feature and downloading a photo from a connected phone",
 		Contacts: []string{
-			"jasonsun@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"jasonsun@chromium.org",
 		},
+		BugComponent: "b:1131837",
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

@@ -20,10 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that toggling Phone Hub's \"Silence phone\" pod will toggle do-not-disturb on the Android phone",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"kyleshima@chromium.org",
 		},
+		BugComponent: "b:1131837",
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

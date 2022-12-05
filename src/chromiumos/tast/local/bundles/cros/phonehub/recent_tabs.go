@@ -26,10 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that recently opened Chrome tabs on Android appear in Phone Hub",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"kyleshima@chromium.org",
 		},
+		BugComponent: "b:1131837",
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

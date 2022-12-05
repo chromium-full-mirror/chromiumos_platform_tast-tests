@@ -27,10 +27,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Android message notifications appear in Phone Hub and that inline reply works",
 		Contacts: []string{
-			"kyleshima@chromium.org",
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"kyleshima@chromium.org",
 		},
+		BugComponent: "b:1131837",
 		Attr:         []string{"group:cross-device", "cross-device_phonehub"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
