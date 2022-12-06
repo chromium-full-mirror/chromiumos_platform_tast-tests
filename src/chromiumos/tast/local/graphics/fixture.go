@@ -163,6 +163,7 @@ func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) 
 		`drm:i915_hangcheck_elapsed`,
 		`drm:i915_hangcheck_hung`,
 		`Hangcheck timer elapsed...`,
+		`GPU HANG: ecode: `,
 		`drm/i915: Resetting chip after gpu hang`,
 		`GPU HANG:.+\b[H|h]ang on (rcs0|vcs0|vecs0)`,
 		`hangcheck recover!`,      // Freedreno
