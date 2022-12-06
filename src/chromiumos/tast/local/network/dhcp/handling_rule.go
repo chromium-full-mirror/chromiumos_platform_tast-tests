@@ -380,11 +380,12 @@ func NewRejectAndRespondToRequest(expReqIP, expSvrIP string, options OptionMap, 
 // response to this packet.
 func NewAcceptDecline(expSvrIP string, options OptionMap, fields FieldMap) *HandlingRule {
 	return &HandlingRule{
-		ruleType:   acceptDecline,
-		options:    options,
-		fields:     fields,
-		msgType:    release,
-		respPktCnt: 1,
-		expSvrIP:   expSvrIP,
+		ruleType:    acceptDecline,
+		options:     options,
+		fields:      fields,
+		msgType:     decline,
+		respPktCnt:  0,
+		expSvrIP:    expSvrIP,
+		expSvrIPSet: true,
 	}
 }
