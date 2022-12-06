@@ -367,6 +367,9 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			testing.ContextLog(ctx, "Rebooting")
 			powerOffCtx, cancel := context.WithTimeout(ctx, cmdTimeout)
 			defer cancel()
+			if err := h.CloseRPCConnection(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close rpc connection: ", err)
+			}
 			// Since the DUT will power off, deadline exceeded is expected here.
 			if err := h.DUT.Conn().CommandContext(powerOffCtx, "reboot").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 				return errors.Wrap(err, "DUT poweroff")
@@ -942,6 +945,9 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	// Booting into recovery mode seems to work better if you don't enable the USB key until after the recovery power state.
 	if usbMux == servo.USBMuxDUT {
 		testing.ContextLog(ctx, "Powering off USB")
+		if err := h.Servo.SetUSBMuxState(ctx, usbMux); err != nil {
+			return errors.Wrapf(err, "setting usb mux state to %s while DUT is off", usbMux)
+		}
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 			return errors.Wrapf(err, "setting usb mux state to %s while DUT is off", usbMux)
 		}
@@ -964,6 +970,9 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 		return errors.Wrapf(err, "setting power state to %s", servo.PowerStateRec)
 	}
 	if usbMux == servo.USBMuxDUT {
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			return errors.Wrapf(err, "sleeping before setting usb mux state to %s", usbMux)
+		}
 		testing.ContextLog(ctx, "Enabling USB")
 		if err := h.Servo.SetUSBMuxState(ctx, usbMux); err != nil {
 			return errors.Wrapf(err, "setting usb mux state to %s while DUT is off", usbMux)
@@ -981,6 +990,9 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 	testing.ContextLog(ctx, "Powering off DUT")
 	powerOffCtx, cancel := context.WithTimeout(ctx, cmdTimeout)
 	defer cancel()
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to close rpc connection: ", err)
+	}
 	// Since the DUT will power off, deadline exceeded is expected here.
 	if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return errors.Wrap(err, "DUT poweroff")

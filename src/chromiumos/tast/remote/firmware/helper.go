@@ -1111,6 +1111,12 @@ func (h *Helper) pressPowerSequenceToOpenCCD(ctx context.Context, openNoTPMWipe 
 func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	testing.ContextLog(ctx, "Validating image usbkey on servo")
 	// Power cycling the USB key helps to make it visible to the host.
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		return "", errors.Wrap(err, "failed to power off usbkey")
+	}
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return "", errors.Wrap(err, "sleep 2s")
+	}
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		return "", errors.Wrap(err, "failed to power off usbkey")
 	}
