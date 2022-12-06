@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      10 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			// Verify that Wilco doesn't turn on from S5 (off) by opening the lid.
 			Name: "lid_close_open",
@@ -103,7 +104,17 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("DUT did not power down: ", err)
 	}
 
+	// Based on 'ap_state.c', we saw that TPM_RST_L should
+	// change with the state of the ap. If cr50 console becomes
+	// unresponsive during deep sleep, check for TPM_RST_L
+	// after DUT awakened, and verify that its value has changed
+	// from 0 to 1.
+	checkTPMRSTLState := false
 	if tc.checkCharger {
+		s.Log("Sleeping for 10 seconds")
+		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+			s.Fatal("Failed to sleep for 10 seconds: ", err)
+		}
 		// Increase timeout in getting response from cr50 uart.
 		if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "10"); err != nil {
 			s.Fatal("Failed to set cr50 uart timeout: ", err)
@@ -127,9 +138,12 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-			s.Fatal("Failed to verify DUT's AP is off: ", err)
+			if !strings.Contains(err.Error(), "Client.Timeout exceeded while awaiting headers") {
+				s.Fatal("Failed to verify DUT's AP is off: ", err)
+			}
+			s.Log("Cr50 not responsive, check for TPM_RST_L state after rebooting the DUT")
+			checkTPMRSTLState = true
 		}
-
 		s.Log("Connecting charger")
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Fatal("Unable to connect charger: ", err)
@@ -179,5 +193,26 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 	s.Log("Checking that DUT wakes up from a press on power button")
 	if err := d.WaitConnect(waitConnectFromPressPowerCtx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
+	}
+
+	if checkTPMRSTLState {
+		s.Log("Checking for TPM_RST_L to verify DUT's ap off during deep sleep")
+		var (
+			foundGpio    = `(0|1\W*)TPM_RST_L`
+			paramInvalid = `Parameter\s+(\d+)\s+invalid`
+			checkGpio    = `(` + foundGpio + `|` + paramInvalid + `)`
+		)
+		cmd := "gpioget TPM_RST_L"
+		out, err := h.Servo.RunCR50CommandGetOutput(ctx, cmd, []string{checkGpio})
+		if err != nil {
+			s.Fatalf("Failed to run command %v: %v", cmd, err)
+		}
+		reMatch := regexp.MustCompile(foundGpio)
+		if match := reMatch.FindStringSubmatch(out[0][0]); match == nil {
+			s.Fatal("Did not find gpio TPM_RST_L: ", err)
+		}
+		if !strings.Contains(out[0][0], "1*") {
+			s.Fatal("Gpio TPM_RST_L did not change after dut awakened")
+		}
 	}
 }
