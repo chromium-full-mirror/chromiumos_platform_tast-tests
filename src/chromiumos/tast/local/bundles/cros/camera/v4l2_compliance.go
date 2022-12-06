@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -24,6 +25,8 @@ func init() {
 		},
 		BugComponent: "b:1093480",
 		Attr:         []string{"group:mainline", "group:camera-usb-qual", "informational"},
+		// TODO(b/258798506) Re-enable on ampton when the focus issue is fixed.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("ampton")),
 		SoftwareDeps: []string{"uvc_compliant"},
 	})
 }
