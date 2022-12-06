@@ -264,6 +264,7 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *empty.Em
 			DataB64: res.Cred.PublicKey.DataB64,
 			KeyType: res.Cred.PublicKey.KeyType,
 		},
+		SerialNumberB64: res.Cred.SerialNumberB64,
 	}
 	return &cred, nil
 }

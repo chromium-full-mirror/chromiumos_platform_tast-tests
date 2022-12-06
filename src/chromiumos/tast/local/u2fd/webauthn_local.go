@@ -37,6 +37,7 @@ type PublicKey struct {
 type WebAuthnCredential struct {
 	CredentialIDB64 string `json:"credentialIDB64"`
 	PublicKey       `json:"publicKey"`
+	SerialNumberB64 string `json:"serialNumberB64"`
 }
 
 // WebAuthnRegistrationConfig is the config to specify options of WebAuthn
