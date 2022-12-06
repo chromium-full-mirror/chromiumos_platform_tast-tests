@@ -74,6 +74,11 @@ func DownloadRecentPhoto(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Recent Photos on the phone: ", err)
 	}
 
+	// Re-open Phone Hub to expose controls to download recent photos.
+	if err := phonehub.Show(ctx, tconn); err != nil {
+		s.Fatal("Failed to re-open Phone Hub to download Recent Photos: ", err)
+	}
+
 	// Download the newly taken photo to Tote.
 	if err := phonehub.DownloadMostRecentPhoto(ctx, tconn); err != nil {
 		s.Fatal("Failed to download the most recent photo: ", err)
