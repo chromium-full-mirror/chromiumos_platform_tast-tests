@@ -33,6 +33,7 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		SoftwareDeps: []string{"v4l2_codec"},
 		Timeout:      2 * time.Minute,
+		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
 			// -v: Turn on verbose reporting.
 			Name: "decoder",

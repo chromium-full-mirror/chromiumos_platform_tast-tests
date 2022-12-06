@@ -40,6 +40,7 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
 			Name: "yuy2tonv12",
 			Val: libYUVPerfTestParams{testName: "LibYUVConvertTest.YUY2ToNV12_Opt",

@@ -22,6 +22,7 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "gpuWatchHangs",
 	})
 }
 

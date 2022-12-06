@@ -27,6 +27,7 @@ func init() {
 		SoftwareDeps: []string{"protected_content"},
 		Timeout:      25 * time.Minute,
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
+		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
 			Name: "ce_cdm",
 			Val:  "widevine_ce_cdm_hw_tests",

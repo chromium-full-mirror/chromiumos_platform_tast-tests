@@ -26,6 +26,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 		SoftwareDeps: []string{"vaapi"},
+		Fixture:      "gpuWatchHangs",
 		Timeout:      120 * time.Minute,
 		// TODO(b/191801955): Reenable on grunt when it stops hanging forever.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt")),
