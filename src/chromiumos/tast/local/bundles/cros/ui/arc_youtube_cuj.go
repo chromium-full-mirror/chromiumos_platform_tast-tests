@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
@@ -74,12 +73,8 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	defer closeUIDevice(cleanupCtx)
 
 	const ytAppPkgName = "com.google.android.youtube"
-	if err := playstore.InstallApp(ctx, a, d, ytAppPkgName, &playstore.Options{}); err != nil {
+	if err := playstore.InstallOrUpdateAppAndClose(ctx, tconn, a, d, ytAppPkgName, &playstore.Options{}); err != nil {
 		s.Fatal("Failed to install ARC++ YouTube app: ", err)
-	}
-
-	if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
-		s.Fatal("Failed to close Play Store: ", err)
 	}
 
 	act, err := arc.NewActivity(a, ytAppPkgName, "com.google.android.apps.youtube.app.WatchWhileActivity")
