@@ -169,34 +169,26 @@ func (e *Env) Cleanup(ctx context.Context) error {
 		updateLastErrAndLog(errors.Wrap(err, "failed removing chroot filesystem"))
 	}
 
-	// Wait until veth pair is removed. It should happen once we remove the netns.
-	if err := waitForInterfaceRemoved(ctx, e.VethOutName); err != nil {
-		updateLastErrAndLog(errors.Wrapf(err, "failed to wait for veth %s removal", e.VethOutName))
+	// Try to remove veth if it still exists.
+	if err := removeInterfaceIfExist(ctx, e.VethOutName); err != nil {
+		updateLastErrAndLog(errors.Wrapf(err, "failed to remove veth %s", e.VethOutName))
 	}
 
 	return lastErr
 }
 
-// waitForInterfaceRemoved waits until interface of given name is removed, which may take up
-// to 2 seconds (on a local DUT) to finish.
-func waitForInterfaceRemoved(ctx context.Context, name string) error {
-	if name == "" {
-		return errors.New("interface name is invalid")
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		ift, err := net.Interfaces()
-		if err != nil {
-			return errors.Wrap(err, "failed to get interfaces")
+// removeInterfaceIfExist remove the interface with name if it exists, in the
+// best-effort way. This function is used to remove the veth interface created
+// by this package. Since the one side of the veth pair is in the netns, when we
+// remove the netns, the veth pair should be removed automatically, but we found
+// that this may take some time on some kernels (see b/260907775), so we do
+// remove it explicitly instead of waiting for it to be removed.
+func removeInterfaceIfExist(ctx context.Context, name string) error {
+	if err := testexec.CommandContext(ctx, "ip", "link", "del", name).Run(); err != nil {
+		// Exit error is expected in case the eth has already been removed.
+		if _, ok := err.(*exec.ExitError); !ok {
+			return errors.Wrapf(err, "failed to remove %s", name)
 		}
-		for _, ifi := range ift {
-			if name == ifi.Name {
-				return errors.Errorf("interface %s still exists", name)
-			}
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		return errors.Wrapf(err, "failed to wait for interface %s disappeared", name)
 	}
 	return nil
 }
@@ -463,10 +455,9 @@ func (e *Env) makeNetNS(ctx context.Context) error {
 		}
 	}
 
-	// Wait until veth pair is removed. It should happen once we remove the netns, but
-	// may fail to wait for removal during clean up. So we wait once again in set up.
-	if err := waitForInterfaceRemoved(ctx, e.VethOutName); err != nil {
-		return errors.Wrapf(err, "failed to wait for veth %s removal", e.VethOutName)
+	// Try to remove the leftover veth from the last test run if there is any.
+	if err := removeInterfaceIfExist(ctx, e.VethOutName); err != nil {
+		return errors.Wrapf(err, "failed to remove veth %s", e.VethOutName)
 	}
 
 	// Create new namespace.
