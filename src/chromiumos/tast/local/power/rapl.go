@@ -23,6 +23,10 @@ const (
 	core     = "core"
 	uncore   = "uncore"
 	dram     = "dram"
+
+	// Note: psys is not supported on ChromeOS. It is ignored if it appears
+	// in any RAPL files.
+	psys = "psys"
 )
 
 // Note that all of these values are estimates.
@@ -35,7 +39,6 @@ var isZoneExpected = map[string]bool{
 	package0: true,
 	// uncore reports the joules from the GPU. It is a subset of package-0.
 	uncore: true,
-	// Note: psys is not supported on ChromeOS.
 }
 
 // RAPLValues represents the Intel "Running Average Power Limit" (RAPL) values.
@@ -254,6 +257,11 @@ func readRAPLValues(dirsToParse []string) (*RAPLValues, time.Time, error) {
 		e, err := readRAPLValue(path.Join(dir, raplEnergyFile))
 		if err != nil {
 			return nil, time.Time{}, err
+		}
+
+		// Ignore psys, since it is not supported on ChromeOS.
+		if name == psys {
+			continue
 		}
 
 		if !isZoneExpected[name] {
