@@ -67,12 +67,6 @@ func SettingsEnableDisable(ctx context.Context, s *testing.State) {
 		cr.Close(ctx)
 	}()
 
-	// Signin with Smart Lock should be disabled by default. Disable it
-	// here in case a previous test run left it on.
-	if err := smartlock.DisableSmartLockLogin(ctx, tconn, cr); err != nil {
-		s.Fatal("Failed to disable smart lock login: ", err)
-	}
-
 	// Check that Smart Lock is not shown when disabled.
 	s.Log("Disabling Smart Lock")
 	if err := smartlock.ToggleSmartLockEnabled(ctx, false /*enable*/, tconn, cr, password); err != nil {

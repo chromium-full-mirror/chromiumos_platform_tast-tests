@@ -22,37 +22,43 @@ import (
 )
 
 const (
-	smartLockSettingsURL      = "smartLock"
 	multidevicePasswordPrompt = crossdevicesettings.MultidevicePageJS + `.shadowRoot.querySelector("settings-password-prompt-dialog")`
 	smartLockSubpage          = crossdevicesettings.MultidevicePageJS + `.shadowRoot.querySelector("settings-multidevice-smartlock-subpage")`
-	smartLockToggle           = smartLockSubpage + `.shadowRoot.querySelector("settings-multidevice-feature-toggle")`
+	smartLockToggle           = crossdevicesettings.MultideviceSubpageJS +
+		`.shadowRoot.getElementById("smartLockItem")` +
+		`.shadowRoot.querySelector("settings-multidevice-feature-toggle")` +
+		`.shadowRoot.getElementById("toggle")`
+	smartLockToggleChecked = smartLockToggle + `.checked`
 )
 
-// OpenSmartLockSubpage opens the Smart Lock sub page in OS Settings
-func OpenSmartLockSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ossettings.OSSettings, error) {
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, filepath.Join(crossdevicesettings.ConnectedDevicesSettingsURL, smartLockSettingsURL), func(context.Context) error { return nil })
+// OpenConnectedDevicesPage opens the multidevice settings page in OS Settings
+func OpenConnectedDevicesPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ossettings.OSSettings, error) {
+	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, filepath.Join(crossdevicesettings.ConnectedDevicesSettingsURL), func(context.Context) error { return nil })
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to launch OS Settings to the Smart Lock page")
+		return nil, errors.Wrap(err, "failed to launch OS Settings at the multidevice feature page")
 	}
 	return settings, nil
 }
 
-// ToggleSmartLockEnabled opens the Smart Lock sub page in OS Settings and toggles Smart Lock's enabled state
+// ToggleSmartLockEnabled opens the Connected devices page in OS Settings and toggles Smart Lock's enabled state
 func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.TestConn, cr *chrome.Chrome, password string) error {
-	settings, err := OpenSmartLockSubpage(ctx, tconn, cr)
+	settings, err := OpenConnectedDevicesPage(ctx, tconn, cr)
 	if err != nil {
-		return errors.Wrap(err, "failed to open Smart Lock subpage in OS Settings")
+		return errors.Wrap(err, "failed to open Connected devices page in OS Settings")
 	}
 	settingsConn, err := settings.ChromeConn(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to OS settings target")
 	}
-	if err := settingsConn.WaitForExpr(ctx, smartLockSubpage); err != nil {
-		return errors.Wrap(err, "failed waiting for Smart Lock subpage to load")
+	defer settingsConn.Close()
+
+	if err := settingsConn.WaitForExpr(ctx, smartLockToggle); err != nil {
+		return errors.Wrap(err, "failed to find the Smart Lock toggle")
 	}
+
 	var toggleChecked bool
-	if err := settingsConn.Eval(ctx, smartLockToggle+`.checked_`, &toggleChecked); err != nil {
-		return errors.Wrap(err, "failed to read Smart Lock toggle checked_ property")
+	if err := settingsConn.Eval(ctx, smartLockToggleChecked, &toggleChecked); err != nil {
+		return errors.Wrap(err, "failed to read Smart Lock toggle checked property")
 	}
 	if toggleChecked == enable {
 		// Smart Lock is already in the desired state.
@@ -73,7 +79,7 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 		if err := settingsConn.Eval(ctx, expr, nil); err != nil {
 			return errors.Wrap(err, "failed to set authToken_ property")
 		}
-		if err := settingsConn.Eval(ctx, smartLockToggle+`.toggleFeature()`, nil); err != nil {
+		if err := settingsConn.Eval(ctx, smartLockToggle+`.click()`, nil); err != nil {
 			return errors.Wrap(err, "failed to toggle Smart Lock enabled on")
 		}
 		// When the toggle is enabled, the password dialog will be shown,
@@ -82,14 +88,14 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 			return errors.Wrap(err, "failed to close password prompt")
 		}
 	} else {
-		if err := settingsConn.Eval(ctx, smartLockToggle+`.toggleFeature()`, nil); err != nil {
+		if err := settingsConn.Eval(ctx, smartLockToggle+`.click()`, nil); err != nil {
 			return errors.Wrap(err, "failed to toggle Smart Lock enabled off")
 		}
 	}
 
 	// Ensure that the Smart Lock toggle is now in the desired state. Wait
 	// up to 3 seconds since the change doesn't take effect instantaneously.
-	var expr string = smartLockToggle + `.checked_`
+	var expr string = smartLockToggleChecked
 	if !enable {
 		expr = `!` + expr
 	}
@@ -102,7 +108,7 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 // DisableSmartLockLogin disables Smart Lock login functionality.
 // This means that only unlocking with Smart Lock is allowed.
 func DisableSmartLockLogin(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	settings, err := OpenSmartLockSubpage(ctx, tconn, cr)
+	settings, err := OpenConnectedDevicesPage(ctx, tconn, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to open Smart Lock subpage in OS Settings")
 	}
@@ -124,7 +130,7 @@ func DisableSmartLockLogin(ctx context.Context, tconn *chrome.TestConn, cr *chro
 
 // EnableSmartLockLogin enables the ability to login with Smart Lock.
 func EnableSmartLockLogin(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, password string) error {
-	settings, err := OpenSmartLockSubpage(ctx, tconn, cr)
+	settings, err := OpenConnectedDevicesPage(ctx, tconn, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to open Smart Lock subpage in OS Settings")
 	}
@@ -235,11 +241,11 @@ func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		return nil, nil, errors.Wrap(err, "failed to sign in")
 	}
 
-	if _, err := OpenSmartLockSubpage(ctx, tconn, cr); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to open Smart lock sub page")
+	if _, err := OpenConnectedDevicesPage(ctx, tconn, cr); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to open Connected devices page")
 	}
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to sleep on Smart Lock subpage")
+		return nil, nil, errors.Wrap(err, "failed to sleep on Connected devices page")
 	}
 	if err := SignOut(ctx, cr, kb); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to sign out")
