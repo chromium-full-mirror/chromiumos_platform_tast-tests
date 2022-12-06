@@ -1008,6 +1008,7 @@ interface WebauthnCredential {
   multiCredBits?: number;
   attestationFormat?: string;
   attestationStatement?: object;
+  serialNumberB64?: string;
 }
 
 async function webauthnRegistration(config: WebauthnRegistrationConfig):
@@ -1099,6 +1100,7 @@ async function webauthnRegistration(config: WebauthnRegistrationConfig):
   const attestationFormat = header['fmt'];
   const attestationStatement = header['attStmt'];
 
+  let serialNumberB64 = "";
   if (config.attestation && config.attestation !== "none") {
     if (header['fmt'] === "none") {
       throw 'Attestation is expected but not provided';
@@ -1106,8 +1108,7 @@ async function webauthnRegistration(config: WebauthnRegistrationConfig):
       throw 'Can\'t parse attestation format ' + header['fmt'];
     }
     const cert = new ByteString(attestationStatement["x5c"][0]);
-    const sn = getSerialNumber(cert);
-    console.log("sn: ", sn.slice);
+    serialNumberB64 = getSerialNumber(cert).webSafeBase64();
   } else if (config.attestation && config.attestation === "none") {
     if (header['fmt'] !== "none") {
       throw 'Attestation is not expected but provided';
@@ -1131,6 +1132,7 @@ async function webauthnRegistration(config: WebauthnRegistrationConfig):
     multiCredBits,
     attestationFormat,
     attestationStatement,
+    serialNumberB64,
   };
 }
 
