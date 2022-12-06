@@ -256,7 +256,7 @@ var file_device_trust_service_proto_rawDesc = []byte{
 	0x61, 0x6b, 0x65, 0x49, 0x64, 0x50, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x78, 0x70, 0x65, 0x63, 0x74, 0x65, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x65, 0x78, 0x70, 0x65, 0x63, 0x74, 0x65, 0x64, 0x32,
-	0xa0, 0x03, 0x0a, 0x12, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x54, 0x72, 0x75, 0x73, 0x74, 0x53,
+	0xe0, 0x03, 0x0a, 0x12, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x54, 0x72, 0x75, 0x73, 0x74, 0x53,
 	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x51, 0x0a, 0x06, 0x45, 0x6e, 0x72, 0x6f, 0x6c, 0x6c,
 	0x12, 0x2d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x65, 0x6e, 0x74,
 	0x65, 0x72, 0x70, 0x72, 0x69, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72,
@@ -281,6 +281,10 @@ var file_device_trust_service_proto_rawDesc = []byte{
 	0x72, 0x69, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x73, 0x2e, 0x43,
 	0x68, 0x65, 0x63, 0x6b, 0x46, 0x61, 0x6b, 0x65, 0x49, 0x64, 0x50, 0x53, 0x74, 0x61, 0x74, 0x75,
 	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x12, 0x3e, 0x0a, 0x0a, 0x53, 0x74, 0x6f, 0x70, 0x43, 0x68, 0x72, 0x6f, 0x6d, 0x65,
+	0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
 	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
 	0x22, 0x00, 0x42, 0x34, 0x5a, 0x32, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73,
 	0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
@@ -313,12 +317,14 @@ var file_device_trust_service_proto_depIdxs = []int32{
 	1, // 1: tast.cros.enterpriseconnectors.DeviceTrustService.LoginWithFakeIdP:input_type -> tast.cros.enterpriseconnectors.LoginWithFakeIdPRequest
 	2, // 2: tast.cros.enterpriseconnectors.DeviceTrustService.ConnectToFakeIdP:input_type -> tast.cros.enterpriseconnectors.ConnectToFakeIdPRequest
 	3, // 3: tast.cros.enterpriseconnectors.DeviceTrustService.CheckFakeIdPStatus:input_type -> tast.cros.enterpriseconnectors.CheckFakeIdPStatusRequest
-	4, // 4: tast.cros.enterpriseconnectors.DeviceTrustService.Enroll:output_type -> google.protobuf.Empty
-	4, // 5: tast.cros.enterpriseconnectors.DeviceTrustService.LoginWithFakeIdP:output_type -> google.protobuf.Empty
-	4, // 6: tast.cros.enterpriseconnectors.DeviceTrustService.ConnectToFakeIdP:output_type -> google.protobuf.Empty
-	4, // 7: tast.cros.enterpriseconnectors.DeviceTrustService.CheckFakeIdPStatus:output_type -> google.protobuf.Empty
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	4, // 4: tast.cros.enterpriseconnectors.DeviceTrustService.StopChrome:input_type -> google.protobuf.Empty
+	4, // 5: tast.cros.enterpriseconnectors.DeviceTrustService.Enroll:output_type -> google.protobuf.Empty
+	4, // 6: tast.cros.enterpriseconnectors.DeviceTrustService.LoginWithFakeIdP:output_type -> google.protobuf.Empty
+	4, // 7: tast.cros.enterpriseconnectors.DeviceTrustService.ConnectToFakeIdP:output_type -> google.protobuf.Empty
+	4, // 8: tast.cros.enterpriseconnectors.DeviceTrustService.CheckFakeIdPStatus:output_type -> google.protobuf.Empty
+	4, // 9: tast.cros.enterpriseconnectors.DeviceTrustService.StopChrome:output_type -> google.protobuf.Empty
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -415,6 +421,7 @@ type DeviceTrustServiceClient interface {
 	LoginWithFakeIdP(ctx context.Context, in *LoginWithFakeIdPRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ConnectToFakeIdP(ctx context.Context, in *ConnectToFakeIdPRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CheckFakeIdPStatus(ctx context.Context, in *CheckFakeIdPStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	StopChrome(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type deviceTrustServiceClient struct {
@@ -461,12 +468,22 @@ func (c *deviceTrustServiceClient) CheckFakeIdPStatus(ctx context.Context, in *C
 	return out, nil
 }
 
+func (c *deviceTrustServiceClient) StopChrome(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.enterpriseconnectors.DeviceTrustService/StopChrome", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DeviceTrustServiceServer is the server API for DeviceTrustService service.
 type DeviceTrustServiceServer interface {
 	Enroll(context.Context, *EnrollRequest) (*emptypb.Empty, error)
 	LoginWithFakeIdP(context.Context, *LoginWithFakeIdPRequest) (*emptypb.Empty, error)
 	ConnectToFakeIdP(context.Context, *ConnectToFakeIdPRequest) (*emptypb.Empty, error)
 	CheckFakeIdPStatus(context.Context, *CheckFakeIdPStatusRequest) (*emptypb.Empty, error)
+	StopChrome(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedDeviceTrustServiceServer can be embedded to have forward compatible implementations.
@@ -484,6 +501,9 @@ func (*UnimplementedDeviceTrustServiceServer) ConnectToFakeIdP(context.Context, 
 }
 func (*UnimplementedDeviceTrustServiceServer) CheckFakeIdPStatus(context.Context, *CheckFakeIdPStatusRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckFakeIdPStatus not implemented")
+}
+func (*UnimplementedDeviceTrustServiceServer) StopChrome(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StopChrome not implemented")
 }
 
 func RegisterDeviceTrustServiceServer(s *grpc.Server, srv DeviceTrustServiceServer) {
@@ -562,6 +582,24 @@ func _DeviceTrustService_CheckFakeIdPStatus_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeviceTrustService_StopChrome_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceTrustServiceServer).StopChrome(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.enterpriseconnectors.DeviceTrustService/StopChrome",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceTrustServiceServer).StopChrome(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DeviceTrustService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.enterpriseconnectors.DeviceTrustService",
 	HandlerType: (*DeviceTrustServiceServer)(nil),
@@ -581,6 +619,10 @@ var _DeviceTrustService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckFakeIdPStatus",
 			Handler:    _DeviceTrustService_CheckFakeIdPStatus_Handler,
+		},
+		{
+			MethodName: "StopChrome",
+			Handler:    _DeviceTrustService_StopChrome_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

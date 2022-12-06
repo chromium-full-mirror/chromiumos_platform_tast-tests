@@ -30,4 +30,5 @@ service DeviceTrustService {
   rpc LoginWithFakeIdP(LoginWithFakeIdPRequest) returns (google.protobuf.Empty) {}
   rpc ConnectToFakeIdP(ConnectToFakeIdPRequest) returns (google.protobuf.Empty) {}
   rpc CheckFakeIdPStatus(CheckFakeIdPStatusRequest) returns (google.protobuf.Empty) {}
+  rpc StopChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }

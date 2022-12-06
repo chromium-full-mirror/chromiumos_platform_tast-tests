@@ -48,18 +48,16 @@ type DeviceTrustService struct {
 
 // Enroll the device with the provided account credentials.
 func (service *DeviceTrustService) Enroll(ctx context.Context, req *pb.EnrollRequest) (_ *empty.Empty, retErr error) {
-	if service.cr != nil {
-		return nil, errors.New("DUT for running snapshot is already set up")
-	}
 	var opts []chrome.Option
 
 	opts = append(opts, chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.User, Pass: req.Pass}))
 	opts = append(opts, chrome.DMSPolicy(sandboxDMServer))
 	opts = append(opts, chrome.NoLogin())
-	_, err := chrome.New(ctx, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}
+	defer cr.Close(ctx)
 
 	return &empty.Empty{}, nil
 }
@@ -109,6 +107,7 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 	if err != nil {
 		return nil, errors.Wrap(err, "Chrome login failed")
 	}
+	service.cr = cr
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -126,7 +125,6 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "Device Trust failed")
 	}
 
-	service.cr = cr
 	service.ui = ui
 
 	return &empty.Empty{}, nil
@@ -137,7 +135,6 @@ func (service *DeviceTrustService) CheckFakeIdPStatus(ctx context.Context, req *
 	if service.cr == nil || service.ui == nil {
 		return nil, errors.New("Device Trust service is not set up properly")
 	}
-	defer service.cr.Close(ctx)
 
 	deviceTrustSuccessful, err := wasDeviceTrustAttestationSuccessful(ctx, service.ui)
 	if err != nil {
@@ -173,6 +170,22 @@ func (service *DeviceTrustService) CheckFakeIdPStatus(ctx context.Context, req *
 	}
 
 	return &empty.Empty{}, nil
+}
+
+// StopChrome closes the current Chrome instance.
+func (service *DeviceTrustService) StopChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if service.cr == nil {
+		return nil, errors.New("no active Chrome instance")
+	}
+
+	var err error
+	if err = service.cr.Close(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to close Chrome: ", err)
+		err = errors.Wrap(err, "failed to close Chrome")
+	}
+	service.cr = nil
+
+	return &empty.Empty{}, err
 }
 
 // getErrorMessage returns in case of an unsuccessful Device Trust attestation flow the error message, which should be displayed by the fake IdP.
