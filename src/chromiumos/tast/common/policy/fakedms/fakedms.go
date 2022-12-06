@@ -102,6 +102,7 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 		// cmd.ExtraFiles (set below) assigns element i to file descriptor 3+i.
 		// See exec.Cmd for more info.
 		"--startup-pipe=3",
+		"--min-log-level=0",
 	}
 
 	cmd := testexec.CommandContext(ctx, fakeDMServerPath, args...)
