@@ -71,7 +71,7 @@ func IgtProcessResults(testExe string, file *os.File, isExitErr bool, exitErr *e
 	summary := fmt.Sprintf("Ran %d subtests with %d failures and %d skipped",
 		results.passed+results.failed, results.failed, results.skipped)
 
-	isError := false
+	isError := true
 	outputLog := ""
 
 	// In the case of running multiple subtests which all happen to be skipped, igt_exitcode is 0,
@@ -83,13 +83,12 @@ func IgtProcessResults(testExe string, file *os.File, isExitErr bool, exitErr *e
 		// Each test is expected to run and either pass or fail. If nothing happens, then something is off.
 	} else if results.passed+results.failed+results.skipped == 0 {
 		outputLog = "Entire test was skipped - No subtests were run\n"
-		isError = true
 	} else if len(failedSubtests) > 0 {
 		outputLog = fmt.Sprintf("FAIL: Test:%s - Pass:%d Fail:%d - FailedSubtests:%s - Summary:%s\n",
 			testExe, results.passed, results.failed, failedSubtests, summary)
-		isError = true
 	} else {
 		outputLog = fmt.Sprintf("%s\n", summary)
+		isError = false
 	}
 
 	return isError, outputLog
