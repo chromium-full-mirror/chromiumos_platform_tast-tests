@@ -525,7 +525,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			testing.ContextLogf(ctx, "Switching tab to window %d, tab %d", idx+1, tabIdx+1)
 
 			tab := window.tabs[tabIdx]
-			if tab.pageInfo.webName == youtube {
+			if tab.pageInfo.webName == youtube || tab.pageInfo.webName == reddit {
 				notificationsDialog := nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
 				allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
 				if err := uiauto.IfSuccessThen(
