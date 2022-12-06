@@ -162,3 +162,10 @@ func (v *Values) Verify(ctx context.Context, expects map[string]float64) []error
 func (v *Values) Save(ctx context.Context, outdir string) error {
 	return v.Values(ctx).Save(outdir)
 }
+
+// ForEach will execute the given callback for each stored metric.
+func (v *Values) ForEach(callback func(name string, value []float64)) {
+	for name, values := range v.values {
+		callback(name, values)
+	}
+}

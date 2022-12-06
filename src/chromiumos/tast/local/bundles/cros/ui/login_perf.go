@@ -39,6 +39,17 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	ensureWorkVisibleHistogram       = "GPU.EnsureWorkVisibleDuration"
+	ensureWorkVisibleLowResHistogram = "GPU.EnsureWorkVisibleDurationLowRes"
+	allBrowserWindowsCreated         = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
+	allBrowserWindowsShown           = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
+	allBrowserWindowsPresented       = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
+	allShelfIconsLoaded              = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
+	shelfLoginAnimationEnd           = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
+	ashTastBootTimeLogin2            = "Ash.Tast.BootTime.Login2"
+)
+
 type loginPerfTestParam struct {
 	bt              browser.Type     // browser.{TypeAsh/TypeLacros}
 	lacrosSelection lacros.Selection // lacros.{Omaha,Rootfs}
@@ -64,7 +75,7 @@ func init() {
 		},
 		// Test runs login / chrome restart 120+ times.
 		Timeout: 120 * time.Minute,
-		Data:    []string{"animation.html", "animation.js"},
+		Data:    []string{"animation.html", "animation.js", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{{
 			Name:      "ash_chrome",
 			ExtraAttr: []string{"group:cuj"},
@@ -101,14 +112,31 @@ func init() {
 	})
 }
 
+type loginPerfTestConfig struct {
+	arcMode          string             // ARC++ mode name. Used to add suffix to the reported metrics.
+	arcOpt           []chrome.Option    // Additional Chrome options to control ARC++.
+	creds            chrome.Creds       // Test user credentials.
+	currentWindows   int                // Test will ensure that at least this number of windows will be restored.
+	expectHistograms []string           // The list of expected histograms. Test will wait for all of them to get reported.
+	inTabletMode     bool               // Whether Chrome should run in tablet mode.
+	lacrosCfg        *lacrosfixt.Config // Lacros configuration.
+	param            loginPerfTestParam // Tast subtest parameters.
+	windows          int                // Number of restored windows as configured.
+}
+
 // loginPerfStartToLoginScreen starts Chrome to the login screen.
-func loginPerfStartToLoginScreen(ctx context.Context, s *testing.State, browserType browser.Type, lacrosConfig *lacrosfixt.Config, arcOpt []chrome.Option, useTabletMode bool) (cr *chrome.Chrome, retErr error) {
+func loginPerfStartToLoginScreen(
+	ctx context.Context,
+	s *testing.State,
+	testConfig *loginPerfTestConfig,
+) (cr *chrome.Chrome, retErr error) {
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).
 	options := []chrome.Option{
 		chrome.NoLogin(),
 		chrome.KeepState(),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.LoadSigninProfileExtension(
+			s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("FullRestore"),
 		chrome.EnableRestoreTabs(),
 		chrome.SkipForceOnlineSignInForTesting(),
@@ -117,8 +145,8 @@ func loginPerfStartToLoginScreen(ctx context.Context, s *testing.State, browserT
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
 	}
-	if browserType == browser.TypeLacros {
-		defaultOpts, err := lacrosConfig.Opts()
+	if testConfig.param.bt == browser.TypeLacros {
+		defaultOpts, err := testConfig.lacrosCfg.Opts()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get default options")
 		}
@@ -129,7 +157,7 @@ func loginPerfStartToLoginScreen(ctx context.Context, s *testing.State, browserT
 	}
 	cr, err := chrome.New(
 		ctx,
-		append(options, arcOpt...)...,
+		append(options, testConfig.arcOpt...)...,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
@@ -146,8 +174,8 @@ func loginPerfStartToLoginScreen(ctx context.Context, s *testing.State, browserT
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, tLoginConn)
 
-	if err = ash.SetTabletModeEnabled(ctx, tLoginConn, useTabletMode); err != nil {
-		return nil, errors.Wrapf(err, "failed to set tablet mode %v", useTabletMode)
+	if err := ash.SetTabletModeEnabled(ctx, tLoginConn, testConfig.inTabletMode); err != nil {
+		return nil, errors.Wrapf(err, "failed to set tablet mode %v", testConfig.inTabletMode)
 	}
 
 	// Wait for the login screen to be ready for password entry.
@@ -163,7 +191,12 @@ func loginPerfStartToLoginScreen(ctx context.Context, s *testing.State, browserT
 }
 
 // loginPerfDoLogin logs in and waits for animations to finish.
-func loginPerfDoLogin(ctx context.Context, cr *chrome.Chrome, credentials chrome.Creds, browserType browser.Type) (retL *lacros.Lacros, lacrosConnectTime *time.Duration, retErr error) {
+func loginPerfDoLogin(
+	ctx context.Context,
+	cr *chrome.Chrome,
+	credentials chrome.Creds,
+	browserType browser.Type,
+) (retL *lacros.Lacros, lacrosConnectTime *time.Duration, retErr error) {
 	outdir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return nil, nil, errors.New("no output directory exists")
@@ -193,7 +226,12 @@ func loginPerfDoLogin(ctx context.Context, cr *chrome.Chrome, credentials chrome
 	}
 
 	// Check if the login was successful using the API and also by looking for the shelf in the UI.
-	if st, err := lockscreen.WaitState(ctx, tLoginConn, func(st lockscreen.State) bool { return st.LoggedIn }, 30*time.Second); err != nil {
+	if st, err := lockscreen.WaitState(
+		ctx,
+		tLoginConn,
+		func(st lockscreen.State) bool { return st.LoggedIn },
+		30*time.Second,
+	); err != nil {
 		return nil, nil, errors.Wrapf(err, "failed waiting to log in: last state: %+v", st)
 	}
 
@@ -227,7 +265,14 @@ func loginPerfDoLogin(ctx context.Context, cr *chrome.Chrome, credentials chrome
 	return nil, nil, nil
 }
 
-func loginPerfCreateWindows(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros, url string, n int) error {
+// loginPerfCreateWindows creates |n| windows and for Ash or Lacros.
+func loginPerfCreateWindows(
+	ctx context.Context,
+	cr *chrome.Chrome,
+	l *lacros.Lacros,
+	url string,
+	n int,
+) error {
 	if l != nil {
 		for i := 0; i < n; i++ {
 			conn, err := l.NewConn(ctx, url, browser.WithNewWindow())
@@ -276,7 +321,13 @@ func maxHistogramValue(h *metrics.Histogram) (float64, error) {
 	return float64(max), nil
 }
 
-func reportMaxHistogramValue(ctx context.Context, pv *perfutil.Values, hist *metrics.Histogram, unit, valueName string) error {
+func reportMaxHistogramValue(
+	ctx context.Context,
+	pv *perfutil.Values,
+	hist *metrics.Histogram,
+	unit,
+	valueName string,
+) error {
 	value, err := maxHistogramValue(hist)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get %s data", hist.Name)
@@ -363,7 +414,14 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 
 // initializeLoginPerfTest initializes user session state that will be restored
 // in subsequent test runs.
-func initializeLoginPerfTest(ctx context.Context, browserType browser.Type, lacrosConfig *lacrosfixt.Config, loginPool string) (chrome.Creds, error) {
+func initializeLoginPerfTest(ctx context.Context,
+	browserType browser.Type,
+	lacrosConfig *lacrosfixt.Config,
+	loginPool string,
+) (
+	chrome.Creds,
+	error,
+) {
 	options := []chrome.Option{
 		chrome.GAIALoginPool(loginPool),
 		chrome.EnableRestoreTabs(),
@@ -433,7 +491,172 @@ func initializeLoginPerfTest(ctx context.Context, browserType browser.Type, lacr
 	return creds, logout(ctx, cr, l)
 }
 
+// testFunction is the actual test flow that could executed multiple times to get average data or generate tracing.
+func testFunction(
+	ctx context.Context,
+	s *testing.State,
+	name string,
+	testConfig *loginPerfTestConfig,
+	runTracing bool,
+) (
+	*chrome.Chrome,
+	*lacros.Lacros,
+	[]*metrics.Histogram,
+	map[perf.Metric][]float64,
+	error,
+) {
+	cr, err := loginPerfStartToLoginScreen(ctx, s, testConfig)
+	if err != nil {
+		return cr, nil, nil, nil, errors.Wrap(err, "failed to start to login screen")
+	}
+
+	var lacrosConnectTime *time.Duration
+	var l *lacros.Lacros
+
+	// The actual test function
+	testFunc := func(ctx context.Context) error {
+		var err error
+		l, lacrosConnectTime, err = loginPerfDoLogin(ctx, cr, testConfig.creds, testConfig.param.bt)
+		if err != nil {
+			return errors.Wrap(err, "failed to log in")
+		}
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to test api")
+		}
+		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+			return ash.WaitWindowFinishAnimating(ctx, tconn, w.ID)
+		}); err != nil {
+			return errors.Wrap(err, "failed to wait")
+		}
+		return nil
+	}
+
+	// Full test run, instantiate recorders.
+	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return cr, l, nil, nil, errors.Wrap(err, "creating login test api connection failed")
+	}
+	// Shorten context a bit to allow for cleanup.
+	closeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Initialize CUJ recording.
+	cujRecorder, err := cujrecorder.NewRecorderWithTestConn(
+		ctx,
+		tLoginConn,
+		cr,
+		tLoginConn,
+		nil,
+		cujrecorder.RecorderOptions{},
+	)
+	if err != nil {
+		s.Fatal("Failed to create a CUJ recorder: ", err)
+	}
+	defer cujRecorder.Close(closeCtx)
+
+	// TODO(b/237400719): support lacros
+	for _, metricConfig := range [][]cujrecorder.MetricConfig{
+		cujrecorder.AshCommonMetricConfigs(),
+		cujrecorder.BrowserCommonMetricConfigs(),
+		cujrecorder.AnyChromeCommonMetricConfigs(),
+	} {
+		if err := cujRecorder.AddCollectedMetrics(tLoginConn, browser.TypeAsh, metricConfig...); err != nil {
+			s.Fatal("Failed to add recorded metrics: ", err)
+		}
+	}
+
+	var histograms []*metrics.Histogram
+
+	// CUJ TPS metrics recording wrapper
+	cujFunc := func(ctx context.Context) error {
+		var err error
+		histograms, err = metrics.RunAndWaitAll(
+			ctx,
+			tLoginConn,
+			4*time.Minute,
+			testFunc,
+			testConfig.expectHistograms...,
+		)
+		if err != nil {
+			return err
+		}
+		visible := 0
+		if visible, err = countVisibleWindows(ctx, cr); err != nil {
+			return err
+		}
+		if visible != testConfig.currentWindows && visible != testConfig.currentWindows+1 {
+			err = errors.Errorf("unexpected number of visible windows: expected %d, found %d", testConfig.currentWindows, visible)
+		}
+		return err
+	}
+	if runTracing {
+		cujRecorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
+		cujRecorder.SetTraceFilePrefix(name + "-")
+	}
+	if err := cujRecorder.Run(ctx, cujFunc); err != nil {
+		return cr, l, nil, nil, errors.Wrap(err, "failed to run the test scenario")
+	}
+	tpsValues := perf.NewValues()
+	if err := cujRecorder.Record(ctx, tpsValues); err != nil {
+		return cr, l, nil, nil, errors.Wrap(err, "failed to collect the data from the recorder")
+	}
+	if lacrosConnectTime != nil {
+		tpsValues.Set(perf.Metric{
+			Name:      "Ash.Tast.LacrosConnectTime",
+			Unit:      "millisecond",
+			Direction: perf.SmallerIsBetter,
+		}, float64(lacrosConnectTime.Milliseconds()))
+	}
+	return cr, l, histograms, tpsValues.GetValues(), err
+}
+
+// storeHistograms transforms []*metrics.Histogram test results into perf Values to report.
+func storeHistograms(
+	ctx context.Context,
+	expectHistograms, heuristicsHistograms []string,
+	currentWindows int,
+	arcMode, metricsReportingSuffix string,
+	pv *perfutil.Values,
+	hists []*metrics.Histogram,
+) error {
+	heuristicsHistogramsMap := make(map[string]bool, len(expectHistograms))
+	for _, v := range heuristicsHistograms {
+		heuristicsHistogramsMap[v] = true
+	}
+	storeHeuristicsHistograms := perfutil.StoreAllWithHeuristics(fmt.Sprintf("%s.%dwindows", arcMode, currentWindows))
+	for _, hist := range hists {
+		if heuristicsHistogramsMap[hist.Name] {
+			storeHeuristicsHistograms(ctx, pv, []*metrics.Histogram{hist})
+			continue
+		}
+		valueName := hist.Name + metricsReportingSuffix
+		switch hist.Name {
+		case ensureWorkVisibleHistogram:
+			reportMaxHistogramValue(ctx, pv, hist, "microsecond", valueName)
+		case allBrowserWindowsCreated,
+			allBrowserWindowsPresented,
+			allBrowserWindowsShown,
+			allShelfIconsLoaded,
+			ashTastBootTimeLogin2,
+			ensureWorkVisibleLowResHistogram,
+			shelfLoginAnimationEnd:
+
+			reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
+		default:
+			return errors.Errorf("unknown histogram %q", hist.Name)
+		}
+	}
+	return nil
+}
+
 func LoginPerf(ctx context.Context, s *testing.State) {
+	// Shorten context a bit to allow for cleanup.
+	closeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	param := s.Param().(loginPerfTestParam)
 	lacrosCfg := lacrosfixt.NewConfig(
 		lacrosfixt.Selection(param.lacrosSelection),
@@ -487,11 +710,20 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				// Log in and log out to create a user pod on the login screen and required number of windows in session.
 				err := func() error {
 					// We do not need ARC to create Chrome windows.
-					cr, err := loginPerfStartToLoginScreen(ctx, s, param.bt, lacrosCfg, []chrome.Option{} /*arcOpt*/, false /*useTabletMode*/)
+					testConfig := &loginPerfTestConfig{
+						arcMode:      arcMode,
+						arcOpt:       []chrome.Option{},
+						creds:        creds,
+						inTabletMode: false,
+						lacrosCfg:    lacrosCfg,
+						param:        param,
+						windows:      windows,
+					}
+					cr, err := loginPerfStartToLoginScreen(ctx, s, testConfig)
 					if err != nil {
 						return err
 					}
-					defer cr.Close(ctx)
+					defer cr.Close(closeCtx)
 
 					l, _, err := loginPerfDoLogin(ctx, cr, creds, param.bt)
 					if err != nil {
@@ -544,16 +776,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					"Ash.LoginAnimation.Jank" + suffix,
 					"Ash.LoginAnimation.Duration" + suffix,
 				}
-				const (
-					ensureWorkVisibleHistogram       = "GPU.EnsureWorkVisibleDuration"
-					ensureWorkVisibleLowResHistogram = "GPU.EnsureWorkVisibleDurationLowRes"
-					allBrowserWindowsCreated         = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
-					allBrowserWindowsShown           = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
-					allBrowserWindowsPresented       = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
-					allShelfIconsLoaded              = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
-					shelfLoginAnimationEnd           = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
-					ashTastBootTimeLogin2            = "Ash.Tast.BootTime.Login2"
-				)
 
 				allHistograms := []string{
 					ensureWorkVisibleHistogram,
@@ -567,136 +789,106 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				}
 				allHistograms = append(allHistograms, heuristicsHistograms...)
 
-				testName := fmt.Sprintf("%s%s.%s.%dwindows", s.TestName(), suffix, arcMode, currentWindows)
+				metricsReportingSuffix := fmt.Sprintf("%s.%s.%dwindows", suffix, arcMode, currentWindows)
+
+				testConfig := &loginPerfTestConfig{
+					arcMode,
+					arcOpt,
+					creds,
+					currentWindows,
+					allHistograms,
+					inTabletMode,
+					lacrosCfg,
+					param,
+					windows,
+				}
+
+				testName := s.TestName() + metricsReportingSuffix
 				s.Logf("Starting test: %q", testName)
-				if err := r.RunMultiple(ctx, testName,
-					uiperf.Run(s, func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
-						var err error
-						cr, err = loginPerfStartToLoginScreen(ctx, s, param.bt, lacrosCfg, arcOpt, inTabletMode)
-						if err != nil {
-							return nil, errors.Wrap(err, "failed to start to login screen")
-						}
-						tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
-						if err != nil {
-							return nil, errors.Wrap(err, "creating login test api connection failed")
-						}
+
+				// Performaance run.
+				// Metrics are collected and saved to `pv`.
+				if err := r.RunMultiple(
+					ctx,
+					testName,
+					uiperf.Run(
+						s,
+						func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
+							// Tracing is disabled for the performance runs.
+							var histograms []*metrics.Histogram
+							var tpsValues map[perf.Metric][]float64
+							var err error
+							// Fill in external 'cr', 'l'.
+							cr, l, histograms, tpsValues, err = testFunction(ctx, s, name, testConfig, false)
+							r.Values().MergeWithSuffix(metricsReportingSuffix, tpsValues)
+							return histograms, err
+						}),
+					func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
 						// Shorten context a bit to allow for cleanup.
-						closeCtx := ctx
+						localCloseCtx := ctx
 						ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 						defer cancel()
-						// Initialize CUJ recording.
-						cujRecorder, err := cujrecorder.NewRecorderWithTestConn(ctx, tLoginConn, cr, tLoginConn, nil, cujrecorder.RecorderOptions{})
-						if err != nil {
-							s.Fatal("Failed to create a CUJ recorder: ", err)
-						}
-						defer cujRecorder.Close(closeCtx)
-						// TODO(b/237400719): support lacros
-						for _, metricConfig := range [][]cujrecorder.MetricConfig{cujrecorder.AshCommonMetricConfigs(), cujrecorder.BrowserCommonMetricConfigs(), cujrecorder.AnyChromeCommonMetricConfigs()} {
-							if err := cujRecorder.AddCollectedMetrics(tLoginConn, browser.TypeAsh, metricConfig...); err != nil {
-								s.Fatal("Failed to add recorded metrics: ", err)
-							}
-						}
+						defer cr.Close(localCloseCtx)
 
-						var lacrosConnectTime *time.Duration
-
-						// The actual test function
-						testFunc := func(ctx context.Context) error {
-							var err error
-							l, lacrosConnectTime, err = loginPerfDoLogin(ctx, cr, creds, param.bt)
-							if err != nil {
-								return errors.Wrap(err, "failed to log in")
-							}
-							tconn, err := cr.TestAPIConn(ctx)
-							if err != nil {
-								return errors.Wrap(err, "failed to connect to test api")
-							}
-							if err = ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-								return ash.WaitWindowFinishAnimating(ctx, tconn, w.ID)
-							}); err != nil {
-								return errors.Wrap(err, "failed to wait")
-							}
-							return nil
-						}
-
-						var histograms []*metrics.Histogram
-						// CUJ TPS metrics recording wrapper
-						cujFunc := func(ctx context.Context) error {
-							var err error
-							histograms, err = metrics.RunAndWaitAll(
-								ctx,
-								tLoginConn,
-								4*time.Minute,
-								testFunc,
-								allHistograms...,
-							)
-							if err != nil {
-								return err
-							}
-							visible := 0
-							if visible, err = countVisibleWindows(ctx, cr); err != nil {
-								return err
-							}
-							if visible != currentWindows && visible != currentWindows+1 {
-								err = errors.Errorf("unexpected number of visible windows: expected %d, found %d", currentWindows, visible)
-							}
+						if err := storeHistograms(
+							ctx,
+							testConfig.expectHistograms,
+							heuristicsHistograms,
+							currentWindows,
+							arcMode,
+							metricsReportingSuffix,
+							pv,
+							hists,
+						); err != nil {
 							return err
 						}
-						if err := cujRecorder.Run(ctx, cujFunc); err != nil {
-							return nil, errors.Wrap(err, "failed to run the test scenario")
-						}
-						tpsValues := perf.NewValues()
-						if err := cujRecorder.Record(ctx, tpsValues); err != nil {
-							return nil, errors.Wrap(err, "failed to collect the data from the recorder")
-						}
-						if lacrosConnectTime != nil {
-							tpsValues.Set(perf.Metric{
-								Name:      "Ash.Tast.LacrosConnectTime",
-								Unit:      "millisecond",
-								Direction: perf.SmallerIsBetter,
-							}, float64(lacrosConnectTime.Milliseconds()))
-						}
-						r.Values().MergeWithSuffix(fmt.Sprintf("%s.%s.%dwindows", suffix, arcMode, currentWindows), tpsValues.GetValues())
-						return histograms, err
-					}),
-					func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
-						defer cr.Close(ctx)
-
-						heuristicsHistogramsMap := make(map[string]bool, len(allHistograms))
-						for _, v := range heuristicsHistograms {
-							heuristicsHistogramsMap[v] = true
-						}
-						storeHeuristicsHistograms := perfutil.StoreAllWithHeuristics(fmt.Sprintf("%s.%dwindows", arcMode, currentWindows))
-						for _, hist := range hists {
-							if heuristicsHistogramsMap[hist.Name] {
-								storeHeuristicsHistograms(ctx, pv, []*metrics.Histogram{hist})
-								continue
-							}
-							valueName := fmt.Sprintf("%s%s.%s.%dwindows", hist.Name, suffix, arcMode, currentWindows)
-							switch hist.Name {
-							case ensureWorkVisibleHistogram:
-								reportMaxHistogramValue(ctx, pv, hist, "microsecond", valueName)
-							case allBrowserWindowsCreated,
-								allBrowserWindowsPresented,
-								allBrowserWindowsShown,
-								allShelfIconsLoaded,
-								ashTastBootTimeLogin2,
-								ensureWorkVisibleLowResHistogram,
-								shelfLoginAnimationEnd:
-
-								reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
-							default:
-								return errors.Errorf("unknown histogram %q", hist.Name)
-							}
-						}
 						return logout(ctx, cr, l)
-					},
-				); err != nil {
+					}); err != nil {
 					s.Fatalf("Failed to run test scenario %s: %s", testName, err)
+				}
+
+				// Do a tracing run.
+				// Values are not stored to the perf results, but only reported to the test log.
+				// Tracing run is different from performance run and we need metrics values from the
+				// tracing run to analyze the trace.
+				tracingValues := perfutil.NewValues()
+
+				var tracingHistograms []*metrics.Histogram
+				var tpsValues map[perf.Metric][]float64
+
+				cr, l, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
+				defer cr.Close(closeCtx)
+
+				if err != nil {
+					s.Fatalf("Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
+				} else if err := storeHistograms(
+					ctx,
+					testConfig.expectHistograms,
+					heuristicsHistograms,
+					currentWindows,
+					arcMode,
+					metricsReportingSuffix,
+					tracingValues,
+					tracingHistograms,
+				); err != nil {
+					s.Fatalf("Failed to dump tracing histograms for the test scenario %s-tracing: %s", testName, err)
+				}
+				tracingValues.ForEach(func(name string, value []float64) {
+					if len(value) != 1 {
+						s.Fatalf("%s-tracing: number of %s values is not equal to one: %v", testName, name, value)
+					}
+					s.Logf("%s-tracing %s: %f", testName, name, value[0])
+				})
+				for metric, values := range tpsValues {
+					s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
+				}
+				if err := logout(ctx, cr, l); err != nil {
+					s.Fatalf("Failed to sign out from the tracing session %s-tracing: %s", testName, err)
 				}
 			}
 		}
 	}
-	if err := r.Values().Save(ctx, s.OutDir()); err != nil {
+	if err := r.Values().Save(closeCtx, s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
 }

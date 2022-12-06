@@ -109,8 +109,8 @@ data_sources: {
         name: "org.chromium.trace_event"
         target_buffer: 2
         chrome_config {
-            # Categories: toplevel, cc, gpu, viz, ui, views, benchmark, input, memory-infra.
-            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"toplevel\",\"cc\",\"gpu\",\"viz\",\"ui\",\"views\",\"benchmark\",\"input\",\"memory-infra\"],\"memory_dump_config\":{}}"
+            # Categories: toplevel, cc, gpu, startup, viz, ui, views, benchmark, input, memory-infra.
+            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"toplevel\",\"cc\",\"gpu\",\"startup\",\"viz\",\"ui\",\"views\",\"benchmark\",\"input\",\"memory-infra\"],\"memory_dump_config\":{}}"
             # When enabled, the data source should only fill in fields in the output that are not potentially privacy sensitive.
             privacy_filtering_enabled: false
             # Don't convert the trace data to the legacy JSON format.
@@ -127,8 +127,8 @@ data_sources: {
         name: "org.chromium.trace_metadata"
         target_buffer: 2
         chrome_config {
-            # Categories: toplevel, cc, gpu, viz, ui, views, benchmark, input, memory-infra.
-            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"toplevel\",\"cc\",\"gpu\",\"viz\",\"ui\",\"views\",\"benchmark\",\"input\",\"memory-infra\"],\"memory_dump_config\":{}}"
+            # Categories: toplevel, cc, gpu, startup, viz, ui, views, benchmark, input, memory-infra.
+            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"toplevel\",\"cc\",\"gpu\",\"startup\",\"viz\",\"ui\",\"views\",\"benchmark\",\"input\",\"memory-infra\"],\"memory_dump_config\":{}}"
             # When enabled, the data source should only fill in fields in the output that are not potentially privacy sensitive.
             privacy_filtering_enabled: false
             # Don't convert the trace data to the legacy JSON format.

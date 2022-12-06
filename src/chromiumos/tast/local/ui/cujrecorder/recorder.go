@@ -163,8 +163,9 @@ type Recorder struct {
 	// Its value is a map keyed by metric name.
 	records map[browser.Type]map[string]*record
 
-	traceDir        string
-	perfettoCfgPath string
+	traceDir                  string
+	perfettoCfgPath           string
+	perfettoTracingFilePrefix string
 
 	// duration is the total running time of the recorder.
 	duration time.Duration
@@ -545,6 +546,13 @@ func (r *Recorder) EnableTracing(traceDir, perfettoCfgPath string) {
 	r.perfettoCfgPath = perfettoCfgPath
 }
 
+// SetTraceFilePrefix inserts perfettoTracingFilePrefix prefix in front of the
+// perfetto trace file name. This is useful when test needs to store several
+// traces.
+func (r *Recorder) SetTraceFilePrefix(perfettoTracingFilePrefix string) {
+	r.perfettoTracingFilePrefix = perfettoTracingFilePrefix
+}
+
 // Close clears states for all trackers.
 func (r *Recorder) Close(ctx context.Context) error {
 	var firstErr error
@@ -649,6 +657,9 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 			}
 
 			filename := "trace.data.gz"
+			if r.perfettoTracingFilePrefix != "" {
+				filename = r.perfettoTracingFilePrefix + filename
+			}
 			file, err := os.OpenFile(filepath.Join(r.traceDir, filename), os.O_CREATE|os.O_RDWR, 0644)
 			if err != nil {
 				return errors.Wrap(err, "could not open file")
