@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies tablet mode functionality with checking input devices behavior",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{},
 		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Touchpad(), hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible)),
 	})
