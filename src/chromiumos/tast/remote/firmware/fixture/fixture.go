@@ -29,6 +29,7 @@ const (
 	USBDevModeNoServices    = "bootModeUSBDevNoServices"
 	USBDevModeGBBNoServices = "bootModeUSBDevGBBNoServices"
 	RecModeNoServices       = "bootModeRecNoServices"
+	RecModeCopyServices     = "bootModeRecModeCopyServices"
 )
 
 func init() {
@@ -102,6 +103,19 @@ func init() {
 		Desc:            "Reboot into recovery mode before test, ServiceDeps are not supported",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            newFixture(common.BootModeRecovery, false, false),
+		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
+		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
+		ResetTimeout:    10 * time.Second,
+		PreTestTimeout:  10 * time.Minute,
+		PostTestTimeout: 10 * time.Minute,
+		TearDownTimeout: 10 * time.Minute,
+		Data:            []string{firmware.ConfigFile},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            RecModeCopyServices,
+		Desc:            "Reboot into recovery mode before test",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Impl:            newFixture(common.BootModeRecovery, false, true),
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
