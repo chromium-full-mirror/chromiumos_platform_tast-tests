@@ -35,6 +35,9 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothService"},
 		Vars:         []string{"router"},
 		VarDeps:      []string{"wifi.signinProfileTestExtensionManifestKey"},
+		// As a workaround to b:239583375, we increase the test duration as this test reinitializes a new test fixture
+		// which causes a second router reboot on openwrt routers. We have not noticed timeout cases on gales.
+		Timeout: 10 * time.Minute,
 	})
 }
 
