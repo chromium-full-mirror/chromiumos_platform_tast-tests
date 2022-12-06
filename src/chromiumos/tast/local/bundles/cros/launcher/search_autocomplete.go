@@ -83,7 +83,7 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 
 	subtests := []searchAutocompleteTestCase{
 		{
-			searchKeyword:          "Web",
+			searchKeyword:          "Web Stor",
 			result:                 "Web Store, Installed App",
 			category:               "Best Match , search result category",
 			expectedSearchBoxText:  "Web Store",
