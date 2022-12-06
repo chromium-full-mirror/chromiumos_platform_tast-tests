@@ -129,6 +129,15 @@ func (d *DBusObject) PropertyUint16(ctx context.Context, propName string) (uint1
 	return value, nil
 }
 
+// PropertyUint32 calls Property for a uint32 value.
+func (d *DBusObject) PropertyUint32(ctx context.Context, propName string) (uint32, error) {
+	var value uint32
+	if err := d.Property(ctx, propName, &value); err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
 // AllProperties calls org.freedesktop.DBus.Properties.GetAll and stores the
 // result into val.
 func (d *DBusObject) AllProperties(ctx context.Context) (map[string]interface{}, error) {

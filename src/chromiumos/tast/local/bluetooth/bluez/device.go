@@ -100,6 +100,11 @@ func (d *Device) RSSI(ctx context.Context) (int16, error) {
 	return d.dbus.PropertyInt16(ctx, "RSSI")
 }
 
+// Class returns the class of device of the bluetooth remote device.
+func (d *Device) Class(ctx context.Context) (uint32, error) {
+	return d.dbus.PropertyUint32(ctx, "Class")
+}
+
 // Connected returns true if the bluetooth remote device is connected.
 func (d *Device) Connected(ctx context.Context) (bool, error) {
 	return d.dbus.PropertyBool(ctx, "Connected")

@@ -23,15 +23,16 @@ import (
 )
 
 type deviceInfo struct {
-	Address           string    `json:"address"`
-	Name              *string   `json:"name"`
-	Type              *string   `json:"type"`
-	Appearance        *uint16   `json:"appearance"`
-	Modalias          *string   `json:"modalias"`
-	MTU               *uint16   `json:"mtu"`
-	RSSI              *int16    `json:"rssi"`
-	UUIDs             *[]string `json:"uuids"`
-	BatteryPercentage *uint8    `json:"battery_percentage"`
+	Address           string            `json:"address"`
+	Name              *string           `json:"name"`
+	Type              *string           `json:"type"`
+	Appearance        *uint16           `json:"appearance"`
+	Modalias          *string           `json:"modalias"`
+	MTU               *uint16           `json:"mtu"`
+	RSSI              *int16            `json:"rssi"`
+	UUIDs             *[]string         `json:"uuids"`
+	BatteryPercentage *uint8            `json:"battery_percentage"`
+	Class             *jsontypes.Uint32 `json:"bluetooth_class"`
 }
 
 type capabilitiesInfo struct {
@@ -279,6 +280,12 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 		}
 		if uuids, err := device.UUIDs(ctx); err == nil {
 			info.UUIDs = &uuids
+		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
+			return err
+		}
+		if class, err := device.Class(ctx); err == nil {
+			bluetoothClass := jsontypes.Uint32(class)
+			info.Class = &bluetoothClass
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
 			return err
 		}
