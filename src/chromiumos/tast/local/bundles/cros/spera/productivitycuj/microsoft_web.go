@@ -719,7 +719,7 @@ func (app *MicrosoftWebOffice) openOneDrive(ctx context.Context) (*chrome.Conn, 
 	appLauncher := nodewith.Name("App launcher").Role(role.PopUpButton).Collapsed()
 	appLauncherOpened := nodewith.Name("App launcher opened").Role(role.GenericContainer)
 	closeAppLauncher := nodewith.Name("Close the app launcher").Role(role.Button).Ancestor(appLauncherOpened)
-	oneDriveLink := nodewith.Name("OneDrive").Role(role.Link).Ancestor(appLauncherOpened)
+	oneDriveItem := nodewith.Name("OneDrive").Ancestor(appLauncherOpened).First()
 	goToOffice := nodewith.Name("Go to Office").Role(role.Link)
 	securityHeading := nodewith.Name("Is your security info still accurate?").Role(role.Heading)
 	looksGoodButton := nodewith.Name("Looks good!").Role(role.Button)
@@ -728,8 +728,7 @@ func (app *MicrosoftWebOffice) openOneDrive(ctx context.Context) (*chrome.Conn, 
 			uiauto.IfSuccessThen(app.ui.Exists(securityHeading), app.uiHdl.Click(looksGoodButton)),
 			app.ui.DoDefault(appLauncher),
 			app.ui.WaitUntilExists(closeAppLauncher),
-			app.ui.FocusAndWait(oneDriveLink),
-			app.ui.DoDefault(oneDriveLink),
+			app.ui.DoDefault(oneDriveItem),
 			app.skipUpdatingTermsDialog(),
 		)(ctx); err == nil {
 			return nil

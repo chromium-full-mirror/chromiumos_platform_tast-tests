@@ -162,7 +162,7 @@ func (app *GoogleDocs) MoveDataFromDocToSheet(ctx context.Context) error {
 
 // MoveDataFromSheetToDoc moves data from spreadsheet to document.
 func (app *GoogleDocs) MoveDataFromSheetToDoc(ctx context.Context) error {
-	testing.ContextLog(ctx, "Moving data from document to spreadsheet")
+	testing.ContextLog(ctx, "Moving data from spreadsheet to document")
 
 	if err := uiauto.Combine("cut selected text from cell",
 		app.selectCell("H1"),
@@ -375,9 +375,7 @@ func (app *GoogleDocs) selectCell(cell string) action.Action {
 		app.kb.TypeAction(cell),
 		app.kb.AccelAction("Enter"),
 		app.ui.WaitUntilExists(nameFieldText),
-		// Given time to jump to the specific cell and select it.
-		// And because we cannot be sure whether the target cell is focused, we have to wait a short time.
-		uiauto.Sleep(500*time.Millisecond),
+		app.ui.WaitUntilGone(nameFieldFocused),
 	)
 }
 
