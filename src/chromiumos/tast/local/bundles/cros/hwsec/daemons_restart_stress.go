@@ -69,14 +69,17 @@ func DaemonsRestartStress(ctx context.Context, s *testing.State) {
 	// Drop the DA reset permission.
 	restorePermCall, err := helper.DropResetLockPermissions(ctx)
 	if err != nil {
-		s.Fatal("Failed to drop the DA reset permission: ", err)
+		// This step isn't necessary on most new devices, and on reven devices.
+		// Even if it failed, it won't really affect the validity of this test.
+		s.Log("Failed to drop the DA reset permission: ", err)
+	} else {
+		defer func(ctx context.Context) {
+			// Restore the DA reset permission.
+			if err = restorePermCall(ctx); err != nil {
+				s.Log("Failed to restore lockout permission: ", err)
+			}
+		}(ctxForResumeDaemons)
 	}
-	defer func(ctx context.Context) {
-		// Restore the DA reset permission.
-		if err = restorePermCall(ctx); err != nil {
-			s.Log("Failed to restore lockout permission: ", err)
-		}
-	}(ctxForResumeDaemons)
 
 	tpmVer, err := helper.GetTPMVersion(ctx)
 	if err != nil {
