@@ -21,6 +21,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/input"
@@ -31,15 +33,22 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FPS,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure frames per second and check it is close to expected fps",
 		Contacts:     []string{"chromeos-gfx@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Fixture:      "chromeGraphics",
 		Data:         []string{"fps.html"},
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			Val:     browser.TypeAsh,
+			Fixture: "chromeGraphics",
+		}, {
+			Name:    "lacros",
+			Val:     browser.TypeLacros,
+			Fixture: "chromeGraphicsLacros",
+		}},
 	})
 }
 
@@ -125,8 +134,15 @@ func FPS(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	testURL := server.URL + "/fps.html"
 
-	cr := s.FixtValue().(*chrome.Chrome)
-	tconn, err := cr.TestAPIConn(ctx)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(
+		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(browser.Type), testURL)
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(ctx)
+	defer conn.Close()
+
+	tconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
@@ -135,12 +151,6 @@ func FPS(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get display info: ", err)
 	}
-
-	conn, err := cr.NewConn(ctx, testURL)
-	if err != nil {
-		s.Fatalf("Failed to open %s: %v", testURL, err)
-	}
-	defer conn.Close()
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Waiting load failed: ", err)
