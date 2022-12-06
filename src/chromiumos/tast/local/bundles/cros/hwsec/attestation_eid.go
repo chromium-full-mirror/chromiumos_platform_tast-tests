@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Verifies that enrollment ID is available",
 		Attr:         []string{"group:mainline"},
 		Contacts:     []string{"cylai@chromium.org", "cros-hwsec@google.com"},
-		SoftwareDeps: []string{"tpm"},
+		SoftwareDeps: []string{"tpm", "endorsement"},
 	})
 }
 
