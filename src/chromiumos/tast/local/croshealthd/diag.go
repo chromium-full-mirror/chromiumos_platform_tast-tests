@@ -77,9 +77,9 @@ type RoutineResult struct {
 // RoutineParams are different configuration options for running a diagnostic
 // routine.
 type RoutineParams struct {
-	Routine            string // The name of the routine to run
-	Cancel             bool   // Boolean flag to cancel the routine
-	WearLevelThreshold int    // Threshold for RoutineNVMEWearLevel. The param
+	Routine                       string // The name of the routine to run
+	Cancel                        bool   // Boolean flag to cancel the routine
+	DefaultNVMEWearLevelThreshold int    // Threshold for RoutineNVMEWearLevel. The param
 	// will only be used if the corresponding field in
 	// cros-config is missing.
 }
@@ -92,20 +92,11 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 		diagParams = append(diagParams, "--force_cancel_at_percent=5")
 	}
 	if params.Routine == RoutineNVMEWearLevel {
-		// Replace the default value in params.WearLevelThreshold with the
-		// correspodning field found in cros-config.
-		thresholdStr, err := crosconfig.Get(ctx, "/cros-healthd/routines/nvme-wear-level", "wear-level-threshold")
-		if err != nil && !crosconfig.IsNotFound(err) {
-			return nil, errors.Wrap(err, "failed to invoke cros_config for wear-level-threshold")
+		threshold, err := getNVMEWearLevelThreshold(ctx, params.DefaultNVMEWearLevelThreshold)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to prepare NVME wear-level-threshold")
 		}
-		if !crosconfig.IsNotFound(err) {
-			threshold, err := strconv.Atoi(thresholdStr)
-			if err != nil {
-				return nil, errors.Wrapf(err, "Unable to parse wear-level-threshold in cros_config %q to int", thresholdStr)
-			}
-			params.WearLevelThreshold = threshold
-		}
-		diagParams = append(diagParams, fmt.Sprintf("--wear_level_threshold=%d", params.WearLevelThreshold))
+		diagParams = append(diagParams, fmt.Sprintf("--wear_level_threshold=%d", threshold))
 	}
 	output, err := runDiag(ctx, diagParams)
 	if err != nil {
@@ -145,6 +136,25 @@ func runDiag(ctx context.Context, args []string) (string, error) {
 		return "", errors.Wrapf(err, "failed to run %q", shutil.EscapeSlice(cmd.Args))
 	}
 	return string(out), nil
+}
+
+// getNVMEWearLevelThreshold reads the threshold value for NVME wear level from
+// cros-config. Fallback to `defaultValue` if the corresponding property is not
+// defined in cros-config.
+func getNVMEWearLevelThreshold(ctx context.Context, defaultValue int) (int, error) {
+	thresholdStr, err := crosconfig.Get(ctx, "/cros-healthd/routines/nvme-wear-level", "wear-level-threshold")
+	if err != nil {
+		if crosconfig.IsNotFound(err) {
+			return defaultValue, nil
+		}
+		return 0, errors.Wrap(err, "failed to invoke cros_config for wear-level-threshold")
+	}
+
+	threshold, err := strconv.Atoi(thresholdStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "Unable to parse wear-level-threshold in cros_config %q to int", thresholdStr)
+	}
+	return threshold, nil
 }
 
 // parseDiagOutput is a helper function that takes the `raw` output from running a
