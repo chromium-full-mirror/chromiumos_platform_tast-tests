@@ -58,6 +58,14 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reconnect DUT: ", err)
 	}
 
+	// Stainless reported that some DUTs weren't able to reach S5 or G3 while
+	// lid closed. Adding some delay here, after a cold reset, helped make
+	// the test more stable.
+	s.Log("Sleeping for one minute")
+	if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+
 	// Parse the usb pd port list.
 	usbcPorts, err := listUSBPdPorts(ctx, h)
 	if err != nil {
@@ -130,15 +138,21 @@ func usbPdOpenLid(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return errors.Wrap(err, "failed to open lid")
 	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+	// During boot-up, dut would reach S0 first before getting reconnected.
+	testing.ContextLog(ctx, "Checking for S0 powerstate")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+		return errors.Wrap(err, "failed to get power state at S0")
+	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
 	defer cancelWaitConnect()
 
 	if err := h.WaitConnect(waitConnectCtx); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
-	testing.ContextLog(ctx, "Checking for S0 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-		return errors.Wrap(err, "failed to get power state at S0")
+	// Allowing some delay makes the test more stable.
+	testing.ContextLog(ctx, "Sleeping for one minute")
+	if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
+		return errors.Wrap(err, "failed to sleep")
 	}
 	return nil
 }

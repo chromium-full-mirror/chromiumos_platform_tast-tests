@@ -413,7 +413,7 @@ func (s *Servo) CheckUSBPdStatus(ctx context.Context, portID int, expectedStatus
 	if cmd == "" {
 		return errors.New("no command found to check for pd")
 	}
-	testing.ContextLog(ctx, "Checking for usb pd status")
+	testing.ContextLogf(ctx, "Checking for pd port %d status", portID)
 	out, err := s.RunECCommandGetOutput(ctx, cmd, matchList)
 	if err != nil {
 		return errors.Wrapf(err, "failed to run cmd %s", cmd)
