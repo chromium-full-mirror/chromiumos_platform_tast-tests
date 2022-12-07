@@ -24,7 +24,7 @@ func init() {
 			"shafron@google.com",
 		},
 		BugComponent: "b:255451722",
-
+		Attr:         []string{"group:ml_service"},
 		Fixture:      fixture.EffectsPipelineInstalled,
 		SoftwareDeps: []string{"camera_feature_effects"},
 		Params: []testing.Param{
