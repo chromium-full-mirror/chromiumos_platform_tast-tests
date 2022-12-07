@@ -53,14 +53,14 @@ func init() {
 		Data:         []string{apploading.X86ApkName, apploading.ArmApkName},
 		Timeout:      40 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParameters{
 				binaryTranslation: false,
 			},
 			Pre: arcAppLoadingBooted,
 		}, {
 			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val: testParameters{
 				binaryTranslation: false,
 			},
@@ -81,7 +81,7 @@ func init() {
 			Pre: arcAppLoadingBootedLacros,
 		}, {
 			Name:              "binarytranslation",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 			Val: testParameters{
 				binaryTranslation: true,

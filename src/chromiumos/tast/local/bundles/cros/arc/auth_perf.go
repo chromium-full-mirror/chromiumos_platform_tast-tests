@@ -62,7 +62,7 @@ func init() {
 		Timeout: 30 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "managed",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParam{
 				browserType:       browser.TypeAsh,
 				username:          "arc.AuthPerf.managed_username",
@@ -80,7 +80,7 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParam{
 				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 1,
@@ -105,7 +105,7 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged_lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val: testParam{
 				browserType:       browser.TypeLacros,
 				maxErrorBootCount: 1,
