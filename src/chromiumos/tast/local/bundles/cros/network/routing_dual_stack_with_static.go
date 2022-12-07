@@ -64,7 +64,7 @@ func RoutingDualStackWithStatic(ctx context.Context, s *testing.State) {
 		IPv4:      true,
 		IPv6:      true,
 		IsPrimary: true,
-		Timeout:   5 * time.Second,
+		Timeout:   30 * time.Second,
 	}
 	if errs := testEnv.VerifyTestNetwork(ctx, verifyOpts); len(errs) > 0 {
 		for _, err := range errs {
