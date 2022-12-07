@@ -77,6 +77,12 @@ func Run(ctx context.Context, s *testing.State) {
 		bTconn = tconn
 	}
 
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParam.Tablet)
+	if err != nil {
+		s.Fatalf("Failed to ensure the tablet mode state [%t]: %v", testParam.Tablet, err)
+	}
+	defer cleanup(closeCtx)
+
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
@@ -89,12 +95,6 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a mouse: ", err)
 	}
 	defer mw.Close()
-
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParam.Tablet)
-	if err != nil {
-		s.Fatalf("Failed to ensure the tablet mode state [%t]: %v", testParam.Tablet, err)
-	}
-	defer cleanup(closeCtx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
