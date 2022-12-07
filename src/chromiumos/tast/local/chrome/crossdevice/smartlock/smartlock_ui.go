@@ -23,7 +23,6 @@ import (
 
 const (
 	multidevicePasswordPrompt = crossdevicesettings.MultidevicePageJS + `.shadowRoot.querySelector("settings-password-prompt-dialog")`
-	smartLockSubpage          = crossdevicesettings.MultidevicePageJS + `.shadowRoot.querySelector("settings-multidevice-smartlock-subpage")`
 	smartLockToggle           = crossdevicesettings.MultideviceSubpageJS +
 		`.shadowRoot.getElementById("smartLockItem")` +
 		`.shadowRoot.querySelector("settings-multidevice-feature-toggle")` +
@@ -105,61 +104,6 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 	return nil
 }
 
-// DisableSmartLockLogin disables Smart Lock login functionality.
-// This means that only unlocking with Smart Lock is allowed.
-func DisableSmartLockLogin(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	settings, err := OpenConnectedDevicesPage(ctx, tconn, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to open Smart Lock subpage in OS Settings")
-	}
-	settingsConn, err := settings.ChromeConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to OS settings target")
-	}
-	if err := settingsConn.WaitForExpr(ctx, smartLockSubpage); err != nil {
-		return errors.Wrap(err, "failed waiting for Smart Lock subpage to load")
-	}
-	if err := settingsConn.Eval(ctx, smartLockSubpage+`.updateSmartLockSignInEnabled_(false)`, nil); err != nil {
-		return errors.Wrap(err, "failed to toggle Smart Lock login button")
-	}
-	if err := settingsConn.Eval(ctx, smartLockSubpage+`.onSmartLockSignInEnabledChanged_()`, nil); err != nil {
-		return errors.Wrap(err, "failed to update Smart Lock login setting")
-	}
-	return nil
-}
-
-// EnableSmartLockLogin enables the ability to login with Smart Lock.
-func EnableSmartLockLogin(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, password string) error {
-	settings, err := OpenConnectedDevicesPage(ctx, tconn, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to open Smart Lock subpage in OS Settings")
-	}
-	settingsConn, err := settings.ChromeConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to OS settings target")
-	}
-	token, err := settings.AuthToken(ctx, settingsConn, password)
-	if err != nil {
-		return errors.Wrap(err, "failed to get auth token")
-	}
-	data, err := json.Marshal(token)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal auth token to JSON")
-	}
-	if err := settingsConn.WaitForExpr(ctx, smartLockSubpage); err != nil {
-		return errors.Wrap(err, "failed waiting for Smart Lock subpage to load")
-	}
-	expr := fmt.Sprintf(`%s.authToken_ = %s`, smartLockSubpage, data)
-	if err := settingsConn.Eval(ctx, expr, nil); err != nil {
-		return errors.Wrap(err, "failed to set authToken_ property")
-	}
-	if err := settingsConn.Eval(ctx, smartLockSubpage+`.onEnableSignInDialogClose_()`, nil); err != nil {
-		return errors.Wrap(err, "failed to toggle smart lock login button")
-	}
-
-	return nil
-}
-
 // SignOut ends the existing chrome session and logs out by keyboard shortcut.
 func SignOut(ctx context.Context, cr *chrome.Chrome, kb *input.KeyboardEventWriter) error {
 	cr.Close(ctx)
@@ -233,21 +177,6 @@ func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 
 	var err error
 	if err = SignOut(ctx, cr, kb); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to sign out")
-	}
-
-	// TODO(b/217272610) Remove this second log in once this bug is resolved.
-	if cr, tconn, err = signInWithPassword(ctx, cr, tconn, loginOpts); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to sign in")
-	}
-
-	if _, err := OpenConnectedDevicesPage(ctx, tconn, cr); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to open Connected devices page")
-	}
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to sleep on Connected devices page")
-	}
-	if err := SignOut(ctx, cr, kb); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to sign out")
 	}
 
