@@ -93,6 +93,7 @@ func NewOptionMap(gatewayIP, clientIP net.IP, opts ...OptionMapOpt) OptionMap {
 		subnetMask:  "255.255.255.0",
 		ipLeaseTime: uint32(86400), // 86400 seconds
 		requestedIP: clientIP.String(),
+		routers:     []string{gatewayIP.String()},
 	}
 	for _, opt := range opts {
 		opt(m)
