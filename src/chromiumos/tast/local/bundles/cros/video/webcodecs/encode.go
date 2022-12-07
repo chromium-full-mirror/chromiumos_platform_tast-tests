@@ -12,16 +12,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/chromeproc"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/devtools"
 	"chromiumos/tast/local/media/encoding"
+	"chromiumos/tast/local/media/oop"
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/testing"
 )
@@ -50,7 +49,6 @@ type TestEncodeArgs struct {
 }
 
 const encodeHTML = "webcodecs_encode.html"
-const videoEncoderUtilSubType = "media.mojom.VideoEncodeAcceleratorProviderFactory"
 
 // EncodeDataFiles returns the HTML and JS files used in RunEncodeTest.
 func EncodeDataFiles() []string {
@@ -169,8 +167,8 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 	}
 
 	if testArgs.VerifyOutOfProcessVideoEncodingIsUsed {
-		if err := verifyOneUtilityEncoderProcessWasStarted(); err != nil {
-			return errors.Wrap(err, "verifyOneUtilityEncoderProcessWasStarted failed")
+		if err := oop.VerifyOneUtilityEncoderProcessWasStarted(); err != nil {
+			return errors.Wrap(err, "VerifyOneUtilityEncoderProcessWasStarted failed")
 		}
 	}
 
@@ -280,45 +278,6 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 	}
 
 	// TODO: Save bitstream always, if SSIM or PSNR is bad or never?
-	return nil
-}
-
-// verifyOneUtilityEncoderProcessWasStarted checks that only one utility
-// process is opened, regardless of the number of encoders opened.
-func verifyOneUtilityEncoderProcessWasStarted() error {
-	procs, err := chromeproc.GetUtilityProcesses()
-
-	if err != nil {
-		return errors.Wrap(err, "failed to GetUtilityProcesses()")
-	}
-
-	re := regexp.MustCompile(` --?utility-sub-type=([\w\.]+)(?: |$)`)
-	numUtilProcs := 0
-
-	for _, proc := range procs {
-		cmdline, err := proc.Cmdline()
-		if err != nil {
-			return errors.Wrap(err, "failed to get cmdline")
-		}
-
-		matches := re.FindStringSubmatch(cmdline)
-		if len(matches) < 2 {
-			continue
-		}
-
-		procName := matches[1]
-		if procName == videoEncoderUtilSubType {
-			numUtilProcs++
-		}
-	}
-
-	// numUtilProcs should be two here because the video encoder sandbox
-	// opens a broker process with the same --utility-sub-type as the
-	// utility process.
-	if numUtilProcs != 2 {
-		return errors.Errorf("expected 2 processes (broker + utility) but got %d", numUtilProcs)
-	}
-
 	return nil
 }
 

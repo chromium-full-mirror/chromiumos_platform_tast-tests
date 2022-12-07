@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/media/oop"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -93,6 +94,8 @@ type RTCTestParams struct {
 	// BrowserType indicates the type of Chrome browser to be used,
 	// Ash Chrome or Lacros Chrome.
 	BrowserType browser.Type
+	// VerifyOutOfProcessVideoEncodingIsUsed denotes if we should verify that a utility encoder process was started.
+	VerifyOutOfProcessVideoEncodingIsUsed bool
 }
 
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
@@ -144,6 +147,12 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 
 	if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
 		return errors.Wrap(err, "error establishing connection")
+	}
+
+	if params.VerifyOutOfProcessVideoEncodingIsUsed {
+		if err := oop.VerifyOneUtilityEncoderProcessWasStarted(); err != nil {
+			return errors.Wrap(err, "VerifyOneUtilityEncoderProcessWasStarted failed")
+		}
 	}
 
 	if err := verifyDecoderImplementation(ctx, conn, params.VerifyDecoderMode); err != nil {
