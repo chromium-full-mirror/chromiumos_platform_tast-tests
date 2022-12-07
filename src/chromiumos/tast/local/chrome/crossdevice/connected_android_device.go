@@ -432,9 +432,37 @@ func (c *AndroidDevice) EnableChromeSync(ctx context.Context) error {
 	acceptBtn = d.Object(ui.ResourceID("com.android.chrome:id/signin_fre_continue_button"))
 	if err := acceptBtn.WaitForExists(ctx, 3*time.Second); err != nil {
 		testing.ContextLog(ctx, "Failed to find account selection page: ", err)
-		// Fall through to final opt-in step when account selection button is not found.
+		// Fall through to next opt-in step when account selection button is not found.
 	} else if err := acceptBtn.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to select account for Chrome Sync")
+	}
+
+	// After selecting the account, confirm turning on sync. Skip if confirmation screen is not found.
+	// Recent builds have Sync Enable happening on first time run.
+	signInSync := d.Object(ui.ResourceID("com.android.chrome:id/signin_sync_title"))
+	confirmBtn := d.Object(ui.ResourceID("com.android.chrome:id/positive_button"))
+	if err := signInSync.WaitForExists(ctx, 3*time.Second); err != nil {
+		// Fall through to next opt-in step when no sign in sync confirmation screen is found.
+		testing.ContextLog(ctx, "Failed to find signin sync confirmation screen: ", err)
+	} else if err := confirmBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find the confirmation button for Chrome Sync")
+	} else if err := confirmBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the confirmation button for Chrome Sync")
+	} else {
+		// If turning on sync is successful on first time run, we can exit this flow early.
+		return c.EnableSystemLevelAppSync(ctx, d)
+	}
+
+	// Ignore notifications. Skip if no notification permission message shows up.
+	notificationDialog := d.Object(ui.ResourceID("com.android.chrome:id/notification_permission_rationale_title"))
+	ignoreBtn := d.Object(ui.ResourceID("com.android.chrome:id/negative_button"))
+	if err := notificationDialog.WaitForExists(ctx, 3*time.Second); err != nil {
+		// Fall through to next opt-in step when no notification dialog is found.
+		testing.ContextLog(ctx, "Failed to find notification permissions dialog: ", err)
+	} else if err := ignoreBtn.WaitForExists(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find the ignore notifications button")
+	} else if err := ignoreBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the ignore notifications button")
 	}
 
 	// After selecting the account, go to the Chrome settings page to finish the opt-in flow.
@@ -470,8 +498,11 @@ func (c *AndroidDevice) EnableChromeSync(ctx context.Context) error {
 		return errors.Wrap(err, "failed to click final opt-in button")
 	}
 
-	// Enable system-level app sync to get phones out of the state
-	// where Chrome Sync and Android App sync are coupled.
+	return c.EnableSystemLevelAppSync(ctx, d)
+}
+
+// EnableSystemLevelAppSync gets phones out of the state where Chrome Sync and Android App sync are coupled.
+func (c *AndroidDevice) EnableSystemLevelAppSync(ctx context.Context, d *ui.Device) error {
 	if err := c.Device.ShellCommand(ctx, "am", "start", "-a", "android.settings.SYNC_SETTINGS").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to open Android account settings")
 	}
