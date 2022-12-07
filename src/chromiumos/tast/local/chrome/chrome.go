@@ -346,6 +346,18 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	}
 	testing.ContextLogf(ctx, "Log file name: %s", logFilename)
 
+	// In case chrome.New fails for a deadline error, which might be caused
+	// by a browser hang, write out the current chrome log.
+	defer func(ctx context.Context) {
+		if retErr == nil || ctx.Err() == nil || origCtx.Err() != nil {
+			return
+		}
+		testing.ContextLog(ctx, "Saving the current chrome log to the output directory")
+		if err := saveChromeLog(origCtx, logFilename); err != nil {
+			testing.ContextLog(ctx, "Failed to save chrome log: ", err)
+		}
+	}(ctx)
+
 	loginPending := false
 	if cfg.DeferLogin() {
 		loginPending = true
@@ -832,5 +844,21 @@ func saveMinidumpsWithoutCrash(ctx context.Context) error {
 	}
 
 	minidump.SaveWithoutCrash(ctx, dir, matchers...)
+	return nil
+}
+
+// saveChromeLog writes out the current chrome log to the output directory of the context.
+// This should only be necessary if something fails during the creation of the chrome instance.
+// Otherwise, Chrome.Close() should handle this.
+func saveChromeLog(ctx context.Context, logFilename string) error {
+	failLogMarker := logsaver.NewMarkerNoOffset(logFilename)
+	if outDir, ok := testing.ContextOutDir(ctx); ok {
+		if err := failLogMarker.Save(filepath.Join(outDir, filepath.Base(logFilename))); err != nil {
+			testing.ContextLog(ctx, "Failed to save the entire log: ", err)
+			return err
+		}
+	} else {
+		testing.ContextLog(ctx, "No output directory exists, not saving log file")
+	}
 	return nil
 }
