@@ -12,6 +12,16 @@ import "chromiumos/tast/common/perf"
 // AshCommonMetricConfigs and adds more.
 func CUJAshCommonMetricConfigs() []MetricConfig {
 	return append(AshCommonMetricConfigs(),
+		// Memory Metrics.
+		NewCustomMetricConfig("ChromeOS.CWP.PSIMemPressure.Full", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("ChromeOS.CWP.PSIMemPressure.Some", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("ChromeOS.Zram.ComprDataSizeMB", "MB", perf.SmallerIsBetter),
+		NewCustomMetricConfig("ChromeOS.Zram.CompressedSizePct", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Platform.SwapInDaily", "pages", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Platform.SwapOutDaily", "pages", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Memory.OOMKills.Daily", "kills", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Memory.PressureLevel2", "level", perf.SmallerIsBetter),
+
 		// Smoothness.
 		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow.InSession2", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Smoothness.MaxPercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
