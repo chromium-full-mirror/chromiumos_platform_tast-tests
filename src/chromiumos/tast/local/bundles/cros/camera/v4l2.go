@@ -22,6 +22,14 @@ import (
 
 const hwTimestampsPath = "/sys/module/uvcvideo/parameters/hwtimestamps"
 
+type v4l2TestType int
+
+const (
+	vttDefault v4l2TestType = iota
+	vttSupportedFormats
+	vttCertification
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         V4L2,
@@ -33,12 +41,18 @@ func init() {
 			{
 				ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 				ExtraSoftwareDeps: []string{caps.BuiltinUSBCamera},
-				Val:               false,
+				Val:               vttDefault,
+			},
+			{
+				Name:              "supported_formats",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+				ExtraSoftwareDeps: []string{caps.BuiltinUSBCamera},
+				Val:               vttSupportedFormats,
 			},
 			{
 				Name:      "certification",
 				ExtraAttr: []string{"group:camera-usb-qual"},
-				Val:       true,
+				Val:       vttCertification,
 			},
 		},
 		BugComponent: "b:167281",
@@ -46,7 +60,8 @@ func init() {
 }
 
 func V4L2(ctx context.Context, s *testing.State) {
-	isCertification := s.Param().(bool)
+	testType := s.Param().(v4l2TestType)
+	isCertification := testType == vttCertification
 
 	hasHWTimestamps, err := pathExist(hwTimestampsPath)
 	if err != nil {
@@ -76,6 +91,13 @@ func V4L2(ctx context.Context, s *testing.State) {
 	}
 	s.Log("USB cameras: ", usbCams)
 
+	filter := ""
+	if testType == vttDefault {
+		filter = "-V4L2Test.SupportedFormats"
+	} else if testType == vttSupportedFormats {
+		filter = "V4L2Test.SupportedFormats"
+	}
+
 	for _, devicePath := range usbCams {
 		extraArgs := []string{
 			"--device_path=" + devicePath,
@@ -86,6 +108,7 @@ func V4L2(ctx context.Context, s *testing.State) {
 
 		t := gtest.New("media_v4l2_test",
 			gtest.Logfile(filepath.Join(s.OutDir(), logFile)),
+			gtest.Filter(filter),
 			gtest.ExtraArgs(extraArgs...))
 
 		if args, err := t.Args(); err == nil {
