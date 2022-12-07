@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -34,9 +35,11 @@ const (
 	editorTabClass = "MuiListItem-button"
 )
 
-var weVideoWebArea = nodewith.Name("WeVideo").Role(role.RootWebArea)
-var beginningOfTheClip = nodewith.NameContaining("the beginning of the clip").ClassName("trim-btn")
-var endingOfTheClip = nodewith.NameContaining("the ending of the clip").ClassName("trim-btn")
+var (
+	weVideoWebArea     = nodewith.Name("WeVideo").Role(role.RootWebArea)
+	beginningOfTheClip = nodewith.NameContaining("the beginning of the clip").HasClass("trim-btn")
+	endingOfTheClip    = nodewith.NameContaining("the ending of the clip").HasClass("trim-btn")
+)
 
 // Clip defines the struct related to WeVideo's clip.
 type Clip struct {
@@ -77,7 +80,7 @@ func (w *WeVideo) Open() action.Action {
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to chrome")
 		}
-		return nil
+		return webutil.WaitForQuiescence(ctx, w.conn, longUITimeout)
 	}
 }
 
@@ -90,7 +93,12 @@ func (w *WeVideo) Login(account string) action.Action {
 		}
 		return nil
 	}
-	loginButton := nodewith.Name("Log in").Role(role.Button)
+	// weVideoBeforeLoginWebArea is the web area of the WeVideo page before login.
+	// The current name of the web area is "Video Creation | Interactivity | WeVideo".
+	// WeVideo may change ui frequently, so NameContaining is used here.
+	weVideoBeforeLoginWebArea := nodewith.NameContaining("WeVideo").Role(role.RootWebArea)
+	// The role of loginLink may be button or link, so use First() to select the first one.
+	loginLink := nodewith.Name("Log in").Ancestor(weVideoBeforeLoginWebArea).Linked().First()
 	loginReg := regexp.MustCompile(`(Login|Log in) to your account`)
 	loginWebArea := nodewith.NameRegex(loginReg).Role(role.RootWebArea)
 	googleLink := nodewith.Name("Log in with Google").Role(role.Link).Ancestor(loginWebArea)
@@ -115,7 +123,7 @@ func (w *WeVideo) Login(account string) action.Action {
 		// There is a bug in Wevideo login process, sometimes it needs to login twice with google account.
 		// So add retry login here.
 		uiauto.Retry(retryTimes, uiauto.NamedCombine("log in WeVideo",
-			uiauto.IfSuccessThen(ui.Exists(loginButton), ui.DoDefault(loginButton)),
+			uiauto.IfSuccessThen(ui.Exists(loginLink), ui.DoDefault(loginLink)),
 			ui.WaitUntilExists(loginWebArea),
 			loginWithGoogle,
 			// Sign up if there is a sign up page.
@@ -127,7 +135,7 @@ func (w *WeVideo) Login(account string) action.Action {
 
 // Create creates the new video editing.
 func (w *WeVideo) Create() action.Action {
-	promptWindow := nodewith.ClassName("Modal medium")
+	promptWindow := nodewith.HasClass("Modal medium")
 	closeButton := nodewith.Name("CLOSE").Role(role.Button).Ancestor(promptWindow)
 	createNewRe := regexp.MustCompile("(?i)create new")
 	createNewButton := nodewith.NameRegex(createNewRe).Ancestor(weVideoWebArea).First()
@@ -232,7 +240,7 @@ func (w *WeVideo) AddText(clipName, expectedTrack, text string) action.Action {
 	textTab := nodewith.Name("Text").Role(role.Tab).HasClass(editorTabClass)
 	// It removes the text info, so it can only capture "Basic text" node by classname.
 	// The first one is "Basic text".
-	basicText := nodewith.ClassName("ui-draggable-handle").Role(role.GenericContainer).First()
+	basicText := nodewith.Role(role.GenericContainer).ClassName("ui-draggable-handle").First()
 	dragTextToTrack := func(ctx context.Context) error {
 		textLocation, err := ui.Location(ctx, basicText)
 		if err != nil {

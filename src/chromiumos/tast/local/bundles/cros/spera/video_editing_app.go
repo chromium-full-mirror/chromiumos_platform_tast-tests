@@ -34,14 +34,14 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "advanced",
-				Fixture: "enrolledLoggedInToCUJUser",
+				Fixture: "loggedInAndKeepState",
 				Timeout: 5 * time.Minute,
 				Val:     browser.TypeAsh,
 			},
 			{
 				Name:              "advanced_lacros",
 				Timeout:           5 * time.Minute,
-				Fixture:           "enrolledLoggedInToCUJUserLacros",
+				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val:               browser.TypeLacros,
 			},

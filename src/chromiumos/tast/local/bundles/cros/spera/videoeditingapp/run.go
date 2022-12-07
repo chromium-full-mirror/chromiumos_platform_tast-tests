@@ -7,16 +7,13 @@ package videoeditingapp
 
 import (
 	"context"
-	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/spera/videoeditingapp/wevideo"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/googleapps"
@@ -144,8 +141,11 @@ func videoEditingScenario(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 	}
 	defer cleanup(cleanupCtx, tconn, cr, w, outDir, func() bool { return hasError })
 
+	if err := cuj.MaximizeBrowserWindow(ctx, tconn, tabletMode, weVideoTitle); err != nil {
+		return errors.Wrap(err, "failed to maximize the WeVideo page")
+	}
+
 	if err := uiauto.Combine("run the video editing scenario",
-		maximizeBrowserWindow(ctx, tconn, tabletMode),
 		w.Login(account),
 		w.Create(),
 		w.AddStockVideo(clip1, "", clipTime1, videoTrack),
@@ -173,27 +173,6 @@ func videoEditingScenario(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 	}
 	hasError = false
 	return nil
-}
-
-// maximizeBrowserWindow returns an action that maximize the WeVideo window to show all the browser UI elements for precise clicking.
-func maximizeBrowserWindow(ctx context.Context, tconn *chrome.TestConn, tabletMode bool) action.Action {
-	return func(ctx context.Context) error {
-		if tabletMode {
-			return nil
-		}
-		// Find the WeVideo browser window.
-		window, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			return (w.WindowType == ash.WindowTypeBrowser || w.WindowType == ash.WindowTypeLacros) && strings.Contains(w.Title, weVideoTitle)
-		})
-		if err != nil {
-			return errors.Wrap(err, "failed to find the WeVideo window")
-		}
-		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateMaximized); err != nil {
-			// Just log the error and try to continue.
-			testing.ContextLog(ctx, "Try to continue the test even though maximizing the WeVideo window failed: ", err)
-		}
-		return nil
-	}
 }
 
 func uiHandler(ctx context.Context, tconn *chrome.TestConn, tabletMode bool) (cuj.UIActionHandler, error) {
