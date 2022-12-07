@@ -45,6 +45,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
+			Name:              "h264_hw_oopve",
+			Val:               peerconnection.MakeHWTestParams("H264", 1280, 720, browser.TypeAsh),
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
+		}, {
 			Name:              "h264_sw",
 			Val:               peerconnection.MakeSWTestParams("H264", 1280, 720),
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
@@ -60,6 +65,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
+			Name:              "vp8_hw_oopve",
+			Val:               peerconnection.MakeHWTestParams("VP8", 1280, 720, browser.TypeAsh),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
+			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
+		}, {
 			Name:    "vp8_sw",
 			Val:     peerconnection.MakeSWTestParams("VP8", 1280, 720),
 			Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
@@ -73,6 +83,11 @@ func init() {
 			Val:               peerconnection.MakeHWTestParams("VP9", 1280, 720, browser.TypeLacros),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
+		}, {
+			Name:              "vp9_hw_oopve",
+			Val:               peerconnection.MakeHWTestParams("VP9", 1280, 720, browser.TypeAsh),
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 		}, {
 			Name:    "vp9_sw",
 			Val:     peerconnection.MakeSWTestParams("VP9", 1280, 720),
