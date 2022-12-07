@@ -28,10 +28,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the DeviceShowUserNamesOnSignin policy",
 		Contacts: []string{
-			"rsorokin@google.com", // Test author
-			"cros-oac@google.com",
+			"cros-oobe@google.com",
+			"cros-lurs@google.com",
+			"dkuzmin@google.com",
+			"antrim@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
+		Attr: []string{
+			"group:hw_agnostic",
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
