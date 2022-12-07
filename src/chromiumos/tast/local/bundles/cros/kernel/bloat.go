@@ -32,9 +32,10 @@ func init() {
 		Func: Bloat,
 		Desc: "Tracks kernel bloat",
 		Contacts: []string{
-			"swboyd@chromium.org",
 			"chromeos-kernel-test@google.com",
+			"swboyd@chromium.org",
 		},
+		BugComponent: "b:167278",
 		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
 	})
 }
