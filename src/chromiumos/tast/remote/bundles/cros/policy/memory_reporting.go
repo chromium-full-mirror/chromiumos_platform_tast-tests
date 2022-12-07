@@ -215,6 +215,7 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
+	defer pc.StopChrome(ctx, &empty.Empty{})
 
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {

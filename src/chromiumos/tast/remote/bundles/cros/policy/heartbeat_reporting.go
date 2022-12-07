@@ -93,6 +93,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
+	defer policyClient.StopChrome(ctx, &empty.Empty{})
 
 	c, err := policyClient.ClientID(ctx, &empty.Empty{})
 	if err != nil {

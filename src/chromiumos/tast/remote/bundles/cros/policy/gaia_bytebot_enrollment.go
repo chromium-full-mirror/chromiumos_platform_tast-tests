@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/ctxutil"
@@ -106,6 +108,7 @@ func GAIABytebotEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
+	defer policyClient.StopChrome(ctx, &empty.Empty{})
 
 	pJSON, err := policy.MarshalList([]policy.Policy{
 		&policy.PluginVmUserId{Stat: policy.StatusSet, Val: "********"},

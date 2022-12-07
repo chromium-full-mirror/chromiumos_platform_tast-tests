@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/exec"
@@ -155,6 +157,7 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to ZTE enroll using chrome: ", err)
 	}
+	defer pc.StopChrome(ctx, &empty.Empty{})
 
 	// Deprovision the DUT at the end of the test.
 	defer func(ctx context.Context) {

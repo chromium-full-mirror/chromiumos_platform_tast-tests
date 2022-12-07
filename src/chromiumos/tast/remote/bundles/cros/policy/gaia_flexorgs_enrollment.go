@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/rpc"
@@ -100,4 +102,5 @@ func GAIAFlexorgsEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
+	defer policyClient.StopChrome(ctx, &empty.Empty{})
 }

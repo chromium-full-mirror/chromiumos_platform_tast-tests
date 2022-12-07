@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -121,6 +123,7 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
+	defer policyClient.StopChrome(ctx, &empty.Empty{})
 
 	// Deprovision the DUT at the end of the test.
 	defer func(ctx context.Context) {
