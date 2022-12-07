@@ -99,3 +99,10 @@ func NewOptionMap(gatewayIP, clientIP net.IP, opts ...OptionMapOpt) OptionMap {
 	}
 	return m
 }
+
+// NewFieldMap returns a FieldMap for DHCP.
+func NewFieldMap(serverName string) FieldMap {
+	return FieldMap{
+		legacyServerName: serverName,
+	}
+}
