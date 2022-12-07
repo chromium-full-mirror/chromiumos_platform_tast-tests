@@ -21,10 +21,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Confirm CPU vulnerabilities are mitigated in the guest kernel",
 		Contacts: []string{
-			"swboyd@chromium.org", // Tast port author
 			"cros-containers-dev@google.com",
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr:         []string{"group:mainline", "informational"},
 		Vars:         []string{"keepState", "ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome", "vm_host", "cpu_vuln_sysfs", "no_qemu"},
