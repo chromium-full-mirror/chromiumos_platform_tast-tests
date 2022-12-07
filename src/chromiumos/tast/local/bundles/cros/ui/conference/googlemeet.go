@@ -622,19 +622,24 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 				if mode != "Tiled" {
 					return nil
 				}
+				// Check if there is more than 1 grid after changing layout to Tiled.
+				expectedGrid := 1
+				if conf.roomType == ClassRoomSize {
+					// Check classrooms to expect grids to be more than 10 grids.
+					expectedGrid = 10
+				}
 				startTime := time.Now()
 				if err := testing.Poll(ctx, func(ctx context.Context) error {
 					grids, err := conf.getStableGrids(ctx)
 					if err != nil {
 						return errors.Wrap(err, "failed to get stable grids")
 					}
-					// Check classrooms to expect grids to be more than 16 grids.
-					if conf.roomType == ClassRoomSize && len(grids) <= 16 {
-						return errors.Wrapf(err, "unexpected grids: got: %v; want more than 16 grids", len(grids))
+					if len(grids) <= expectedGrid {
+						return errors.Wrapf(err, "unexpected grids: got: %v; want more than %v grids", len(grids), expectedGrid)
 					}
 					return nil
 				}, &testing.PollOptions{Timeout: longUITimeout}); err != nil {
-					return errors.Wrapf(err, "failed to wait for grids more than 16 grids within %v", longUITimeout)
+					return errors.Wrapf(err, "failed to wait for grids more than %v grids within %v", expectedGrid, longUITimeout)
 				}
 				testing.ContextLogf(ctx, "Get stable grids took %v to appear", time.Now().Sub(startTime))
 				return nil
