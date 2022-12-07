@@ -69,6 +69,9 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		// TODO(crbug.com/1291183): Parameterize this test to also run a version that tests the
 		// Consolidated Consent screen instead of EULA + ARC TOS.
 		chrome.DisableFeatures("OobeConsolidatedConsent"),
+		// Enable DemoModeSWA feature so that component is downloaded during setup. Chrome Apps behavior
+		// can still be tested by explicitly disabling the feature in tests that use this fixture.
+		chrome.EnableFeatures("DemoModeSWA"),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ExtraArgs("--demo-mode-enrolling-username="+f.enrollmentUser),
 		chrome.ExtraArgs("--arc-start-mode=always-start"),
