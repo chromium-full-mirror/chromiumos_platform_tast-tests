@@ -19,9 +19,10 @@ func init() {
 		Func: PstoreConsoleRamoops,
 		Desc: "Fails if console-ramoops isn't maintained across a warm reboot",
 		Contacts: []string{
-			"swboyd@chromium.org",
 			"chromeos-kernel-test@google.com",
+			"swboyd@chromium.org",
 		},
+		BugComponent: "b:167278",
 		SoftwareDeps: []string{"pstore", "reboot"},
 		Attr:         []string{"group:mainline"},
 	})
