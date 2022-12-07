@@ -69,6 +69,14 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
+	if err := h.DUT.Reboot(ctx); err != nil {
+		s.Fatal("Failed to reboot DUT: ", err)
+	}
+
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		s.Fatal("Failed to sleep for 5 seconds: ", err)
+	}
+
 	enablePins, err := getUSBPorts(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to probe usb ports: ", err)
@@ -120,7 +128,7 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: usbPortStatePollTimeout, Interval: usbPortStatePollInterval}); err != nil {
-		s.Fatal("Not all usb ports enabled after again: ", err)
+		s.Fatal("Not all usb ports enabled after booting again: ", err)
 	}
 }
 
