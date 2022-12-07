@@ -10,6 +10,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 )
 
 // bluetoothDetailedView is the detailed Bluetooth view within the Quick
@@ -22,6 +23,10 @@ var bluetoothFeaturePodLabelButton = nodewith.ClassName("FeaturePodLabelButton")
 // BluetoothDetailedViewPairNewDeviceButton is the "Pair new device" button
 // child within the detailed Bluetooth view.
 var BluetoothDetailedViewPairNewDeviceButton = nodewith.ClassName("IconButton").NameContaining("Pair new device").Ancestor(bluetoothDetailedView)
+
+// BluetoothPairNewDeviceDialog is the "Pair new device" dialog opened when
+// BluetoothDetailedViewPairNewDeviceButton is clicked.
+var BluetoothPairNewDeviceDialog = nodewith.NameContaining("Pair new device").Role(role.RootWebArea)
 
 // BluetoothDetailedViewSettingsButton is the Settings button child within the
 // detailed Bluetooth view.

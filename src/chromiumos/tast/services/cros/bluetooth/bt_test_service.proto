@@ -51,6 +51,10 @@ service BTTestService {
 
   // RemoveAllSavedDevices will attempt to remove all of the devices from the Saved Devices subpage.
   rpc RemoveAllSavedDevices(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // PairDeviceWithQuickSettings pairs with the specified device through UI
+  // interactions with the Quick Settings.
+  rpc PairDeviceWithQuickSettings(PairDeviceWithQuickSettingsRequest) returns (google.protobuf.Empty) {}
 }
 
 message Device {
@@ -100,4 +104,8 @@ message PairWithFastPairNotificationRequest {
 
 message ConfirmSavedDevicesStateRequest {
   repeated string device_names = 1;
+}
+
+message PairDeviceWithQuickSettingsRequest {
+  string advertisedName = 1;
 }

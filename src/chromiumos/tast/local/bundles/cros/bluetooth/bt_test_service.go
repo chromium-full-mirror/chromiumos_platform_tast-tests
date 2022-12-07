@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/bluetooth"
@@ -558,5 +559,72 @@ func (bts *BTTestService) RemoveAllSavedDevices(ctx context.Context, request *em
 	}
 
 	testing.ContextLogf(ctx, "Removed %d of %d saved devices from Saved Devices subpage", count, len(devices))
+
+	return &emptypb.Empty{}, nil
+}
+
+// PairDeviceWithQuickSettings will attempt to pair with the Bluetooth device described in the request using the Quick Settings UI.
+// This method will ensure that any windows it had opened are closed before returning.
+func (bts *BTTestService) PairDeviceWithQuickSettings(ctx context.Context, req *pb.PairDeviceWithQuickSettingsRequest) (*emptypb.Empty, error) {
+	cr := bts.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+	}
+
+	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
+	}
+
+	defer quicksettings.Hide(ctx, tconn)
+
+	ui := uiauto.New(tconn)
+	if err := ui.LeftClickUntil(quicksettings.BluetoothDetailedViewPairNewDeviceButton,
+		ui.Exists(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to open the pairing dialog")
+	}
+
+	defer func() {
+		found, err := ui.IsNodeFound(ctx, quicksettings.BluetoothPairNewDeviceDialog)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to determine if the pairing dialog was still open")
+			return
+		}
+		if !found {
+			return
+		}
+		if err := ui.LeftClickUntil(nodewith.Name("Cancel").HasClass("cancel-button").Ancestor(quicksettings.BluetoothPairNewDeviceDialog),
+			ui.Gone(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close the pairing dialog")
+		}
+	}()
+
+	// TODO(b/261885619): Investigate why this delay before selecting the device improves how
+	// likely we are to successfully pair with the device.
+	testing.Sleep(ctx, 5*time.Second)
+
+	deviceFinder := nodewith.NameContaining(req.AdvertisedName).Ancestor(quicksettings.BluetoothPairNewDeviceDialog).Role(role.Button)
+	toastFinder := nodewith.NameContaining(req.AdvertisedName + " connected").Ancestor(nodewith.HasClass("ToastOverlay"))
+
+	// The device we want to pair with may disappear and reappear in the pairing dialog.
+	// To mitigate this flaky behavior we continue to click the device while waiting for
+	// the "device connected" toast to appear for up to 1 minute.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ui.Exists(toastFinder)(ctx); err == nil {
+			return nil
+		}
+		if err := uiauto.Combine("find and click the device",
+			ui.Exists(deviceFinder),
+			ui.LeftClick(deviceFinder))(ctx); err != nil {
+			return errors.Wrap(err, "failed to find and click the device")
+		}
+		return errors.New("failed to pair with the device, retrying")
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to pair with the device")
+	}
+
 	return &emptypb.Empty{}, nil
 }
