@@ -74,7 +74,7 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	// Close browser shell window as cleanup.
 	defer func(ctx context.Context) {
-		croshCloseButton := nodewith.Name("Close").ClassName("FrameCaptionButton").Role(role.Button)
+		croshCloseButton := nodewith.Name("Close").ClassName("FrameCaptionButton").Role(role.Button).Ancestor(nodewith.NameContaining("crosh").First())
 		if err := ui.LeftClick(croshCloseButton)(ctx); err != nil {
 			s.Error("Failed to close browser shell: ", err)
 		}
@@ -87,7 +87,7 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	croshWindow := nodewith.Name("Chrome - crosh").Role(role.Window)
+	croshWindow := nodewith.Name("crosh").Role(role.Window).First()
 	if err := ui.WaitForLocation(croshWindow)(ctx); err != nil {
 		s.Fatal("Failed to launch browser shell: ", err)
 	}
@@ -100,6 +100,41 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 
 	if err := vk.Accel(ctx, "enter"); err != nil {
 		s.Fatal("Failed to press Enter key: ", err)
+	}
+
+	// Load Terminal Settings page.
+	if err := vk.Accel(ctx, "Ctrl+Shift+P"); err != nil {
+		s.Fatal("Failed to press Ctrl+Shift+P to load Terminal Settings page: ", err)
+	}
+
+	behaviorBtton := nodewith.Name("Behavior").Role(role.Link)
+	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(behaviorBtton)(ctx); err != nil {
+		s.Fatal("Failed to find 'Behavior' button: ", err)
+	}
+	if err := ui.LeftClick(behaviorBtton)(ctx); err != nil {
+		s.Fatal("Failed to click 'Behavior' button: ", err)
+	}
+
+	// Enable audible terminal bell.
+	terminalBell := nodewith.Role(role.CheckBox).Ancestor(nodewith.Name("Audible terminal bell."))
+	bellCheckboxInfo, err := ui.Info(ctx, terminalBell)
+	if err != nil {
+		s.Fatal("Failed to get 'Audible terminal bell' info: ", err)
+	}
+
+	if !bellCheckboxInfo.Selected {
+		if err := ui.LeftClick(terminalBell)(ctx); err != nil {
+			s.Fatal("Failed to click 'Audible terminal bell' button: ", err)
+		}
+	}
+
+	// Close loaded Terminal Settings page.
+	closeBttn := nodewith.Name("Close").Role(role.Button).Ancestor(nodewith.NameContaining("Terminal - Settings").First())
+	if err := ui.Exists(closeBttn)(ctx); err != nil {
+		s.Fatal("Failed to find 'Close' button for Terminal Settings page: ", err)
+	}
+	if err := ui.LeftClick(closeBttn)(ctx); err != nil {
+		s.Fatal("Failed click 'Close' button for Terminal Settings page: ", err)
 	}
 
 	// Press downward arror keyboard key.
