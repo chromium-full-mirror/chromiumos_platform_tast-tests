@@ -70,6 +70,7 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
+
 	// Set up the apps to launch list.
 	appsList := s.Param().([]apps.App)
 
@@ -91,10 +92,11 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 
 	// Opens PlayStore, Browser and Files.
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
-	appsList = append(appsList, browserApp)
 	if err != nil {
 		s.Fatal("Could not find the primary browser app info: ", err)
 	}
+	appsList = append(appsList, browserApp)
+
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
 	}
@@ -112,6 +114,8 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.SaveCurrentDesk(ctx, ac, ash.Template, "Template 1"); err != nil {
 		s.Fatal("Failed to save current desk as 'Template 1' of type 'Template': ", err)
 	}
+
+	defer saveddesks.DeleteSavedDesks(cleanupCtx, tconn, ac)
 
 	// Verify saved desk.
 	if err := ash.VerifySavedDesk(ctx, ac, []string{"Template 1"}); err != nil {

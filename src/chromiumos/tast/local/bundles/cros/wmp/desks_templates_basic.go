@@ -114,6 +114,8 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save current desk as 'Template 1' of type 'Template': ", err)
 	}
 
+	defer saveddesks.DeleteSavedDesks(cleanupCtx, tconn, ac)
+
 	// Verify saved desk.
 	if err := ash.VerifySavedDesk(ctx, ac, []string{"Template 1"}); err != nil {
 		s.Fatal("Failed to verify saved desk: ", err)

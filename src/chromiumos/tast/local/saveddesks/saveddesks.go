@@ -109,7 +109,7 @@ func WaitforAppsToBeVisible(ctx context.Context, tconn *chrome.TestConn, ac *uia
 	return nil
 }
 
-// OpenApps opens the given apps, waits for them to launch and their windows to appear..
+// OpenApps opens the given apps, waits for them to launch and their windows to appear.
 func OpenApps(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, appsList []apps.App) error {
 	for _, app := range appsList {
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
@@ -121,5 +121,41 @@ func OpenApps(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, a
 		return errors.Wrap(err, "failed to wait for app launch")
 	}
 
+	return nil
+}
+
+// DeleteSavedDesks resets the  current state of the system by deleting
+// all newly created saved desks.
+func DeleteSavedDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
+	// Enter overview mode.
+	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
+		return errors.Wrap(err, "failed to set overview mode")
+	}
+	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for the animation to be completed")
+	}
+	// Check if library button is visible.
+	libraryButtonVisible, err := ash.IsLibraryButtonVisible(ctx, ac)
+	if err != nil {
+		return errors.Wrap(err, "ailed to check if library is visible")
+	}
+
+	// Enter library page, and delete all saved desks.
+	if libraryButtonVisible {
+		if err := ash.EnterLibraryPage(ctx, ac); err != nil {
+			return errors.Wrap(err, "failed to enter library page")
+		}
+		if err := ash.DeleteAllSavedDesks(ctx, ac, tconn); err != nil {
+			return errors.Wrap(err, "fail to clean up desk templates")
+		}
+	}
+
+	// Exit overview mode.
+	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
+		return errors.Wrap(err, "failed to set overview mode")
+	}
+	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for the animation to be completed")
+	}
 	return nil
 }

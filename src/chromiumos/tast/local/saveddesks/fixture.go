@@ -28,6 +28,9 @@ const PreTestTimeout = 15 * time.Second
 // It's intentionally set longer than ResetTimeout because dumping 'dumpsys' takes around 20 seconds.
 const PostTestTimeout = ResetTimeout + 20*time.Second
 
+// UserDataDir is the directory that contains the user data of saveddesks.
+const UserDataDir = "/home/chronos/user/saveddesks/"
+
 func init() {
 	// savedDesksEnableWithoutArc is a fixture that enables saved desks functionality without ARC.
 	testing.AddFixture(&testing.Fixture{
@@ -270,6 +273,9 @@ func (f *savedDesksFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 }
 
 func (f *savedDesksFixture) Reset(ctx context.Context) error {
+	if err := os.RemoveAll(UserDataDir); err != nil {
+		return errors.Wrap(err, "failed to delete saveddesks user data directory")
+	}
 	if err := f.cr.ResetState(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset chrome")
 	}
