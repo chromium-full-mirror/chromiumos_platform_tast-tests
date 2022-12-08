@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/dlc"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/upstart"
@@ -58,7 +57,6 @@ func ModemfwdFallbackToRootfsNoDlcservice(ctx context.Context, s *testing.State)
 	}(ctx)
 	// modemfwd is initially stopped in the fixture SetUp
 	if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
-		err := cellular.TagKnownBugOnBoard(ctx, err, "b/253087349", []string{"herobrine"})
 		s.Fatal("modemfwd failed during initialization: ", err)
 	}
 
