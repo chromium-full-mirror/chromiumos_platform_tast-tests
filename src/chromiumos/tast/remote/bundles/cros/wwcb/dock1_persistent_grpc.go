@@ -32,6 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Windows persistent settings for single display through a Dock",
 		Contacts:     []string{"flin@google.com", "newmanliu19020@allion.corp-partner.google.com"},
+		BugComponent: "b:1289112",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID", "wwcbIPPowerIp"},

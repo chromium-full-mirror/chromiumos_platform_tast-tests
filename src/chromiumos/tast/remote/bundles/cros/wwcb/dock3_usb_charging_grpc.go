@@ -27,6 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test power charging via a powered Dock over USB-C",
 		Contacts:     []string{"flin@google.com", "allion-wwcb@allion.corp-partner.google.com", "newmanliu19020@allion.corp-partner.google.com"},
+		BugComponent: "b:1289112",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID", "wwcbIPPowerIp"},
