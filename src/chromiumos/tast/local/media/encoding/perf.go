@@ -62,6 +62,7 @@ func ParseQualityPerfMetrics(metricsPath, scalabilityMode string, p *perf.Values
 		PSNRAverage               float64
 		BitrateDeviation          float64
 		LogLikelihoodRatioAverage float64
+		BottomRowPSNRAverage      float64
 	}
 	if err := json.NewDecoder(f).Decode(&metrics); err != nil {
 		return errors.Wrapf(err, "failed decoding %s", metricsPath)
@@ -79,6 +80,11 @@ func ParseQualityPerfMetrics(metricsPath, scalabilityMode string, p *perf.Values
 		Unit:      "scalar",
 		Direction: perf.BiggerIsBetter,
 	}, metrics.PSNRAverage)
+	p.Set(perf.Metric{
+		Name:      "bottom_row_psnr" + scalabilityMode + ".average",
+		Unit:      "scalar",
+		Direction: perf.BiggerIsBetter,
+	}, metrics.BottomRowPSNRAverage)
 	p.Set(perf.Metric{
 		Name:      "bitrate_deviation" + scalabilityMode,
 		Unit:      "percent",
