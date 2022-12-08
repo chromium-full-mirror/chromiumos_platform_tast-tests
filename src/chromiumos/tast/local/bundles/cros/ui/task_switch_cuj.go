@@ -26,7 +26,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      25 * time.Minute,
 		Vars: []string{
@@ -36,31 +36,13 @@ func init() {
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				Fixture:           "loggedInToCUJUser",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-				},
-			},
-			{
-				Name:              "vm",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Fixture:           "loggedInToCUJUser",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
 				},
 			}, {
 				Name:              "lacros",
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_p", "lacros"},
-				Fixture:           "loggedInToCUJUserLacros",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeLacros,
-				},
-			}, {
-				Name:              "lacros_vm",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeLacros,
@@ -68,17 +50,6 @@ func init() {
 			}, {
 				Name:              "tablet",
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "loggedInToCUJUser",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-					Tablet:      true,
-				},
-			},
-			{
-				Name:              "tablet_vm",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_vm"},
 				Fixture:           "loggedInToCUJUser",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
@@ -87,16 +58,7 @@ func init() {
 			}, {
 				Name:              "lacros_tablet",
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_p", "lacros"},
-				Fixture:           "loggedInToCUJUserLacros",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeLacros,
-					Tablet:      true,
-				},
-			}, {
-				Name:              "lacros_tablet_vm",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeLacros,
@@ -106,7 +68,6 @@ func init() {
 				// Pilot test on "noibat" that has HDMI dongle installed.
 				Name:              "noibat",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("noibat")),
-				ExtraSoftwareDeps: []string{"android_vm"},
 				Fixture:           "loggedInToCUJUser",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
