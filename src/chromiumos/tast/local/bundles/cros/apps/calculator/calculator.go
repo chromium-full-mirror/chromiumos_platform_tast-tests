@@ -37,12 +37,12 @@ func UIConn(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
 // keyName is aria-label of the element, not displayed text. e.g. Do not use '+' but 'plus'.
 func TapKey(appConn *chrome.Conn, keyName string) uiauto.Action {
 	script := fmt.Sprintf(`document.querySelector(".keypad canvas[aria-role='button'][aria-label='%s']").click()`, keyName)
-	return func(ctx context.Context) error {
+	return action.RetrySilently(3, func(ctx context.Context) error {
 		if err := appConn.Eval(ctx, script, nil); err != nil {
 			return errors.Wrapf(err, "failed to tap key %q", keyName)
 		}
 		return nil
-	}
+	}, time.Second)
 }
 
 // WaitForCalculateResult waits until the calculation result is expected.
