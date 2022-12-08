@@ -19,10 +19,10 @@ import (
 
 // WaitUntilRefreshProfileCompletes will wait until the cellular refresh profile completes.
 func WaitUntilRefreshProfileCompletes(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn).WithTimeout(1 * time.Minute)
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Minute)
 	refreshProfileText := nodewith.NameContaining("This may take a few minutes").Role(role.StaticText)
 	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(refreshProfileText)(ctx); err == nil {
-		if err := ui.WithTimeout(time.Minute).WaitUntilGone(refreshProfileText)(ctx); err != nil {
+		if err := ui.WithTimeout(5 * time.Minute).WaitUntilGone(refreshProfileText)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait until refresh profile complete")
 
 		}
