@@ -224,6 +224,9 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 		if udIn.Version == "Unknown" {
 			return errors.New("unknown USB version")
 		}
+		if udIn.SpecSpeed == "Unknown" {
+			return errors.New("unknown USB speed")
+		}
 		// TODO:(b/199683963): Validation of types.BusDevice.DeviceClass is skipped.
 		udOut := usbutil.Device{
 			VendorID:    fmt.Sprintf("%04x", udIn.VendorID),
