@@ -74,6 +74,9 @@ const (
 	p2pClientIPAddress string = "192.160.0.2"
 )
 
+// Set to false for tethering setup using Shill.
+const useWpaCliAPI = true
+
 // TFOption is the function signature used to modify TextFixutre.
 type TFOption func(*TestFixture)
 
@@ -246,9 +249,10 @@ type TestFixture struct {
 	attenuatorTarget string
 	attenuator       *attenuator.Attenuator
 
-	setLogging bool
-	logLevel   int
-	logTags    []string
+	useWpaCliAPI bool
+	setLogging   bool
+	logLevel     int
+	logTags      []string
 
 	// The following parameters (with prefix p2p*) are used with P2P tests.
 	p2pGO              *dut.DUT
@@ -365,7 +369,8 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		logLevel: -2,
 		// Default log tags used in WiFi tests. Example of other tags that can be added.
 		// (connection + dbus + device + link + manager + portal + service)
-		logTags: []string{"wifi"},
+		logTags:      []string{"wifi"},
+		useWpaCliAPI: useWpaCliAPI,
 	}
 	// By default we require router presence.
 	tf.option.routerRequired = true
@@ -761,6 +766,7 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 
 	// Give the router a moment to shut down before trying to reconnect.
 	testing.ContextLogf(ctx, "Waiting %s before trying to reconnect to %s", routerPostRebootWaitTime, routerMsgName)
+	//GoBigSleepLint. Sleep is a minimum time, enhanced by a later poll.
 	if err := testing.Sleep(ctx, routerPostRebootWaitTime); err != nil {
 		return errors.Wrapf(err, "failed to wait for %s after rebooting %s", routerPostRebootWaitTime, routerMsgName)
 	}
@@ -2074,6 +2080,11 @@ func (tf *TestFixture) ReserveForDeleteIPRoute(ctx context.Context) (context.Con
 	return ctxutil.Shorten(ctx, 2*time.Second)
 }
 
+// UseWpaCliAPI sets up test fixture to use wpa_cli API for extra configuration.
+func (tf *TestFixture) UseWpaCliAPI(enable bool) {
+	tf.useWpaCliAPI = enable
+}
+
 // SeedRegdomain sets up AP which broadcasts country information, so that all self-managed devices in the wificell get their regdomain seeded.
 func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) (*APIface, func(context.Context), error) {
 	// One AP is enough for all testcases.
@@ -2155,6 +2166,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		AutoDisableMinute: c.AutoDisableMin,
 		Ssid:              []byte(c.SSID),
 		Band:              c.Band.String(),
+		UseWpaCliApi:      tf.useWpaCliAPI,
 	}
 
 	if fac != nil {
@@ -2194,7 +2206,7 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) error {
 	ctx, st := timing.Start(ctx, "tf.StopTethering")
 	defer st.End()
 
-	_, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &empty.Empty{})
+	_, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI})
 	if err != nil {
 		return errors.Wrap(err, "client failed to stop tethering session")
 	}

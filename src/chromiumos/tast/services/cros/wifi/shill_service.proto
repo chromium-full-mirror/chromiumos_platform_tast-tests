@@ -211,7 +211,7 @@ service ShillService {
   rpc StartTethering(TetheringRequest) returns (TetheringResponse) {}
 
   // StopTethering attempts to stop the tethering session.
-  rpc StopTethering(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc StopTethering(StopTetheringRequest) returns (google.protobuf.Empty) {}
 
   // SetPortalDetectionEnabled persistently enables/disables PortalDection via shill.
   rpc SetPortalDetectionEnabled(SetPortalDetectionEnabledRequest) returns (google.protobuf.Empty) {}
@@ -612,6 +612,11 @@ message TetheringRequest {
   string security = 5;
   string psk = 6;
   string cipher = 7;
+  bool use_wpa_cli_api = 8;
+}
+
+message StopTetheringRequest {
+  bool use_wpa_cli_api = 1;
 }
 
 message TetheringResponse {

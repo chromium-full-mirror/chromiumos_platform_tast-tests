@@ -32,6 +32,7 @@ import (
 	"chromiumos/tast/common/utils"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/network"
 	"chromiumos/tast/local/network/cmd"
 	local_firewall "chromiumos/tast/local/network/firewall"
@@ -247,7 +248,7 @@ func (s *ShillService) discoverService(ctx context.Context, m *shill.Manager, pr
 	return service, nil
 }
 
-// connectService connects to a WiFi service and wait until conntected state.
+// connectService connects to a WiFi service and wait until connected state.
 // The time used for association and configuration is returned when success.
 func (s *ShillService) connectService(ctx context.Context, service *shill.Service) (assocTime, configTime time.Duration, retErr error) {
 	ctx, st := timing.Start(ctx, "connectService")
@@ -2632,7 +2633,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		if err := writeStringToFile(resetPath, "assert"); err != nil {
 			return errors.Wrapf(err, "failed to write to the reset path %q", resetPath)
 		}
-		// Ath11k does not explicitly disconnect/reconnect during simulated FW crash.
+		// GoBigSleepLint. Ath11k does not explicitly disconnect/reconnect during simulated FW crash.
 		// This will cause ping to start right after simulated FW crash, causing ping pkt drops.
 		// Allow 20 secs sleep (FW takes approx ~12 for complete initialization/full scan).
 		// TODO(b/230656342): Handle no disconnection/connection during simulated FW crash.
@@ -2660,7 +2661,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 			return err
 		}
 
-		// Ath10k on 5.15 does not explicitly disconnect/reconnect during simulated FW crash.
+		// GoBigSleepLint. Ath10k on 5.15 does not explicitly disconnect/reconnect during simulated FW crash.
 		// This will cause ping to start right after simulated FW crash, causing ping pkt drops.
 		// Allow 20 secs sleep (20 secs threshold is to ensure that the FW has recovered fine).
 		// TODO(b/230656342): Handle no disconnection/connection during simulated FW crash.
@@ -3033,17 +3034,49 @@ func (s *ShillService) WatchDarkResume(_ *empty.Empty, sender wifi.ShillService_
 	}
 }
 
+func waitForTetheringState(ctx context.Context, manager *shill.Manager, state string) (*dbusutil.Properties, error) {
+	var props *dbusutil.Properties
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		if props, err = manager.TetheringStatus(ctx); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read tethering status"))
+		}
+		if s, err := props.GetString(shillconst.TetheringStatusState); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get tethering status"))
+		} else if s != state && s == shillconst.TetheringStateIdle {
+			// Try a best effort read of a possible failure reason.
+			errMsg, err := props.GetString(shillconst.TetheringStatusIdleReason)
+			if err != nil {
+				errMsg = "[Unknown]"
+			}
+			return testing.PollBreak(errors.Errorf("tethering status == %q, for a reason %q", s, errMsg))
+		} else if s != state {
+			return errors.Errorf("wrong tethering state, got %s, want %s", s, state)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return nil, errors.Wrapf(err, "failed to wait for the correct tethering status %s", state)
+	}
+	return props, nil
+}
+
 // StartTethering attempts to start a tethering session.
 // This is the implementation of wifi.ShillService/StartTethering gRPC.
-func (s *ShillService) StartTethering(ctx context.Context, request *wifi.TetheringRequest) (*wifi.TetheringResponse, error) {
+func (s *ShillService) StartTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
+	if request.UseWpaCliApi {
+		return s.startSupplicantTethering(ctx, request)
+	}
+	return s.startShillTethering(ctx, request)
+}
+
+func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) (*wifi.TetheringResponse, error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
 	ctx, st := timing.Start(ctx, "wifi_service.StartTethering")
 	defer st.End()
-	testing.ContextLog(ctx, "Attempting to start tethering with config: ", request)
+	testing.ContextLog(ctx, "Attempting to start tethering via WPA Supplicant with config: ", request)
 
-	// TODO(b/235758932): Change to use Shill dbus call instead of wpa_supplicant when tethering support in Shill is ready.
 	const macBitLocal = 0x2
 	const macBitMulticast = 0x1
 
@@ -3054,7 +3087,7 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 	}
 	mac[0] = (mac[0] &^ macBitMulticast) | macBitLocal
 
-	// Add interfce to system.
+	// Add interface to the system.
 	err := local_iw.NewLocalRunner().AddInterface(ctx, "phy0", apIfName, iw.IfSetTypeAP, &mac)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to add interface to system")
@@ -3103,28 +3136,161 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 	return &wifi.TetheringResponse{DownlinkTech: "WiFi", Channel: channel}, nil
 }
 
+func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	ctx, st := timing.Start(ctx, "wifi_service.StartTethering")
+	defer st.End()
+	testing.ContextLog(ctx, "Attempting to start tethering via Shill with config: ", request)
+
+	serviceProps := map[string]interface{}{
+		shillconst.TetheringConfBand:         request.Band,
+		shillconst.TetheringConfSSID:         hex.EncodeToString(request.Ssid),
+		shillconst.TetheringConfUpstreamTech: shillconst.TypeEthernet,
+		shillconst.TetheringConfAutoDisable:  false,
+	}
+
+	switch request.Security {
+	case shillconst.SecurityWPA2:
+		serviceProps[shillconst.TetheringConfSecurity] = shillconst.SecurityWPA2
+		serviceProps[shillconst.TetheringConfPassphrase] = request.Psk
+	case shillconst.SecurityWPA3:
+		serviceProps[shillconst.TetheringConfSecurity] = shillconst.SecurityWPA3
+		serviceProps[shillconst.TetheringConfPassphrase] = request.Psk
+	case shillconst.SecurityWPA2WPA3:
+		serviceProps[shillconst.TetheringConfSecurity] = shillconst.SecurityWPA2WPA3
+		serviceProps[shillconst.TetheringConfPassphrase] = request.Psk
+	default:
+		return nil, errors.Errorf("security %q not supported by Shill API", request.Security)
+	}
+
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+	}
+
+	if _, err := manager.CreateFakeUserProfile(ctx, wifiTestProfileName); err != nil {
+		return nil, errors.Wrapf(err, "failed to create fake profile %q", wifiTestProfileName)
+	}
+
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			// Success, nothing to do here.
+			return
+		}
+		if err := manager.RemoveFakeUserProfile(ctx, wifiTestProfileName); err != nil {
+			if retErr != nil {
+				testing.ContextLogf(ctx, "Failed to remove profile %q and the test has already failed: %v", wifiTestProfileName, err)
+			} else {
+				retErr = errors.Wrapf(err, "failed to remove profile %q", wifiTestProfileName)
+			}
+		}
+	}(ctx)
+
+	if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, true); err != nil {
+		return nil, errors.Wrap(err, "failed to set ManagerTetheringAllowed")
+	}
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, false); err != nil {
+			if retErr != nil {
+				testing.ContextLogf(ctx, "Failed to remove profile %q and the test has already failed: %v", wifiTestProfileName, err)
+			} else {
+				retErr = errors.Wrapf(err, "failed to remove profile %q", wifiTestProfileName)
+			}
+		}
+	}(ctx)
+
+	if err := manager.ConfigureTethering(ctx, serviceProps); err != nil {
+		return nil, errors.Wrap(err, "failed to configure tethering")
+	}
+
+	// No need to rollback in case of further failure.
+
+	if err := manager.EnableTethering(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to enable tethering")
+	}
+
+	if _, err := waitForTetheringState(ctx, manager, shillconst.TetheringStateActive); err != nil {
+		return nil, errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateActive)
+	}
+
+	// TODO(b/275644434): Remove when patchpanel changes take care of DHCP.
+	if err := s.startDHCPServer(ctx); err != nil {
+		s.stopDHCPServer(ctx)
+		return nil, errors.Wrap(err, "failed to start DHCP server")
+	}
+
+	return &wifi.TetheringResponse{}, nil
+}
+
 // StopTethering attempts to stop the tethering session.
 // This is the implementation of wifi.ShillService/StopTethering gRPC.
-func (s *ShillService) StopTethering(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+func (s *ShillService) StopTethering(ctx context.Context, request *wifi.StopTetheringRequest) (*empty.Empty, error) {
+	if request.UseWpaCliApi {
+		return s.stopSupplicantTethering(ctx, nil)
+	}
+	return s.stopShillTethering(ctx, nil)
+}
+
+func (s *ShillService) stopSupplicantTethering(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
 	var firstErr error
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
 	ctx, st := timing.Start(ctx, "wifi_service.StopTethering")
 	defer st.End()
-	testing.ContextLog(ctx, "Attempting to stop the tethering session")
+	testing.ContextLog(ctx, "Attempting to stop the tethering session with WPA Supplicant")
 
 	if err := s.stopDHCPServer(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop DHCP server"))
 	}
 
-	// TODO(b/235758932): Change to use Shill dbus call instead of wpa_supplicant when tethering support in Shill is ready.
 	if err := localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop soft AP in wpa_supplicant"))
 	}
 
 	s.RemoveInterface(ctx, apIfName)
 	local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
+
+	return &empty.Empty{}, firstErr
+}
+
+func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	var firstErr error
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+
+	// TODO(b/275644434): Remove when patchpanel changes take care of DHCP.
+	if err := s.stopDHCPServer(ctx); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop DHCP server"))
+	}
+	ctx, st := timing.Start(ctx, "wifi_service.StopTethering")
+	defer st.End()
+	testing.ContextLog(ctx, "Attempting to stop the tethering session using Shill")
+
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+	}
+
+	if err := manager.DisableTethering(ctx); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to enable tethering"))
+	}
+
+	if _, err := waitForTetheringState(ctx, manager, shillconst.TetheringStateIdle); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateIdle))
+	}
+
+	if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, false); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to clear ManagerTetheringAllowed"))
+	}
+	if err := manager.RemoveFakeUserProfile(ctx, wifiTestProfileName); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to remove fake profile %q", wifiTestProfileName))
+	}
 
 	return &empty.Empty{}, firstErr
 }

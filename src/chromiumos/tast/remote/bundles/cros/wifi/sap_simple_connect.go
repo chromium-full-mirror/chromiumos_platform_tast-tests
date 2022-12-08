@@ -24,6 +24,7 @@ import (
 type sapSimpleConnectTestcase struct {
 	tetheringOpts []tethering.Option
 	secConfFac    security.ConfigFactory
+	useWpaCliAPI  bool // Use wpa_cli API to setup tethering.
 }
 
 func init() {
@@ -50,8 +51,10 @@ func init() {
 				Name: "open",
 				Val: []sapSimpleConnectTestcase{{
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 				}},
 			},
 			{
@@ -69,6 +72,7 @@ func init() {
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
 					),
+					useWpaCliAPI: true,
 				}},
 			},
 			{
@@ -87,6 +91,7 @@ func init() {
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
+					useWpaCliAPI: true,
 				}},
 			},
 			{
@@ -105,6 +110,7 @@ func init() {
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
+					useWpaCliAPI: true,
 				}},
 			},
 		},
@@ -137,8 +143,9 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
 	defer cancel()
 
-	testOnce := func(ctx context.Context, s *testing.State, options []tethering.Option, fac security.ConfigFactory) {
-		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, options, fac)
+	testOnce := func(ctx context.Context, s *testing.State, tc sapSimpleConnectTestcase) {
+		tf.UseWpaCliAPI(tc.useWpaCliAPI)
+		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)
 		if err != nil {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)
 		}
@@ -150,7 +157,6 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 		}(ctx)
 		ctx, cancel := tf.ReserveForStopTethering(ctx)
 		defer cancel()
-		s.Log("Tethering session started")
 
 		cdIdx := wificell.DutIdx(1)
 		_, err = tf.ConnectWifiFromDUT(ctx, cdIdx, tetheringConf.SSID, dutcfg.ConnSecurity(tetheringConf.SecConf))
@@ -189,7 +195,7 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 	testcases := s.Param().([]sapSimpleConnectTestcase)
 	for i, tc := range testcases {
 		subtest := func(ctx context.Context, s *testing.State) {
-			testOnce(ctx, s, tc.tetheringOpts, tc.secConfFac)
+			testOnce(ctx, s, tc)
 		}
 		s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest)
 	}
