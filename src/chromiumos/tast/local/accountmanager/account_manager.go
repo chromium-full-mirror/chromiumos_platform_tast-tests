@@ -476,6 +476,7 @@ func TestCleanup(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome)
 	ui := uiauto.New(tconn).WithTimeout(DefaultUITimeout)
 
 	if err := ui.Exists(AddAccountDialog())(ctx); err == nil {
+		testing.ContextLog(ctx, "TestCleanup: detected Add Account dialog, pressing Esc to close")
 		// Set up keyboard.
 		kb, err := input.Keyboard(ctx)
 		if err != nil {
@@ -534,6 +535,7 @@ func TestCleanup(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome)
 	if err != nil {
 		return errors.Wrap(err, "failed to get all open window")
 	}
+	testing.ContextLogf(ctx, "TestCleanup: found %v open windows", len(ws))
 	for _, w := range ws {
 		if err := w.CloseWindow(ctx, tconn); err != nil {
 			return errors.Wrapf(err, "failed to close window (%+v)", w)
