@@ -957,13 +957,13 @@ func RestoreArcvmDevConf(ctx context.Context) error {
 // CheckNoDex2Oat verifies whether ARC is pre-optimized and no dex2oat was previously running in the background.
 func CheckNoDex2Oat(outDir string) error {
 	const (
-		containerDexPrefix = `/system/bin/dex2oat .*--dex-file=(.+?) --`
-		vmDexPrefix        = `DexInv: --- BEGIN \'(.+?)\' ---`
+		piDexPrefix      = `/system/bin/dex2oat .*--dex-file=(.+?) --`
+		rvcPlusDexPrefix = `DexInv: --- BEGIN \'(.+?)\' ---`
 	)
 
-	isVMEnabled, err := VMEnabled()
+	sdkVersion, err := SDKVersion()
 	if err != nil {
-		return errors.Wrap(err, "failed to get whether ARCVM is enabled")
+		return errors.Wrap(err, "failed to get SDK version")
 	}
 
 	// check logcat for evidence of dex2oat running.
@@ -974,9 +974,9 @@ func CheckNoDex2Oat(outDir string) error {
 		return errors.Wrap(err, "failed to read logcat")
 	}
 
-	dexPrefix := containerDexPrefix
-	if isVMEnabled {
-		dexPrefix = vmDexPrefix
+	dexPrefix := piDexPrefix
+	if sdkVersion >= SDKR {
+		dexPrefix = rvcPlusDexPrefix
 	}
 	m := regexp.MustCompile(dexPrefix).FindAllStringSubmatch(string(dump), -1)
 	for _, match := range m {
