@@ -10,6 +10,7 @@ This file implements functions to check or switch the DUT's boot mode.
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	fwCommon "chromiumos/tast/common/firmware"
@@ -939,6 +940,24 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
 	}
+
+	// Stainless reported thermal shutdown on some dedede duts while they
+	// were booting into recovery mode. Check for the temperature information
+	// before power-off for debugging purposes.
+	out, err := h.DUT.Conn().CommandContext(ctx, "ectool", "temps", "all").Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to run ectool: ", err)
+	}
+	temps := strings.Split(strings.TrimSpace(string(out)), "\n")
+	if len(temps) < 2 {
+		testing.ContextLog(ctx, "Did not find temperature data")
+	} else {
+		testing.ContextLog(ctx, "Found temperature data")
+		for _, val := range temps {
+			testing.ContextLog(ctx, val)
+		}
+	}
+
 	if err := ms.PowerOff(ctx); err != nil {
 		return errors.Wrap(err, "powering off DUT")
 	}
