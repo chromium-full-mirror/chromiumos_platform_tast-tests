@@ -50,6 +50,7 @@ var md5OfYUV = map[string]string{
 	"crowd-641x361.i420.yuv":            "124d3e29ea68eaba0dc35243b4dfc27b",
 	"crowd-641x361.nv12.yuv":            "f2eabbe28eae5bfcf5f8aa0b50bf9119",
 	"crowd-320x180_30frames.i420.yuv":   "795d9e03fc4631245558cc522462a1e5",
+	"crowd-480x270_30frames.i420.yuv":   "21c426bea751e475533d2480b4b33426",
 	"crowd-640x360_30frames.i420.yuv":   "134fecaaae471820dede6c761e4d8f4b",
 	"crowd-960x540_30frames.i420.yuv":   "c1ab2a4af9bc76fc5d659fcf19fbee09",
 	"crowd-1280x720_30frames.i420.yuv":  "f26bff398809056165be970922492281",

@@ -16,6 +16,7 @@ import (
 
 const (
 	crowd180p  = "crowd-320x180_30frames.vp9.webm"
+	crowd270p  = "crowd-480x270_30frames.vp9.webm"
 	crowd360p  = "crowd-640x360_30frames.vp9.webm"
 	crowd540p  = "crowd-960x540_30frames.vp9.webm"
 	crowd720p  = "crowd-1280x720_30frames.vp9.webm"
@@ -43,6 +44,12 @@ func init() {
 			Val:               encode.MakeTestOptions(crowd180p, videotype.H264BaselineProf),
 			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd180p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264},
+		}, {
+			Name:              "h264_270p",
+			Val:               encode.MakeTestOptions(crowd270p, videotype.H264BaselineProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd270p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264},
 		}, {
 			Name:              "h264_360p",
@@ -85,6 +92,12 @@ func init() {
 			Val:               encode.MakeVBRTestOptions(crowd180p, videotype.H264BaselineProf),
 			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd180p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR},
+		}, {
+			Name:              "h264_270p_vbr",
+			Val:               encode.MakeVBRTestOptions(crowd270p, videotype.H264BaselineProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd270p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR},
 		}, {
 			Name:              "h264_360p_vbr",
@@ -183,6 +196,12 @@ func init() {
 			ExtraData:         encode.TestData(crowd180p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 		}, {
+			Name:              "vp8_270p",
+			Val:               encode.MakeTestOptions(crowd270p, videotype.VP8Prof),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd270p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+		}, {
 			Name:              "vp8_360p",
 			Val:               encode.MakeTestOptions(crowd360p, videotype.VP8Prof),
 			ExtraAttr:         []string{"graphics_perbuild"},
@@ -217,6 +236,12 @@ func init() {
 			Val:               encode.MakeTestOptions(crowd180p, videotype.VP9Prof),
 			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd180p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+		}, {
+			Name:              "vp9_270p",
+			Val:               encode.MakeTestOptions(crowd270p, videotype.VP9Prof),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd270p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 		}, {
 			Name:              "vp9_360p",
