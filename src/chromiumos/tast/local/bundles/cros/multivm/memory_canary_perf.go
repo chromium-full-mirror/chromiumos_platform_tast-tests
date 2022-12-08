@@ -6,20 +6,21 @@ package multivm
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/memory"
+	"chromiumos/tast/local/memory/kernelmeter"
 	"chromiumos/tast/local/memory/memoryuser"
 	"chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/multivm"
@@ -33,6 +34,7 @@ type canaryHealthPerfParam struct {
 }
 
 const iterationsVar = "multivm.MemoryCanaryPerf.iterations"
+const throttleVar = "multivm.MemoryCanaryPerf.throttle"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -94,109 +96,90 @@ func init() {
 		}},
 		Vars: []string{
 			iterationsVar,
+			throttleVar,
 		},
 		Timeout: 30 * time.Minute,
 	})
 }
 
-const initialOpenFileLimit = 2048
-
-// updateOpenFileLimit updates the soft & hard limits of the number of open files by the test process.
-// We need this because this test opens one file (stdin) for one memory allocator.
-func updateOpenFileLimit(ctx context.Context, softLimit, hardLimit int) error {
-	pid := os.Getpid()
-	testing.ContextLogf(ctx, "pid: %d", pid)
-	cmd := testexec.CommandContext(ctx, "prlimit", fmt.Sprintf("--pid=%d", pid), fmt.Sprintf("--nofile=%d:%d", softLimit, hardLimit))
-	testing.ContextLogf(ctx, "The open file limit is updated to %d:%d", softLimit, hardLimit)
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "failed to update the open file limit")
-	}
-	return nil
-}
-
-// getCurrentOpenFileLimit returns the current soft & hard limits of the number of open files by the test process.
-func getCurrentOpenFileLimit(ctx context.Context) (int, int, error) {
-	pid := os.Getpid()
-	softLimitOutputBytes, err := testexec.CommandContext(ctx, "prlimit", fmt.Sprintf("--pid=%d", pid), "-o", "SOFT", "--noheading", "--nofile").Output()
-	if err != nil {
-		return -1, -1, errors.Wrap(err, "failed to get the soft limit")
-	}
-	softLimit, err := strconv.Atoi(strings.TrimSpace(string(softLimitOutputBytes)))
-	if err != nil {
-		return -1, -1, errors.Wrap(err, "failed to parse the soft limit")
-	}
-	hardLimitOutputBytes, err := testexec.CommandContext(ctx, "prlimit", fmt.Sprintf("--pid=%d", pid), "-o", "HARD", "--noheading", "--nofile").Output()
-	if err != nil {
-		return -1, -1, errors.Wrap(err, "failed to get the hard limit")
-	}
-	hardLimit, err := strconv.Atoi(strings.TrimSpace(string(hardLimitOutputBytes)))
-	if err != nil {
-		return -1, -1, errors.Wrap(err, "failed to parse the hard limit")
-	}
-	return softLimit, hardLimit, nil
-}
-
 const canaryAllocatedMiB = 0
-const canaryCompressionRatio = 0.
-const singleAllocatorMiB = 50
+const canaryCompressionRatio = 0.67
 const allocatorComplessionRatio = 0.67
 
-func stressCanary(ctx context.Context, s *testing.State, param *canaryHealthPerfParam, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC) (int64, time.Duration, error) {
-	originalSoftLimit, originalHardLimit, err := getCurrentOpenFileLimit(ctx)
-	if err != nil {
-		s.Fatal("Failed to get the open file limit: ", err)
-	}
-	defer updateOpenFileLimit(ctx, originalSoftLimit, originalHardLimit)
+func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPerfParam, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC) (int64, time.Duration, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
 
-	var openFileLimit = initialOpenFileLimit
-
-	err = updateOpenFileLimit(ctx, openFileLimit, openFileLimit)
-	if err != nil {
-		s.Fatal("Update of the open file limit failed: ", err)
-	}
-
+	var err error
 	var canary memoryuser.Canary
 	switch param.canary {
 	case memoryuser.Tab:
-		canary = memoryuser.NewTabCanary(ctx, canaryAllocatedMiB, canaryCompressionRatio, s.DataFileSystem(), br, false)
+		canary = memoryuser.NewTabCanary(ctx, canaryAllocatedMiB, canaryCompressionRatio, fs, br, false)
 	case memoryuser.App:
 		canary, err = memoryuser.NewAppCanary(ctx, canaryAllocatedMiB, canaryCompressionRatio, cr, a)
 		if err != nil {
 			return -1, -1, errors.Wrap(err, "failed to create the canary")
 		}
 	default:
-		s.Fatal("Invalid canary type")
+		return -1, -1, errors.New("invalid canary type")
 	}
 	canary.Run(ctx)
-	defer canary.Close(ctx)
+	defer canary.Close(cleanupCtx)
 
 	target := param.allocationTarget
-	allocationManager := memoryuser.NewMemoryAllocationManager(ctx, target, singleAllocatorMiB, allocatorComplessionRatio, a)
-	defer allocationManager.Cleanup(ctx)
+	allocationManager := memoryuser.NewMemoryAllocationManager(ctx, target, allocationMiB, allocatorComplessionRatio, a)
+	defer allocationManager.Cleanup(cleanupCtx)
 
 	var allocationTime time.Duration = 0
 	var allocatedMiB int64 = 0
 
+	start := time.Now()
+	allocationNum := 0
+	// Keep allocating until the canary dies.
 	for {
-		// Increase the open file limit when needed.
-		if allocationManager.NumOfAllocators() >= openFileLimit/3 {
-			openFileLimit *= 2
-			updateOpenFileLimit(ctx, openFileLimit, openFileLimit)
+		// Throttle allocations if we have a target time period between
+		// allocations.
+		// NB: We compute allocationDelay based on the start time because it allows
+		// us to catch up to the target if we get behind for a bit. The
+		// canary.StillAlive check sometimes takes a few seconds, so it's best to
+		// not delay the test unless we are consistently behind the target. Hence
+		// the 5s threshold before we add a pause.
+		if allocationPeriod > 0 {
+			// Compute when the next allocation should happen.
+			allocationDelay := time.Until(start.Add(allocationPeriod * time.Duration(allocationNum)))
+			// If the target allocation is in the past, we are behind schedule.
+			// If we're more than 5 seconds behind schedule, then pause for a second to let the system catch up.
+			if allocationDelay < -5*time.Second {
+				testing.ContextLogf(ctx, "WARNING: %.2fs behind schedule after %d allocations", -allocationDelay.Seconds(), allocationNum)
+				allocationDelay = time.Second
+				// Reset start to pretend that we are on schedule after a 1s wait.
+				start = time.Now().Add(time.Second - allocationPeriod*time.Duration(allocationNum))
+			}
+			if allocationDelay > 0 {
+				if err := testing.Sleep(ctx, allocationDelay); err != nil {
+					return -1, -1, errors.Wrap(err, "failed to sleep to throttle allocations")
+				}
+			}
 		}
+
+		// Check to see if the test is over.
 		if !canary.StillAlive(ctx) {
-			s.Logf("%s died after %d MiB allocations", canary.String(), allocationManager.TotalAllocatedMiB())
+			testing.ContextLogf(ctx, "%s died after %d MiB allocations", canary.String(), allocationManager.TotalAllocatedMiB())
 			allocatedMiB += allocationManager.TotalAllocatedMiB()
 			break
 		}
 		if err := allocationManager.AssertNoDeadAllocator(); err != nil {
 			return -1, -1, errors.Wrap(err, "an allocator is killed before the canary")
 		}
-		start := time.Now()
+
+		// Track the time spent actually allocating as a performance metric.
+		allocationStart := time.Now()
 		if err := allocationManager.AddAllocator(ctx); err != nil {
 			return -1, -1, errors.Wrap(err, "failed to add an allocator")
 		}
-		elapsed := time.Since(start)
-		allocationTime += elapsed
+		allocationTime += time.Since(allocationStart)
+		allocationNum++
 	}
 	return allocatedMiB, allocationTime, nil
 }
@@ -211,39 +194,85 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupBr(ctx)
 
+	info, err := kernelmeter.MemInfo()
+	if err != nil {
+		s.Fatal("Failed to get meminfo for RAM size: ", err)
+	}
+
 	iterationsStr, ok := s.Var(iterationsVar)
 	var iterations int
 	if ok {
 		iterationsConv, err := strconv.Atoi(iterationsStr)
 		if err != nil {
-			s.Fatal("Could not convert the iterations arg to integer: ", err)
+			s.Fatalf("Could not convert var %s := %q to integer: %s", iterationsVar, iterationsStr, err)
 		}
 		iterations = iterationsConv
 	} else {
 		iterations = 5
 	}
 
+	// Each allocation is for 0.5% of RAM.
+	const allocationFraction = 0.005
+	allocationMiB := int64(allocationFraction * float64(info.Total) / float64(memory.MiB))
+
+	// Default allocation rate is 1% per second
+	allocationRate := 0.01
+	throttleStr, ok := s.Var(throttleVar)
+	if ok {
+		parsedAllocationRate, err := strconv.ParseFloat(throttleStr, 64)
+		if err != nil {
+			s.Fatalf("Could not convert var %s := %q to float: %s", throttleVar, throttleStr, err)
+		}
+		if parsedAllocationRate < 0 || parsedAllocationRate >= 0.1 {
+			s.Fatalf("Var %s := %q must be in the range [0, 0.1]", throttleVar, throttleStr)
+		}
+		allocationRate = parsedAllocationRate
+	}
+
+	s.Logf("Allocation size: %.3f RAM = %d MiB", allocationFraction, allocationMiB)
+	allocationPeriod := time.Duration(0)
+	if allocationRate > 0 {
+		allocationPeriod = time.Duration(float64(time.Second) * allocationFraction / allocationRate)
+		s.Logf("Allocation rate: %.3f RAM/s = %d MiB / %.3f s = %.f MiB/s", allocationRate, allocationMiB, allocationPeriod.Seconds(), float64(allocationMiB)/allocationPeriod.Seconds())
+	} else {
+		s.Log("Allocation rate not throttled")
+	}
+
+	p := perf.NewValues()
+	allocationSizeMetric := perf.Metric{
+		Name:      "allocated",
+		Unit:      "MiB",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+	}
+	allocationSpeedMetric := perf.Metric{
+		Name:      "unthrottledSpeed",
+		Unit:      "MiBps",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+	}
+	memTotalMetric := perf.Metric{
+		Name:      "MemTotal",
+		Unit:      "MiB",
+		Direction: perf.BiggerIsBetter,
+	}
+	p.Set(memTotalMetric, float64(info.Total)/float64(memory.MiB))
+
 	basemem, err := metrics.NewBaseMemoryStats(ctx, preARC)
 	if err != nil {
 		s.Fatal("Failed to retrieve base memory stats: ", err)
 	}
 
-	var totalMib int64 = 0
-	var totalTime time.Duration = 0
-
 	for i := 0; i < iterations; i++ {
-		mib, time, err := stressCanary(ctx, s, param, pre.Chrome, br, preARC)
+		mib, time, err := stressCanary(ctx, s.DataFileSystem(), param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC)
 		if err != nil {
 			s.Fatal("Error in the canary stress test: ", err)
 		}
-		s.Logf("Allocation speed: %f MiB / ms", float64(mib)/float64(time.Milliseconds()))
-		totalTime += time
-		totalMib += mib
+		speed := float64(mib) / time.Seconds()
+		s.Logf("Allocation speed: %.00f MiB / s", speed)
+		p.Append(allocationSizeMetric, float64(mib))
+		p.Append(allocationSpeedMetric, float64(speed))
 	}
-	averageAllocationSpeed := float64(totalMib) / float64(totalTime.Milliseconds())
-	s.Logf("Average allocation speed: %f MiB / ms", averageAllocationSpeed)
-	averageAllocatedMiB := float64(totalMib) / float64(iterations)
-	s.Logf("Average allocated memory: %f MiB", averageAllocatedMiB)
 
 	memoryStats := perf.NewValues()
 	if err := metrics.LogMemoryStats(ctx, basemem, preARC, memoryStats, s.OutDir(), ""); err != nil {
@@ -257,23 +286,7 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 	if err := memoryStats.Save(nouploadPath); err != nil {
 		s.Error("Failed to save memory metrics: ", err)
 	}
-	p := perf.NewValues()
-	p.Set(
-		perf.Metric{
-			Name:      "allocatedMiB",
-			Unit:      "MiB",
-			Direction: perf.SmallerIsBetter,
-		},
-		averageAllocatedMiB,
-	)
-	p.Set(
-		perf.Metric{
-			Name:      "allocationSpeed",
-			Unit:      "MiB-per-ms",
-			Direction: perf.BiggerIsBetter,
-		},
-		averageAllocationSpeed,
-	)
+
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save perf.Values: ", err)
 	}
