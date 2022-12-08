@@ -259,6 +259,8 @@ func (uiHelper *UIHelper) CalibrateLidAccelerometerPageOperation(ctx context.Con
 		uiHelper.waitForPageToLoad("Calibrate components", timeInSecondToLoadPage),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Calibrating components…", timeInSecondToLoadPage),
+		uiHelper.waitForPageToLoad("Calibration complete", timeInSecondToLoadPage),
+		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Finalizing repair", timeInSecondToLoadPage),
 		uiHelper.waitForPageToLoad("Almost done!", timeInSecondToLoadPage),
 	)(ctx)

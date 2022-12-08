@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/shimlessrma/rmaweb"
 	"chromiumos/tast/remote/firmware/fixture"
@@ -87,6 +88,25 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to setup init status: ", err)
 	}
 
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+
+	if err := generateActionCombinedToDisableWPManual(uiHelper)(ctx); err != nil {
+		s.Fatal("Fail to navigate to Disable Write Protect page and turn off write protect: ", err)
+	}
+
+	// Wait for reboot to enable the factory mode, so that we don't need to enable HWWP ourselves later.
+	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
+		s.Fatal("Fail to sleep to wait for reboot to enter factory mode: ", err)
+	}
+
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+
 	component := s.Param().(sensor)
 	statePath := s.DataPath(component.stateFilePath)
 
@@ -122,4 +142,18 @@ func Calibration(ctx context.Context, s *testing.State) {
 			s.Fatal("Fail to calibrate base gyro: ", err)
 		}
 	}
+
+	if err := uiHelper.RepairCompletedPageOperation(ctx, rmaweb.NotStoreLog); err != nil {
+		s.Fatal("Fail to navigate to Repair Complete page: ", err)
+	}
+}
+
+func generateActionCombinedToDisableWPManual(uiHelper *rmaweb.UIHelper) action.Action {
+	return action.Combine("navigate to Manual Disable Write Protect page, choose same user and turn off write protect",
+		uiHelper.WelcomePageOperation,
+		uiHelper.ComponentsPageOperation,
+		uiHelper.OwnerPageOperation(rmaweb.SameUser),
+		uiHelper.WipeDevicePageOperation,
+		uiHelper.WriteProtectPageChooseManual,
+	)
 }
