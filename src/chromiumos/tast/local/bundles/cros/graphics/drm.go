@@ -170,6 +170,12 @@ func init() {
 			ExtraSoftwareDeps: []string{"no_qemu"},
 			ExtraAttr:         []string{"graphics_weekly"},
 		}, {
+			Name:              "gbm_test",
+			Val:               []string{"gbmtest"},
+			Timeout:           30 * time.Second,
+			ExtraSoftwareDeps: []string{},
+			ExtraAttr:         []string{"graphics_perbuild"},
+		}, {
 			Name:              "linear_bo_test",
 			Val:               []string{"linear_bo_test"},
 			Timeout:           30 * time.Second,
