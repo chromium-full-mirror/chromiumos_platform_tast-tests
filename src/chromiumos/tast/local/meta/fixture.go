@@ -22,7 +22,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "metaLocalDataFilesFixture",
 		Desc:     "Demonstrate how to use data files in fixtures",
-		Contacts: []string{"oka@chromium.org", "tast-owner@google.com"},
+		Contacts: []string{"tast-owner@google.com", "oka@chromium.org"},
 		Data: []string{
 			"fixture_data_internal.txt",
 			"fixture_data_external.txt",
@@ -32,11 +32,51 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "metaLocalFixtureDUTFeature",
 		Desc:     "Demonstrate how to access DUT Features in fixtures",
-		Contacts: []string{"seewaifu@chromium.org", "tast-owner@google.com"},
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
 		Data:     []string{},
 		Impl:     &dutFeatureFixture{},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaLocalFixtureWithStringVal",
+		Parent:   "metaRemoteFixtureWithStringVal",
+		Desc:     "Used for verification of tests accessing string value from local fixture",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org", "yichiyan@chromium.org"},
+		Data:     []string{},
+		Impl:     &fixtSerializedStringFixture{},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaLocalFixtureWithStructVal",
+		Parent:   "metaRemoteFixtureWithStructVal",
+		Desc:     "Used for verification of tests accessing string value from local fixture",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org", "yichiyan@chromium.org"},
+		Data:     []string{},
+		Impl:     &fixtSerializedStructFixture{},
+	})
 }
+
+type fixtSerializedStringFixture struct{}
+
+func (fixtSerializedStringFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	return s.ParentValue()
+}
+func (fixtSerializedStringFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (fixtSerializedStringFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (fixtSerializedStringFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (fixtSerializedStringFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+
+type fixtSerializedStructFixture struct{}
+
+func (fixtSerializedStructFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	return s.ParentValue()
+}
+func (fixtSerializedStructFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (fixtSerializedStructFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (fixtSerializedStructFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (fixtSerializedStructFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
 
 type dataFileFixture struct{}
 
