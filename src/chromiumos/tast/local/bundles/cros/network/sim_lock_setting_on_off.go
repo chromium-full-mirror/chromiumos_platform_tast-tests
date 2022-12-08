@@ -28,7 +28,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
-		Attr:         []string{"group:cellular", "cellular_e2e_unstable", "cellular_sim_pinlock"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:      "cellular",
 		Vars:         []string{"autotest_host_info_labels"},
 	})
