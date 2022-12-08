@@ -96,6 +96,17 @@ func SimLockPolicyLockSettingOn(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to find PUK code for ICCID: ", iccid)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		// Unlock and disable pin lock.
+		if err = helper.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
+			s.Fatal("Failed to clear PIN/PUK lock: ", err)
+		}
+	}(cleanupCtx)
+
 	// Check if pin enabled and locked/set.
 	if helper.IsSimLockEnabled(ctx) || helper.IsSimPinLocked(ctx) {
 		// Disable pin.
@@ -103,10 +114,6 @@ func SimLockPolicyLockSettingOn(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disable lock: ", err)
 		}
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel()
 
 	s.Log("Attempting to enable SIM lock with correct pin")
 	if err = helper.Device.RequirePin(ctx, currentPin, true); err != nil {
