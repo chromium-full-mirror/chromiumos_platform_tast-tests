@@ -78,7 +78,7 @@ func DHCPNonASCIIParam(ctx context.Context, s *testing.State) {
 	}
 	rules[len(rules)-1].SetIsFinalHandler(true)
 
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, rt, rules, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, rt, rules, func(ctx context.Context) error {
 		if err := svc.Reconnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to reconnect the service")
 		}
@@ -86,12 +86,9 @@ func DHCPNonASCIIParam(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to wait for service connected")
 		}
 		return nil
-	}); testErr != nil || svrErr != nil {
-		if testErr != nil {
-			s.Error("Failed to verify service: ", testErr)
-		}
-		if svrErr != nil {
-			s.Error("Failed to verify DHCP packets for negotiation: ", svrErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation: ", err)
 		}
 	}
 }

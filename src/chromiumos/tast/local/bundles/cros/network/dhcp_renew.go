@@ -103,14 +103,11 @@ func DHCPRenew(ctx context.Context, s *testing.State) {
 		gatewayIP.String(), intendedIP.String(), true /*expSvrIPSet*/)
 	requestRule.SetIsFinalHandler(true)
 
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*discoveryRule, *requestRule}, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*discoveryRule, *requestRule}, func(ctx context.Context) error {
 		return svc.WaitForConnectedOrError(ctx)
-	}); testErr != nil || svrErr != nil {
-		if testErr != nil {
-			s.Error("Failed to wait for service connected: ", testErr)
-		}
-		if svrErr != nil {
-			s.Error("Failed to verify DHCP packets for negotiation: ", svrErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation: ", err)
 		}
 		return
 	}
@@ -135,7 +132,7 @@ func DHCPRenew(ctx context.Context, s *testing.State) {
 	t2 := leaseStartTime.Add(leaseT2Seconds * time.Second)
 	t2Rule.SetTargetTime(t2.Add(-1*time.Second), t2.Add(time.Second))
 
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*t1Rule, *t2Rule, *discoveryRule}, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*t1Rule, *t2Rule, *discoveryRule}, func(ctx context.Context) error {
 		pw, err := svc.CreateWatcher(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to create watcher")
@@ -149,13 +146,9 @@ func DHCPRenew(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to wait for service failure")
 		}
 		return nil
-	}); testErr != nil || svrErr != nil {
-		if testErr != nil {
-			s.Error("Failed to wait for service failure: ", testErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation for renewal: ", err)
 		}
-		if svrErr != nil {
-			s.Error("Failed to verify DHCP packets for renewal: ", svrErr)
-		}
-		return
 	}
 }

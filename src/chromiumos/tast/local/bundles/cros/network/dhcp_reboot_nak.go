@@ -107,17 +107,14 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 		gatewayIP.String(), intendedIP.String(), true /*expSvrIPSet*/)
 	requestRule.SetIsFinalHandler(true)
 
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*discoverRule, *requestRule}, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*discoverRule, *requestRule}, func(ctx context.Context) error {
 		if err := wifi.Service.Connect(ctx); err != nil {
 			return err
 		}
 		return wifi.Service.WaitForConnectedOrError(ctx)
-	}); testErr != nil || svrErr != nil {
-		if testErr != nil {
-			s.Error("Failed to wait for service connected: ", testErr)
-		}
-		if svrErr != nil {
-			s.Error("Failed to verify DHCP packets for negotiation: ", svrErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation: ", err)
 		}
 		return
 	}
@@ -138,7 +135,7 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 	requestRuleAfterNAK.SetIsFinalHandler(true)
 
 	rules := []dhcp.HandlingRule{*nakRule, *discoverRuleAfterNAK, *requestRuleAfterNAK}
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, wifi.Router, rules, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, wifi.Router, rules, func(ctx context.Context) error {
 		if err := wifi.Service.Reconnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to reconnect the WiFi service")
 		}
@@ -160,13 +157,9 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 5 * time.Second})
-	}); testErr != nil || svrErr != nil {
-		if testErr != nil {
-			s.Error("Failed to verify service: ", testErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation for reconnect: ", err)
 		}
-		if svrErr != nil {
-			s.Error("Failed to verify DHCP packets for rebinding: ", svrErr)
-		}
-		return
 	}
 }

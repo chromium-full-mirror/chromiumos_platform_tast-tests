@@ -99,7 +99,7 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 
 	// Connect the service for the first time. Configure the server with DISCOVER
 	// and REQUEST rules.
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*discoveryRule, *requestRule}, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*discoveryRule, *requestRule}, func(ctx context.Context) error {
 		if err := wifi.Service.Connect(ctx); err != nil {
 			return err
 		}
@@ -107,9 +107,10 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 			return err
 		}
 		return nil
-	}); testErr != nil || svrErr != nil {
-		s.Error("Failed to connect to the WiFi service: ", testErr)
-		s.Error("Failed to verify DHCP server for connect: ", svrErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation: ", err)
+		}
 		return
 	}
 
@@ -123,7 +124,7 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	requestRule = dhcp.NewRespondToPostT2Request(intendedIP.String(), gatewayIP.String(),
 		dhcp.NewOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true /*shouldRespond*/, intendedIP.String())
 	requestRule.SetIsFinalHandler(true)
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*requestRule}, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*requestRule}, func(ctx context.Context) error {
 		if err := wifi.Service.Connect(ctx); err != nil {
 			return err
 		}
@@ -131,9 +132,9 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 			return err
 		}
 		return nil
-	}); testErr != nil || svrErr != nil {
-		s.Error("Failed to reconnect to the WiFi service: ", testErr)
-		s.Error("Failed to verify DHCP server for reconnect: ", svrErr)
-		return
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation for reconnect: ", err)
+		}
 	}
 }

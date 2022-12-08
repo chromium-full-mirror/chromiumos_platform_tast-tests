@@ -19,7 +19,10 @@ type testFunc func(ctx context.Context) error
 //  1. start the DHCP test server with rules in env;
 //  2. run testFunc to execute the test logic;
 //  3. stop the DHCP test server and check the rules.
-func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, testFunc testFunc) (testErr, svrErr error) {
+//
+// Returns the server after the test which can be used to verify the
+// interaction, e.g., get packets received by the server.
+func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, testFunc testFunc) (*testServer, []error) {
 	const (
 		serverPort = 67
 		clientPort = 68
@@ -52,11 +55,16 @@ func RunTestWithEnv(ctx context.Context, env *env.Env, rules []HandlingRule, tes
 
 	// Run the test function at first, and then stop the server if it is still
 	// running and get the result.
-	testErr = testFunc(ctx)
+	var errs []error
+	if err := testFunc(ctx); err != nil {
+		errs = append(errs, err)
+	}
 	testing.ContextLog(ctx, "Verify rules for DHCP server")
 	cancel()
-	svrErr = <-ec
-	return testErr, svrErr
+	if err := <-ec; err != nil {
+		errs = append(errs, errors.Wrap(err, "failed to verify DHCP rules in server"))
+	}
+	return s, errs
 }
 
 // OptionMapOpt is the function type to configure a OptionMap. OptionMap is of

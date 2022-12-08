@@ -87,7 +87,7 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 	}
 	rules[len(rules)-1].SetIsFinalHandler(true)
 
-	if testErr, svrErr := dhcp.RunTestWithEnv(ctx, testEnv.TestRouter, rules, func(ctx context.Context) error {
+	if _, errs := dhcp.RunTestWithEnv(ctx, testEnv.TestRouter, rules, func(ctx context.Context) error {
 		if err := testEnv.WaitForServiceOnline(ctx, testEnv.TestService); err != nil {
 			return errors.Wrap(err, "failed to wait for test service online")
 		}
@@ -100,12 +100,9 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 			return errors.Wrap(errs[0], "failed to verify test network")
 		}
 		return nil
-	}); testErr != nil || svrErr != nil {
-		if testErr != nil {
-			s.Error("Failed to wait for service connected: ", testErr)
-		}
-		if svrErr != nil {
-			s.Error("Failed to verify DHCP packets for negotiation: ", svrErr)
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation: ", err)
 		}
 		return
 	}
