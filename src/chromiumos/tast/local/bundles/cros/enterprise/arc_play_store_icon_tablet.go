@@ -37,11 +37,9 @@ func init() {
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "tablet_form_factor"},
-			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm", "tablet_form_factor"},
-			ExtraAttr:         []string{"informational"},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
