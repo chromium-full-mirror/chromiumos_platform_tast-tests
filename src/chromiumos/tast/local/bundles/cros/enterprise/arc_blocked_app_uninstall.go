@@ -37,7 +37,6 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_p"},
-				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm",
