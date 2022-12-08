@@ -57,7 +57,13 @@ func init() {
 		Func:         FastInk,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that fast ink is working as evidenced by a hardware overlay",
-		Contacts:     []string{"chromeos-wmp@google.com", "amusbach@chromium.org", "oshima@chromium.org"},
+		Contacts: []string{
+			"chromeos-wmp@google.com",
+			"zoraiznaeem@chromium.org",
+			"skau@chromium.org",
+			"amusbach@chromium.org",
+			"oshima@chromium.org",
+		},
 		BugComponent: "b:189315", // ChromeOS > Platform > Services > Input > Stylus
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
