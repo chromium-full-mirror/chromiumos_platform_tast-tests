@@ -918,6 +918,9 @@ func newDHCPPacket(buf []byte) (*dhcpPacket, error) {
 	if len(buf) < optionsStartOffset+1 {
 		return nil, errors.New("invalid byte string for packet")
 	}
+	// Make a copy of buf at first, since we don't want to rely on the slice
+	// passed in, whose contents can be modified later.
+	buf = append([]byte{}, buf...)
 	for _, field := range allFields {
 		fieldVal, err := field.unpack(buf[field.offset() : field.offset()+field.size()])
 		if err != nil {
@@ -1034,6 +1037,12 @@ func (d *dhcpPacket) setField(field field, fieldValue interface{}) {
 
 func (d *dhcpPacket) setOption(option option, optionValue interface{}) {
 	d.options[option] = optionValue
+}
+
+// VendorID returns the value of vendor class ID option (option 60) if set, an
+// empty string otherwise.
+func (d *dhcpPacket) VendorID() string {
+	return string(d.option(vendorID).([]byte))
 }
 
 func (d *dhcpPacket) marshal() ([]byte, error) {

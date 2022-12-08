@@ -39,7 +39,8 @@ type testServer struct {
 	bcastAddr net.IP
 	bcastPort int
 
-	conn *net.UDPConn
+	conn    *net.UDPConn
+	packets []*dhcpPacket
 }
 
 type testFunction func(context.Context) error
@@ -139,6 +140,8 @@ func (s *testServer) runLoop(ctx context.Context, rules []HandlingRule) error {
 			continue
 		}
 
+		s.packets = append(s.packets, packet)
+
 		rule := rules[0]
 		code := rule.handle(packet)
 		if code&popHandler != 0 {
@@ -181,4 +184,9 @@ func (s *testServer) runTest(ctx context.Context, rules []HandlingRule, testFunc
 		return testFunc(ctx)
 	})
 	return g.Wait()
+}
+
+// Packets returns all the DHCP packets received by the server.
+func (s *testServer) Packets() []*dhcpPacket {
+	return s.packets
 }
