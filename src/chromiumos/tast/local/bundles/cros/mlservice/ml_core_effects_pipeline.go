@@ -6,16 +6,14 @@ package mlservice
 
 import (
 	"context"
-	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
-	testing.AddTest(&testing.Test{
+	// TODO(b/261920411): Either remove this or re-enable it.
+	/*testing.AddTest(&testing.Test{
 		Func:    MlCoreEffectsPipeline,
 		Desc:    "Validates that the ML Core bindings layer interacts correctly with the libcros_ml_core_internal.so library from G3",
 		Timeout: 5 * time.Minute,
@@ -46,7 +44,7 @@ func init() {
 				Val:               []string{"ml_core_effects_pipeline_test"},
 			},
 		},
-	})
+	})*/
 }
 
 func MlCoreEffectsPipeline(ctx context.Context, s *testing.State) {
