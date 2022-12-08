@@ -14,6 +14,9 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -42,12 +45,14 @@ func init() {
 			Value: "screenplay-c74ed558-34e5-4373-9b18-cb40269caa65",
 		}},
 		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
+			Val: browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           "lacros",
+			Val:               browser.TypeLacros,
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
+		Timeout: chrome.GAIALoginTimeout + 120*time.Second,
+		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }
 
@@ -57,7 +62,15 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	bt := s.Param().(browser.Type)
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -72,9 +85,17 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Ensure there is no window open before test starts.
-	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure no window is open: ", err)
+	// Ensure there is no window open before test starts. (Except as mentioned above we should have one lacros window open in lacros)
+	// The anonymous function here is supposed to return true for all windows except for the first identified lacros window.
+	hasLacrosWindow := false
+	if err := ash.CloseAllWindowsMatching(ctx, tconn, func(window *ash.Window) bool {
+		if !hasLacrosWindow && window.WindowType == ash.WindowTypeLacros {
+			hasLacrosWindow = true
+			return false
+		}
+		return true
+	}); err != nil {
+		s.Fatal("Failed to ensure no unexpected windows are open: ", err)
 	}
 
 	ac := uiauto.New(tconn)
@@ -86,18 +107,24 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close()
 
-	// Opens Files and Chrome.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
-	if err != nil {
-		s.Fatal("Could not find browser app info: ", err)
+	// Opens Files and Chrome. (In lacros we should already have an open browser window)
+	if bt != browser.TypeLacros {
+		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		if err != nil {
+			s.Fatal("Could not find browser app info: ", err)
+		}
+		if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
+			s.Fatal("Failed to open browser window: ", err)
+		}
+		if err := ash.WaitForApp(ctx, tconn, browserApp.ID, time.Minute); err != nil {
+			s.Fatal("Browser window did not appear in shelf after launch: ", err)
+		}
 	}
-	for _, app := range []apps.App{browserApp, apps.FilesSWA} {
-		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
-			s.Fatalf("Failed to open %s: %v", app.Name, err)
-		}
-		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
-			s.Fatalf("%s did not appear in shelf after launch: %s", app.Name, err)
-		}
+	if err := apps.Launch(ctx, tconn, apps.FilesSWA.ID); err != nil {
+		s.Fatal("Failed to open Files app: ", err)
+	}
+	if err := ash.WaitForApp(ctx, tconn, apps.FilesSWA.ID, time.Minute); err != nil {
+		s.Fatal("Files app did not appear in shelf after launch: ", err)
 	}
 
 	// Enters overview mode.
