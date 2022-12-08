@@ -27,11 +27,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the new desk button for tablet mode",
 		Contacts: []string{
+			"chromeos-wms@google.com",
 			"hongyulong@chromium.org",
-			"chromeos-wmp@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		//  ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Fixture:      "chromeLoggedIn",
 	})
