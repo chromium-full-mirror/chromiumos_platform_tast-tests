@@ -29,6 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"pinweaver"},
 	})
 }
 
