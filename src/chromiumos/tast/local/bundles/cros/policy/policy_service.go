@@ -675,3 +675,8 @@ func (c *PolicyService) ClientID(ctx context.Context, req *empty.Empty) (*ppb.Cl
 
 	return &ppb.ClientIdResponse{ClientId: *p.DeviceId}, nil
 }
+
+func (c *PolicyService) GetTimeOfDay(ctx context.Context, req *empty.Empty) (*ppb.GetTimeOfDayResponse, error) {
+	now := time.Now()
+	return &ppb.GetTimeOfDayResponse{Hour: int32(now.Hour()), Minute: int32(now.Minute())}, nil
+}

@@ -599,3 +599,8 @@ func webKioskServerHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, contentHTML)
 	return
 }
+
+// GetLocalAccounts fetches DeviceLocalAccounts policy
+func (k *Kiosk) GetLocalAccounts() *policy.DeviceLocalAccounts {
+	return k.localAccounts
+}

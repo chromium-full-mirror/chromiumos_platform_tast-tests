@@ -49,8 +49,11 @@ service PolicyService {
   rpc EvalExpressionInChromeURL(EvalExpressionInChromeUrlRequest)
       returns (google.protobuf.Empty) {}
 
-  // Grabs Client ID for the session
+  // Grabs Client ID for the session.
   rpc ClientID(google.protobuf.Empty) returns (ClientIdResponse) {}
+
+  // Gets the local time.
+  rpc GetTimeOfDay(google.protobuf.Empty) returns (GetTimeOfDayResponse) {}
 }
 
 message VerifyPolicyStatusRequest {
@@ -152,4 +155,9 @@ message StartChromeRequest {
 
 message ClientIdResponse {
   string clientId = 1;
+}
+
+message GetTimeOfDayResponse{
+  int32 hour = 1;
+  int32 minute = 2;
 }
