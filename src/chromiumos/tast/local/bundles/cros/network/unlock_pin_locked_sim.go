@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -31,7 +32,7 @@ func init() {
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},
 		// Run test only on cellular capable devices that only have one active SIM.
-		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture: "cellular",
 		Timeout: 8 * time.Minute,
 		Vars:    []string{"autotest_host_info_labels"},
@@ -39,6 +40,10 @@ func init() {
 }
 
 func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
+	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
+		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	}
+
 	// Gather Shill Device SIM properties.
 	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
 	if err != nil {
@@ -85,13 +90,8 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 	}
 
 	defer func(ctx context.Context) {
-		// Unlock and disable pin lock.
-		if err = helper.Device.RequirePin(ctx, currentPin, false); err != nil {
-			// Unlock and disable pin lock if failed after locking pin.
-			if errNew := helper.ClearSIMLock(ctx, currentPin, currentPuk); errNew != nil {
-				s.Log("Failed to clear default pin lock: ", errNew)
-			}
-			s.Fatal("Failed to disable default pin lock: ", err)
+		if err := helper.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
+			s.Fatal("Failed to clear PIN/PUK lock: ", err)
 		}
 	}(cleanupCtx)
 
