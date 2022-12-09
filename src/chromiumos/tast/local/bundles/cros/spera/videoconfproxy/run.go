@@ -154,7 +154,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 			return errors.Wrap(err, "failed to initial test")
 		}
 
-		return videoConfProxyScenario(ctx, tconn, videoConn, kb, pv)
+		if err := videoConfProxyScenario(ctx, tconn, videoConn, kb, pv); err != nil {
+			return err
+		}
+		// Stop WebRTC to generate WebRTC video metrics.
+		// window.stopWebRTC() is a function exposed by JavaScript in video_conf_proxy.html.
+		if err := videoConn.Eval(ctx, "window.stopWebRTC()", nil); err != nil {
+			return errors.Wrap(err, "failed to stop WebRTC")
+		}
+		return nil
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the video conf proxy scenario")
 	}
@@ -201,6 +209,7 @@ func putWindowSideBySide(tconn *chrome.TestConn) action.Action {
 		return nil
 	}
 }
+
 func videoConfProxyScenario(ctx context.Context, tconn *chrome.TestConn, videoConn *chrome.Conn, kb *input.KeyboardEventWriter, pv *perf.Values) error {
 	const (
 		notes         = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
