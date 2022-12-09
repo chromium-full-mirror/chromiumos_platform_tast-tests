@@ -41,9 +41,19 @@ func init() {
 			Value: "screenplay-353dbfd4-4666-4e1f-be6c-7a210f95069d",
 		}},
 		Params: []testing.Param{{
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "feature_id",
+				// Switch desks.
+				Value: "screenplay-353dbfd4-4666-4e1f-be6c-7a210f95069d",
+			}},
 			Fixture: "chromeLoggedIn",
 			Val:     browser.TypeAsh,
 		}, {
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "feature_id",
+				// Switch accounts.
+				Value: "screenplay-cda6d805-a7c7-4332-84fe-97d11de4b7c5",
+			}},
 			Name:              "lacros",
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
