@@ -24,7 +24,8 @@ func init() {
 			"vsavu@google.com", // Test author
 		},
 		BugComponent: "b:1031231",
-		Attr:         []string{"group:omaha"},
+		// TODO(b:260357414): Disabled due to Re-FSI issues.
+		Attr:         []string{},
 		SoftwareDeps: []string{"auto_update_stable"},
 		Fixture:      fixture.Omaha,
 	})
