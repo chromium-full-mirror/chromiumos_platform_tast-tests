@@ -254,4 +254,17 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+
+	// lacrosLogin is used to test Lacros with a guest user login.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosGuest",
+		Desc:     "Lacros Chrome logged into a guest user session",
+		Contacts: []string{"lacros-team@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return NewConfig(Mode(lacros.LacrosPrimary), KeepAlive(false), ChromeOptions(chrome.GuestLogin())).Opts()
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
