@@ -144,7 +144,7 @@ func (d *Display) CaptionHeight(ctx context.Context) (h int, err error) {
 			return -1, errors.Wrap(err, "failed to parse captionHeight value")
 		}
 		return i, nil
-	case SDKR:
+	case SDKR, SDKS, SDKT:
 		uniqueID, err := scrapeUniqueID(output, d.DisplayID)
 		if err != nil {
 			return -1, errors.Wrap(err, "failed to parse display unique id")
@@ -204,12 +204,12 @@ func scrapeDensity(output []byte, displayID, sdkVersion int) (density float64, e
 			`^Display Devices: size=1\n` + // Match Display Devices section.
 			`(?:\s+.*$)*` + // Skip entire lines...
 			`\s*PhysicalDisplayInfo{.*density (\d\.\d+)?`) // ...until density is matched.
-	case SDKR:
+	case SDKR, SDKS, SDKT:
 		uniqueID, err := scrapeUniqueID(output, displayID)
 		if err != nil {
 			return -1, err
 		}
-		// In Android R, we are looking for:
+		// In Android R and later, we are looking for:
 		//   DisplayDeviceInfo{...: uniqueId="local:1886094531531010", ...}
 		//     ...
 		//     mDisplayInfo=DisplayInfo{..., density=2.0, ...}
@@ -352,8 +352,8 @@ func scrapeDisplaySize(output []byte, isStableSize bool, displayID, sdkVersion i
 				`^\s*Display: mDisplayId=0\n` + // Match displayId 0 (internal display).
 				`\s*init=([0-9]+)x([0-9]+)`) // Gather 'init=' bounds.
 		}
-	case SDKR:
-		// For ARC R, dump output from `dumpsys display`
+	case SDKR, SDKS, SDKT:
+		// For ARC R and later, dump output from `dumpsys display`
 		if isStableSize {
 			// Looking for:
 			//   mDisplayId=...
