@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"chromiumos/tast/common/perf"
 	cbiperf "chromiumos/tast/remote/cellular/callbox/iperf"
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/remote/network/iperf"
@@ -90,6 +91,7 @@ func Iperf(ctx context.Context, s *testing.State) {
 
 	testManager := cbiperf.NewTestManager(tf.Vars.Callbox, dutConn, tf.CallboxManagerClient)
 
+	perfValues := perf.NewValues()
 	for _, config := range tc.iperfConfigurations {
 		subTest := func(ctx context.Context, s *testing.State) {
 			history, err := testManager.RunOnce(ctx, config.testType, tf.InterfaceName, config.additionalOptions)
@@ -101,6 +103,12 @@ func Iperf(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to calculate iperf result statistics: ", err)
 			}
+
+			perfValues.Set(perf.Metric{
+				Name:      string(config.testType),
+				Unit:      "Mbps",
+				Direction: perf.BiggerIsBetter,
+			}, float64(result.Throughput/iperf.Mbps))
 
 			min, target, err := testManager.CalculateExpectedThroughput(ctx, config.testType)
 			if err != nil {
@@ -120,5 +128,9 @@ func Iperf(ctx context.Context, s *testing.State) {
 		}
 
 		s.Run(ctx, fmt.Sprintf("Testcase %s", config.testType), subTest)
+	}
+
+	if err := perfValues.Save(s.OutDir()); err != nil {
+		s.Fatal("Failed to save perf data: ", err)
 	}
 }
