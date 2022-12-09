@@ -9,8 +9,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"chromiumos/tast/common/servo"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -40,7 +42,6 @@ func abs(i int) int {
 
 func ECBattery(ctx context.Context, s *testing.State) {
 	const (
-		BatteryStatusFPTemplate             = "/sys/class/power_supply/%s/status"
 		BatteryVoltageReadingFPTemplate     = "/sys/class/power_supply/%s/voltage_now"
 		BatteryCurrentReadingFPTemplate     = "/sys/class/power_supply/%s/current_now"
 		VoltageMVErrorMargin                = 300
@@ -94,32 +95,35 @@ func ECBattery(ctx context.Context, s *testing.State) {
 		{"current", "mA", servo.BatteryCurrentMA, batteryCurrentFP, CurrentMAErrorMargin},
 	} {
 		s.Logf("Checking if %s from sysfs matches servo", tc.metric)
-		servoReading, err := h.Servo.GetInt(ctx, tc.servoControl)
-		if err != nil {
-			s.Fatalf("Failed to read battery %s from servo: %s", tc.metric, err)
-		}
-		servoReading = abs(servoReading)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			servoReading, err := h.Servo.GetInt(ctx, tc.servoControl)
+			if err != nil {
+				return errors.Wrapf(err, "failed to read battery %s from servo", tc.metric)
+			}
 
-		kernelReadingOut, err := h.DUT.Conn().CommandContext(ctx, "cat", tc.sysfsPath).Output()
-		if err != nil {
-			s.Fatalf("Failed to read battery %s from servo: %s", tc.metric, err)
-		}
-		kernelReadingOut = bytes.TrimSuffix(kernelReadingOut, []byte("\n"))
-		kernelReading, err := strconv.Atoi(string(kernelReadingOut))
-		if err != nil {
-			s.Fatalf("Failed to parse kernel %s reading value %s: %s", tc.metric, kernelReadingOut, err)
-		}
+			kernelReadingOut, err := h.DUT.Conn().CommandContext(ctx, "cat", tc.sysfsPath).Output()
+			if err != nil {
+				return errors.Wrapf(err, "failed to read battery %s from servo", tc.metric)
+			}
+			kernelReadingOut = bytes.TrimSuffix(kernelReadingOut, []byte("\n"))
+			kernelReading, err := strconv.Atoi(string(kernelReadingOut))
+			if err != nil {
+				return errors.Wrapf(err, "failed to parse kernel %s reading value %s", tc.metric, kernelReadingOut)
+			}
 
-		// Kernel gives values in micro-units, convert to milli-units here.
-		kernelReading = kernelReading / 1000
-		kernelReading = abs(kernelReading)
+			// Kernel gives values in micro-units, convert to milli-units here.
+			kernelReading = kernelReading / 1000
 
-		s.Logf("Battery %s reading from kernel: %d%s", tc.metric, kernelReading, tc.unit)
-		s.Logf("Battery %s reading from servo: %d%s", tc.metric, servoReading, tc.unit)
+			s.Logf("Battery %s reading from kernel: %d%s", tc.metric, kernelReading, tc.unit)
+			s.Logf("Battery %s reading from servo: %d%s", tc.metric, servoReading, tc.unit)
 
-		if abs(servoReading-kernelReading) > tc.errorMargin {
-			s.Fatalf("Voltage reading from servo (%d%s) and kernel (%d%s) mismatch beyond %d%s error margin",
-				servoReading, tc.unit, kernelReading, tc.unit, tc.errorMargin, tc.unit)
+			if abs(abs(servoReading)-abs(kernelReading)) > tc.errorMargin {
+				return errors.Errorf("reading from servo (%d%s) and kernel (%d%s) mismatch beyond %d%s error margin",
+					servoReading, tc.unit, kernelReading, tc.unit, tc.errorMargin, tc.unit)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: time.Minute, Interval: 10 * time.Second}); err != nil {
+			s.Fatalf("Failed to verify %s after retries: %v", tc.metric, err)
 		}
 	}
 
