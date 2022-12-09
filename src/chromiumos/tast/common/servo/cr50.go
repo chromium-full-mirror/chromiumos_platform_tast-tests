@@ -307,3 +307,24 @@ func (s *Servo) GetAPState(ctx context.Context) (string, string, error) {
 	}
 	return apPower, screenState, nil
 }
+
+// GetGscUSBSerialNumberDescriptor uses the GSC `sysinfo` command to get the
+// `DEV_ID`s for the device and format them as a USB serial number descriptor
+// that can be used in the `flashrom` command. This is useful when many GSCs are
+// attached to a host and we want to target our device specifically.
+func (s *Servo) GetGscUSBSerialNumberDescriptor(ctx context.Context) (string, error) {
+	regex := `DEV_ID:\s+0x([0-9a-fA-F]+)\s+0x([0-9a-fA-F]+)`
+	matches, err := s.RunCR50CommandGetOutput(ctx, "sysinfo", []string{regex})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to match GSC `sysinfo` command output")
+	}
+
+	// TODO(b/266096476): Support Ti50 that uses lowercase instead of uppercase
+	// like Cr50.
+	if len(matches[0]) == 3 {
+		s := strings.ToUpper(matches[0][1]) + "-" + strings.ToUpper(matches[0][2])
+		return s, nil
+	}
+
+	return "", errors.New("failed to get the correct regex match from `sysinfo` command output")
+}
