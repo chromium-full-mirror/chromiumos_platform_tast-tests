@@ -723,6 +723,7 @@ func (conf *GoogleMeetConference) changeBackgroundOnJoinPage(background string) 
 		closeText    = "Close"
 	)
 	ui := uiauto.New(conf.tconn)
+	dontShowAgainButton := nodewith.Name("Don't show again").Role(role.Button).Ancestor(meetWebArea)
 	changeBackgroundButton := nodewith.Name("Apply visual effects").Role(role.Button)
 	noEffectAndBlurRegion := nodewith.NameContaining(noEffectText).Role(role.Region)
 	noEffectAndBlurHeading := nodewith.NameContaining(noEffectText).Role(role.Heading)
@@ -732,13 +733,13 @@ func (conf *GoogleMeetConference) changeBackgroundOnJoinPage(background string) 
 	closeDialog := nodewith.Name(closeText).Role(role.Button).Ancestor(selectAFileDialog)
 	closeButton := nodewith.Name(closeText).Role(role.Button).Ancestor(meetWebArea)
 	return uiauto.NamedCombine("change background to "+background,
-		ui.LeftClick(changeBackgroundButton), // Open "Background" panel.
-		ui.WithTimeout(longUITimeout).WaitUntilExists(noEffectAndBlurRegion),
+		uiauto.IfSuccessThen(ui.Exists(dontShowAgainButton), ui.LeftClick(dontShowAgainButton)),
+		// Open "Background" panel.
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(changeBackgroundButton, ui.WaitUntilExists(noEffectAndBlurRegion)),
 		ui.LeftClick(noEffectAndBlurHeading),
 		// Turn off effect to avoid clicking the blur button to turn off the effect.
 		cuj.ExpandMenu(conf.tconn, turnOffButton, noEffectAndBlurRegion, 100),
-		ui.LeftClick(backgroundButton),
-		ui.WaitUntilExists(backgroundButton.Focused()),
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(backgroundButton, ui.WaitUntilExists(backgroundButton.Focused())),
 		takeScreenshot(conf.cr, conf.outDir, "change-background-to-"+background),
 		ui.LeftClick(closeButton), // Close "Background" panel.
 		// Some DUT performance is too poor, clicking the turn off button will trigger "Upload a background image".
