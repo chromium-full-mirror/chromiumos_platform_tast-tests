@@ -38,9 +38,18 @@ func init() {
 		Desc:         "Verifies local audio playback through default app and exercises various audio player controls",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"audio_stable"},
+			}, {
+				Name:              "unstable_platform",
+				ExtraSoftwareDeps: []string{"audio_unstable"},
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
