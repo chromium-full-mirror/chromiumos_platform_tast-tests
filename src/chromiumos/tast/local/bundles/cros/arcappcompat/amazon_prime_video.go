@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arcappcompat/pre"
 	"chromiumos/tast/local/bundles/cros/arcappcompat/testutil"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -295,6 +295,8 @@ func launchAppForAmazonPrimeVideo(ctx context.Context, s *testing.State, tconn *
 		neverButtonID        = "com.google.android.gms:id/credential_save_reject"
 		importantMessageText = "Important"
 	)
+	username := s.RequiredVar("arcappcompat.AmazonPrimeVideo.username")
+	password := s.RequiredVar("arcappcompat.AmazonPrimeVideo.password")
 
 	// Click on allow button to access your photos, media and files.
 	allowButton := d.Object(ui.ClassName(testutil.AndroidButtonClassName), ui.Text(allowButtonText))
@@ -308,31 +310,8 @@ func launchAppForAmazonPrimeVideo(ctx context.Context, s *testing.State, tconn *
 	enterEmailAddress := d.Object(ui.ID(enterEmailAddressID))
 	if err := enterEmailAddress.WaitForExists(ctx, testutil.LongUITimeout); err != nil {
 		s.Fatal("EnterEmailAddress does not exist: ", err)
-	} else if err := enterEmailAddress.Click(ctx); err != nil {
-		s.Fatal("Failed to click on enterEmailAddress: ", err)
-	}
-	// Click on emailid text field until the emailid text field is focused.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if emailIDFocused, err := enterEmailAddress.IsFocused(ctx); err != nil {
-			return errors.New("email text field not focused yet")
-		} else if !emailIDFocused {
-			enterEmailAddress.Click(ctx)
-			return errors.New("email text field not focused yet")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: testutil.LongUITimeout}); err != nil {
-		s.Fatal("Failed to focus EmailId: ", err)
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	defer kb.Close()
-
-	username := s.RequiredVar("arcappcompat.AmazonPrimeVideo.username")
-	if err := kb.Type(ctx, username); err != nil {
-		s.Fatal("Failed to enter username: ", err)
+	} else if err := enterEmailAddress.SetText(ctx, username); err != nil {
+		s.Fatal("Failed to input text on enterEmailAddress: ", err)
 	}
 	s.Log("Entered username")
 
@@ -340,26 +319,8 @@ func launchAppForAmazonPrimeVideo(ctx context.Context, s *testing.State, tconn *
 	enterPassword := d.Object(ui.ID(passwordID))
 	if err := enterPassword.WaitForExists(ctx, testutil.LongUITimeout); err != nil {
 		s.Fatal("EnterPassword does not exist: ", err)
-	} else if err := enterPassword.Click(ctx); err != nil {
+	} else if err := enterPassword.SetText(ctx, password); err != nil {
 		s.Fatal("Failed to click on enterPassword: ", err)
-	}
-
-	// Click on password text field until the password text field is focused.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if pwdFocused, err := enterPassword.IsFocused(ctx); err != nil {
-			return errors.New("password text field not focused yet")
-		} else if !pwdFocused {
-			enterPassword.Click(ctx)
-			return errors.New("password text field not focused yet")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: testutil.LongUITimeout}); err != nil {
-		s.Fatal("Failed to focus password: ", err)
-	}
-
-	password := s.RequiredVar("arcappcompat.AmazonPrimeVideo.password")
-	if err := kb.Type(ctx, password); err != nil {
-		s.Fatal("Failed to enter password: ", err)
 	}
 	s.Log("Entered password")
 
@@ -375,31 +336,40 @@ func launchAppForAmazonPrimeVideo(ctx context.Context, s *testing.State, tconn *
 	} else {
 		s.Log("Entered KEYCODE_ENTER")
 	}
-	// Click on never button until home page is visible
-	neverButton := d.Object(ui.ID(neverButtonID))
-	letsGoButton := d.Object(ui.ID(letsGoButtonID))
-	testutil.ClickUntilButtonExists(ctx, s, tconn, a, d, neverButton, letsGoButton)
 
-	// Click on lets go button.
-	if err := letsGoButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
-		s.Log("LetsGo Button doesn't exists: ", err)
-	} else if err := letsGoButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click on LetsGo Button: ", err)
-	}
-	// Check for captcha and OTP.
-	checkForCaptcha := d.Object(ui.TextStartsWith(importantMessageText))
-	sendOTPButton := d.Object(ui.ClassName(testutil.AndroidButtonClassName), ui.Text(sendOTPText))
+	if err := uiauto.Retry(2, func(ctx context.Context) error {
+		// Check the popups which will cause the sigin failed.
+		testutil.HandleDialogBoxes(ctx, s, d, appPkgName)
 
-	if err := checkForCaptcha.WaitForExists(ctx, testutil.DefaultUITimeout); err == nil {
-		s.Log("checkForCaptcha does exists")
-		return
-	}
-	if err := sendOTPButton.WaitForExists(ctx, testutil.DefaultUITimeout); err == nil {
-		s.Log("Send OTP Button does exist")
-		return
+		// Click on never button until home page is visible
+		neverButton := d.Object(ui.ID(neverButtonID))
+		letsGoButton := d.Object(ui.ID(letsGoButtonID))
+		testutil.ClickUntilButtonExists(ctx, s, tconn, a, d, neverButton, letsGoButton)
+
+		// Click on lets go button.
+		if err := letsGoButton.WaitForExists(ctx, testutil.DefaultUITimeout); err != nil {
+			s.Log("LetsGo Button doesn't exists: ", err)
+		} else if err := letsGoButton.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click on LetsGo Button")
+		}
+		// Check for captcha and OTP.
+		checkForCaptcha := d.Object(ui.TextStartsWith(importantMessageText))
+		sendOTPButton := d.Object(ui.ClassName(testutil.AndroidButtonClassName), ui.Text(sendOTPText))
+
+		if err := checkForCaptcha.WaitForExists(ctx, testutil.DefaultUITimeout); err == nil {
+			s.Log("checkForCaptcha does exists")
+			return nil
+		}
+		if err := sendOTPButton.WaitForExists(ctx, testutil.DefaultUITimeout); err == nil {
+			s.Log("Send OTP Button does exist")
+			return nil
+		}
+
+		return nil
+	})(ctx); err != nil {
+		s.Fatal("Failed to verify the app has been fully launched and signed in: ", err)
 	}
 
-	testutil.HandleDialogBoxes(ctx, s, d, appPkgName)
 	// Check for launch verifier.
 	launchVerifier := d.Object(ui.PackageName(appPkgName))
 	if err := launchVerifier.WaitForExists(ctx, testutil.LongUITimeout); err != nil {

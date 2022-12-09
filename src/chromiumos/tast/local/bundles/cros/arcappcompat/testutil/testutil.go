@@ -1515,6 +1515,7 @@ func HandleDialogBoxes(ctx context.Context, s *testing.State, d *ui.Device, appP
 		okayText                    = "OKAY"
 		skipText                    = "Skip"
 		whileUsingThisAppButtonText = "WHILE USING THE APP"
+		noThanksText                = "No thanks"
 	)
 
 	allowButton := d.Object(ui.TextMatches("(?i)" + allowText))
@@ -1528,6 +1529,7 @@ func HandleDialogBoxes(ctx context.Context, s *testing.State, d *ui.Device, appP
 	skipButton := d.Object(ui.TextMatches("(?i)" + skipText))
 	whileUsingThisAppButton := d.Object(ui.TextMatches("(?i)" + whileUsingThisAppButtonText))
 	cancelButton := d.Object(ui.TextMatches("(?i)" + cancelText))
+	noThanksButton := d.Object(ui.TextMatches("(?i)" + noThanksText))
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := allowButton.Exists(ctx); err == nil {
@@ -1569,6 +1571,10 @@ func HandleDialogBoxes(ctx context.Context, s *testing.State, d *ui.Device, appP
 		if err := cancelButton.Exists(ctx); err == nil {
 			s.Log("Click on cancelButton")
 			cancelButton.Click(ctx)
+		}
+		if err := noThanksButton.Exists(ctx); err == nil {
+			s.Log("Click on noThanksButton")
+			noThanksButton.Click(ctx)
 		}
 		return appverifer.Exists(ctx)
 	}, &testing.PollOptions{Timeout: LongUITimeout}); err != nil {
