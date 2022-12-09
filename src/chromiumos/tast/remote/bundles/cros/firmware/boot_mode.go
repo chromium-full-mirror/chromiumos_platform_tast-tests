@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -337,6 +338,28 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to set 'usb3_mux_sel:dut_sees_usbkey': ", err)
 		}
 
+		// Stainless reported a few DUTs booting from section
+		// different than expected. Document crossystem params
+		// before reboot for debugging purposes.
+		var crossInfo string
+		params := []reporters.CrossystemParam{
+			reporters.CrossystemParamFWTryCount,
+			reporters.CrossystemParamFWTryNext,
+			reporters.CrossystemParamFWTried,
+			reporters.CrossystemParamFWResult,
+			reporters.CrossystemParamFWPrevTried,
+			reporters.CrossystemParamFWPrevResult,
+		}
+		crossMap, err := h.Reporter.Crossystem(ctx, params...)
+		if err != nil {
+			s.Log("Error while parsing crossystem: ", err)
+		}
+		for _, param := range params {
+			if crossMap[param] != "" {
+				crossInfo = crossInfo + fmt.Sprintf("%s:%s", param, crossMap[param]) + " "
+			}
+		}
+
 		s.Log("Power-cycling DUT with a warm reset")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			s.Fatal("Failed to reboot DUT by servo: ", err)
@@ -365,7 +388,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get crossystem mainfw_act: ", err)
 		}
 		if mainfwAct != "A" {
-			s.Fatalf("Expected mainfw_act:A but got mainfw_act:%s", mainfwAct)
+			s.Fatalf("Expected mainfw_act:A but got mainfw_act:%s, crossystem params before warm reset: %s", mainfwAct, crossInfo)
 		}
 	}
 }

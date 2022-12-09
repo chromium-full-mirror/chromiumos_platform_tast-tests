@@ -37,6 +37,10 @@ const (
 	CrossystemParamRecoveryReason     CrossystemParam = "recovery_reason"
 	CrossystemParamTriedFWB           CrossystemParam = "tried_fwb"
 	CrossystemParamRecoveryRequest    CrossystemParam = "recovery_request"
+	CrossystemParamFWTried            CrossystemParam = "fw_tried"
+	CrossystemParamFWResult           CrossystemParam = "fw_result"
+	CrossystemParamFWPrevTried        CrossystemParam = "fw_prev_tried"
+	CrossystemParamFWPrevResult       CrossystemParam = "fw_prev_result"
 )
 
 var (
@@ -51,6 +55,10 @@ var (
 		CrossystemParamMainfwType,
 		CrossystemParamWpswCur,
 		CrossystemParamRecoveryReason,
+		CrossystemParamFWTried,
+		CrossystemParamFWResult,
+		CrossystemParamFWPrevTried,
+		CrossystemParamFWPrevResult,
 	}
 	rCrossystemLine = regexp.MustCompile(`^([^ =]*) *= *(.*[^ ]) *# [^#]*$`)
 )
@@ -70,7 +78,7 @@ func (r *Reporter) Crossystem(ctx context.Context, requiredKeys ...CrossystemPar
 	}
 	for _, k := range requiredKeys {
 		if _, found := parsed[k]; !found {
-			return nil, errors.Errorf("required param %q not found in output: %v", k, parsed)
+			return parsed, errors.Errorf("required param %q not found in output: %v", k, parsed)
 		}
 	}
 	return parsed, nil
