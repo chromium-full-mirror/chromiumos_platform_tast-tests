@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	fixtureSetUpTimeout    = 10 * time.Second
-	fixtureResetTimeout    = 5 * time.Second
-	fixtureTearDownTimeout = 5 * time.Second
+	fixtureSetUpTimeout    = 1 * time.Minute
+	fixtureResetTimeout    = 1 * time.Minute
+	fixtureTearDownTimeout = 1 * time.Minute
 )
 
 func init() {
