@@ -28,7 +28,12 @@ func init() {
 		Func:         SELinuxFilesDataDir,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks SELinux labels specifically for the data dir in android-data",
-		Contacts:     []string{"vraheja@chromium.org", "chromeos-security@google.com"},
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+			"vraheja@chromium.org",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux", "chrome"},
 		Attr:         []string{"group:mainline"},
 		Pre:          arc.Booted(),
