@@ -35,10 +35,7 @@ func init() {
 		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
-			"tim.chang@cienet.com",
-			"ting.chen@cienet.com",
-			"wenbojie@chromium.org",
-			"cienet-development@googlegroups.com",
+			"jinrongwu@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
