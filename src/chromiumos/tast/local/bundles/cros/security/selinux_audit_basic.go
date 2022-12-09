@@ -23,9 +23,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxAuditBasic,
-		Desc:         "Checks SELinux audit works as intended",
-		Contacts:     []string{"fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Func: SELinuxAuditBasic,
+		Desc: "Checks SELinux audit works as intended",
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux"},
 		// TODO(b/245411884): Re-enable this test.
 		// Attr:         []string{"group:mainline"},

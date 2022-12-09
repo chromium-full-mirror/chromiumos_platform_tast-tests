@@ -13,9 +13,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxValidity,
-		Desc:         "Checks some SELinux status",
-		Contacts:     []string{"fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Func: SELinuxValidity,
+		Desc: "Checks some SELinux status",
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux"},
 		Attr:         []string{"group:mainline"},
 	})

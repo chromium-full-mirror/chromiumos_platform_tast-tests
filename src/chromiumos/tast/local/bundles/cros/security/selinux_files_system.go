@@ -17,7 +17,11 @@ func init() {
 		Func:         SELinuxFilesSystem,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that SELinux file labels are set correctly for system files",
-		Contacts:     []string{"fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome", "selinux"},
 		Attr:         []string{"group:mainline"},
 		Pre:          chrome.LoggedIn(),

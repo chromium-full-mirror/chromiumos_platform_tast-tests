@@ -16,9 +16,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxFilesSystemInformational,
-		Desc:         "Checks that SELinux file labels are set correctly for system files (new testcases, flaky testcases)",
-		Contacts:     []string{"fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Func: SELinuxFilesSystemInformational,
+		Desc: "Checks that SELinux file labels are set correctly for system files (new testcases, flaky testcases)",
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"selinux"},
 	})

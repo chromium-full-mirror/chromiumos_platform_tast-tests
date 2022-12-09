@@ -13,9 +13,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxProcesses,
-		Desc:         "Checks that processes are running in correct SELinux domain",
-		Contacts:     []string{"fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Func: SELinuxProcesses,
+		Desc: "Checks that processes are running in correct SELinux domain",
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux_current"},
 		Attr:         []string{"group:mainline"},
 	})

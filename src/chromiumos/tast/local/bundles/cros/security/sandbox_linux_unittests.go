@@ -23,9 +23,10 @@ func init() {
 		Desc: "Runs the sandbox_linux_unittests Chrome binary",
 		Attr: []string{"group:mainline", "informational"},
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 	})
 }
 
