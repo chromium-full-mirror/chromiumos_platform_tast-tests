@@ -27,6 +27,8 @@ const (
 // fetchIntelCPUUarch gets the name of the x86 microarchitecture.
 func fetchIntelCPUUarch() (string, error) {
 	intelUarchTable := map[string]string{
+		"06_9A": "Alder Lake",
+		"06_BE": "Alder Lake",
 		"06_4C": "Airmont",
 		"06_1C": "Atom",
 		"06_26": "Atom",
@@ -54,6 +56,7 @@ func fetchIntelCPUUarch() (string, error) {
 		"06_9E": "Kaby Lake",
 		"06_0F": "Merom",
 		"06_16": "Merom",
+		"06_AA": "Meteor Lake",
 		"06_17": "Nehalem",
 		"06_1A": "Nehalem",
 		"06_1D": "Nehalem",
@@ -63,6 +66,7 @@ func fetchIntelCPUUarch() (string, error) {
 		"0F_03": "Prescott",
 		"0F_04": "Prescott",
 		"0F_06": "Presler",
+		"06_BA": "Raptor Lake",
 		"06_2A": "Sandy Bridge",
 		"06_2D": "Sandy Bridge",
 		"06_37": "Silvermont",
@@ -123,6 +127,7 @@ func fetchPackageStates() (map[string]int64, error) {
 	// Group same package cstate using the older uarch name
 	fullStateMap := map[string]map[string]int64{
 		"Airmont":      silvermontStates,
+		"Alder Lake":   broadwellStates,
 		"Atom":         atomStates,
 		"Broadwell":    broadwellStates,
 		"Comet Lake":   broadwellStates,
@@ -132,7 +137,9 @@ func fetchPackageStates() (map[string]int64, error) {
 		"Ivy Bridge":   sandyBridgeStates,
 		"Ivy Bridge-E": sandyBridgeStates,
 		"Kaby Lake":    broadwellStates,
+		"Meteor Lake":  broadwellStates,
 		"Nehalem":      nehalemStates,
+		"Raptor Lake":  broadwellStates,
 		"Sandy Bridge": sandyBridgeStates,
 		"Silvermont":   silvermontStates,
 		"Skylake":      broadwellStates,
