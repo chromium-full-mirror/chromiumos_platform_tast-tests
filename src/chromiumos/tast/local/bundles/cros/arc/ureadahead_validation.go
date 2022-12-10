@@ -43,10 +43,10 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			// TODO(b/259450728): Currently we are failing some 4GB ARM devices due to
-			// missing up-to-date board for pack generation. This limit can be removed
-			// once bug is fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
+			// TODO(b/259450728): Currently we are failing some ARM devices due to
+			// missing up-to-date board for pack generation. This dep can be removed
+			// once the bug is fixed.
+			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 		}},
 		// Minimum acceptable.
 		Timeout: 5 * time.Minute,
