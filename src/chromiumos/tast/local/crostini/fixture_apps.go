@@ -7,6 +7,7 @@ package crostini
 import (
 	"context"
 	"path/filepath"
+	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -193,6 +194,7 @@ func (f *crostiniAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 			// pixel being able differ to any degree.
 			MaxDifferentPixels:  100,
 			PixelDeltaThreshold: 255 * 4,
+			RetryInterval:       2 * time.Second,
 		},
 		SkipDpiNormalization: true,
 	}
