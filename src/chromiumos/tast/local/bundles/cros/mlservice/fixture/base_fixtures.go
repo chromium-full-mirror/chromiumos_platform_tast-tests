@@ -1,0 +1,138 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package fixture defines fixtures for ML service tests.
+package fixture
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+	"chromiumos/tast/testing"
+)
+
+// List of fixture names for ML service testing.
+const (
+	LoggedIn     = "mlLoggedIn"
+	GAIALoggedIn = "mlGaiaLoggedIn"
+	NoLoggedIn   = "mlNoLoggedIn"
+)
+
+const (
+	resetTimeout    = 30 * time.Second
+	preTestTimeout  = 10 * time.Second
+	postTestTimeout = 15 * time.Second
+)
+
+func init() {
+	testing.AddFixture(&testing.Fixture{
+		Name: LoggedIn,
+		Desc: "A fixture with fake user logged in",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Impl:            baseSetupFixture(browser.TypeAsh, nil),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedIn,
+		Desc: "A fixture with GAIA user logged in",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: NoLoggedIn,
+		Desc: "A fixture with no user logged in",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.NoLogin()}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+}
+
+func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) testing.FixtureImpl {
+	return &baseSetupFixtureImpl{
+		browserType: browserType,
+		fOpts:       fOpts,
+	}
+}
+
+// BaseSetupFixtData is the data returned by SetUp and passed to tests.
+type BaseSetupFixtData struct {
+	Chrome      *chrome.Chrome
+	BrowserType browser.Type
+}
+
+// baseSetupFixtureImpl implements testing.FixtureImpl.
+type baseSetupFixtureImpl struct {
+	cr          *chrome.Chrome         // Underlying Chrome instance
+	browserType browser.Type           // Whether Ash or Lacros is used for test
+	fOpts       chrome.OptionsCallback // Function to return chrome options.
+}
+
+func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Start Chrome instance.
+	var fOpts = []chrome.Option{}
+	var err error
+	if f.fOpts != nil {
+		fOpts, err = f.fOpts(ctx, s)
+		if err != nil {
+			s.Fatal("Failed to get Chrome options: ", err)
+		}
+	}
+	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(), fOpts...)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	f.cr = cr
+
+	return BaseSetupFixtData{f.cr, f.browserType}
+}
+
+func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (f *baseSetupFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := f.cr.Close(ctx); err != nil {
+		s.Log("Failed to close Chrome connection: ", err)
+	}
+	f.cr = nil
+}

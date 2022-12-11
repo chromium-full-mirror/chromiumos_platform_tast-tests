@@ -23,7 +23,7 @@ func init() {
 		},
 		BugComponent: "b:1140118",
 		Attr:         []string{"group:ml_service"},
-		Fixture:      fixture.EffectsPipelineInstalled,
+		Fixture:      fixture.NoLoggedIn,
 		SoftwareDeps: []string{"camera_feature_effects"},
 		Params: []testing.Param{
 			{
