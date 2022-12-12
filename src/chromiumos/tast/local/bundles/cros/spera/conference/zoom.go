@@ -109,25 +109,27 @@ func (conf *ZoomConference) Join(ctx context.Context, room string) error {
 
 	// allowPerm allows camera and microphone if browser asks for the permissions.
 	allowPerm := func(ctx context.Context) error {
-		unableButton := nodewith.NameContaining("Unable to play media.").Role(role.Video)
-		// If there is an unable button, it will display a alert dialog to allow permission.
-		if err := ui.WithTimeout(shortUITimeout).WaitUntilGone(unableButton)(ctx); err != nil {
-			avPerm := nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).ClassName("RootView").Role(role.AlertDialog).First()
-			allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(avPerm)
-			if err := ui.WaitUntilExists(avPerm)(ctx); err == nil {
-				if err := uiauto.NamedCombine("allow microphone and camera permissions",
-					// Immediately clicking the allow button sometimes doesn't work. Sleep 2 seconds.
-					uiauto.Sleep(2*time.Second),
-					ui.LeftClick(allowButton),
-					ui.WaitUntilGone(avPerm),
-				)(ctx); err != nil {
-					return err
-				}
-			} else {
-				testing.ContextLog(ctx, "No action is required to allow microphone and camera")
-			}
-		}
-		return allowPagePermissions(conf.tconn)(ctx)
+		startVideoButton := nodewith.NameRegex(regexp.MustCompile(startVideoRegexCapture)).Role(role.Button)
+		joinAudioButton := nodewith.Name("Join Audio").Role(role.Button)
+		spinnerImage := nodewith.ClassName("spinner").Role(role.Image).First()
+		checkSpinnerImageExists := ui.WithTimeout(shortUITimeout).WaitUntilExists(spinnerImage)
+		dialogRE := regexp.MustCompile(".*Use your (microphone|camera).*")
+		avPerm := nodewith.NameRegex(dialogRE).ClassName("RootView").Role(role.AlertDialog).First()
+		allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(avPerm)
+		allowPermissions := uiauto.IfSuccessThen(
+			ui.WaitUntilExists(avPerm),
+			uiauto.NamedAction("allow microphone and camera permissions",
+				ui.LeftClickUntil(allowButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(spinnerImage)),
+			))
+		return uiauto.Combine("allow permissions",
+			uiauto.IfSuccessThen(ui.Exists(startVideoButton),
+				ui.LeftClickUntil(startVideoButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(startVideoButton))),
+			uiauto.IfSuccessThen(ui.Exists(joinAudioButton),
+				ui.LeftClickUntil(joinAudioButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioButton))),
+			// Check the spinner image to quickly determine if it requires permission to allow microphone and camera.
+			uiauto.IfSuccessThen(checkSpinnerImageExists, allowPermissions),
+			allowPagePermissions(conf.tconn),
+		)(ctx)
 	}
 
 	// Checks the number of participants in the conference that
@@ -174,7 +176,7 @@ func (conf *ZoomConference) Join(ctx context.Context, room string) error {
 	}
 
 	joinButton := nodewith.Name("Join").Role(role.Button)
-	video := nodewith.Role(role.Video)
+	previewVideo := nodewith.ClassName("preview-video").Ancestor(zoomWebArea)
 	joinFromYourBrowser := nodewith.Name("Join from Your Browser").Role(role.StaticText)
 	// There are two types of cookie accept dialogs: "ACCEPT COOKIES" and "ACCEPT ALL COOKIES".
 	acceptCookiesButton := nodewith.NameRegex(regexp.MustCompile("ACCEPT.*COOKIES")).Role(role.Button)
@@ -205,7 +207,7 @@ func (conf *ZoomConference) Join(ctx context.Context, room string) error {
 			ui.LeftClickUntil(acceptCookiesButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(acceptCookiesButton))),
 		ui.LeftClick(joinFromYourBrowser),
 		ui.WithTimeout(longUITimeout).WaitUntilExists(joinButton),
-		ui.WaitUntilExists(video),
+		ui.WaitUntilExists(previewVideo),
 		allowPerm,
 		clickJoinButton,
 		waitForZoomPageToLoad,

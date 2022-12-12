@@ -7,6 +7,7 @@ package conference
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -62,9 +63,10 @@ func waitForFullscreenCondition(tconn *chrome.TestConn, title string, isFullScre
 func allowPagePermissions(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	blockedButton := nodewith.NameContaining("This page has been blocked").Role(role.Button)
-	dialogRoot := nodewith.Name("Camera and microphone blocked").Role(role.Window).ClassName("ContentSettingBubbleContents")
-	alwaysAllowButton := nodewith.NameContaining("Always allow").Role(role.RadioButton).Ancestor(dialogRoot)
-	doneButton := nodewith.Name("Done").Role(role.Button).Focusable().Ancestor(dialogRoot)
+	dialogRE := regexp.MustCompile("(Camera and microphone|Microphone) blocked")
+	dialogWindow := nodewith.NameRegex(dialogRE).Role(role.Window).ClassName("ContentSettingBubbleContents")
+	alwaysAllowButton := nodewith.NameContaining("Always allow").Role(role.RadioButton).Ancestor(dialogWindow)
+	doneButton := nodewith.Name("Done").Role(role.Button).Focusable().Ancestor(dialogWindow)
 	reloadButton := nodewith.Name("Reload").Role(role.Button).Focusable().First()
 	accessButton := nodewith.NameContaining("This page is accessing").Role(role.Button)
 	allowPermission := uiauto.NamedAction("allow page permissions",
