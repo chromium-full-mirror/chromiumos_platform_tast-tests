@@ -41,8 +41,7 @@ func Crosh(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Start Chrome with CroshSWA flag.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("CroshSWA"))
+	cr, err := chrome.New(ctx, chrome.DisableFeatures("TerminalAlternativeEmulator"))
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}
