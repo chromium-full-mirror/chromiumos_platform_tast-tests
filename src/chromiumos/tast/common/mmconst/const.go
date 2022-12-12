@@ -11,17 +11,18 @@ import "time"
 
 // ModemManager1.Modem properties
 const (
-	ModemPropertyBearers             = "Bearers"
-	ModemPropertyDevice              = "Device"
-	ModemPropertyEquipmentIdentifier = "EquipmentIdentifier"
-	ModemPropertyManufacturer        = "Manufacturer"
-	ModemPropertyOwnNumbers          = "OwnNumbers"
-	ModemPropertyPowered             = "PowerState"
-	ModemPropertyPrimarySimSlot      = "PrimarySimSlot"
-	ModemPropertySim                 = "Sim"
-	ModemPropertySimSlots            = "SimSlots"
-	ModemPropertyState               = "State"
-	ModemPropertyMessages            = "Messages"
+	ModemPropertyBearers                     = "Bearers"
+	ModemPropertyDevice                      = "Device"
+	ModemPropertyEquipmentIdentifier         = "EquipmentIdentifier"
+	ModemPropertyManufacturer                = "Manufacturer"
+	ModemPropertyMaxActiveMultiplexedBearers = "MaxActiveMultiplexedBearers"
+	ModemPropertyOwnNumbers                  = "OwnNumbers"
+	ModemPropertyPowered                     = "PowerState"
+	ModemPropertyPrimarySimSlot              = "PrimarySimSlot"
+	ModemPropertySim                         = "Sim"
+	ModemPropertySimSlots                    = "SimSlots"
+	ModemPropertyState                       = "State"
+	ModemPropertyMessages                    = "Messages"
 )
 
 // ModemManager1.Modem.Modem3gpp properties
@@ -92,6 +93,17 @@ const (
 	BearerIPFamilyIPv6   BearerIPFamily = 1 << 1
 	BearerIPFamilyIPv4v6 BearerIPFamily = 1 << 2
 	BearerIPFamilyAny    BearerIPFamily = 0xFFFFFFFF
+)
+
+// BearerMultiplexSupport Multiplex support options from Modemmanager-enums.h
+type BearerMultiplexSupport uint32
+
+// All the bearer multiplex options
+const (
+	BearerMultiplexSupportUnknown   BearerMultiplexSupport = 0
+	BearerMultiplexSupportNone      BearerMultiplexSupport = 1
+	BearerMultiplexSupportRequested BearerMultiplexSupport = 2
+	BearerMultiplexSupportRequired  BearerMultiplexSupport = 3
 )
 
 // Wait times for modem at Modemmanager operations

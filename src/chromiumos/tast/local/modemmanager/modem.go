@@ -757,6 +757,19 @@ func (m *Modem) GetOperatorCode(ctx context.Context) (string, error) {
 	return operatorCode, nil
 }
 
+// GetMaxActiveMultiplexedBearers gets the maximum number of active multiplexed bearers.
+func (m *Modem) GetMaxActiveMultiplexedBearers(ctx context.Context, modem *Modem) (uint32, error) {
+	modemPath := ObjectPath{dbus.ObjectPath(m.String()), nil}
+	value := modemPath.GetPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface).
+		GetProperties(ctx).
+		Get(mmconst.ModemPropertyMaxActiveMultiplexedBearers)
+
+	if value.err != nil {
+		return 0, errors.Wrap(value.err, "failed to read MaxActiveMultiplexedBearers")
+	}
+	return value.iface.(uint32), nil
+}
+
 // SetInitialEpsBearerSettings sets the Attach APN.
 func SetInitialEpsBearerSettings(ctx context.Context, modem3gpp *Modem, props map[string]interface{}) error {
 	if c := modem3gpp.Call(ctx, "SetInitialEpsBearerSettings", props); c.Err != nil {
