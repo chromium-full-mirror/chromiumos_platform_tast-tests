@@ -566,24 +566,28 @@ func EnsureRegistered(ctx context.Context, modem, simpleModem *Modem) error {
 	return nil
 }
 
-// Connect polls on simple modem D-Bus connect call with given apn.
-func Connect(ctx context.Context, modem *Modem, props map[string]interface{}, timeout time.Duration) error {
-	// Connect and poll for modem state.
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		errConn := modem.Call(ctx, mmconst.ModemConnect, props).Err
-		if (errConn != nil) && (strings.Contains(errConn.Error(), "no-service")) {
-			return errors.Wrap(errConn, "failed to connect can be network issue")
-		}
-		if isConnected, err := modem.IsConnected(ctx); err != nil {
-			return errors.Wrap(err, "failed to fetch connected state")
-		} else if !isConnected {
-			return errors.Wrap(err, "modem not connected")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  timeout,
-		Interval: 2 * time.Second,
-	})
+// Connect calls the connect function on simple modem D-Bus and returns the bearer path if it connects successfully.
+func Connect(ctx context.Context, modem *Modem, props map[string]interface{}) (dbus.ObjectPath, error) {
+	bearerPath := dbus.ObjectPath("")
+	response := modem.Call(ctx, mmconst.ModemConnect, props)
+	if (response.Err != nil) && (strings.Contains(response.Err.Error(), "no-service")) {
+		return bearerPath, errors.Wrap(response.Err, "failed to connect can be network issue")
+	} else if response.Err != nil {
+		return bearerPath, errors.Wrap(response.Err, "failed to connect")
+	}
+	if isConnected, err := modem.IsConnected(ctx); err != nil {
+		return bearerPath, errors.Wrap(err, "failed to fetch connected state")
+	} else if !isConnected {
+		return bearerPath, errors.Wrap(err, "modem not connected")
+	}
+	if len(response.Body) != 1 {
+		return bearerPath, errors.Errorf("connect resulted in incorrect response len: %d", len(response.Body))
+	}
+	bearerPath, ok := response.Body[0].(dbus.ObjectPath)
+	if !ok {
+		return bearerPath, errors.New("could not parse bearer path")
+	}
+	return bearerPath, nil
 }
 
 // InhibitModem inhibits the first available modem on DBus. Use the returned callback to uninhibit.

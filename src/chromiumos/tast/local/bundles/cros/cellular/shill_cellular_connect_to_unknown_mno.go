@@ -116,7 +116,7 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Connecting")
-	if err := modemmanager.Connect(ctx, simpleModem, apnToConnect, 20*time.Second); err != nil {
+	if _, err := modemmanager.Connect(ctx, simpleModem, apnToConnect); err != nil {
 		s.Fatal("Modem connect failed with error: ", err)
 
 	}
