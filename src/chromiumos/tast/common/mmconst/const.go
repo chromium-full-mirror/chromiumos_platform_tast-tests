@@ -57,6 +57,29 @@ const (
 const (
 	BearerPropertyConnected  = "Connected"
 	BearerPropertyProperties = "Properties"
+	// APN related properties
+	BearerPropertyAllowRoaming = "allow-roaming"
+	BearerPropertyAllowedAuth  = "allowed-auth"
+	BearerPropertyApn          = "apn"
+	BearerPropertyApnType      = "apn-type"
+	BearerPropertyIPType       = "ip-type"
+	BearerPropertyMultiplex    = "multiplex"
+	BearerPropertyPassword     = "password"
+	BearerPropertyUser         = "user"
+)
+
+// BearerAllowedAuth Allowed authentication types from Modemmanager-enums.h
+type BearerAllowedAuth uint32
+
+// All the bearer authentication types
+const (
+	BearerAllowedAuthUnknown  BearerAllowedAuth = 0
+	BearerAllowedAuthNone     BearerAllowedAuth = 1 << 0
+	BearerAllowedAuthPAP      BearerAllowedAuth = 1 << 1
+	BearerAllowedAuthCHAP     BearerAllowedAuth = 1 << 2
+	BearerAllowedAuthMSChap   BearerAllowedAuth = 1 << 3
+	BearerAllowedAuthMSChapV2 BearerAllowedAuth = 1 << 4
+	BearerAllowedAuthEAP      BearerAllowedAuth = 1 << 5
 )
 
 // BearerIPFamily IP families from Modemmanager-enums.h

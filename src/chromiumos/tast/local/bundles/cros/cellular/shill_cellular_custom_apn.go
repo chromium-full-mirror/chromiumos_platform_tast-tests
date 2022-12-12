@@ -138,16 +138,14 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 	optionalAPNSucceeded := false
 	for _, knownAPN := range knownAPNs {
 		if testNewAPNUIRevamp {
-			isAttach, err := cellular.IsAttach(knownAPN.APNInfo)
-			if err != nil {
-				s.Fatal("Failed to check if the apn is of type IA : ", err)
-			}
 			// Append all other APNs after the one we are testing if the current APN is an attach APN. It should work either way.
-			apns := []map[string]string{knownAPN.APNInfo}
-			if isAttach {
+			apn := knownAPN.GetAPNForShill()
+			apns := []map[string]string{apn}
+			if knownAPN.IsAttachAPN() {
 				for _, knownAPN2 := range knownAPNs {
-					if !reflect.DeepEqual(knownAPN2.APNInfo, knownAPN.APNInfo) {
-						apns = append(apns, knownAPN2.APNInfo)
+					apn2 := knownAPN2.GetAPNForShill()
+					if !reflect.DeepEqual(apn2, apn) {
+						apns = append(apns, apn2)
 					}
 				}
 			}
@@ -157,9 +155,8 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 			}
 		} else {
 			ipType, okIPType := knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnIPType]
-			attach, okAttach := knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnAttach]
 			auth, okAuth := knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnAuthentication]
-			if okAttach && attach == shillconst.DevicePropertyCellularAPNInfoApnAttachTrue {
+			if knownAPN.IsAttachAPN() {
 				// Skip known ipv4v6 and ipv6 APNs, since Cellular.APN doesn't support the ip_type field.
 				// Skip known PAP APNs, since Cellular.APN doesn't support the authentication field.
 				if (okIPType && (ipType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4v6 || ipType == shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv6)) ||
@@ -177,7 +174,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 				delete(knownAPN.APNInfo, shillconst.DevicePropertyCellularAPNInfoApnAuthentication)
 			}
 
-			if err = helper.SetAPN(ctx, knownAPN.APNInfo); err != nil {
+			if err = helper.SetAPN(ctx, knownAPN.GetAPNForShill()); err != nil {
 				s.Fatal("Unable to set the custom APN: ", err)
 			}
 
@@ -221,8 +218,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 
 		apn := serviceLastAttachAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 		expectedAPN := knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName]
-		isAttach := knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnAttach] == shillconst.DevicePropertyCellularAPNInfoApnAttachTrue
-		if isAttach && apn != expectedAPN {
+		if knownAPN.IsAttachAPN() && apn != expectedAPN {
 			if knownAPN.Optional {
 				continue
 			}
