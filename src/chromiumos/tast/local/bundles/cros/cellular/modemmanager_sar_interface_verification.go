@@ -23,7 +23,7 @@ func init() {
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active"},
 		HardwareDeps: hwdep.D(hwdep.CellularSoftwareDynamicSar()),
-		Fixture:      "cellular",
+		Fixture:      "cellularModemManager",
 		Timeout:      5 * time.Minute,
 	})
 }

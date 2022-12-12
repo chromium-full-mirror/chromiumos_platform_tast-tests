@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -36,7 +37,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{modemfwdStopped: false},
+		Impl:            &cellularFixture{},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolled",
@@ -47,15 +48,34 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &cellularFixture{modemfwdStopped: false, useFakeDMS: true},
+		Impl:            &cellularFixture{useFakeDMS: true},
 		Parent:          fixture.FakeDMSEnrolled,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "cellularModemManager",
+		Desc: "ModemManager tests are safe to run without shill running",
+		Contacts: []string{
+			"andrewlassalle@google.com",
+			"chromeos-cellular-team@google.com",
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{disableCellularTechnology: true, restartMM: true},
 	})
 }
 
 // cellularFixture implements testing.FixtureImpl.
 type cellularFixture struct {
+	// Fixture control flags
+	disableCellularTechnology bool
+	restartMM                 bool
+	useFakeDMS                bool
+	// Fixture variables
+	helper          *cellular.Helper
 	modemfwdStopped bool
-	useFakeDMS      bool
 	sf              *starfish.Starfish
 }
 
@@ -125,6 +145,22 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Logf("Could not confirm if Hermes is idle: %s", err)
 	}
 
+	if f.disableCellularTechnology {
+		f.helper, err = cellular.NewHelper(ctx)
+		if err != nil {
+			s.Fatal("Failed to create cellular.Helper: ", err)
+		}
+		// Disabling cellular in shill, prevents shill from re-enabling cellular
+		// after Modem disable called.
+		if _, err := f.helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
+			s.Fatal("Unable to disable Cellular: ", err)
+		}
+	}
+	if f.restartMM {
+		if err := upstart.RestartJob(ctx, modemmanager.JobName); err != nil {
+			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
+		}
+	}
 	return &FixtData{fdms}
 }
 
@@ -137,6 +173,19 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
 		if err := cellular.RestartModemWithHelper(ctx); err != nil {
 			s.Fatal("Failed to restart modem: ", err)
+		}
+	}
+	if f.disableCellularTechnology && f.restartMM {
+		modem, err := modemmanager.NewModemWithSim(ctx)
+		if err != nil {
+			s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+		}
+		if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
+			s.Fatal("Modem enable failed with: ", err)
+		}
+
+		if err := modemmanager.EnsureEnabled(ctx, modem); err != nil {
+			s.Fatal("Modem not enabled: ", err)
 		}
 	}
 
@@ -189,6 +238,11 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.disableCellularTechnology {
+		if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
+			s.Fatal("Unable to enable Cellular: ", err)
+		}
+	}
 	if f.modemfwdStopped {
 		err := upstart.EnsureJobRunning(ctx, modemfwd.JobName, upstart.WithArg("DEBUG_MODE", "true"))
 		if err != nil {
