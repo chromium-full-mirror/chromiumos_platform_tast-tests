@@ -48,16 +48,23 @@ data_sources: {
     }
 }
 
-# Coarse CPU usage counter, kernel meminfo and virtual memory stats.
+# System stats.
 data_sources: {
     config {
         name: "linux.sys_stats"
         target_buffer: 0
         sys_stats_config {
+            # CPU frequency.
+            cpufreq_period_ms: 1000
+            # Kernel meminfo.
             meminfo_period_ms: 1000
+            # Virtual memory stats.
             vmstat_period_ms: 1000
+            # Kernel activity information.
             stat_period_ms: 1000
+            # CPU times since boot.
             stat_counters: STAT_CPU_TIMES
+            # Num processes forked since boot.
             stat_counters: STAT_FORK_COUNT
         }
     }
