@@ -47,13 +47,16 @@ type impl struct {
 func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	d := s.DUT()
 
-	// Attempt to connect to those DUTs that aren't already connected.
+	// Attempt to connect to those DUTs that aren't already connected (due to
+	// DUTs rendered inoperable from a prior failed test).
+	// TODO(b/239013478): Clean up the connection checks when the issue is resolved.
 	if !d.Connected(ctx) {
 		s.Log("Attempting to connect to DUT")
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return d.Connect(ctx)
-		}, &testing.PollOptions{Interval: time.Second, Timeout: 30 * time.Second}); err != nil {
-			s.Fatal("Failed to connect to DUT: ", err)
+		waitConnectCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+
+		if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to the DUT at the beginning: ", err)
 		}
 		s.Log("Connected to DUT")
 	}
