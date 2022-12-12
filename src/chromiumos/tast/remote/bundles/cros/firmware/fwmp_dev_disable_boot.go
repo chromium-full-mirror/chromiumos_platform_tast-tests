@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/235742217): This test might be leaving broken DUTS that can't be auto-repaired. Add attr firmware_unstable when fixed.
 		Attr:         []string{"group:firmware"},
-		Timeout:      25 * time.Minute,
+		Timeout:      30 * time.Minute,
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Vboot2()),
 	})
@@ -154,7 +154,28 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	var opts []firmware.ModeSwitchOption
 	opts = append(opts, firmware.SkipModeCheckAfterReboot, firmware.UseFwScreenToDevMode)
 	if err := ms.ModeAwareReboot(rebootCtx, firmware.ColdReset, opts...); err != nil {
-		s.Fatal("Unexpected error occurred while attempting to boot DUT: ", err)
+		// When dev mode got disabled by FWMP, pressing the ENTER key would be
+		// required on DUTs with RecButtonDevSwitch, for example chromeboxes,
+		// to free them from the 'confirm returning to secure mode' screen.
+		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) && h.Config.RecButtonDevSwitch {
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				s.Log("Pressing ENTER key")
+				if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
+					errors.Wrap(err, "failed to press enter key")
+				}
+
+				recButtonCtx, cancelRecButtonCtx := context.WithTimeout(ctx, 1*time.Minute)
+				defer cancelRecButtonCtx()
+				if err := h.WaitConnect(recButtonCtx); err != nil {
+					return errors.Wrap(err, "failed to reconnect after pressing ENTER key")
+				}
+				return nil
+			}, &testing.PollOptions{Timeout: 4 * time.Minute}); err != nil {
+				s.Fatal("While trying to reboot DUT with dev mode disabled: ", err)
+			}
+		} else {
+			s.Fatal("Unexpected error occurred while attempting to boot DUT: ", err)
+		}
 	}
 
 	// For debugging purposes, log current boot mode after the reboot.
