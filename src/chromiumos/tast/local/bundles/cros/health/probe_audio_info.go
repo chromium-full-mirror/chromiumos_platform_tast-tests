@@ -9,18 +9,30 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/croshealthd"
+	"chromiumos/tast/local/jsontypes"
 	"chromiumos/tast/testing"
 )
 
 type audioInfo struct {
-	InputDeviceName  string `json:"input_device_name"`
-	InputGain        int    `json:"input_gain"`
-	InputMute        bool   `json:"input_mute"`
-	OutputDeviceName string `json:"output_device_name"`
-	OutputMute       bool   `json:"output_mute"`
-	OutputVolume     int    `json:"output_volume"`
-	SevereUnderruns  int    `json:"severe_underruns"`
-	Underruns        int    `json:"underruns"`
+	InputDeviceName  string           `json:"input_device_name"`
+	InputGain        int              `json:"input_gain"`
+	InputMute        bool             `json:"input_mute"`
+	OutputDeviceName string           `json:"output_device_name"`
+	OutputMute       bool             `json:"output_mute"`
+	OutputVolume     int              `json:"output_volume"`
+	SevereUnderruns  int              `json:"severe_underruns"`
+	Underruns        int              `json:"underruns"`
+	OutputNodes      *[]audioNodeInfo `json:"output_nodes"`
+	InputNodes       *[]audioNodeInfo `json:"input_nodes"`
+}
+
+type audioNodeInfo struct {
+	ID            jsontypes.Uint64 `json:"id"`
+	Name          string           `json:"name"`
+	DeviceName    string           `json:"device_name"`
+	Active        bool             `json:"active"`
+	NodeVolume    uint8            `json:"node_volume"`
+	InputNodeGain uint8            `json:"input_node_gain"`
 }
 
 func init() {
