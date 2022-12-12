@@ -1,0 +1,31 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cellular
+
+import (
+	"context"
+
+	"chromiumos/tast/local/cellular"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         IsVariantKnown,
+		Desc:         "Verifies that the variant is known",
+		Contacts:     []string{"andrewlassalle@google.com", "chromeos-cellular-team@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_unstable"},
+		Fixture:      "cellular",
+		SoftwareDeps: []string{"cellular_variant_present"},
+	})
+}
+
+// IsVariantKnown Test
+func IsVariantKnown(ctx context.Context, s *testing.State) {
+	if err := cellular.IsVariantKnown(ctx); err != nil {
+		s.Fatal("variant not known: ", err)
+	}
+}

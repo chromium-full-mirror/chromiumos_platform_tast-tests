@@ -328,6 +328,18 @@ func GetDeviceVariant(ctx context.Context) (string, error) {
 	return deviceVariant, nil
 }
 
+// IsVariantKnown checks if the DUT's variant is in |knownVariants|.
+func IsVariantKnown(ctx context.Context) error {
+	dutVariant, err := GetDeviceVariant(ctx)
+	if err != nil {
+		return err
+	}
+	if _, ok := knownVariants[dutVariant]; !ok {
+		return errors.Errorf("variant %q is not in |knownVariants|", dutVariant)
+	}
+	return nil
+}
+
 // TagKnownBugOnVariant adds a tag to the error code if any of the |variants| matches the DUT's variant.
 func TagKnownBugOnVariant(ctx context.Context, errIn error, bugNumber string, variants []string) error {
 	dutVariant, err := GetDeviceVariant(ctx)
