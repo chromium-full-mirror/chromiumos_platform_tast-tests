@@ -23,7 +23,6 @@ import (
 )
 
 // TODO(b/213524693) : remove "chronicler" when b/213524693 is fixed.
-// TODO(b/238591902) : remove "nautilus" and "nautiluslte" when b/238591902 is fixed.
 // TODO(b/238591444) : remove "soraka" when b/238591444 is fixed.
 // TODO(b/238718764) : remove "karma" when b/238718764 is fixed.
 // TODO(b/239385484) : remove "beetley" when b/239385484 is fixed.
@@ -41,7 +40,7 @@ import (
 // TODO(b/249023249) : remove "vell" when b/249023249 is fixed.
 // TODO(b/249207920) : remove "astronaut", "blacktip", "blacktip360", "epaulette", "lava", "nasher360", "rabbid", "robo", "robo360", "santa", "whitetip" when b/249207920 is fixed.
 // TODO(b/258112490) : remove "steelix" when b/258112490 is fixed.
-var alsaConformanceUnstableModels = []string{"chronicler", "nautilus", "nautiluslte", "soraka", "karma", "beetley", "redrix", "gimble", "primus", "anahera", "babymega", "babytiger", "blacktiplte", "taniks", "bob", "nasher", "sasukette", "vell", "astronaut", "blacktip", "blacktip360", "epaulette", "lava", "nasher360", "rabbid", "robo", "robo360", "santa", "whitetip", "steelix"}
+var alsaConformanceUnstableModels = []string{"chronicler", "soraka", "karma", "beetley", "redrix", "gimble", "primus", "anahera", "babymega", "babytiger", "blacktiplte", "taniks", "bob", "nasher", "sasukette", "vell", "astronaut", "blacktip", "blacktip360", "epaulette", "lava", "nasher360", "rabbid", "robo", "robo360", "santa", "whitetip", "steelix"}
 
 // TODO(b/136614687): Relex the criteria for grunt devices, the audio still sounds fine as CRAS can compensate the rate, if the rate error is not huge.
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}
