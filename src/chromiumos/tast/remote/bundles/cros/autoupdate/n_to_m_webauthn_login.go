@@ -70,7 +70,7 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec env: ", err)
 	}
 
-	var cred webauthnpb.WebAuthnCredential
+	var cred *webauthnpb.WebAuthnCredential
 	ops := &util.Operations{
 		PreUpdate: func(ctx context.Context) error {
 			return util.ClearTpm(ctx, env)
@@ -86,7 +86,8 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to put files to remote")
 			}
-			return createUserAndMakeCredential(ctx, env, cl.Conn, dataPath, &cred)
+			cred, err = createUserAndMakeCredential(ctx, env, cl.Conn, dataPath)
+			return err
 		},
 		PostRollback: func(ctx context.Context) error {
 			cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -99,7 +100,7 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to put files to remote")
 			}
-			return loginUserAndGetAssertion(ctx, env, cl.Conn, dataPath, &cred)
+			return loginUserAndGetAssertion(ctx, env, cl.Conn, dataPath, cred)
 		},
 	}
 
@@ -116,7 +117,7 @@ func passwordAuth(ctx context.Context, client webauthnpb.WebauthnServiceClient) 
 	return nil
 }
 
-func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, dataPath string, cred *webauthnpb.WebAuthnCredential) error {
+func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, dataPath string) (*webauthnpb.WebAuthnCredential, error) {
 	client := webauthnpb.NewWebauthnServiceClient(conn)
 
 	// Login Chrome and create a WebAuthn credential.
@@ -124,7 +125,7 @@ func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *
 		BrowserType: webauthnpb.BrowserType_ASH,
 		DataPath:    dataPath,
 	}); err != nil {
-		return errors.Wrap(err, "failed to start Chrome")
+		return nil, errors.Wrap(err, "failed to start Chrome")
 	}
 	defer client.Close(ctx, &empty.Empty{})
 
@@ -133,7 +134,7 @@ func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *
 		AuthenticatorType: webauthnpb.AuthenticatorType_UNSPECIFIED,
 		HasDialog:         true,
 	}); err != nil {
-		return errors.Wrap(err, "failed to start WebAuthn flow")
+		return nil, errors.Wrap(err, "failed to start WebAuthn flow")
 	}
 
 	authCallback := func(ctx context.Context) error {
@@ -141,9 +142,9 @@ func createUserAndMakeCredential(ctx context.Context, env *util.HwsecEnv, conn *
 	}
 	cred, err := u2fd.RemoteMakeCredentialInLocalSite(ctx, client, authCallback)
 	if err != nil {
-		return errors.Wrap(err, "failed to perform MakeCredential flow")
+		return nil, errors.Wrap(err, "failed to perform MakeCredential flow")
 	}
-	return nil
+	return cred, nil
 }
 
 func loginUserAndGetAssertion(ctx context.Context, env *util.HwsecEnv, conn *grpc.ClientConn, dataPath string, cred *webauthnpb.WebAuthnCredential) error {

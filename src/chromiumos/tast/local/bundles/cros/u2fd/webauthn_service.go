@@ -101,34 +101,38 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		}
 	}(ctxForCleanUp)
 
-	tmpdir, err := ioutil.TempDir("", "fdms-")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create temp dir")
-	}
-	defer func(ctx context.Context) {
-		if !ok {
-			if err := os.RemoveAll(tmpdir); err != nil {
-				testing.ContextLogf(ctx, "Failed to delete %s: %v", tmpdir, err)
-			}
-		}
-	}(ctxForCleanUp)
-
-	fdms, err := fakedms.New(c.s.ServiceContext(), tmpdir)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start FakeDMS")
-	}
-	defer func(ctx context.Context) {
-		if !ok {
-			fdms.Stop(ctx)
-		}
-	}(ctxForCleanUp)
-
 	var opts []chrome.Option
 	if req.GetKeepState() {
 		opts = append(opts, chrome.KeepState())
 	}
 
 	if req.GetAllowEnterpriseAttestation() {
+		tmpdir, err := ioutil.TempDir("", "fdms-")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create temp dir")
+		}
+		defer func(ctx context.Context) {
+			if !ok {
+				if err := os.RemoveAll(tmpdir); err != nil {
+					testing.ContextLogf(ctx, "Failed to delete %s: %v", tmpdir, err)
+				}
+				c.fakeDMSDir = ""
+			}
+		}(ctxForCleanUp)
+		c.fakeDMSDir = tmpdir
+
+		fdms, err := fakedms.New(c.s.ServiceContext(), tmpdir)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to start FakeDMS")
+		}
+		defer func(ctx context.Context) {
+			if !ok {
+				fdms.Stop(ctx)
+				c.fakeDMS = nil
+			}
+		}(ctxForCleanUp)
+		c.fakeDMS = fdms
+
 		pb := policy.NewBlob()
 		pb.AddPolicies([]policy.Policy{
 			&policy.SecurityKeyPermitAttestation{Val: []string{"localhost"}},
@@ -173,9 +177,6 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 	c.keyboard = keyboard
 	c.conn = conn
 	c.srv = srv
-
-	c.fakeDMS = fdms
-	c.fakeDMSDir = tmpdir
 
 	ok = true
 	return &empty.Empty{}, nil
