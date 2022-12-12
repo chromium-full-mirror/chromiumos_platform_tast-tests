@@ -43,7 +43,8 @@ const (
 	RecoveryReasonRWHashWrongSize  RecoveryReason = "RW_HASH_WRONG_SIZE"
 	RecoveryReasonRWVerifyBody     RecoveryReason = "RW_VERIFY_BODY"
 	RecoveryReasonRWValid          RecoveryReason = "RW_VALID"
-	RecoveryReasonRWNoRONormal     RecoveryReason = "RW_NO_RO_NORMAL"   // Read-only normal path requested by firmware preamble, but unsupported by firmware.
+	RecoveryReasonRWNoRONormal     RecoveryReason = "RW_NO_RO_NORMAL" // Read-only normal path requested by firmware preamble, but unsupported by firmware.
+	RecoveryReasonRWVendorBlob     RecoveryReason = "RW_VERIFY_VENDOR_BLOB"
 	RecoveryReasonROFirmware       RecoveryReason = "RO_FIRMWARE"       // Firmware boot failure outside of verified boot
 	RecoveryReasonROTPMReboot      RecoveryReason = "RO_TPM_REBOOT"     // Recovery mode TPM initialization requires a system reboot. The system was already in recovery mode for some other reason when this happened.
 	RecoveryReasonECSoftwareSync   RecoveryReason = "EC_SOFTWARE_SYNC"  // EC software sync - other error
@@ -108,6 +109,7 @@ var recoveryReasonCodesMap = map[RecoveryReasonValue]RecoveryReason{
 	"27":  RecoveryReasonRWVerifyBody,
 	"28":  RecoveryReasonRWValid,
 	"29":  RecoveryReasonRWNoRONormal,
+	"30":  RecoveryReasonRWVendorBlob,
 	"32":  RecoveryReasonROFirmware,
 	"33":  RecoveryReasonROTPMReboot,
 	"34":  RecoveryReasonECSoftwareSync,
