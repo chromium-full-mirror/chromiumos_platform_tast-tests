@@ -341,7 +341,7 @@ var allTargets = []struct {
 	{cuj.CnnAmericasURL, newPageInfo(cuj.Plus, cnn, `/americas`, `/asia`)},
 	{cuj.CnnAustraliaURL, newPageInfo(cuj.Plus, cnn, `/australia`, `/china`)},
 	{cuj.CnnEuropeURL, newPageInfo(cuj.Premium, cnn, `/europe`, `/india`)},
-	{cuj.CnnMiddleEastURL, newPageInfo(cuj.Premium, cnn, `/middle-east`, `/uk`)},
+	{cuj.CnnMiddleEastURL, newPageInfo(cuj.Premium, cnn, `/middle-east`, `/europe`, `/united-kingdom`)},
 
 	{cuj.EspnNflURL, newPageInfo(cuj.Plus, espn, `/nfl/scoreboard`, `/nfl/schedule`)},
 	{cuj.EspnNbaURL, newPageInfo(cuj.Plus, espn, `/nba/scoreboard`, `/nba/schedule`)},
