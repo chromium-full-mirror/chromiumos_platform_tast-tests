@@ -81,12 +81,21 @@ const GoogleDoHProvider = "https://dns.google/dns-query"
 // The URL must match the CA certificate used by virtualnet/certs/cert.go.
 const ExampleDoHProvider = "https://www.example.com/dns-query"
 
+// DNSProxyIPv4Prefix is the prefix used for DNS proxy's namespaces.
+const DNSProxyIPv4Prefix = "100.115.92"
+
 // DigProxyIPRE is the regular expressions for DNS proxy IP inside dig output.
 var DigProxyIPRE = regexp.MustCompile(`SERVER: 100.115.92.\d+#53`)
 
 // ARCQueryRCodeRE is the regular expression to get the return code of ARC DNS query.
 // RCode output is in the form of: "rcode: No error (0)"
 var ARCQueryRCodeRE = regexp.MustCompile(`rcode: .* \(([0-9]+)\)`)
+
+// ARCNameserversRE is the regular expression to get ARC's R+ current nameservers.
+// The output is taken from ARC's `dumpsys wifi tools dns`:
+// ARC P: "... DnsAddresses: [100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010,] ... "
+// ARC R+: "... DnsAddresses: [ /100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010 ] ..."
+var ARCNameserversRE = regexp.MustCompile(`MojoLinkProperties:.*DnsAddresses: \[ ?(?:(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))?(?:,(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))*,? ?\]`)
 
 // GetClientString get the string representation of a DNS client.
 func GetClientString(c Client) string {

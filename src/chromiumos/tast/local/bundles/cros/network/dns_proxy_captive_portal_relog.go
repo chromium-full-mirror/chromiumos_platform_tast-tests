@@ -6,10 +6,13 @@ package network
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/dns"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network"
@@ -44,6 +47,13 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
+	// Start ARC.
+	a, err := arc.New(ctx, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to start ARC: ", err)
+	}
+	defer a.Close(cleanupCtx)
+
 	// Ensure connectivity is available.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return testexec.CommandContext(ctx, "/bin/ping", "-c1", "-w1", "8.8.8.8").Run()
@@ -56,6 +66,9 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 		return dns.DigMatch(ctx, dns.DigProxyIPRE, true)
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to verify system proxy: ", err)
+	}
+	if err := verifyARCNameservers(ctx, a); err != nil {
+		s.Error("Failed to verify ARC: ", err)
 	}
 
 	// Shill's captive portal detector works by probing various endpoints over HTTP and HTTPS.
@@ -76,7 +89,7 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add rules to block portal detector: ", err)
 	}
 	if err := mgr.RecheckPortal(ctx); err != nil {
-		s.Fatal("Failed to invoke RecheckPortal on shill")
+		s.Fatal("Failed to invoke RecheckPortal on shill: ", err)
 	}
 
 	// Verify the system proxy is not the current nameserver and name resolution works.
@@ -95,6 +108,13 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
+	// Start ARC.
+	a, err = arc.New(ctx, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to start ARC: ", err)
+	}
+	defer a.Close(cleanupCtx)
+
 	// Verify the system proxy is still not the current nameserver and name resolution works.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return dns.DigMatch(ctx, dns.DigProxyIPRE, false)
@@ -108,6 +128,9 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	if err := network.UnblockShillPortalDetector(ctx); err != nil {
 		s.Fatal("Failed to remove rules to unblock portal detector: ", err)
 	}
+	if err := mgr.RecheckPortal(ctx); err != nil {
+		s.Fatal("Failed to invoke RecheckPortal on shill: ", err)
+	}
 
 	// Verify the system proxy is the current nameserver and name resolution works.
 	// Give shill and dns-proxy sufficient time to respond to regaining connectivity.
@@ -116,4 +139,34 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to verify switchover to system proxy: ", err)
 	}
+	if err := verifyARCNameservers(ctx, a); err != nil {
+		s.Error("Failed to verify ARC: ", err)
+	}
+}
+
+// verifyARCNameservers verify that ARC's nameservers contains DNS proxy address.
+// The name servers are taken from MojoLinkProperties of ARC's `dumpsys wifi arc-networks`.
+func verifyARCNameservers(ctx context.Context, a *arc.ARC) error {
+	out, err := a.Command(ctx, "dumpsys", "wifi", "arc-networks").Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to get ARC networks")
+	}
+	matches := dns.ARCNameserversRE.FindAllStringSubmatch(string(out), -1)
+	if len(matches) == 0 {
+		return errors.New("empty name server")
+	}
+	for _, m := range matches {
+		f := false
+		// Index 0 contains the full match, start from index 1.
+		for i := 1; i < len(m); i++ {
+			if strings.Contains(m[i], dns.DNSProxyIPv4Prefix) {
+				f = true
+				break
+			}
+		}
+		if !f {
+			return errors.Errorf("invalid name server: %v", m)
+		}
+	}
+	return nil
 }
