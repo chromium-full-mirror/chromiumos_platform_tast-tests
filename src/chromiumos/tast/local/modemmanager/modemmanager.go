@@ -5,8 +5,9 @@
 // Package modemmanager provides D-Bus wrappers and utilities for modemmanager.
 package modemmanager
 
-// ModemManager1 DBus constants
+// ModemManager1 constants
 const (
+	// dbus constants
 	DBusModemmanagerPath                 = "/org/freedesktop/ModemManager1"
 	DBusModemmanagerService              = "org.freedesktop.ModemManager1"
 	DBusModemmanagerInterface            = "org.freedesktop.ModemManager1"
@@ -19,4 +20,6 @@ const (
 	DBusModemmanagerSignalInterface      = "org.freedesktop.ModemManager1.Modem.Signal"
 	DBusModemmanagerSimInterface         = "org.freedesktop.ModemManager1.Sim"
 	DBusModemmanagerSmsInterface         = "org.freedesktop.ModemManager1.Sms"
+	// JobName is the name of the Modem Manager process
+	JobName = "modemmanager"
 )
