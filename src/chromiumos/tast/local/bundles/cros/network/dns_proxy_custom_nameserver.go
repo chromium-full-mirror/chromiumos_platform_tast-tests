@@ -6,6 +6,7 @@ package network
 
 import (
 	"context"
+	"runtime"
 	"time"
 
 	"chromiumos/tast/common/testexec"
@@ -26,7 +27,7 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host", "arc", "dlc", "no_kernel_upstream"},
-		Data:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
+		Data:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false), digExecutable()},
 		Pre:          multivm.ArcCrostiniStartedWithDNSProxy(),
 		HardwareDeps: crostini.CrostiniStable,
 		Timeout:      5 * time.Minute,
@@ -39,6 +40,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	// Ensure plaintext query.
 	pre := s.PreValue().(*multivm.PreData)
 	cr := pre.Chrome
+	a := multivm.ARCFromPre(pre)
 	tconn := pre.TestAPIConn
 	if err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHOff, dns.GoogleDoHProvider); err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
@@ -51,21 +53,28 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 		s.Fatal("No connectivity: ", err)
 	}
 
+	p, err := dns.InstallDigInARC(ctx, a, s.DataPath(digExecutable()))
+	if err != nil {
+		s.Error("Failed to install dig in ARC: ", err)
+	}
+
 	// By default, host DNS queries work as-is.
-	// TODO(b/230686377, b/232882301) - Add Crostini and ARC
+	// TODO(b/232882301) - Add Crostini
 	tc := []dns.ProxyTestCase{
 		{Client: dns.System},
 		{Client: dns.User},
 		{Client: dns.Chrome},
+		{Client: dns.ARC},
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil, nil, dns.NewQueryOptions()); len(errs) > 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, dns.NewQueryOptions()); len(errs) > 0 {
 		s.Error("Failed initial DNS check: ", errs)
 	}
 
 	// Confirm that host queries to a different nameserver also work.
 	opts := dns.NewQueryOptions()
 	opts.Nameserver = "1.1.1.1"
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil, nil, opts); len(errs) > 0 {
+	opts.ARCDigPath = p
+	if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, opts); len(errs) > 0 {
 		s.Error("Failed nameserver confirmation check: ", errs)
 	}
 
@@ -83,10 +92,22 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 			tc[i].ExpectErr = true
 		}
 		opts.Domain = dns.RandDomain()
-		if errs := dns.TestQueryDNSProxy(ctx, tc, nil, nil, opts); len(errs) > 0 {
+		if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, opts); len(errs) > 0 {
 			s.Error("Failed nameserver verification: ", errs)
 		}
 	}); len(errs) > 0 {
 		s.Fatal("Failed to block DNS to nameserver: ", errs)
+	}
+}
+
+// digExecutable returns the dig executable name based on arch.
+func digExecutable() string {
+	switch runtime.GOARCH {
+	case "arm":
+		return "dig_arm"
+	case "arm64":
+		return "dig_arm64"
+	default:
+		return "dig_amd64"
 	}
 }

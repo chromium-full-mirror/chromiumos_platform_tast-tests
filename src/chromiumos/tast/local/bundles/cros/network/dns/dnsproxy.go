@@ -164,7 +164,6 @@ func newPlaintextDropRules(nss, ifs []string, dest string) []rule {
 	}
 	var rules []rule
 	r := rule{
-		chain:  "OUTPUT",
 		dest:   dest,
 		dport:  53,
 		target: "DROP",
@@ -173,6 +172,7 @@ func newPlaintextDropRules(nss, ifs []string, dest string) []rule {
 		r.ipc.v6 = v6
 		for _, p := range []string{"udp", "tcp"} {
 			r.proto = p
+			r.chain = "OUTPUT"
 			// Block dnsproxy namespaces.
 			for _, ns := range nss {
 				r.ipc.ns = ns
@@ -189,6 +189,13 @@ func newPlaintextDropRules(nss, ifs []string, dest string) []rule {
 			r.owner = "chronos"
 			rules = append(rules, r)
 			r.owner = ""
+			// Block forwarded traffic from ARC.
+			r.chain = "FORWARD"
+			for _, i := range ifs {
+				r.oif = i
+				rules = append(rules, r)
+				r.oif = ""
+			}
 		}
 	}
 	return rules

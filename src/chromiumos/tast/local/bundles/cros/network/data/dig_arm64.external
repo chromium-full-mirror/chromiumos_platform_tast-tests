@@ -1,0 +1,5 @@
+{
+    "sha256sum": "55b631d35fb38bbc0c575dfcf0ceaa6161aac79b06ef140757482d537fad40b3",
+    "size": 3672640,
+    "url": "gs://chromiumos-test-assets-public/tast/cros/network/dig_arm64_20221210"
+}

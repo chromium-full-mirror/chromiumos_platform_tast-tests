@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
@@ -84,6 +83,10 @@ const ExampleDoHProvider = "https://www.example.com/dns-query"
 
 // DigProxyIPRE is the regular expressions for DNS proxy IP inside dig output.
 var DigProxyIPRE = regexp.MustCompile(`SERVER: 100.115.92.\d+#53`)
+
+// ARCQueryRCodeRE is the regular expression to get the return code of ARC DNS query.
+// RCode output is in the form of: "rcode: No error (0)"
+var ARCQueryRCodeRE = regexp.MustCompile(`rcode: .* \(([0-9]+)\)`)
 
 // GetClientString get the string representation of a DNS client.
 func GetClientString(c Client) string {
@@ -246,9 +249,12 @@ func RandDomain() string {
 }
 
 // QueryOptions are provided to QueryDNS to configure the lookup query.
+// If ARCDigPath and Nameserver is not empty, ARC's query uses dig.
+// Otherwise, ARC will query through `dumpsys wifi tools dns`.
 type QueryOptions struct {
 	Domain     string
 	Nameserver string
+	ARCDigPath string
 }
 
 // NewQueryOptions returns a new options pre-populated with a random domain for testing.
@@ -280,17 +286,23 @@ func QueryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opt
 	case Crostini:
 		return cont.Command(ctx, append([]string{"dig"}, args...)...).Run()
 	case ARC:
+		// ARC does not support querying a specific nameserver.
+		// Use dig binary to do so.
+		if opts.ARCDigPath != "" && opts.Nameserver != "" {
+			return a.Command(ctx, opts.ARCDigPath, args...).Run()
+		}
 		out, err := a.Command(ctx, "dumpsys", "wifi", "tools", "dns", opts.Domain).Output()
 		if err != nil {
 			return errors.Wrap(err, "failed to do ARC DNS query")
 		}
-		// At least one IP response must be observed.
-		for _, l := range strings.Split(string(out), "\n") {
-			if net.ParseIP(strings.TrimSpace(l)) != nil {
+		if matches := ARCQueryRCodeRE.FindStringSubmatch(string(out)); matches != nil {
+			// Only NOERROR and NXDOMAIN are allowed.
+			if matches[1] == "0" || matches[1] == "3" {
 				return nil
 			}
+			return errors.New("failed to resolve domain, got errcode " + matches[1])
 		}
-		return errors.New("failed to resolve domain")
+		return errors.New("failed to resolve domain: " + string(out))
 	default:
 		return errors.New("unknown client")
 	}
@@ -326,6 +338,19 @@ func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, a *arc.ARC, con
 		}
 	}
 	return errs
+}
+
+// InstallDigInARC installs a statically-linked binary of dig inside ARC.
+// Returns the installed path of dig.
+func InstallDigInARC(ctx context.Context, a *arc.ARC, execPath string) (string, error) {
+	p, err := a.PushFileToTmpDir(ctx, execPath)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to push %q to tmpdir", execPath)
+	}
+	if err := a.Command(ctx, "chmod", "0755", p).Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrapf(err, "failed to change the permission of %q", p)
+	}
+	return p, nil
 }
 
 // InstallDigInContainer installs dig in container.
