@@ -7,6 +7,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/hwsec"
@@ -137,6 +138,34 @@ func EnsureChapsSlotsInitialized(ctx context.Context, chaps *pkcs11.Chaps) error
 		Timeout:  30 * time.Second,
 		Interval: time.Second,
 	})
+}
+
+// U2fDevicePath waits until the integrated u2f device path exists, and
+// returns it.
+func U2fDevicePath(ctx context.Context, cmd *hwsecremote.CmdRunnerRemote) (string, error) {
+	const (
+		VID = "18D1"
+		PID = "502C"
+	)
+
+	lsCmd := fmt.Sprintf("ls /sys/bus/hid/devices/*:%s:%s.*/hidraw", VID, PID)
+	var dev string
+	err := testing.Poll(ctx, func(context.Context) error {
+		data, err := cmd.Run(ctx, "sh", "-c", lsCmd)
+		if err != nil {
+			return errors.Wrap(err, "failed to list files")
+		}
+		dev = strings.TrimSpace(string(data))
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  30 * time.Second,
+		Interval: 100 * time.Millisecond,
+	})
+
+	if err != nil {
+		return "", errors.Wrap(err, "failed to find a HID device")
+	}
+	return "/dev/" + dev, nil
 }
 
 // CopyFilesToRemote is a convenient helper to call u2fd.CopyFilesToRemote

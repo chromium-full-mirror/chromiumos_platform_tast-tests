@@ -6,7 +6,6 @@ package hwsec
 
 import (
 	"context"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
@@ -193,8 +192,11 @@ func WebauthnAttestation(ctx context.Context, s *testing.State) {
 			} else {
 				util.SetU2fdFlags(ctx, helper, true, false, false)
 			}
-			// Wait for u2fd to fully restart.
-			testing.Sleep(ctx, 3*time.Second)
+			// Wait for u2fd to create the HID device.
+			_, err = util.U2fDevicePath(ctx, cmdRunner)
+			if err != nil {
+				s.Fatal("Failed to get u2f device path: ", err)
+			}
 			if _, err := cr.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
 				UserVerification:  webauthnpb.UserVerification_DISCOURAGED,
 				AuthenticatorType: webauthnpb.AuthenticatorType_CROSS_PLATFORM,

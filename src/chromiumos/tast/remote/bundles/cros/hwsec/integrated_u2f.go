@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -159,46 +158,16 @@ func IntegratedU2F(ctx context.Context, s *testing.State) {
 			if err := util.SetU2fdFlags(ctx, helper, tc.u2f, tc.g2f, tc.userKeys); err != nil {
 				s.Fatal("Failed to set u2fd flags: ", err)
 			}
-			device, err := u2fDevicePath(ctx, cmdRunner)
+			device, err := util.U2fDevicePath(ctx, cmdRunner)
 			if err != nil {
 				s.Fatal("Failed to get u2f device path: ", err)
 			}
-
-			//  Wait for system become stable.
-			testing.Sleep(ctx, 3*time.Second)
 
 			if err := runU2Test(ctx, s.DUT(), device, pbHelper); err != nil {
 				s.Fatal("U2F test filed: ", err)
 			}
 		})
 	}
-}
-
-// u2fDevicePath returns the integrated u2f device path.
-func u2fDevicePath(ctx context.Context, cmd *hwsecremote.CmdRunnerRemote) (string, error) {
-	const (
-		VID = "18D1"
-		PID = "502C"
-	)
-
-	lsCmd := fmt.Sprintf("ls /sys/bus/hid/devices/*:%s:%s.*/hidraw", VID, PID)
-	var dev string
-	err := testing.Poll(ctx, func(context.Context) error {
-		data, err := cmd.Run(ctx, "sh", "-c", lsCmd)
-		if err != nil {
-			return errors.Wrap(err, "failed to list files")
-		}
-		dev = strings.TrimSpace(string(data))
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  30 * time.Second,
-		Interval: time.Second,
-	})
-
-	if err != nil {
-		return "", errors.Wrap(err, "failed to find hid device")
-	}
-	return "/dev/" + dev, nil
 }
 
 // runU2Test runs the U2FTest with the U2F device.

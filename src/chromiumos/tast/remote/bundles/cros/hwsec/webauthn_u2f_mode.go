@@ -159,6 +159,11 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 	util.SetU2fdFlags(ctx, helper, true, true, false)
 	// Clean up the flags in u2fd after the tests finished.
 	defer util.SetU2fdFlags(ctx, helper, false, false, false)
+	// Wait for u2fd to create the HID device.
+	_, err = util.U2fDevicePath(ctx, cmdRunner)
+	if err != nil {
+		s.Fatal("Failed to get u2f device path: ", err)
+	}
 
 	passwordAuthCallback := func(ctx context.Context) error {
 		// Type password into ChromeOS WebAuthn dialog.
