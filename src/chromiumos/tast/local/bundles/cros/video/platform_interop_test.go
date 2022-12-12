@@ -19,14 +19,15 @@ import (
 type codecAPI string
 
 const (
-	software     codecAPI = "sw"
-	vaapi        codecAPI = "vaapi"
-	v4l2Stateful codecAPI = "v4l2sf"
+	software      codecAPI = "sw"
+	vaapi         codecAPI = "vaapi"
+	v4l2Stateful  codecAPI = "v4l2sf"
+	v4l2Stateless codecAPI = "v4l2sl"
 	// TODO(b/251256531): Add other codecs and APIs.
 )
 
 func isHardwareAPI(api codecAPI) bool {
-	return api == vaapi || api == v4l2Stateful
+	return api == vaapi || api == v4l2Stateful || api == v4l2Stateless
 }
 
 func isSoftwareAPI(api codecAPI) bool {
@@ -80,6 +81,8 @@ func getDecoderBinaryAndParams(decoder codecAPI, codec string) (binary, paramGen
 		}
 	case v4l2Stateful:
 		return "v4l2_stateful_decoder", "v4l2StatefulDecodeArgs"
+	case v4l2Stateless:
+		return "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder", "v4l2StatelessDecodeArgs"
 	}
 	return
 }
@@ -129,6 +132,9 @@ func getHardwareDeps(decoder codecAPI) string {
 	if decoder == v4l2Stateful {
 		return "hwdep.SupportsV4L2StatefulVideoDecoding()"
 	}
+	if decoder == v4l2Stateless {
+		return "hwdep.SupportsV4L2StatelessVideoDecoding()"
+	}
 	return ""
 }
 
@@ -164,7 +170,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 
 	var codecs = []string{"vp8", "vp9", "h264"}
 	var encoders = []codecAPI{software, vaapi, v4l2Stateful}
-	var decoders = []codecAPI{software, vaapi, v4l2Stateful}
+	var decoders = []codecAPI{software, vaapi, v4l2Stateful, v4l2Stateless}
 	for _, codec := range codecs {
 		for _, encoder := range encoders {
 			for _, decoder := range decoders {
@@ -174,6 +180,11 @@ func TestPlatformInteropParamParams(t *testing.T) {
 				}
 				if isMixedHardwareAPIs(decoder, encoder) {
 					// Skip mixing HW APIs.
+					continue
+				}
+				// TODO(b/251256531): Enable this once H.264 v4l2_stateless_decoder
+				// can produce MD5SUM values, see b/234752983.
+				if decoder == v4l2Stateless && codec == "h264" {
 					continue
 				}
 
