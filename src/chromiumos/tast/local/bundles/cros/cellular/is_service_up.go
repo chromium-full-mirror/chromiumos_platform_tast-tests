@@ -16,16 +16,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSim,
+		Func:         IsServiceUp,
 		Desc:         "Verifies that Cellular Device and Service properties match ModemManager SIM properties",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
 		Fixture:      "cellular",
 	})
 }
 
-func ShillCellularSim(ctx context.Context, s *testing.State) {
+func IsServiceUp(ctx context.Context, s *testing.State) {
 	// Gather ModemManager properties
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {

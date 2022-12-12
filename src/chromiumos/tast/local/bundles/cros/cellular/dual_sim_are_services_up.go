@@ -25,16 +25,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSimSlots,
+		Func:         DualSimAreServicesUp,
 		Desc:         "Verifies that Shill receives SimSlot information from ModemManager and can set the primary sim slot",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
 		Fixture:      "cellular",
 	})
 }
 
-func ShillCellularSimSlots(ctx context.Context, s *testing.State) {
+func DualSimAreServicesUp(ctx context.Context, s *testing.State) {
 	// The test only checks that shill creates a cellular service for the pSIM when the eSIM slot is active.
 	// Shill doesn't create a service for the eSIM if it is on the inactive slot since the service is not usable. See go/dual-sim-mbim
 	// If Chrome wishes to create a service for the inactive eSIM, Chrome calls Hermes to switch slots, enables any profiles, before shill creates a service for the eSIM.

@@ -23,16 +23,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSimConnect,
+		Func:         ShillConnectToSecondarySim,
 		Desc:         "Verifies that Shill can connect to a service in a different slot",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "stevenjb@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
 		Fixture:      "cellular",
 	})
 }
 
-func ShillCellularSimConnect(ctx context.Context, s *testing.State) {
+func ShillConnectToSecondarySim(ctx context.Context, s *testing.State) {
 	// Start the test on the eSIM, and connect to the pSIM service
 	euicc, _, err := hermes.GetEUICC(ctx, false)
 	if err != nil {
