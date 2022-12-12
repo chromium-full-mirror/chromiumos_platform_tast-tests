@@ -30,6 +30,7 @@ type MountError uint32
 // system_api/dbus/cros-disks/dbus-constants.h
 const (
 	MountErrorNone               MountError = 0
+	MountErrorInvalidArgument    MountError = 3
 	MountErrorInvalidPath        MountError = 4
 	MountErrorPathNotMounted     MountError = 6
 	MountErrorMountProgramFailed MountError = 12
@@ -43,6 +44,8 @@ func (e MountError) Error() string {
 	switch e {
 	case MountErrorNone:
 		return "MountErrorNone"
+	case MountErrorInvalidArgument:
+		return "MountErrorInvalidArgument"
 	case MountErrorInvalidPath:
 		return "MountErrorInvalidPath"
 	case MountErrorPathNotMounted:

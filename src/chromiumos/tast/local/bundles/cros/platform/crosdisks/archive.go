@@ -311,6 +311,13 @@ func testSJISInArchives(ctx context.Context, s *testing.State, cd *crosdisks.Cro
 	if err := VerifyArchiveContent(ctx, cd, filepath.Join(dataDir, "SJIS Bug 846195.zip"), []string{"encoding=libzip"}, expectedContent); err != nil {
 		s.Error("Test failed with encoding=libzip: ", err)
 	}
+
+	// crbug.com/1398994: If the encoding contains invalid characters, mounting
+	// the archive fails.
+	if err := verifyMountStatus(ctx, cd, filepath.Join(dataDir, "SJIS Bug 846195.zip"), ".zip", []string{"encoding=Shift_JIS,fsname=exploit"}, crosdisks.MountErrorInvalidArgument); err != nil {
+		s.Error("Unexpected status when mounting archive with invalid encoding parameter: ", err)
+	}
+
 }
 
 func testSymlinksDisabledInArchives(ctx context.Context, s *testing.State, cd *crosdisks.CrosDisks, dataDir string) {
