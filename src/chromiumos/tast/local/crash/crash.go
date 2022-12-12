@@ -104,7 +104,7 @@ const (
 	JavaScriptStackExt = ".js_stack"
 
 	// ChromeVerboseConsentFlags provides the flags to enable verbose logging about consent.
-	ChromeVerboseConsentFlags = "--vmodule=stats_reporting_controller=1,autotest_private_api=1"
+	ChromeVerboseConsentFlags = "--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1"
 
 	// FilterInIgnoreAllCrashes is a value to put in the filter-in file if
 	// you wish to ignore all crashes that happen during a test.

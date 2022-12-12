@@ -82,8 +82,10 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 	//    state OWNERSHIP_NONE), there is a brief time after ownership is
 	//    taken where consent is reset to false. See
 	//    https://crbug.com/1041062#c23
+	waited := false
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if _, err := os.Stat("/var/lib/devicesettings/owner.key"); err != nil {
+			waited = true
 			if os.IsNotExist(err) {
 				return err
 			}
@@ -92,6 +94,15 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 		return nil
 	}, nil); err != nil {
 		return errors.Wrap(err, "timed out while waiting for device ownership")
+	}
+	if waited {
+		// Wait for chrome to catch up with the newly written policy.
+		// This is hacky, but empirically, it resolves flakiness on the crash.User.*_crasher_{no,real}_consent tests.
+		// Ideally, we would find a better condition to wait for in the testing.Poll above, but we cannot directly
+		// observe Chrome's internal state.
+		if err := testing.Sleep(ctx, time.Second); err != nil {
+			testing.ContextLogf(ctx, "Failed to sleep: %v. Ignoring", err)
+		}
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)

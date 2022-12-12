@@ -738,7 +738,7 @@ func User(ctx context.Context, s *testing.State) {
 	var cr *chrome.Chrome
 	if consentType == localcrash.RealConsent {
 		var err error
-		cr, err = chrome.New(ctx)
+		cr, err = chrome.New(ctx, chrome.ExtraArgs(localcrash.ChromeVerboseConsentFlags))
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}
