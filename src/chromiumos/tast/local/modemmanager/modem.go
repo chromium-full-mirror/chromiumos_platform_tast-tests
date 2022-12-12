@@ -490,23 +490,6 @@ func EnsureEnabled(ctx context.Context, modem *Modem) error {
 
 // EnsureDisabled polls for modem state property to be disabled.
 func EnsureDisabled(ctx context.Context, modem *Modem) error {
-	// poll for expected power state as powered state change can take time
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isPowered, err := modem.IsPowered(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to read modem powered state")
-		}
-		if isPowered {
-			return errors.New("still modem not in low powered state")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  5 * time.Second,
-		Interval: 200 * time.Millisecond,
-	}); err != nil {
-		return errors.Wrap(err, "failed to verify modem power state")
-	}
-
 	// poll for expected modem state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		isEnabled, err := modem.IsEnabled(ctx)
