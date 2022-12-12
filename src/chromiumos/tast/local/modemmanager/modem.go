@@ -575,7 +575,7 @@ func EnsureRegistered(ctx context.Context, modem, simpleModem *Modem) error {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  60 * time.Second,
+		Timeout:  20 * time.Second,
 		Interval: 1 * time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "failed to verify modem registration state")
