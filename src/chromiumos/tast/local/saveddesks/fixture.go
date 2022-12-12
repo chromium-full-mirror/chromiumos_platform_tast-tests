@@ -29,6 +29,7 @@ const PreTestTimeout = 15 * time.Second
 const PostTestTimeout = ResetTimeout + 20*time.Second
 
 func init() {
+	// savedDesksEnableWithoutArc is a fixture that enables saved desks functionality without ARC.
 	testing.AddFixture(&testing.Fixture{
 		Name: "savedDesksEnableWithoutArc",
 		Desc: "Saved desks features enabled without ARC",
@@ -64,6 +65,50 @@ func init() {
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// savedDesksCUJEnableWithoutArc is a fixture that enables saved desks CUJ functionality.
+	testing.AddFixture(&testing.Fixture{
+		Name: "savedDesksCUJEnableWithoutArc",
+		Desc: "Saved desks features enabled without ARC",
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Contacts: []string{
+			"zhumatthew@google.com",
+			"cros-commercial-productivity-eng@google.com",
+		},
+		Impl: bootedWithFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
+				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// savedDesksCUJEnableWithArc is a fixture that enables saved desks CUJ functionality alongside ARC.
+	testing.AddFixture(&testing.Fixture{
+		Name: "savedDesksCUJEnableWithArc",
+		Desc: "Saved desks features enabled with ARC",
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Contacts: []string{
+			"zhumatthew@google.com",
+			"cros-commercial-productivity-eng@google.com",
+		},
+		Impl: bootedWithARCFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
+				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,

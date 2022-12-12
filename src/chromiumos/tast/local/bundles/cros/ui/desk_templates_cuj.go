@@ -46,11 +46,11 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Fixture: "savedDesksEnableWithoutArc",
+			Fixture: "savedDesksCUJEnableWithoutArc",
 			Val:     []apps.App{apps.FilesSWA},
 		}, {
 			Name:              "arc_enabled",
-			Fixture:           "savedDesksEnableWithArc",
+			Fixture:           "savedDesksCUJEnableWithArc",
 			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
