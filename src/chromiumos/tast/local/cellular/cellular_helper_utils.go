@@ -7,6 +7,7 @@ package cellular
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -28,58 +29,101 @@ var (
 	deviceVariant = ""
 )
 
+// ModemType is the type of modem used in a device
+type ModemType uint32
+
+// All the bearer IP families
+const (
+	ModemTypeL850 ModemType = iota
+	ModemTypeNL668
+	ModemTypeFM350
+	ModemTypeFM101
+	ModemTypeSC7180 // trogdor
+	ModemTypeSC7280 // herobrine
+)
+
 type deviceInfo struct {
 	ModemVariant string
 	Board        string
+	Modem        ModemType
 }
 
 var (
 	knownVariants = map[string]deviceInfo{
-		"anahera_l850":     {"anahera_l850", "brya"},
-		"brya_fm350":       {"brya_fm350", "brya"},
-		"brya_l850":        {"brya_l850", "brya"},
-		"crota_fm101":      {"crota_fm101", "brya"},
-		"primus_l850":      {"primus_l850", "brya"},
-		"redrix_fm350":     {"redrix_fm350", "brya"},
-		"redrix_l850":      {"redrix_l850", "brya"},
-		"vell_fm350":       {"vell_fm350", "brya"},
-		"krabby_fm101":     {"krabby_fm101", "corsola"},
-		"rusty_fm101":      {"rusty_fm101", "corsola"},
-		"steelix_fm101":    {"steelix_fm101", "corsola"},
-		"beadrix_nl668am":  {"beadrix_nl668am", "dedede"},
-		"boten":            {"boten", "dedede"},
-		"bugzzy_l850gl":    {"bugzzy_l850gl", "dedede"},
-		"bugzzy_nl668am":   {"bugzzy_nl668am", "dedede"},
-		"cret":             {"cret", "dedede"},
-		"drawper_l850gl":   {"drawper_l850gl", "dedede"},
-		"kracko":           {"kracko", "dedede"},
-		"metaknight":       {"metaknight", "dedede"},
-		"sasuke":           {"sasuke", "dedede"},
-		"sasuke_nl668am":   {"sasuke_nl668am", "dedede"},
-		"sasukette":        {"sasukette", "dedede"},
-		"storo360_l850gl":  {"storo360_l850gl", "dedede"},
-		"storo360_nl668am": {"storo360_nl668am", "dedede"},
-		"storo_l850gl":     {"storo_l850gl", "dedede"},
-		"storo_nl668am":    {"storo_nl668am", "dedede"},
-		"guybrush360_l850": {"guybrush360_l850", "guybrush"},
-		"guybrush_fm350":   {"guybrush_fm350", "guybrush"},
-		"nipperkin":        {"nipperkin", "guybrush"},
-		"evoker":           {"evoker", "herobrine"},
-		"herobrine":        {"herobrine", "herobrine"},
-		"hoglin":           {"hoglin", "herobrine"},
-		"piglin":           {"piglin", "herobrine"},
-		"villager":         {"villager", "herobrine"},
-		"gooey":            {"gooey", "keeby"},
-		"craask_fm101":     {"craask_fm101", "nissa"},
-		"nivviks_fm101":    {"nivviks_fm101", "nissa"},
-		"pujjo":            {"pujjo", "nissa"},
-		"skyrim_fm101":     {"skyrim_fm101", "skyrim"},
-		"volteer":          {"volteer", "volteer"},
-		"volteer2":         {"volteer2", "volteer"},
-		"vilboz":           {"vilboz", "zork"},
-		"vilboz360":        {"vilboz360", "zork"},
+		"anahera_l850":     {"anahera_l850", "brya", ModemTypeL850},
+		"brya_fm350":       {"brya_fm350", "brya", ModemTypeFM350},
+		"brya_l850":        {"brya_l850", "brya", ModemTypeL850},
+		"crota_fm101":      {"crota_fm101", "brya", ModemTypeFM101},
+		"primus_l850":      {"primus_l850", "brya", ModemTypeL850},
+		"redrix_fm350":     {"redrix_fm350", "brya", ModemTypeFM350},
+		"redrix_l850":      {"redrix_l850", "brya", ModemTypeL850},
+		"vell_fm350":       {"vell_fm350", "brya", ModemTypeFM350},
+		"krabby_fm101":     {"krabby_fm101", "corsola", ModemTypeFM101},
+		"rusty_fm101":      {"rusty_fm101", "corsola", ModemTypeFM101},
+		"steelix_fm101":    {"steelix_fm101", "corsola", ModemTypeFM101},
+		"beadrix_nl668am":  {"beadrix_nl668am", "dedede", ModemTypeNL668},
+		"boten":            {"boten", "dedede", ModemTypeL850},
+		"bugzzy_l850gl":    {"bugzzy_l850gl", "dedede", ModemTypeL850},
+		"bugzzy_nl668am":   {"bugzzy_nl668am", "dedede", ModemTypeNL668},
+		"cret":             {"cret", "dedede", ModemTypeL850},
+		"drawper_l850gl":   {"drawper_l850gl", "dedede", ModemTypeL850},
+		"kracko":           {"kracko", "dedede", ModemTypeNL668},
+		"metaknight":       {"metaknight", "dedede", ModemTypeL850},
+		"sasuke":           {"sasuke", "dedede", ModemTypeL850},
+		"sasuke_nl668am":   {"sasuke_nl668am", "dedede", ModemTypeNL668},
+		"sasukette":        {"sasukette", "dedede", ModemTypeL850},
+		"storo360_l850gl":  {"storo360_l850gl", "dedede", ModemTypeL850},
+		"storo360_nl668am": {"storo360_nl668am", "dedede", ModemTypeNL668},
+		"storo_l850gl":     {"storo_l850gl", "dedede", ModemTypeL850},
+		"storo_nl668am":    {"storo_nl668am", "dedede", ModemTypeNL668},
+		"guybrush360_l850": {"guybrush360_l850", "guybrush", ModemTypeL850},
+		"guybrush_fm350":   {"guybrush_fm350", "guybrush", ModemTypeFM350},
+		"nipperkin":        {"nipperkin", "guybrush", ModemTypeL850},
+		"evoker":           {"evoker", "herobrine", ModemTypeSC7280},
+		"herobrine":        {"herobrine", "herobrine", ModemTypeSC7280},
+		"hoglin":           {"hoglin", "herobrine", ModemTypeSC7280},
+		"piglin":           {"piglin", "herobrine", ModemTypeSC7280},
+		"villager":         {"villager", "herobrine", ModemTypeSC7280},
+		"gooey":            {"gooey", "keeby", ModemTypeL850},
+		"dood":             {"dood", "octopus", ModemTypeL850},
+		"droid":            {"droid", "octopus", ModemTypeL850},
+		"fleex":            {"fleex", "octopus", ModemTypeL850},
+		"garg":             {"garg", "octopus", ModemTypeL850},
+		"craask_fm101":     {"craask_fm101", "nissa", ModemTypeFM101},
+		"nivviks_fm101":    {"nivviks_fm101", "nissa", ModemTypeFM101},
+		"pujjo_fm101":      {"pujjo_fm101", "nissa", ModemTypeFM101},
+		"arcada":           {"arcada", "sarien", ModemTypeL850},
+		"sarien":           {"sarien", "sarien", ModemTypeL850},
+		"coachz":           {"coachz", "strongbad", ModemTypeSC7180},
+		"quackingstick":    {"quackingstick", "strongbad", ModemTypeSC7180},
+		"kingoftown":       {"kingoftown", "trogdor", ModemTypeSC7180},
+		"lazor":            {"kingoftown", "trogdor", ModemTypeSC7180},
+		"limozeen":         {"kingoftown", "trogdor", ModemTypeSC7180},
+		"pazquel":          {"kingoftown", "trogdor", ModemTypeSC7180},
+		"skyrim_fm101":     {"skyrim_fm101", "skyrim", ModemTypeFM101},
+		"vilboz":           {"vilboz", "zork", ModemTypeNL668},
+		"vilboz360":        {"vilboz360", "zork", ModemTypeL850},
 	}
 )
+
+func (e ModemType) String() string {
+	switch e {
+	case ModemTypeL850:
+		return "L850"
+	case ModemTypeNL668:
+		return "NL668"
+	case ModemTypeFM350:
+		return "FM350"
+	case ModemTypeFM101:
+		return "FM101"
+	case ModemTypeSC7180:
+		return "SC7180"
+	case ModemTypeSC7280:
+		return "SC7280"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
 
 func assignLastIntValueAndDropKey(d LabelMap, to *int, key string) LabelMap {
 	if v, ok := getLastIntValue(d, key); ok {
@@ -360,4 +404,18 @@ func RestartModemManager(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// TagKnownBugOnModemType adds a tag to the error code if any of the |modems| matches the DUT's Modem type.
+func TagKnownBugOnModemType(ctx context.Context, errIn error, bugNumber string, modems []ModemType) error {
+	dutVariant, err := GetDeviceVariant(ctx)
+	device, ok := knownVariants[dutVariant]
+	if err == nil && ok {
+		for _, modem := range modems {
+			if device.Modem == modem {
+				return errors.Wrapf(errIn, "known bug on modem: %q bug: %q", modem, bugNumber)
+			}
+		}
+	}
+	return errIn
 }
