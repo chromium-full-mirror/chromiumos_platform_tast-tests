@@ -39,12 +39,16 @@ func init() {
 		Data:         []string{constants.LockscreenWallpaperFileName},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func LockscreenWallpaper(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	// Using fixture may leave the DUT in a locked state that affects the tests
+	// that follow in the same fixture.
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
