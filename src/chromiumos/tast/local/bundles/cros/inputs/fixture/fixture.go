@@ -37,6 +37,7 @@ const (
 	guestLogin chromeOpts = iota
 	gaiaLogin
 	assistMultiWord
+	autocorrectToggle
 	diacriticsOnPhysicalKeyboardLongpress
 	virtualKeyboardMultitouch
 )
@@ -156,7 +157,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh),
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -336,7 +337,7 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros),
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -507,6 +508,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.GuestLogin())
 		case gaiaLogin:
 			opts = append(opts, chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+		case autocorrectToggle:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=AutocorrectToggle"))
 		case assistMultiWord:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AssistMultiWord"))
 		case diacriticsOnPhysicalKeyboardLongpress:

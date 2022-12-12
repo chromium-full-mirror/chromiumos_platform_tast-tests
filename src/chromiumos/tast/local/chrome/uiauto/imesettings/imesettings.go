@@ -39,7 +39,7 @@ const (
 	AutoCapitalization      settingOption = "Auto-capitalization"
 	ShowInputOptionsInShelf settingOption = "Show input options in the shelf"
 	KoreanKeyboardLayout    settingOption = "Korean keyboard layout"
-	VKAutoCorrection        settingOption = "Auto-correction"
+	AutoCorrection          settingOption = "Auto-correction"
 	SpellingGrammarCheck    settingOption = "Spelling and grammar check"
 	SpellCheck              settingOption = "Spell check"
 )
@@ -162,7 +162,6 @@ func (i *IMESettings) AddCustomizedSpellCheck(cr *chrome.Chrome, kb *input.Keybo
 			i.WaitUntilExists(deleteWordButton),
 		)(ctx)
 	}
-
 }
 
 // RemoveCustomizedSpellCheck removes customized word from spelling check dictionary by clicking
@@ -187,18 +186,19 @@ func (i *IMESettings) ChangeKoreanKeyboardLayout(cr *chrome.Chrome, expected str
 	}
 }
 
-// setAutoCorrection sets the 'Auto-correction' of PK or VK setting to a specific value.
-func (i *IMESettings) setAutoCorrection(cr *chrome.Chrome, isVK bool, expected string) uiauto.Action {
-	// VK and PK setting use exactly the same name.
-	// Use index to find the option since impossible to unique identify VK setting.
-	index := 0
-	if isVK {
-		index = 1
+// setPKAutoCorrection sets the 'Auto-correction' of PK setting to a specific
+// value.
+func (i *IMESettings) setPKAutoCorrection(cr *chrome.Chrome, expected bool) uiauto.Action {
+	return func(ctx context.Context) error {
+		// TODO(b/261653159): This only works for PK at the moment, if this function
+		// is used for vk in the future as well, consider updating
+		// IsToggleOptionEnabled to not always match first result.
+		if isEnabled, err := i.IsToggleOptionEnabled(ctx, cr, string(AutoCorrection)); err != nil {
+			return err
+		} else if isEnabled == expected {
+			return nil
+		}
+		optionFinder := nodewith.Name(string(AutoCorrection)).First()
+		return i.LeftClick(optionFinder)(ctx)
 	}
-	optionFinder := nodewith.Name(string(VKAutoCorrection)).Nth(index)
-	settingFinder := nodewith.Name(expected).Role(role.ListBoxOption)
-	return uiauto.Combine("set drop down option",
-		i.LeftClick(optionFinder),
-		i.LeftClick(settingFinder),
-	)
 }

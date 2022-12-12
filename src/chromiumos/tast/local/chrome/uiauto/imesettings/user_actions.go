@@ -158,31 +158,17 @@ func SetGlideTyping(uc *useractions.UserContext, im ime.InputMethod, isEnabled b
 }
 
 // AutoCorrectionLevel describes the auto correction level of an input method.
-// The value exactly should exactly match the string displayed in IME setting page.
-type AutoCorrectionLevel string
+type AutoCorrectionLevel bool
 
 // Available auto correction levels.
 const (
-	AutoCorrectionOff         AutoCorrectionLevel = "Off"
-	AutoCorrectionModest                          = "Modest"
-	AutoCorrectionProgressive                     = "Progressive"
+	AutoCorrectionOff AutoCorrectionLevel = false
+	AutoCorrectionOn                      = true
 )
 
-// SetVKAutoCorrection returns a user action to change 'On-screen keyboard Auto-correction' setting.
-func SetVKAutoCorrection(uc *useractions.UserContext, im ime.InputMethod, acLevel AutoCorrectionLevel) uiauto.Action {
-	return setAutoCorrection(uc, im, true, acLevel)
-}
-
-// SetPKAutoCorrection returns a user action to change 'Physical keyboard Auto-correction' setting.
+// SetPKAutoCorrection sets the PK auto-correction toggle to On or Off as required.
 func SetPKAutoCorrection(uc *useractions.UserContext, im ime.InputMethod, acLevel AutoCorrectionLevel) uiauto.Action {
-	return setAutoCorrection(uc, im, false, acLevel)
-}
-
-func setAutoCorrection(uc *useractions.UserContext, im ime.InputMethod, isVK bool, acLevel AutoCorrectionLevel) uiauto.Action {
-	actionName := fmt.Sprintf("Set PK auto-correction level to %q", acLevel)
-	if isVK {
-		actionName = fmt.Sprintf("Set VK auto-correction level to %q", acLevel)
-	}
+	actionName := fmt.Sprintf("Set PK auto-correction level to %t", acLevel)
 
 	action := func(ctx context.Context) error {
 		setting, err := LaunchAtInputsSettingsPage(ctx, uc.TestAPIConn(), uc.Chrome())
@@ -191,7 +177,7 @@ func setAutoCorrection(uc *useractions.UserContext, im ime.InputMethod, isVK boo
 		}
 		return uiauto.Combine(actionName,
 			setting.OpenInputMethodSetting(uc.TestAPIConn(), im),
-			setting.setAutoCorrection(uc.Chrome(), isVK, string(acLevel)),
+			setting.setPKAutoCorrection(uc.Chrome(), bool(acLevel)),
 			// TODO(b/157686038) A better solution to identify decoder status.
 			// Decoder works async in returning status to frontend IME and self loading.
 			uiauto.Sleep(5*time.Second),

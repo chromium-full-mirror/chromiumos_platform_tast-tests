@@ -80,7 +80,7 @@ func PhysicalKeyboardAutocorrectAccentKey(ctx context.Context, s *testing.State)
 	// Performing Install -> Setting -> Activate can save the wait time (15s) to speed up testing.
 	if err := uiauto.NamedCombine("set current input method to: %q with PK autocorrect",
 		inputMethod.Install(tconn),
-		imesettings.SetPKAutoCorrection(uc, inputMethod, imesettings.AutoCorrectionModest),
+		imesettings.SetPKAutoCorrection(uc, inputMethod, imesettings.AutoCorrectionOn),
 		inputMethod.Activate(tconn),
 	)(ctx); err != nil {
 		s.Fatalf("Failed to set current input method to %q: %v", inputMethod, err)
