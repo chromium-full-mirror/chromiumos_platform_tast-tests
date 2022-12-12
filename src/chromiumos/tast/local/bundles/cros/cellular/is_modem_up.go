@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Verifies that a modem is available",
 		Contacts:     []string{"chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_run_isolated"},
 		Fixture:      "cellular",
 		Timeout:      3 * time.Minute,
 	})
