@@ -115,7 +115,7 @@ func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
 	cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
 	cr, err := chrome.New(
 		ctx,
-		chrome.KeepState(),     // to avoid resetings TPM
+		chrome.KeepState(),     // to avoid resetting TPM
 		chrome.FakeLogin(cred), // to use the same user as certs are installed for
 	)
 	if err != nil {
@@ -174,16 +174,38 @@ func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for VPN connected automatically: ", err)
 	}
 
+	// Stop the VPN server before restarting ui, otherwise cryptohome will enter a
+	// strange state on some boards (e.g., brya).
+	if err := conn.Server.Exit(ctx); err != nil {
+		s.Fatal("Failed to stop VPN server before logout user: ", err)
+	}
+
 	// Restart UI to logout.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to restart ui: ", err)
 	}
 
+	// Start the VPN server again. Use vpn.Connection without setting up the
+	// service to set up the server only. This code can be refactored once
+	// b/257379393 is done.
+	vpnServer, err := vpn.NewConnectionWithEnvs(ctx, config, testEnv.BaseServer, nil)
+	if err != nil {
+		s.Fatal("Failed to prepare VPN server after login again: ", err)
+	}
+	if err := vpnServer.SetUpWithoutService(ctx); err != nil {
+		s.Fatal("Failed to setup VPN server after login again: ", err)
+	}
+	defer func() {
+		if err := vpnServer.Cleanup(cleanupCtx); err != nil {
+			s.Fatal("Failed to stop VPN server after the test: ", err)
+		}
+	}()
+
 	// Re-login to Chrome.
 	cr, err = chrome.New(
 		ctx,
 		chrome.CustomLoginTimeout(chrome.ManagedUserLoginTimeout),
-		chrome.KeepState(),     // to avoid resetings TPM
+		chrome.KeepState(),     // to avoid resetting TPM
 		chrome.FakeLogin(cred), // to use the same user as certs are installed for
 	)
 	if err != nil {

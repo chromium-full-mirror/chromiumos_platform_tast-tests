@@ -68,7 +68,8 @@ func (n *serverRunner) Startup(ctx context.Context) (string, error) {
 	netnsIP := addrs.IPv4Addr.String()
 
 	for _, rootdir := range n.netRootDirectories {
-		if err := os.Mkdir(n.virtualNetEnv.ChrootPath(rootdir), os.ModePerm); err != nil {
+		// Use MkdirAll to ignore errors when the path already exists.
+		if err := os.MkdirAll(n.virtualNetEnv.ChrootPath(rootdir), os.ModePerm); err != nil {
 			return "", errors.Wrapf(err, "failed to create root dir %s inside chroot", rootdir)
 		}
 	}
