@@ -13,12 +13,23 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
+
+// searchAutocompleteTestCase describes modes in which the launcher UI can be
+// shown, and by which launcher test should generally be parameterized.
+// It additionally provides a search query and the expected results.
+// Use a struct because it makes the individual test cases more readable.
+type searchAutocompleteTestCase struct {
+	TabletMode             bool
+	searchKeyword          string
+	category               string
+	result                 string
+	expectedSearchBoxText  string
+	expectedGhostGhostText string
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -30,28 +41,51 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"yulunwu@chromium.org",
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name:    "clamshell_mode",
+			Name:    "clamshell_mode_joe_bide",
 			Fixture: "chromeLoggedInExtendedAutocomplete",
-			Val:     launcher.TestCase{TabletMode: false},
+			Val: searchAutocompleteTestCase{TabletMode: false,
+				searchKeyword:          "Joe Bide",
+				category:               "Best Match , search result category",
+				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
+				expectedSearchBoxText:  "Joe Biden",
+				expectedGhostGhostText: "Search and Assistant",
+			},
 		}, {
-			Name:              "tablet_mode",
-			Fixture:           "chromeLoggedInExtendedAutocomplete",
-			Val:               launcher.TestCase{TabletMode: true},
+			Name:    "tablet_mode_joe_bide",
+			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Val: searchAutocompleteTestCase{TabletMode: true,
+				searchKeyword:          "Joe Bide",
+				category:               "Best Match , search result category",
+				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
+				expectedSearchBoxText:  "Joe Biden",
+				expectedGhostGhostText: "Search and Assistant"},
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		}, {
+			Name:    "clamshell_mode_oe_biden",
+			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Val: searchAutocompleteTestCase{TabletMode: false,
+				searchKeyword:          "oe Biden",
+				category:               "Best Match , search result category",
+				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
+				expectedSearchBoxText:  "oe Biden",
+				expectedGhostGhostText: "Joe Biden - Search and Assistant",
+			},
+		}, {
+			Name:    "tablet_mode_oe_biden",
+			Fixture: "chromeLoggedInExtendedAutocomplete",
+			Val: searchAutocompleteTestCase{TabletMode: true,
+				searchKeyword:          "oe Biden",
+				category:               "Best Match , search result category",
+				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
+				expectedSearchBoxText:  "oe Biden",
+				expectedGhostGhostText: "Joe Biden - Search and Assistant"},
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		}},
 	})
-}
-
-type searchAutocompleteTestCase struct {
-	searchKeyword          string
-	result                 string
-	category               string
-	expectedSearchBoxText  string
-	expectedGhostGhostText string
 }
 
 // SearchAutocomplete checks launcher search box behavior for autocompleting
@@ -74,7 +108,7 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	testCase := s.Param().(launcher.TestCase)
+	testCase := s.Param().(searchAutocompleteTestCase)
 
 	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, testCase.TabletMode, false /*stabilizeAppCount*/)
 	if err != nil {
@@ -82,60 +116,20 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	subtests := []searchAutocompleteTestCase{
-		{
-			searchKeyword:          "Web Stor",
-			result:                 "Web Store, Installed App",
-			category:               "Best Match , search result category",
-			expectedSearchBoxText:  "Web Store",
-			expectedGhostGhostText: "Apps",
-		},
-		{
-			searchKeyword:          "Store",
-			result:                 "Web Store, Installed App",
-			category:               "Best Match , search result category",
-			expectedSearchBoxText:  "Store",
-			expectedGhostGhostText: "Web Store - Apps",
-		},
-		{
-			searchKeyword:          "Youtub",
-			result:                 "YouTube, Video sharing company - Google Search, Google Search",
-			category:               "Best Match , search result category",
-			expectedSearchBoxText:  "Youtube",
-			expectedGhostGhostText: "Search and Assistant",
-		},
-		{
-			searchKeyword:          "outube",
-			result:                 "YouTube, Video sharing company - Google Search, Google Search",
-			category:               "Best Match , search result category",
-			expectedSearchBoxText:  "outube",
-			expectedGhostGhostText: "YouTube - Search and Assistant",
-		},
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_query_"+string(testCase.searchKeyword))
+
+	if err := uiauto.Combine("search launcher and verify ghost text",
+		launcher.Search(tconn, kb, testCase.searchKeyword),
+		launcher.WaitForCategorizedResult(tconn, testCase.category, testCase.result))(ctx); err != nil {
+		s.Fatal("Failed to search for: ", testCase.searchKeyword)
+	}
+	res, err :=
+		launcher.GetSearchBoxGhostText(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get ghost text: ", err)
 	}
 
-	for _, subtest := range subtests {
-		s.Run(ctx, subtest.searchKeyword, func(ctx context.Context, s *testing.State) {
-			ui := uiauto.New(tconn)
-			clearSearchButton := nodewith.Role(role.Button).Name("Clear searchbox text")
-			defer ui.LeftClick(clearSearchButton)(cleanupCtx)
-
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_query_"+string(subtest.searchKeyword))
-
-			if err := uiauto.Combine("search launcher",
-				launcher.Search(tconn, kb, subtest.searchKeyword),
-				launcher.WaitForCategorizedResult(tconn, subtest.category, subtest.result),
-			)(ctx); err != nil {
-				s.Fatal("Failed to search: ", err)
-			}
-			res, err :=
-				launcher.GetSearchBoxGhostText(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to get ghost text: ", err)
-			}
-
-			if res != subtest.expectedGhostGhostText {
-				s.Fatalf("Failed to verify ghost text: got:%s, want:%s", res, subtest.expectedGhostGhostText)
-			}
-		})
+	if res != testCase.expectedGhostGhostText {
+		s.Fatalf("Failed to verify ghost text: got:%s, want:%s", res, testCase.expectedGhostGhostText)
 	}
 }
