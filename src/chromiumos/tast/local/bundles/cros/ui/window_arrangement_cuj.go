@@ -138,17 +138,58 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	defer srv.Close()
 	pipVideoTestURL := srv.URL + "/pip.html"
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-	if err != nil {
-		s.Fatal("Failed to ensure clamshell/tablet mode: ", err)
-	}
-	defer cleanup(closeCtx)
-
 	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
 	}
 	defer revertZoom(closeCtx, tconn)
+
+	info, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get the primary display info: ", err)
+	}
+	displayID := info.ID
+
+	// Set to clamshell mode first and ensure landscape orientation is
+	// observed. This ensures that when windowarrangementcuj.combineTabs
+	// switches to clamshell mode, it won't cause the display to rotate.
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure clamshell mode: ", err)
+	}
+	defer cleanup(closeCtx)
+	orientation, err := display.GetOrientation(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to obtain the orientation info: ", err)
+	}
+	if orientation.Type == display.OrientationPortraitPrimary {
+		if err := display.SetDisplayRotationSync(ctx, tconn, displayID, display.Rotate90); err != nil {
+			s.Fatal("Failed to rotate display: ", err)
+		}
+		defer display.SetDisplayRotationSync(closeCtx, tconn, displayID, display.Rotate0)
+	}
+
+	if tabletMode {
+		if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {
+			s.Fatal("Failed to switch from clamshell to tablet: ", err)
+		}
+		// Defer a change back to clamshell mode so that the above deferred
+		// call to display.SetDisplayRotationSync will still revert the
+		// display orientation associated with clamshell mode.
+		defer ash.SetTabletModeEnabled(closeCtx, tconn, false)
+
+		// Ensure landscape orientation in tablet mode too.
+		orientation, err := display.GetOrientation(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to obtain the orientation info: ", err)
+		}
+		if orientation.Type == display.OrientationPortraitPrimary {
+			if err := display.SetDisplayRotationSync(ctx, tconn, displayID, display.Rotate90); err != nil {
+				s.Fatal("Failed to rotate display: ", err)
+			}
+			defer display.SetDisplayRotationSync(closeCtx, tconn, displayID, display.Rotate0)
+		}
+	}
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
