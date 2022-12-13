@@ -24,6 +24,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "cellular",
+		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 
@@ -33,7 +34,12 @@ func Identifiers(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
-	helper, err := cellular.NewHelper(ctx)
+	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
+	if err != nil {
+		s.Fatal("Failed to read autotest_host_info_labels: ", err)
+	}
+
+	helper, err := cellular.NewHelperWithLabels(ctx, labels)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}

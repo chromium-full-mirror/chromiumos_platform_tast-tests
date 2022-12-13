@@ -25,6 +25,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_ota_avl"},
 		Fixture:      "cellular",
 		Timeout:      5 * time.Minute,
+		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 
@@ -33,7 +34,12 @@ func ModemmanagerInhibitDevice(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
-	helper, err := cellular.NewHelper(ctx)
+	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
+	if err != nil {
+		s.Fatal("Failed to read autotest_host_info_labels: ", err)
+	}
+
+	helper, err := cellular.NewHelperWithLabels(ctx, labels)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}

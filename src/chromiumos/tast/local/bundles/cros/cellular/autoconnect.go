@@ -27,6 +27,7 @@ func init() {
 		Fixture:      "cellular",
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
+		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 
@@ -37,7 +38,12 @@ func Autoconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
-	helper, err := cellular.NewHelper(ctx)
+	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
+	if err != nil {
+		s.Fatal("Failed to read autotest_host_info_labels: ", err)
+	}
+
+	helper, err := cellular.NewHelperWithLabels(ctx, labels)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}
