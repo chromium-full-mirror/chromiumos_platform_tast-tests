@@ -273,6 +273,9 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *empty.Em
 	if res.Err != nil {
 		return nil, res.Err
 	}
+	if res.Cred == nil {
+		return nil, errors.New("failed to retrieve created WebAuthn credential")
+	}
 
 	cred := hwsec.WebAuthnCredential{
 		CredentialIdB64: res.Cred.CredentialIDB64,
@@ -325,6 +328,9 @@ func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.Star
 	}
 
 	cred := req.GetCred()
+	if cred == nil {
+		return nil, errors.New("failed to parse WebAuthn credential from request")
+	}
 	config := u2fd.WebAuthnAssertionConfig{
 		Keys: []u2fd.WebAuthnCredential{
 			{
