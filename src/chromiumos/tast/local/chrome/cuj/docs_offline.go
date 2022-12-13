@@ -6,12 +6,14 @@ package cuj
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto/cws"
+	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/testing"
 )
 
@@ -38,4 +40,40 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 
 	testing.ContextLog(ctx, "Install docs offline extension")
 	return cws.InstallApp(ctx, br, tconn, docsOfflineExt)
+}
+
+// EnsureDocsOfflineEnabled ensures that docs offline extension is installed for
+// the browser and the current active user has it enabled in Drive's settings.
+// This function should be called before opening any docs if offline capability
+// is desired.
+func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
+	if err := EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
+		return errors.Wrap(err, "failed to install Docs offline extension")
+	}
+
+	// Open Drive settings page.
+	conn, err := br.NewConn(ctx, "https://drive.google.com/settings")
+	if err != nil {
+		return errors.Wrap(err, "failed to open Drive settings")
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
+
+	// Wait for settings page to load and sync the account settings.
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for Drive settings to load")
+	}
+
+	// Make sure the "offline" checkbox is checked.
+	testing.ContextLog(ctx, "Making sure offline support is enabled")
+	if err := conn.Call(ctx, nil, `() => {
+		let offlineCheckbox = document.getElementsByName('offline')[0];
+		if (!offlineCheckbox.checked)
+			offlineCheckbox.click();
+	}`); err != nil {
+		return errors.Wrap(err, "failed to ensure offline checkbox checked")
+	}
+
+	testing.ContextLog(ctx, "Docs offline support enabled")
+	return nil
 }

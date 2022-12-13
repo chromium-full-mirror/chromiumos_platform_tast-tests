@@ -601,10 +601,10 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	if meet.docs {
-		// Ensure docs offline extension is installed to avoid docs page hitting
+		// Ensure docs offline support is enabled to avoid docs page hitting
 		// fatal network error. See http://b/254914987
-		if err := cuj.EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
-			s.Fatal("Failed to install docs offline extension: ", err)
+		if err := cuj.EnsureDocsOfflineEnabled(ctx, br, tconn); err != nil {
+			s.Fatal("Failed to enable docs offline support: ", err)
 		}
 	}
 
