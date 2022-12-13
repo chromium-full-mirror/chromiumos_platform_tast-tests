@@ -105,7 +105,7 @@ func SearchAndroidApps(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err := launcher.SearchAndWaitForAppOpen(tconn, kb, apps.PlayStore)(ctx); err != nil {
 		s.Fatal("Failed to launch Play Store: ", err)
