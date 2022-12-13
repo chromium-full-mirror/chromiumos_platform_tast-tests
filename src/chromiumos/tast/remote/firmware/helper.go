@@ -1122,6 +1122,13 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	if usbdev == "" {
 		return "", errors.New("no USB key detected")
 	}
+	// Document usb model and serial numbers for debugging purposes,
+	modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
+	} else {
+		testing.ContextLogf(ctx, "Got usb model: %s, serial number: %s", modelName, serialNumber)
+	}
 	/*
 		Some USBs would drop connection after a short period of time.
 		Wait for 2 minutes before listing usb content to ensure that
@@ -1144,7 +1151,7 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	})
 	if err != nil {
 		if stderr != nil {
-			return "", errors.Errorf("validate usb key at %q, got stderr: %s", usbdev, stderr)
+			return "", errors.Errorf("validate usb key at %q, got stderr: %s, usb model: %s, serial number: %s", usbdev, stderr, modelName, serialNumber)
 		}
 		return "", errors.Wrapf(err, "validate usb key at %q", usbdev)
 	}
@@ -1152,9 +1159,38 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	// Following ChromiumOS Developer Guide, USB size should be bigger than 8GB:
 	// https://chromium.googlesource.com/chromiumos/docs/+/HEAD/developer_guide.md#put-your-image-on-a-usb-disk
 	if err := checkUSBStorage(ctx, string(fdiskOutput), 8); err != nil {
-		return "", errors.Wrap(err, "failed to verify usb storage")
+		return "", errors.Wrapf(err, "failed to verify usb storage, got usb model: %s, serial number: %s", modelName, serialNumber)
 	}
 	return usbdev, nil
+}
+
+// getUSBModelAndSerial accepts the device path of a usb, and
+// returns its model name and serial numbers.
+func (h *Helper) getUSBModelAndSerial(ctx context.Context, usbdev string) (string, string, error) {
+	var model, serial = "unknown", "unknown"
+	sysfsPath, err := h.ServoProxy.OutputCommand(ctx, true, "udevadm", "info", "-q", "path", "-n", usbdev)
+	if err != nil {
+		return model, serial, errors.Wrapf(err, "failed to get the sysfs path for %s", usbdev)
+	}
+	// Running udevadm test on a device path would cite all the rules involved,
+	// for example, '60-persistent-storage.rules'. It would also print debug
+	// information, including model name, serial numbers, vendor ID, etc.
+	pathStr := strings.TrimSpace(string(sysfsPath))
+	bOut, err := h.ServoProxy.OutputCommand(ctx, true, "udevadm", "test", "--action=add", pathStr)
+	if err != nil {
+		return model, serial, errors.Wrapf(err, "failed to run udevadm test on %s", usbdev)
+	}
+	var (
+		reModel  = regexp.MustCompile(`(?i)ID_MODEL=(.+)`)
+		reSerial = regexp.MustCompile(`(?i)ID_SERIAL_SHORT=(.+)`)
+	)
+	if foundModel := reModel.FindStringSubmatch(string(bOut)); foundModel != nil {
+		model = foundModel[1]
+	}
+	if foundSerial := reSerial.FindStringSubmatch(string(bOut)); foundSerial != nil {
+		serial = foundSerial[1]
+	}
+	return model, serial, nil
 }
 
 // FormatUSB will format the usb device to create an invalid usb device.
@@ -1162,10 +1198,16 @@ func (h *Helper) FormatUSB(ctx context.Context, usbdev string) error {
 	if usbdev == "" {
 		return errors.New("no USB key detected. Please run CheckUSBOnServoHost")
 	}
+	// Document usb model and serial numbers for debugging purposes,
+	// before formatting the usb.
+	modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
+	}
 	testing.ContextLog(ctx, "Formatting the USB device")
 	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "mkfs.vfat", "-I", usbdev); err != nil {
 		if strings.Contains(string(stderr), "Read-only file system") {
-			return errors.New("found usb device as read-only file system")
+			return errors.Errorf("found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
 		}
 		if err := h.validateUSBConn(ctx); err != nil {
 			return errors.Wrap(err, "failed while verifying usb connection to DUT")
