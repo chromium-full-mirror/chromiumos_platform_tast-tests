@@ -55,7 +55,7 @@ main() {
 
   fio \
       --directory="${mountpoint}" \
-      --runtime=2m \
+      --runtime=1m \
       --iodepth=16 \
       --size=512M \
       --direct=0 \
