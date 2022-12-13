@@ -10,6 +10,8 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/clipboardhistory"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -25,17 +27,15 @@ type clipboardResource struct {
 	ui    *uiauto.Context
 	kb    *input.KeyboardEventWriter
 	cr    *chrome.Chrome
+	bt    browser.Type
 	tconn *chrome.TestConn
 	text  string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ContextMenuClipboard,
-		// TODO(b/243339088): No Lacros variant can be added to this test until a
-		// clipboard history entry point is added to the Lacros address bar context
-		// menu.
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func:         ContextMenuClipboard,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies the clipboard option in the context menu is working properly within several apps by left-clicking an option",
 		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{
@@ -46,7 +46,16 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{{
+			Name:    "ash",
+			Val:     browser.TypeAsh,
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name:              "lacros",
+			Val:               browser.TypeLacros,
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "lacros",
+		}},
 	})
 }
 
@@ -70,6 +79,7 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 		ui:    uiauto.New(tconn),
 		kb:    kb,
 		cr:    cr,
+		bt:    s.Param().(browser.Type),
 		tconn: tconn,
 		text:  "abc",
 	}
@@ -90,7 +100,13 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 }
 
 func verifyChrome(ctx context.Context, s *testing.State, res *clipboardResource) {
-	conn, err := res.cr.Browser().NewConn(ctx, "")
+	br, closeBrowser, err := browserfixt.SetUp(ctx, res.cr, res.bt)
+	if err != nil {
+		s.Fatal("Failed to open the browser: ", err)
+	}
+	defer closeBrowser(ctx)
+
+	conn, err := br.NewConn(ctx, "")
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
