@@ -166,7 +166,8 @@ func init() {
 		}, {
 			Name: "kms_flip",
 			Val: graphics.IgtTest{
-				Exe: "kms_flip",
+				Exe:              "kms_flip",
+				DisableHangCheck: true,
 			},
 			Timeout:           30 * time.Minute,
 			ExtraAttr:         []string{"graphics_weekly"},
@@ -224,7 +225,8 @@ func init() {
 		}, {
 			Name: "kms_pipe_crc_basic",
 			Val: graphics.IgtTest{
-				Exe: "kms_pipe_crc_basic",
+				Exe:              "kms_pipe_crc_basic",
+				DisableHangCheck: true,
 			},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"graphics_nightly"},
@@ -382,7 +384,8 @@ func init() {
 		}, {
 			Name: "kms_vblank",
 			Val: graphics.IgtTest{
-				Exe: "kms_vblank",
+				Exe:              "kms_vblank",
+				DisableHangCheck: true,
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"graphics_weekly"},
@@ -420,6 +423,10 @@ func init() {
 
 func IgtKms(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.IgtTest)
+	if testOpt.DisableHangCheck {
+		graphics.DisableHangCheck()
+	}
+
 	f, err := os.Create(filepath.Join(s.OutDir(), filepath.Base(testOpt.Exe)+".txt"))
 	if err != nil {
 		s.Fatal("Failed to create a log file: ", err)

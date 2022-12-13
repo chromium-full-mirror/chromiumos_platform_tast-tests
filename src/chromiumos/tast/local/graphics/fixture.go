@@ -7,9 +7,7 @@ package graphics
 
 import (
 	"context"
-	"io"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -176,31 +174,11 @@ func (f *graphicsNoChromeFixture) TearDown(ctx context.Context, s *testing.FixtS
 }
 
 type gpuWatchHangsFixture struct {
-	regexp       *regexp.Regexp
 	postFunc     []func(ctx context.Context) error
 	tearDownFunc []func(ctx context.Context) error
 }
 
 func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// TODO: This needs to be kept in sync for new drivers, especially ARM.
-	hangRegexStrs := []string{
-		`drm:i915_hangcheck_elapsed`,
-		`drm:i915_hangcheck_hung`,
-		`Hangcheck timer elapsed...`,
-		`GPU HANG: ecode `,
-		`drm/i915: Resetting chip after gpu hang`,
-		`GPU HANG:.+\b[H|h]ang on (rcs0|vcs0|vecs0)`,
-		`hangcheck recover!`,      // Freedreno
-		`mtk-mdp.*: cmdq timeout`, // Mediatek
-		`amdgpu: GPU reset begin!`,
-		`scp ipi .* ack time out !`,                      // Mediatek
-		`mtk-iommu .*: fault`,                            // Mediatek (at least MT8183)
-		`qcom-venus .*video-codec: SFR message from FW:`, // Qualcomm
-	}
-	// TODO(pwang): add regex for memory faults.
-	f.regexp = regexp.MustCompile(strings.Join(hangRegexStrs, "|"))
-	s.Log("Setup regex to detect GPU hang: ", f.regexp)
-
 	if hangCheckTimer, err := GetHangCheckTimer(ctx); err != nil {
 		testing.ContextLog(ctx, "Warning: failed to get hangcheck timer. This is normal for kernels older than 5.4: ", err)
 	} else {
@@ -237,24 +215,6 @@ func (f *gpuWatchHangsFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-// checkHangs checks gpu hangs from the reader. It returns error if failed to read the file or gpu hang patterns are detected.
-func (f *gpuWatchHangsFixture) checkHangs(ctx context.Context, reader *syslog.Reader) error {
-	for {
-		e, err := reader.Read()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return errors.Wrap(err, "failed to read syslog")
-		}
-
-		matches := f.regexp.FindAllStringSubmatch(e.Line, -1)
-		if len(matches) > 0 {
-			return errors.Errorf("GPU hang: %s", e.Content)
-		}
-	}
-	return nil
-}
-
 func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	f.postFunc = nil
 	// Attempt flushing system logs every second instead of every 10 minutes.
@@ -268,6 +228,7 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 			return SetDirtyWritebackDuration(ctx, dirtyWritebackDuration)
 		})
 	}
+
 	// syslog.NewReader reports syslog message written after it is started for GPU hang detection.
 	sysLogReader, err := syslog.NewReader(ctx)
 	if err != nil {
@@ -275,7 +236,7 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 	} else {
 		f.postFunc = append(f.postFunc, func(ctx context.Context) error {
 			defer sysLogReader.Close()
-			return f.checkHangs(ctx, sysLogReader)
+			return checkHangs(ctx, sysLogReader)
 		})
 	}
 }

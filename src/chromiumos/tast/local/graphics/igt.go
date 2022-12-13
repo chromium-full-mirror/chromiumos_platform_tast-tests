@@ -18,7 +18,8 @@ import (
 
 // IgtTest is used to describe the config used to run each test.
 type IgtTest struct {
-	Exe string // The test executable name.
+	Exe              string // The test executable name.
+	DisableHangCheck bool   // If true, disable the gpu hang check as the test produces hangs intentionally.
 }
 
 // igtResultSummary is a summary of results from an igt test log.
