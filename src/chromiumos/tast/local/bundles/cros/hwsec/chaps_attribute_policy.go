@@ -29,7 +29,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "tpm"},
 		Timeout:      3 * time.Minute,
 	})
 }

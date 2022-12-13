@@ -28,7 +28,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "tpm"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "with_uss",
