@@ -100,16 +100,14 @@ const (
 	GoogleHelpMapURL = "https://support.google.com/maps/?hl=en"
 	// GoogleHelpYoutubeURL specifies the URL for Google Help's Youtube page.
 	GoogleHelpYoutubeURL = "https://support.google.com/youtube/?hl=en"
-	// GoogleNewsForYouURL specifies the URL for Google News's for you page.
-	GoogleNewsForYouURL = "https://news.google.com/foryou?hl=en-US&gl=US&ceid=US%3Aen"
 	// GoogleNonprofitsURL specifies the URL for Google Nonprofits' home page.
 	GoogleNonprofitsURL = "https://www.google.com/intl/en-US/nonprofits/"
 	// GoogleNonprofitsEligibilityURL specifies the URL for Google Nonprofits' eligibility page.
 	GoogleNonprofitsEligibilityURL = "https://www.google.com/intl/en-US/nonprofits/eligibility"
 	// GoogleNonprofitsProductHelpURL specifies the URL for Google Nonprofits' product help page.
 	GoogleNonprofitsProductHelpURL = "https://www.google.com/intl/en-US/nonprofits/resources/product-help"
-	// GoogleNonprofitsSucessStoriesURL specifies the URL for Google Nonprofits' success stories page.
-	GoogleNonprofitsSucessStoriesURL = "https://www.google.com/intl/en-US/nonprofits/success-stories"
+	// GoogleNonprofitsSuccessStoriesURL specifies the URL for Google Nonprofits' success stories page.
+	GoogleNonprofitsSuccessStoriesURL = "https://www.google.com/intl/en-US/nonprofits/success-stories"
 	// GooglePlayAppsURL specifies the URL for Google Play's apps page.
 	GooglePlayAppsURL = "https://play.google.com/store/apps"
 	// GooglePlayBooksURL specifies the URL for Google Play's books page.
@@ -124,12 +122,16 @@ const (
 	GooglePolicyURL = "https://policies.google.com/"
 	// GooglePolicyPrivacyURL specifies the URL for Google Policy's privacy page.
 	GooglePolicyPrivacyURL = "https://policies.google.com/privacy"
+	// GooglePolicyTechnologiesURL specifies the URL for Google Policy's technologies page.
+	GooglePolicyTechnologiesURL = "https://policies.google.com/technologies"
+	// GooglePolicyFAQURL specifies the URL for Google Policy's FAQ page.
+	GooglePolicyFAQURL = "https://policies.google.com/faq"
 	// GoogleStoreURL specifies the URL for Google Store's home page.
 	GoogleStoreURL = "https://store.google.com/us/"
 	// GoogleStoreInstallationURL specifies the URL for Google Store's installation page.
 	GoogleStoreInstallationURL = "https://store.google.com/us/magazine/installation"
-	// GoogleStoreOrderHistoryURL specifies the URL for Google Store's order history page.
-	GoogleStoreOrderHistoryURL = "https://store.google.com/us/orderhistory"
+	// GoogleStoreEarbudsURL specifies the URL for Google Store's earbuds page.
+	GoogleStoreEarbudsURL = "https://store.google.com/us/category/earbuds"
 	// GoogleStorePhonesURL specifies the URL for Google Store's phones page.
 	GoogleStorePhonesURL = "https://store.google.com/us/category/phones"
 	// GoogleStoreSmartHomeURL specifies the URL for Google Store's Smart Home page.

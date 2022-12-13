@@ -82,7 +82,7 @@ var googleWebsitesTargets = []tabTarget{
 
 	{cuj.GoogleStoreURL, newPageInfo(cuj.Essential, googleStore, `/`, `/ideas`, `/cart`)},
 	{cuj.GoogleStorePhonesURL, newPageInfo(cuj.Essential, googleStore, `/category/phones`, `/category/earbuds`, `/cart`)},
-	{cuj.GoogleStoreOrderHistoryURL, newPageInfo(cuj.Essential, googleStore, `/orderhistory`, `/repairhistory`)},
+	{cuj.GoogleStoreEarbudsURL, newPageInfo(cuj.Essential, googleStore, `/category/earbuds`, `/category/connected_home`, `/cart`)},
 	{cuj.GoogleStoreSmartHomeURL, newPageInfo(cuj.Advanced, googleStore, `/category/connected_home`, `/product/pixelbook`, `/cart`)},
 	{cuj.GoogleStoreInstallationURL, newPageInfo(cuj.Advanced, googleStore, `/magazine/installation`, `/category/watches`, `/cart`)},
 	{cuj.GoogleStoreSubscriptionsURL, newPageInfo(cuj.Advanced, googleStore, `/category/subscriptions`, `/support`, `/cart`)},
@@ -96,7 +96,7 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GoogleNonprofitsURL, newPageInfo(cuj.Essential, googleNonprofits, `/`, `/offerings/workspace`, `/resources/faq`)},
 	{cuj.GoogleNonprofitsProductHelpURL, newPageInfo(cuj.Essential, googleNonprofits, `/resources/product-help`, `/resources/how-to-guide`)},
 	{cuj.GoogleNonprofitsEligibilityURL, newPageInfo(cuj.Advanced, googleNonprofits, `/eligibility`, `/offerings/youtube-nonprofit-program`, `/resources/faq`)},
-	{cuj.GoogleNonprofitsSucessStoriesURL, newPageInfo(cuj.Advanced, googleNonprofits, `/success-stories`, `/resources/faq`)},
+	{cuj.GoogleNonprofitsSuccessStoriesURL, newPageInfo(cuj.Advanced, googleNonprofits, `/success-stories`, `/resources/faq`)},
 
 	{cuj.GooglePlayBooksURL, newPageInfo(cuj.Advanced, googlePlay, `/books`, `/wishlist`, `/FAMILY`)},
 	{cuj.GooglePlayKidsURL, newPageInfo(cuj.Advanced, googlePlay, `/apps/category/FAMILY`, `/store/apps/category/FAMILY?age=AGE_RANGE1`, `/games`)},
@@ -110,11 +110,10 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GoogleFinanceGainersURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/gainers`, `/markets/losers`, `/markets/currencies`)},
 	{cuj.GoogleFinanceLosersURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/losers`, `/markets/currencies`, `/`)},
 
-	{cuj.GoogleNewsURL, newPageInfo(cuj.Advanced, googleNews, `/home`, `/foryou`, `/my/library`)},
-	{cuj.GoogleNewsForYouURL, newPageInfo(cuj.Advanced, googleNews, `/foryou`, `/my/library`, `/`)},
-
 	{cuj.GooglePolicyURL, newPageInfo(cuj.Advanced, googlePolicy, `/`, `privacy`, `terms`)},
 	{cuj.GooglePolicyPrivacyURL, newPageInfo(cuj.Advanced, googlePolicy, `privacy`, `faq`, `technologies`)},
+	{cuj.GooglePolicyFAQURL, newPageInfo(cuj.Advanced, googlePolicy, `faq`, `technologies`, `terms`)},
+	{cuj.GooglePolicyTechnologiesURL, newPageInfo(cuj.Advanced, googlePolicy, `technologies`, `terms`, `faq`)},
 
 	{cuj.YoutubeURL, newPageInfo(cuj.Advanced, youtube, `/`, `/feed/library`, `/history`)},
 }
