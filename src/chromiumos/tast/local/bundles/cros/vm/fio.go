@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -290,11 +292,13 @@ func Fio(ctx context.Context, s *testing.State) {
 
 	logFile := filepath.Join(s.OutDir(), "serial.log")
 
+	numCPU := runtime.NumCPU()
+
 	// Increase the max open file limit as the benchmark creates a lot of files.
 	args := []string{
 		"--nofile=262144",
 		"crosvm", "run",
-		"-c", "1",
+		"-c", strconv.Itoa(numCPU),
 		"-m", "1024",
 		"-s", td,
 		"--shared-dir", "/:/dev/root:type=fs:cache=always",
