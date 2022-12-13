@@ -15,12 +15,13 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Dawn,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Dawn unit and end-to-end tests run successfully",
 		Contacts: []string{
-			"hob@chromium.org",
 			"chromeos-gfx@google.com",
+			"hob@chromium.org",
 		},
+		BugComponent: "b:960692",
 		Params: []testing.Param{{
 			Name: "unit_tests",
 			Val:  "dawn_unittests",
