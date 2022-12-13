@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
+	"chromiumos/tast/local/disk"
 	"chromiumos/tast/testing"
 )
 
@@ -342,6 +343,11 @@ func Fio(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create crosvm log file: ", err)
 	}
 	defer output.Close()
+
+	// Drop host caches before starting crosvm
+	if err := disk.DropCaches(ctx); err != nil {
+		s.Fatal("Failed to drop caches: ", err)
+	}
 
 	s.Log("Running fio")
 	cmd := testexec.CommandContext(ctx, "prlimit", args...)
