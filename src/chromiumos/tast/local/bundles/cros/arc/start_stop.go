@@ -27,6 +27,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies clean start and stop of CrOS Chrome and Android container",
 		Contacts: []string{
+			"arcvm-software@google.com", // Owner team.
+			"raging@google.com",         // Owner for VM tests.
+
 			// Contacts for TestPID and TestMount failure.
 			"rohitbm@chromium.org", // Original author.
 			"arc-eng@google.com",
@@ -37,6 +40,7 @@ func init() {
 
 			"hidehiko@chromium.org", // Tast port author.
 		},
+		BugComponent: "b:883059",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Attr:         []string{"group:mainline"},
