@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -64,6 +65,8 @@ type Config struct {
 	// CertVals contains necessary values to setup a cert-based VPN service. This
 	// is only used by cert-based VPNs (e.g., L2TP/IPsec-cert, OpenVPN, etc.).
 	CertVals CertVals
+
+	includedRoutesV4 []net.IPNet
 }
 
 // VPN types.
@@ -80,6 +83,45 @@ const (
 	AuthTypeEAP  = "eap"
 	AuthTypePSK  = "psk"
 )
+
+// Option is used in NewConfig() function to generate a VPN Config object
+type Option = func(*Config)
+
+// NewConfig creates a config object for a given VPN type
+func NewConfig(vpnType string, opts ...Option) *Config {
+	c := &Config{
+		Type: vpnType,
+	}
+	if vpnType == TypeOpenVPN {
+		c.AuthType = AuthTypeCert
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c
+}
+
+// WithCertVals sets up the certificate value used by client.
+// This is mandatory by connections using certificates for authentication.
+func WithCertVals(val CertVals) Option {
+	return func(c *Config) {
+		c.CertVals = val
+	}
+}
+
+// WithOpenVPNTLSAuth enables TLSAuth for OpenVPN.
+func WithOpenVPNTLSAuth() Option {
+	return func(c *Config) {
+		c.OpenVPNTLSAuth = true
+	}
+}
+
+// WithIPv4IncludedRoute sets up the VPN as split-routed. This option can be used multiple times to set up multiple included routes.
+func WithIPv4IncludedRoute(route *net.IPNet) Option {
+	return func(c *Config) {
+		c.includedRoutesV4 = append(c.includedRoutesV4, *route)
+	}
+}
 
 // IPType defines IP address type of overlay IP address.
 type IPType int
@@ -268,7 +310,7 @@ func (c *Connection) startServer(ctx context.Context) error {
 	case TypeL2TPIPsec:
 		c.Server, err = StartL2TPIPsecServer(ctx, c.serverEnv, c.config.AuthType, c.config.IPsecUseXauth, c.config.UnderlayIPIsOverlayIP)
 	case TypeOpenVPN:
-		c.Server, err = StartOpenVPNServer(ctx, c.serverEnv, c.config.OpenVPNUseUserPassword, c.config.OpenVPNTLSAuth)
+		c.Server, err = StartOpenVPNServer(ctx, c.serverEnv, &c.config)
 	case TypeWireGuard:
 		clientKey := wgClientPublicKey
 		if c.config.WGAutoGenKey {

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"path/filepath"
 	"strings"
 	"time"
@@ -323,7 +324,8 @@ var (
 			"verb 5\n" +
 			"writepid /{{.pid_file}}\n" +
 			"tmp-dir /tmp\n" +
-			"push \"redirect-gateway def1\"\n" +
+			"{{if .default_route}}push \"redirect-gateway def1\"\n {{end}}" +
+			"{{range .push_route}}push \"route {{.addr}} {{.mask}}\"\n{{end}}" +
 			"{{if .push_dns}}push \"dhcp-option DNS 10.11.12.1\"\n {{end}}" +
 			"{{.optional_user_verification}}\n",
 	}
@@ -550,7 +552,7 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType string, ipType
 }
 
 // StartOpenVPNServer starts an OpenVPN server.
-func StartOpenVPNServer(ctx context.Context, env *env.Env, useUserPassword, useTLSAuth bool) (*Server, error) {
+func StartOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,
@@ -575,11 +577,23 @@ func StartOpenVPNServer(ctx context.Context, env *env.Env, useUserPassword, useT
 		"log_file":                     openvpnLogFile,
 		"push_dns":                     true,
 	}
-	if useUserPassword {
+	if config.OpenVPNUseUserPassword {
 		configValues["optional_user_verification"] = fmt.Sprintf("auth-user-pass-verify /%s via-file\nscript-security 2", openvpnAuthScript)
 	}
-	if useTLSAuth {
+	if config.OpenVPNTLSAuth {
 		configValues["tls_auth_file"] = openvpnTLSAuthFile
+	}
+	if len(config.includedRoutesV4) > 0 {
+		var routes []map[string]interface{}
+		for _, prefix := range config.includedRoutesV4 {
+			routes = append(routes, map[string]interface{}{
+				"addr": prefix.IP.String(),
+				"mask": net.ParseIP("255.255.255.255").Mask(prefix.Mask).String(),
+			})
+		}
+		configValues["push_route"] = routes
+	} else {
+		configValues["default_route"] = true
 	}
 
 	runner.AddConfigValues(configValues)
