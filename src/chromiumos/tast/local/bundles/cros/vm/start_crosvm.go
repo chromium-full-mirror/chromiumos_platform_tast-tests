@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"time"
 
+	"chromiumos/tast/local/bundles/cros/vm/dlc"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
@@ -26,14 +27,13 @@ func init() {
 		BugComponent: "b:1248538",
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"vm_host"},
-		Pre:          vm.Artifact(),
-		Data:         []string{vm.ArtifactData()},
+		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
+		Fixture:      "vmDLC",
 	})
 }
 
 func StartCrosvm(ctx context.Context, s *testing.State) {
-	data := s.PreValue().(vm.PreData)
+	data := s.FixtValue().(dlc.FixtData)
 
 	td, err := ioutil.TempDir("", "tast.vm.StartCrosvm.")
 	if err != nil {

@@ -20,6 +20,7 @@ import (
 	pp "chromiumos/system_api/patchpanel_proto"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/vm/dlc"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
@@ -35,9 +36,9 @@ func init() {
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
 		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{vm.ArtifactData(), runVhostUserNetTest},
-		SoftwareDeps: []string{"vm_host"},
-		Pre:          vm.Artifact(),
+		Data:         []string{runVhostUserNetTest},
+		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
+		Fixture:      "vmDLC",
 	})
 }
 
@@ -203,7 +204,7 @@ func VhostUserNet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start vhost-user net device: ", err)
 	}
 
-	data := s.PreValue().(vm.PreData)
+	data := s.FixtValue().(dlc.FixtData)
 	script := s.DataPath(runVhostUserNetTest)
 
 	// Wait until the device starts and sockets are created
