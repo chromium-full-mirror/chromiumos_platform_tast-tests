@@ -6,6 +6,7 @@ package settings
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -44,7 +45,8 @@ func init() {
 		Func:         SearchSections,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Search with keywords and verify the related results from OS Settings",
-		Contacts:     []string{"tim.chang@cienet.com", "cienet-development@googlegroups.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-settings@google.com", "cienet-development@googlegroups.com", "tim.chang@cienet.com"},
+		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Params: []testing.Param{
@@ -54,7 +56,7 @@ func init() {
 					arc:        false,
 					searchtype: normalOptions,
 				},
-				Fixture: "chromeLoggedIn",
+				Fixture: "chromeLoggedInWithOsSettingsSearchFeedback",
 			}, {
 				Name: "arc_options",
 				Val: settingsSearchTestParams{
@@ -82,7 +84,7 @@ func init() {
 					arc:        false,
 					searchtype: guestMode,
 				},
-				Fixture: "chromeLoggedInGuest",
+				Fixture: "chromeLoggedInGuestWithOsSettingsSearchFeedback",
 			},
 		},
 	})
@@ -97,6 +99,12 @@ type settingsSearchDetail struct {
 
 	deepLinkingSection string
 	subpageLabel       string
+}
+
+type settingsOSSearch struct {
+	keyword  string
+	ui       *uiauto.Context
+	settings *ossettings.OSSettings
 }
 
 func searchDetail(st settingsSearchType) []settingsSearchDetail {
@@ -273,6 +281,13 @@ func SearchSections(ctx context.Context, s *testing.State) {
 			s.Fatal("Invalid search result")
 		}
 
+		if search.expectedMismatch {
+			resource := &settingsOSSearch{search.keyword, ui, osSettings}
+			if err := sendSearchFeedback(ctx, resource)(ctx); err != nil {
+				s.Fatal("Failed to send feedback for no search results: ", err)
+			}
+		}
+
 		if search.subpageLabel != "" {
 			if err := ui.WithTimeout(30*time.Second).RetryUntil(
 				mouse.Click(tconn, result.Location.CenterPoint(), mouse.LeftButton),
@@ -330,4 +345,18 @@ func searchAndCheck(ctx context.Context, osSettings *ossettings.OSSettings, kb *
 	}
 
 	return nil, errors.Errorf("no match results found, the first result is %q", infos[0].Name)
+}
+
+func sendSearchFeedback(ctx context.Context, resource *settingsOSSearch) uiauto.Action {
+	testing.ContextLogf(ctx, "Send search feedback when there are no search results for query: %q", resource.keyword)
+
+	feedbackDescriptionPlaceholderNodeName := fmt.Sprintf("#Settings No search results returned for '%v'", resource.keyword)
+	return uiauto.Combine("check search feedback dialog with pre-populated description",
+		resource.settings.LeftClick(ossettings.SearchFeedbackButton),
+		resource.ui.WaitUntilExists(ossettings.FeedbackDialogRoot),
+		resource.ui.WaitUntilExists(nodewith.Name("Describe the issue in detail").Role(role.InlineTextBox).Ancestor(ossettings.FeedbackDialogRoot)),
+		resource.ui.Exists(nodewith.Name(feedbackDescriptionPlaceholderNodeName).Role(role.StaticText).Ancestor(ossettings.FeedbackDialogRoot)),
+		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(ossettings.FeedbackDialogRoot)),
+		resource.ui.WaitUntilGone(ossettings.FeedbackDialogRoot),
+	)
 }

@@ -118,6 +118,12 @@ var searchMismatched = `No search results found`
 // searchResultFinder is a finder of all possible search results.
 var searchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Search result \d+ of \d+: .*|%s)`, searchMismatched))).Onscreen()
 
+// SearchFeedbackButton is a button for sending feedback when a search result doesn't exist.
+var SearchFeedbackButton = nodewith.Name("Report this search result").Role(role.Button)
+
+// FeedbackDialogRoot is the finder for the feedback dialog.
+var FeedbackDialogRoot = nodewith.Name("Send feedback to Google").HasClass("RootView")
+
 // networkFinder is the finder for the Network page UI in OS setting.
 var networkFinder = nodewith.Name("Network").Role(role.Link).Ancestor(WindowFinder)
 

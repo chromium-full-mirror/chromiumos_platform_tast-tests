@@ -209,7 +209,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeLoggedInWithOobe",
 		Desc:     "Log in and proceed with the post-login OOBE flow",
-		Contacts: []string{"bohdanty@google.com, cros-oobe@google.com"},
+		Contacts: []string{"cros-oobe@google.com", "bohdanty@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{DontSkipOOBEAfterLogin()}, nil
 		}),
@@ -263,6 +263,30 @@ func init() {
 		Contacts: []string{"yulunwu@chromium.org", "tbarzic@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("AutocompleteExtendedSuggestions")}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInWithOsSettingsSearchFeedback",
+		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
+		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{EnableFeatures("OsSettingsSearchFeedback")}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInGuestWithOsSettingsSearchFeedback",
+		Desc:     "Logged into a guest user session with searchFeedbackEnabled flag enabled",
+		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback")}, nil
 		}),
 		SetUpTimeout:    LoginTimeout,
 		ResetTimeout:    ResetTimeout,

@@ -32,6 +32,7 @@ func init() {
 			"lyle.lai@cienet.com",
 			"ting.chen@cienet.com",
 		},
+		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
@@ -134,13 +135,11 @@ func checkOnlineHelp(resource *chromeOSPageInfo) uiauto.Action {
 }
 
 func checkReportIssue(resource *chromeOSPageInfo) uiauto.Action {
-	feedbackRoot := nodewith.Name("Send feedback to Google").HasClass("RootView")
-
 	return uiauto.Combine("check report issue",
 		resource.settings.LeftClick(ossettings.ReportIssue),
-		resource.ui.WaitUntilExists(feedbackRoot),
-		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(feedbackRoot)),
-		resource.ui.WaitUntilGone(feedbackRoot),
+		resource.ui.WaitUntilExists(ossettings.FeedbackDialogRoot),
+		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(ossettings.FeedbackDialogRoot)),
+		resource.ui.WaitUntilGone(ossettings.FeedbackDialogRoot),
 	)
 }
 
