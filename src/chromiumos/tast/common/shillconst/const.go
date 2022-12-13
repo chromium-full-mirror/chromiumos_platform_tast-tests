@@ -315,7 +315,7 @@ const (
 	ProfilePropertyProhibitedTechnologies    = "ProhibitedTechnologies"
 	ProfilePropertyArpGateway                = "ArpGateway"
 	ProfilePropertyNoAutoConnectTechnologies = "NoAutoConnectTechnologies"
-	ProfilePropertyAlwaysOnVPNServive        = "AlwaysOnVpnService"
+	ProfilePropertyAlwaysOnVPNService        = "AlwaysOnVpnService"
 	ProfilePropertyAlwaysOnVPNMode           = "AlwaysOnVpnMode"
 )
 
@@ -397,6 +397,7 @@ const (
 
 // Shill always on VPN values.
 const (
+	AlwaysOnVPNModeOff        = "off"
 	AlwaysOnVPNModeStrict     = "strict"
 	AlwaysOnVPNModeBestEffort = "best-effort"
 )

@@ -9,6 +9,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/errors"
 )
 
@@ -42,4 +43,21 @@ func (p *Profile) GetEntry(ctx context.Context, entryID string) (map[string]inte
 // DeleteEntry calls the DeleteEntry method on the profile.
 func (p *Profile) DeleteEntry(ctx context.Context, entryID string) error {
 	return p.Call(ctx, "DeleteEntry", entryID).Err
+}
+
+// SetAlwaysOnVPN sets the AlwaysOnVpnMode and AlwaysOnVpnService properties on
+// the profile. If mode is "off", svc must be nil.
+func (p *Profile) SetAlwaysOnVPN(ctx context.Context, mode string, svc *Service) error {
+	if (mode == shillconst.AlwaysOnVPNModeOff) != (svc == nil) {
+		return errors.Errorf("mode %v and service %v does not match", mode, svc)
+	}
+	if svc != nil {
+		if err := p.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNService, svc.ObjectPath()); err != nil {
+			return errors.Wrap(err, "failed to set Always-on VPN service")
+		}
+	}
+	if err := p.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNMode, mode); err != nil {
+		return errors.Wrap(err, "failed to set Always-on VPN mode")
+	}
+	return nil
 }

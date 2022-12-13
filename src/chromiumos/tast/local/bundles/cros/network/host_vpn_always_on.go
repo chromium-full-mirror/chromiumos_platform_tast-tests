@@ -164,12 +164,10 @@ func HostVPNAlwaysOn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get active profile: ", err)
 	}
+	// We use a test profile here so don't need to reset the value.
 	vpnMode := s.Param().(hostVPNAlwaysOnTestCase).mode
-	if err := profile.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNServive, conn.Service().DBusObject.ObjectPath()); err != nil {
-		s.Fatal("Failed to set Always-on VPN service: ", err)
-	}
-	if err := profile.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNMode, vpnMode); err != nil {
-		s.Fatal("Failed to set Always-on VPN mode: ", err)
+	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
+		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}
 
 	// Check if always on VPN is set in correct mode.

@@ -151,12 +151,14 @@ func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get active profile: ", err)
 	}
 	vpnMode := s.Param().(alwaysOnVPNAutoconnectTestCase).mode
-	if err := profile.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNServive, conn.Service().DBusObject.ObjectPath()); err != nil {
-		s.Fatal("Failed to set Always-on VPN service: ", err)
+	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
+		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}
-	if err := profile.SetProperty(ctx, shillconst.ProfilePropertyAlwaysOnVPNMode, vpnMode); err != nil {
-		s.Fatal("Failed to set Always-on VPN mode: ", err)
-	}
+	defer func() {
+		if err := profile.SetAlwaysOnVPN(cleanupCtx, shillconst.AlwaysOnVPNModeOff, nil); err != nil {
+			s.Fatal("Failed to reset Always-on VPN properties: ", err)
+		}
+	}()
 
 	// Check if always on VPN is set in correct mode.
 	props, err := profile.GetProperties(ctx)
