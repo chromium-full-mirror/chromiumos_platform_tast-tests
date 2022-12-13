@@ -151,7 +151,6 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 	}
 
 	if dlcCounter > 0 && dlcCounter != len(manifest.Device) {
-		err := cellular.TagKnownBugOnBoard(ctx, nil, "b/250065904", []string{"herobrine"})
-		s.Fatal("There is an unequal number of variants and DLCs: ", err)
+		s.Fatal("There is an unequal number of variants and DLCs")
 	}
 }
