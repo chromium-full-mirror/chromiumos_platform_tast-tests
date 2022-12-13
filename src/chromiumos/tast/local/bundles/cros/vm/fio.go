@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
+	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/testing"
 )
@@ -265,7 +266,7 @@ func init() {
 }
 
 func Fio(ctx context.Context, s *testing.State) {
-	// Create a temporary directory on the stateful partition rather than in memory.
+	// Create a temporary directory that shared with the guest so the guest can put test logs.
 	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.Fio.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
@@ -274,12 +275,22 @@ func Fio(ctx context.Context, s *testing.State) {
 
 	data := s.FixtValue().(dlc.FixtData)
 
-	shared := filepath.Join(td, "shared")
+	// Create a temporary directory on the encrypted file system on `/home/root/${user hash}/`.
+	// This directory will be accessed by FIO.
+	username := data.Chrome.NormalizedUser()
+	rootCryptDir, err := cryptohome.SystemPath(ctx, username)
+	if err != nil {
+		s.Fatal("Failed to get the cryptohome directory: ", err)
+	}
+	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.Fio.")
+	defer os.RemoveAll(ud)
+
+	shared := filepath.Join(ud, "shared")
 	if err := os.Mkdir(shared, 0755); err != nil {
 		s.Fatal("Failed to create shared directory: ", err)
 	}
 
-	block := filepath.Join(td, "block")
+	block := filepath.Join(ud, "block")
 	f, err := os.Create(block)
 	if err != nil {
 		s.Fatal("Failed to create block device file: ", err)
@@ -301,7 +312,7 @@ func Fio(ctx context.Context, s *testing.State) {
 		"-c", strconv.Itoa(numCPU),
 		"-m", "1024",
 		"-s", td,
-		"--shared-dir", "/:/dev/root:type=fs:cache=always",
+		"--shared-dir", "/:root:type=fs:cache=always",
 		"--serial", fmt.Sprintf("type=file,num=1,console=true,path=%s", logFile),
 	}
 
@@ -316,7 +327,7 @@ func Fio(ctx context.Context, s *testing.State) {
 	} else if kind == "virtiofs" || kind == "virtiofs_dax" {
 		tag = "shared"
 		args = append(args, "--shared-dir",
-			fmt.Sprintf("%s:%s:type=fs:cache=always:timeout=3600:writeback=true:dax=%t",
+			fmt.Sprintf("%s:%s:type=fs:cache=auto:timeout=1:writeback=true:dax=%t",
 				shared, tag, kind == "virtiofs_dax"))
 	} else if kind == "p9" {
 		tag = "shared"
@@ -328,7 +339,7 @@ func Fio(ctx context.Context, s *testing.State) {
 	fioOutput := filepath.Join(s.OutDir(), "fio-output.json")
 
 	params := []string{
-		"root=/dev/root",
+		"root=root",
 		"rootfstype=virtiofs",
 		"rw",
 		fmt.Sprintf("init=%s", s.DataPath(runFio)),
