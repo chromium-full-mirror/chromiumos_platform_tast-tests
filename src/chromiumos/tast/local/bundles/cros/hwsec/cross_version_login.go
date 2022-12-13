@@ -13,9 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-
 	uda "chromiumos/system_api/user_data_auth_proto"
 	cryptohomecommon "chromiumos/tast/common/cryptohome"
 	"chromiumos/tast/common/hwsec"
@@ -233,7 +230,8 @@ func prefixToVersion(prefix string) ([3]int, error) {
 
 // authenticateAuthFactor authenticates the factor with the given label.
 func authenticateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, label string, authConfig *hwsec.AuthConfig, lowEntropy bool) (bool, error) {
-	_, authSessionID, err := cryptohome.StartAuthSession(ctx, username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY)
+	// TODO(b/262661359): after b/262661359 is fixed, change uda.AuthIntent_AUTH_INTENT_DECRYPT back to uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY.
+	_, authSessionID, err := cryptohome.StartAuthSession(ctx, username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to start auth session")
 	}
@@ -250,20 +248,10 @@ func authenticateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeCli
 		return false, errors.Wrap(err, "failed to authenticate with auth session")
 	}
 	if err := cryptohomecommon.ExpectContainsAuthIntent(authReply.AuthorizedFor,
-		uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY); err != nil {
+		uda.AuthIntent_AUTH_INTENT_DECRYPT); err != nil {
 		return false, errors.Wrap(err, "unexpected AuthSession authorized intents")
 	}
 	return true, nil
-}
-
-func testCheckKey(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username string, keyInfo *util.VaultKeyInfo, invalidPassword string) error {
-	if _, err := cryptohome.CheckVault(ctx, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, keyInfo.Password)); err != nil {
-		return errors.Wrap(err, "failed to check vault")
-	}
-	if _, err := cryptohome.CheckVault(ctx, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, invalidPassword)); err == nil {
-		return errors.New("unexpectedly can check vault with invalid password")
-	}
-	return nil
 }
 
 // testAuthFactor tests that the factor authenticates successfully and the invalidPassword doesn't.
@@ -277,39 +265,56 @@ func testAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, use
 	return nil
 }
 
-// testRemoveKey tests that RemoveVaultKey() works as expected
-func testRemoveKey(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, password string, keyInfo *util.VaultKeyInfo) error {
-	if err := cryptohome.RemoveVaultKey(ctx, username, password, keyInfo.KeyLabel); err != nil {
-		return errors.Wrap(err, "failed to remove key")
+// testRemoveAuthFactor tests that RemoveAuthFactor() works as expected. The auth factor with |keyinfo| would be removed.
+func testRemoveAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, password, label string, keyInfo *util.VaultKeyInfo) error {
+	if err := cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authID, label, password); err != nil {
+			return errors.Wrap(err, "failed to authenticate user")
+		}
+		if err := cryptohome.RemoveAuthFactor(ctx, authID, keyInfo.KeyLabel); err != nil {
+			return errors.Wrap(err, "failed to remove auth factor")
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
-	if _, err := cryptohome.CheckVault(ctx, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, keyInfo.Password)); err == nil {
-		return errors.New("unexpectedly can the check vault with removed key")
-	}
+
 	if _, err := authenticateAuthFactor(ctx, cryptohome, username, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, keyInfo.Password), false); err == nil {
 		return errors.New("unexpectedly can authenticate via a removed AuthFactor")
 	}
 	return nil
 }
 
-// testAddRemoveKey tests that AddVaultKey() and RemoveVaultKey() works as expected
-func testAddRemoveKey(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, password, label string, keyInfo *util.VaultKeyInfo, invalidPassword string) error {
-	if err := cryptohome.AddVaultKey(ctx, username, password, label, keyInfo.Password, keyInfo.KeyLabel, keyInfo.LowEntropy); err != nil {
-		return errors.Wrap(err, "failed to add key")
-	}
-	if err := testCheckKey(ctx, cryptohome, username, keyInfo, invalidPassword); err != nil {
-		return errors.Wrap(err, "failed to properly check key")
+// testAddRemoveAuthFactor tests that AddAuthFactor() and RemoveAuthFactor() works as expected. It would add an auth factor with |keyInfo| and then remove it.
+func testAddRemoveAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, password, label string, keyInfo *util.VaultKeyInfo, invalidPassword string) error {
+	if err := cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authID, label, password); err != nil {
+			return errors.Wrap(err, "failed to authenticate user")
+		}
+		if keyInfo.LowEntropy {
+			if err := cryptohome.AddPinAuthFactor(ctx, authID, keyInfo.KeyLabel, keyInfo.Password); err != nil {
+				return errors.Wrap(err, "failed to add auth factor")
+			}
+		} else {
+			if err := cryptohome.AddAuthFactor(ctx, authID, keyInfo.KeyLabel, keyInfo.Password); err != nil {
+				return errors.Wrap(err, "failed to add auth factor")
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 	if err := testAuthFactor(ctx, cryptohome, username, keyInfo, invalidPassword); err != nil {
 		return errors.Wrap(err, "failed to test added AuthFactor")
 	}
-	if err := testRemoveKey(ctx, cryptohome, username, password, keyInfo); err != nil {
+	if err := testRemoveAuthFactor(ctx, cryptohome, username, password, label, keyInfo); err != nil {
 		return errors.Wrap(err, "failed to properly remove key")
 	}
 	return nil
 }
 
-// testMigrateKey tests that changing the password works as expected.
-func testMigrateKey(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, oldPassword, label, changedPassword, invalidPassword string) error {
+// testUpdateAuthFactor tests that changing the password works as expected. The auth factor with |label| would be updated from |oldPassword| to |changedPassword|, and would be changed back to |oldPassword|.
+func testUpdateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, oldPassword, label, changedPassword, invalidPassword string) error {
 	// Run one session to change the password.
 	if err := cryptohome.WithAuthSession(ctx, username, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, invalidPassword); err == nil {
@@ -354,6 +359,7 @@ func hasSharedElement(lhs, rhs []string) bool {
 	return false
 }
 
+// prepareChallengeAuth prepares the dbus connection and key delegate for smart card auth.
 func prepareChallengeAuth(ctx context.Context, lf hwsec.LogFunc, config *util.CrossVersionLoginConfig) (func(), error) {
 	authConfig := config.AuthConfig
 	rsaKey := config.RsaKey
@@ -412,29 +418,20 @@ func testConfigViaChrome(ctx context.Context, config *util.CrossVersionLoginConf
 	}
 
 	// Check password login.
-	for _, withAuthFactors := range []bool{false, true} {
-		opts := []chrome.Option{
-			chrome.FakeLogin(chrome.Creds{User: username, Pass: authConfig.Password}),
-			chrome.KeepState(),
-		}
-		errorContext := ""
-		if withAuthFactors {
-			opts = append(opts, chrome.EnableFeatures("UseAuthFactors"))
-			errorContext = " via AuthFactors"
-		} else {
-			opts = append(opts, chrome.DisableFeatures("UseAuthFactors"))
-		}
-		cr, err := chrome.New(ctx, opts...)
-		if err != nil {
-			return errors.Wrapf(err, "failed to log in with password%s", errorContext)
-		}
-		// TODO(b/237120336): Check cryptohome was not recreated, by reading some file
-		// that was previously put into the snapshot.
-		if err := cr.Close(ctx); err != nil {
-			return errors.Wrapf(err, "failed to log out after password login%s", errorContext)
-		}
-		// TODO(b/237120336): Check PIN login as well.
+	opts := []chrome.Option{
+		chrome.FakeLogin(chrome.Creds{User: username, Pass: authConfig.Password}),
+		chrome.KeepState(),
 	}
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		return errors.Wrap(err, "failed to log in with password")
+	}
+	// TODO(b/237120336): Check cryptohome was not recreated, by reading some file
+	// that was previously put into the snapshot.
+	if err := cr.Close(ctx); err != nil {
+		return errors.Wrap(err, "failed to log out after password login")
+	}
+	// TODO(b/237120336): Check PIN login as well.
 
 	return nil
 }
@@ -464,6 +461,7 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 	if usedLabels := []string{newPasswordLabel, newPinLabel}; hasSharedElement(targetLabels, usedLabels) {
 		return errors.Errorf("Some labels in config are identical to the labels we would use: %q vs %q", targetLabels, usedLabels)
 	}
+	var expectedConfiguredFactors = []*uda.AuthFactorWithStatus{}
 
 	switch authConfig.AuthType {
 	case hwsec.ChallengeAuth:
@@ -472,7 +470,14 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 			return errors.Wrap(err, "failed to prepare challenge auth")
 		}
 		defer cleanup()
+		expectedConfiguredFactors = append(expectedConfiguredFactors, &uda.AuthFactorWithStatus{
+			AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
+				Label: keyLabel,
+			},
+		})
 	case hwsec.PassAuth:
+		// Check if we accidentally use the same password for different purposes.
 		var targetPasswords = []string{password}
 		for _, vaultKey := range config.ExtraVaultKeys {
 			targetPasswords = append(targetPasswords, vaultKey.Password)
@@ -480,45 +485,50 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 		if usedPasswords := []string{changedPassword, newPassword, invalidPassword, invalidPin}; hasSharedElement(targetPasswords, usedPasswords) {
 			return errors.Errorf("some passwords in config are identical to the passwords we would use: %q vs %q", targetPasswords, usedPasswords)
 		}
+		expectedConfiguredFactors = append(expectedConfiguredFactors, &uda.AuthFactorWithStatus{
+			AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+				Label: keyLabel,
+			},
+		})
 	default:
 		return errors.Errorf("unknown auth type %d", authConfig.AuthType)
 	}
 
-	// Common check
-	labels, err := cryptohome.ListVaultKeys(ctx, username)
-	if err != nil {
-		return errors.Wrap(err, "failed to list keys")
-	}
-	less := func(a, b string) bool { return a < b }
-	if !cmp.Equal(labels, targetLabels, cmpopts.SortSlices(less)) {
-		return errors.Errorf("mismatch result from list keys, got %q, expected %q", labels, targetLabels)
-	}
-	for _, label := range targetLabels {
-		if _, err := cryptohome.GetKeyData(ctx, username, label); err != nil {
-			return errors.Wrapf(err, "failed to get data of key %q", label)
+	for _, vaultKey := range config.ExtraVaultKeys {
+		factorType := uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD
+		if vaultKey.LowEntropy {
+			factorType = uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN
 		}
+		expectedConfiguredFactors = append(expectedConfiguredFactors, &uda.AuthFactorWithStatus{
+			AuthFactor: &uda.AuthFactor{
+				Type:  factorType,
+				Label: vaultKey.KeyLabel,
+			},
+		})
+	}
+
+	// Common check
+	reply, err := cryptohome.ListAuthFactors(ctx, username)
+	if err != nil {
+		return errors.Wrap(err, "failed to list auth factors")
+	}
+	if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(reply.ConfiguredAuthFactorsWithStatus, expectedConfiguredFactors); err != nil {
+		return errors.Wrap(err, "mismatch in configured auth factors (-got, +want)")
 	}
 
 	// Auth-type specific check.
 	switch authConfig.AuthType {
 	case hwsec.ChallengeAuth:
-		// VaultKeySet check.
-		if _, err := cryptohome.CheckVault(ctx, keyLabel, &authConfig); err != nil {
-			return errors.Wrap(err, "failed to check vault")
-		}
-		// AuthSession check.
-		_, authID, err := cryptohome.StartAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-		if err != nil {
-			return errors.Wrap(err, "failed to start auth session")
-		}
-		if err := cryptohome.AuthenticateChallengeCredentialWithAuthSession(ctx, authID, keyLabel, &authConfig); err != nil {
-			return errors.Wrap(err, "failed to authenticate challenge credential with auth session")
+		if err := cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+			if _, err := cryptohome.AuthenticateSmartCardAuthFactor(ctx, authID, keyLabel, &authConfig); err != nil {
+				return errors.Wrap(err, "failed to authenticate smart card auth factor")
+			}
+			return nil
+		}); err != nil {
+			return err
 		}
 	case hwsec.PassAuth:
-		// VaultKeySet check.
-		if err := testCheckKey(ctx, cryptohome, username, util.NewVaultKeyInfo(password, keyLabel, false), invalidPassword); err != nil {
-			return errors.Wrap(err, "failed to properly check key")
-		}
 		if err := testAuthFactor(ctx, cryptohome, username, util.NewVaultKeyInfo(password, keyLabel, false), invalidPassword); err != nil {
 			return errors.Wrap(err, "failed to test preexisting AuthFactor")
 		}
@@ -529,43 +539,22 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 				keyForm = "pin"
 				invalidSecret = invalidPin
 			}
-			if err := testCheckKey(ctx, cryptohome, username, &vaultKey, invalidSecret); err != nil {
-				return errors.Wrapf(err, "failed to properly check key with extra %s key", keyForm)
-			}
 			if err := testAuthFactor(ctx, cryptohome, username, &vaultKey, invalidSecret); err != nil {
 				return errors.Wrapf(err, "failed to test extra AuthFactor %s", keyForm)
 			}
-			if err := testRemoveKey(ctx, cryptohome, username, password, &vaultKey); err != nil {
+			if err := testRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, &vaultKey); err != nil {
 				return errors.Wrapf(err, "failed to properly remove key with extra %s key", keyForm)
 			}
 		}
 
-		if err := testAddRemoveKey(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPassword, newPasswordLabel, false), invalidPassword); err != nil {
+		if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPassword, newPasswordLabel, false), invalidPassword); err != nil {
 			return errors.Wrap(err, "failed to properly add or remove password key")
 		}
-		if err := testAddRemoveKey(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPin, newPinLabel, true), invalidPin); err != nil {
+		if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPin, newPinLabel, true), invalidPin); err != nil {
 			return errors.Wrap(err, "failed to properly add or remove pin key")
 		}
-		if err := testMigrateKey(ctx, cryptohome, username, password, keyLabel, changedPassword, invalidPassword); err != nil {
+		if err := testUpdateAuthFactor(ctx, cryptohome, username, password, keyLabel, changedPassword, invalidPassword); err != nil {
 			return errors.Wrap(err, "failed to properly migrate key")
-		}
-		// AuthSession check.
-		_, authID, err := cryptohome.StartAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-		if err != nil {
-			return errors.Wrap(err, "failed to start auth session")
-		}
-		// Authenticate with invalid password. This is expected to fail.
-		if err := cryptohome.AuthenticateAuthSession(ctx, invalidPassword, keyLabel, authID, false); err == nil {
-			return errors.Wrap(err, "unexpectedly authenticate auth session with invalid password")
-		}
-
-		_, authID, err = cryptohome.StartAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-		if err != nil {
-			return errors.Wrap(err, "failed to start auth session")
-		}
-		// Authenticate with correct password. This should succeed.
-		if err := cryptohome.AuthenticateAuthSession(ctx, password, keyLabel, authID, false); err != nil {
-			return errors.Wrap(err, "failed to authenticate auth session")
 		}
 	}
 

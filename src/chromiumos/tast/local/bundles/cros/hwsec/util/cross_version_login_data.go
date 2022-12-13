@@ -16,6 +16,7 @@ import (
 	"path"
 
 	cpb "chromiumos/system_api/cryptohome_proto"
+	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -70,16 +71,21 @@ func NewPassAuthCrossVersionLoginConfig(authConfig *hwsec.AuthConfig, keyLabel s
 }
 
 // AddVaultKeyData adds a vault key to cryptohome and store the VaultKeyInfo to the config
-func (config *CrossVersionLoginConfig) AddVaultKeyData(ctx context.Context, cryptohome *hwsec.CryptohomeClient, info *VaultKeyInfo) error {
-	authConfig := config.AuthConfig
-	username := authConfig.Username
-	password := authConfig.Password
-	keyLabel := config.KeyLabel
-	if err := cryptohome.AddVaultKey(ctx, username, password, keyLabel, info.Password, info.KeyLabel, info.LowEntropy); err != nil {
-		return errors.Wrap(err, "failed to add key")
-	}
-	if _, err := cryptohome.CheckVault(ctx, info.KeyLabel, hwsec.NewPassAuthConfig(username, info.Password)); err != nil {
-		return errors.Wrap(err, "failed to check vault with new key")
+func (config *CrossVersionLoginConfig) AddVaultKeyData(ctx context.Context, cryptohome *hwsec.CryptohomeClient, authID string, info *VaultKeyInfo) error {
+	if info.LowEntropy {
+		if err := cryptohome.AddPinAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
+			return errors.Wrap(err, "failed to add pin")
+		}
+		if _, err := cryptohome.AuthenticatePinAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
+			return errors.Wrap(err, "failed to verify added pin")
+		}
+	} else {
+		if err := cryptohome.AddAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
+			return errors.Wrap(err, "failed to add password")
+		}
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
+			return errors.Wrap(err, "failed to verify added password")
+		}
 	}
 	config.ExtraVaultKeys = append(config.ExtraVaultKeys, *info)
 	return nil
@@ -156,18 +162,21 @@ func createChallengeResponseData(ctx context.Context, lf hwsec.LogFunc, cryptoho
 	defer keyDelegate.Close()
 
 	authConfig := hwsec.NewChallengeAuthConfig(testUser, dbusName, keyDelegate.DBusPath, pubKeySPKIDER, keyAlgs)
-	// Enforce the usage of ecryptfs, so that we can take a usable snapshot of encrypted files.
-	vaultConfig := hwsec.NewVaultConfig()
-	vaultConfig.Ecryptfs = true
 	// Create the challenge-response protected cryptohome.
-	if err := cryptohome.MountVault(ctx, keyLabel, authConfig, true, vaultConfig); err != nil {
-		return nil, errors.Wrap(err, "failed to create cryptohome")
-	}
-	if keyDelegate.ChallengeCallCnt == 0 {
-		return nil, errors.New("no key challenges made during mount")
-	}
-	if _, err := cryptohome.CheckVault(ctx, keyLabel, authConfig); err != nil {
-		return nil, errors.Wrap(err, "failed to check the key for the mounted cryptohome")
+	if err := cryptohome.WithAuthSession(ctx, testUser, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		if err := cryptohome.CreatePersistentUser(ctx, authID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		// Enforce the usage of ecryptfs, so that we can take a usable snapshot of encrypted files.
+		if _, err := cryptohome.PreparePersistentVault(ctx, authID, true /* ecryptfs */); err != nil {
+			return errors.Wrap(err, "failed to prepare persistent user")
+		}
+		if err := cryptohome.AddSmartCardAuthFactor(ctx, authID, keyLabel, authConfig); err != nil {
+			return errors.Wrap(err, "failed to add smart card auth factor")
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	// It's expected that the ecryptfs was used because we specified `Ecryptfs` in `vaultConfig`.
@@ -200,16 +209,18 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 	username := cr.Creds().User
 	password := cr.Creds().Pass
 
-	labels, err := cryptohome.ListVaultKeys(ctx, username)
+	reply, err := cryptohome.ListAuthFactors(ctx, username)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list key label")
+		return nil, errors.Wrap(err, "failed to list auth factors")
 	}
-	if len(labels) != 1 {
-		return nil, errors.Errorf("expected exactly 1 label, but got %v", labels)
+	authFactors := reply.ConfiguredAuthFactors
+	if len(authFactors) != 1 {
+		return nil, errors.Errorf("expected exactly 1 auth factor, but got %v", authFactors)
 	}
+	keyLabel := authFactors[0].Label
 
 	authConfig := hwsec.NewPassAuthConfig(username, password)
-	config := NewPassAuthCrossVersionLoginConfig(authConfig, labels[0])
+	config := NewPassAuthCrossVersionLoginConfig(authConfig, keyLabel)
 	ecryptfsExists, err := ecryptfsVaultExists(ctx, cryptohome, username)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check ecryptfs presence")
@@ -218,13 +229,21 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 		config.VaultFSType = ECRYPTFSVaultFS
 	}
 
-	if err := config.AddVaultKeyData(ctx, cryptohome, NewVaultKeyInfo(extraPass, extraLabel, false)); err != nil {
-		return nil, errors.Wrap(err, "failed to add vault key data of password")
-	}
-	if supportsLE {
-		if err := config.AddVaultKeyData(ctx, cryptohome, NewVaultKeyInfo(pin, pinLabel, true)); err != nil {
-			return nil, errors.Wrap(err, "failed to add vault key data of pin")
+	if err := cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authID, keyLabel, password); err != nil {
+			return errors.Wrap(err, "failed to authenticate auth factor")
 		}
+		if err := config.AddVaultKeyData(ctx, cryptohome, authID, NewVaultKeyInfo(extraPass, extraLabel, false)); err != nil {
+			return errors.Wrap(err, "failed to add vault key data of password")
+		}
+		if supportsLE {
+			if err := config.AddVaultKeyData(ctx, cryptohome, authID, NewVaultKeyInfo(pin, pinLabel, false)); err != nil {
+				return errors.Wrap(err, "failed to add vault key data of pin")
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return config, nil
 }
