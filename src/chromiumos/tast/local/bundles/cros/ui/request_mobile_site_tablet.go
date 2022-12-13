@@ -80,15 +80,18 @@ type mobileTestResources struct {
 
 func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 	optsForUser := map[userType][]chrome.Option{
-		child: []chrome.Option{
+		child: {
 			chrome.GAIALogin(chrome.Creds{
 				User:       s.RequiredVar("family.unicornEmail"),
 				Pass:       s.RequiredVar("family.unicornPassword"),
 				ParentUser: s.RequiredVar("family.parentEmail"),
 				ParentPass: s.RequiredVar("family.parentPassword"),
 			}),
+			// Dev tools are necessary for the test instrumentation to work, but by default
+			// disabled for supervised users. Always force enable them in supervised users tests.
+			chrome.ExtraArgs("--force-devtools-available"),
 		},
-		normal: []chrome.Option{
+		normal: {
 			chrome.GAIALogin(chrome.Creds{
 				User: s.RequiredVar("family.parentEmail"),
 				Pass: s.RequiredVar("family.parentPassword"),
