@@ -37,6 +37,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
+		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:              "usb_pins_on_lid_close",
@@ -91,24 +92,11 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: usbPortStatePollTimeout, Interval: usbPortStatePollInterval}); err != nil {
 		s.Fatal("Expected USB Ports to be enabled: ", err)
 	}
-	if err := checkUSBAPortEnabled(ctx, h, enablePins, 1); err != nil {
-		s.Fatal("Expected USB Ports to be enabled: ", err)
-	}
 
 	switch s.Param().(ecUsbPortTest) {
 	case testUSBOnShutdown:
 		if err := testPortsAfterShutdown(ctx, h, enablePins); err != nil {
 			s.Fatal("Some USB Ports enabled after shutdown: ", err)
-		}
-		defer func() {
-			s.Log("Reopen DUT lid in case it was left closed at test end")
-			if err := h.Servo.OpenLid(ctx); err != nil {
-				s.Fatal("Failed to make sure lid is open after test end: ", err)
-			}
-		}()
-	case testUSBOnLidClose:
-		if err := testPortsAfterLidClose(ctx, h, enablePins); err != nil {
-			s.Fatal("Some USB Ports enabled after lidclose: ", err)
 		}
 		defer func() {
 			s.Log("Reset DUT after test end in case it was left powered off")
@@ -117,6 +105,16 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 			}
 			if err := h.WaitConnect(ctx); err != nil {
 				s.Fatal("Failed to reconnect to DUT after test end: ", err)
+			}
+		}()
+	case testUSBOnLidClose:
+		if err := testPortsAfterLidClose(ctx, h, enablePins); err != nil {
+			s.Fatal("Some USB Ports enabled after lidclose: ", err)
+		}
+		defer func() {
+			s.Log("Reopen DUT lid in case it was left closed at test end")
+			if err := h.Servo.OpenLid(ctx); err != nil {
+				s.Fatal("Failed to make sure lid is open after test end: ", err)
 			}
 		}()
 	}
