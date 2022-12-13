@@ -169,8 +169,13 @@ type Param struct {
 	TestLacros bool
 
 	// TestManatee controls whether the test case tests Manatee.
-	// If yes, an extra software dependency to "vm_host_manatee" will be added.
+	// If yes, an extra software dependency to "manatee" will be added.
 	TestManatee bool
+
+	// IsManateeCritical indicates whether the manatee test should be critical
+	// or not. This is only relevant if the TestManatee parameter is set
+	// and the given test has a manatee variant.
+	IsManateeCritical bool
 
 	// DeviceMode indicates whether the tests explicitly use use tablet mode
 	// or clamshell mode.
@@ -246,6 +251,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	}
 
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}}
+	var itManatee = []iterator{{debianVersion: vm.DebianBuster, stable: true}}
 
 	for _, testCase := range baseCases {
 		// Check here if it's possible for any iteration of
@@ -404,6 +410,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			if isManatee {
 				testParam.Name = combineName(name, "manatee")
+				if !testCase.IsManateeCritical {
+					testParam.ExtraAttr = append(testParam.ExtraAttr, "informational")
+				}
 				testParam.ExtraSoftwareDeps = append(extraSoftwareDeps, "manatee")
 			}
 
@@ -425,7 +434,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 		}
 
-		var itManatee = []iterator{{debianVersion: vm.DebianBuster, stable: true}}
 		if testCase.TestManatee {
 			for _, i := range itManatee {
 				iterate(i, "", true)

@@ -18,74 +18,90 @@ import (
 	"chromiumos/tast/local/crostini"
 )
 
-var standardTests = []string{
-	"audio_basic.go",
-	"audio_playback_configurations.go",
-	"command_cd.go",
-	"command_ps.go",
-	"command_vim.go",
-	"copy_files_to_linux_files.go",
-	"crash_reporter.go",
-	"drag_drop.go",
-	"files_app_watch.go",
-	"home_directory_create_file.go",
-	"home_directory_delete_file.go",
-	"home_directory_rename_file.go",
-	"icon_and_username.go",
-	"launch_terminal.go",
-	"nested_vm.go",
-	"notify.go",
-	"no_access_to_downloads.go",
-	"no_shared_folder.go",
-	"open_with_terminal.go",
-	"package_info.go",
-	"package_install_uninstall.go",
-	"pulse_audio_basic.go",
-	"remove_cancel.go",
-	"remove_ok.go",
-	"resize_cancel.go",
-	"resize_ok.go",
-	"resize_restart.go",
-	"resize_space_constrained.go",
-	"restart.go",
-	"restart_icon.go",
-	"run_with_arc.go",
-	"shared_font_files.go",
-	"share_downloads_add_files.go",
-	"share_downloads.go",
-	"share_files_cancel.go",
-	"share_files_manage.go",
-	"share_files_ok.go",
-	"share_files_restart.go",
-	"share_files_toast.go",
-	"share_folders.go",
-	"share_folder_zip_file.go",
-	"share_invalid_paths.go",
-	"sshfs_mount.go",
-	"sync_time.go",
-	"task_manager.go",
-	"uninstall_invalid_app.go",
-	"verify_app_x11.go",
-	"vmc_extra_disk.go",
-	"vmc_start.go",
-	"webserver.go",
-	"xattrs.go",
+// Struct used to specify extra test options for standard tests with ManaTEE variants.
+// By default the ManaTEE variants are not disabled but are **not** set as critical.
+// If the timeout is not changed, we set it to the default value.
+type testOptions struct {
+	disabledOnManatee bool
+	criticalOnManatee bool
+	timeout           time.Duration
 }
 
-var standardTestsCustomTimeout = map[string]time.Duration{
+const DefaultStandardTimeout = 7 * time.Minute
+
+// Map crostini tests by file and their extra test options (if any).
+// For tests that are broken on manatee runs but not on non-manatee buster_stable builds
+// please file bugs directly in the manatee-specific component: http://b/issues?q=componentid:988046
+// For context on certain tests being disabled on manatee, see: http://b/221317548#comment9
+var standardTests = map[string]testOptions{
+	"audio_basic.go": testOptions{},
 	// Audio playback configurations took about 6 minutes on model with echo reference
-	"audio_playback_configurations.go": 10 * time.Minute,
+	"audio_playback_configurations.go": testOptions{timeout: 10 * time.Minute},
+	"basic.go":                         testOptions{criticalOnManatee: true},
+	"command_cd.go":                    testOptions{},
+	"command_ps.go":                    testOptions{},
+	"command_vim.go":                   testOptions{},
+	"copy_files_to_linux_files.go":     testOptions{},
+	"crash_reporter.go":                testOptions{},
+	"drag_drop.go":                     testOptions{},
+	"files_app_watch.go":               testOptions{},
+	"home_directory_create_file.go":    testOptions{},
+	"home_directory_delete_file.go":    testOptions{},
+	"home_directory_rename_file.go":    testOptions{},
+	"icon_and_username.go":             testOptions{},
+	"launch_terminal.go":               testOptions{},
+	"nested_vm.go":                     testOptions{disabledOnManatee: true},
+	"notify.go":                        testOptions{},
+	"no_access_to_downloads.go":        testOptions{},
+	"no_shared_folder.go":              testOptions{},
+	"open_with_terminal.go":            testOptions{},
+	"package_info.go":                  testOptions{},
+	"package_install_uninstall.go":     testOptions{},
+	"pulse_audio_basic.go":             testOptions{},
+	"remove_cancel.go":                 testOptions{},
+	"remove_ok.go":                     testOptions{},
+	"resize_cancel.go":                 testOptions{},
+	"resize_ok.go":                     testOptions{disabledOnManatee: true},
+	"resize_restart.go":                testOptions{disabledOnManatee: true},
+	"resize_space_constrained.go":      testOptions{disabledOnManatee: true},
+	"restart.go":                       testOptions{},
+	"restart_icon.go":                  testOptions{},
+	"run_with_arc.go":                  testOptions{disabledOnManatee: true},
+	"shared_font_files.go":             testOptions{disabledOnManatee: true},
+	"share_downloads_add_files.go":     testOptions{},
+	"share_downloads.go":               testOptions{},
+	"share_files_cancel.go":            testOptions{},
+	"share_files_manage.go":            testOptions{},
+	"share_files_ok.go":                testOptions{},
+	"share_files_restart.go":           testOptions{},
+	"share_files_toast.go":             testOptions{},
+	"share_folders.go":                 testOptions{},
+	"share_folder_zip_file.go":         testOptions{},
+	"share_invalid_paths.go":           testOptions{},
+	"sshfs_mount.go":                   testOptions{},
+	"sync_time.go":                     testOptions{},
+	"task_manager.go":                  testOptions{disabledOnManatee: true},
+	"uninstall_invalid_app.go":         testOptions{},
+	"verify_app_x11.go":                testOptions{},
+	"vmc_extra_disk.go":                testOptions{disabledOnManatee: true},
+	"vmc_start.go":                     testOptions{disabledOnManatee: true},
+	"webserver.go":                     testOptions{},
+	"xattrs.go":                        testOptions{},
 }
 
 func TestFixTestParams(t *testing.T) {
-	for _, filename := range standardTests {
-		var customTimeout time.Duration
-		if timeout, ok := standardTestsCustomTimeout[filename]; ok {
-			customTimeout = timeout
+	for filename, options := range standardTests {
+		customTimeout := options.timeout
+		// Use the default timeout if we didn't specify a custom timeout
+		if customTimeout == 0 {
+			customTimeout = DefaultStandardTimeout
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:    customTimeout,
-			UseFixture: true,
+			Timeout:           customTimeout,
+			UseFixture:        true,
+			TestManatee:       !options.disabledOnManatee,
+			IsManateeCritical: options.criticalOnManatee,
+			ExtraSoftwareDeps: []string{"vm_host"},
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -103,21 +119,6 @@ func TestLacrosTestParams(t *testing.T) {
 			UseFixture: true,
 			TestLacros: true,
 			Val:        "browser.TypeAsh",
-		}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-var manateeTests = []string{
-	"basic.go",
-}
-
-func TestManateeTestParams(t *testing.T) {
-	for _, filename := range manateeTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			UseFixture:        true,
-			TestManatee:       true,
-			ExtraSoftwareDeps: []string{"vm_host"},
 		}})
 		genparams.Ensure(t, filename, params)
 	}
