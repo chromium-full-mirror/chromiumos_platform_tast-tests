@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/graphics/WebGL/webgl_many_planets_deep_static.tar.zst",
+  "size": 545220,
+  "sha256sum": "b84064bbb7f3bbdd29fb1f2cbf771b9bbefa3a610c30e618670b2faf57dccb07"
+}
