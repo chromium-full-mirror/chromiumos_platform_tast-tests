@@ -184,7 +184,7 @@ func WebauthnAttestation(ctx context.Context, s *testing.State) {
 			attestationType: webauthnpb.AttestationType_ENTERPRISE,
 		},
 	} {
-		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+		result := s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
 			// Set u2f/g2f mode to enable power button press authentication and enterprise
 			// attestation.
 			if tc.g2f {
@@ -230,6 +230,8 @@ func WebauthnAttestation(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to perform GetAssertion flow: ", err)
 			}
 		})
+		if !result {
+			break
+		}
 	}
-
 }

@@ -243,7 +243,7 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 			authCallback:      passwordAuthCallback,
 		},
 	} {
-		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+		result := s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
 			if _, err := client.StartWebauthn(ctx, &webauthnpb.StartWebauthnRequest{
 				UserVerification:  tc.userVerification,
 				AuthenticatorType: tc.authenticatorType,
@@ -260,6 +260,8 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to perform GetAssertion flow: ", err)
 			}
 		})
+		if !result {
+			break
+		}
 	}
-
 }
