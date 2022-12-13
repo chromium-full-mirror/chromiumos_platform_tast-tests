@@ -79,6 +79,10 @@ eapol_version=2
 	return confPath, nil
 }
 
+func (c EAPConf) String() string {
+	return fmt.Sprintf("%s-%s", c.OuterAuth, c.InnerAuth)
+}
+
 // Server holds information about a started hostapd server for the 'driver=wired' variant.
 type Server struct {
 	hostapd.Server

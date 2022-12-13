@@ -6,6 +6,7 @@ package hostapd
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,6 +26,8 @@ type configGenerator interface {
 	// configuration in dir. Returns the path to the main configuration
 	// file or an error.
 	Generate(ctx context.Context, dir, ctrlPath string) (string, error)
+	// String returns a human readable representation of the configuration.
+	String() string
 }
 
 // Server holds information about a started hostapd server.
@@ -143,4 +146,8 @@ func (s *Server) ListStations(ctx context.Context) ([]string, error) {
 		return nil, errors.Wrapf(err, "hostapd_cli list_sta command failed: %s", e)
 	}
 	return strings.Split(o, "\n"), nil
+}
+
+func (s *Server) String() string {
+	return fmt.Sprintf("%s on %s", s.conf, s.iface)
 }

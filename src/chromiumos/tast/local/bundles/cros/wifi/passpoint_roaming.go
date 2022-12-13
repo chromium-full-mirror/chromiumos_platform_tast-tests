@@ -258,6 +258,7 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 
 func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext, ap *hostapd.Server) (retErr error) {
 	// Create the test access point.
+	testing.ContextLogf(ctx, "Creating %s", ap)
 	if err := ap.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start access point")
 	}
@@ -268,6 +269,7 @@ func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext
 	}()
 
 	// Create a monitor to collect access point events.
+	testing.ContextLogf(ctx, "Starting monitor for %s", ap)
 	m := hostapd.NewMonitor()
 	if err := m.Start(ctx, ap); err != nil {
 		return errors.Wrap(err, "failed to start hostapd monitor")

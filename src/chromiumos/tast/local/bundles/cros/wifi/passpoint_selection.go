@@ -397,6 +397,7 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 
 	// Start all the access points.
 	for _, ap := range tc.aps {
+		testing.ContextLogf(ctx, "Creating %s", ap)
 		if err := ap.Start(ctx); err != nil {
 			s.Fatal("Failed to start access point: ", err)
 		}
@@ -415,6 +416,7 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a monitor to collect access point events.
+	testing.ContextLogf(ctx, "Starting monitor for %s", tc.expectedAP)
 	m := hostapd.NewMonitor()
 	if err := m.Start(ctx, tc.expectedAP); err != nil {
 		s.Fatal("Failed to start hostapd monitor: ", err)

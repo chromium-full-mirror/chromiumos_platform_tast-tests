@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/hostapd"
+	"chromiumos/tast/testing"
 )
 
 // AccessPoint describes a Passpoint compatible access point with its match criteria.
@@ -233,6 +234,10 @@ hs20=1
 	return buf.String(), nil
 }
 
+func (c APConf) String() string {
+	return fmt.Sprintf("%q", c.ssid)
+}
+
 // STAAssociationTimeout is the reasonable delay to wait for station
 // association before making a decision.
 const STAAssociationTimeout = time.Minute
@@ -259,6 +264,7 @@ func waitForSTAAssociationEvent(ctx context.Context, m *hostapd.Monitor, client 
 	if err != nil {
 		return errors.Wrapf(err, "failed to obtain %s interface information: ", client)
 	}
+	testing.ContextLogf(ctx, "Waiting %s (%s) association event", iface.HardwareAddr, client)
 
 	for {
 		event, err := m.WaitForEvent(timeoutContext)
@@ -276,7 +282,7 @@ func waitForSTAAssociationEvent(ctx context.Context, m *hostapd.Monitor, client 
 		}
 		if e, ok := event.(*hostapd.ApStaDisconnectedEvent); ok && !association {
 			if bytes.Compare(iface.HardwareAddr, e.Addr) != 0 {
-				return errors.Errorf("unexpected station association: got %v want %v", e.Addr, iface.HardwareAddr)
+				return errors.Errorf("unexpected station disassociation: got %v want %v", e.Addr, iface.HardwareAddr)
 			}
 			return nil
 		}
