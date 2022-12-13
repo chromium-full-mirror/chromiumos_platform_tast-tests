@@ -7,6 +7,7 @@ package firmware
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 )
 
@@ -30,7 +30,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DevModeBootFromUSB,
 		Desc:         "Verify the functionality of Ctrl+U while on the dev screen",
-		Contacts:     []string{"cienet-firmware@cienet.corp-partner.google.com", "chromeos-firmware@google.com"},
+		Contacts:     []string{"chromeos-faft@google.com", "cienet-firmware@cienet.corp-partner.google.com"},
+		BugComponent: "b:792402",
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},
@@ -58,6 +59,12 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
+	}
+
+	// Ensure CCD open and testlab enabled. When CCD locked,
+	// simulated key presses may not be detected later during the test.
+	if err := h.OpenCCD(ctx, true, true); err != nil {
+		s.Fatal("Failed to open CCD: ", err)
 	}
 
 	ms, err := firmware.NewModeSwitcher(ctx, h)
@@ -122,10 +129,13 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	// Store a copy of the firmware log on the local machine,
 	// which would get uploaded to Stainless for debugging purposes.
 	defer func(ctx context.Context) {
-		s.Log("Sending file to local machine")
-		destPath := filepath.Join(s.OutDir(), "/firmwareLog")
-		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), "/sys/firmware/log", destPath, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to send firmware log to local machine: ", err)
+		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Fatal("Failed to write firmware log: ", err)
 		}
 	}(cleanupCtx)
 
