@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	libhwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -30,7 +31,14 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome", "tpm"},
-		Timeout:      3 * time.Minute,
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}},
+		Timeout: 3 * time.Minute,
 	})
 }
 

@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 // NOTE: This test is largely similar to hwsec.RecreateUserVaultTPM1 (a remote test), if change is made to one,
@@ -31,9 +32,16 @@ func init() {
 			"garryxiao@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm2", "tpm_clear_allowed"},
+		SoftwareDeps: []string{"tpm2"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic", "tpm_clear_allowed"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
+		}},
 	})
 }
 

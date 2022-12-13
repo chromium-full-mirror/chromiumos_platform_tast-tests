@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -30,13 +31,34 @@ func init() {
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{
 			{
-				Name: "rsassa_sha1",
+				Name:              "rsassa_sha1",
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 				Val: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
 				},
 			},
 			{
-				Name: "rsassa_all",
+				Name:              "rsassa_all",
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+				Val: []cpb.ChallengeSignatureAlgorithm{
+					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
+					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA256,
+					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA384,
+					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA512,
+				},
+			},
+			{
+				Name:              "rsassa_sha1_tpm_dynamic",
+				ExtraSoftwareDeps: []string{"tpm_dynamic"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+				Val: []cpb.ChallengeSignatureAlgorithm{
+					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
+				},
+			},
+			{
+				Name:              "rsassa_all_tpm_dynamic",
+				ExtraSoftwareDeps: []string{"tpm_dynamic"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 				Val: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA256,

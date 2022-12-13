@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:              "tpm1",
-			ExtraSoftwareDeps: []string{"tpm1"},
+			ExtraSoftwareDeps: []string{"tpm1", "no_tpm_dynamic"},
 			ExtraAttr:         []string{"informational"},
 			Timeout:           4 * time.Minute,
 		}, {
@@ -37,7 +38,18 @@ func init() {
 			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "tpm2",
-			ExtraSoftwareDeps: []string{"tpm2", "no_qemu"},
+			ExtraSoftwareDeps: []string{"tpm2", "no_qemu", "no_tpm_dynamic"},
+			// No ExtraAttr; this test is critical.
+		}, {
+			Name:              "tpm_dynamic_1",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm1()),
+			ExtraAttr:         []string{"informational"},
+			Timeout:           4 * time.Minute,
+		}, {
+			Name:              "tpm_dynamic_2",
+			ExtraSoftwareDeps: []string{"no_qemu", "tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
 			// No ExtraAttr; this test is critical.
 		}},
 	})

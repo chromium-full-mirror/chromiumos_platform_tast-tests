@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 // NOTE: This test is largely similar to hwsec.KeysetTiedToTPM1 (a remote test), if change is made to one, it is likely that the other have to be changed as well.
@@ -27,14 +28,26 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm2", "tpm_clear_allowed"},
+		SoftwareDeps: []string{"tpm2"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
+			Name:              "with_uss",
+			Fixture:           "ussAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
+			Name:              "with_vk",
+			Fixture:           "vkAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "with_uss_tpm_dynamic",
+			Fixture:           "ussAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"tpm_dynamic", "tpm_clear_allowed"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
+		}, {
+			Name:              "with_vk_tpm_dynamic",
+			Fixture:           "vkAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"tpm_dynamic", "tpm_clear_allowed"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
 		}},
 	})
 }

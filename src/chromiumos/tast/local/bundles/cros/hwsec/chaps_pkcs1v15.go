@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	libhwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -31,11 +32,23 @@ func init() {
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
+			Name:              "with_uss",
+			Fixture:           "ussAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
+			Name:              "with_vk",
+			Fixture:           "vkAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "with_uss_tpm_dynamic",
+			Fixture:           "ussAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name:              "with_vk_tpm_dynamic",
+			Fixture:           "vkAuthSessionFixture",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}},
 	})
 }

@@ -10,6 +10,7 @@ import (
 	"chromiumos/tast/common/hwsec"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -20,6 +21,13 @@ func init() {
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement"},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}},
 	})
 }
 
