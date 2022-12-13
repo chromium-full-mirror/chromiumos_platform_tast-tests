@@ -470,7 +470,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	// The screenWake function attempts one of the screenWakeTrigger options to wake the screen.
 	screenWake := func(ctx context.Context, option screenWakeTrigger) error {
 		// Ensure that DUT's screen is off before sending a trigger to wake the screen.
-		if screenIsOn {
+		if screenIsOn && option != screenWakeByCloseOpenLid {
 			s.Log("Turn off DUT's screen before testing a screen wake trigger")
 			if err := turnDisplayOffWithPower(ctx); err != nil {
 				return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
@@ -584,24 +584,10 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			if err != nil {
 				return errors.Wrap(err, "failed to read lidstate from EC console")
 			}
-			s.Logf("Lid state from EC console: %s", lidStateEC[0][1])
-
-			s.Log("Wait for power state to become S0ix or S3")
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				state, err := h.Servo.GetECSystemPowerState(ctx)
-				if err != nil {
-					return testing.PollBreak(errors.Wrap(err, "failed to get power state"))
-				}
-				if err := testing.Sleep(ctx, 1*time.Second); err != nil {
-					return errors.Wrap(err, "error in sleeping for 1 second")
-				}
-				if state != "S0ix" && state != "S3" {
-					return errors.New("power state is " + state)
-				}
-				return nil
-			}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 2 * time.Minute}); err != nil {
-				return errors.Wrap(err, "error in waiting for power state to be S0ix or S3")
+			if strings.TrimSpace(lidStateEC[0][1]) != "closed" {
+				return errors.Errorf("expected lid closed, but got:%s", lidStateEC[0][1])
 			}
+
 			s.Log("Wait for a few seconds before opening DUT's lid")
 			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 				return errors.Wrap(err, "error in sleeping before opening DUT's lid")
