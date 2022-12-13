@@ -161,7 +161,10 @@ func testIfPhysicalPresenceRequiredForCCDOpen(ctx context.Context, s *testing.St
 	h := s.FixtValue().(*fixture.Value).Helper
 	regex := "Console unlock allowed|CCD opened"
 	if shouldBeRequired {
-		regex = "Press the physical button now!"
+		// If `ccd open` is allowed, the GSC will prompt for the user to press.
+		// If `ccd open` is not allowed, an access denied string will be
+		// printed.
+		regex = "Press the physical button now!|Access Denied"
 	}
 
 	if err := h.Servo.CheckGSCCommandOutput(ctx, "ccd open", []string{regex}); err != nil {
