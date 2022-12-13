@@ -13,7 +13,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -49,26 +48,26 @@ type ifreq struct {
 func openTapDevice(device *pp.NetworkDevice) (int, error) {
 	const path = "/dev/net/tun"
 
-	fd, err := syscall.Open(path, syscall.O_RDWR|syscall.O_NONBLOCK, 0)
+	fd, err := unix.Open(path, unix.O_RDWR|unix.O_NONBLOCK, 0)
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to open Tap device: %v", device.Ifname)
 	}
 
 	if len(device.Ifname) > unix.IFNAMSIZ-1 {
-		syscall.Close(fd)
+		unix.Close(fd)
 		return 0, errors.Wrapf(err, "too long Ifname: %s", device.Ifname)
 	}
 
 	ifr := ifreq{}
 	copy(ifr.name[:], device.Ifname)
-	ifr.flags = syscall.IFF_TAP | syscall.IFF_NO_PI | syscall.IFF_VNET_HDR
-	if _, _, errno := syscall.Syscall(
-		syscall.SYS_IOCTL,
+	ifr.flags = unix.IFF_TAP | unix.IFF_NO_PI | unix.IFF_VNET_HDR
+	if _, _, errno := unix.Syscall(
+		unix.SYS_IOCTL,
 		uintptr(fd),
-		syscall.TUNSETIFF,
+		unix.TUNSETIFF,
 		uintptr(unsafe.Pointer(&ifr)),
 	); errno != 0 {
-		syscall.Close(fd)
+		unix.Close(fd)
 		return 0, errors.Errorf("failed to set network interface: %s", errno.Error())
 	}
 
@@ -136,7 +135,7 @@ func getTap(ctx context.Context, pc *patchpanel.Client, cid uint32) (device tapD
 
 	cleanup = func() {
 		shutdown()
-		syscall.Close(fd)
+		unix.Close(fd)
 	}
 
 	return
