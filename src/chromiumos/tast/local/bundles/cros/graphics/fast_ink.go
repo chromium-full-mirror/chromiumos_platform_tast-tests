@@ -64,7 +64,7 @@ func init() {
 			"amusbach@chromium.org",
 			"oshima@chromium.org",
 		},
-		BugComponent: "b:189315", // ChromeOS > Platform > Services > Input > Stylus
+		BugComponent: "b:326525", // Research > Ink > Longform
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.InternalDisplay(), hwdep.TouchScreen()),
