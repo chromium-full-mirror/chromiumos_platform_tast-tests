@@ -6,8 +6,11 @@ package wifi
 
 import (
 	"context"
+	"encoding/hex"
+	"strings"
 	"time"
 
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
@@ -181,6 +184,14 @@ func init() {
 	})
 }
 
+// testAP contains information related to a test access point.
+type testAP struct {
+	// ssid is the name of the network provided by the access point.
+	ssid string
+	// server is the instance of hostapd that will provide the network.
+	server *hostapd.Server
+}
+
 // roamingTestContext contains the environment required to run a test case.
 type roamingTestContext struct {
 	// manager is the proxy to Shill Manager API.
@@ -188,7 +199,7 @@ type roamingTestContext struct {
 	// clientIface is the simulated interface used by Shill.
 	clientIface string
 	// aps is the list of access point created for the test.
-	aps []*hostapd.Server
+	aps []testAP
 	// credentials is the set of Passpoint credentials under test.
 	credentials *passpoint.Credentials
 }
@@ -243,9 +254,9 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set Passpoint credentials: ", err)
 	}
 
-	for i, ap := range tc.aps {
+	for _, ap := range tc.aps {
 		if err := runApTestCase(ctx, s, tc, ap); err != nil {
-			s.Fatalf("Failed to connect to access point %d: %v", i, err)
+			s.Fatalf("Failed to connect to access point %s: %v", ap.ssid, err)
 		}
 		// Flush the cache of previously scanned networks.
 		// As the test does quick AP changes, the previous access point stays in
@@ -256,22 +267,22 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 	}
 }
 
-func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext, ap *hostapd.Server) (retErr error) {
+func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext, ap testAP) (retErr error) {
 	// Create the test access point.
-	testing.ContextLogf(ctx, "Creating %s", ap)
-	if err := ap.Start(ctx); err != nil {
+	testing.ContextLogf(ctx, "Creating %s", ap.server)
+	if err := ap.server.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start access point")
 	}
 	defer func() {
-		if err := ap.Stop(); retErr == nil && err != nil {
+		if err := ap.server.Stop(); retErr == nil && err != nil {
 			retErr = errors.Wrap(err, "failed to stop access point")
 		}
 	}()
 
 	// Create a monitor to collect access point events.
-	testing.ContextLogf(ctx, "Starting monitor for %s", ap)
+	testing.ContextLogf(ctx, "Starting monitor for %s", ap.server)
 	m := hostapd.NewMonitor()
-	if err := m.Start(ctx, ap); err != nil {
+	if err := m.Start(ctx, ap.server); err != nil {
 		return errors.Wrap(err, "failed to start hostapd monitor")
 	}
 	defer func(ctx context.Context) {
@@ -284,8 +295,12 @@ func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	// Trigger a scan.
-	if err := tc.manager.RequestScan(ctx, shill.TechnologyWifi); err != nil {
+	// Trigger a scan and wait for the network to be discovered by Shill.
+	// b/245919543: a scan request might be refused because a scan is
+	// automatically started after the previous AP disappeared. If the new
+	// AP appears during the ongoing scan but late, it might not be discovered
+	// and the test will fail.
+	if err := scanAndWaitForService(ctx, tc, ap.ssid); err != nil {
 		return errors.Wrap(err, "failed to request an active scan")
 	}
 
@@ -317,16 +332,66 @@ func prepareRoamingTest(ctx context.Context, s *testing.State) (*roamingTestCont
 	}
 
 	// Create one access point per test network.
-	var servers []*hostapd.Server
+	var aps []testAP
 	for i, ap := range params.aps {
 		server := ap.ToServer(ifaces.AP[i], s.OutDir())
-		servers = append(servers, server)
+		aps = append(aps, testAP{
+			ssid:   ap.SSID,
+			server: server,
+		})
 	}
 
 	return &roamingTestContext{
 		manager:     m,
 		clientIface: ifaces.Client[0],
 		credentials: params.credentials,
-		aps:         servers,
+		aps:         aps,
 	}, nil
+}
+
+// scanAndWaitForService scan and wait for the service to appear in Shill.
+func scanAndWaitForService(ctx context.Context, tc *roamingTestContext, ssid string) error {
+	const (
+		// discoveryTimeout is the delay left to the device to discover the
+		// network. It is long enough to let slower devices find the network
+		// but the discovery delay will be way shorter most of the time.
+		discoveryTimeout = time.Minute
+		// discoveryInterval is the delay between two polls, it allows to avoid
+		// spamming Shill with D-Bus requests.
+		discoveryInterval = time.Second
+	)
+
+	d, err := tc.manager.DeviceByName(ctx, tc.clientIface)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get %s device from Shill", tc.clientIface)
+	}
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		properties, err := d.GetProperties(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get device scanning state"))
+		}
+
+		scanning, err := properties.GetBool(shillconst.DevicePropertyScanning)
+		if err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to get %q property", shillconst.DevicePropertyScanning))
+		}
+
+		if !scanning {
+			if err := tc.manager.RequestScan(ctx, shill.TechnologyWifi); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to request an active scan"))
+			}
+		}
+
+		hexSSID := hex.EncodeToString([]byte(ssid))
+		props := map[string]interface{}{
+			shillconst.ServicePropertyType:        shillconst.TypeWifi,
+			shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hexSSID),
+		}
+		_, err = tc.manager.FindMatchingService(ctx, props)
+		return err
+	}, &testing.PollOptions{
+		Timeout:  discoveryTimeout,
+		Interval: discoveryInterval,
+	})
 }
