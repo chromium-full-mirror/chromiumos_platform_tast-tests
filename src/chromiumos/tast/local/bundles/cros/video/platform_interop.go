@@ -98,7 +98,7 @@ func init() {
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("kevin", "scarlet", "dru"), hwdep.SupportsV4L2StatelessVideoDecoding()),
 			},
 			{
 				Name: "vp8_180_vaapi_to_sw",
