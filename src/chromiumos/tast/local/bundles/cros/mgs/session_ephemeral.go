@@ -32,7 +32,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      5 * time.Minute,
-	})
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Verify that settings do not persist after MGS.
+			Value: "screenplay-1aebb48d-76b9-49a5-8d5a-8d924466f208",
+		}}})
 }
 
 const accessibilityPage = "osAccessibility"

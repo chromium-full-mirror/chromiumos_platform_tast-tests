@@ -35,7 +35,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"pwa_manifest.json", "pwa_service.js", "pwa_index.html", "pwa_icon.png"},
 		Fixture:      fixture.FakeDMSEnrolled,
-	})
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Auto-launch MGS.
+			Value: "screenplay-c6a4d9e8-7522-448d-9fda-c8bc7db48507",
+		}}})
 }
 
 func ProgressiveWebApp(ctx context.Context, s *testing.State) {
