@@ -85,7 +85,7 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 	}
 
 	logPath := filepath.Join(s.OutDir(), ureadaheadLogName)
-	cmd := testexec.CommandContext(ctx, "/sbin/ureadahead", "--dump", packPath)
+	cmd := testexec.CommandContext(ctx, "/sbin/ureadahead", "--dump", "--verbose", packPath)
 
 	logFile, err := os.Create(logPath)
 	if err != nil {
@@ -161,7 +161,7 @@ func dumpGuestPack(ctx context.Context, logPath string) error {
 	defer logFile.Close()
 
 	// Capture stdout into log file.
-	cmd := a.Command(ctx, "/system/bin/ureadahead", "--dump")
+	cmd := a.Command(ctx, "/system/bin/ureadahead", "--dump", "--verbose")
 	cmd.Stdout = logFile
 	return cmd.Run(testexec.DumpLogOnError)
 }
