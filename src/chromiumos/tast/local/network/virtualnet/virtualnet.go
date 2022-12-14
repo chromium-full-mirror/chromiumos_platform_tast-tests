@@ -385,6 +385,20 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 		}
 	}
 
+	// Disable and re-enable the WiFi device to force stopping the ongoing scan,
+	// to make sure that the scan is triggered after AP is created, otherwise the
+	// AP cannot be found by the scan (b/261666421).
+	d, err := m.DeviceByType(ctx, shillconst.TypeWifi)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get WiFi device")
+	}
+	if err := d.Disable(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to disable WiFi device")
+	}
+	if err := d.Enable(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to enable WiFi device")
+	}
+
 	// Trigger a scan and wait for shill to find this service. This may take some
 	// time.
 	testing.ContextLogf(ctx, "Waiting for WiFi service for %s in shill", ssid)
