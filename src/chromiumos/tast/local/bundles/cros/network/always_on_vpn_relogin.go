@@ -20,9 +20,9 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// alwaysOnVPNAutoconnectTestCase defines mode and config of the VPN
+// alwaysOnVPNReloginTestCase defines mode and config of the VPN
 // we want to set up in the test
-type alwaysOnVPNAutoconnectTestCase struct {
+type alwaysOnVPNReloginTestCase struct {
 	// mode of always on VPN we want to test.
 	mode string
 	// configurarion of host VPN.
@@ -31,7 +31,7 @@ type alwaysOnVPNAutoconnectTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AlwaysOnVPNAutoconnect,
+		Func:         AlwaysOnVPNRelogin,
 		Desc:         "Host VPN client can be configured as always-on VPN and connected automatically after logout and login",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
@@ -43,7 +43,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "strict_mode_l2tp_ipsec",
-				Val: alwaysOnVPNAutoconnectTestCase{
+				Val: alwaysOnVPNReloginTestCase{
 					mode: shillconst.AlwaysOnVPNModeStrict,
 					config: vpn.Config{
 						Type:     vpn.TypeL2TPIPsec,
@@ -53,7 +53,7 @@ func init() {
 			},
 			{
 				Name: "best_effort_mode_l2tp_ipsec",
-				Val: alwaysOnVPNAutoconnectTestCase{
+				Val: alwaysOnVPNReloginTestCase{
 					mode: shillconst.AlwaysOnVPNModeBestEffort,
 					config: vpn.Config{
 						Type:     vpn.TypeL2TPIPsec,
@@ -63,7 +63,7 @@ func init() {
 			},
 			{
 				Name: "strict_mode_openvpn",
-				Val: alwaysOnVPNAutoconnectTestCase{
+				Val: alwaysOnVPNReloginTestCase{
 					mode: shillconst.AlwaysOnVPNModeStrict,
 					config: vpn.Config{
 						Type:           vpn.TypeOpenVPN,
@@ -74,7 +74,7 @@ func init() {
 			},
 			{
 				Name: "best_effort_mode_openvpn",
-				Val: alwaysOnVPNAutoconnectTestCase{
+				Val: alwaysOnVPNReloginTestCase{
 					mode: shillconst.AlwaysOnVPNModeBestEffort,
 					config: vpn.Config{
 						Type:           vpn.TypeOpenVPN,
@@ -88,9 +88,9 @@ func init() {
 	})
 }
 
-// AlwaysOnVPNAutoconnect tests always on VPN can be configured and auto reconnect
+// AlwaysOnVPNRelogin tests always on VPN can be configured and auto reconnect
 // after user logout and login.
-func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
+func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a
 	// few seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
@@ -133,7 +133,7 @@ func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
 	}()
 
 	// Set up new VPN connection based on the config.
-	config := s.Param().(alwaysOnVPNAutoconnectTestCase).config
+	config := s.Param().(alwaysOnVPNReloginTestCase).config
 	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
 
 	conn, err := vpn.NewConnectionWithEnvs(ctx, config, testEnv.BaseServer, nil)
@@ -150,7 +150,7 @@ func AlwaysOnVPNAutoconnect(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get active profile: ", err)
 	}
-	vpnMode := s.Param().(alwaysOnVPNAutoconnectTestCase).mode
+	vpnMode := s.Param().(alwaysOnVPNReloginTestCase).mode
 	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
 		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}

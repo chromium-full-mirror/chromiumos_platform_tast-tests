@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type hostVPNAlwaysOnTestCase struct {
+type alwaysOnVPNRoutingTestCase struct {
 	// mode of Always-on VPN we want to test.
 	mode string
 	// configurarion of host VPN.
@@ -28,7 +28,7 @@ type hostVPNAlwaysOnTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HostVPNAlwaysOn,
+		Func:         AlwaysOnVPNRouting,
 		Desc:         "Host VPN client can be configured as always-on VPN and connected automatically",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		BugComponent: "b:156085",
@@ -38,7 +38,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "strict_mode_ikev2",
-				Val: hostVPNAlwaysOnTestCase{
+				Val: alwaysOnVPNRoutingTestCase{
 					mode: shillconst.AlwaysOnVPNModeStrict,
 					config: vpn.Config{
 						Type:     vpn.TypeIKEv2,
@@ -49,7 +49,7 @@ func init() {
 			},
 			{
 				Name: "strict_mode_l2tp_ipsec_psk",
-				Val: hostVPNAlwaysOnTestCase{
+				Val: alwaysOnVPNRoutingTestCase{
 					mode: shillconst.AlwaysOnVPNModeStrict,
 					config: vpn.Config{
 						Type:     vpn.TypeL2TPIPsec,
@@ -59,7 +59,7 @@ func init() {
 			},
 			{
 				Name: "best_effort_mode_ikev2",
-				Val: hostVPNAlwaysOnTestCase{
+				Val: alwaysOnVPNRoutingTestCase{
 					mode: shillconst.AlwaysOnVPNModeBestEffort,
 					config: vpn.Config{
 						Type:     vpn.TypeIKEv2,
@@ -70,7 +70,7 @@ func init() {
 			},
 			{
 				Name: "best_effort_mode_l2tp_ipsec_psk",
-				Val: hostVPNAlwaysOnTestCase{
+				Val: alwaysOnVPNRoutingTestCase{
 					mode: shillconst.AlwaysOnVPNModeBestEffort,
 					config: vpn.Config{
 						Type:     vpn.TypeL2TPIPsec,
@@ -82,7 +82,7 @@ func init() {
 	})
 }
 
-// HostVPNAlwaysOn sets up an host VPN and checks if this VPN can be configured
+// AlwaysOnVPNRouting sets up an host VPN and checks if this VPN can be configured
 // as always-on VPN, connects automatically and routing is correct when VPN service
 // is not available.
 //
@@ -91,7 +91,7 @@ func init() {
 //	veth0 --+-- test router --+-- physical server (used to test if system/user traffic is blocked)
 //	            DHCP server   |
 //	                          +-- virtual server (used to configure Always-on VPN)
-func HostVPNAlwaysOn(ctx context.Context, s *testing.State) {
+func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a
 	// few seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
@@ -148,7 +148,7 @@ func HostVPNAlwaysOn(ctx context.Context, s *testing.State) {
 	physicalAddr := addrs.IPv4Addr.String()
 
 	// Establish a VPN on one of the servers.
-	config := s.Param().(hostVPNAlwaysOnTestCase).config
+	config := s.Param().(alwaysOnVPNRoutingTestCase).config
 	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
 	conn, err := vpn.NewConnectionWithEnvs(ctx, config, vsvr, nil)
 	if err != nil {
@@ -165,7 +165,7 @@ func HostVPNAlwaysOn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get active profile: ", err)
 	}
 	// We use a test profile here so don't need to reset the value.
-	vpnMode := s.Param().(hostVPNAlwaysOnTestCase).mode
+	vpnMode := s.Param().(alwaysOnVPNRoutingTestCase).mode
 	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
 		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}
