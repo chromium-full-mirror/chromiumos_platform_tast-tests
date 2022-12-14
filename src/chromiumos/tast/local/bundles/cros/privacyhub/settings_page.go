@@ -17,7 +17,29 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
+
+// High-end models, where the test should not be flaky.
+// To make any change to this test, please verify everything passes on at least
+// 1 golden model locally (ideally more). You can use go/crosfleet if you don't
+// have access to physical DUTs.
+var goldenModels = []string{
+	"eldrid",
+	"chronicler",
+	"volta",
+	"jinlon",
+	"dragonair",
+	"dratini",
+	"gimble",
+	"redrix",
+	"atlas",
+	"eve",
+}
+
+type testSettingsParam struct {
+	chromeFeature string
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,15 +51,28 @@ func init() {
 		BugComponent: "b:1178745",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{
 			{
-				Name: "feature_on",
-				Val:  true,
+				Name:      "feature_on",
+				Val:       testSettingsParam{chromeFeature: "CrosPrivacyHub"},
+				ExtraAttr: []string{"group:mainline", "informational"},
 			},
 			{
-				Name: "feature_off",
-				Val:  false,
+				Name:      "feature_off",
+				Val:       testSettingsParam{chromeFeature: ""},
+				ExtraAttr: []string{"group:mainline", "informational"},
+			},
+			{
+				Name:              "feature_on_golden",
+				Val:               testSettingsParam{chromeFeature: "CrosPrivacyHubV0"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
+				ExtraAttr:         []string{"group:mainline"},
+			},
+			{
+				Name:              "feature_off_golden",
+				Val:               testSettingsParam{chromeFeature: ""},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
+				ExtraAttr:         []string{"group:mainline"},
 			},
 		},
 	})
@@ -49,15 +84,12 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	featureOn := s.Param().(bool)
+	chromeFeature := s.Param().(testSettingsParam).chromeFeature
+	featureOn := (chromeFeature != "")
 
 	var cr *chrome.Chrome
 	var err error
-	if featureOn {
-		cr, err = chrome.New(ctx, chrome.EnableFeatures("CrosPrivacyHub"))
-	} else {
-		cr, err = chrome.New(ctx)
-	}
+	cr, err = chrome.New(ctx, chrome.EnableFeatures(chromeFeature))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
