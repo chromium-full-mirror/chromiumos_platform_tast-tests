@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
@@ -33,6 +34,8 @@ func init() {
 			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > System UI Surfaces > Notifications
+		BugComponent: "b:1246021",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
@@ -79,14 +82,9 @@ func InlineReply(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	ui := uiauto.New(tconn)
-	permissionBubble := nodewith.Name("tests.peter.sh wants to").HasClass("PermissionPromptBubbleView").Role(role.Window)
-	if err := uiauto.IfSuccessThen(
-		ui.WaitUntilExists(permissionBubble),
-		// TODO(b/236799853): Use ui.LeftClick after node position mismatching issue is resolved.
-		ui.DoDefault(nodewith.Name("Allow").Ancestor(permissionBubble).Role(role.Button)),
-	)(ctx); err != nil {
-		s.Fatal("Failed to allow the notification permission: ", err)
+	// Clear notification prompt dialog if it exists.
+	if err := prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.ShowNotificationsPrompt)(ctx); err != nil {
+		s.Fatal("Failed to clear notification prompt dialog: ", err)
 	}
 
 	selectSettingExpr := `
@@ -113,6 +111,8 @@ func InlineReply(ctx context.Context, s *testing.State) {
 	if err := conn.Eval(ctx, fmt.Sprintf(selectSettingExpr, "action", "Display an alert()."), nil); err != nil {
 		s.Fatal("Failed to select reaction setting: ", err)
 	}
+
+	ui := uiauto.New(tconn)
 
 	sendBtn := nodewith.Name("Display the notification").Role(role.Button)
 	if err := uiauto.Combine("send notification",
