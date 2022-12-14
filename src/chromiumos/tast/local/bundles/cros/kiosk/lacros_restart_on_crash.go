@@ -32,6 +32,11 @@ func init() {
 		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Relaunch PWA kiosk after OS crash.
+			Value: "screenplay-86fc814e-2bdd-4680-bbb2-defed8bde33c",
+		}},
 	})
 }
 

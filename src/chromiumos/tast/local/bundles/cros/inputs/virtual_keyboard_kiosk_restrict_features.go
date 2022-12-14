@@ -31,8 +31,15 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		SearchFlags: append(
+			[]*testing.StringPair{
+				{
+					Key: "feature_id",
+					// Restrict virtual keyboard features in PWA kiosk.
+					Value: "screenplay-a9a646d9-a149-464f-a7de-4d51f47527c4",
+				}},
+			util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod})...),
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

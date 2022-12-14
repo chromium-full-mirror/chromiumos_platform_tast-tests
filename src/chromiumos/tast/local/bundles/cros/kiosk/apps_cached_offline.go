@@ -44,7 +44,11 @@ func init() {
 		}},
 		Fixture: fixture.KioskAutoLaunchCleanup,
 		Timeout: 5 * time.Minute, // Starting Kiosk twice requires longer timeout.
-	})
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Launch Chrome app kiosk offline.
+			Value: "screenplay-79897752-32ad-43e4-826c-7c21f5bef5e8",
+		}}})
 }
 
 func AppsCachedOffline(ctx context.Context, s *testing.State) {

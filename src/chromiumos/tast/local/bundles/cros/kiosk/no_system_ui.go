@@ -40,7 +40,17 @@ func init() {
 			Fixture:           fixture.KioskLoggedInLacros,
 			Timeout:           1 * time.Minute,
 		}},
-	})
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Test auto-launched kiosk.
+				Value: "screenplay-90708eaa-cdde-4060-8ccb-eeb305485531",
+			},
+			{
+				Key: "feature_id",
+				// Test launch PWA kiosk.
+				Value: "screenplay-d93db63f-372e-4c3b-a1ca-3f23587dbac4",
+			}}})
 }
 
 func NoSystemUI(ctx context.Context, s *testing.State) {

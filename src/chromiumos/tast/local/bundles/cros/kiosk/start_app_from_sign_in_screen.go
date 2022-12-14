@@ -46,6 +46,17 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Manually launch chrome app kiosk.
+				Value: "screenplay-749437a3-b4d5-427f-abc0-4c62d397d120",
+			},
+			{
+				Key: "feature_id",
+				// Manually launch PWA kiosk.
+				Value: "screenplay-cf0d13cd-2203-406c-a2df-1f4ad502d9e7",
+			}},
 	})
 }
 

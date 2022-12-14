@@ -62,7 +62,11 @@ func init() {
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedFunctionalityOS),
-		},
+			{
+				Key: "feature_id",
+				// Pin the OS version.
+				Value: "screenplay-716d9d83-9b88-4034-94d3-0a4760bc835a",
+			}},
 	})
 }
 

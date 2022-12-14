@@ -29,6 +29,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Chrome app kiosk reads device ID.
+			Value: "screenplay-be4e8241-2469-4b3f-969e-026494fb4ced",
+		}},
 	})
 }
 

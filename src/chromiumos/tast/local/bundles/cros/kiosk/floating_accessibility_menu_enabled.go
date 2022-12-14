@@ -45,7 +45,11 @@ func init() {
 				Val:  chrome.ExtraArgs("--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore"),
 			},
 		},
-	})
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Enable accessibility menu in kiosk.
+			Value: "screenplay-fff0f806-5b29-44a8-b48a-075c3d0e19f0",
+		}}})
 }
 
 func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {

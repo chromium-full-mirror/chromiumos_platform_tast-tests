@@ -128,6 +128,12 @@ func init() {
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}},
 					},
 				},
+				ExtraSearchFlags: []*testing.StringPair{
+					{
+						Key: "feature_id",
+						// Enable on-screen keyboard.
+						Value: "screenplay-3daf683c-be30-4cd9-a94c-276e6ad05346",
+					}},
 			},
 			{
 				Name:    "touch_virtual",
