@@ -44,20 +44,27 @@ func init() {
 				Val:       browser.TypeAsh,
 				ExtraAttr: []string{"cross-device_floss"},
 			},
-			{
-				Name:              "lacros",
-				Fixture:           "lacrosCrossdeviceOnboardedAllFeatures",
-				ExtraAttr:         []string{"cross-device_lacros"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
-			},
-			{
-				Name:              "lacros_floss",
-				Fixture:           "lacrosCrossdeviceOnboardedAllFeaturesFloss",
-				ExtraAttr:         []string{"cross-device_lacros", "cross-device_floss"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
-			}},
+			// TODO(b/260599791): According to go/lacros-phonehub-sync, Ash web browser
+			// is meant to be disabled when using Lacros. Phonehub on lacros needs a workaround
+			// to access data from Sessions Sync Data before the following tests can be
+			// re-enabled.
+			/*
+				{
+					Name:              "lacros",
+					Fixture:           "lacrosCrossdeviceOnboardedAllFeatures",
+					ExtraAttr:         []string{"cross-device_lacros"},
+					ExtraSoftwareDeps: []string{"lacros"},
+					Val:               browser.TypeLacros,
+				},
+				{
+					Name:              "lacros_floss",
+					Fixture:           "lacrosCrossdeviceOnboardedAllFeaturesFloss",
+					ExtraAttr:         []string{"cross-device_lacros", "cross-device_floss"},
+					ExtraSoftwareDeps: []string{"lacros"},
+					Val:               browser.TypeLacros,
+				},
+			*/
+		},
 	})
 }
 
