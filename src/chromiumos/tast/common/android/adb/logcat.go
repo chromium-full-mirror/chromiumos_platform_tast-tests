@@ -26,12 +26,23 @@ func RegexpPred(exp *regexp.Regexp) func(string) bool {
 
 // WaitForLogcat keeps scanning logcat. The function pred is called on the logcat contents line by line. This function returns the candidate line successfully if pred returns true. If pred never returns true, this function returns an error as soon as the context is done.
 // An optional quitFunc will be polled at regular interval, which can be used to break early if for example the activity which is supposed to print the exp has crashed
-func (d *Device) WaitForLogcat(ctx context.Context, pred func(string) bool, quitFunc ...func() bool) (string, error) {
+func (d *Device) WaitForLogcat(ctx context.Context, pred func(string) bool, since LogcatTimestampLong, quitFunc ...func() bool) (string, error) {
 	if len(quitFunc) > 1 {
 		return "", errors.New("only 1 quitFunc is supported")
 	}
 
-	cmd := d.ShellCommand(ctx, "logcat")
+	var cmdArgs []string
+	if since != "" {
+		if !LogcatTimestampLongPattern.MatchString(string(since)) {
+			return "", errors.New("since parameter is formatted incorrectly")
+		}
+
+		// Use the -T command to ensure logcat starts at the provided time, and
+		// continues streaming results.
+		cmdArgs = append(cmdArgs, "-T", string(since))
+	}
+
+	cmd := d.ShellCommand(ctx, "logcat", cmdArgs...)
 
 	pipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -151,8 +162,15 @@ func (d *Device) OutputLogcatGrep(ctx context.Context, grepArg string) ([]byte, 
 // MM-DD hh:mm:ss.xxx ex: 06-15 17:03:00.887
 type LogcatTimestamp string
 
-// LogcatTimestampPattern is the regexp for matching a logcat timestamp string.
+// LogcatTimestampPattern is the regexp for matching a logcat timestamp string of the form MM-DD hh:mm:ss.mmm
 var LogcatTimestampPattern = regexp.MustCompile(`\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{1,3}`)
+
+// LogcatTimestampLong is a logcat-formatted timestamp string:
+// YYYYY-MM-DD hh:mm:ss.xxx ex: 06-15 17:03:00.887
+type LogcatTimestampLong string
+
+// LogcatTimestampLongPattern is the regexp for matching a logcat timestamp string of the form YYYY-MM-DD hh:mm:ss.mmm
+var LogcatTimestampLongPattern = regexp.MustCompile(`\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{1,3}`)
 
 // LatestLogcatTimestamp gets the timestamp of the latest logcat entry.
 // This can be used as a marker to get logcat entries that only happen after
@@ -171,4 +189,14 @@ func (d *Device) LatestLogcatTimestamp(ctx context.Context) (LogcatTimestamp, er
 // The output will only contain entries that occurred after the timestamp.
 func (d *Device) DumpLogcatFromTimestamp(ctx context.Context, filePath string, timestamp LogcatTimestamp) error {
 	return d.DumpLogcat(ctx, filePath, "-T", fmt.Sprintf("%v", timestamp))
+}
+
+// LogcatDeviceTime returns a logcat formatted timestamp of the current device
+// time.
+func (d *Device) LogcatDeviceTime(ctx context.Context) (LogcatTimestampLong, error) {
+	out, err := d.ShellCommand(ctx, "/system/bin/sh", "-c", `date +"%Y-%m-%d %T.%3N"`).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to retrieve the device time")
+	}
+	return LogcatTimestampLong(out), nil
 }
