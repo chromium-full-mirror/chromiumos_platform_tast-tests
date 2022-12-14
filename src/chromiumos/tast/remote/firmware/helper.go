@@ -66,6 +66,9 @@ type Helper struct {
 	// CgptServiceClient provides cgpt related services such as reading CGPT table.
 	CgptServiceClient fwpb.CgptServiceClient
 
+	// TPMServiceClient provides TPM related services.
+	TPMServiceClient fwpb.TPMServiceClient
+
 	// Board contains the DUT's board, as reported by the Platform RPC.
 	// Currently, this is based on /etc/lsb-release's CHROMEOS_RELEASE_BOARD.
 	Board string
@@ -316,10 +319,22 @@ func (h *Helper) RequireBiosServiceClient(ctx context.Context) error {
 	return nil
 }
 
+// RequireTPMServiceClient creates a firmware.TPMServiceClient, unless one already exists.
+func (h *Helper) RequireTPMServiceClient(ctx context.Context) error {
+	if h.TPMServiceClient != nil {
+		return nil
+	}
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return errors.Wrap(err, "requiring RPC client")
+	}
+	h.TPMServiceClient = fwpb.NewTPMServiceClient(h.RPCClient.Conn)
+	return nil
+}
+
 // CloseRPCConnection shuts down the RPC client (if present), and removes any RPC clients that the Helper was tracking.
 func (h *Helper) CloseRPCConnection(ctx context.Context) error {
 	defer func() {
-		h.RPCClient, h.RPCUtils, h.BiosServiceClient = nil, nil, nil
+		h.RPCClient, h.RPCUtils, h.BiosServiceClient, h.CgptServiceClient, h.TPMServiceClient = nil, nil, nil, nil, nil
 	}()
 	if h.RPCClient != nil {
 		testing.ContextLog(ctx, "Closing RPCClient connection")

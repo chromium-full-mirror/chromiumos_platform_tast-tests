@@ -1,0 +1,48 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.firmware;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "chromiumos/tast/services/cros/firmware";
+
+// TPMService provides some basic operations for TPM tests.
+service TPMService {
+    // NewHelper creates a new FullHelper for TPM.
+    rpc NewHelper (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    // CloseHelper closes existing helper.
+    rpc CloseHelper (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    // TPMVersion gets the current TPM version eg. "1.2" or "2.0". Requires a Helper to be created.
+    rpc TPMVersion (google.protobuf.Empty) returns (TPMVersionResponse) {}
+    // StartDaemons starts TPM related daemons in reverse order of stopped daemons from low to high level.
+    rpc StartDaemons (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    // StopDaemons stops TPM related daemons in specific order from high to low level.
+    rpc StopDaemons (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    // GetAllVolatileFlags gets the current ST CLEAR flags. Requires a Helper to be created.
+    rpc GetAllVolatileFlags (google.protobuf.Empty) returns (TPMFlags) {}
+    // GetAllPermanentFlags gets the current permanent flags. Requires a Helper to be created.
+    rpc GetAllPermanentFlags (google.protobuf.Empty) returns (TPMFlags) {}
+    // GetSpacePermissions gets the current permission for a given index. Requires a Helper to be created.
+    rpc GetSpacePermissions (TPMSpacePermission) returns (TPMSpacePermission) {}
+}
+
+// TPMVersionResponse holds the string representing the TPM version.
+message TPMVersionResponse {
+    string version = 1;
+}
+
+// TPMFlags contains the map of flag to their current value from `tpmc` commands like `getpf` and `getvf`
+message TPMFlags {
+    map<string, string> flags = 1;
+}
+
+// TPMSpacePermission holds the space and corresponding permissions for the space.
+// Provide the space to query when used as an argument, the return value will include the permissions for that space.
+message TPMSpacePermission {
+    string space = 1;
+    string permission = 2;
+}

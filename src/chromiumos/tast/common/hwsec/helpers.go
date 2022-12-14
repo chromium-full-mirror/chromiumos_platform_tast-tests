@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -479,4 +480,94 @@ func (h *CmdTPMClearHelper) DisableUserSecretStash(ctx context.Context) (func(co
 		}
 		return nil
 	}), nil
+}
+
+// GetAllVolatileFlags returns a map of the output from `tpmc getvf` cmd which returns the ST CLEAR flags.
+func (h *CmdHelper) GetAllVolatileFlags(ctx context.Context) (map[string]string, error) {
+	flags := make(map[string]string)
+
+	out, err := h.cmdRunner.Run(ctx, "tpmc", "getvf")
+	if err != nil {
+		return flags, errors.Wrap(err, "failed to get st clear flags")
+	}
+
+	/*
+		Example output for TPM 2.0:
+			phEnable 0
+			shEnable 1
+			ehEnable 1
+			phEnableNV 1
+			orderly 0
+
+		Example output for TPM 1.2:
+			deactivated 0
+			physicalPresence 0
+			physicalPresenceLock 1
+			bGlobalLock 1
+	*/
+
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for _, line := range lines {
+		split := strings.Fields(strings.TrimSpace(line))
+		flags[strings.TrimSpace(split[0])] = strings.TrimSpace(split[len(split)-1])
+	}
+
+	return flags, nil
+
+}
+
+// GetAllPermanentFlags returns a map of the output from `tpmc getpf` cmd which returns the permanent flags.
+func (h *CmdHelper) GetAllPermanentFlags(ctx context.Context) (map[string]string, error) {
+	flags := make(map[string]string)
+
+	out, err := h.cmdRunner.Run(ctx, "tpmc", "getpf")
+	if err != nil {
+		return flags, errors.Wrap(err, "failed to get permanent flags")
+	}
+
+	/*
+		Example output for TPM 2.0:
+			lockoutAuthSet: 1
+			disableClear: 0
+			inLockout: 0
+			tpmGeneratedEPS: 1
+			ownerAuthSet: 1
+			endorsementAuthSet: 1
+
+		Example output for TPM 1.2:
+			disable 0
+			ownership 1
+			deactivated 0
+			physicalPresenceHWEnable 0
+			physicalPresenceCMDEnable 1
+			physicalPresenceLifetimeLock 1
+			nvLocked 1
+	*/
+
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for _, line := range lines {
+		split := strings.Fields(strings.TrimSpace(line))
+		flags[strings.TrimSpace(split[0])] = strings.TrimSpace(split[len(split)-1])
+	}
+
+	return flags, nil
+
+}
+
+// GetSpacePermissions returns the output from `tpmc getp space` cmd for the given space.
+func (h *CmdHelper) GetSpacePermissions(ctx context.Context, space string) (string, error) {
+	out, err := h.cmdRunner.Run(ctx, "tpmc", "getp", space)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get space permission")
+	}
+
+	trimmedOut := strings.TrimSpace(string(out))
+	rePerm := regexp.MustCompile(fmt.Sprintf(`space %s has permissions (0x[0-9A-Fa-f]+)`, space))
+	match := rePerm.FindStringSubmatch(trimmedOut)
+
+	if match == nil {
+		return "", errors.Errorf("failed to parse space permission, got output: %s", trimmedOut)
+	}
+
+	return match[1], nil
 }
