@@ -38,7 +38,10 @@ var goldenModels = []string{
 }
 
 type testSettingsParam struct {
-	chromeFeature string
+	chromeFeature          string
+	checkCameraControl     bool
+	checkMicrophoneControl bool
+	checkLocationControl   bool
 }
 
 func init() {
@@ -51,26 +54,67 @@ func init() {
 		BugComponent: "b:1178745",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
+
+		// Note about Params array with tests:
+		// * The Test Strategy is to keep a ballance between scope and a risk of getting a flaky test.
+		// * If the test name is xxxxxxxxxx_golden:
+		//    * it must pass on selected devices (to be non-flaky),
+		//    * shall cover all functionality for upcoming milestones.
+		// * Otherwise (test is not xxxxxxxxxx_golden):
+		//    * test will be running on all devices (no filtering to goldeModels),
+		//    * on some models it may be flaky (that's the reason of introducing golden tests),
+		//    * outcome (pass/fail) will be informative due to flakiness on all models.
 		Params: []testing.Param{
+
 			{
-				Name:      "feature_on",
-				Val:       testSettingsParam{chromeFeature: "CrosPrivacyHub"},
+				Name: "feature_v1_mic_cam_loc",
+				Val: testSettingsParam{
+					chromeFeature:          "CrosPrivacyHub",
+					checkCameraControl:     true,
+					checkMicrophoneControl: true,
+					checkLocationControl:   true,
+				},
 				ExtraAttr: []string{"group:mainline", "informational"},
 			},
+
 			{
-				Name:      "feature_off",
-				Val:       testSettingsParam{chromeFeature: ""},
+				Name: "feature_v0_mic_cam",
+				Val: testSettingsParam{
+					chromeFeature:          "CrosPrivacyHubV0",
+					checkCameraControl:     true,
+					checkMicrophoneControl: true,
+					checkLocationControl:   false,
+				},
 				ExtraAttr: []string{"group:mainline", "informational"},
-			},
-			{
-				Name:              "feature_on_golden",
-				Val:               testSettingsParam{chromeFeature: "CrosPrivacyHubV0"},
+			}, {
+				Name: "feature_v0_mic_cam_golden",
+				Val: testSettingsParam{
+					chromeFeature:          "CrosPrivacyHubV0",
+					checkCameraControl:     true,
+					checkMicrophoneControl: true,
+					checkLocationControl:   false,
+				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
+
 			{
-				Name:              "feature_off_golden",
-				Val:               testSettingsParam{chromeFeature: ""},
+				Name: "feature_off",
+				Val: testSettingsParam{
+					chromeFeature:          "",
+					checkCameraControl:     false,
+					checkMicrophoneControl: false,
+					checkLocationControl:   false,
+				},
+				ExtraAttr: []string{"group:mainline", "informational"},
+			}, {
+				Name: "feature_off_golden",
+				Val: testSettingsParam{
+					chromeFeature:          "",
+					checkCameraControl:     false,
+					checkMicrophoneControl: false,
+					checkLocationControl:   false,
+				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
@@ -84,14 +128,17 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	chromeFeature := s.Param().(testSettingsParam).chromeFeature
+	param := s.Param().(testSettingsParam)
+	chromeFeature := param.chromeFeature
 	featureOn := (chromeFeature != "")
+	s.Log("ChromeFeature to check: ", chromeFeature)
 
+	// Instantiate Chrome & test API.
 	var cr *chrome.Chrome
 	var err error
 	cr, err = chrome.New(ctx, chrome.EnableFeatures(chromeFeature))
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		s.Fatal("Failed to start Chrome: ", err, " with feature ", chromeFeature)
 	}
 	defer cr.Close(cleanupCtx)
 
@@ -100,6 +147,7 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 
+	// Trigger opening ChromeOS settings.
 	settings, err := ossettings.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch OS settings: ", err)
@@ -107,23 +155,57 @@ func SettingsPage(ctx context.Context, s *testing.State) {
 	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
+	// Wait for controls element (and check existence depending on featureOn flag).
 	ui := uiauto.New(tconn)
 	privacyMenu := nodewith.NameStartingWith("Privacy controls")
+
+	// If camera to be checked - we checking other Privacy Controls menu and expected buttons.
+	// If camere to not be checked - it shall be no even the Privacy Controls menu.
 	if featureOn {
+		s.Log("Schedule a check for: Privacy Controls menu")
 		if err := ui.WithTimeout(20 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
 			s.Fatal("Failed to find Privacy Hub in OS setting page: ", err)
 		}
+
 		// Check that the Privacy Hub section contains the required buttons.
-		cameraLabel := nodewith.NameStartingWith("Camera").Role(role.ToggleButton)
-		microphoneLabel := nodewith.NameStartingWith("Microphone").Role(role.ToggleButton)
-		if err := uiauto.Combine("Verify privacy menu page",
+		if err := uiauto.Combine("Verify Privacy Hub menu page",
 			ui.DoDefault(privacyMenu),
-			ui.WaitUntilExists(cameraLabel),
-			ui.WaitUntilExists(microphoneLabel),
+			func(ctx context.Context) error {
+				if param.checkCameraControl {
+					s.Log("Schedule a check for: Camera access label")
+					cameraAccessLabel := nodewith.NameStartingWith("Camera access").Role(role.ToggleButton)
+					if err := ui.WaitUntilExists(cameraAccessLabel); err != nil {
+						return err(ctx)
+					}
+				}
+				return nil
+			},
+			func(ctx context.Context) error {
+				if param.checkMicrophoneControl {
+					s.Log("Schedule a check for: Microphone access label")
+					microphoneAccessLabel := nodewith.NameStartingWith("Microphone access").Role(role.ToggleButton)
+					if err := ui.WaitUntilExists(microphoneAccessLabel); err != nil {
+						return err(ctx)
+					}
+				}
+				return nil
+			},
+			func(ctx context.Context) error {
+				if param.checkLocationControl {
+					s.Log("Schedule a check for: Location access label")
+					microphoneAccessLabel := nodewith.NameStartingWith("Location access").Role(role.ToggleButton)
+					if err := ui.WaitUntilExists(microphoneAccessLabel); err != nil {
+						return err(ctx)
+					}
+				}
+				return nil
+			},
 		)(ctx); err != nil {
-			s.Fatal("Failed to verify privacy menu: ", err)
+			s.Fatal("Failed to verify Privacy Hub menu: ", err)
 		}
+
 	} else {
+		s.Log("Schedule a check for: Privacy Controls menu (absence of it)")
 		// Check that the Privacy Hub section does not exist if feature flag is not explicitly set.
 		// This will be removed when PrivacyHub is in production.
 		if err := ui.WithTimeout(20 * time.Second).WaitUntilExists(privacyMenu)(ctx); err == nil {
