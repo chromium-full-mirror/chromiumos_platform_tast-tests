@@ -48,6 +48,12 @@ func init() {
 		Data:         []string{fa.PngFile},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-3f028d06-0100-4b5b-b1f3-99ceeaf3d62b",
+			},
+		},
 		Params: []testing.Param{{
 			Name: "share_data",
 			Val:  true,

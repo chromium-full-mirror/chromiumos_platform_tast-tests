@@ -34,6 +34,12 @@ func init() {
 		},
 		// ChromeOS > Data > Engineering > Feedback
 		BugComponent: "b:1033360",
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-3f028d06-0100-4b5b-b1f3-99ceeaf3d62b",
+			},
+		},
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,

@@ -34,6 +34,12 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-3f028d06-0100-4b5b-b1f3-99ceeaf3d62b",
+			},
+		},
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: "chromeLoggedInWithOsFeedback",
