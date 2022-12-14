@@ -53,6 +53,9 @@ var (
 	reFlashSize     = regexp.MustCompile(`FlashSize\s*(\d+)`)
 	reChipInfo      = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S+)`)
 	reI2CLookup     = regexp.MustCompile(`Bus: I2C; Port: (\S+); Address: (\S+)`)
+	reTempInfo      = regexp.MustCompile(`(\d+):\s+\d+\s+(\S+)`)
+	reSensorTemp    = regexp.MustCompile(`\S+\s+([0-9]+) K`)
+	reBatteryInfo   = regexp.MustCompile(`\s*(\S[^\r\n]+)(:|\s)\s+(\S[^\r\n]+)`)
 )
 
 // Command return the prebuilt ssh Command with options and args applied.
@@ -299,4 +302,154 @@ func (ec *ECTool) CBI(ctx context.Context, cmd CBICmd, args ...string) (string, 
 		return "", errors.Wrapf(err, "running 'ectool %s' on DUT with args %v, got: %v", string(cmd), args, string(out))
 	}
 	return string(out), nil
+}
+
+// TempsInfo parses `tempsinfo all` from ectool, returns map of the sensor name to sensor id.
+// Note, this is opposite of what tempsinfo displays to make it easier to search by sensor name.
+func (ec *ECTool) TempsInfo(ctx context.Context) (map[string]int, error) {
+	out, err := ec.Command(ctx, "tempsinfo", "all").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get tempsinfo output")
+	}
+
+	lines := strings.Split(string(out), "\n")
+	infoMap := make(map[string]int, len(lines))
+	for _, line := range lines {
+		if match := reTempInfo.FindStringSubmatch(line); match != nil {
+			idx, _ := strconv.Atoi(match[1])
+			infoMap[match[2]] = idx
+		}
+	}
+
+	return infoMap, nil
+}
+
+// Temps gets `temps <id>` from ectool which has temp for sensor_id.
+func (ec *ECTool) Temps(ctx context.Context, id int) (int, error) {
+	out, err := ec.Command(ctx, "temps", strconv.Itoa(id)).Output()
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to get temp output")
+	}
+
+	if match := reSensorTemp.FindStringSubmatch(string(out)); match != nil {
+		temp, _ := strconv.Atoi(match[1])
+		return temp, nil
+	}
+	return -1, errors.Errorf("failed to parse sensor temp from output %v", string(out))
+}
+
+// Battery returns a parsed map of the Battery # to various info associated with that battery.
+func (ec *ECTool) Battery(ctx context.Context) (map[string]string, error) {
+	/*
+		Output looks like:
+			Battery 0 info:
+				OEM name:               Sunwoda
+				Model number:           L20D3PG2
+				Chemistry   :           LiP
+				Serial number:          55E6
+				Design capacity:        3735 mAh
+				Last full charge:       3803 mAh
+				Design output voltage   11250 mV     <-- Note: Some of these don't have colons/separators,
+				Cycle count             18                     which makes it tricky to parse.
+				Present voltage         12668 mV
+				Present current         0 mA
+				Remaining capacity      3802 mAh
+				Desired voltage         0 mV
+				Desired current         0 mA
+				Flags                   0x0b AC_PRESENT BATT_PRESENT CHARGING
+			...
+
+		TODO(tij@): Update to support situations with more than one battery eg.
+			"Battery n info:..."
+	*/
+
+	out, err := ec.Command(ctx, "battery").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get battery output from ectool")
+	}
+
+	battMap := make(map[string]string)
+
+	lines := strings.Split(string(out), "\n")
+
+	for _, line := range lines[1:] {
+		if match := reBatteryInfo.FindStringSubmatch(line); match != nil {
+			key := strings.TrimSpace(strings.Replace(match[1], ":", "", 1))
+			val := strings.TrimSpace(match[3])
+			battMap[key] = val
+		}
+	}
+
+	return battMap, nil
+}
+
+// Lightbar runs the lightbar commands from ectool.
+// Example inputs: `lightbar`, `lightbar on|off|init` and `lightbar 4 255 255 255`.
+func (ec *ECTool) Lightbar(ctx context.Context, args ...string) (string, error) {
+	out, err := ec.Command(ctx, append([]string{"lightbar"}, args...)...).Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to run lightbar cmd in ectool")
+	}
+
+	return string(out), nil
+}
+
+// SetFanRPM uses `pwmsetfanrpm` to set fanspeed to given rpm.
+func (ec *ECTool) SetFanRPM(ctx context.Context, rpm int) error {
+	out, err := ec.Command(ctx, "pwmsetfanrpm", strconv.Itoa(rpm)).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to run pwmsetfanrpm cmd in ectool")
+	}
+
+	if !strings.Contains(string(out), "Fan target RPM set") {
+		return errors.Errorf("failed to set fan rpm, got output: %v", string(out))
+	}
+
+	return nil
+}
+
+// GetFanRPM uses `pwmgetfanrpm` to get fanspeed for fan(s).
+func (ec *ECTool) GetFanRPM(ctx context.Context) (map[int]int, error) {
+	reMultipleFanRPM := regexp.MustCompile(`Fan\s+(\d+)\s+RPM:\s+(\d+)`)
+	reSingleFanRPM := regexp.MustCompile(`Current fan RPM:\s+(\d+)`)
+
+	fanSpeeds := make(map[int]int)
+
+	out, err := ec.Command(ctx, "pwmgetfanrpm").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run pwmgetfanrpm cmd in ectool")
+	}
+
+	if match := reSingleFanRPM.FindStringSubmatch(string(out)); match != nil {
+		fanRPM, _ := strconv.Atoi(match[2])
+		fanSpeeds[0] = fanRPM
+		// If output only shown for current fan, return immediately since no more fan speeds to parse.
+		return fanSpeeds, nil
+	}
+
+	/*
+		If output in format:
+			Fan <id> RPM: <speed>
+			...
+		read all speeds.
+	*/
+	lines := strings.Split(string(out), "\n")
+	for _, line := range lines {
+		if match := reMultipleFanRPM.FindStringSubmatch(line); match != nil {
+			fanIdx, _ := strconv.Atoi(match[1])
+			fanRPM, _ := strconv.Atoi(match[2])
+			fanSpeeds[fanIdx] = fanRPM
+		}
+	}
+
+	return fanSpeeds, nil
+}
+
+// AutoFanCtrl uses `autofanctrl` to reset fanspeed to automatic setting.
+func (ec *ECTool) AutoFanCtrl(ctx context.Context) error {
+	if err := ec.Command(ctx, "autofanctrl").Run(); err != nil {
+		return errors.Wrap(err, "failed to set fan speed to auto")
+	}
+
+	return nil
 }
