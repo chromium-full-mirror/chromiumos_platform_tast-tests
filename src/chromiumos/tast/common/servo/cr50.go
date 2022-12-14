@@ -270,7 +270,9 @@ func (s *Servo) CheckGSCCommandOutput(ctx context.Context, cmd string, regexs []
 
 // LockCCD locks the CCD console by sending a GSC command.
 func (s *Servo) LockCCD(ctx context.Context) error {
-	if err := s.CheckGSCCommandOutput(ctx, "ccd lock", []string{`CCD locked`}); err != nil {
+	// Cr50 and Ti50 output slightly different capitalization, so use case
+	// insensitive matching
+	if err := s.CheckGSCCommandOutput(ctx, "ccd lock", []string{`(?i)CCD locked`}); err != nil {
 		return errors.Wrap(err, "failed to run 'ccd lock' on GSC")
 	}
 	return nil
