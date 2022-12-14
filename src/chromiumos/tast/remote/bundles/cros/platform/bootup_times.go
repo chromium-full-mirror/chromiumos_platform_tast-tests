@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/powercontrol"
 	"chromiumos/tast/rpc"
+	"chromiumos/tast/services/cros/inputs"
 	"chromiumos/tast/services/cros/platform"
 	"chromiumos/tast/services/cros/security"
 	"chromiumos/tast/testing"
@@ -30,6 +31,7 @@ type bootupTimes struct {
 
 const (
 	reboot       string = "reboot"
+	vt2Reboot    string = "vt2Reboot"
 	lidCloseOpen string = "lidCloseOpen"
 	powerButton  string = "powerButton"
 	bootFromS5   string = "bootFromS5"
@@ -42,10 +44,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot performance test after reboot, powerbutton and lid close open",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:253998684",
 		// Disabled due to 98%-99% failure rate and preventing other tests from running. TODO(b/242478571): fix and re-enable.
 		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService", "tast.cros.security.BootLockboxService"},
+		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService", "tast.cros.inputs.KeyboardService"},
 		Vars: []string{"servo",
 			"platform.BootupTimes.bootTime",
 			"platform.BootupTimes.cbmemTimeout",
@@ -54,6 +57,10 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "reboot",
 			Val:     bootupTimes{bootType: reboot},
+			Timeout: 5 * time.Minute,
+		}, {
+			Name:    "vt2_reboot",
+			Val:     bootupTimes{bootType: vt2Reboot},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name:    "lid_close_open",
@@ -288,9 +295,29 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		if err := dut.WaitConnect(waitCtx); err != nil {
 			s.Fatal("Failed to wait connect DUT: ", err)
 		}
+	} else if btType.bootType == vt2Reboot {
+		kb := inputs.NewKeyboardServiceClient(cl.Conn)
+
+		if err := openVT2(ctx, kb); err != nil {
+			s.Fatal("Failed to open VT2 Terminal: ", err)
+		}
+
+		if err := loginVT2(ctx, kb); err != nil {
+			s.Fatal("Failed to login VT2 Terminal: ", err)
+		}
+
+		if err := rebootViaVT2(ctx, kb); err != nil {
+			s.Fatal("Failed to reboot via VT2 Terminal: ", err)
+		}
+
+	}
+	waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	if err := dut.WaitConnect(waitCtx); err != nil {
+		s.Fatal("Failed to wait connect DUT: ", err)
 	}
 	// Validating prev sleep state for power modes.
-	if btType.bootType == "reboot" {
+	if btType.bootType == "reboot" || btType.bootType == vt2Reboot {
 		if err := powercontrol.ValidatePrevSleepState(ctx, dut, 0); err != nil {
 			s.Fatal("Failed to get previous sleep state: ", err)
 		}
@@ -433,6 +460,67 @@ func waitForS0State(ctx context.Context, pxy *servo.Proxy) error {
 		return nil
 	}, &testing.PollOptions{Interval: 200 * time.Millisecond, Timeout: time.Minute}); err != nil {
 		return errors.Wrap(err, "EC output parsing failed")
+	}
+	return nil
+}
+
+// openVT2 opens the VT2 Terminal
+func openVT2(ctx context.Context, kb inputs.KeyboardServiceClient) error {
+	keyboardKey := "ctrl+alt+refresh"
+	if _, err := kb.Accel(ctx, &inputs.AccelRequest{
+		Key: keyboardKey,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to press key %q", keyboardKey)
+	}
+	waitTime := 5 * time.Second // wait time for switching to happen.
+	// Allowing some wait time for switching to happen.
+	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
+	if err := testing.Sleep(ctx, waitTime); err != nil {
+		return errors.Wrap(err, "failed while waiting for switching to VT2")
+	}
+	return nil
+}
+
+// loginVT2 logins in VT2 Terminal using default username and password
+func loginVT2(ctx context.Context, kb inputs.KeyboardServiceClient) error {
+	if _, err := kb.Type(ctx, &inputs.TypeRequest{
+		Key: "root",
+	}); err != nil {
+		return errors.Wrap(err, "failed to enter username")
+	}
+	enterKey := "Enter"
+	if _, err := kb.Accel(ctx, &inputs.AccelRequest{
+		Key: enterKey,
+	}); err != nil {
+		return errors.Wrap(err, "failed to press enter key")
+	}
+
+	if _, err := kb.Type(ctx, &inputs.TypeRequest{
+		Key: "test0000",
+	}); err != nil {
+		return errors.Wrap(err, "failed to enter password")
+	}
+	if _, err := kb.Accel(ctx, &inputs.AccelRequest{
+		Key: enterKey,
+	}); err != nil {
+		return errors.Wrap(err, "failed to press enter key")
+	}
+	return nil
+}
+
+// rebootViaVT2 enters reboot command in VT2 terminal
+func rebootViaVT2(ctx context.Context, kb inputs.KeyboardServiceClient) error {
+	if _, err := kb.Type(ctx, &inputs.TypeRequest{
+		Key: "reboot",
+	}); err != nil {
+		return errors.Wrap(err, "failed to enter reboot command")
+	}
+
+	// Error expected after pressing enter because DUT is turning off.
+	if _, err := kb.Accel(ctx, &inputs.AccelRequest{
+		Key: "Enter",
+	}); err != nil {
+		testing.ContextLog(ctx, "Error expected: ", err)
 	}
 	return nil
 }
