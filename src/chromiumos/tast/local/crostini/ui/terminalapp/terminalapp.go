@@ -43,6 +43,10 @@ var (
 	rootWindow          = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
+
+	webArea = nodewith.NameRegex(regexp.MustCompile(`\@penguin\: `)).Role(role.RootWebArea)
+	// Prompt is the input prefix.
+	Prompt = nodewith.Name("$ ").Role(role.StaticText).Ancestor(webArea)
 )
 
 // TerminalApp represents an instance of the Terminal App.
@@ -179,9 +183,7 @@ func (ta *TerminalApp) ExitSSH() uiauto.Action {
 // prompt. Useful for either waiting for the startup process to finish
 // or for a terminal application to exit.
 func (ta *TerminalApp) WaitForPrompt() uiauto.Action {
-	webArea := nodewith.NameRegex(regexp.MustCompile(`\@penguin\: `)).Role(role.RootWebArea)
-	prompt := nodewith.Name("$ ").Role(role.StaticText).Ancestor(webArea)
-	return ta.ui.WithTimeout(3 * time.Minute).WaitUntilExists(prompt)
+	return ta.ui.WithTimeout(3 * time.Minute).WaitUntilExists(Prompt)
 }
 
 // ClickShelfMenuItem right clicks the terminal app icon on the shelf and left click the specified menu item.
