@@ -98,6 +98,12 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
+	// Ensure CCD open and testlab enabled. With CCD locked,
+	// power presses may not be successful later during the test.
+	if err := h.OpenCCD(ctx, true, true); err != nil {
+		s.Fatal("While attempting to open CCD: ", err)
+	}
+
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to create mode switcher: ", err)
