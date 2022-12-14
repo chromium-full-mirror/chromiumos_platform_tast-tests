@@ -5,12 +5,16 @@
 package disk
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"golang.org/x/sys/unix"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/testing"
 )
 
 // Fill creates a temporary file in a directory that fills the disk by
@@ -30,7 +34,7 @@ func Fill(dir string, tofill uint64) (string, error) {
 	return file.Name(), nil
 }
 
-// FillUntil reates a temporary file in a directory that fills the disk until
+// FillUntil creates a temporary file in a directory that fills the disk until
 // less than remaining bytes are available.
 func FillUntil(dir string, remaining uint64) (string, error) {
 	freeSpace, err := FreeSpace(dir)
@@ -45,6 +49,37 @@ func FillUntil(dir string, remaining uint64) (string, error) {
 	tofill := freeSpace - remaining
 
 	return Fill(dir, tofill)
+}
+
+// FillUntilWithRetry creates a temporary file in a directory that fills the
+// disk until less than remaining bytes are available. It also checks the free
+// disk space after timeToCheck duration. If the free space is not within the
+// defined margin, creates the temporary file again until the maxRetry is
+// reached.
+func FillUntilWithRetry(ctx context.Context, dir string, remaining, upperMargin, lowerMargin uint64) (fileName string, err error) {
+	timeToCheck := time.Second
+	maxRetry := 3
+	if err := action.Retry(maxRetry, func(ctx context.Context) error {
+		fileName, err = FillUntil(dir, remaining)
+		if err != nil {
+			return errors.Wrap(err, "faileded to create temp file")
+		}
+
+		testing.Sleep(ctx, timeToCheck)
+		if freeSpace, err := FreeSpace(dir); err != nil {
+			return errors.Wrapf(err, "fail to read free space in %s", dir)
+		} else if freeSpace > remaining+upperMargin || freeSpace < remaining-lowerMargin {
+			if removeErr := os.Remove(fileName); removeErr != nil {
+				return errors.Wrap(err, "failed to remove the fill file before re-fill a new one")
+			}
+			return errors.New("free space is not within the specified margin")
+		}
+		return nil
+	}, 0)(ctx); err != nil {
+		return "", err
+	}
+
+	return fileName, nil
 }
 
 // Refiller maintains the temporary fill file for you, so you can easily

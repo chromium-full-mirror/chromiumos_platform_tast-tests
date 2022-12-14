@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/testing"
@@ -29,7 +30,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Timeout:      3 * time.Minute,
+		Timeout:      7 * time.Minute,
 		Fixture:      "ccaTestBridgeReadyWithLowStorageEnabled",
 		BugComponent: "b:978428",
 	})
@@ -40,6 +41,7 @@ const (
 	mib                 uint64 = 1024 * 1024 // 1 mib
 	lowTarget                  = 128 * mib
 	criticallyLowTarget        = 32 * mib
+	fillOffset                 = 8 * mib
 )
 
 type fillFile struct {
@@ -47,12 +49,18 @@ type fillFile struct {
 	deleted bool
 }
 
+type lowStorageSubtest func(context.Context, *cca.App, *chrome.Chrome) error
+
 func createFillFile(ctx context.Context, cr *chrome.Chrome, fillUntil uint64) (*fillFile, error) {
 	userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot find user home dir path")
 	}
-	fileName, err := disk.FillUntil(userPath, fillUntil)
+	// Allocate a bit more offset in case the disk-cleanup procedure takes place
+	// to free more space after allocating the specified disk space. Also set
+	// lowerMargin to handle the case we create a file while recording a video,
+	// the recording video may contribute to disk's free space as well.
+	fileName, err := disk.FillUntilWithRetry(ctx, userPath, fillUntil-fillOffset, 0, 16*mib)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create a fill file")
 	}
@@ -76,10 +84,10 @@ func CCAUIRecordVideoEdgeCase(ctx context.Context, s *testing.State) {
 	// TODO(b/244261957): Add testLowStorageOnPause
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
-	subTestTimeout := 40 * time.Second
+	subTestTimeout := 2 * time.Minute
 	for _, tc := range []struct {
 		name string
-		run  func(context.Context, *cca.App, *chrome.Chrome) error
+		run  lowStorageSubtest
 	}{
 		{"testLowStorageWarning", testLowStorageWarning},
 		{"testLowStorageAutoStop", testLowStorageAutoStop},
@@ -87,6 +95,18 @@ func CCAUIRecordVideoEdgeCase(ctx context.Context, s *testing.State) {
 	} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
+			// Pushing device to low storage may affect performance, we
+			// should wait until CPU is stable before starting the new subtest.
+			defer func() {
+				// TODO(b/264217261): Find better approach to cooldown for scarlet/dru.
+				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+					s.Errorf("Failed to wait while sleep before cooldown CPU for %v subtest: %v", tc.name, err)
+				}
+				if err := cpu.WaitUntilIdle(ctx); err != nil {
+					s.Errorf("Failed to wait until CPU idle for %v subtest: %v", tc.name, err)
+				}
+			}()
+
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
 				return tc.run(ctx, app, cr)
 			}, cca.TestWithAppParams{}); err != nil {
@@ -123,12 +143,12 @@ func testLowStorageWarning(ctx context.Context, app *cca.App, cr *chrome.Chrome)
 	}
 
 	// Create the first file to take up space.
-	f, err := createFillFile(ctx, cr, lowTarget)
+	f1, err := createFillFile(ctx, cr, lowTarget)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		if err := f.delete(); err != nil {
+		if err := f1.delete(); err != nil {
 			retErr = errors.Wrap(retErr, err.Error())
 		}
 	}()
@@ -147,19 +167,19 @@ func testLowStorageWarning(ctx context.Context, app *cca.App, cr *chrome.Chrome)
 	}
 
 	testing.ContextLog(ctx, "Waiting for warning to hide")
-	if err := f.delete(); err != nil {
+	if err := f1.delete(); err != nil {
 		return errors.Wrap(err, "failed to delete the fill file")
 	}
 	if err := app.WaitForVisibleStateFor(ctx, cca.LowStorageWarning, false, 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to wait for warning to hide")
 	}
 
-	f, err = createFillFile(ctx, cr, lowTarget)
+	f2, err := createFillFile(ctx, cr, lowTarget)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		if err := f.delete(); err != nil {
+		if err := f2.delete(); err != nil {
 			retErr = errors.Wrap(retErr, err.Error())
 		}
 	}()
