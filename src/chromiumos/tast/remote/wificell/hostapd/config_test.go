@@ -110,7 +110,35 @@ func TestNewConfig(t *testing.T) {
 				VHTCenterChannel(42),
 			},
 			expected:   nil,
-			shouldFail: true, // should not set VHTCenterChannel on mode other than 802.11ac
+			shouldFail: true, // should not set VHTCenterChannel on mode older than 802.11ac
+		},
+		// Check HECenterChannelValidation
+		{
+			ops: []Option{
+				Mode(Mode80211acPure),
+				Channel(36),
+				HECenterChannel(42),
+			},
+			expected:   nil,
+			shouldFail: true, // should not set HECenterChannel on mode older than 802.11ax
+		},
+		{
+			ops: []Option{
+				Mode(Mode80211acMixed),
+				Channel(36),
+				HECenterChannel(42),
+			},
+			expected:   nil,
+			shouldFail: true, // should not set HECenterChannel on mode older than 802.11ax
+		},
+		{
+			ops: []Option{
+				Mode(Mode80211a),
+				Channel(36),
+				HECenterChannel(42),
+			},
+			expected:   nil,
+			shouldFail: true, // should not set HECenterChannel on mode older than 802.11ax
 		},
 		{
 			ops: []Option{
@@ -653,6 +681,61 @@ func TestConfigFormat(t *testing.T) {
 				"ieee80211ac":                  "1",
 				"vht_oper_chwidth":             "1",
 				"vht_oper_centr_freq_seg0_idx": "42",
+				"vht_capab":                    "",
+			},
+		},
+		// verify he_capab
+		{
+			conf: &Config{
+				SSID:             "ssid",
+				Mode:             Mode80211axPure,
+				Channel:          157,
+				HTCaps:           HTCapHT40Plus,
+				VHTCaps:          []VHTCap{VHTCapSGI80},
+				VHTCenterChannel: 155,
+				VHTChWidth:       VHTChWidth80,
+				HECenterChannel:  155,
+				HEChWidth:        HEChWidth80,
+
+				SecurityConfig: &base.Config{},
+			},
+			verify: map[string]string{
+				"hw_mode":                      "a",
+				"channel":                      "157",
+				"ieee80211n":                   "1",
+				"ht_capab":                     "[HT40+]",
+				"ieee80211ac":                  "1",
+				"ieee80211ax":                  "1",
+				"vht_oper_chwidth":             "1",
+				"vht_oper_centr_freq_seg0_idx": "155",
+				"he_oper_chwidth":              "1",
+				"he_oper_centr_freq_seg0_idx":  "155",
+				"vht_capab":                    "[SHORT-GI-80]",
+			},
+		},
+		{
+			conf: &Config{
+				SSID:             "ssid",
+				Mode:             Mode80211axMixed,
+				Channel:          36,
+				HTCaps:           HTCapHT40Plus,
+				VHTCenterChannel: 42,
+				VHTChWidth:       VHTChWidth80,
+				HECenterChannel:  42,
+				HEChWidth:        HEChWidth80,
+				SecurityConfig:   &base.Config{},
+			},
+			verify: map[string]string{
+				"hw_mode":                      "a",
+				"channel":                      "36",
+				"ieee80211n":                   "1",
+				"ht_capab":                     "[HT40+]",
+				"ieee80211ac":                  "1",
+				"ieee80211ax":                  "1",
+				"vht_oper_chwidth":             "1",
+				"vht_oper_centr_freq_seg0_idx": "42",
+				"he_oper_chwidth":              "1",
+				"he_oper_centr_freq_seg0_idx":  "42",
 				"vht_capab":                    "",
 			},
 		},

@@ -31,6 +31,8 @@ const (
 	Mode80211nPure   ModeEnum = "n-only"
 	Mode80211acMixed ModeEnum = "ac-mixed"
 	Mode80211acPure  ModeEnum = "ac-only"
+	Mode80211axMixed ModeEnum = "ax-mixed"
+	Mode80211axPure  ModeEnum = "ax-only"
 )
 
 // HTCap is the type for specifying HT capabilities in hostapd config (ht_capab=).
@@ -97,6 +99,22 @@ const (
 	VHTChWidth160
 	VHTChWidth80Plus80
 )
+
+// HEChWidthEnum is the type for specifying operating channel width in hostapd config (he_oper_chwidth=).
+type HEChWidthEnum int
+
+// HEChWidth enums.
+const (
+	// HEChWidth20Or40 is the default value when none of HEChWidth* specified.
+	HEChWidth20Or40 HEChWidthEnum = iota
+	HEChWidth80
+	HEChWidth160
+	HEChWidth80Plus80
+)
+
+// HECap is the type for specifying HE capabilities in hostapd config (he_capab=).
+// This capability is currently not supported in hostapd.
+type HECap string
 
 // PMFEnum is the type for specifying the setting of "Protected Management Frames" (IEEE802.11w).
 type PMFEnum int
@@ -341,6 +359,27 @@ func VHTChWidth(chw VHTChWidthEnum) Option {
 	}
 }
 
+// HECenterChannel returns an Option which sets HE center channel in hostapd config.
+func HECenterChannel(ch int) Option {
+	return func(c *Config) {
+		c.HECenterChannel = ch
+	}
+}
+
+// HEChWidth returns an Option which sets HE operating channel width in hostapd config.
+func HEChWidth(chw HEChWidthEnum) Option {
+	return func(c *Config) {
+		c.HEChWidth = chw
+	}
+}
+
+// HECaps returns an Option which sets HE capabilities in hostapd config.
+func HECaps(caps ...HECap) Option {
+	return func(c *Config) {
+		c.HECaps = append(c.HECaps, caps...)
+	}
+}
+
 // Hidden returns an Option which sets that it is a hidden network in hostapd config.
 func Hidden() Option {
 	return func(c *Config) {
@@ -578,6 +617,9 @@ type Config struct {
 	VHTCaps            []VHTCap
 	VHTCenterChannel   int
 	VHTChWidth         VHTChWidthEnum
+	HEChWidth          HEChWidthEnum
+	HECaps             []HECap
+	HECenterChannel    int
 	Hidden             bool
 	SpectrumManagement bool
 	BeaconInterval     int
@@ -636,14 +678,14 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 	}
 	configure("hw_mode", hwMode)
 
-	if c.is80211n() || c.is80211ac() {
+	if c.is80211n() || c.is80211ac() || c.is80211ax() {
 		configure("ieee80211n", "1")
 		configure("ht_capab", c.htCapsString())
 		if c.Mode == Mode80211nPure {
 			configure("require_ht", "1")
 		}
 	}
-	if c.is80211ac() {
+	if c.is80211ac() || c.is80211ax() {
 		configure("ieee80211ac", "1")
 		configure("vht_oper_chwidth", strconv.Itoa(int(c.VHTChWidth)))
 		// If not set, ignore this field and use hostapd's default value.
@@ -654,6 +696,19 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		if c.Mode == Mode80211acPure {
 			configure("require_vht", "1")
 		}
+	}
+	if c.is80211ax() {
+		configure("ieee80211ax", "1")
+		configure("he_oper_chwidth", strconv.Itoa(int(c.HEChWidth)))
+		configure("he_default_pe_duration", "0") // 0us value in PE (packet extension) field
+		configure("he_basic_mcs_nss_set", "2")   // Enable MCS index 0-11
+		configure("he_bss_color", "42")          // Set default bss color
+
+		if c.HECenterChannel != 0 {
+			configure("he_oper_centr_freq_seg0_idx", strconv.Itoa(c.HECenterChannel))
+		}
+		// No requirement for require_he=1 for Mode80211axPure because it's not a valid option
+		// in our tree.
 	}
 	if c.HTCaps != 0 {
 		configure("wmm_enabled", "1")
@@ -781,6 +836,17 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 // PcapFreqOptions returns the options for the caller to set frequency with iw for
 // preparing interface for packet capturing.
 func (c *Config) PcapFreqOptions() ([]iw.SetFreqOption, error) {
+	if c.is80211ax() {
+		switch c.HEChWidth {
+		case HEChWidth80:
+			return []iw.SetFreqOption{iw.SetFreqChWidth(iw.ChWidth80)}, nil
+		case HEChWidth160:
+			return []iw.SetFreqOption{iw.SetFreqChWidth(iw.ChWidth160)}, nil
+		case HEChWidth80Plus80:
+			return nil, errors.New("unsupported 80+80 channel width")
+		}
+		// fallthrough HEChWidth20Or40.
+	}
 	if c.is80211ac() {
 		switch c.VHTChWidth {
 		case VHTChWidth80:
@@ -792,8 +858,8 @@ func (c *Config) PcapFreqOptions() ([]iw.SetFreqOption, error) {
 		}
 		// fallthrough VHTChWidth20Or40.
 	}
-	if c.is80211n() || c.is80211ac() {
-		// 80211n or 80211ac with VHTChWidth20Or40.
+	if c.is80211n() || c.is80211ac() || c.is80211ax() {
+		// 80211n or 80211ac or 80211ax with VHTChWidth20Or40 or HEChWidth20Or40.
 		ht := c.htMode()
 		switch ht {
 		case HTCapHT40Minus:
@@ -833,6 +899,18 @@ func (c *Config) PerfDesc() string {
 		default:
 			width = "20"
 		}
+	} else if c.is80211ax() {
+		mode = "HE"
+		switch c.HEChWidth {
+		case HEChWidth80:
+			width = "80"
+		case HEChWidth160:
+			width = "160"
+		case HEChWidth80Plus80:
+			width = "80+80"
+		default:
+			width = "40"
+		}
 	} else {
 		mode = "11" + string(c.Mode)
 	}
@@ -850,13 +928,33 @@ func (c *Config) validate() error {
 	if c.Mode == "" {
 		return errors.New("invalid mode")
 	}
-	if c.HTCaps > 0 && !c.is80211n() && !c.is80211ac() {
+	if c.HTCaps > 0 && !c.is80211n() && !c.is80211ac() && !c.is80211ax() {
 		return errors.Errorf("HTCap is not supported by mode %s", c.Mode)
 	}
-	if c.HTCaps == 0 && (c.is80211n() || c.is80211ac()) {
-		return errors.New("HTCap should be set in mode 802.11n or 802.11ac")
+	if c.HTCaps == 0 && (c.is80211n() || c.is80211ac() || c.is80211ax()) {
+		return errors.New("HTCap should be set in mode 802.11n or 802.11ac or 802.11ax")
 	}
-	if !c.is80211ac() {
+
+	if c.is80211ax() {
+		if err := c.validateHEChWidth(); err != nil {
+			return err
+		}
+	} else {
+		// We do not check HECap here (in contrast with the VHTCap check below)
+		// because HECaps are not currently supported by hostapd.
+		if c.HECenterChannel != 0 {
+			return errors.Errorf("HECenterChannel is not supported by mode %s", c.Mode)
+		}
+		if c.HEChWidth != HEChWidth20Or40 {
+			return errors.Errorf("HEChWidth is not supported by mode %s", c.Mode)
+		}
+	}
+
+	if c.is80211ac() || c.is80211ax() {
+		if err := c.validateVHTChWidth(); err != nil {
+			return err
+		}
+	} else {
 		if len(c.VHTCaps) != 0 {
 			return errors.Errorf("VHTCap is not supported by mode %s", c.Mode)
 		}
@@ -866,9 +964,8 @@ func (c *Config) validate() error {
 		if c.VHTChWidth != VHTChWidth20Or40 {
 			return errors.Errorf("VHTChWidth is not supported by mode %s", c.Mode)
 		}
-	} else if err := c.validateVHTChWidth(); err != nil {
-		return err
 	}
+
 	if err := c.validateChannel(); err != nil {
 		return err
 	}
@@ -1009,17 +1106,24 @@ func (c *Config) is80211ac() bool {
 	return c.Mode == Mode80211acMixed || c.Mode == Mode80211acPure
 }
 
+func (c *Config) is80211ax() bool {
+	return c.Mode == Mode80211axMixed || c.Mode == Mode80211axPure
+}
+
 func (c *Config) hwMode() (string, error) {
 	if c.Mode == Mode80211a || c.Mode == Mode80211b || c.Mode == Mode80211g {
 		return string(c.Mode), nil
 	}
-	if c.is80211n() || c.is80211ac() {
+	if c.is80211n() || c.is80211ac() || c.is80211ax() {
 		f, err := ChannelToFrequency(c.Channel)
 		if err != nil {
 			return "", err
 		}
 		if f > 5000 {
 			return string(Mode80211a), nil
+		} else if c.is80211ax() {
+			// 80211ax on 2.4ghz operates with 80211b hwmode as fallback.
+			return string(Mode80211b), nil
 		}
 		return string(Mode80211g), nil
 	}
@@ -1068,6 +1172,14 @@ func (c *Config) vhtCapsString() string {
 	return strings.Join(caps, "")
 }
 
+func (c *Config) heCapsString() string {
+	caps := make([]string, len(c.HECaps))
+	for i, v := range c.HECaps {
+		caps[i] = string(v)
+	}
+	return strings.Join(caps, "")
+}
+
 func (c *Config) validateVHTChWidth() error {
 	switch c.VHTChWidth {
 	case VHTChWidth20Or40, VHTChWidth80, VHTChWidth160, VHTChWidth80Plus80:
@@ -1077,6 +1189,14 @@ func (c *Config) validateVHTChWidth() error {
 	}
 }
 
+func (c *Config) validateHEChWidth() error {
+	switch c.HEChWidth {
+	case HEChWidth20Or40, HEChWidth80, HEChWidth80Plus80, HEChWidth160:
+		return nil
+	default:
+		return errors.Errorf("invalid he_oper_chwidth %d", int(c.HEChWidth))
+	}
+}
 func (c *Config) validatePMF() error {
 	switch c.PMF {
 	case PMFDisabled:
