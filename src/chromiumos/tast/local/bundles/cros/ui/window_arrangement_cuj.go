@@ -6,6 +6,8 @@ package ui
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -13,10 +15,12 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/ui/windowarrangementcuj"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -97,28 +101,56 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testParam := s.Param().(windowarrangementcuj.TestParam)
 	tabletMode := testParam.Tablet
 
-	conns, err := windowarrangementcuj.SetupChrome(ctx, closeCtx, s)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to setup chrome: ", err)
+		s.Fatal("Failed to connect to test api: ", err)
 	}
-	defer conns.Cleanup(closeCtx)
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, conns.TestConn, tabletMode)
+	var cs ash.ConnSource
+	var br *browser.Browser
+	var bTconn *chrome.TestConn
+	switch testParam.BrowserType {
+	case browser.TypeAsh:
+		cs = cr
+		br = cr.Browser()
+		bTconn = tconn
+	case browser.TypeLacros:
+		// Launch lacros.
+		l, err := lacros.Launch(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to launch lacros: ", err)
+		}
+		defer l.Close(closeCtx)
+		cs = l
+		br = l.Browser()
+
+		bTconn, err = l.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get lacros TestAPIConn: ", err)
+		}
+	}
+
+	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer srv.Close()
+	pipVideoTestURL := srv.URL + "/pip.html"
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
 	if err != nil {
 		s.Fatal("Failed to ensure clamshell/tablet mode: ", err)
 	}
 	defer cleanup(closeCtx)
 
-	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, conns.TestConn)
+	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
 	}
-	defer revertZoom(closeCtx, conns.TestConn)
+	defer revertZoom(closeCtx, tconn)
 
-	tabChecker, err := cuj.NewTabCrashChecker(ctx, conns.TestConn)
+	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to create TabCrashChecker: ", err)
 	}
@@ -139,16 +171,16 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 			cujrecorder.NewLatencyMetricConfig("Ash.SplitViewResize.PresentationTime.TabletMode.MultiWindow"))
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, conns.Chrome, conns.BrowserTestConn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
 
-	if err := recorder.AddCollectedMetrics(conns.BrowserTestConn, conns.BrowserType, configs...); err != nil {
+	if err := recorder.AddCollectedMetrics(bTconn, testParam.BrowserType, configs...); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
 
-	if err := recorder.AddCommonMetrics(conns.TestConn, conns.BrowserTestConn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
@@ -167,9 +199,9 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer crastestclient.Unmute(closeCtx)
 
-	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, conns.TestConn)
+	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
-	connNoPiP, err := conns.Source.NewConn(ctx, conns.PipVideoTestURL)
+	connNoPiP, err := cs.NewConn(ctx, pipVideoTestURL)
 	if err != nil {
 		s.Fatal("Failed to load pip.html: ", err)
 	}
@@ -182,7 +214,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for pip.html to achieve quiescence: ", err)
 	}
 
-	connPiP, err := conns.Source.NewConn(ctx, conns.PipVideoTestURL)
+	connPiP, err := cs.NewConn(ctx, pipVideoTestURL)
 	if err != nil {
 		s.Fatal("Failed to load pip.html: ", err)
 	}
@@ -195,7 +227,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for pip.html to achieve quiescence: ", err)
 	}
 
-	ui := uiauto.New(conns.TestConn)
+	ui := uiauto.New(tconn)
 
 	// The second tab enters the system PiP mode.
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
@@ -214,7 +246,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	// Lacros specific setup.
 	if testParam.BrowserType == browser.TypeLacros {
 		// Close blank tab created at startup after creating other tabs.
-		if err := conns.CloseBlankTab(ctx); err != nil {
+		if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
 			s.Fatal("Failed to close blank tab: ", err)
 		}
 	}
@@ -222,7 +254,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	// For clamshell variants, activate the tab on the left.
 	if !tabletMode {
 		var tabs []map[string]interface{}
-		if err := conns.BrowserTestConn.Call(ctx, &tabs,
+		if err := bTconn.Call(ctx, &tabs,
 			"tast.promisify(chrome.tabs.query)",
 			map[string]interface{}{},
 		); err != nil {
@@ -231,7 +263,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		if len(tabs) != 2 {
 			s.Errorf("Unexpected number of browser tabs; got %d, want 2", len(tabs))
 		}
-		if err := conns.BrowserTestConn.Call(ctx, nil,
+		if err := bTconn.Call(ctx, nil,
 			"tast.promisify(chrome.tabs.update)",
 			int(tabs[0]["id"].(float64)),
 			map[string]interface{}{"active": true},
@@ -242,9 +274,9 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 
 	var pc pointer.Context
 	if !tabletMode {
-		pc = pointer.NewMouse(conns.TestConn)
+		pc = pointer.NewMouse(tconn)
 	} else {
-		pc, err = pointer.NewTouch(ctx, conns.TestConn)
+		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to create a touch controller: ", err)
 		}
@@ -254,11 +286,11 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	var f func(ctx context.Context) error
 	if !tabletMode {
 		f = func(ctx context.Context) error {
-			return windowarrangementcuj.RunClamShell(ctx, closeCtx, conns.TestConn, ui, pc)
+			return windowarrangementcuj.RunClamShell(ctx, closeCtx, tconn, ui, pc)
 		}
 	} else {
 		f = func(ctx context.Context) error {
-			return windowarrangementcuj.RunTablet(ctx, closeCtx, conns.TestConn, ui, pc)
+			return windowarrangementcuj.RunTablet(ctx, closeCtx, tconn, ui, pc)
 		}
 	}
 

@@ -8,8 +8,6 @@ package windowarrangementcuj
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"regexp"
 	"time"
 
@@ -19,7 +17,6 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
@@ -51,116 +48,6 @@ const (
 type TestParam struct {
 	BrowserType browser.Type
 	Tablet      bool
-}
-
-// Connections holds things that facilitate interaction with the DUT.
-type Connections struct {
-	// Chrome interacts with the currently-running Chrome instance via
-	// the Chrome DevTools protocol:
-	// https://chromedevtools.github.io/devtools-protocol/
-	Chrome *chrome.Chrome
-
-	// Source is used to create new chrome.Conn connections.
-	Source ash.ConnSource
-
-	// TestConn is a connection to ash chrome.
-	TestConn *chrome.TestConn
-
-	// Cleanup resets everything to a clean state. It only needs to be
-	// called if SetupChrome succeeds.
-	Cleanup func(ctx context.Context) error
-
-	// CloseBlankTab closes the blank tab that is created when lacros
-	// is started.
-	CloseBlankTab func(ctx context.Context) error
-
-	// BrowserTestConn is a connection to ash chrome or lacros chrome,
-	// depending on the browser in use.
-	BrowserTestConn *chrome.TestConn
-
-	// BrowserType is the browser type.
-	BrowserType browser.Type
-
-	// PipVideoTestURL is the URL of the PIP video test page.
-	PipVideoTestURL string
-}
-
-// SetupChrome creates ash-chrome or lacros-chrome based on test parameters.
-func SetupChrome(ctx, closeCtx context.Context, s *testing.State) (*Connections, error) {
-	testParam := s.Param().(TestParam)
-
-	var cleanupActionsInReverseOrder []action.Action
-
-	connection := &Connections{
-		Cleanup: func(ctx context.Context) error {
-			var firstErr error
-			for i := len(cleanupActionsInReverseOrder) - 1; i >= 0; i-- {
-				if err := cleanupActionsInReverseOrder[i](ctx); firstErr == nil {
-					firstErr = err
-				}
-			}
-			return firstErr
-		},
-		CloseBlankTab: func(ctx context.Context) error { return nil },
-	}
-	var l *lacros.Lacros
-
-	ok := false
-	defer func() {
-		if !ok {
-			if err := connection.Cleanup(closeCtx); err != nil {
-				s.Error("Failed to clean up after detecting error condition: ", err)
-			}
-		}
-	}()
-
-	connection.BrowserType = testParam.BrowserType
-	if testParam.BrowserType == browser.TypeAsh {
-		connection.Chrome = s.FixtValue().(chrome.HasChrome).Chrome()
-		connection.Source = connection.Chrome
-
-		var err error
-		connection.BrowserTestConn, err = connection.Chrome.TestAPIConn(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get TestAPIConn")
-		}
-	} else {
-		var err error
-		connection.Chrome, l, connection.Source, err = lacros.Setup(ctx, s.FixtValue(), browser.TypeLacros)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to setup lacros")
-		}
-		cleanupActionsInReverseOrder = append(cleanupActionsInReverseOrder, func(ctx context.Context) error {
-			lacros.CloseLacros(ctx, l)
-			return nil
-		})
-
-		if connection.BrowserTestConn, err = l.TestAPIConn(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to get lacros TestAPIConn")
-		}
-	}
-
-	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	cleanupActionsInReverseOrder = append(cleanupActionsInReverseOrder, func(ctx context.Context) error {
-		srv.Close()
-		return nil
-	})
-	connection.PipVideoTestURL = srv.URL + "/pip.html"
-
-	var err error
-	connection.TestConn, err = connection.Chrome.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to test api")
-	}
-
-	if testParam.BrowserType == browser.TypeLacros {
-		connection.CloseBlankTab = func(ctx context.Context) error {
-			return l.Browser().CloseWithURL(ctx, chrome.NewTabURL)
-		}
-	}
-
-	ok = true
-	return connection, nil
 }
 
 // cleanUp is used to execute a given cleanup action and report
