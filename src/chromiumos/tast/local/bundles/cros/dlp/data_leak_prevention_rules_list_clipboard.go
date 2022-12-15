@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -151,6 +152,16 @@ func init() {
 	})
 }
 
+// waitForDialog waits for a 2nd exo surface to appear. On Lacros the 'bubble' is retrievable before it is visible / clickable. This checks for a unnamed surface being visible (the browser surface is named).
+func waitForDialog(ctx context.Context, s *testing.State, ui *uiauto.Context, browserType browser.Type) {
+	if browserType == browser.TypeLacros {
+		regex, _ := regexp.Compile("ExoShellSurface-.*")
+		if err := ui.WaitUntilExists(nodewith.ClassNameRegex(regex).Name("").Visible())(ctx); err != nil {
+			s.Fatal("Failed to wait for dialog: ", err)
+		}
+	}
+}
+
 func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -265,6 +276,7 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 			s.Error("Didn't expect notification but one was found: ")
 		}
 	case restrictionlevel.WarnCancelled:
+		waitForDialog(ctx, s, ui, params.browserType)
 		bubbleClass, notifError := clipboard.WarnBubble(ctx, ui, parsedSourceURL.Hostname())
 		if notifError != nil {
 			s.Error("Expected notification but found an error: ", notifError)
@@ -274,6 +286,7 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 			s.Fatal("Failed to click the cancel button: ", err)
 		}
 	case restrictionlevel.WarnProceeded:
+		waitForDialog(ctx, s, ui, params.browserType)
 		bubbleClass, notifError := clipboard.WarnBubble(ctx, ui, parsedSourceURL.Hostname())
 		if notifError != nil {
 			s.Error("Expected notification but found an error: ", notifError)
