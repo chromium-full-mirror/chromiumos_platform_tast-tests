@@ -59,7 +59,7 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(
 		ctx,
 		chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
-		chrome.EnableFeatures("OnDeviceSpeechRecognition"),
+		chrome.EnableFeatures("OnDeviceSpeechRecognition", "LayoutMediaNGContainer"),
 	)
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)
