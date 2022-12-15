@@ -25,7 +25,12 @@ func init() {
 		// TODO(b/254328916): Make sure we also cover the rootfs chrome binary in lacros variant tests.
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks SELinux labels on ARC-specific files on devices that support ARC",
-		Contacts:     []string{"niwa@chromium.org", "fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+			"niwa@chromium.org",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux", "chrome"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,

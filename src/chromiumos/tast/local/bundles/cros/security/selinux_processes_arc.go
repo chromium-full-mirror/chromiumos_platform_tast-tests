@@ -29,7 +29,12 @@ func init() {
 		Func:         SELinuxProcessesARC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that host processes are running in correct SELinux domain after ARC boots",
-		Contacts:     []string{"niwa@chromium.org", "fqj@chromium.org", "jorgelo@chromium.org", "chromeos-security@google.com"},
+		Contacts: []string{
+			"chromeos-hardening@google.com",
+			"niwa@chromium.org",
+		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"selinux", "chrome"},
 		Pre:          arc.Booted(),
 		Attr:         []string{"group:mainline"},
