@@ -32,6 +32,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"graphics.chameleon_ip"},
+		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
 			Name: "port0",
 			Val: graphics.ChameleonTest{
@@ -83,6 +84,12 @@ func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to get stable video input from a physically plugged port %d: %s", port, err)
 	}
+	defer func(ctx context.Context) {
+		err = cham.Unplug(ctx, port)
+		if err != nil {
+			s.Fatalf("Failed to unplug a physically plugged port %d: %s ", port, err)
+		}
+	}(ctx)
 
 	// We explicitly want a Chrome that is waiting on the login screen.
 	cleanupCtx := ctx
@@ -146,10 +153,5 @@ func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 	// Check chameleon resolution after logging out.
 	if postLoginWidth != postLogoutWidth || postLoginHeight != postLogoutHeight {
 		s.Fatalf("Port %d screen size changed from %dx%d to %dx%d after logout", port, postLoginWidth, postLoginHeight, postLogoutWidth, postLogoutHeight)
-	}
-
-	err = cham.Unplug(ctx, port)
-	if err != nil {
-		s.Fatalf("Failed to unplug a physically plugged port %d: %s ", port, err)
 	}
 }

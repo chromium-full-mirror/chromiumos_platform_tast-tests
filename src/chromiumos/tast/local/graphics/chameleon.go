@@ -46,12 +46,25 @@ var (
 		"Port for chameleond on Chameleon (optional/used)")
 )
 
+// DisplayMode is an enum used to describe Chrome's display modes.
+type DisplayMode int
+
+const (
+	// Undefined is the default mode
+	Undefined DisplayMode = iota
+	// UIExtended sets the UI extended mode
+	UIExtended
+	// UIMirror sets the UI to mirror mode
+	UIMirror
+	// AlternateExtendedMirror is used to alterate between modes
+	AlternateExtendedMirror
+)
+
 // ChameleonTest is used to describe the config used to run each test.
 type ChameleonTest struct {
-	Port         chameleon.PortID // The port number
-	Iterations   int
-	ExtendedMode bool
-	MirrorMode   bool
+	Port       chameleon.PortID // The port number
+	Iterations int              // Number of iterations for stress tests
+	Display    DisplayMode      // The initial display mode
 }
 
 // RGB is an in-memory image whose At method returns color.RGBA values.
@@ -121,7 +134,6 @@ func SwitchDisplayMode(ctx context.Context, cr *chrome.Chrome, setMirrorMode boo
 	if err != nil {
 		return errors.Wrap(err, "failed to launch os-settings Settings page")
 	}
-	defer settings.Close(ctx)
 
 	deviceFinder := nodewith.Name("Device").Role(role.Link)
 	err = ui.LeftClick(deviceFinder)(ctx)
@@ -143,8 +155,11 @@ func SwitchDisplayMode(ctx context.Context, cr *chrome.Chrome, setMirrorMode boo
 			return errors.Wrap(err, "failed to click mirror display")
 		}
 	}
+	if err = settings.Close(ctx); err != nil {
+		return err
+	}
 
-	// Expect the display is changed. Return err after poll timeout.
+	// We expect the display has changed modes, we poll for the . Return err after poll timeout.
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
 		internalDisplayInfo, err := display.GetInternalInfo(ctx, tconn)
 		if err != nil {
@@ -200,6 +215,9 @@ func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 	cham, err := chameleon.NewChameleond(ctx, chamURL)
 	if err != nil {
 		return nil, errors.Errorf("failed to connect to Chameleon: %s", err)
+	}
+	if err = cham.Reset(ctx); err != nil {
+		return nil, errors.Errorf("failed to reset Chameleon: %s", err)
 	}
 	testing.ContextLog(ctx, "Connected to Chameleon")
 	return cham, nil
