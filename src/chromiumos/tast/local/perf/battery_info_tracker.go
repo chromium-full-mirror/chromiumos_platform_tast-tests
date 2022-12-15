@@ -24,8 +24,11 @@ type BatteryInfoTracker struct {
 	prefix                    string
 	batteryPath               string
 	chargeFullDesign          float64
+	chargeNow                 []float64 // Remaining charge [Ah].
 	voltageMinDesign          float64
+	voltageMaxDesign          float64
 	lowBatteryShutdownPercent float64
+	lowBatteryShutdownTime    int64
 	batteryChargeStart        float64
 	batteryChargeEnd          float64
 	batteryCapacityStart      float64
@@ -34,9 +37,12 @@ type BatteryInfoTracker struct {
 	power                     []float64 // Power reading every |batteryCheckInterval|.
 	powerTime                 []float64
 	energyFullDesign          float64
+	cycleCount                int64
 	collecting                chan bool
 	collectingErr             chan error
 	err                       error
+	duration                  time.Duration
+	trackStartTime            time.Time
 }
 
 // NewBatteryInfoTracker creates a new instance of BatteryInfoTracker. If battery is not
@@ -60,21 +66,42 @@ func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryIn
 	if err != nil {
 		return nil, err
 	}
+	voltageMaxDesign, err := power.ReadBatteryProperty(ctx, batteryPath, "voltage_max_design")
+	if err != nil {
+		// Change to raise error if voltageMaxDesign is later used.
+		testing.ContextLog(ctx, "Battery does not have field: voltage_max_design")
+	}
+	cycleCount, err := power.ReadBatteryIntProperty(ctx, batteryPath, "cycle_count")
+	if err != nil {
+		// Change to raise error if cycleCount is later used.
+		testing.ContextLog(ctx, "Battery does not have field: cycle_count")
+	}
 	output, err := testexec.CommandContext(ctx, "check_powerd_config", "--low_battery_shutdown_percent").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read low battery shutdown percent from powerd")
 	}
 	lowBatteryShutdownPercent, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 64)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to parse %q", output)
+	}
+	powerdRead, err := testexec.CommandContext(ctx, "check_powerd_config", "--low_battery_shutdown_time").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read low battery shutdown time from powerd")
+	}
+	lowBatteryShutdownTime, err := strconv.ParseInt(strings.TrimSpace(string(powerdRead)), 0, 64)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse %q", powerdRead)
 	}
 
 	return &BatteryInfoTracker{
 		prefix:                    metricPrefix,
 		batteryPath:               batteryPath,
 		chargeFullDesign:          chargeFullDesign,
+		cycleCount:                cycleCount,
 		voltageMinDesign:          voltageMinDesign,
+		voltageMaxDesign:          voltageMaxDesign,
 		lowBatteryShutdownPercent: lowBatteryShutdownPercent,
+		lowBatteryShutdownTime:    lowBatteryShutdownTime,
 	}, nil
 }
 
@@ -90,6 +117,10 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 	t.collecting = make(chan bool)
 	t.collectingErr = make(chan error, 1)
 
+	if !t.trackStartTime.IsZero() {
+		return errors.New("Battery info tracker already started")
+	}
+
 	chargeNow, err := power.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
 	if err != nil {
 		return err
@@ -99,8 +130,10 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 		return err
 	}
 
+	t.trackStartTime = time.Now() // Reset start time.
 	t.batteryChargeStart = chargeNow
 	t.batteryCapacityStart = capacityNow
+	t.chargeNow = append(t.chargeNow, chargeNow)
 	testing.ContextLogf(ctx, "charge_now value at start: %f, capacity value at start: %f", chargeNow, capacityNow)
 
 	go func() {
@@ -123,6 +156,13 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 				t.energy += watt * tNew.Sub(tOld).Seconds()
 				tOld = tNew
 
+				chargeLeft, err := power.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
+				if err != nil {
+					t.collectingErr <- errors.Wrapf(err, "failed to read system property from %q", t.batteryPath)
+					return
+				}
+
+				t.chargeNow = append(t.chargeNow, chargeLeft)
 				t.power = append(t.power, watt)
 				t.powerTime = append(t.powerTime, time.Since(timeZero).Seconds())
 			case <-ctx.Done():
@@ -145,6 +185,10 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 		return errors.New("not started")
 	}
 
+	if t.trackStartTime.IsZero() {
+		return errors.New("Battery info tracker has not started")
+	}
+
 	chargeNow, err := power.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
 	if err != nil {
 		return err
@@ -156,6 +200,9 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 
 	t.batteryChargeEnd = chargeNow
 	t.batteryCapacityEnd = capacityNow
+	t.chargeNow = append(t.chargeNow, chargeNow)
+	t.duration = time.Since(t.trackStartTime)
+	t.trackStartTime = time.Time{} // Reset to zero for next start.
 	testing.ContextLogf(ctx, "charge_now value at end: %f, capacity value at end: %f", chargeNow, capacityNow)
 
 	t.energyFullDesign = t.chargeFullDesign * t.voltageMinDesign * 1e-12 * 3600
