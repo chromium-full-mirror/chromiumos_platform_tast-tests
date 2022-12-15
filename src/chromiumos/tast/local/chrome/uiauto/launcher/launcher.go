@@ -323,17 +323,12 @@ func SetupContinueSectionFiles(ctx context.Context, tconn *chrome.TestConn,
 }
 
 // CreateAppSearchFinder creates a finder for an app search result in the current launcher search UI.
-// It expects the launcher search page to be open - search containers within which apps are searched depend on
-// whether productivity launcher is enabled, which is inferred from the current app list search UI state.
+// It expects the launcher search page to be open.
 func CreateAppSearchFinder(ctx context.Context, tconn *chrome.TestConn, appName string) *nodewith.Finder {
-	ui := uiauto.New(tconn)
-	// Look for results in different search containers depending on productivity launcher flag.
-	// ProductivityLauncherSearchView for productivity launcher.
-	// SearchResultPageView otherwise.
-	if err := ui.Exists(nodewith.ClassName("AppListBubbleView"))(ctx); err == nil {
-		return AppSearchFinder(appName, "ProductivityLauncherSearchView")
-	}
-	return AppSearchFinder(appName, "SearchResultPageView")
+	// TODO(b/261863907): Use just the AppListSearchView class name once the ProductivityLauncherSearchView class rename is landed.
+	searchContainerClassName := nodewith.ClassNameRegex(regexp.MustCompile(`^(ProductivityLauncher|AppList)SearchView$`))
+	re := regexp.MustCompile(regexp.QuoteMeta(appName) + ", [Ii]nstalled [Aa]pp")
+	return nodewith.NameRegex(re).Ancestor(searchContainerClassName)
 }
 
 // SearchAndWaitForAppOpen return a function that searches for an app, launches it, and waits for it to be open.
@@ -363,19 +358,6 @@ func SearchAndLaunchWithQuery(tconn *chrome.TestConn, kb *input.KeyboardEventWri
 				},
 			), &testing.PollOptions{Interval: time.Second, Timeout: time.Minute})
 	}
-}
-
-// SearchAndRightClick returns a function that searches a query in the launcher and right click the app from the list.
-// It right clicks the app until a menu item is displayed.
-func SearchAndRightClick(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query, appName string) uiauto.Action {
-	ui := uiauto.New(tconn)
-	menuItem := nodewith.Role(role.MenuItem).First()
-	app := AppSearchFinder(appName, "SearchResultPageView")
-	return uiauto.Combine(fmt.Sprintf("SearchAndRightClick(%s, %s)", query, appName),
-		Open(tconn),
-		Search(tconn, kb, query),
-		ui.WithTimeout(time.Minute).WithInterval(10*time.Second).RightClickUntil(app, ui.WaitUntilExists(menuItem)),
-	)
 }
 
 // Open return a function that opens the launcher.
@@ -518,13 +500,6 @@ func WaitForClamshellLauncherSearchExit(tconn *chrome.TestConn) uiauto.Action {
 		ui.WaitUntilGone(nodewith.ClassName(BubbleSearchPage)),
 		ui.WaitUntilExists(nodewith.ClassName(BubbleAppsPage)),
 	)
-}
-
-// AppSearchFinder returns a Finder to find the specified app in an open launcher's search results.
-func AppSearchFinder(appName, searchContainer string) *nodewith.Finder {
-	searchResultView := nodewith.ClassName(searchContainer)
-	re := regexp.MustCompile(regexp.QuoteMeta(appName) + ", [Ii]nstalled [Aa]pp")
-	return nodewith.NameRegex(re).Ancestor(searchResultView)
 }
 
 // AppItemViewFinder returns a Finder to find the specified app in an open launcher's item view.
