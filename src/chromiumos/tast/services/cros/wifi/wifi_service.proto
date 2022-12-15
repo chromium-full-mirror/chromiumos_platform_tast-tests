@@ -24,10 +24,16 @@ service WifiService {
 }
 
 message JoinWifiRequest {
+  message SecurityEapTls {
+    string client_cert = 1;
+    string ca_cert = 2;
+  }
+
   string ssid = 1;
   oneof security {
     google.protobuf.Any none = 2;
     string psk = 3;
+    SecurityEapTls eap_tls = 4;
   }
 }
 

@@ -130,6 +130,19 @@ func joinWifiSetSecurity(ui *uiauto.Context, kb *input.KeyboardEventWriter, req 
 		securityOptionName = "PSK (WPA or RSN)"
 		passwordTextField := nodewith.Name("Password").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
 		authenticateAction = setTextField(ui, kb, passwordTextField, req.GetPsk())
+	case *wifi.JoinWifiRequest_EapTls:
+		securityOptionName = "EAP"
+		eapMethodComboBox := nodewith.Name("EAP method").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+		caComboBox := nodewith.Name("Server CA certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+		userComboBox := nodewith.Name("User certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+		identityTextField := nodewith.Name("Identity").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
+		authenticateAction = uiauto.Combine("set EAP certificates",
+			selectComboBoxOption(ui, eapMethodComboBox, "EAP-TLS"),
+			selectComboBoxOption(ui, caComboBox, req.GetEapTls().GetCaCert()),
+			selectComboBoxOption(ui, userComboBox, req.GetEapTls().GetClientCert()),
+			// Any non-empty string would work for EAP-TLS.
+			setTextField(ui, kb, identityTextField, "test"),
+		)
 	}
 
 	securityComboBox := nodewith.Name("Security").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
@@ -245,7 +258,7 @@ func verifyConnectedStatus(ctx context.Context, ssid string, expectedStatus bool
 
 	expectProps := map[string]interface{}{
 		shillconst.ServicePropertyName:        ssid,
-		shillconst.ServicePropertyIsConnected: []interface{}{expectedStatus},
+		shillconst.ServicePropertyIsConnected: expectedStatus,
 	}
 	if _, err := m.WaitForServiceProperties(ctx, expectProps, 15*time.Second); err != nil {
 		return errors.Wrap(err, "failed to wait WiFi to be expected status")
