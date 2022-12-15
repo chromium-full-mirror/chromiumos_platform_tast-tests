@@ -65,6 +65,13 @@ var screenRecord = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to record the screen during the test",
 )
 
+// ignoreFrameDataError decides whether to ignoring the errors caused by collecting Frame Data.
+var ignoreFrameDataError = testing.RegisterVarString(
+	"cujrecorder.ignoreFrameDataError",
+	"false",
+	"A boolean string (true/false) signifying whether to skipping the frame data collecting error",
+)
+
 // MetricConfig is the configuration for the recorder.
 type MetricConfig struct {
 	// The name of the histogram to be recorded.
@@ -856,7 +863,9 @@ func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
 	var stopErr error
 	if err := r.frameDataTracker.Stop(ctx, r.tconn); err != nil {
 		testing.ContextLog(ctx, "Failed to stop FrameDataTracker: ", err)
-		stopErr = errors.Wrap(err, "failed to stop FrameDataTracker")
+		if strings.ToLower(ignoreFrameDataError.Value()) != "true" {
+			stopErr = errors.Wrap(err, "failed to stop FrameDataTracker")
+		}
 	}
 
 	if err := r.zramInfoTracker.Stop(ctx); err != nil {
