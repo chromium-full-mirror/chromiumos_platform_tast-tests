@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 )
 
@@ -154,6 +155,29 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 			testing.ContextLogf(ctx, "Failed to reset screen brightness to %.2f%%: %v", brightness, err)
 		}
 	}(cleanupCtx)
+
+	sup, cleanup := setup.New("charge control")
+	defer func(ctx context.Context) {
+		if err := cleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Cleanup failed: ", err)
+		}
+	}(cleanupCtx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Chrome Test API Connection")
+	}
+
+	// Don't set BatteryDischarge, since that's handled with servo.
+	sup.Add(setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
+		Fwupd:     setup.DisableFwupd,
+		Powerd:    setup.DisablePowerd,
+		Backlight: setup.DoNotChangeBacklight,
+		DPTF:      setup.DoNotChangeDPTF,
+	}, nil))
+	if err := sup.Check(ctx); err != nil {
+		return errors.Wrap(err, "setup failed to stop powerd and fwupd")
+	}
 
 	// Rendering a WebGL website to consume power quickly.
 	conn, err := cr.NewConn(ctx, "https://crospower.page.link/power_BatteryDrain")
