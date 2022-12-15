@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/android/ui"
 	androidui "chromiumos/tast/common/android/ui"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/playstore"
@@ -512,7 +513,7 @@ func (y *YtApp) IsPlaying() uiauto.Action {
 // dumpAppInfo dumps Youtube app version name and code.
 func dumpAppInfo(ctx context.Context, a *arc.ARC, d *ui.Device, appPkgName string) (string, error) {
 	var versionName, versionCode string
-	out, err := a.Command(ctx, "dumpsys", "package", appPkgName).Output()
+	out, err := a.Command(ctx, "dumpsys", "package", appPkgName).Output(testexec.DumpLogOnError)
 	if err == nil {
 		versionNamePrefix, versionCodePrefix := "versionName=", "versionCode="
 		output := string(out)
