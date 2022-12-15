@@ -51,7 +51,7 @@ var (
 	reECHash        = regexp.MustCompile(`hash:\s*(\S+)\s*`)
 	reTabletModeAng = regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
 	reFlashSize     = regexp.MustCompile(`FlashSize\s*(\d+)`)
-	reChipInfo      = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S+)`)
+	reChipInfo      = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S*)`)
 	reI2CLookup     = regexp.MustCompile(`Bus: I2C; Port: (\S+); Address: (\S+)`)
 	reTempInfo      = regexp.MustCompile(`(\d+):\s+\d+\s+(\S+)`)
 	reSensorTemp    = regexp.MustCompile(`\S+\s+([0-9]+) K`)

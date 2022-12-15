@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
@@ -28,16 +29,26 @@ func init() {
 	})
 }
 
-// chipSizeMap is a map of chipName to size of flash in KiB. Please keep items alphabetized.
+// chipSizeMap is a map of chip Name(.Revision) to size of flash in KiB.
+// Please keep items alphabetized.
 var chipSizeMap = map[string]int{
-	"it81302":         1024,
-	"it8320":          512,
-	"ite_spi_ccd_i2c": 1024,
-	"mec1322":         512,
-	"npcx_int_spi":    512,
-	"npcx_spi":        512,
-	"npcx_uut":        512,
-	"stm32":           256,
+	"it81202.bx":          1024,
+	"it81302":             1024,
+	"it8320.dx":           512,
+	"ite_spi_ccd_i2c":     1024,
+	"mec1322.81":          256,
+	"NPCX586G.A.05":       512,
+	"NPCX796F.A.07":       512,
+	"NPCX796F.B.02":       512,
+	"NPCX796F.C.02":       512,
+	"NPCX797F.C.02":       512,
+	"NPCX797W.C.02":       512,
+	"NPCX993F.A.00160207": 512,
+	"npcx_int_spi":        512,
+	"npcx_spi":            512,
+	"npcx_uut":            512,
+	"stm32":               256,
+	"stm32f09x":           256,
 }
 
 func ECSize(ctx context.Context, s *testing.State) {
@@ -56,18 +67,23 @@ func ECSize(ctx context.Context, s *testing.State) {
 
 	chip, err := ectool.ChipInfo(ctx)
 	if err != nil {
-		s.Fatal("Failed to get ec chip: ", err)
+		s.Fatalf("Failed to get ec chip, got size %d: %v", size, err)
+	}
+
+	chipID := chip.Name
+	if chip.Revision != "" {
+		chipID = fmt.Sprintf("%s.%s", chip.Name, chip.Revision)
 	}
 
 	s.Logf("Flash size: %d KB", size)
-	s.Logf("EC Chip name: %s, vendor: %s, revision: %s", chip.Name, chip.Vendor, chip.Revision)
+	s.Logf("EC Chip: %s - {name: %s, vendor: %s, revision: %s}", chipID, chip.Name, chip.Vendor, chip.Revision)
 
-	expSize, ok := chipSizeMap[chip.Name]
+	expSize, ok := chipSizeMap[chipID]
 	if !ok {
-		s.Fatalf("Failed to find ec chip %v in chipSizeMap", chip.Name)
+		s.Fatalf("Failed to find ec chip %v in chipSizeMap", chipID)
 	}
 
 	if expSize != size {
-		s.Fatalf("Failed to verify EC size, expected size %d, got %d KB for chip %v", expSize, size, chip)
+		s.Fatalf("Failed to verify EC size, expected size %d, got %d KB for chip %v", expSize, size, *chip)
 	}
 }
