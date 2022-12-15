@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -103,6 +104,12 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 		} else {
 			s.Logf("Screen recording saved to %s", res.FileName)
 		}
+
+		testing.ContextLog(ctx, "Copying screen recording from DUT to local machine")
+		destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to copy screen recording to local machine: ", err)
+		}
 	}()
 
 	// Current hardware depencies might miss out on DUTs that actually don't
@@ -136,13 +143,29 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to check initial keybaord backlight value: ", err)
 	}
+
+	kbLightUp := "<f7>"
+	kbLightDown := "<f6>"
+	modelsWithShiftedShortcuts := []string{"atlas", "eve"}
+	// Some models use <f6> and <f5> instead for adjusting the kb light.
+	if func(modelName string, modelPool []string) bool {
+		for _, m := range modelPool {
+			if modelName == m {
+				return true
+			}
+		}
+		return false
+	}(h.Model, modelsWithShiftedShortcuts) {
+		kbLightUp = "<f6>"
+		kbLightDown = "<f5>"
+	}
 	switch initValue {
 	case 0:
 		s.Log("Keyboard initial backlight value is 0, attempting to increase the light to at least 40 percent before test")
-		err = adjustKBBacklight(ctx, h, s.DUT(), 40, 15*time.Second, "<f7>", "increasing")
+		err = adjustKBBacklight(ctx, h, s.DUT(), 40, 15*time.Second, kbLightUp, "increasing")
 	case 100:
 		s.Log("Keyboard initial backlight value is 100, attempting to decrease the light to at leaset 40 percent before test")
-		err = adjustKBBacklight(ctx, h, s.DUT(), 40, 15*time.Second, "<f6>", "decreasing")
+		err = adjustKBBacklight(ctx, h, s.DUT(), 40, 15*time.Second, kbLightDown, "decreasing")
 	}
 	if err != nil {
 		if _, ok := err.(*timeoutError); ok {
@@ -153,8 +176,8 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	}
 
 	kbBacklightTesting := make(map[int]string, 2)
-	kbBacklightTesting[0] = "<f6>"
-	kbBacklightTesting[100] = "<f7>"
+	kbBacklightTesting[0] = kbLightDown
+	kbBacklightTesting[100] = kbLightUp
 
 	for extremeValue, key := range kbBacklightTesting {
 		s.Logf("-----Adjusting keyboard backlight till %d percent-----", extremeValue)
