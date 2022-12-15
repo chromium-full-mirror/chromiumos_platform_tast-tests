@@ -33,6 +33,13 @@ func init() {
 		Timeout:      3 * time.Minute,
 		// TODO(b/244676664): Skip on amd64-generic due to CQ failures
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("amd64-generic")),
+		Params: []testing.Param{{
+			Name:    "with_uss",
+			Fixture: "ussAuthSessionFixture",
+		}, {
+			Name:    "with_vk",
+			Fixture: "vkAuthSessionFixture",
+		}},
 	})
 }
 
@@ -154,6 +161,7 @@ func AccountDiskUsage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// Cleanup before we start.
 	if err := utility.UnmountAll(ctx); err != nil {
