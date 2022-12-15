@@ -178,10 +178,12 @@ func (s *Servo) SetTestlab(ctx context.Context, option TestlabState) error {
 /*
 GetCCDCapability will return the current state of a specific CCD capability.
 Possible states are:
+
 	0 = Default
 	1 = Always
 	2 = UnlessLocked
 	3 = IfOpened
+
 It will also return "Y" if the capability is accessible, and "-" otherwise.
 */
 func (s *Servo) GetCCDCapability(ctx context.Context, capability CCDCap) (int, string, error) {
@@ -208,6 +210,7 @@ func (s *Servo) GetCCDCapability(ctx context.Context, capability CCDCap) (int, s
 /*
 SetCCDCapability will try to set a CCD capability to a specific state.
 Possible states are:
+
 	Default
 	Always
 	UnlessLocked
@@ -248,13 +251,13 @@ func (s *Servo) SetCCDCapability(ctx context.Context, capabilities map[CCDCap]CC
 	return nil
 }
 
-// Wrapper function to that runs a GSC command and ensures all Python regex
-// patterns appear at least once in the response. This function will throw a
-// pretty printed error otherwise.
+// CheckGSCCommandOutput is a wrapper function to that runs a GSC command and
+// ensures all Python regex patterns appear at least once in the response. This
+// function will throw a pretty printed error otherwise.
 func (s *Servo) CheckGSCCommandOutput(ctx context.Context, cmd string, regexs []string) error {
 	matches, err := s.RunCR50CommandGetOutput(ctx, cmd, regexs)
 	if err != nil {
-		return errors.Wrap(err, "Failed to run `"+cmd+"` on GSC, expected regex patterns = {"+strings.Join(regexs, ",")+"}")
+		return errors.Wrap(err, "failed to run `"+cmd+"` on GSC, expected regex patterns = {"+strings.Join(regexs, ",")+"}")
 	}
 	if len(matches) == 0 {
 		// NOTE: I've never seen this case occur since `servod` will throw an
@@ -264,10 +267,10 @@ func (s *Servo) CheckGSCCommandOutput(ctx context.Context, cmd string, regexs []
 	return nil
 }
 
-// Lock the CCD console by sending a GSC command
+// LockCCD locks the CCD console by sending a GSC command
 func (s *Servo) LockCCD(ctx context.Context) error {
 	if err := s.CheckGSCCommandOutput(ctx, "ccd lock", []string{`CCD locked`}); err != nil {
-		return errors.Wrap(err, "Failed to run 'ccd lock' on GSC: ")
+		return errors.Wrap(err, "failed to run 'ccd lock' on GSC")
 	}
 	return nil
 }
