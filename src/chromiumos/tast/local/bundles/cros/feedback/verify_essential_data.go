@@ -195,8 +195,8 @@ func VerifyEssentialData(ctx context.Context, s *testing.State) {
 		}
 
 		// Choose not to include email.
-		emailDropdown := nodewith.Name("Select email").Role(role.ListBox)
-		dontIncludeEmailOption := nodewith.Name("anonymous user").Role(role.ListBoxOption)
+		emailDropdown := nodewith.Name("Select email").ClassName("md-select")
+		dontIncludeEmailOption := nodewith.Name(fa.AnonymousUser).Role(role.ListBoxOption)
 		if err := uiauto.Combine("choose not to include Email",
 			ui.LeftClickUntil(emailDropdown, ui.WithTimeout(
 				2*time.Second).WaitUntilExists(dontIncludeEmailOption)),

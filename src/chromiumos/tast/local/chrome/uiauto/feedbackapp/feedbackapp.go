@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/testing"
 )
 
 const numberOfHelpLinks = 5
@@ -27,20 +28,38 @@ const IssueText = "Test only - please ignore"
 // ReportPath export is used to find the feedback report path.
 const ReportPath = "/tmp/feedback-report/feedback-report"
 
+// AnonymousUser export is used to find the email option for anonymous user.
+const AnonymousUser = "Don't include email address"
+
 // PngFile and PdfFile are used to define the file names.
 const (
 	PngFile = "attach_file_upload_01.png"
 	PdfFile = "attach_file_upload_02.pdf"
 )
 
-// Launch starts the Feedback app via the default method.
+// Launch starts the Feedback app via alt+shift+i.
 func Launch(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
-	if err := apps.Launch(ctx, tconn, apps.Feedback.ID); err != nil {
-		return nil, errors.Wrap(err, "failed to launch feedback app")
+	// Set up keyboard.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
+	defer kb.Close()
 
-	if err := ash.WaitForApp(ctx, tconn, apps.Feedback.ID, time.Minute); err != nil {
-		return nil, errors.Wrap(err, "feedback app did not appear in shelf after launch")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Launch Feedback app with alt+shift+i.
+		if err := kb.Accel(ctx, "Alt+Shift+I"); err != nil {
+			return errors.Wrap(err, "failed pressing alt+shift+i")
+		}
+
+		// Verify Feedback app is launched.
+		if err = ash.WaitForApp(ctx, tconn, apps.Feedback.ID, 20*time.Second); err != nil {
+			return errors.Wrap(err, "could not find app in shelf after launch")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
+		return nil, errors.Wrap(err, "failed launching Feedback app")
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)

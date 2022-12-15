@@ -67,8 +67,8 @@ func ChooseNotShareEmailWillDisableCheckbox(ctx context.Context, s *testing.Stat
 		s.Fatal("Failed to launch feedback app and navigating to share data page: ", err)
 	}
 
-	emailDropdown := nodewith.Name("Select email").Role(role.ListBox)
-	dontIncludeEmailOption := nodewith.Name("anonymous user").Role(role.ListBoxOption)
+	emailDropdown := nodewith.Name("Select email").ClassName("md-select")
+	dontIncludeEmailOption := nodewith.Name(feedbackapp.AnonymousUser).Role(role.ListBoxOption)
 
 	// Choose not to include email.
 	if err := uiauto.Combine("choose not to include Email",

@@ -98,8 +98,8 @@ func VerifyFeedbackUserCtlConsentValue(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch feedback app and navigate to share data page: ", err)
 	}
 
-	emailDropdown := nodewith.Name("Select email").Role(role.ListBox)
-	dontIncludeEmailOption := nodewith.Name("anonymous user").Role(role.ListBoxOption)
+	emailDropdown := nodewith.Name("Select email").ClassName("md-select")
+	dontIncludeEmailOption := nodewith.Name(feedbackapp.AnonymousUser).Role(role.ListBoxOption)
 	checkboxContainer := nodewith.Name("Allow Google to email you about this issue").Role(role.GenericContainer)
 	consentCheckbox := nodewith.Role(role.CheckBox).Ancestor(checkboxContainer)
 

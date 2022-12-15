@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const defaultEmailName = "user email"
+const defaultEmailName = "testuser@gmail.com"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -63,14 +63,12 @@ func VerifyUserEmailIsDisplayedAndSelectedByDefault(ctx context.Context, s *test
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 
 	// Launch feedback app and go to share data page.
-	feedbackRootNode, err := feedbackapp.LaunchAndGoToShareDataPage(ctx, tconn)
-	if err != nil {
+	if _, err := feedbackapp.LaunchAndGoToShareDataPage(ctx, tconn); err != nil {
 		s.Fatal("Failed to launch feedback app and go to share data page: ", err)
 	}
 
 	// Verify user email is displayed by default.
-	emailDropdown := nodewith.Name("Select email").Role(
-		role.ListBox).Ancestor(feedbackRootNode)
+	emailDropdown := nodewith.Name("Select email").ClassName("md-select")
 	emailDropdownInfo, err := ui.Info(ctx, emailDropdown)
 	if err != nil {
 		s.Fatal("Failed to get email dropdown info: ", err)
