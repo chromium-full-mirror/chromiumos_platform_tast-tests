@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
@@ -94,7 +95,7 @@ func exerciseSplitViewResize(ctx context.Context, tconn *chrome.TestConn, ui *ui
 // RunTablet runs window arrangement cuj for tablet. Since windows are always
 // maximized in tablet mode, we only test performance for tab dragging and split
 // view resizing.
-func RunTablet(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context) (retErr error) {
+func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context) (retErr error) {
 	const (
 		timeout           = 10 * time.Second
 		duration          = 2 * time.Second
@@ -113,14 +114,52 @@ func RunTablet(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uiauto
 		return errors.Wrap(err, "failed to click the tab strip button")
 	}
 
-	// Get the first tab location with a polling interval of 2 seconds (meaning
-	// wait until the location is stable for 2 seconds) to work around a
-	// glitchy animation that sometimes happens when bringing up the tab strip.
-	firstTab := nodewith.Role(role.Tab).First()
-	firstTabRect, err := ui.WithInterval(2*time.Second).Location(ctx, firstTab)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the location of the first tab")
+	if err := ui.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for the tab strip to stabilize")
 	}
+
+	tabStripConn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://tab-strip.top-chrome/"))
+	if err != nil {
+		return errors.Wrap(err, "failed to get connection to web UI tab strip")
+	}
+	defer cleanUp(closeCtx, action.Named(
+		"close connection to web UI tab strip",
+		func(ctx context.Context) error {
+			return tabStripConn.Close()
+		},
+	), &retErr)
+
+	// Get the bounds of the first tab by using JavaScript directly,
+	// because uiauto can't get the accurate bounds reliably in Lacros.
+	var firstTabRect coords.Rect
+	if err := tabStripConn.Eval(ctx,
+		`(function() {
+			const b = document.querySelector('tabstrip-tab-list').shadowRoot
+				.querySelectorAll('tabstrip-tab')[0].shadowRoot
+				.getElementById('tab').getBoundingClientRect();
+			return {
+				'left':   Math.round(b.left),
+				'top':    Math.round(b.top),
+				'width':  Math.round(b.width),
+				'height': Math.round(b.height),
+			};
+		})()`,
+		&firstTabRect); err != nil {
+		return errors.Wrap(err, "failed to get bounds of first tab")
+	}
+
+	// firstTabRect is relative to the web UI tab strip which is across the top of
+	// the browser window, so we can treat firstTabRect as relative to the browser
+	// window. Then here we convert it to be relative to the root window instead.
+	ws, err := getAllNonPipWindows(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get windows")
+	}
+	if len(ws) != 1 {
+		return errors.Errorf("unexpected number of windows: got %d; want 1", len(ws))
+	}
+	browserRect := ws[0].TargetBounds
+	firstTabRect = firstTabRect.WithOffset(browserRect.Left, browserRect.Top)
 
 	// Drag the first tab in the tab strip and snap it to the right.
 	defer cleanUp(ctx, action.Named(

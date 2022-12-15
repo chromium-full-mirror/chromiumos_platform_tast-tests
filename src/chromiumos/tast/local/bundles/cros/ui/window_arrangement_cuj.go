@@ -290,7 +290,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		f = func(ctx context.Context) error {
-			return windowarrangementcuj.RunTablet(ctx, closeCtx, tconn, ui, pc)
+			return windowarrangementcuj.RunTablet(ctx, closeCtx, br, tconn, ui, pc)
 		}
 	}
 
