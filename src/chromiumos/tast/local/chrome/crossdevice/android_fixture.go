@@ -370,6 +370,9 @@ func GetLoginCredentials(ctx context.Context, s *testing.FixtState, feature Feat
 
 // OverrideFeatureFlags overrides the required Phenotype flags for the given cross device feature.
 func OverrideFeatureFlags(ctx context.Context, adbDevice *adb.Device, feature Feature) error {
+	if err := adbDevice.OverridePhenotypeFlag(ctx, "com.google.android.gms.auth.proximity", "UnifiedBetterTogetherSetup__unify_better_together_host_set_feature_supported", "true", "boolean"); err != nil {
+		return errors.Wrap(err, "failed to override required flag for Unified Better Together Setup")
+	}
 	switch feature.Name {
 	case PhoneHub:
 		// These flags need to be overridden before logging into the account so that they can have the desired values during CryptAuth enrollment.
