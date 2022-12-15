@@ -22,6 +22,7 @@ const (
 	CR50UARTCmd    StringControl = "cr50_uart_cmd"
 	CR50UARTRegexp StringControl = "cr50_uart_regexp"
 	CR50UARTStream StringControl = "cr50_uart_stream"
+	GSCVersion     StringControl = "gsc_version"
 )
 
 // These controls accept only "on" and "off" as values.
@@ -267,7 +268,7 @@ func (s *Servo) CheckGSCCommandOutput(ctx context.Context, cmd string, regexs []
 	return nil
 }
 
-// LockCCD locks the CCD console by sending a GSC command
+// LockCCD locks the CCD console by sending a GSC command.
 func (s *Servo) LockCCD(ctx context.Context) error {
 	if err := s.CheckGSCCommandOutput(ctx, "ccd lock", []string{`CCD locked`}); err != nil {
 		return errors.Wrap(err, "failed to run 'ccd lock' on GSC")
