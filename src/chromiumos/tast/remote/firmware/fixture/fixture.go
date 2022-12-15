@@ -249,6 +249,20 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Error("Test did not run")
 		s.Fatal("Servo echo failed: ", err)
 	}
+	// Check whether CCD connection exists, if it does, attempt to open
+	// CCD with all capabilities set to factory settings. If CCD is locked,
+	// transitioning the dut from one mode to another might fail, returning
+	// one error that says "EC: No data was sent from the pty".
+	hasCCD, err := i.value.Helper.Servo.HasCCD(ctx)
+	if err != nil {
+		s.Fatal("Failed to check for CCD connection: ", err)
+	}
+	if hasCCD {
+		s.Log("Ensuring CCD open, testlab enabled, and capabilities set to factory settings")
+		if err := i.value.Helper.OpenCCD(ctx, true, true); err != nil {
+			s.Fatal("Failed to set CCD open: ", err)
+		}
+	}
 
 	if i.disallowSSH {
 		return
