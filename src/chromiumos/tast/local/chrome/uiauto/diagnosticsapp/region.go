@@ -27,6 +27,6 @@ var DxInternalKeyboardTestButtons = map[string]*nodewith.Finder{
 // DxKeyboardTabButtons defines keyboard tab button which specified by region.
 var DxKeyboardTabButtons = map[string]*nodewith.Finder{
 	"us": DxKeyboardTab,
-	"jp": nodewith.NameContaining("キーボード").Role(role.GenericContainer),
-	"fr": nodewith.NameContaining("Clavier").Role(role.GenericContainer),
+	"jp": nodewith.NameContaining("キーボード").Role(role.Button),
+	"fr": nodewith.NameContaining("Clavier").Role(role.Button),
 }
