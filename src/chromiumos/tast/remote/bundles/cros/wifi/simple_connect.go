@@ -161,6 +161,47 @@ func init() {
 					},
 				}},
 			}, {
+				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 20MHz.
+				Name:      "80211axhe20",
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
+						ap.HEChWidth(ap.HEChWidth20Or40),
+					},
+				}},
+			}, {
+				// Verifies that DUT can connect to an open 802.11ax network on channel 60 with a channel width of 40MHz.
+				Name:      "80211axhe40",
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement(),
+						ap.HEChWidth(ap.HEChWidth20Or40),
+					},
+				}},
+			}, {
+				// Verifies that DUT can connect to an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
+				Name:      "80211axhe80mixed",
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+					},
+				}},
+			}, {
+				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz.
+				// The router is forced to use 80 MHz wide rates only.
+				Name:      "80211axhe80pure",
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+					},
+				}},
+			}, {
 				// Verifies that DUT can connect to a hidden network on 2.4GHz and 5GHz channels.
 				Name: "hidden",
 				Val: []simpleConnectTestcase{{
