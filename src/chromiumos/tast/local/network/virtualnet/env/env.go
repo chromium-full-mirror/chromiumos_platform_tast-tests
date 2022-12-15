@@ -69,7 +69,9 @@ type server interface {
 
 // New creates a new Env object. |name| will be used as part of the names of
 // netns, ifnames of veths, and the log file, and thus it should be unique among
-// different Env objects.
+// different Env objects. This function is supposed to be used in virtualnet
+// package only. Consider using virtualnet.Create*Env() functions in other
+// packages instead.
 func New(name string) *Env {
 	return &Env{
 		name:        name,
@@ -82,7 +84,8 @@ func New(name string) *Env {
 
 // NewHidden creates a new Env object. Different from New(), the veth interface
 // created in this method will not be visible to shill (its name started with
-// "veth" and thus shill will ignore it).
+// "veth" and thus shill will ignore it). Consider using virtualnet.Create*Env()
+// functions in other packages instead.
 func NewHidden(name string) *Env {
 	return &Env{
 		name:        name,

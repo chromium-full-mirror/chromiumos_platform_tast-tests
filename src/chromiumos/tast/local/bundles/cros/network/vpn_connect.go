@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/dumputil"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet/env"
+	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/testing"
 )
 
@@ -294,8 +294,8 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	}()
 	// Create another env and connect it to the router. This can be used to verify
 	// if physical network is reachable.
-	physicalEnv := env.NewHidden("phy")
-	if err := physicalEnv.SetUp(ctx); err != nil {
+	physicalEnv, err := virtualnet.CreateEnv(ctx, "phy")
+	if err != nil {
 		s.Fatal("Failed to setup env for verifying physical connection: ", err)
 	}
 	defer func() {

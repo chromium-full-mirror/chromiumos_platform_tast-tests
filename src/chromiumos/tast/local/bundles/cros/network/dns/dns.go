@@ -540,8 +540,8 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 func NewServer(ctx context.Context, envName string, ipv4Subnet, ipv6Subnet *net.IPNet, routerEnv *env.Env, httpsCerts *certs.Certs) (*env.Env, error) {
 	success := false
 
-	server := env.New(envName)
-	if err := server.SetUp(ctx); err != nil {
+	server, err := virtualnet.CreateEnv(ctx, envName)
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up server env")
 	}
 	defer func() {

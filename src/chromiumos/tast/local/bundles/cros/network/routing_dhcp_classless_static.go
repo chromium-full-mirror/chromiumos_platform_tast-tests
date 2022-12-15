@@ -104,8 +104,8 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Setting up another server behind the test router")
 		success := false
 
-		env := env.New("same-sv")
-		if err := env.SetUp(ctx); err != nil {
+		env, err := virtualnet.CreateEnv(ctx, "same-sv")
+		if err != nil {
 			return nil, errors.Wrap(err, "failed to set up env")
 		}
 
@@ -141,8 +141,8 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Setting up another gateway and server on the same network of the test router")
 		success := false
 
-		gatewayEnv := env.New("other-gw")
-		if err := gatewayEnv.SetUp(ctx); err != nil {
+		gatewayEnv, err := virtualnet.CreateEnv(ctx, "other-gw")
+		if err != nil {
 			return nil, errors.Wrap(err, "failed to set up the second gateway on the test network")
 		}
 		defer func() {
@@ -151,8 +151,8 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 			}
 		}()
 
-		serverEnv := env.New("other-sv")
-		if err := serverEnv.SetUp(ctx); err != nil {
+		serverEnv, err := virtualnet.CreateEnv(ctx, "other-sv")
+		if err != nil {
 			return nil, errors.Wrap(err, "failed to set up the server behind second gateway on the test network")
 		}
 		defer func() {

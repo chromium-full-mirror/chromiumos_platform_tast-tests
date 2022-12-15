@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet/env"
+	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/testing"
 )
 
@@ -70,8 +70,8 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	vpnServer := env.New("vpn")
-	if err := vpnServer.SetUp(ctx); err != nil {
+	vpnServer, err := virtualnet.CreateEnv(ctx, "vpn")
+	if err != nil {
 		s.Fatal("Failed to setup vpn server env: ", err)
 	}
 	defer func(ctx context.Context) {

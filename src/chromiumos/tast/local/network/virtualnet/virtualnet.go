@@ -30,6 +30,28 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// Env simulates a node on the network, which can run different kinds of servers
+// (e.g., DHCP, HTTP) on it. An Env can be attached to the DUT directly (i.e.,
+// as a router), or connected to each other to simulate a complex network
+// topology. In implementation, an Env consists of a network namespace and a
+// pair of veth interfaces, and all the servers (commands) will be ran with
+// chroot and minijail inside it, so it should not interfere with the
+// environment on the host. See go/cros-routing-tests for more details.
+type Env = env.Env
+
+// CreateEnv sets up an Env. name will be used in the name of netns and veth
+// interfaces, and it should be unique among Envs. The Env created by this
+// function will not be visible to shill, and should usually be connected to
+// other Envs. To simulate a network on DUT, use CreateRouterEnv() or other
+// variants instead.
+func CreateEnv(ctx context.Context, name string) (*Env, error) {
+	e := env.NewHidden(name)
+	if err := e.SetUp(ctx); err != nil {
+		return nil, err
+	}
+	return e, nil
+}
+
 // EnvOptions contains the options that can be used to set up a virtualnet Env.
 type EnvOptions struct {
 	// Priority is the service priority in shill for the exposed interface. Please
@@ -76,7 +98,7 @@ type EnvOptions struct {
 // CreateRouterEnv creates a virtualnet Env with the given options. On success,
 // returns the corresponding shill Service and Env object. It's caller's
 // responsibility to call Cleanup() on the returned Env object.
-func CreateRouterEnv(ctx context.Context, m *shill.Manager, pool *subnet.Pool, opts EnvOptions) (*shill.Service, *env.Env, error) {
+func CreateRouterEnv(ctx context.Context, m *shill.Manager, pool *subnet.Pool, opts EnvOptions) (*shill.Service, *Env, error) {
 	router := env.New("router" + opts.NameSuffix)
 	if err := router.SetUp(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to set up the router env")
@@ -127,7 +149,7 @@ func CreateRouterEnv(ctx context.Context, m *shill.Manager, pool *subnet.Pool, o
 // the Internet. This setup is useful when we need to test something that cannot
 // be done in local subnet, e.g., to test the default routes. On success, it's
 // caller's responsibility to call Cleanup() on the returned Env objects.
-func CreateRouterServerEnv(ctx context.Context, m *shill.Manager, pool *subnet.Pool, opts EnvOptions) (svc *shill.Service, routerEnv, serverEnv *env.Env, err error) {
+func CreateRouterServerEnv(ctx context.Context, m *shill.Manager, pool *subnet.Pool, opts EnvOptions) (svc *shill.Service, routerEnv, serverEnv *Env, err error) {
 	success := false
 
 	svc, router, err := CreateRouterEnv(ctx, m, pool, opts)
@@ -143,8 +165,8 @@ func CreateRouterServerEnv(ctx context.Context, m *shill.Manager, pool *subnet.P
 		}
 	}()
 
-	server := env.New("server" + opts.NameSuffix)
-	if err := server.SetUp(ctx); err != nil {
+	server, err := CreateEnv(ctx, "server"+opts.NameSuffix)
+	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to set up server env")
 	}
 	defer func() {
@@ -164,7 +186,7 @@ func CreateRouterServerEnv(ctx context.Context, m *shill.Manager, pool *subnet.P
 	return svc, router, server, nil
 }
 
-func startServersInRouter(ctx context.Context, router *env.Env, pool *subnet.Pool, opts EnvOptions) error {
+func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, opts EnvOptions) error {
 	var dnsmasqOpts []dnsmasq.Option
 	if opts.EnableDHCP {
 		v4Subnet, err := pool.AllocNextIPv4Subnet()
@@ -203,7 +225,7 @@ func startServersInRouter(ctx context.Context, router *env.Env, pool *subnet.Poo
 		if len(rdnssServers) == 0 {
 			// Note that in the current implementation, shill requires an IPv6
 			// connection has both address and DNS servers. Therefore if not
-			// explictliy provided we'll use our own address as DNS server.
+			// explicitly provided we'll use our own address as DNS server.
 			rdnssServers = append(rdnssServers, selfIPv6Addr.String())
 		}
 		radvd := radvd.New(v6Prefix, rdnssServers)
@@ -250,7 +272,7 @@ type wifiEnv struct {
 	// Service is the shill service corresponding to this AP.
 	Service *shill.Service
 	// Router is the Env which simulates the WiFi router. Servers can be ran on it.
-	Router *env.Env
+	Router *Env
 
 	hostapd *testexec.Cmd
 

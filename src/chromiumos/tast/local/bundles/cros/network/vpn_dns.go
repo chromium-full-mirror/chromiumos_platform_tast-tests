@@ -16,8 +16,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
+	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/dnsmasq"
-	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/testing"
 )
 
@@ -83,8 +83,8 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	vpnServer := env.New("vpn")
-	if err := vpnServer.SetUp(ctx); err != nil {
+	vpnServer, err := virtualnet.CreateEnv(ctx, "vpn")
+	if err != nil {
 		s.Fatal("Failed to setup vpn server env: ", err)
 	}
 	if err := vpnServer.ConnectToRouterWithPool(ctx, testEnv.Router, testEnv.Pool); err != nil {

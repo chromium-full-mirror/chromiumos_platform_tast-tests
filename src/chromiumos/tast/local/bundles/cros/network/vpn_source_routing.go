@@ -13,7 +13,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/network/virtualnet"
-	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
@@ -63,8 +62,8 @@ func VPNSourceRouting(ctx context.Context, s *testing.State) {
 	}
 	defer rt.Cleanup(cleanupCtx)
 
-	vsvr := env.New("vserver")
-	if err := vsvr.SetUp(ctx); err != nil {
+	vsvr, err := virtualnet.CreateEnv(ctx, "vserver")
+	if err != nil {
 		s.Fatal("Failed to setup server: ", err)
 	}
 	s4, err := pool.AllocNextIPv4Subnet()
