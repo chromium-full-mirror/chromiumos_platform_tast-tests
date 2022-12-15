@@ -70,6 +70,21 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeGraphicsHwOverlays",
+		Desc:     "Logged into a user session for graphics testing for HwOverlays test",
+		Contacts: []string{"chromeos-gfx@chromium.org", "syedfaaiz@google.com"},
+		Parent:   "gpuWatchDog",
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs("--ash-no-nudges"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeGraphicsLacros",
 		Desc:     "Logged into a user session for graphics testing (lacros)",
 		Contacts: []string{"lacros-team@google.com"},

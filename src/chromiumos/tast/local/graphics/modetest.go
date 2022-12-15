@@ -18,6 +18,25 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	minModeTestMatches = 11
+	numBits            = 16
+)
+
+var (
+	modesetConnectorPattern = regexp.MustCompile(
+		`^(\d+)\s+(\d+)\s+(connected|disconnected)\s+(\S+)\s+(\d+)x(\d+)\s+(\d+)\s+(.+)$`)
+	modesetCrtcPattern    = regexp.MustCompile(`^(\d+)\s+(\d+)\s+\((\d+),(\d+)\)\s+\((\d+)x(\d+)\)$`)
+	modesetEncoderPattern = regexp.MustCompile(
+		`^(\d+)\s+(\d+)\s+(\S+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)$`)
+	modesetModePattern = regexp.MustCompile(
+		`^\s*#(\d+)\s+(\S+)\s+(\d+\.?\d*)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)?.*$`)
+	modetestPlanesPattern = regexp.MustCompile(
+		`^(\d+)\s+(\d+)\s+(\d+)\s+(\d+),(\d+)\s+(\d+),(\d+)\s+(\d+)\s+(0x)(?P<bit>([[:xdigit:]]+))`)
+	modetestPlanesStartPattern = regexp.MustCompile(
+		`^id\s+crtc\s+fb\s+CRTC\s+x,y\s+x,y\s+gamma\s+size\s+possible\s+crtcs`)
+)
+
 // Encoder attributes parsed from modetest.
 type Encoder struct {
 	EncoderID      uint32
@@ -66,6 +85,45 @@ type Mode struct {
 	VTotal     uint16
 }
 
+// asBits converts an unsigned int value to 16 bit binary.
+func asBits(val uint64) []uint64 {
+	var bits = []uint64{}
+	for i := 0; i < numBits; i++ {
+		bits = append([]uint64{val & 0x1}, bits...)
+		val = val >> 1
+	}
+	return bits
+}
+
+// GetModeTestPlanes runs modetest and returns a 2D array of uint binary representation of planes.
+func GetModeTestPlanes(ctx context.Context) ([][]uint64, error) {
+	var output [][]uint64
+	stdout, _, err := testexec.CommandContext(ctx, "modetest", "-p").SeparatedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		return output, errors.Wrap(err, "failed to run modetest ")
+	}
+	found := false
+	for _, line := range strings.Split(string(stdout), "\n") {
+		// Example of regex that will match:
+		// 31      91      340     0,0             0,0     0               0x00000001
+		if matches := modetestPlanesPattern.FindStringSubmatch(line); found && len(matches) >= minModeTestMatches {
+			binary, err := strconv.ParseUint(matches[10], 16, 64)
+			if err != nil {
+				return output, errors.Wrapf(err, "failed to parse %s as unsigned int ", matches[10])
+			}
+			output = append(output, asBits(binary))
+			if err != nil {
+				return output, errors.Wrapf(err, "failed to convert %s to binary ", matches[10])
+			}
+		}
+		matches := modetestPlanesStartPattern.FindStringSubmatch(line)
+		if matches != nil {
+			found = true
+		}
+	}
+	return output, nil
+}
+
 // DumpModetestOnError dumps the output of modetest to a file if the test failed.
 func DumpModetestOnError(ctx context.Context, outDir string, hasError func() bool) {
 	if !hasError() {
@@ -85,9 +143,6 @@ func DumpModetestOnError(ctx context.Context, outDir string, hasError func() boo
 		testing.ContextLog(ctx, "Failed to run modetest: ", err)
 	}
 }
-
-var modesetEncoderPattern = regexp.MustCompile(
-	`^(\d+)\s+(\d+)\s+(\S+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)$`)
 
 // ModetestEncoders returns the list of encoders parsed from modetest.
 func ModetestEncoders(ctx context.Context) ([]*Encoder, error) {
@@ -131,9 +186,6 @@ func ModetestEncoders(ctx context.Context) ([]*Encoder, error) {
 	}
 	return encoders, nil
 }
-
-var modesetConnectorPattern = regexp.MustCompile(
-	`^(\d+)\s+(\d+)\s+(connected|disconnected)\s+(\S+)\s+(\d+)x(\d+)\s+(\d+)\s+(.+)$`)
 
 // splitAndConvertInt splits string with comma and whitespace then converts each sub-string to int.
 func splitAndConvertInt(input string) ([]uint32, error) {
@@ -230,8 +282,6 @@ func NumberOfOutputsConnected(ctx context.Context) (int, error) {
 	return connected, nil
 }
 
-var modesetCrtcPattern = regexp.MustCompile(`^(\d+)\s+(\d+)\s+\((\d+),(\d+)\)\s+\((\d+)x(\d+)\)$`)
-
 // ModetestCrtcs returns the list of crtcs parsed from modetest.
 func ModetestCrtcs(ctx context.Context) ([]*Crtc, error) {
 	output, err := testexec.CommandContext(ctx, "modetest", "-p").Output()
@@ -292,9 +342,6 @@ func ModetestCrtcs(ctx context.Context) ([]*Crtc, error) {
 	return crtcs, nil
 
 }
-
-var modesetModePattern = regexp.MustCompile(
-	`^\s*#(\d+)\s+(\S+)\s+(\d+\.?\d*)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)?.*$`)
 
 // parseMode returns the mode parsed from the provided array of regexp substring matches.
 func parseMode(matches []string) (*Mode, error) {
