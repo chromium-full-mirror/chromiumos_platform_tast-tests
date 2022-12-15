@@ -88,6 +88,30 @@ func init() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	// TODO(b/230401333): Remove fixture after root cause of PhoneHub onboarding failure fixed.
+	// This is a temporary fixture to see if flake rates for Cryptauth DeviceSync are lower after a second DeviceSync attempt with a longer wait time.
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossdeviceOnboardedAllFeaturesRerun",
+		Desc: "Temporary Re-run fixture for tests that fail initially on crossdeviceOnboardedAllFeatures fixture",
+		Contacts: []string{
+			"jasonrhee@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "crossdeviceAndroidSetupPhoneHubRerun",
+		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return nil, nil
+		}),
+		Vars: []string{
+			customCrOSUsername,
+			customCrOSPassword,
+			KeepStateVar,
+		},
+		SetUpTimeout:    10*time.Minute + BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboarded",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled",

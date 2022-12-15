@@ -39,6 +39,11 @@ func init() {
 				Val:     browser.TypeAsh,
 			},
 			{
+				Name:    "rerun",
+				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
+				Val:     browser.TypeAsh,
+			},
+			{
 				Name:      "floss",
 				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
 				Val:       browser.TypeAsh,

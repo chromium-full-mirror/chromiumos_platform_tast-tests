@@ -40,6 +40,10 @@ func init() {
 				Fixture: "crossdeviceOnboardedAllFeatures",
 			},
 			{
+				Name:    "rerun",
+				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
+			},
+			{
 				Name:      "floss",
 				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
 				ExtraAttr: []string{"cross-device_floss"},
