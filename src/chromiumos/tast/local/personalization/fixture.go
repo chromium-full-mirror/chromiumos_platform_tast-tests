@@ -9,6 +9,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
 )
 
@@ -125,10 +126,49 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "personalizationWithScreenSaverPreview",
+		Desc: "Login with Gaia account with screen saver preview enabled",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"safarli@google.com",
+		},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.EnableFeatures("ScreenSaverPreview"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars: []string{
+			"ui.gaiaPoolDefault",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "personalizationWithScreenSaverPreviewClamshell",
+		Desc: "Login using Gaia account with Personalization Hub enabled in Clamshell mode",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"safarli@google.com",
+		},
+		Impl:            &clamshellFixture{},
+		Parent:          "personalizationWithScreenSaverPreview",
+		SetUpTimeout:    chrome.GAIALoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars: []string{
+			"ui.gaiaPoolDefault",
+		},
+	})
 }
 
 type clamshellFixture struct {
 	cleanup func(ctx context.Context) error
+	cr      *chrome.Chrome
 }
 
 func (f *clamshellFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -151,6 +191,7 @@ func (f *clamshellFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 		s.Fatal("Failed to wait the launcher state Closed: ", err)
 	}
 
+	f.cr = cr
 	return cr
 }
 
@@ -158,10 +199,14 @@ func (f *clamshellFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.cleanup != nil {
 		f.cleanup(ctx)
 	}
+	f.cr = nil
 }
 
 func (f *clamshellFixture) Reset(ctx context.Context) error {
 	return nil
 }
-func (f *clamshellFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
-func (f *clamshellFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *clamshellFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *clamshellFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, f.cr, "ui_dump")
+	f.cr = nil
+}

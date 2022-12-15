@@ -14,8 +14,10 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
+	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/personalization"
@@ -207,6 +209,32 @@ func TestLockScreenIdle(
 		hideAmbientMode(tconn, ui),
 		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
 	)(ctx)
+}
+
+// CloseScreenSaverPreview closes screen saver preview by clicking left mouse button.
+func CloseScreenSaverPreview(ctx context.Context, tconn *chrome.TestConn,
+	ui *uiauto.Context) error {
+	container := nodewith.ClassName("InSessionAmbientModeContainer").Role(role.Window)
+	if err := ui.Exists(container)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find ambient mode container")
+	}
+
+	if err := mouse.Click(tconn, coords.Point{X: 0, Y: 0}, mouse.LeftButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click mouse")
+	}
+
+	// Ambient mode container should not exist.
+	if err := ui.WaitUntilGone(container)(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure ambient container dismissed")
+	}
+
+	if st, err := lockscreen.GetState(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to get lockscreen state")
+	} else if st.Locked {
+		return errors.Wrap(err, "failed to ensure that screen is not locked")
+	}
+
+	return nil
 }
 
 // lockScreen returns an action to lock screen.
