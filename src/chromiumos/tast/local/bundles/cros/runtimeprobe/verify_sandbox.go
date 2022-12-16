@@ -35,18 +35,36 @@ func init() {
 		SoftwareDeps: []string{"racc"},
 		Params: []testing.Param{{
 			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{}}},
+			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "edid",
+			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"edid"},
+				}}},
+			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "input_device",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"input_device"},
+				}}},
+			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "usb_camera",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"usb_camera"},
 				}}},
+			ExtraAttr: []string{"informational"},
 		}, {
-			// These probe function can only be run on amd64.
-			Name: "amd64",
+			Name: "memory_amd64",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"memory"},
 				}}},
+			// This probe function can only be run on amd64.
 			ExtraSoftwareDeps: []string{"amd64"},
 		}, {
 			Name: "tcpc",
