@@ -51,12 +51,16 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		s.Log("Resetting DUT after test")
+		if err := h.Servo.OpenLid(ctx); err != nil {
+			s.Fatal("Failed to re open lid: ", err)
+		}
+
+		h.DisconnectDUT(ctx)
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 			s.Fatal("Failed to reset DUT: ", err)
 		}
 
 		s.Log("Reconnecting to DUT")
-		h.DisconnectDUT(ctx)
 		if err := h.WaitConnect(ctx); err != nil {
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
@@ -83,12 +87,15 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 }
 
 func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (reterr error) {
+	h.DisconnectDUT(ctx)
+	if err := h.Servo.OpenLid(ctx); err != nil {
+		return errors.Wrap(err, "failed to re open lid")
+	}
 	testing.ContextLog(ctx, "Resetting DUT")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		return errors.Wrap(err, "powering off DUT")
 	}
 	testing.ContextLog(ctx, "Reconnecting to DUT")
-	h.DisconnectDUT(ctx)
 	if err := h.WaitConnect(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
@@ -107,6 +114,7 @@ func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (r
 		return errors.Wrapf(err, "failed %s GBBFlag_DISABLE_LID_SHUTDOWN flag", flagState)
 	}
 
+	h.DisconnectDUT(ctx)
 	testing.ContextLog(ctx, "Booting to recovery")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
 		return errors.Wrap(err, "powering off DUT")
