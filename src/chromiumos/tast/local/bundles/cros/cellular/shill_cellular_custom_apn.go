@@ -48,16 +48,9 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
-	if err != nil || len(operatorID) == 0 {
-		// b/249809084: ModemManager often fails to read the operator identifier after a
-		// cold boot. Try to get the value from the IMSI before failing the test.
-		imsi, err := modem.GetIMSI(ctx)
-		if err != nil || len(imsi) < 6 {
-			s.Fatal("Could not get operator identifier from sim: ", err)
-		}
-		testing.ContextLog(ctx, "operatorID= ", operatorID, "  imsi= ", imsi)
-		operatorID = imsi[0:6]
+	operatorID, err := modem.GetOperatorIdentifierWithBestEffort(ctx)
+	if err != nil {
+		s.Fatal("Cannot get the OperatorIdentifier: ", err)
 	}
 
 	helper, err := cellular.NewHelper(ctx)

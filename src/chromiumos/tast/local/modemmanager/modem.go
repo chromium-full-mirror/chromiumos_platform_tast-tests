@@ -717,6 +717,23 @@ func (m *Modem) GetOperatorIdentifier(ctx context.Context) (string, error) {
 	return m.GetSimProperty(ctx, mmconst.SimPropertySimOperatorIdentifier)
 }
 
+// GetOperatorIdentifierWithBestEffort gets current modem sim Operator Identifier, and if one doesn't exist,
+// try to extract it from the IMSI. This should be removed when b/249809084 is fixed.
+func (m *Modem) GetOperatorIdentifierWithBestEffort(ctx context.Context) (string, error) {
+	operatorID, err := m.GetOperatorIdentifier(ctx)
+	if err != nil || len(operatorID) == 0 {
+		// b/249809084: ModemManager often fails to read the operator identifier after a
+		// cold boot. Try to get the value from the IMSI before failing the test.
+		imsi, err := m.GetIMSI(ctx)
+		if err != nil || len(imsi) < 6 {
+			return "", errors.Wrap(err, "could not get operator identifier from sim")
+		}
+		testing.ContextLog(ctx, "operatorID= ", operatorID, "  imsi= ", imsi)
+		operatorID = imsi[0:6]
+	}
+	return operatorID, nil
+}
+
 // GetSimIdentifier gets current modem sim Identifier, return Identifier if sim is active.
 func (m *Modem) GetSimIdentifier(ctx context.Context) (string, error) {
 	return m.GetSimProperty(ctx, mmconst.SimPropertySimIdentifier)
