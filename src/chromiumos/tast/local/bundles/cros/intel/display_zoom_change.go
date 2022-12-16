@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package graphics
+package intel
 
 import (
 	"context"
@@ -17,8 +17,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisplayZoomChange,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verfifies display zoom to small and large",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:262727675",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
