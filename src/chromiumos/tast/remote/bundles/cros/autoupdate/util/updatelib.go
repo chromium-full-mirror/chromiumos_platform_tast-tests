@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -36,9 +37,22 @@ type Operations struct {
 	CleanUp      func(ctx context.Context)
 }
 
+func getModel(ctx context.Context, dut *dut.DUT) (string, error) {
+	b, err := dut.Conn().CommandContext(ctx, "cros_config", "/", "name").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "cros_config failed")
+	}
+	if len(b) == 0 {
+		return "", errors.New("cros_config returned empty model")
+	}
+	return strings.TrimSpace(string(b)), nil
+}
+
 // NToMTest drives autoupdate and calls to client code providing callbacks.
+// paygen parameter specifies the filtered paygen the test wants to apply,
+// where the board type and milestone will be filtered in this function.
 // deltaM parameter specifies amount of milestones to rollback.
-func NToMTest(ctx context.Context, dut *dut.DUT, outDir string, rpcHint *testing.RPCHint, ops *Operations, deltaM int) error {
+func NToMTest(ctx context.Context, dut *dut.DUT, outDir string, rpcHint *testing.RPCHint, ops *Operations, paygen *updateutil.Paygen, deltaM int) error {
 	// Reserve time for deferred calls.
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTimeoutN2M)
@@ -76,6 +90,10 @@ func NToMTest(ctx context.Context, dut *dut.DUT, outDir string, rpcHint *testing
 
 	board := lsbContent[lsbrelease.Board]
 	originalVersion := lsbContent[lsbrelease.Version]
+	model, err := getModel(ctx, dut)
+	if err != nil {
+		return errors.Wrap(err, "failed to get model of device")
+	}
 
 	milestoneN, err := strconv.Atoi(lsbContent[lsbrelease.Milestone])
 	if err != nil {
@@ -83,16 +101,14 @@ func NToMTest(ctx context.Context, dut *dut.DUT, outDir string, rpcHint *testing
 	}
 	milestoneM := milestoneN - deltaM // Target milestone.
 
-	// Find the latest stable release for milestone M.
-	paygen, err := updateutil.LoadPaygenFromGS(preCtx)
-	if err != nil {
-		return errors.Wrap(err, "failed to load paygen data")
-	}
-
-	filtered := paygen.FilterBoardChannelDeltaType(board, "stable", "OMAHA").FilterMilestone(milestoneM)
+	// Model doesn't always effectively filter the paygen entries because if a
+	// board has only 1 possible model, the `applicable_models` field will be
+	// omitted in the paygen entry. Therefore we still have to filter entries by
+	// board first.
+	filtered := paygen.FilterBoard(board).FilterModel(model).FilterMilestone(milestoneM)
 	latest, err := filtered.FindLatest()
 	if err != nil {
-		return errors.Wrapf(err, "failed to find the latest stable release for milestone %d and board %s", milestoneM, board)
+		return errors.Wrapf(err, "failed to find the latest release for milestone %d, board %s, and model %s", milestoneM, board, model)
 	}
 	rollbackVersion := latest.ChromeOSVersion
 

@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/u2fd"
+	"chromiumos/tast/remote/updateutil"
 	"chromiumos/tast/rpc"
 	webauthnpb "chromiumos/tast/services/cros/hwsec"
 	"chromiumos/tast/testing"
@@ -65,6 +66,9 @@ func copyFilesToRemote(ctx context.Context, s *testing.State, cl *dutfs.Client) 
 }
 
 func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
+	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
+	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA", "MILESTONE"})
+
 	env, err := util.NewHwsecEnv(s.DUT())
 	if err != nil {
 		s.Fatal("Failed to create hwsec env: ", err)
@@ -104,7 +108,7 @@ func NToMWebauthnLogin(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), ops, 3 /*deltaM*/); err != nil {
+	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), ops, filtered, 3 /*deltaM*/); err != nil {
 		s.Fatal("Failed to run cross version test: ", err)
 	}
 }

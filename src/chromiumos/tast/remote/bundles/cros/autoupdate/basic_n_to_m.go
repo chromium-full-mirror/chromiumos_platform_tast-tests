@@ -9,6 +9,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
+	"chromiumos/tast/remote/updateutil"
 	"chromiumos/tast/testing"
 )
 
@@ -21,6 +22,7 @@ func init() {
 			"gabormagda@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1170223",
 		Attr:         []string{}, // Manual execution only.
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
@@ -33,7 +35,9 @@ func init() {
 }
 
 func BasicNToM(ctx context.Context, s *testing.State) {
-	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), &util.Operations{}, 3 /*deltaM*/); err != nil {
+	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
+	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA", "MILESTONE"})
+	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), &util.Operations{}, filtered, 3 /*deltaM*/); err != nil {
 		s.Error("Failed to complete the N to M update test: ", err)
 	}
 }

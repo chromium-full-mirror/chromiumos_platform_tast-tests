@@ -124,12 +124,60 @@ func (p Paygen) FilterBoard(board string) *Paygen {
 	return &filtered
 }
 
+// FilterModel filters for a specific model string.
+func (p Paygen) FilterModel(model string) *Paygen {
+	var filtered Paygen
+	for _, delta := range p.Deltas {
+		// If the applicable_models list isn't specified, the image should be supported
+		// on all devices of that board.
+		if len(delta.Models) == 0 {
+			filtered.Deltas = append(filtered.Deltas, delta)
+			continue
+		}
+		for _, applicableModel := range delta.Models {
+			if applicableModel == model {
+				filtered.Deltas = append(filtered.Deltas, delta)
+				break
+			}
+		}
+	}
+
+	return &filtered
+}
+
+// FilterChannel filters for a specific channel string.
+func (p Paygen) FilterChannel(channel string) *Paygen {
+	var filtered Paygen
+	for _, delta := range p.Deltas {
+		if delta.Channel == channel {
+			filtered.Deltas = append(filtered.Deltas, delta)
+		}
+	}
+
+	return &filtered
+}
+
 // FilterDeltaType filters by type.
 func (p Paygen) FilterDeltaType(deltaType string) *Paygen {
 	var filtered Paygen
 	for _, delta := range p.Deltas {
 		if delta.DeltaType == deltaType {
 			filtered.Deltas = append(filtered.Deltas, delta)
+		}
+	}
+
+	return &filtered
+}
+
+// FilterDeltaTypes filters by the specified set of types.
+func (p Paygen) FilterDeltaTypes(deltaTypes []string) *Paygen {
+	var filtered Paygen
+	for _, delta := range p.Deltas {
+		for _, deltaType := range deltaTypes {
+			if delta.DeltaType == deltaType {
+				filtered.Deltas = append(filtered.Deltas, delta)
+				break
+			}
 		}
 	}
 
