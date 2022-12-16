@@ -30,6 +30,16 @@ func init() {
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Find the right VDI app: COM_VDI_CUJ1_TASK2_WF1.
+			Value: "screenplay-bbe00399-7b52-49ec-8402-9440c89f412c",
+		}, {
+			Key: "feature_id",
+			// Launch VDI app: COM_VDI_CUJ4_TASK1_WF1.
+			Value: "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a",
+		}},
+		Requirements: []string{"screenplay-bbe00399-7b52-49ec-8402-9440c89f412c", "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a"},
 		Params: []testing.Param{
 			{
 				Name:      "citrix",

@@ -38,6 +38,12 @@ func init() {
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Launch Citrix or VMWare virtual desktop: COM_VDI_CUJ7_TASK1_WF1.
+			Value: "screenplay-e4fd3e2c-eb81-4feb-8cca-4a30962136fb",
+		}},
+		Requirements: []string{"screenplay-e4fd3e2c-eb81-4feb-8cca-4a30962136fb"},
 		Params: []testing.Param{
 			{
 				Name:    "citrix",
