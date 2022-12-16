@@ -11,7 +11,6 @@ import (
 
 	"chromiumos/tast/local/media/decoding"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -112,8 +111,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.ivf", "perf/vp9/2160p_60fps_600frames.vp9.ivf.json"},
 				ExtraAttr:         []string{"graphics_video_decodeaccel"},
-                // Skip on AMD zork models because it crashes the GPU, see b/248993753.
-                ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("berknip", "dirinboz", "ezkinil", "gumboz", "jelboz", "jelboz360", "morphius", "vilboz", "vilboz14", "vilboz360", "woomax")),
 			},
 		},
 	})
