@@ -34,6 +34,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{Name: "normal",
 				Fixture: fixture.NormalMode,
@@ -60,6 +61,12 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(b/194910957): old test disables EC WP here
+	ectool := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
+	if out, err := ectool.FlashProtect(ctx); err != nil {
+		s.Fatal("Failed to get flashprotect status: ", err)
+	} else {
+		s.Logf("FlashProtect status: %s", out)
+	}
 
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Requiring BiosServiceClient: ", err)
@@ -85,7 +92,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not backup EC firmware: ", err)
 	}
 	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
 	defer cancel()
 	defer func(ctx context.Context) {
 		if err := h.EnsureDUTBooted(ctx); err != nil {

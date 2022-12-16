@@ -453,3 +453,14 @@ func (ec *ECTool) AutoFanCtrl(ctx context.Context) error {
 
 	return nil
 }
+
+// FlashProtect runs the 'ectool flashprotect'.
+func (ec *ECTool) FlashProtect(ctx context.Context) (string, error) {
+	cmdAndArgs := []string{"flashprotect"}
+	testing.ContextLogf(ctx, "Running cmd: 'ectool %s'", strings.Join(cmdAndArgs, " "))
+	out, err := ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, got: %v", strings.Join(cmdAndArgs, " "), string(out))
+	}
+	return string(out), nil
+}
