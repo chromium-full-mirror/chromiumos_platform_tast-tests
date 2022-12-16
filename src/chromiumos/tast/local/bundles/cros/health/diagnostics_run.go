@@ -135,6 +135,10 @@ func init() {
 			Val:               newRoutineParams(croshealthd.RoutineEMMCLifetime),
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 			ExtraAttr:         []string{"informational"},
+		}, {
+			Name:      "led_lit_up",
+			Val:       newRoutineParams(croshealthd.RoutineLedLitUp),
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
