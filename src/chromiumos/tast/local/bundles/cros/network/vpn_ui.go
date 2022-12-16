@@ -83,6 +83,10 @@ func init() {
 	})
 }
 
+// vpnClientCertNameInUI is the display name of the client cert we should use in
+// the test.
+const vpnClientCertNameInUI = "chromelab-wifi-testbed-root.mtv.google.com [chromelab-wifi-testbed-client.mtv.google.com]"
+
 func VPNUI(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(vpn.FixtureEnv).Cr
 	tconn, err := cr.TestAPIConn(ctx)
@@ -200,6 +204,7 @@ func (v *vpnDialogConfigger) inputTextField(ctx context.Context, name, value str
 func (v *vpnDialogConfigger) selectListOption(ctx context.Context, name, value string) error {
 	btn := nodewith.Name(name).Role(role.ComboBoxSelect)
 	return uiauto.Combine("Select "+name,
+		v.ui.WaitUntilExists(btn),
 		v.ui.MakeVisible(btn),
 		v.ui.LeftClick(btn),
 		v.ui.LeftClick(nodewith.Name(value).Role(role.ListBoxOption)),
@@ -233,9 +238,12 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 	}
 	switch v.cfg.AuthType {
 	case vpn.AuthTypeCert:
-		// User cert and server CA are selected by default.
+		// Server CA is selected by default.
 		if err := v.selectListOption(ctx, "Authentication type", "User certificate"); err != nil {
 			return errors.Wrap(err, "failed to select authentication type")
+		}
+		if err := v.selectListOption(ctx, "User certificate", vpnClientCertNameInUI); err != nil {
+			return errors.Wrap(err, "failed to select user certificate")
 		}
 		if err := v.inputTextField(ctx, "Remote identity (optional)", v.conn.Properties["IKEv2.RemoteIdentity"].(string)); err != nil {
 			return err
@@ -286,10 +294,13 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 
 	switch v.cfg.AuthType {
 	case vpn.AuthTypeCert:
+		// Server CA is selected by default.
 		if err := v.selectListOption(ctx, "Authentication type", "User certificate"); err != nil {
 			return errors.Wrap(err, "failed to select authentication type")
 		}
-		// User cert and server CA should be selected by default.
+		if err := v.selectListOption(ctx, "User certificate", vpnClientCertNameInUI); err != nil {
+			return errors.Wrap(err, "failed to select user certificate")
+		}
 	case vpn.AuthTypePSK:
 		// Authentication type is default to "Pre-shared key".
 		if err := v.inputTextField(ctx, "Pre-shared key", v.conn.Properties["L2TPIPsec.PSK"].(string)); err != nil {
@@ -316,8 +327,7 @@ func (v *vpnDialogConfigger) configOpenVPN(ctx context.Context) error {
 	}
 
 	// Server CA is selected by default. Only need to select user cert.
-	certName := "chromelab-wifi-testbed-root.mtv.google.com [chromelab-wifi-testbed-client.mtv.google.com]"
-	if err := v.selectListOption(ctx, "User certificate", certName); err != nil {
+	if err := v.selectListOption(ctx, "User certificate", vpnClientCertNameInUI); err != nil {
 		return errors.Wrap(err, "failed to select user certificate")
 	}
 	return nil
