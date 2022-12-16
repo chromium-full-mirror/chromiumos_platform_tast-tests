@@ -75,6 +75,10 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ExtraArgs("--demo-mode-enrolling-username="+f.enrollmentUser),
 		chrome.ExtraArgs("--arc-start-mode=always-start"),
+		// Download test version of components (most importantly demo-mode-resources and demo-mode-app),
+		// to catch issues before they reach prod
+		// TODO(b/263269444): Consider running a version of these tests against the prod components as well
+		chrome.ExtraArgs("--component-updater=test-request"),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	)
 	if err != nil {
