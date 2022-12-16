@@ -7,6 +7,7 @@ package vpn
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
@@ -15,6 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/shill"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/hwsec"
+	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/network"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -71,10 +73,11 @@ func resetShillWithLockingHook(ctx context.Context) error {
 
 // vpnFixture is a fixture to prepare environment that can be used to test VPN
 // connections. Particularly, this fixture does the followings:
-// - Reset shill in SetUp and TearDown, to make sure we have a clean shill profile.
-// - Prepare the cert store and install user certificate (and server CA certificate
-//	 if Chrome is required).
-// - Start a new Chrome session if required.
+//   - Reset shill in SetUp and TearDown, to make sure we have a clean shill profile.
+//   - Prepare the cert store and install user certificate (and server CA certificate
+//     if Chrome is required).
+//   - Start a new Chrome session if required.
+//
 // When a test failed, to ensure we have a clean setup, shill will be reset if
 // there is no Chrome, and a full restart of this fixture will happen if there is Chrome.
 type vpnFixture struct {
@@ -82,6 +85,7 @@ type vpnFixture struct {
 	useCr     bool // if Chrome is needed
 	cr        *chrome.Chrome
 	certStore *netcertstore.Store
+	logMarker *logsaver.Marker // to store fixture and per-test log
 }
 
 // FixtureEnv wraps the variables created by the fixture and used in the tests.
@@ -106,6 +110,10 @@ func installUserCert(ctx context.Context, certStore *netcertstore.Store) (CertVa
 }
 
 func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if err := f.startLogSaver(ctx); err != nil {
+		s.Error("Failed to start log saver: ", err)
+	}
+
 	if err := resetShillWithLockingHook(ctx); err != nil {
 		s.Fatal("Failed to reset shill: ", err)
 	}
@@ -132,12 +140,16 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
 		f.cr, err = chrome.New(
 			ctx,
-			chrome.KeepState(),     // to avoid resetings TPM
+			chrome.KeepState(),     // to avoid resetting TPM
 			chrome.FakeLogin(cred), // to use the same user as certs are installed for
 		)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
+	}
+
+	if err := f.stopLogSaver(ctx, "net.setup.log"); err != nil {
+		s.Error("Failed to stop log saver: ", err)
 	}
 
 	return FixtureEnv{f.cr, certVals}
@@ -147,7 +159,7 @@ func (f *vpnFixture) Reset(ctx context.Context) error {
 	// When there is a failure and no Chrome, we only need to reset shill.
 	if !f.useCr && f.hasError {
 		f.hasError = false
-		testing.ContextLog(ctx, "Test failed, reseting shill")
+		testing.ContextLog(ctx, "Test failed, resetting shill")
 		if err := resetShillWithLockingHook(ctx); err != nil {
 			return errors.Wrap(err, "failed to reset shill")
 		}
@@ -176,13 +188,24 @@ func (f *vpnFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *vpnFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *vpnFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := f.startLogSaver(ctx); err != nil {
+		s.Error("Failed to start log saver: ", err)
+	}
+}
 
 func (f *vpnFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	f.hasError = s.HasError()
+	if err := f.stopLogSaver(ctx, "net.log"); err != nil {
+		s.Error("Failed to stop log saver: ", err)
+	}
 }
 
 func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := f.startLogSaver(ctx); err != nil {
+		s.Error("Failed to start log saver: ", err)
+	}
+
 	if f.useCr {
 		if err := f.cr.Close(ctx); err != nil {
 			s.Log("Failed to close Chrome connection: ", err)
@@ -204,4 +227,39 @@ func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := resetShillWithLockingHook(ctx); err != nil {
 		s.Error("Failed to reset shill in TearDown: ", err)
 	}
+
+	if err := f.stopLogSaver(ctx, "net.teardown.log"); err != nil {
+		s.Error("Failed to stop log saver: ", err)
+	}
+}
+
+func (f *vpnFixture) startLogSaver(ctx context.Context) error {
+	if f.logMarker != nil {
+		testing.ContextLog(ctx, "A log marker is already created but not cleaned up")
+		f.logMarker = nil
+	}
+
+	logMarker, err := logsaver.NewMarker("/var/log/net.log")
+	if err != nil {
+		return errors.Wrap(err, "failed to create log saver for net.log")
+	}
+	f.logMarker = logMarker
+	return nil
+}
+
+func (f *vpnFixture) stopLogSaver(ctx context.Context, name string) error {
+	if f.logMarker == nil {
+		testing.ContextLog(ctx, "No available log saver")
+		return nil
+	}
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("failed to get ContextOutDir")
+	}
+	if err := f.logMarker.Save(filepath.Join(outDir, name)); err != nil {
+		return errors.Wrapf(err, "failed to store log to %s", name)
+	}
+	f.logMarker = nil
+	return nil
 }
