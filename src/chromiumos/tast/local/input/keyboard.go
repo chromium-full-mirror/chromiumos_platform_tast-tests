@@ -57,20 +57,41 @@ func Keyboard(ctx context.Context) (*KeyboardEventWriter, error) {
 	return VirtualKeyboard(ctx)
 }
 
-// FindPhysicalKeyboard iterates over devices and returns path for physical keyboard
-// otherwise returns boolean stating a physical keyboard was not found
-func FindPhysicalKeyboard(ctx context.Context) (bool, string, error) {
+// findPhysicalKeyboardDevInfo iterates over devices and returns devinfo for
+// physical keyboard otherwise returns boolean stating a physical keyboard was
+// not found.
+func findPhysicalKeyboardDevInfo(ctx context.Context) (bool, *devInfo, error) {
 	infos, err := readDevices("")
 	if err != nil {
-		return false, "", errors.Wrap(err, "failed to read devices")
+		return false, nil, errors.Wrap(err, "failed to read devices")
 	}
 	for _, info := range infos {
 		if info.isKeyboard() && info.phys != "" {
 			testing.ContextLogf(ctx, "Using existing keyboard device %+v", info)
-			return true, info.path, nil
+			return true, info, nil
 		}
 	}
-	return false, "", nil
+	return false, nil, nil
+}
+
+// FindPhysicalKeyboard returns the path for the physical keyboard device's /dev/event entry, if present.
+func FindPhysicalKeyboard(ctx context.Context) (bool, string, error) {
+	success, info, err := findPhysicalKeyboardDevInfo(ctx)
+
+	if info == nil {
+		return success, "", err
+	}
+	return success, info.path, err
+}
+
+// FindPhysicalKeyboardName returns the name for the physical keyboard device, if present.
+func FindPhysicalKeyboardName(ctx context.Context) (bool, string, error) {
+	success, info, err := findPhysicalKeyboardDevInfo(ctx)
+
+	if info == nil {
+		return success, "", err
+	}
+	return success, info.name, err
 }
 
 // FindPowerKeyDevice iterates over devices and returns path for cros_ec_buttons
@@ -160,7 +181,8 @@ func (kw *KeyboardEventWriter) Device() string { return kw.dev }
 
 // sendKey writes a EV_KEY event containing the specified code and value, followed by a EV_SYN event.
 // If kw represents a keyboard with a custom top row, we will also send a EV_MSC
-//	event mapped from topRowScanCodeMap
+// event mapped from topRowScanCodeMap.
+//
 // If firstErr points at a non-nil error, no events are written.
 // If an error is encountered, it is saved to the address pointed to by firstErr.
 func (kw *KeyboardEventWriter) sendKey(ec EventCode, val int32, firstErr *error) {
