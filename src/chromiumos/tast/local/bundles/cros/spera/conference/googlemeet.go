@@ -316,7 +316,7 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) error {
 		testing.ContextLogf(ctx, "The join button took %v to appear", time.Now().Sub(startTime))
 		return uiauto.NamedCombine("join conference",
 			changeBackgroundToBlur,
-			ui.RetryUntil(ui.DoDefault(joinButton), ui.WithTimeout(shortUITimeout).WaitUntilGone(joinButton)),
+			ui.WithTimeout(longUITimeout).DoDefaultUntil(joinButton, ui.WaitUntilGone(joinButton)),
 			ui.WithTimeout(longUITimeout).WaitUntilGone(homeLink),
 		)(ctx)
 	}
@@ -536,7 +536,9 @@ func (conf *GoogleMeetConference) getStableGrids(ctx context.Context) (grids []u
 			return errors.Wrap(err, "failed to find grids")
 		}
 		currentQuantity := len(grids)
-		if currentQuantity == lastQuantity {
+		// Sometimes the number of grids may be unstable, especially on low end DUTs.
+		// It may reduce 1~2 grids when exchanging participants videos.
+		if lastQuantity-2 <= currentQuantity && currentQuantity <= lastQuantity+2 {
 			count++
 		} else {
 			lastQuantity = currentQuantity
@@ -651,7 +653,8 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 		closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(changeLayoutPanel)
 		closePanel := uiauto.Combine("close change layout panel",
 			uiauto.NamedAction("press esc to close change layout panel", conf.kb.AccelAction("esc")),
-			uiauto.IfFailThen(ui.WaitUntilGone(changeLayoutPanel), ui.DoDefault(closeButton)))
+			ui.Retry(retryTimes, uiauto.IfFailThen(ui.WaitUntilGone(closeButton),
+				ui.DoDefaultUntil(closeButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton)))))
 		return uiauto.NamedCombine("change layout to "+mode,
 			conf.closeNotifDialog(),
 			openLayout,
