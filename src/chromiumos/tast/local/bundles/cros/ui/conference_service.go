@@ -246,43 +246,18 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 		return &empty.Empty{}, nil
 	}
 
-	if meet.BondEnabled {
-		for { // Using for loop for the sake of breaking out of the block.
-			// Connect.
-			bondConn, err := bond.NewClient(ctx, bond.WithCredsJSON(meet.BondCreds), bond.WithExternalEndpoint())
-			if err != nil {
-				testing.ContextLogf(ctx, "BOND API2: Failed to connect: %+v", err)
-				break
-			}
-			defer bondConn.Close()
-
-			// Create room with bots.
-			botsDuration := 60 * time.Minute // one hour long by default.
-			deadline, ok := ctx.Deadline()
-			if ok {
-				botsDuration = deadline.Add(90 * time.Second).Sub(time.Now())
-			}
-			numBots := conference.GoogleMeetRoomParticipants[roomType] - 1 // one of participants is the test itself
-			bondMeetingCode, numFailures, err := bondConn.CreateConferenceWithBots(ctx, numBots, botsDuration)
-			defer bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
-			if err != nil || numFailures > 0 {
-				testing.ContextLogf(ctx, "BOND API2: %d bots failed to connect. Error: %+v", numFailures, err)
-				break
-			}
-			testing.ContextLogf(ctx, "BOND API2: Created conference: %+v and added %d bots for the duration of %v", bondMeetingCode, numBots, botsDuration)
-
-			// Make the room created by BOND the first one to try.
-			meet.URLs = append([]string{fmt.Sprintf("https://meet.google.com/%s", bondMeetingCode)})
-
-			break
-		}
-
-		if len(meet.URLs) == 0 {
-			return nil, errors.Wrap(err, "failed to create a meeting via BOND API and no static rooms specified")
-		}
-	}
-
 	runWithMeetUrls := func(ctx context.Context) error {
+		if meet.BondEnabled {
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+			defer cancel()
+			meetlink, cleanupBond, err := generateMeetLinkViaBond(ctx, meet, roomType)
+			if err != nil {
+				return &conference.BondError{Err: errors.Wrap(err, "failed to create meet link via BOND API")}
+			}
+			defer cleanupBond(cleanupCtx)
+			meet.URLs = []string{meetlink}
+		}
 		var err error
 		for _, url := range meet.URLs {
 			testing.ContextLog(ctx, "URL to be tested in the meet url list: ", url)
@@ -315,7 +290,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 				// Record the complete run result if the failure is not because of timeout.
 				lastError = err
 			}
-			if conference.IsParticipantError(err) {
+			if conference.IsParticipantError(err) || conference.IsBondError(err) {
 				testing.ContextLogf(ctx, "Wait %v and try to run meet scenario again; caused by error: %v", meet.RetryInterval, err)
 				return err
 			}
@@ -418,4 +393,54 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 	}
 
 	return &empty.Empty{}, nil
+}
+
+func generateMeetLinkViaBond(ctx context.Context, meet conference.GoogleMeetConfig, roomType conference.RoomType) (meetLink string, cleanup func(ctx context.Context), err error) {
+	var (
+		bondConn        *bond.Client
+		bondMeetingCode string
+		numFailures     int
+	)
+	cleanupfunc := func(ctx context.Context) {
+		if bondConn != nil {
+			if bondMeetingCode != "" {
+				bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
+			}
+			bondConn.Close()
+		}
+	}
+	// Connect.
+	bondConn, err = bond.NewClient(ctx, bond.WithCredsJSON(meet.BondCreds), bond.WithExternalEndpoint())
+	if err != nil {
+		return "", cleanupfunc, errors.Wrap(err, "BOND API2: Failed to connect")
+	}
+	defer func(ctx context.Context) {
+		if err != nil {
+			bondConn.Close()
+		}
+	}(ctx)
+
+	// Create room with bots.
+	botsDuration := 60 * time.Minute // one hour long by default.
+	deadline, ok := ctx.Deadline()
+	if ok {
+		botsDuration = deadline.Add(90 * time.Second).Sub(time.Now())
+	}
+	numBots := conference.GoogleMeetRoomParticipants[roomType] - 1 // one of participants is the test itself
+	bondMeetingCode, numFailures, err = bondConn.CreateConferenceWithBots(ctx, numBots, botsDuration)
+	defer func(ctx context.Context) {
+		if err != nil {
+			bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
+		}
+	}(ctx)
+
+	if err != nil || numFailures > 0 {
+		return "", cleanupfunc, errors.Wrapf(err, "BOND API2: %d bots failed to connect", numFailures)
+	}
+	testing.ContextLogf(ctx, "BOND API2: Created conference: %+v and added %d bots for the duration of %v", bondMeetingCode, numBots, botsDuration)
+
+	// Make the room created by BOND the first one to try.
+	meetLink = fmt.Sprintf("https://meet.google.com/%s", bondMeetingCode)
+
+	return meetLink, cleanupfunc, nil
 }

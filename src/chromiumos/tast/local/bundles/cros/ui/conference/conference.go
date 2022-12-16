@@ -41,8 +41,10 @@ type Conference interface {
 	DisplayAllParticipantsTime() time.Duration
 }
 
-const participantError = "number of participants is incorrect (ERROR - PARTICIPANT NUMBER)"
-const signedOutError = "the account has been signed out: "
+const (
+	participantError = "number of participants is incorrect (ERROR - PARTICIPANT NUMBER)"
+	signedOutError   = "the account has been signed out: "
+)
 
 // ParticipantError wraps the given error with participant error specific information
 // which can be used to identify the error type with IsParticipantError() function.
@@ -54,6 +56,21 @@ func ParticipantError(err error) error {
 func IsParticipantError(err error) bool {
 	// Use string comparason because error loses its type after wrapping.
 	return strings.Contains(err.Error(), participantError)
+}
+
+// BondError represents an error caused by the BOND API.
+type BondError struct {
+	Err error
+}
+
+func (b *BondError) Error() string {
+	return b.Err.Error()
+}
+
+// IsBondError returns true if the given error is caused by BOND API error.
+func IsBondError(err error) bool {
+	var bErr *BondError
+	return errors.As(err, &bErr)
 }
 
 // CheckSignedOutError check whether the account is signed out or not.

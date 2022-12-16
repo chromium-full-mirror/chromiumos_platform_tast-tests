@@ -61,6 +61,21 @@ func IsParticipantError(err error) bool {
 	return strings.Contains(err.Error(), participantError)
 }
 
+// BondError represents an error caused by the BOND API.
+type BondError struct {
+	Err error
+}
+
+func (b *BondError) Error() string {
+	return b.Err.Error()
+}
+
+// IsBondError returns true if the given error is caused by BOND API error.
+func IsBondError(err error) bool {
+	var bErr *BondError
+	return errors.As(err, &bErr)
+}
+
 // CheckSignedOutError check whether the account is signed out or not.
 // If the acount is signed out, wraps the given error with signed out error specific information.
 // If any other error happens or there is no signed out message, the original error will be returned.
