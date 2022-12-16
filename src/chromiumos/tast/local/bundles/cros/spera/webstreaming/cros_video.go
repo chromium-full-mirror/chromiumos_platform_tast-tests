@@ -152,9 +152,18 @@ func (v *CrosVideo) FramesData(ctx context.Context) (decodedFrames, droppedFrame
 }
 
 // Close the cros video page.
-func (v *CrosVideo) Close(ctx context.Context) {
-	v.conn.CloseTarget(ctx)
-	v.conn.Close()
+func (v *CrosVideo) Close(ctx context.Context) error {
+	if v.conn == nil {
+		return nil
+	}
+	if err := v.conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close target for cros video")
+	}
+	if err := v.conn.Close(); err != nil {
+		return errors.Wrap(err, "failed to close connection for cros video")
+	}
+	v.conn = nil
+	return nil
 }
 
 // printVideoDecoderName prints the video decoder name.

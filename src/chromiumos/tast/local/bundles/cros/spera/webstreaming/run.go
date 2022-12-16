@@ -121,22 +121,33 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		return errors.Wrap(err, "could not find the Chrome app")
 	}
 
+	googleDocClosed := false
+	cleanupGoogleDoc := func(ctx context.Context) error {
+		// Maximize the Google Docs window to delete Docs.
+		if err := maximizeWindowSize(ctx, tabletMode, tconn, bTconn); err != nil {
+			testing.ContextLog(ctx, "Failed to maximize the Google Docs page")
+		}
+		if err := googleapps.DeleteDoc(tconn)(ctx); err != nil {
+			// Only log the error.
+			testing.ContextLog(ctx, "Failed to clean up the document: ", err)
+		}
+		if err := cuj.CloseAllWindows(ctx, tconn); err != nil {
+			return err
+		}
+		googleDocClosed = true
+		return nil
+	}
+
 	if err := googleapps.NewGoogleDocs(ctx, tconn, br, uiHandler, true); err != nil {
 		return err
 	}
 	defer func(ctx context.Context) {
 		faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-
-		// Maximize the Google Docs window to delete Docs.
-		if err := maximizeWindowSize(ctx, tabletMode, tconn, bTconn); err != nil {
-			testing.ContextLog(ctx, "Failed to maximize the Google Docs page")
+		if !googleDocClosed {
+			if err := cleanupGoogleDoc(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to cleanup Google Docs")
+			}
 		}
-
-		if err := googleapps.DeleteDoc(tconn)(ctx); err != nil {
-			// Only log the error.
-			testing.ContextLog(ctx, "Failed to clean up the document: ", err)
-		}
-		cuj.CloseAllWindows(ctx, tconn)
 	}(cleanupCtx)
 
 	video, err := NewCrosVideo(ctx, tconn, uiHandler, br)
@@ -159,22 +170,26 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 	)(ctx); err != nil {
 		return err
 	}
+	var decodedFrames, droppedFrames, droppedFramesPer float64
 
+	setFramesData := func(ctx context.Context) error {
+		decodedFrames, droppedFrames, droppedFramesPer, err = video.FramesData(ctx)
+		return err
+	}
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		return webStreamingScenario(ctx, tconn, kb, video)
+		if err := webStreamingScenario(ctx, tconn, kb, video); err != nil {
+			return err
+		}
+		return uiauto.NamedCombine("collect metrics",
+			uiHandler.SwitchToAppWindowByName(chromeApp.Name, crosVideoTitle),
+			video.Pause(),
+			setFramesData,
+			// Close browsers to generate LCP2 metrics.
+			video.Close,
+			cleanupGoogleDoc,
+		)(ctx)
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the web streaming scenario")
-	}
-
-	if err := uiauto.Combine("pause video",
-		uiHandler.SwitchToAppWindowByName(chromeApp.Name, crosVideoTitle),
-		video.Pause(),
-	)(ctx); err != nil {
-		return err
-	}
-	decodedFrames, droppedFrames, droppedFramesPer, err := video.FramesData(ctx)
-	if err != nil {
-		return err
 	}
 
 	pv := perf.NewValues()
