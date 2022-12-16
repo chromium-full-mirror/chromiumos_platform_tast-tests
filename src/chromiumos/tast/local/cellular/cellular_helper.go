@@ -18,11 +18,16 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/common/mmconst"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/dbusutil"
+	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
@@ -1314,4 +1319,120 @@ func (h *Helper) ConnectAndCheckSignalQuality(ctx context.Context) error {
 		return errors.Wrap(err, "failed SignalStrength check")
 	}
 	return nil
+}
+
+// GetManagedProfileIccidBeforeTest is only used for CellularPolicyConnection*
+// tests, it picks one of the eSIM profile and rename it to "ManagedProfile" and
+// return the network configuration value used in the policy ONC and disables
+// all profiles in the euicc. It also renames another eSIM profile to
+// "UnmanagedProfile". Please also run the returned cleanupFunc to revert to
+// original status.
+func GetManagedProfileIccidBeforeTest(ctx context.Context) (onc []*policy.ONCNetworkConfiguration, cleanupFunc func(ctx context.Context), e error) {
+	const prodSimSlotNum = 0
+	euicc, err := hermes.NewEUICC(ctx, prodSimSlotNum)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Unable to get Hermes euicc")
+	}
+
+	testing.ContextLog(ctx, "Looking for installed profile")
+	profiles, err := euicc.InstalledProfiles(ctx, false)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get installed profiles")
+	}
+	if len(profiles) < 2 {
+		return nil, nil, errors.Wrap(err, "no profiles found on euicc, expected atleast two installed profiles")
+	}
+
+	managedIccid := ""
+	prevManagedProfileName := ""
+	prevUnmanagedProfileName := ""
+	findUnmanagedProfile := false
+	for _, profile := range profiles {
+		props, err := dbusutil.NewDBusProperties(ctx, profile.DBusObject)
+		iccid, err := props.GetString(hermesconst.ProfilePropertyIccid)
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "failed to read profile %s iccid", profile.String())
+		}
+
+		nickName, err := props.GetString(hermesconst.ProfilePropertyNickname)
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "failed to read profile %s nickname", profile.String())
+		}
+
+		state, err := props.GetInt32(hermesconst.ProfilePropertyState)
+		if err != nil {
+			return nil, nil, errors.Wrapf(err, "failed to read profile %s property state", profile.String())
+		}
+
+		if managedIccid == "" {
+			managedIccid = iccid
+			testing.ContextLogf(ctx, "Using managed profile iccid: %s", managedIccid)
+
+			if state == hermesconst.ProfileStateEnabled {
+				if err := profile.Call(ctx, hermesconst.ProfileMethodDisable).Err; err != nil {
+					return nil, nil, errors.Wrapf(err, "failed to disable profile %s", profile.String())
+				}
+			}
+
+			if nickName != ossettings.ManagedEsimProfileName {
+				testing.ContextLogf(ctx, "Renaming profile %s to ManagedProfile", profile.String())
+				if err := profile.Call(ctx, "Rename", ossettings.ManagedEsimProfileName).Err; err != nil {
+					return nil, nil, errors.Wrapf(err, "failed to rename profile: %s", profile.String())
+				}
+				prevManagedProfileName = nickName
+			}
+		} else if !findUnmanagedProfile {
+			if nickName != ossettings.UnmanagedEsimProfileName {
+				testing.ContextLogf(ctx, "Renaming profile %s to UnmanagedProfile", profile.String())
+				if err := profile.Call(ctx, "Rename", ossettings.UnmanagedEsimProfileName).Err; err != nil {
+					return nil, nil, errors.Wrapf(err, "failed to rename profile: %s", profile.String())
+				}
+				prevUnmanagedProfileName = nickName
+			}
+			testing.ContextLogf(ctx, "Using unmanaged profile iccid: %s", iccid)
+			findUnmanagedProfile = true
+		}
+	}
+
+	cleanupFunc = func(ctx context.Context) {
+		for _, profile := range profiles {
+			props, err := dbusutil.NewDBusProperties(ctx, profile.DBusObject)
+			nickName, err := props.GetString(hermesconst.ProfilePropertyNickname)
+			if err != nil {
+				testing.ContextLogf(ctx, "Failed to read profile %s nick name", profile.String())
+				continue
+			}
+			if prevManagedProfileName != "" && nickName == ossettings.ManagedEsimProfileName {
+				testing.ContextLogf(ctx, "Rename back managed profile to %s", prevManagedProfileName)
+				if err := profile.Call(ctx, "Rename", prevManagedProfileName).Err; err != nil {
+					testing.ContextLog(ctx, "Failed to rename-back managed profile")
+				}
+			} else if prevUnmanagedProfileName != "" && nickName == ossettings.UnmanagedEsimProfileName {
+				testing.ContextLogf(ctx, "Rename back unmanaged profile to %s", prevUnmanagedProfileName)
+				if err := profile.Call(ctx, "Rename", prevUnmanagedProfileName).Err; err != nil {
+					testing.ContextLog(ctx, "Failed to rename-back unmanaged profile")
+				}
+			}
+		}
+	}
+
+	if !findUnmanagedProfile {
+		return nil, cleanupFunc, errors.Wrap(nil, "didn't find unmanaged profile")
+	}
+
+	cellularONC := &policy.ONCCellular{
+		ICCID: managedIccid,
+	}
+
+	deviceProfileServiceGUID := "Cellular-Managed"
+	networkConfigurations := []*policy.ONCNetworkConfiguration{
+		{
+			GUID:     deviceProfileServiceGUID,
+			Name:     "CellularManaged",
+			Type:     "Cellular",
+			Cellular: cellularONC,
+		},
+	}
+
+	return networkConfigurations, cleanupFunc, nil
 }

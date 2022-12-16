@@ -268,3 +268,9 @@ var (
 	// SocksPortTextField is the finder for the "SOCKS port" text field.
 	SocksPortTextField = nodewith.Name("SOCKS Host - Port").Role(role.TextField)
 )
+
+// ManagedEsimProfileName is the name of the managde eSim profile name used in network.CellularPolicyConnection* tests.
+const ManagedEsimProfileName = "ManagedProfile"
+
+// UnmanagedEsimProfileName is the name of the unmanagde eSim profile name used in network.CellularPolicyConnection* tests.
+const UnmanagedEsimProfileName = "UnmanagedProfile"
