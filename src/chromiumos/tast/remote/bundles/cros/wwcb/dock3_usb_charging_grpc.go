@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:1289112",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID", "wwcbIPPowerIp"},
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService"},
 	})
 }
@@ -41,7 +41,7 @@ func Dock3UsbChargingGRPC(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID")
+	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()

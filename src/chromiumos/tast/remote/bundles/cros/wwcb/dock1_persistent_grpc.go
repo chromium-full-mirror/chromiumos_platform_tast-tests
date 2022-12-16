@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:1289112",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID", "wwcbIPPowerIp"},
+		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		ServiceDeps: []string{
 			"tast.cros.wwcb.DisplayService",
 			"tast.cros.apps.AppsService",
@@ -50,7 +50,7 @@ func Dock1PersistentGRPC(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID")
+	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
