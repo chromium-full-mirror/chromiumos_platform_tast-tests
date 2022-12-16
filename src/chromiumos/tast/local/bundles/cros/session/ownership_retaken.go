@@ -7,30 +7,99 @@ package session
 import (
 	"bytes"
 	"context"
-	"crypto/x509"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
+	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
+	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/session"
-	"chromiumos/tast/local/session/ownership"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: OwnershipRetaken,
-		Desc: "Ensures that ownership is re-taken upon loss of owner's cryptohome",
+		Func:         OwnershipRetaken,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Ensures that ownership is re-taken upon loss of owner's cryptohome and device policies are preserved",
 		Contacts: []string{
 			"hidehiko@chromium.org",
+			"miersh@google.com",
 		},
-		Data: []string{"testcert.p12"},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
+		BugComponent: "b:1207311",
+		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      fixture.CleanOwnership,
 	})
+}
+
+// prepareForSessionManagerNotifications returns an accessor for session manager
+// methods, signal watchers for device policies, and owner key update events.
+func prepareForSessionManagerNotifications(ctx context.Context) (
+	*session.SessionManager, *dbusutil.SignalWatcher, *dbusutil.SignalWatcher, error) {
+	sessionManager, err := session.NewSessionManager(ctx)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create session_manager binding")
+	}
+	settingsWatcher, err := sessionManager.WatchPropertyChangeComplete(ctx)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to start watching PropertyChangeComplete signal")
+	}
+	keyWatcher, err := sessionManager.WatchSetOwnerKeyComplete(ctx)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to start watching SetOwnerKeyComplete signal")
+	}
+	return sessionManager, settingsWatcher, keyWatcher, nil
+}
+
+// readPolicyValues returns device policy values (i.e. the content of device
+// policies).
+func readPolicyValues(ctx context.Context, sessionManager *session.SessionManager) (
+	*empb.ChromeDeviceSettingsProto, error) {
+	policyValues, err := session.RetrieveSettings(ctx, sessionManager)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve settings")
+	}
+	return policyValues, nil
+}
+
+// readPolicyProto returns full device policy protobuf message (that includes
+// a signature by the owner key).
+func readPolicyProto(ctx context.Context, sessionManager *session.SessionManager) (
+	*empb.PolicyFetchResponse, error) {
+	policyProto, err := sessionManager.RetrievePolicyEx(ctx, session.DevicePolicyDescriptor())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve policies")
+	}
+	return policyProto, nil
+}
+
+// readPublicKey returns the public half of the owner key.
+func readPublicKey(ctx context.Context) ([]byte, error) {
+	path := filepath.Join(session.PolicyPath, "owner.key")
+	pubKey, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read owner key")
+	}
+	if len(pubKey) == 0 {
+		return nil, errors.Wrap(err, "public key is empty")
+	}
+
+	return pubKey, nil
 }
 
 func OwnershipRetaken(ctx context.Context, s *testing.State) {
@@ -39,97 +108,164 @@ func OwnershipRetaken(ctx context.Context, s *testing.State) {
 		testPass = "testme"
 	)
 
-	privKey, err := session.ExtractPrivKey(s.DataPath("testcert.p12"))
-	if err != nil {
-		s.Fatal("Failed to parse PKCS #12 file: ", err)
+	// Reserve ten seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	policyValues1, policyProto1, pubKey1 := func() (
+		*empb.ChromeDeviceSettingsProto,
+		*empb.PolicyFetchResponse, []byte) {
+		sessionManager, settingsWatcher, keyWatcher, err := prepareForSessionManagerNotifications(ctx)
+		if err != nil {
+			s.Fatal("Failed to prepare for session manager notifications: ", err)
+		}
+		defer keyWatcher.Close(cleanupCtx)
+		defer settingsWatcher.Close(cleanupCtx)
+
+		// Create a new user that will take ownership.
+		cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: testUser, Pass: testPass}))
+		if err != nil {
+			s.Fatal("Failed to log in with Chrome: ", err)
+		}
+		defer cr.Close(cleanupCtx)
+
+		// Wait until the creation of initial policies and the owner key.
+		select {
+		case <-keyWatcher.Signals:
+		case <-ctx.Done():
+			s.Fatal("Timed out waiting for initial key creation: ", ctx.Err())
+		}
+		select {
+		case <-settingsWatcher.Signals:
+		case <-ctx.Done():
+			s.Fatal("Timed out waiting for initial policy creation: ", ctx.Err())
+		}
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect to test API: ", err)
+		}
+		ui := uiauto.New(tconn)
+
+		// Change system settings, so they are different from the initial ones.
+		// This change is expected to be preserved when ChromeOS retakes ownership.
+		toggle24Hours := nodewith.Name("Use 24-hour clock").Role(role.ToggleButton)
+
+		settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "dateTime", ui.Exists(toggle24Hours))
+		if err != nil {
+			s.Fatal("Failed to open time and date OS settings: ", err)
+		}
+		defer settings.Close(cleanupCtx)
+
+		if err := ui.DoDefault(toggle24Hours)(ctx); err != nil {
+			s.Fatal("Failed to toggle 24-hour clock: ", err)
+		}
+
+		// Wait until the change is saved on disk by session manager.
+		settingsWatcher2, err := sessionManager.WatchPropertyChangeComplete(ctx)
+		if err != nil {
+			s.Fatal("Failed to start watching PropertyChangeComplete signal: ", err)
+		}
+		select {
+		case <-settingsWatcher2.Signals:
+		case <-ctx.Done():
+			s.Fatal("Timed out waiting for policy update: ", ctx.Err())
+		}
+
+		// Retrieve current policies and the key.
+		policyValues, err := readPolicyValues(ctx, sessionManager)
+		if err != nil {
+			s.Fatal("Failed to read policy values: ", err)
+		}
+		policyProto, err := readPolicyProto(ctx, sessionManager)
+		if err != nil {
+			s.Fatal("Failed to read proto: ", err)
+		}
+		publicKey, err := readPublicKey(ctx)
+		if err != nil {
+			s.Fatal("Failed to read public key: ", err)
+		}
+
+		return policyValues, policyProto, publicKey
+	}()
+
+	// Emulate logout.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to log out: ", err)
 	}
 
-	if err := session.SetUpDevice(ctx); err != nil {
-		s.Fatal("Failed to reset device ownership: ", err)
-	}
-
-	if err = cryptohome.RemoveVault(ctx, testUser); err != nil {
+	// Delete user data for the owner user, including the private half of the
+	// owner key. This will make ChromeOS retake ownership when the owner user
+	// signs in next time.
+	if err := cryptohome.RemoveVault(ctx, testUser); err != nil {
 		s.Fatal("Failed to remove vault: ", err)
 	}
 
-	sm, err := session.NewSessionManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create session_manager binding: ", err)
-	}
-	if err := session.PrepareChromeForPolicyTesting(ctx, sm); err != nil {
-		s.Fatal("Failed to prepare Chrome for testing: ", err)
-	}
-
-	// Pre-configure some owner settings, including initial key.
-	settings := ownership.BuildTestSettings(testUser)
-	if err := session.StoreSettings(ctx, sm, testUser, privKey, nil, settings); err != nil {
-		s.Fatal("Failed to store settings: ", err)
-	}
-
-	// Grab key, ensure that it's the same as the known key.
-	verifyOwnerKey := func() (bool, error) {
-		path := filepath.Join(session.PolicyPath, "owner.key")
-		pubKey, err := ioutil.ReadFile(path)
+	policyValues2, policyProto2, pubKey2 := func() (
+		*empb.ChromeDeviceSettingsProto,
+		*empb.PolicyFetchResponse, []byte) {
+		sessionManager, settingsWatcher, keyWatcher, err := prepareForSessionManagerNotifications(ctx)
 		if err != nil {
-			return false, errors.Wrap(err, "failed to read policy")
+			s.Fatal("Failed to prepare for session manager notifications: ", err)
 		}
-		pubDer, err := x509.MarshalPKIXPublicKey(&privKey.PublicKey)
+		defer keyWatcher.Close(cleanupCtx)
+		defer settingsWatcher.Close(cleanupCtx)
+
+		// Sign in to retake ownership.
+		cr, err := chrome.New(ctx, chrome.KeepState(), chrome.TryReuseSession(),
+			chrome.FakeLogin(chrome.Creds{User: testUser, Pass: testPass}))
 		if err != nil {
-			return false, errors.Wrap(err, "failed to marshal public key to DER")
+			s.Fatal("Failed to log in with Chrome: ", err)
 		}
-		return bytes.Equal(pubKey, pubDer), nil
-	}
-	if same, err := verifyOwnerKey(); err != nil {
-		s.Fatal("Failed to check owner key: ", err)
-	} else if !same {
-		s.Fatal("Owner key should not have changed")
-	}
+		defer cr.Close(cleanupCtx)
 
-	// Start a new session, which will trigger the re-taking of ownership.
-	wp, err := sm.WatchPropertyChangeComplete(ctx)
-	if err != nil {
-		s.Fatal("Failed to start watching PropertyChangeComplete signal: ", err)
-	}
-	defer wp.Close(ctx)
-	ws, err := sm.WatchSetOwnerKeyComplete(ctx)
-	if err != nil {
-		s.Fatal("Failed to start watching SetOwnerKeyComplete signal: ", err)
-	}
-	defer ws.Close(ctx)
+		// Wait until a new owner key is generated and policies and the key are
+		// updated by session manager.
+		select {
+		case <-keyWatcher.Signals:
+		case <-ctx.Done():
+			s.Fatal("Timed out waiting for key update: ", ctx.Err())
+		}
+		select {
+		case <-settingsWatcher.Signals:
+		case <-ctx.Done():
+			s.Fatal("Timed out waiting for policy update: ", ctx.Err())
+		}
 
-	if err = cryptohome.CreateVault(ctx, testUser, testPass); err != nil {
-		s.Fatal("Failed to create vault: ", err)
-	}
-	if err = sm.StartSession(ctx, testUser, ""); err != nil {
-		s.Fatalf("Failed to start new session for %s: %v", testUser, err)
-	}
+		// Retrieve updated policies and the key.
+		policyValues, err := readPolicyValues(ctx, sessionManager)
+		if err != nil {
+			s.Fatal("Failed to read policy values: ", err)
+		}
+		policyProto, err := readPolicyProto(ctx, sessionManager)
+		if err != nil {
+			s.Fatal("Failed to read proto: ", err)
+		}
+		publicKey, err := readPublicKey(ctx)
+		if err != nil {
+			s.Fatal("Failed to read public key: ", err)
+		}
 
-	select {
-	case <-wp.Signals:
-	case <-ws.Signals:
-	case <-ctx.Done():
-		s.Fatal("Timed out waiting for PropertyChangeComplete or SetOwnerKeyComplete signal: ", ctx.Err())
-	}
+		return policyValues, policyProto, publicKey
+	}()
 
-	// Grab key, ensure that it's different than known key.
-	if same, err := verifyOwnerKey(); err != nil {
-		s.Fatal("Failed to check owner key: ", err)
-	} else if same {
+	if bytes.Equal(pubKey1, pubKey2) {
 		s.Fatal("Owner key should have changed")
 	}
 
-	// Fetch the data from the session_manager.
-	ret, err := session.RetrieveSettings(ctx, sm)
-	if err != nil {
-		s.Fatal("Failed to retrieve settings: ", err)
+	// The full protobuf message should have changed because it's now signed by
+	// the new key.
+	if diff := cmp.Diff(policyProto1, policyProto2, protocmp.Transform()); diff == "" {
+		s.Fatal("The signature in the policy protobuf message should have changed")
 	}
 
-	// Verify that there's no diff between sent data and fetched data.
-	if diff := cmp.Diff(settings, ret, protocmp.Transform()); diff != "" {
+	// But policy values should stay the same.
+	if diff := cmp.Diff(policyValues1, policyValues2, protocmp.Transform()); diff != "" {
 		const diffName = "diff.txt"
-		if err = ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
-		s.Error("Sent data and fetched data has diff, which is found in ", diffName)
+		s.Error("Policy values changed after the ownership was retaken, diff can be found in ", diffName)
 	}
 }
