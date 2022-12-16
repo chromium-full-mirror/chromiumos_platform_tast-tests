@@ -7,8 +7,11 @@ package audio
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -158,4 +161,31 @@ func GenerateTestRawData(ctx context.Context, testData TestRawData) error {
 		return errors.Wrap(err, "sox failed")
 	}
 	return nil
+}
+
+// ReadS16LEPCM reads S16LE PCM data from file, and returns the data in arr[channel][x].
+func ReadS16LEPCM(path string, channels int) ([][]int64, error) {
+	// Read file
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open file")
+	}
+	defer f.Close()
+
+	// Each sample is 16-bit signed integer.
+	// Data order: <ch 1 sample 1> <ch 2 sample 1> ... <ch 1 sample 2> ...
+	arr := make([][]int64, channels)
+	channel := 0
+	var samp int16
+	for {
+		if err := binary.Read(f, binary.LittleEndian, &samp); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, errors.Wrap(err, "error while reading file")
+		}
+		arr[channel] = append(arr[channel], int64(samp))
+		channel = (channel + 1) % channels
+	}
+	return arr, nil
 }
