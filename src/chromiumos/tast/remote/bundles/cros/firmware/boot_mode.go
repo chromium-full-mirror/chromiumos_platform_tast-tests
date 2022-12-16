@@ -52,7 +52,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.WarmReset,
 			},
-			ExtraAttr: []string{"firmware_smoke"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_bios", "firmware_level2"},
 			Timeout:   15 * time.Minute,
 		}, {
 			Name:    "normal_cold",
@@ -61,7 +61,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			ExtraAttr: []string{"firmware_smoke"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_bios", "firmware_level2"},
 			Timeout:   15 * time.Minute,
 		}, {
 			Name:    "rec_warm",
@@ -71,7 +71,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.WarmReset,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "rec_cold",
@@ -81,7 +81,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "dev_usb_cold",
@@ -100,7 +100,7 @@ func init() {
 				resetType:         firmware.WarmReset,
 				checkBootFromMain: true,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "dev_cold",
@@ -110,7 +110,7 @@ func init() {
 				resetType:         firmware.ColdReset,
 				checkBootFromMain: true,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "dev_to_rec",
@@ -118,7 +118,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeRecovery,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
 			Timeout:   60 * time.Minute,
 		}, {
 			Name:    "rec_to_dev",
