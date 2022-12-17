@@ -17,8 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ThermalTCC,
-		Desc: "Check that TCC and TCC offset value are correct and not changed after suspend",
+		Func:         ThermalTCC,
+		Desc:         "Check that TCC and TCC offset value are correct and not changed after suspend",
+		BugComponent: "b:167191",
 		Contacts: []string{
 			"puthik@chromium.org",                // test author
 			"chromeos-platform-power@google.com", // CrOS platform power developers

@@ -32,6 +32,7 @@ func init() {
 		Func:         Idle,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collects data on idle with Chrome logged in",
+		BugComponent: "b:167191",
 		Contacts:     []string{"hidehiko@chromium.org", "lacros-team@google.com"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},

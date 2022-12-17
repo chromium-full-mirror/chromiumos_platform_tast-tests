@@ -27,6 +27,7 @@ func init() {
 		Func:         TimeTakenSuspendResume,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Time Taken to suspend and resume for S0ix",
+		BugComponent: "b:167191",
 		Contacts: []string{
 			"ambalavanan.m.m@intel.com",
 			"intel-chrome-system-automation-team@intel.com",

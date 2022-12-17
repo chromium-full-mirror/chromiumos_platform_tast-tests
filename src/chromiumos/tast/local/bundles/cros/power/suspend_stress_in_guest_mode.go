@@ -26,6 +26,7 @@ func init() {
 		Func:         SuspendStressInGuestMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Suspend Stress test memory check in GuestMode",
+		BugComponent: "b:167191",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Attr:         []string{"group:mainline", "informational"},
