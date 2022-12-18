@@ -54,8 +54,10 @@ func Minijail(ctx context.Context, s *testing.State) {
 	const (
 		minijailPath = "/sbin/minijail0"
 		bashPath     = "/bin/bash"
-		// This is installed by the chromeos-base/tast-local-helpers-cros package.
-		staticBashPath = "/usr/local/libexec/tast/helpers/local/cros/security.Minijail.staticbashexec"
+		// These are installed by the chromeos-base/tast-local-helpers-cros package.
+		exePrefix      = "/usr/local/libexec/tast/helpers/local/cros/security.Minijail."
+		staticBashPath = exePrefix + "staticbashexec"
+		bpfTestPath    = exePrefix + "bpfdeny"
 	)
 
 	// Create a directory that can be written to by test cases running in user namespaces.
@@ -392,6 +394,18 @@ func Minijail(ctx context.Context, s *testing.State) {
 			cmd:   "id -ru && id -u",
 			args:  usernsArgs,
 			check: checkRegexp("^0\n0\n$"),
+		},
+		// Default runtime environment test cases.
+		{
+			name:  "bpf-blocked",
+			cmd:   bpfTestPath,
+			check: checkRegexp(""),
+		},
+		{
+			name:  "bpf-not-blocked",
+			cmd:   bpfTestPath + " expect-syscall-error",
+			args:  []string{"--no-default-runtime-environment"},
+			check: checkRegexp(""),
 		},
 		// Landlock test cases.
 		{

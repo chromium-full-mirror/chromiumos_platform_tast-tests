@@ -146,6 +146,12 @@ executable("security.AltSyscall.read") {
   ]
 }
 
+executable("security.Minijail.bpfdeny") {
+  sources = [
+    "security.Minijail.bpfdeny.c",
+  ]
+}
+
 executable("security.MemoryFileExecTelemetry.memfd_fexecve") {
   sources = [
     "security.MemoryFileExecTelemetry.memfd_fexecve.c",
@@ -206,6 +212,7 @@ group("all") {
     ":security.AltSyscall.mmap",
     ":security.AltSyscall.read",
     ":security.MemoryFileExecTelemetry.memfd_fexecve",
+    ":security.Minijail.bpfdeny",
     ":security.MinijailSeccomp.fail",
     ":security.MinijailSeccomp.ok",
     ":security.MinijailSeccomp.open",
