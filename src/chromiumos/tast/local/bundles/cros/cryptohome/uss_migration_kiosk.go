@@ -12,8 +12,8 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
+	cryptochrome "chromiumos/tast/local/cryptohome/chrome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
 )
@@ -31,26 +31,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
-}
-
-// withUssMigration will execute a given block of code while enabling or
-// disabling the USS migration feature, handling the setup and teardown of
-// Chrome automatically. The given block should take no parameters and
-// should return nil on success and an error if one occurs.
-func withUssMigration(ctx context.Context, enabled bool, f func() error) error {
-	const featureName = "CrOSLateBootMigrateToUserSecretStash"
-	var featureOption chrome.Option
-	if enabled {
-		featureOption = chrome.EnableFeatures(featureName)
-	} else {
-		featureOption = chrome.DisableFeatures(featureName)
-	}
-	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome at the login screen")
-	}
-	defer cr.Close(ctx)
-	return f()
 }
 
 func UssMigrationKiosk(ctx context.Context, s *testing.State) {
@@ -85,7 +65,7 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up an auth factor with USS migration disabled.
-	if err := withUssMigration(ctx, false /*enabled*/, func() error {
+	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
 		// Put the system into USS disabled mode, to ensure we get VK credentials.
 		disableUssCleanup, err := helper.DisableUserSecretStash(ctx)
 		if err != nil {
@@ -124,7 +104,7 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 	defer client.RemoveVault(cleanupCtx, ownerName)
 
 	// Run the rest of the test with USS migration enabled
-	if err := withUssMigration(ctx, true /*enabled*/, func() error {
+	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
 		// Switch cryptohome into USS mode.
 		enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
 		if err != nil {
