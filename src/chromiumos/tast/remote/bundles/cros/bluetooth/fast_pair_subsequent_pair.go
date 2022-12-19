@@ -9,8 +9,6 @@ import (
 	"encoding/base64"
 	"time"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
 	pb "chromiumos/tast/services/cros/bluetooth"
@@ -23,9 +21,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the Fast Pair subsequent pairing scenario",
 		Contacts: []string{
-			"jaredbennett@google.com",
-			"cros-connectivity@google.com",
+			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"dclasson@google.com",
 		},
+		BugComponent: "b:1133283",
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
@@ -59,8 +59,10 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Pairing device with fast pair notification")
-	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to pair with fast pair notification: ", err)
+	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
+		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
+	}); err != nil {
+		s.Fatal("Failed to pair with initial fast pair notification: ", err)
 	}
 
 	resp, err := fv.BTS.DeviceStatus(ctx, &pb.DeviceStatusRequest{

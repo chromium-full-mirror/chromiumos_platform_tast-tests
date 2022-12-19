@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that Saved Devices subpage shows a newly added Saved Device after the Fast Pair initial pairing scenario",
 		Contacts: []string{
-			"dclasson@google.com",
 			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
+			"dclasson@google.com",
 		},
+		BugComponent: "b:1133283",
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService", "tast.cros.ui.ChromeUIService"},
@@ -78,7 +79,9 @@ func FastPairInitialPairAddsToSavedDevices(ctx context.Context, s *testing.State
 	}
 
 	testing.ContextLog(ctx, "Pairing device with fast pair notification")
-	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
+		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
+	}); err != nil {
 		s.Fatal("Failed to pair with fast pair notification: ", err)
 	}
 

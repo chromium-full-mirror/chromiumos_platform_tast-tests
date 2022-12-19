@@ -50,11 +50,19 @@ const (
 
 // Public test variable keys that are used in multiple tests
 const (
-	// These variable can be overridden by specifying a custom value in the command
-	// line, "--vars=bluetooth.FastPairAntispoofingKeyPem=XXXX", which can be used
+	// TestVarFastPairAntispoofingKeyPem is used for setting the antispoofing key, which is
+	// required for Initial Pairing Fast Pair V2 devices. The variable can be overridden by
+	// specifying a custom value in the command line,
+	// "--vars=bluetooth.FastPairAntispoofingKeyPem=XXXX", which can be used
 	// for local testing. Otherwise uses the default value.
 	TestVarFastPairAntispoofingKeyPem = "bluetooth.FastPairAntispoofingKeyPem"
-	TestVarFastPairAccountKey         = "bluetooth.FastPairAccountKey"
+
+	// TestVarFastPairAccountKey is used for setting the account key, which is
+	// required for Subsequent Pairing Fast Pair V2 devices. The variable can be overridden
+	// by specifying a custom value in the command line,
+	// "--vars=bluetooth.FastPairAccountKey=XXXX", which can be used
+	// for local testing. Otherwise uses the default value.
+	TestVarFastPairAccountKey = "bluetooth.FastPairAccountKey"
 )
 
 // Used for Fake login for the Bluetooth UI tests.

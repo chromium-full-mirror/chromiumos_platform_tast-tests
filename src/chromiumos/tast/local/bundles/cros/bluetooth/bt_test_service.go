@@ -363,8 +363,9 @@ func (bts *BTTestService) DeviceStatus(ctx context.Context, request *pb.DeviceSt
 }
 
 // PairWithFastPairNotification will attempt to pair a fast pair device with
-// the fast pair notification.
-func (bts *BTTestService) PairWithFastPairNotification(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+// the fast pair notification. The |request| contains a Protocol which must be
+// either Initial or Subsequent for this function.
+func (bts *BTTestService) PairWithFastPairNotification(ctx context.Context, request *pb.PairWithFastPairNotificationRequest) (*emptypb.Empty, error) {
 	cr := bts.sharedObject.Chrome
 	if cr == nil {
 		return nil, errors.New("Chrome has not been started")
@@ -374,13 +375,23 @@ func (bts *BTTestService) PairWithFastPairNotification(ctx context.Context, empt
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
+	// The Initial and Subsequent scenarios have slightly different notifications.
+	expectedNotificationID := ""
+	if request.Protocol == pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL {
+		expectedNotificationID = bluetooth.NotificationIDFastPairDiscoveryUser
+	} else if request.Protocol == pb.FastPairProtocol_FAST_PAIR_PROTOCOL_SUBSEQUENT {
+		expectedNotificationID = bluetooth.NotificationIDFastPairSubsequentPair
+	} else {
+		return nil, errors.New("Wrong protocol requested; only initial and subsequent scenarios are supported")
+	}
+
 	// Wait for the discovery notification.
 	testing.ContextLog(ctx, "Waiting for fast pair discovery notification")
 	_, err = ash.WaitForNotification(
 		ctx,
 		tConn,
 		30*time.Second,
-		ash.WaitIDContains(bluetooth.NotificationIDFastPairDiscoveryUser),
+		ash.WaitIDContains(expectedNotificationID),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to wait for fast pair discovery notification to appear")

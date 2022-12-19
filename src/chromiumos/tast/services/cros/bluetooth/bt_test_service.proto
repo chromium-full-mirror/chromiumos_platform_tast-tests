@@ -39,7 +39,7 @@ service BTTestService {
 
   // PairWithFastPairNotification will attempt to pair a fast pair device with
   // the fast pair notification.
-  rpc PairWithFastPairNotification(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc PairWithFastPairNotification(PairWithFastPairNotificationRequest) returns (google.protobuf.Empty) {}
 
   // CloseNotifications closes all open notifications.
   rpc CloseNotifications(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -86,6 +86,16 @@ message DeviceStatusRequest {
 message DeviceStatusResponse {
   bool is_discovered = 1;
   bool is_paired = 2;
+}
+
+enum FastPairProtocol {
+  FAST_PAIR_PROTOCOL_INITIAL = 0;
+  FAST_PAIR_PROTOCOL_SUBSEQUENT = 1;
+  FAST_PAIR_PROTOCOL_RETROACTIVE = 2;
+}
+
+message PairWithFastPairNotificationRequest {
+  FastPairProtocol protocol = 1;
 }
 
 message ConfirmSavedDevicesStateRequest {
