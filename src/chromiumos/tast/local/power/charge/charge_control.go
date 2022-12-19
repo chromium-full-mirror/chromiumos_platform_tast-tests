@@ -129,7 +129,7 @@ func charge(ctx context.Context, displayPercentage float64) error {
 }
 
 // drain discharges the device battery to the specified display percentage by rendering a resource heavy WebGL graphics.
-func drain(ctx context.Context, cr *chrome.Chrome, displayPercentage float64) error {
+func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) error {
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -172,14 +172,14 @@ func drain(ctx context.Context, cr *chrome.Chrome, displayPercentage float64) er
 			return testing.PollBreak(errors.New("battery draining requires device disconnected from the power source"))
 		}
 
-		if status.BatteryDisplayPercent > displayPercentage {
-			return errors.Errorf("still discharging from %.2f%% to %.2f%%", displayPercentage, status.BatteryDisplayPercent)
+		if status.BatteryDisplayPercent > desiredPercentage {
+			return errors.Errorf("still discharging from %.2f%% to %.2f%%", status.BatteryDisplayPercent, desiredPercentage)
 		}
 		return nil
 	}, &testing.PollOptions{
 		Interval: time.Second,
 	}); err != nil {
-		return errors.Wrapf(err, "failed to drain battery to %.2f%%", displayPercentage)
+		return errors.Wrapf(err, "failed to drain battery to %.2f%%", desiredPercentage)
 	}
 
 	return nil
