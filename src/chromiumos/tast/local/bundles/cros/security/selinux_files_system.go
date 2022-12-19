@@ -135,8 +135,6 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/usr/bin/midis", Context: "cros_midis_exec", IgnoreErrors: true},
 		{Path: "/usr/bin/mount-passthrough", Context: "cros_mount_passthrough_exec", IgnoreErrors: true},
 		{Path: "/usr/bin/mount-passthrough-jailed", Context: "cros_mount_passthrough_jailed_exec", IgnoreErrors: true},
-		{Path: "/usr/bin/mount-passthrough-jailed-media", Context: "cros_mount_passthrough_jailed_media_exec", IgnoreErrors: true},
-		{Path: "/usr/bin/mount-passthrough-jailed-play", Context: "cros_mount_passthrough_jailed_play_exec", IgnoreErrors: true},
 		{Path: "/usr/bin/periodic_scheduler", Context: "cros_periodic_scheduler_exec"},
 		{Path: "/usr/bin/powerd", Context: "cros_powerd_exec"},
 		{Path: "/usr/bin/resourced", Context: "cros_resourced_exec"},
