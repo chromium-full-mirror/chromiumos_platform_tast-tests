@@ -208,6 +208,12 @@ func RunFioStress(ctx context.Context, testConfig TestConfig) error {
 			return errors.Wrapf(err, "%v failed", testConfig.Job)
 		}
 
+		for _, j := range res.Jobs {
+			if j.TotalError != 0 {
+				return errors.Errorf("Detected errors during FIO job %q, first error: %v", j.Jobname, j.FirstError)
+			}
+		}
+
 		// If duration test parameter is 0, we do a single iteration of a test.
 		if testConfig.Duration == 0 || time.Since(start) > testConfig.Duration {
 			break

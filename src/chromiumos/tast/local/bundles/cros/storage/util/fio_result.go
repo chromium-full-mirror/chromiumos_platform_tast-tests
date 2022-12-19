@@ -20,11 +20,13 @@ import (
 // fioResult is a serializable structure representing fio results output.
 type fioResult struct {
 	Jobs []struct {
-		Jobname string                 `json:"jobname"`
-		Read    map[string]interface{} `json:"read"`
-		Write   map[string]interface{} `json:"write"`
-		Trim    map[string]interface{} `json:"trim"`
-		Sync    map[string]interface{} `json:"sync"`
+		Jobname    string                 `json:"jobname"`
+		Read       map[string]interface{} `json:"read"`
+		Write      map[string]interface{} `json:"write"`
+		Trim       map[string]interface{} `json:"trim"`
+		Sync       map[string]interface{} `json:"sync"`
+		TotalError int64                  `json:"total_err"`
+		FirstError int64                  `json:"first_error"`
 	}
 	DiskUtil []struct {
 		Name string

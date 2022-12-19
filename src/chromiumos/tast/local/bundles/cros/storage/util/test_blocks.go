@@ -71,7 +71,9 @@ func retentionTestBlock(ctx context.Context, s *testing.State, rw *FioResultWrit
 		VerifyOnly: true,
 	}
 
-	runFioStress(ctx, s, writeConfig.WithPath(testParam.TestDevice))
+	if err := runFioStress(ctx, s, writeConfig.WithPath(testParam.TestDevice)); err != nil {
+		s.Fatal("Error while running retention test: ", err)
+	}
 
 	// Run Suspend repeatedly until the timeout.
 	pollOptions := &testing.PollOptions{
@@ -87,7 +89,9 @@ func retentionTestBlock(ctx context.Context, s *testing.State, rw *FioResultWrit
 		s.Fatal("Failed running retention block: ", err)
 	}
 
-	runFioStress(ctx, s, verifyConfig.WithPath(testParam.TestDevice))
+	if err := runFioStress(ctx, s, verifyConfig.WithPath(testParam.TestDevice)); err != nil {
+		s.Fatal("Error while running retention test: ", err)
+	}
 }
 
 // suspendTestBlock triggers periodic power suspends while running disk
