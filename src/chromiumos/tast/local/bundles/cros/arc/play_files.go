@@ -26,13 +26,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type playFilesConfig struct {
-	// Extra Chrome command line options.
-	chromeArgs []string
-	// Path of the Play files mount point in ChromeOS.
-	crosPlayfilesPath string
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayFiles,
@@ -46,27 +39,11 @@ func init() {
 		Data:         []string{"capybara.jpg"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
-			Val: playFilesConfig{
-				chromeArgs:        nil,
-				crosPlayfilesPath: "/run/arc/sdcard/write/emulated/0",
-			},
+			Val:               "/run/arc/sdcard/write/emulated/0",
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: playFilesConfig{
-				chromeArgs:        nil,
-				crosPlayfilesPath: "/run/arc/sdcard/write/emulated/0",
-			},
-		}, {
-			// TODO(b/248151439): Merge to "vm" once the SSHFS version of Play files is enabled on all ARCVM devices.
-			Name:              "vm_virtioblk",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: playFilesConfig{
-				chromeArgs: []string{
-					"--enable-features=ArcEnableVirtioBlkForData,GuestOsFiles",
-				},
-				crosPlayfilesPath: "/media/fuse/android_files",
-			},
+			Val:               "/media/fuse/android_files",
 		}},
 		Timeout: 6 * time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
@@ -74,7 +51,7 @@ func init() {
 }
 
 func PlayFiles(ctx context.Context, s *testing.State) {
-	config := s.Param().(playFilesConfig)
+	crosPlayfilesPath := s.Param().(string)
 
 	// Shorten the context to make room for cleanup jobs.
 	cleanupCtx := ctx
@@ -82,9 +59,6 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	args := arc.DisableSyncFlags()
-	if config.chromeArgs != nil {
-		args = append(args, config.chromeArgs...)
-	}
 	cr, err := chrome.New(
 		ctx,
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -122,7 +96,7 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Testing Android -> CrOS")
-	if err := testAndroidToCros(ctx, a, s.DataPath("capybara.jpg"), config.crosPlayfilesPath); err != nil {
+	if err := testAndroidToCros(ctx, a, s.DataPath("capybara.jpg"), crosPlayfilesPath); err != nil {
 		s.Fatal("Android -> CrOS failed: ", err)
 	}
 }
