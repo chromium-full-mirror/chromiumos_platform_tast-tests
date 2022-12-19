@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/android/ui"
@@ -123,13 +123,12 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 func testCrosToARC(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) {
 	config := storage.TestConfig{DirPath: myFilesPath, DirName: "My files", DirTitle: "Files - My files",
 		CreateTestFile: true, FileName: "storage.txt"}
-	testFileURI := arc.VolumeProviderContentURIPrefix + path.Join(arc.MyFilesUUID, config.FileName)
 
 	testing.ContextLog(ctx, "Testing CrOS -> Android")
 
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
-		{LabelID: storage.URIID, Value: testFileURI},
+		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join(arc.MyFilesUUID, config.FileName))},
 		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
 
 	storage.TestOpenWithAndroidApp(ctx, s, a, cr, d, config, expectations)

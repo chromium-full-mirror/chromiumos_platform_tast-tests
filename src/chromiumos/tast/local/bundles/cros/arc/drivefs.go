@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/url"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -81,19 +82,28 @@ func Drivefs(ctx context.Context, s *testing.State) {
 
 	config := storage.TestConfig{DirPath: drivefsRoot, DirName: "Google Drive", DirTitle: "Files - My Drive",
 		CreateTestFile: true, CheckFileType: true, FileName: "storage_drivefs.txt", KeepFile: true}
+
+	var verifyContentURI (func(string) bool)
+	if vmEnabled {
+		subPath := filepath.Join("MyDrive", "root", config.FileName)
+		verifyContentURI = arc.VerifyContentURIForArcVolumeProviderPath(subPath)
+	} else {
+		const mountPathPrefix = "/media/fuse/"
+		absPath := filepath.Join(drivefsRoot, config.FileName)
+		if !strings.HasPrefix(absPath, mountPathPrefix) {
+			s.Fatalf("%v does not start with %v", absPath, mountPathPrefix)
+		}
+		relPath := strings.TrimPrefix(absPath, mountPathPrefix)
+		expected := arc.ChromeContentProviderURIPrefix + "externalfile%3A" + url.PathEscape(relPath)
+		verifyContentURI = func(actual string) bool {
+			return actual == expected
+		}
+	}
+
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
-		{LabelID: storage.URIID, Value: constructDriveFSURI(vmEnabled, drivefsRoot, config.FileName)},
+		{LabelID: storage.URIID, Predicate: verifyContentURI},
 		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
 
 	storage.TestOpenWithAndroidApp(ctx, s, a, cr, d, config, expectations)
-}
-
-// constructDriveFSURI constructs a Drive FS URI.
-func constructDriveFSURI(vmEnabled bool, drivefsRoot, file string) string {
-	if vmEnabled {
-		return arc.VolumeProviderContentURIPrefix + path.Join("MyDrive", "root", file)
-	}
-	subPath := strings.ReplaceAll(drivefsRoot, "/media/fuse/", "") + "/"
-	return "content://org.chromium.arc.chromecontentprovider/externalfile%3A" + url.PathEscape(subPath) + file
 }
