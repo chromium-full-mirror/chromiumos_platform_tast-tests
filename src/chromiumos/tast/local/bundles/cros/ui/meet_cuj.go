@@ -931,10 +931,21 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				presentTabTitle = "Untitled Jam"
 			}
 
-			// Select the tab to present.
+			// Select the tab to present. Avoid directly tapping on the screen
+			// due to miscalculated node bounds for Lacros tablet devices.
+			waitForPresentTabFocus := uiauto.New(tconn).WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameStartingWith(presentTabTitle).HasClass("AXVirtualView").Focused())
 			if err := action.Combine(
 				"select tab to screenshare",
-				pc.Click(nodewith.NameStartingWith(presentTabTitle).HasClass("AXVirtualView")),
+				ui.EnsureFocused(nodewith.Name("Chrome Tab").Role(role.ListGrid)),
+				// If the presenting tab is not focused, press the down
+				// arrow until it is.
+				uiauto.IfFailThen(
+					waitForPresentTabFocus,
+					ui.RetryUntil(
+						kw.AccelAction("Down"),
+						waitForPresentTabFocus,
+					),
+				),
 				kw.AccelAction("Enter"),
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to select the tab to share")
