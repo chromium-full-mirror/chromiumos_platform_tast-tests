@@ -16,6 +16,7 @@ import (
 
 	cryptossh "golang.org/x/crypto/ssh"
 
+	"chromiumos/tast/common/utils"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/shutil"
@@ -138,24 +139,19 @@ func connectChart(ctx context.Context, d *dut.DUT, hostname string) (*ssh.Conn, 
 // files to be displayed from |chartPaths| and returns a new |Chart| instance
 // and the |NamePath| for each input chart for further be displayed with.
 func New(ctx context.Context, d *dut.DUT, altHostname, outDir string, chartPaths []string) (*Chart, []NamePath, error) {
-	var conn *ssh.Conn
-
 	// Connect to chart tablet.
-	if len(altHostname) > 0 {
-		c, err := connectChart(ctx, d, altHostname)
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "failed to connect to chart with hostname %v", altHostname)
+	if len(altHostname) == 0 {
+		var err error
+		if altHostname, err = utils.CompanionDeviceHostname(d.HostName(), utils.CompanionSuffixTablet); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to derive default hostname for camerabox")
 		}
-		conn = c
-	} else {
-		c, err := d.DefaultCameraboxChart(ctx)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to chart with default '-tablet' suffix hostname")
-		}
-		conn = c
+	}
+	c, err := connectChart(ctx, d, altHostname)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "failed to connect to chart with hostname %q", altHostname)
 	}
 
-	return SetUp(ctx, conn, outDir, chartPaths)
+	return SetUp(ctx, c, outDir, chartPaths)
 }
 
 // copyChart copies the chart from local to host chart tablet.
