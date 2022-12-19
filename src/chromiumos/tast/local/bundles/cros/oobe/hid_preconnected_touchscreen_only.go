@@ -23,12 +23,13 @@ func init() {
 			"andrewdear@google.com",
 			"cros-connectivity@google.com",
 		},
+		BugComponent: "b:1131776",
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase)),
+		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase), hwdep.SkipOnModel("kalista", "karma")),
 		Fixture:      "chromeEnterOobeHidDetectionServoOff",
 		Timeout:      time.Second * 15,
 	})
