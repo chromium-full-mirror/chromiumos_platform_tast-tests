@@ -7,7 +7,7 @@ package mojo
 // BTConfigJS is javascript code that initializes the config object and defines
 // some additional functions.
 const BTConfigJS = `async function () {
-    let btmojo = await import('chrome://resources/mojo/chromeos/services/bluetooth_config/public/mojom/cros_bluetooth_config.mojom-webui.js');
+    let btmojo = await import('chrome://resources/mojo/chromeos/ash/services/bluetooth_config/public/mojom/cros_bluetooth_config.mojom-webui.js');
     return {
         bluetoothConfig : btmojo.CrosBluetoothConfig.getRemote(),
 
