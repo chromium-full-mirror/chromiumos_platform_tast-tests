@@ -408,7 +408,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	// to handle case when the fixture is created from outside of the precondition.
 	if len(tf.routers) == 0 {
 		testing.ContextLog(ctx, "Using default router name")
-		name, err := tf.duts[DefaultDUT].dut.CompanionDeviceHostname(dut.CompanionSuffixRouter)
+		name, err := utils.CompanionDeviceHostname(tf.duts[DefaultDUT].dut.HostName(), utils.CompanionSuffixRouter)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to synthesize default router name")
 		}
@@ -448,7 +448,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 
 	// errInvalidHost checks if the error is a wrapped "no such host" error.
 	errInvalidHost := func(err error) bool {
-		if err == dut.ErrCompanionHostname {
+		if err == utils.ErrCompanionHostname {
 			return true
 		}
 		var dnsErr *net.DNSError
@@ -462,7 +462,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	if tf.pcapTarget == "" {
 		var err error
 		testing.ContextLog(ctx, "Using default pcap name")
-		tf.pcapTarget, err = tf.duts[DefaultDUT].dut.CompanionDeviceHostname(dut.CompanionSuffixPcap)
+		tf.pcapTarget, err = utils.CompanionDeviceHostname(tf.duts[DefaultDUT].dut.HostName(), utils.CompanionSuffixPcap)
 		if err != nil {
 			// DUT might be specified with IP. As the routers are available,
 			// fallback to use router as pcap in this case.
@@ -736,7 +736,7 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	routerType := rd.object.RouterType()
 	routerMsgName := fmt.Sprintf("%s router %q", routerType.String(), routerName)
 	routerIsPcap := tf.pcapHost == rd.host
-  
+
 	// Close and reboot router.
 	testing.ContextLogf(ctx, "Preparing %s for reboot", routerMsgName)
 	if err := rd.object.Close(ctx); err != nil {

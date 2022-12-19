@@ -7,9 +7,22 @@ package utils
 
 import (
 	"context"
+	"net"
+	"strings"
 
 	"chromiumos/tast/caller"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
+)
+
+// Suffix names for forward compatibility.
+const (
+	// CompanionSuffixPcap is a companion suffix for the pcap.
+	CompanionSuffixPcap = "-pcap"
+	// CompanionSuffixRouter is a companion suffix for the router.
+	CompanionSuffixRouter = "-router"
+	// CompanionSuffixTablet is a companion suffix for the tablet.
+	CompanionSuffixTablet = "-tablet"
 )
 
 // CollectFirstErr collects the first error into firstErr and logs the others.
@@ -23,4 +36,28 @@ func CollectFirstErr(ctx context.Context, firstErr *error, err error) {
 	if *firstErr == nil {
 		*firstErr = err
 	}
+}
+
+// ErrCompanionHostname is the error of deriving default companion device hostname from dut's hostname.
+// e.g. when DUT is connected with IP address.
+var ErrCompanionHostname = errors.New("cannot derive default companion device hostname")
+
+// CompanionDeviceHostname derives the hostname of companion device from test target hostname
+// with the convention in Autotest.
+// (see server/cros/dnsname_mangler.py in Autotest)
+func CompanionDeviceHostname(dutHost, suffix string) (string, error) {
+	// Try split out port part.
+	if host, _, err := net.SplitHostPort(dutHost); err == nil {
+		dutHost = host
+	}
+
+	if ip := net.ParseIP(dutHost); ip != nil {
+		// Cannot derive companion hostname from IP. Return error.
+		return "", ErrCompanionHostname
+	}
+
+	// Companion device hostname convention: append suffix after the first sub-domain string.
+	hostname := strings.SplitN(dutHost, ".", 2)
+	hostname[0] = hostname[0] + suffix
+	return strings.Join(hostname, "."), nil
 }

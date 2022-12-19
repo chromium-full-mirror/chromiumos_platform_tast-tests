@@ -12,9 +12,9 @@ import (
 
 	"chromiumos/tast/common/network/ping"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
+	"chromiumos/tast/common/utils"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
-	"chromiumos/tast/dut"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/router/ax"
@@ -236,7 +236,7 @@ func AxSimpleConnect(ctx context.Context, s *testing.State) {
 	if !ok || router == "" {
 		var err error
 		testing.ContextLogf(ctx, "Router name not specified, building default router hostname based on DUT hostname %q", s.DUT().HostName())
-		router, err = s.DUT().CompanionDeviceHostname(dut.CompanionSuffixRouter)
+		router, err = utils.CompanionDeviceHostname(s.DUT().HostName(), utils.CompanionSuffixRouter)
 		if err != nil {
 			s.Fatalf("Failed to synthesize default router name from DUT hostname %q: %v", s.DUT().HostName(), err)
 		}

@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	policyBlob "chromiumos/tast/common/policy"
+	"chromiumos/tast/common/utils"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/policyutil"
@@ -210,7 +211,7 @@ func newTastFixture(features TFFeatures) *tastFixtureImpl {
 
 // companionName returns the hostname of a companion device.
 func (f *tastFixtureImpl) companionName(s *testing.FixtState, suffix string) string {
-	name, err := s.DUT().CompanionDeviceHostname(suffix)
+	name, err := utils.CompanionDeviceHostname(s.DUT().HostName(), suffix)
 	if err != nil {
 		s.Fatal("Unable to synthesize name, err: ", err)
 	}
@@ -319,7 +320,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 			ops = append(ops, TFRouter(slice...))
 		} else {
 			var routers []string
-			for _, suffix := range []string{dut.CompanionSuffixRouter, dut.CompanionSuffixPcap} {
+			for _, suffix := range []string{utils.CompanionSuffixRouter, utils.CompanionSuffixPcap} {
 				routers = append(routers, f.companionName(s, suffix))
 
 			}
