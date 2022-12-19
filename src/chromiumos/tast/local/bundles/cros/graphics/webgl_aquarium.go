@@ -29,10 +29,10 @@ const (
 
 var (
 	commandsMap = map[string]string{
-		"avg_fps":             "g_crosFpsCounter.getAvgFps();",
-		"avg_interframe_time": "g_crosFpsCounter.getAvgInterFrameTime();",
-		"avg_render_time_":    "g_crosFpsCounter.getAvgRenderTime();",
-		"std_interframe_time": "g_crosFpsCounter.getStdInterFrameTime();",
+		"avg_fps":             "g_crosFpsCounter.getAvgFps()",
+		"avg_interframe_time": "g_crosFpsCounter.getAvgInterFrameTime()",
+		"avg_render_time_":    "g_crosFpsCounter.getAvgRenderTime()",
+		"std_interframe_time": "g_crosFpsCounter.getStdInterFrameTime()",
 	}
 	fishSettings = map[int][]string{
 		50:   []string{"'setSetting2'", "2"},
@@ -126,7 +126,7 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	for metricName, evalCommand := range commandsMap {
 		var output float64
 		if err = conn.Eval(ctx, evalCommand, &output); err != nil {
-			s.Fatal("Failed while fetching values: ", err)
+			s.Fatalf("Failed while fetching values for metric %s : %s", evalCommand, err)
 		}
 		savePerfVal(output, metricName, "ms", pv)
 	}
