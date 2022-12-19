@@ -103,7 +103,7 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 	}
 	defer client.RemoveVault(cleanupCtx, ownerName)
 
-	// Run the rest of the test with USS migration enabled
+	// Enable migration to verify the migration process.
 	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
 		// Switch cryptohome into USS mode.
 		enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
@@ -160,4 +160,38 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		s.Fatal("Validation while USS migration was enabled failed: ", err)
 	}
 
+	// Disable migration and re-run authentication to verify the rollback process.
+	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
+		// Make sure cryptohome is still in USS mode, we're only disabling migration.
+		enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
+		if err != nil {
+			return errors.Wrap(err, "unable to enable USS with migration rollback")
+		}
+		defer enableUssCleanup(cleanupCtx)
+
+		// Start a new auth session and mount the persistent vault.
+		// This should work with the old VK credentials.
+		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			if err := client.AuthenticateKioskAuthFactor(ctx, authSessionID); err != nil {
+				return errors.Wrap(err, "failed to authenticate with kiosk credential")
+			}
+			if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to mount and verify persistence")
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "failed to authenticate and mount the user vault with rollback")
+		}
+
+		// TODO(b/262008437): Verify that this most recent session was backed
+		// by factors from VK (rolled back).
+
+		// Unmount user vault.
+		if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "failed to unmount vault after post-rollback mount")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Validation while USS migration was rolled back failed: ", err)
+	}
 }
