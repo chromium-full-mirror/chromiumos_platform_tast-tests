@@ -19,7 +19,7 @@ func init() {
 		Func:         CrosToCrosInContacts,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks we can successfully send files from one Cros device to another when they are in each other's contacts list",
-		Contacts:     []string{
+		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
@@ -82,7 +82,7 @@ func init() {
 			// Floss duplicates
 			{
 				Name:      "dataoffline_allcontacts_png5kb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContacts",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContactsFloss",
 				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				ExtraData: []string{"small_png.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
@@ -90,7 +90,7 @@ func init() {
 			},
 			{
 				Name:      "dataoffline_allcontacts_jpg11kb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContacts",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContactsFloss",
 				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				ExtraData: []string{"small_jpg.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
@@ -98,7 +98,7 @@ func init() {
 			},
 			{
 				Name:      "dataoffline_somecontacts_png5kb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContacts",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContactsFloss",
 				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				ExtraData: []string{"small_png.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
@@ -106,7 +106,7 @@ func init() {
 			},
 			{
 				Name:      "dataoffline_somecontacts_jpg11kb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContacts",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContactsFloss",
 				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				ExtraData: []string{"small_jpg.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
@@ -114,7 +114,7 @@ func init() {
 			},
 			{
 				Name:    "dataonline_allcontacts_txt30mb_floss",
-				Fixture: "nearbyShareRemoteDataUsageOnlineAllContacts",
+				Fixture: "nearbyShareRemoteDataUsageOnlineAllContactsFloss",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
 				ExtraData: []string{"big_txt.zip"},
@@ -123,7 +123,7 @@ func init() {
 			},
 			{
 				Name:    "dataonline_somecontacts_txt30mb_floss",
-				Fixture: "nearbyShareRemoteDataUsageOnlineSomeContacts",
+				Fixture: "nearbyShareRemoteDataUsageOnlineSomeContactsFloss",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
 				ExtraData: []string{"big_txt.zip"},
