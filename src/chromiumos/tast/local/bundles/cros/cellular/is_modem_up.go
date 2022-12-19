@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -26,5 +27,8 @@ func init() {
 
 // IsModemUp checks if the fixture and pre test executed successfully.
 func IsModemUp(ctx context.Context, s *testing.State) {
-	// The fixture checks if a modem is up during pre test.
+	_, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		s.Fatal("Could not find MM dbus object: ", err)
+	}
 }
