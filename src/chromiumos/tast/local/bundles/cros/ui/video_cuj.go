@@ -16,9 +16,9 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
@@ -115,29 +115,21 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
+	webConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.bt, chrome.BlankURL)
+	if err != nil {
+		s.Fatal("Failed to setup Chrome: ", err)
+	}
+	defer closeBrowser(closeCtx)
+	defer webConn.Close()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
+		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	var cs ash.ConnSource
-	var bTconn *chrome.TestConn
-	switch testParam.bt {
-	case browser.TypeLacros:
-		// Launch lacros.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(ctx)
-		cs = l
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
-		}
-	case browser.TypeAsh:
-		cs = cr
-		bTconn = tconn
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
@@ -211,11 +203,9 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 	defer recorder.Close(closeCtx)
 
-	webConn, err := cs.NewConn(ctx, ui.PerftestURL)
-	if err != nil {
+	if err := webConn.Navigate(ctx, ui.PerftestURL); err != nil {
 		s.Fatal("Failed to open web: ", err)
 	}
-	defer webConn.Close()
 
 	var webWinID int
 	if all, err := ash.GetAllWindows(ctx, tconn); err != nil {
@@ -227,7 +217,7 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Open youtube Web")
-	ytConn, err := cs.NewConn(ctx,
+	ytConn, err := br.NewConn(ctx,
 		"https://www.youtube.com/watch?v=by_xCK2Jo5c&absolute_experiments="+
 			s.RequiredVar("ui.VideoCUJ.ytExperiments"),
 		browser.WithNewWindow())

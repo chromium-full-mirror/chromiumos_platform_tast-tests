@@ -15,10 +15,10 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
@@ -70,33 +70,23 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	slidesConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	if err != nil {
+		s.Fatal("Failed to setup Chrome: ", err)
+	}
+	defer closeBrowser(closeCtx)
+	defer slidesConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to the test API connection: ", err)
+		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	var l *lacros.Lacros
-	var cs ash.ConnSource
-	var bTconn *chrome.TestConn
-	switch bt {
-	case browser.TypeLacros:
-		var err error
-		if cr, l, cs, err = lacros.Setup(ctx, s.FixtValue(), browser.TypeLacros); err != nil {
-			s.Fatal("Failed to initialize test: ", err)
-		}
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
-		}
-		defer lacros.CloseLacros(closeCtx, l)
-	case browser.TypeAsh:
-		cs = cr
-		bTconn = tconn
-	default:
-		s.Fatal("Unrecognized browser type: ", bt)
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
@@ -147,11 +137,10 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-		slidesConn, err := cs.NewConn(ctx, slidesURL, browser.WithNewWindow())
-		if err != nil {
-			return errors.Wrap(err, "failed to open the google slides website")
+		// Open Google Slides file.
+		if err := slidesConn.Navigate(ctx, slidesURL); err != nil {
+			return errors.Wrapf(err, "failed to navigate to %s", slidesURL)
 		}
-		defer slidesConn.Close()
 
 		// Go through the Slides deck.
 		s.Logf("Going through the Google Slides file for %s", slidesScrollTimeout)
@@ -217,6 +206,11 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		if err := slidesConn.Navigate(ctx, "chrome://version"); err != nil {
 			return errors.Wrap(err, "failed to navigate to chrome://version")
+		}
+
+		// Ensure that there is exactly 1 window open at the end of the test.
+		if ws, err := ash.GetAllWindows(ctx, tconn); len(ws) != 1 {
+			return errors.Wrapf(err, "unexpected number of open windows, got: %d, expected: 1", len(ws))
 		}
 
 		return nil

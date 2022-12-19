@@ -14,9 +14,9 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
@@ -70,33 +70,23 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	if err != nil {
+		s.Fatal("Failed to setup Chrome: ", err)
+	}
+	defer closeBrowser(closeCtx)
+	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
+		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	var cs ash.ConnSource
-	var bTconn *chrome.TestConn
-	switch bt {
-	case browser.TypeLacros:
-		// Launch lacros.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(ctx)
-		cs = l
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
-		}
-	case browser.TypeAsh:
-		cs = cr
-		bTconn = tconn
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
@@ -154,11 +144,9 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrapf(err, "waiting for screen to be unlocked failed (last status %+v)", st)
 		}
 
-		conn, err := cs.NewConn(ctx, "https://www.gmail.com/")
-		if err != nil {
-			return errors.Wrap(err, "failed to open web")
+		if err := conn.Navigate(ctx, "https://www.gmail.com/"); err != nil {
+			return errors.Wrap(err, "failed to open Gmail")
 		}
-		defer conn.Close()
 
 		ws, err := ash.GetAllWindows(ctx, tconn)
 		if err != nil {

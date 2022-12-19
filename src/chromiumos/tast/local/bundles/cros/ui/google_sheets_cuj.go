@@ -14,10 +14,10 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
@@ -77,29 +77,21 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
+	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	if err != nil {
+		s.Fatal("Failed to setup Chrome: ", err)
+	}
+	defer closeBrowser(closeCtx)
+	defer sheetConn.Close()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to the test API connection: ", err)
+		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	var cs ash.ConnSource
-	var bTconn *chrome.TestConn
-	switch s.Param().(browser.Type) {
-	case browser.TypeAsh:
-		cs = cr
-		bTconn = tconn
-	case browser.TypeLacros:
-		// Launch lacros.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(closeCtx)
-		cs = l
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
-		}
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
@@ -190,12 +182,9 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open Google Sheets file.
-		sheetConn, err := cs.NewConn(ctx, sheetURL, browser.WithNewWindow())
-		if err != nil {
-			return errors.Wrap(err, "failed to open the Google Sheets website")
+		if err := sheetConn.Navigate(ctx, sheetURL); err != nil {
+			return errors.Wrapf(err, "failed to navigate to %s", sheetURL)
 		}
-		defer sheetConn.Close()
-		s.Log("Creating a Google Sheets window")
 
 		// Pop-up content regarding view history privacy might show up.
 		privacyButton := nodewith.Name("I understand").Role(role.Button)
@@ -277,6 +266,11 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		if err := sheetConn.Navigate(ctx, "chrome://version"); err != nil {
 			return errors.Wrap(err, "failed to navigate to chrome://version")
+		}
+
+		// Ensure that there is exactly 1 window open at the end of the test.
+		if ws, err := ash.GetAllWindows(ctx, tconn); len(ws) != 1 {
+			return errors.Wrapf(err, "unexpected number of open windows, got: %d, expected: 1", len(ws))
 		}
 
 		return nil
