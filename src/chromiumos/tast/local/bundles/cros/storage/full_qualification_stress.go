@@ -43,6 +43,10 @@ func init() {
 			Val:     util.MiniSoakRunner,
 			Timeout: 2 * time.Hour,
 		}, {
+			Name:    "retention",
+			Val:     util.RetentionRunner,
+			Timeout: 2 * time.Hour,
+		}, {
 			Name:    "teardown_benchmarks",
 			Val:     util.SetupBenchmarks,
 			Timeout: 1 * time.Hour,

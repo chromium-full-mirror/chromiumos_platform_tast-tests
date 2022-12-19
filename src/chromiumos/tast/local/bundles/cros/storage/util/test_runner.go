@@ -147,6 +147,23 @@ func StressRunner(ctx context.Context, s *testing.State, rw *FioResultWriter, te
 	}
 }
 
+// RetentionRunner exercises only the retention test.
+func RetentionRunner(ctx context.Context, s *testing.State, rw *FioResultWriter, testParam QualParam) {
+	for _, tc := range []struct {
+		name     string
+		function subTestFunc
+	}{
+		{
+			name:     "retention",
+			function: subTestFunc(retentionTestBlock),
+		},
+	} {
+		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+			tc.function(ctx, s, rw, testParam)
+		})
+	}
+}
+
 // FunctionalRunner exercises only the functional part of the block.
 // It is intended to be used in the lab on bringup devices.
 func FunctionalRunner(ctx context.Context, s *testing.State, rw *FioResultWriter, testParam QualParam) {
