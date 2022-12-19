@@ -24,13 +24,11 @@ func init() {
 		Func:         ScreenRecorder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the screen recorder Tast API works",
-		Contacts: []string{
-			"alvinjia@google.com",
-			"chromeos-engprod-sydney@google.com",
-		},
+		Contacts:     []string{"chromeos-engprod-sydney@google.com", "alvinjia@google.com", "mattlui@google.com"},
+		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      2 * time.Minute,
 	})
 }
