@@ -190,15 +190,13 @@ func (s *ShakaPlayer) FullScreenEntryExit(ctx context.Context, iteration int) er
 // VerifyVideoBlankScreen func verifies in the area where video is playing should be blank in screenshot.
 func (s *ShakaPlayer) VerifyVideoBlankScreen(ctx context.Context, saveDir string, extDisplay bool) error {
 	// Get Display Scale Factor to use it to convert bounds in dip to pixels.
-	info, err := display.GetPrimaryInfo(ctx, s.Tconn)
+	deviceScaleFactor, err := display.GetDeviceScaleFactor(ctx, s.Tconn,
+		func(info *display.Info) bool {
+			return info.IsPrimary
+		})
 	if err != nil {
-		return errors.Wrap(err, "failed to get the primary display info")
+		return errors.Wrap(err, "failed to get primary display scale factor")
 	}
-	mode, err := info.GetSelectedMode()
-	if err != nil {
-		return errors.Wrap(err, "failed to get the selected display mode of the primary display")
-	}
-	deviceScaleFactor := mode.DeviceScaleFactor
 	videoPreview := nodewith.ClassName("shaka-video-container").Role(role.GenericContainer)
 	// Capture screenshot on display, if extDisplay value true on external display else internal display.
 	var videoImg image.Image

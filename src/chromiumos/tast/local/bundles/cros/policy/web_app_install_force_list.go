@@ -53,6 +53,8 @@ func init() {
 			"certificate.pem",
 			"key.pem",
 			"ca-cert.pem"},
+		// ChromeOS > Software > Commercial (Enterprise) > EngProd
+		BugComponent: "b:1170223",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.WebAppInstallForceList{}, pci.VerifiedFunctionalityUI),
 		},
@@ -263,15 +265,13 @@ func WebAppInstallForceList(ctx context.Context, s *testing.State) {
 			}
 
 			// Get Display Scale Factor to use it to convert bounds in dip to pixels.
-			displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
+			deviceScaleFactor, err := display.GetDeviceScaleFactor(ctx, tconn,
+				func(info *display.Info) bool {
+					return info.IsPrimary
+				})
 			if err != nil {
-				s.Fatal("Failed to get the primary display info: ", err)
+				s.Fatal("Failed to get primary display scale factor: ", err)
 			}
-			displayMode, err := displayInfo.GetSelectedMode()
-			if err != nil {
-				s.Fatal("Failed to get the selected display mode of the primary display: ", err)
-			}
-			deviceScaleFactor := displayMode.DeviceScaleFactor
 
 			// The icon is slightly to the left of the heading (which contains just the app name).
 			// This aims exactly for the center of the icon.

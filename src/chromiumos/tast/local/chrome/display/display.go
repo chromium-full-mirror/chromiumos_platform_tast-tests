@@ -138,6 +138,22 @@ func GetPrimaryInfo(ctx context.Context, tconn *chrome.TestConn) (*Info, error) 
 	})
 }
 
+// GetDeviceScaleFactor returns information about the Device scale factor
+// of the first display that satisfy the function match.
+// If there no matching function, an error will be returned.
+func GetDeviceScaleFactor(ctx context.Context, tconn *chrome.TestConn, match func(info *Info) bool) (float64, error) {
+
+	displayInfo, err := FindInfo(ctx, tconn, match)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get the display info")
+	}
+	displayMode, err := displayInfo.GetSelectedMode()
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get the selected display mode of the display")
+	}
+	return displayMode.DeviceScaleFactor, nil
+}
+
 // DisplayProperties holds properties to change and is passed to SetDisplayProperties.
 // nil fields are ignored. See https://developer.chrome.com/docs/extensions/reference/system_display/#type-DisplayProperties.
 type DisplayProperties struct { // NOLINT
