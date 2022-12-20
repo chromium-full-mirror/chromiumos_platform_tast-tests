@@ -26,6 +26,10 @@ import (
 	"chromiumos/tast/testing"
 )
 
+var (
+	disableFirmwareUpdater = chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp")
+)
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "gpuWatchHangsEnrolled",
@@ -62,7 +66,7 @@ func init() {
 		Contacts: []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Parent:   "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return nil, nil
+			return []chrome.Option{disableFirmwareUpdater}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -90,7 +94,8 @@ func init() {
 		Contacts: []string{"lacros-team@google.com"},
 		Parent:   "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig().Opts()
+			opt, err := lacrosfixt.NewConfig().Opts()
+			return append(opt, disableFirmwareUpdater), err
 		}),
 		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -122,7 +127,7 @@ func init() {
 		Desc:            "Logged into a user session for graphics Idle testing. This fixture starts a chrome dedicated for graphics.Idle tests",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Parent:          "gpuWatchDog",
-		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{}},
+		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -133,7 +138,7 @@ func init() {
 		Desc:            "Logged into a user session for graphics Idle testiang. This fixture starts an arc enabled chrome dedicated for graphics.Idle.*arc tests",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Parent:          "gpuWatchDog",
-		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{chrome.ARCEnabled()}},
+		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -141,6 +146,10 @@ func init() {
 }
 
 type graphicsNoChromeFixture struct {
+}
+
+func videoRenderingPowerFixtExtraArg() chrome.Option {
+	return chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp")
 }
 
 func (f *graphicsNoChromeFixture) Reset(ctx context.Context) error {
