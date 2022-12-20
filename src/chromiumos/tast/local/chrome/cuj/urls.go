@@ -212,6 +212,11 @@ const (
 	// GoogleChatURL specifies the URL for Google Chat.
 	GoogleChatURL = "https://chat.google.com"
 
+	// URLs used by GoogleMeet.
+
+	// WebRTCInternalsURL specifies the URL for WebRTC internals.
+	WebRTCInternalsURL = "chrome://webrtc-internals"
+
 	// URLs used by ZoomConfCUJ.
 
 	// ZoomURL specifies the URL for Zoom.

@@ -44,6 +44,7 @@ type GoogleMeetConference struct {
 	tabletMode                 bool
 	extendedDisplay            bool
 	networkLostCount           int
+	participants               int
 }
 
 var _ Conference = (*GoogleMeetConference)(nil)
@@ -92,6 +93,21 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) error {
 		}
 		if err := webutil.WaitForQuiescence(ctx, conf.meetConn, longUITimeout); err != nil {
 			return CheckSignedOutError(ctx, tconn, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", room))
+		}
+		if conf.bt == browser.TypeLacros {
+			chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+			if err != nil {
+				return errors.Wrap(err, "could not find the Chrome app")
+			}
+			window, err := ash.GetActiveWindow(ctx, tconn)
+			if err != nil {
+				return errors.Wrap(err, "failed to get active window")
+			}
+			if !strings.Contains(window.Title, meetTitle) {
+				if err := conf.uiHandler.SwitchToAppWindowByName(chromeApp.Name, meetTitle)(ctx); err != nil {
+					return CheckSignedOutError(ctx, tconn, errors.Wrapf(err, "failed to switch to %s window by name %s", chromeApp.Name, meetTitle))
+				}
+			}
 		}
 		return cuj.MaximizeBrowserWindow(ctx, tconn, conf.tabletMode, meetTitle)
 	}
@@ -352,6 +368,7 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) error {
 			}
 		}
 		testing.ContextLog(ctx, "Current participants: ", participants)
+		conf.participants = participants
 		return nil
 	}
 
@@ -368,9 +385,12 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) error {
 }
 
 // GetParticipants returns the number of meeting participants.
+// If the participants already has a value, return the value directly.
 func (conf *GoogleMeetConference) GetParticipants(ctx context.Context) (int, error) {
+	if conf.participants != 0 {
+		return conf.participants, nil
+	}
 	ui := conf.ui
-
 	participant := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetWebArea)
 	if err := uiauto.NamedCombine("wait for the meet page to load participant",
 		conf.closeNotifDialog(),

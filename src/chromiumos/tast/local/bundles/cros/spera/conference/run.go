@@ -6,6 +6,7 @@ package conference
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -28,8 +29,34 @@ type Cleanup func(context.Context) error
 // Prepare prepares conference room link before testing.
 type Prepare func(context.Context) (string, Cleanup, error)
 
+// TestParams stores data common to the tests run in this package.
+type TestParams struct {
+	Cr                     *chrome.Chrome
+	Conf                   Conference
+	Prepare                Prepare
+	Tier                   cuj.Tier
+	Bt                     browser.Type
+	RoomType               RoomType
+	OutDir                 string
+	TraceConfigPath        string
+	TabletMode             bool
+	CollectWebRTCInternals bool
+}
+
 // Run runs the specified user scenario in conference room with different CUJ tiers.
-func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepare, tier cuj.Tier, outDir, traceConfigPath string, tabletMode bool, bt browser.Type, roomType RoomType) (retErr error) {
+func Run(ctx context.Context, p *TestParams) (retErr error) {
+	var (
+		cr                     = p.Cr
+		conf                   = p.Conf
+		prepare                = p.Prepare
+		tier                   = p.Tier
+		bt                     = p.Bt
+		roomType               = p.RoomType
+		outDir                 = p.OutDir
+		traceConfigPath        = p.TraceConfigPath
+		tabletMode             = p.TabletMode
+		collectWebRTCInternals = p.CollectWebRTCInternals
+	)
 	// Shorten context a bit to allow for cleanup.
 	cleanUpCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -111,7 +138,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 	} else if isPremium {
 		meetTimeout = 3 * time.Minute
 	}
-
+	if !isNoRoom && collectWebRTCInternals {
+		webRTCInternalsConn, err := cuj.OpenWebRTCInternals(ctx, tconn, br)
+		if err != nil {
+			return err
+		}
+		defer webRTCInternalsConn.Close()
+	}
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Collect GPU metrics in goroutine while other tests are being executed.
@@ -163,6 +196,16 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to generate ADF")
 		}
+		if !isNoRoom && collectWebRTCInternals {
+			participants, err := conf.GetParticipants(ctx)
+			if err != nil {
+				return err
+			}
+			numBots := participants - 1
+			if err := reportWebRTCInternals(ctx, pv, tconn, bTconn, cr.NormalizedUser(), outDir, numBots, tier != cuj.Essential); err != nil {
+				return errors.Wrap(err, "failed to report WebRTC internals")
+			}
+		}
 		if !isNoRoom {
 			// Close conference to collect metrics.
 			if err := conf.CloseConference(ctx); err != nil {
@@ -210,6 +253,32 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 
 	if err := recorder.SaveHistograms(outDir); err != nil {
 		return errors.Wrap(err, "failed to save histogram raw data")
+	}
+
+	return nil
+}
+
+// reportWebRTCInternals reports information from WebRTC internals and dumps to performance metrics.
+func reportWebRTCInternals(ctx context.Context, pv *perf.Values, tconn, bTconn *chrome.TestConn, username, outDir string, numBots int, present bool) error {
+	testing.ContextLog(ctx, "Start reporting performance metrics from WebRTC internals dump file")
+	ui := uiauto.New(tconn)
+	webRTCUI := ui.WithTimeout(10 * time.Minute)
+	path, err := cuj.DumpWebRTCInternals(ctx, tconn, webRTCUI, username)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to download dump from chrome://webrtc-internals: ", err)
+	} else {
+		dump, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return errors.Wrap(readErr, "failed to read WebRTC internals dump from Downloads folder")
+		}
+		defer os.Remove(path)
+
+		if err := os.WriteFile(filepath.Join(outDir, "webrtc-internals.json"), dump, 0644); err != nil {
+			return errors.Wrap(err, "failed to write WebRTC internals dump to test results folder")
+		}
+		if err := cuj.ReportWebRTCInternals(pv, dump, numBots, present); err != nil {
+			testing.ContextLog(ctx, "Failed to report info from WebRTC internals dump to performance metrics: ", err)
+		}
 	}
 
 	return nil

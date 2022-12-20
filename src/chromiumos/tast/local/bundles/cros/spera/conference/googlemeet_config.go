@@ -17,13 +17,14 @@ import (
 
 // GoogleMeetConfig defines input params and retry settings for Google meet testing.
 type GoogleMeetConfig struct {
-	Account       string
-	Password      string
-	BondEnabled   bool
-	BondCreds     []byte
-	URLs          []string
-	RetryTimeout  time.Duration
-	RetryInterval time.Duration
+	Account                string
+	Password               string
+	BondEnabled            bool
+	BondCreds              []byte
+	URLs                   []string
+	RetryTimeout           time.Duration
+	RetryInterval          time.Duration
+	CollectWebRTCInternals bool
 }
 
 // GetGoogleMeetConfig returns an object that contains the Google meet configuration.
@@ -36,6 +37,10 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 		defaultMeetRetryTimeout  = 40 * time.Minute
 		defaultMeetRetryInterval = 2 * time.Minute
 	)
+	collectWebRTCInternals := false // Default is false.
+	if v, ok := s.Var("spera.collectWebRTCInternals"); ok && strings.ToLower(v) == "true" {
+		collectWebRTCInternals = true
+	}
 	varToDuration := func(name string, defaultValue time.Duration) (time.Duration, error) {
 		str, ok := s.Var(name)
 		if !ok {
@@ -72,10 +77,11 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 			return GoogleMeetConfig{}, errors.New("bond API is enabled via spera.GoogleMeetCUJ.bond_enabled but spera.GoogleMeetCUJ.bond_key is not set")
 		}
 		return GoogleMeetConfig{
-			BondEnabled:   bondEnabled,
-			BondCreds:     []byte(bondCreds),
-			RetryTimeout:  meetRetryTimeout,
-			RetryInterval: meetRetryInterval,
+			BondEnabled:            bondEnabled,
+			BondCreds:              []byte(bondCreds),
+			RetryTimeout:           meetRetryTimeout,
+			RetryInterval:          meetRetryInterval,
+			CollectWebRTCInternals: collectWebRTCInternals,
 		}, nil
 	}
 
@@ -138,10 +144,11 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 	testing.ContextLog(ctx, "Google meet URLs: ", meetURLs)
 
 	return GoogleMeetConfig{
-		Account:       meetAccount,
-		Password:      meetPassword,
-		URLs:          meetURLs,
-		RetryTimeout:  meetRetryTimeout,
-		RetryInterval: meetRetryInterval,
+		Account:                meetAccount,
+		Password:               meetPassword,
+		URLs:                   meetURLs,
+		RetryTimeout:           meetRetryTimeout,
+		RetryInterval:          meetRetryInterval,
+		CollectWebRTCInternals: collectWebRTCInternals,
 	}, nil
 }

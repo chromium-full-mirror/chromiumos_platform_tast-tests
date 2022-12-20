@@ -41,6 +41,8 @@ func init() {
 			"spera.cuj_mode",
 			// Optional. Expecting "enable" or "disable", default is "disable".
 			"spera.collectTrace",
+			// Optional. Expecting "true" or "false", default is "false".
+			"spera.collectWebRTCInternals",
 			// CrOS login credentials.
 			"ui.cujAccountPool",
 			// Credentials used to join Google Meet. It might be different with CrOS login credentials.
@@ -224,8 +226,19 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 		// Shorten context a bit to allow for cleanup if Run fails.
 		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 		defer cancel()
-
-		if err := conference.Run(ctx, cr, gmcli, prepare, cuj.Tier(req.Tier), outDir, traceConfigPath, tabletMode, bt, roomType); err != nil {
+		testParams := &conference.TestParams{
+			Cr:                     cr,
+			Conf:                   gmcli,
+			Prepare:                prepare,
+			Tier:                   cuj.Tier(req.Tier),
+			Bt:                     bt,
+			RoomType:               roomType,
+			OutDir:                 outDir,
+			TraceConfigPath:        traceConfigPath,
+			TabletMode:             tabletMode,
+			CollectWebRTCInternals: meet.CollectWebRTCInternals,
+		}
+		if err := conference.Run(ctx, testParams); err != nil {
 			return errors.Wrap(err, "failed to run Google Meet conference")
 		}
 		return nil
@@ -406,7 +419,18 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 	// Shorten context a bit to allow for cleanup if Run fails.
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
-	if err := conference.Run(ctx, cr, zmcli, prepare, cuj.Tier(req.Tier), outDir, traceConfigPath, tabletMode, bt, roomType); err != nil {
+	testParams := &conference.TestParams{
+		Cr:              cr,
+		Conf:            zmcli,
+		Prepare:         prepare,
+		Tier:            cuj.Tier(req.Tier),
+		Bt:              bt,
+		RoomType:        roomType,
+		OutDir:          outDir,
+		TraceConfigPath: traceConfigPath,
+		TabletMode:      tabletMode,
+	}
+	if err := conference.Run(ctx, testParams); err != nil {
 		return nil, errors.Wrap(err, "failed to run Zoom conference")
 	}
 
