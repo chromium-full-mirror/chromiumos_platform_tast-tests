@@ -60,14 +60,6 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	// TODO(b/194910957): old test disables EC WP here
-	ectool := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
-	if out, err := ectool.FlashProtect(ctx); err != nil {
-		s.Fatal("Failed to get flashprotect status: ", err)
-	} else {
-		s.Logf("FlashProtect status: %s", out)
-	}
-
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
@@ -109,7 +101,8 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	// TODO(b/194910957): Old test unlocks CCD, is this needed?
 
 	// Reboot just in case the firmware version we backed up isn't the same one that software sync will restore.
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	// Use a cold reset to prevent "RO_AT_BOOT is not clear" errors.
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 	h.CloseRPCConnection(ctx)
