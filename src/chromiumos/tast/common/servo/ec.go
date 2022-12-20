@@ -202,10 +202,14 @@ func (s *Servo) GetECSystemPowerState(ctx context.Context) (string, error) {
 	return s.GetString(ctx, ECSystemPowerState)
 }
 
-// ECHibernate puts the EC into hibernation mode, after removing the servo watchdog for CCD if necessary.
+// ECHibernate puts the EC into hibernation mode, after removing the servo watchdogs.
 func (s *Servo) ECHibernate(ctx context.Context, option HibernationOpt) error {
 	if err := s.WatchdogRemove(ctx, WatchdogCCD); err != nil {
 		return errors.Wrap(err, "failed to remove watchdog for ccd")
+	}
+	// TODO(b/188497815): Workaround servod exits
+	if err := s.WatchdogRemove(ctx, WatchdogMain); err != nil {
+		return errors.Wrap(err, "failed to remove watchdog for main")
 	}
 	switch option {
 	case "keyboard":
