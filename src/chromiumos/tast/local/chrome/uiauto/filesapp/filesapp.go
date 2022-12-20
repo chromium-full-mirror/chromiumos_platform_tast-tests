@@ -41,7 +41,7 @@ const (
 	Paste        = "Paste Ctrl+V"
 	GetInfo      = "Get info Space" // Space is the key shortcut.
 	Rename       = "Rename Ctrl+Enter"
-	Delete       = "Delete Alt+Backspace"
+	Delete       = "Delete Alt+Shift+Backspace"
 	ZipSelection = "Zip select"
 	NewFolder    = "New folder Ctrl+E"
 	Share        = "Share"
