@@ -5,10 +5,17 @@ mno {
     localized_name {
       name: "Cros Cellular Network"
     }
-    mccmnc: "00101"
-    mccmnc: "310260"  #Tmobile
-    mccmnc: "310280"  #ATT
-    mccmnc: "310410"
-    mccmnc: "311480"  #Verizon
+    mccmnc: "00101"  # Callbox
+    mccmnc: "23415"  # VodafoneUK
+    mccmnc: "23430"  # EEUK
+    mccmnc: "310260" # Tmobile
+    mccmnc: "311882" # Tmobile
+    mccmnc: "310280" # ATT
+    mccmnc: "310410" # ATT
+    mccmnc: "311480" # Verizon
+    mccmnc: "44010"  # Docomo
+    mccmnc: "44011"  # Rakuten
+    mccmnc: "44020"  # Softbank
+    mccmnc: "44051"  # KDDI
   }
 }

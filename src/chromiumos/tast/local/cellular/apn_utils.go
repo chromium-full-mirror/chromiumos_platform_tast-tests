@@ -55,7 +55,7 @@ const (
 )
 
 var (
-	// When updating this list, please also update the list in cellular/data/callbox_no_apns.prototxt
+	// When updating this list, please also update the list in cellular/data/test_no_apns.prototxt
 	// and regenerate the *.pbf files by following the directions in cellular/data/README.md.
 	carrierMapping = map[string]carrier{
 		"00101":  carrierAmarisoft,

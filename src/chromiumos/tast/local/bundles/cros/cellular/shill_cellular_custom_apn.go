@@ -124,6 +124,11 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable cellular: ", err)
 	}
 
+	// Check that shill recognizes the MCCMNC in |modbOverrideProto|.
+	if _, _, err = helper.GetHomeProviderFromShill(ctx); err != nil {
+		s.Fatal("Failed to get HomeProvider from shill: ", err)
+	}
+
 	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID)
 	if err != nil {
 		s.Fatal("Cannot find known APNs: ", err)
