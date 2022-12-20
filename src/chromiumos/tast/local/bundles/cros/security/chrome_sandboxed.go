@@ -33,7 +33,7 @@ func init() {
 		}, {
 			Name:              "lacros",
 			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraSoftwareDeps: []string{"lacros", "gpu_sandboxing"},
 			Val:               browser.TypeLacros,
 		}},
 	})
