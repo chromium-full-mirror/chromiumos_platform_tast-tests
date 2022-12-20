@@ -25,6 +25,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
+		BugComponent: "b:893827",
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
@@ -45,6 +46,17 @@ func MBOAssocDisallow(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get MAC of WiFi interface: ", err)
 	}
+
+	// Turn off the background scan to avoid outgoing scan before setting AP.
+	ctx, restoreBg, err := tf.WifiClient().TurnOffBgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background scan: ", err)
+	}
+	defer func() {
+		if err := restoreBg(); err != nil {
+			s.Error("Failed to restore the background scan config: ", err)
+		}
+	}()
 
 	s.Log("Configuring AP")
 	testSSID := hostapd.RandomSSID("MBO_ASSOC_DISALLOW_")
