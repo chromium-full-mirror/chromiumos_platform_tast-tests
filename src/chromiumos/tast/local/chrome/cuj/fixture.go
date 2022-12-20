@@ -150,7 +150,12 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeAsh},
+		Impl: &loggedInToCUJUserFixture{
+			keepState: true,
+			bt:        browser.TypeAsh,
+			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
+			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
+		},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
@@ -197,7 +202,12 @@ func init() {
 			"xliu@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeLacros},
+		Impl: &loggedInToCUJUserFixture{
+			keepState: true,
+			bt:        browser.TypeLacros,
+			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
+			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
+		},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
