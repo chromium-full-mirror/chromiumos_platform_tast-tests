@@ -22,6 +22,11 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	defaultIterations = 20
+	defaultSeed       = 1
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIStress,
@@ -45,6 +50,7 @@ func init() {
 			// Optional. Expecting "tablet".
 			"mode",
 		},
+		// TODO(b/192846832): Change the fixture from ccaLaunched to ccaTestBridgeReady.
 		Params: []testing.Param{{
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
@@ -122,15 +128,96 @@ func switchToRearCamera(ctx context.Context, app cca.App) error {
 	return nil
 }
 
-func CCAUIStress(ctx context.Context, s *testing.State) {
+func clickPhotoShutterContinuously(ctx context.Context, s *testing.State) error {
+	app := s.FixtValue().(cca.FixtureData).App()
+
+	const timerState = cca.TimerOff
+	iterations := intVar(s, "iterations", defaultIterations)
+	seed := intVar(s, "seed", defaultSeed)
+	rand.Seed(int64(seed))
+
+	if err := app.SwitchMode(ctx, cca.Photo); err != nil {
+		return err
+	}
+
+	if err := app.SetTimerOption(ctx, timerState); err != nil {
+		return err
+	}
+
+	testing.ContextLog(ctx, "Start to take photos")
+	var startTime = time.Now()
+	for i := 0; i < iterations; i++ {
+		if err := app.ClickShutter(ctx); err != nil {
+			return err
+		}
+		var interval = time.Duration(rand.Intn(500)) * time.Millisecond
+		if err := testing.Sleep(ctx, interval); err != nil {
+			return err
+		}
+	}
+
+	if err := app.WaitForState(ctx, "taking", false); err != nil {
+		return errors.Wrap(err, "capturing hasn't ended")
+	}
+	dir, err := app.SavedDir(ctx)
+	if err != nil {
+		return err
+	}
+	info, err := app.WaitForFileSaved(ctx, dir, cca.PhotoPattern, startTime)
+	if err != nil {
+		return errors.Wrapf(err, "can't find any result pictures with regexp: %v", cca.PhotoPattern)
+	}
+	if info.Size() == 0 {
+		return errors.Errorf("saved file %v is empty", info.Name())
+	}
+	if err := app.CheckNoTemporalFile(ctx, dir, cca.PhotoPattern, startTime); err != nil {
+		return err
+	}
+	return nil
+}
+
+func clickVideoShutterContinuously(ctx context.Context, s *testing.State) error {
+	app := s.FixtValue().(cca.FixtureData).App()
+
+	iterations := intVar(s, "iterations", defaultIterations)
+	seed := intVar(s, "seed", defaultSeed)
+	rand.Seed(int64(seed))
+
+	if err := app.SwitchMode(ctx, cca.Video); err != nil {
+		return err
+	}
+	var startTime = time.Now()
+	for i := 0; i < iterations; i++ {
+		if err := app.ClickShutter(ctx); err != nil {
+			return err
+		}
+		var interval = time.Duration(rand.Intn(500)) * time.Millisecond
+		if err := testing.Sleep(ctx, interval); err != nil {
+			return err
+		}
+	}
+	if err := app.Close(ctx); err != nil {
+		return err
+	}
+
+	dir, err := app.SavedDir(ctx)
+	if err != nil {
+		return err
+	}
+	if err := app.CheckNoTemporalFile(ctx, dir, cca.VideoPattern, startTime); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func takeActionsRandomly(ctx context.Context, s *testing.State) error {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	app := s.FixtValue().(cca.FixtureData).App()
 	tb := s.FixtValue().(cca.FixtureData).TestBridge()
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true})
 
-	const defaultIterations = 20
 	const defaultSkipIterations = 0
-	const defaultSeed = 1
 	const actionTimeout = 30 * time.Second
 	const cleanupTimeout = 20 * time.Second
 
@@ -138,7 +225,7 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 	skipIterations := intVar(s, "skip_iterations", defaultSkipIterations)
 	actionFilter, err := regexp.Compile(stringVar(s, "action_filter", ".*"))
 	if err != nil {
-		s.Fatal("Failed to compile action_filter as a regexp")
+		return errors.New("failed to compile action_filter as a regexp")
 	}
 	actionSequences := strings.Split(stringVar(s, "action_sequence", ""), ",")
 
@@ -147,7 +234,7 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
+		return errors.Wrap(err, "failed to connect to test API")
 	}
 
 	cleanupCtx := ctx
@@ -158,21 +245,21 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 		tabletMode = mode == "tablet"
 		cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
 		if err != nil {
-			s.Fatalf("Failed to enable tablet mode to %v: %v", tabletMode, err)
+			return errors.Wrapf(err, "failed to enable tablet mode to %v", tabletMode)
 		}
 		defer cleanup(cleanupCtx)
 	} else {
 		// Use default screen mode of the DUT.
 		tabletMode, err = ash.TabletModeEnabled(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to get DUT default screen mode: ", err)
+			return errors.Wrap(err, "failed to get DUT default screen mode")
 		}
 	}
 	s.Log("Running test with tablet mode: ", tabletMode)
 	if tabletMode {
 		cleanup, err := display.RotateToLandscape(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to rotate display to landscape: ", err)
+			return errors.Wrap(err, "failed to rotate display to landscape")
 		}
 		defer cleanup(cleanupCtx)
 	}
@@ -283,13 +370,16 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 		if len(actionSequences) > 1 {
 			for _, action := range actions {
 				s.Logf("Iteration %d/%d: Performing action %s", i, iterations, action.name)
-				func() {
+				if err := func() error {
 					actionCtx, actionCancel := context.WithTimeout(ctx, actionTimeout)
 					defer actionCancel()
 					if err := action.perform(actionCtx); err != nil {
-						s.Fatalf("Failed to perform action %v: %v", action.name, err)
+						return errors.Wrapf(err, "failed to perform action %v", action.name)
 					}
-				}()
+					return nil
+				}(); err != nil {
+					return err
+				}
 			}
 		} else {
 			action := actions[rand.Intn(len(actions))]
@@ -298,14 +388,42 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 				continue
 			}
 			s.Logf("Iteration %d/%d: Performing action %s", i, iterations, action.name)
-			func() {
+			if err := func() error {
 				actionCtx, actionCancel := context.WithTimeout(ctx, actionTimeout)
 				defer actionCancel()
 				if err := action.perform(actionCtx); err != nil {
-					s.Fatalf("Failed to perform action %v: %v", action.name, err)
+					return errors.Wrapf(err, "failed to perform action %v", action.name)
 				}
-			}()
-
+				return nil
+			}(); err != nil {
+				return err
+			}
 		}
+	}
+	return nil
+}
+
+func CCAUIStress(ctx context.Context, s *testing.State) {
+	subTestTimeout := 5 * time.Minute
+	for _, tst := range []struct {
+		name     string
+		testFunc func(context.Context, *testing.State) error
+	}{{
+		"takeActionsRandomly",
+		takeActionsRandomly,
+	}, {
+		"clickPhotoShutterContinuously",
+		clickPhotoShutterContinuously,
+	}, {
+		"clickVideoShutterContinuously",
+		clickVideoShutterContinuously,
+	}} {
+		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
+		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
+			if err := tst.testFunc(ctx, s); err != nil {
+				s.Fatalf("Test %v failed : %v", tst.name, err)
+			}
+		})
+		defer cancel()
 	}
 }

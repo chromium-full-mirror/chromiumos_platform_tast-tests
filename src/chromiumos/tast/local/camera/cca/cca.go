@@ -475,6 +475,25 @@ func (a *App) WaitForVideoActive(ctx context.Context) error {
 	return a.checkVideoState(ctx, true, time.Second)
 }
 
+// CheckNoTemporalFile checks if there is any temporal file which don't match pattern |pat| left in |dir| after the specified timestamp |ts|.
+func (a *App) CheckNoTemporalFile(ctx context.Context, dir string, pat *regexp.Regexp, ts time.Time) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		files, err := ioutil.ReadDir(dir)
+		if err != nil {
+			return err
+		}
+		for _, file := range files {
+			if file.ModTime().Before(ts) {
+				continue
+			}
+			if !pat.MatchString(file.Name()) {
+				return errors.Errorf("temporal file %v was found", file.Name())
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
+}
+
 // WaitForFileSaved calls WaitForFileSavedFor with 5 second timeout.
 func (a *App) WaitForFileSaved(ctx context.Context, dir string, pat *regexp.Regexp, ts time.Time) (os.FileInfo, error) {
 	return a.WaitForFileSavedFor(ctx, dir, pat, ts, 5*time.Second)
