@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type cCDCapabilitiesOverrideWP struct {
@@ -33,6 +34,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Fixture:      fixture.NormalMode,
+		HardwareDeps: hwdep.D(hwdep.GSCUART()),
 		SoftwareDeps: []string{"gsc"},
 		Timeout:      2 * time.Minute,
 		Vars:         []string{"servo"},
