@@ -41,7 +41,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      45 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:      "toggle_powerd",
@@ -125,7 +125,12 @@ func testPowerOffWithShortPowerKey(ctx context.Context, h *firmware.Helper) erro
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
-	return h.WaitConnect(ctx)
+	ctx, cancel := context.WithTimeout(ctx, 6*time.Minute)
+	defer cancel()
+	if err := h.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed connect to DUT after power key on")
+	}
+	return nil
 }
 
 func testIgnoreShortPowerKey(ctx context.Context, h *firmware.Helper) error {
@@ -214,7 +219,7 @@ func enablePowerd(ctx context.Context, h *firmware.Helper, status bool) error {
 		startOrStop = "stop"
 	}
 
-	startStopJob := func(ctx context.Context, job string) error {
+	startStopJob := func(ctx context.Context, job string, missingOk bool) error {
 		cmd := h.DUT.Conn().CommandContext(ctx, startOrStop, job)
 		stderr, _ := cmd.StderrPipe()
 		if err := cmd.Start(); err != nil {
@@ -225,24 +230,30 @@ func enablePowerd(ctx context.Context, h *firmware.Helper, status bool) error {
 		for scanner.Scan() {
 			errMsg = fmt.Sprintf("%s\n%s", errMsg, scanner.Text())
 		}
-		if err := cmd.Wait(); err != nil && !strings.Contains(errMsg, "Job is already running") {
+		if err := cmd.Wait(); err != nil {
+			if strings.Contains(errMsg, "Job is already running") {
+				return nil
+			}
+			if missingOk && strings.Contains(errMsg, "Unknown job:") {
+				return nil
+			}
 			return errors.Wrapf(err, "failed to %s job %v, got error: %s", startOrStop, job, errMsg)
 		}
 		return nil
 	}
 
 	if status {
-		if err := startStopJob(ctx, "powerd"); err != nil {
+		if err := startStopJob(ctx, "powerd", false); err != nil {
 			return errors.Wrap(err, "failed to start powerd")
 		}
 	}
 
-	if err := startStopJob(ctx, "fwupd"); err != nil {
+	if err := startStopJob(ctx, "fwupd", true); err != nil {
 		return errors.Wrapf(err, "failed to %v fwupd", startOrStop)
 	}
 
 	if !status {
-		if err := startStopJob(ctx, "powerd"); err != nil {
+		if err := startStopJob(ctx, "powerd", false); err != nil {
 			return errors.Wrap(err, "failed to stop powerd")
 		}
 	}
@@ -316,5 +327,10 @@ func testRebootWithSettingPowerState(ctx context.Context, h *firmware.Helper) er
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
-	return h.WaitConnect(ctx)
+	ctx, cancel := context.WithTimeout(ctx, 6*time.Minute)
+	defer cancel()
+	if err := h.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed connect to DUT after power key on")
+	}
+	return nil
 }
