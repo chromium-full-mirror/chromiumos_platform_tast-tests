@@ -177,7 +177,7 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 	} else {
 		for i, d := range PIN {
 			button := nodewith.Role(role.Button).Name(string(d))
-			if err := ui.WithTimeout(uiTimeout).LeftClick(button)(ctx); err != nil {
+			if err := ui.WithTimeout(uiTimeout).DoDefault(button)(ctx); err != nil {
 				return errors.Wrapf(err, "failed to press %q button (Digit %v of PIN)", d, i)
 			}
 		}
