@@ -103,6 +103,10 @@ func (f *mtpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Fatal("Failed to set the device to MTP mode: ", err)
 	}
 
+	if _, err := adb.WaitForDevice(ctx, func(device *adb.Device) bool { return !strings.HasPrefix(device.Serial, "emulator-") }, 10*time.Second); err != nil {
+		s.Fatal("Failed to wait for adb device reconnected after MTP is set: ", err)
+	}
+
 	testing.ContextLog(ctx, "Enable adb root")
 	rootCmd := adbDevice.Command(ctx, "root")
 	// adb requires wait for restart as root for first run after a new build is flashed.
