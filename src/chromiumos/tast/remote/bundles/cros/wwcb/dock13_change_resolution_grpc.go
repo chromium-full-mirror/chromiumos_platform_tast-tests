@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Change Resolution being displayed on external monitor",
 		Contacts:     []string{"flin@google.com", "allion-wwcb@allion.corp-partner.google.com", "newmanliu19020@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService"},

@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Windows persistent settings for single display through a Dock",
 		Contacts:     []string{"flin@google.com", "newmanliu19020@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		ServiceDeps: []string{
