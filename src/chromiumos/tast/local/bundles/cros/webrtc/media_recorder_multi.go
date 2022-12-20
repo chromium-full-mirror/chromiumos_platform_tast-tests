@@ -25,9 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies that MediaRecorder can use multiple encoders in parallel",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"loopback_media_recorder.html"},
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
@@ -95,7 +96,7 @@ func MediaRecorderMulti(ctx context.Context, s *testing.State) {
 		g.Go(func() error {
 			s.Log("Running codec ", c)
 			return mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(
-				encCtx, cr, s.DataFileSystem(), c, recordDuration)
+				encCtx, cr, tconn, tconn, s.DataFileSystem(), c, recordDuration)
 		})
 	}
 

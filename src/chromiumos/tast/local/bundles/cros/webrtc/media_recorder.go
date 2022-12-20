@@ -10,52 +10,70 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/webrtc/mediarecorder"
-	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/testing"
 )
 
+// mediaRecorderTest is used to describe the config used to run each test case.
+type mediaRecorderTest struct {
+	codec       videotype.Codec
+	browserType browser.Type
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MediaRecorder,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that MediaRecorder uses video encode acceleration",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
-
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"loopback_media_recorder.html"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name:              "h264",
-			Val:               videotype.H264,
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "h264_lacros",
+			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
+		}, {
 			// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
 			Name:              "h264_vbr",
-			Val:               videotype.H264,
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndHWVBREncoding",
 		}, {
 			Name:              "vp8",
-			Val:               videotype.VP8,
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "vp8_lacros",
+			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
+		}, {
 			Name:              "vp9",
-			Val:               videotype.VP9,
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "vp9_lacros",
+			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
+		}, {
 			Name:              "vp8_cam",
-			Val:               videotype.VP8,
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
+			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
 			Fixture:           "chromeCameraPerf",
 		}},
@@ -69,8 +87,32 @@ func MediaRecorder(ctx context.Context, s *testing.State) {
 		// receive just bits and pieces of the container header.
 		recordDuration = 100 * time.Millisecond
 	)
+	params := s.Param().(mediaRecorderTest)
 
-	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, s.FixtValue().(*chrome.Chrome), s.DataFileSystem(), s.Param().(videotype.Codec), recordDuration); err != nil {
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.browserType)
+	if err != nil {
+		s.Fatal("Failed to initialize test: ", err)
+	}
+	defer lacros.CloseLacros(ctx, l)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	var br *browser.Browser
+	switch params.browserType {
+	case browser.TypeAsh:
+		br = cr.Browser()
+	case browser.TypeLacros:
+		br = l.Browser()
+	}
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
+	}
+
+	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cs, tconn, bTconn, s.DataFileSystem(), params.codec, recordDuration); err != nil {
 		s.Error("Failed to run VerifyMediaRecorderUsesEncodeAccelerator: ", err)
 	}
 }

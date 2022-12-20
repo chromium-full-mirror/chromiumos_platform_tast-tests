@@ -47,7 +47,7 @@ func reportMetric(name, unit string, value float64, direction perf.Direction, p 
 }
 
 // MeasurePerf measures the frame processing time and CPU usage while recording and report the results.
-func MeasurePerf(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSystem, outDir, codec string, hwAccelEnabled bool) error {
+func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, outDir, codec string, hwAccelEnabled bool) error {
 
 	p := perf.NewValues()
 	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
@@ -69,17 +69,12 @@ func MeasurePerf(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSys
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return err
-	}
-
-	initHistogram, err := metrics.GetHistogram(ctx, tconn, constants.MediaRecorderVEAUsed)
+	initHistogram, err := metrics.GetHistogram(ctx, bTconn, constants.MediaRecorderVEAUsed)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
 
-	conn, err := cr.NewConn(ctx, server.URL+"/loopback_media_recorder.html")
+	conn, err := cs.NewConn(ctx, server.URL+"/loopback_media_recorder.html")
 	if err != nil {
 		return errors.Wrap(err, "failed to open recorder page")
 	}
@@ -120,7 +115,7 @@ func MeasurePerf(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSys
 		return errors.Wrap(err, "failed to stop recording")
 	}
 
-	hwAccelUsed, err := histogram.WasHWAccelUsed(ctx, tconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess))
+	hwAccelUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess))
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram")
 	}
@@ -216,14 +211,9 @@ VideoTrackNumLoop:
 }
 
 // VerifyMediaRecorderUsesEncodeAccelerator checks whether MediaRecorder uses HW encoder for codec.
-func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSystem, codec videotype.Codec, recordTime time.Duration) error {
+func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, codec videotype.Codec, recordTime time.Duration) error {
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
-	}
 
 	// Real webcams on tablets might capture a rotated feed and make one of the
 	// dimensions too large for the hardware encoder, see crbug.com/1071979. Set
@@ -259,12 +249,12 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cr *chrome.Ch
 		}
 	}
 
-	initHistogram, err := metrics.GetHistogram(ctx, tconn, constants.MediaRecorderVEAUsed)
+	initHistogram, err := metrics.GetHistogram(ctx, bTconn, constants.MediaRecorderVEAUsed)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
 
-	conn, err := cr.NewConn(ctx, server.URL+"/loopback_media_recorder.html")
+	conn, err := cs.NewConn(ctx, server.URL+"/loopback_media_recorder.html")
 	if err != nil {
 		return errors.Wrap(err, "failed to open recorder page")
 	}
@@ -285,7 +275,7 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cr *chrome.Ch
 		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", codec, recordTime.Milliseconds())
 	}
 
-	if hwUsed, err := histogram.WasHWAccelUsed(ctx, tconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess)); err != nil {
+	if hwUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess)); err != nil {
 		return errors.Wrap(err, "failed to verify histogram")
 	} else if !hwUsed {
 		return errors.New("hardware accelerator was not used")
