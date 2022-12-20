@@ -113,6 +113,49 @@ func FillFromLSBRelease(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 	return nil
 }
 
+// ReadBootID reads back the current boot_id from the DUT.
+func ReadBootID(ctx context.Context, dut *dut.DUT) (string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "cat", "/proc/sys/kernel/random/boot_id").Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// ApplyDeferredUpdate applies the deferred update, reboot, and wait for the DUT becomes reachable again.
+func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
+	bootID, err := ReadBootID(ctx, dut)
+	if err != nil {
+		return errors.Wrap(err, "failed to read the boot_id before applying the update")
+	}
+
+	// Call update_engine DBus method to apply the update and reboot.
+	// The command is non-blocking, so need to wait for the operations to complete afterward.
+	if err := dut.Conn().CommandContext(ctx, "update_engine_client", "--apply_deferred_update").Run(); err != nil {
+		return errors.Wrap(err, "failed to apply deferred update")
+	}
+
+	// Wait for reboot and boot_id change.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+		if err := dut.WaitConnect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to DUT")
+		}
+		id, err := ReadBootID(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "failed to read boot_id")
+		}
+		if id == bootID {
+			return errors.New("boot_id did not change")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute * 2, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT to reboot")
+	}
+	return nil
+}
+
 // UpdateFromGS updates the DUT to an image found in the Google Storage under the builder path folder.
 // It saves the logs (udpdate engine logs and Nebraska logs) to the given outdir.
 func UpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath string) (retErr error) {

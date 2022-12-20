@@ -100,7 +100,7 @@ func ConsumerAutoupdateFeature(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		s.Log("Applying the deferred update")
-		if err := s.DUT().Conn().CommandContext(postCtx, "update_engine_client", "--apply_deferred_update").Run(); err != nil {
+		if err := updateutil.ApplyDeferredUpdate(postCtx, s.DUT()); err != nil {
 			s.Fatal("Failed to apply deferred update: ", err)
 		}
 	}
