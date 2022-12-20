@@ -1,0 +1,46 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package video
+
+import (
+	"context"
+	"path/filepath"
+
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/gtest"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func: V4L2Unittest,
+		Desc: "Runs V4l2 unit tests",
+		Contacts: []string{
+			"chromeos-gfx-video@google.com",
+			"bchoobineh@google.com",
+		},
+		BugComponent: "b:168352",
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Fixture:      "graphicsNoChrome",
+	})
+}
+
+// V4L2Unittest runs a set of tests which compares MiniGBM allocated
+// buffers and decode device allocated buffers.
+func V4L2Unittest(ctx context.Context, s *testing.State) {
+	const exec = "v4l2_unittest"
+	if report, err := gtest.New(
+		filepath.Join(chrome.BinTestDir, exec),
+	).Run(ctx); err != nil {
+		s.Errorf("Failed to run %v: %v", exec, err)
+		if report != nil {
+			for _, name := range report.FailedTestNames() {
+				s.Error(name, " failed")
+			}
+		} else {
+			s.Error("No additional information is available for this failure")
+		}
+	}
+}
