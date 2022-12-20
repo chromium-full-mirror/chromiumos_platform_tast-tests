@@ -35,6 +35,8 @@ func init() {
 func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 	// CRYPTOHOME_ERROR_UNUSABLE_VAULT is returned by cryptohome UserDataAuth proto binding.
 	const CryptohomeUnusableVaultErrorNumber = 53
+	// CRYPTOHOME_ERROR_MOUNT_MOUNT_POINT_BUSY is returned by cryptohome UserDataAuth proto binding.
+	const CryptohomeErrorMountPointBusyErrorNumber = 6
 
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 
@@ -125,7 +127,7 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 		s.Fatal("Mount was expected to fail but succeeded")
 	}
 	var exitErr *hwsec.CmdExitError
-	if !errors.As(err, &exitErr) || exitErr.ExitCode != CryptohomeUnusableVaultErrorNumber {
-		s.Fatalf("Unexpected mount error: got %q; want exit status %d (CRYPTOHOME_ERROR_UNUSABLE_VAULT)", err, CryptohomeUnusableVaultErrorNumber)
+	if !errors.As(err, &exitErr) || (exitErr.ExitCode != CryptohomeUnusableVaultErrorNumber && exitErr.ExitCode != CryptohomeErrorMountPointBusyErrorNumber) {
+		s.Fatalf("Unexpected mount error: got %q; want exit status of either %d (CRYPTOHOME_ERROR_UNUSABLE_VAULT) or %d CRYPTOHOME_ERROR_MOUNT_MOUNT_POINT_BUSY", err, CryptohomeUnusableVaultErrorNumber, CryptohomeErrorMountPointBusyErrorNumber)
 	}
 }
