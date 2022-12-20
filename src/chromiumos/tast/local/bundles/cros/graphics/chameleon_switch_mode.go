@@ -44,97 +44,97 @@ func init() {
 		VarDeps:      []string{"graphics.chameleon_ip"},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
-			Name: "extended_port0",
+			Name: "extended_dp1",
 			Val: graphics.ChameleonTest{
-				Port:       0,
+				Port:       "dp1",
 				Iterations: 1,
 				Display:    graphics.UIExtended,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "extended_port1",
+			Name: "extended_dp2",
 			Val: graphics.ChameleonTest{
-				Port:       1,
+				Port:       "dp2",
 				Iterations: 1,
 				Display:    graphics.UIExtended,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "extended_port2",
+			Name: "extended_hdmi1",
 			Val: graphics.ChameleonTest{
-				Port:       2,
+				Port:       "hdmi1",
 				Iterations: 1,
 				Display:    graphics.UIExtended,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "extended_port3",
+			Name: "extended_hdmi2",
 			Val: graphics.ChameleonTest{
-				Port:       3,
+				Port:       "hdmi2",
 				Iterations: 1,
 				Display:    graphics.UIExtended,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port0",
+			Name: "mirror_dp1",
 			Val: graphics.ChameleonTest{
-				Port:       0,
+				Port:       "dp1",
 				Iterations: 1,
 				Display:    graphics.UIMirror,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port1",
+			Name: "mirror_dp2",
 			Val: graphics.ChameleonTest{
-				Port:       1,
+				Port:       "dp2",
 				Iterations: 1,
 				Display:    graphics.UIMirror,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port2",
+			Name: "mirror_hdmi1",
 			Val: graphics.ChameleonTest{
-				Port:       2,
+				Port:       "hdmi1",
 				Iterations: 1,
 				Display:    graphics.UIMirror,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port3",
+			Name: "mirror_hdmi2",
 			Val: graphics.ChameleonTest{
-				Port:       3,
+				Port:       "hdmi2",
 				Iterations: 1,
 				Display:    graphics.UIMirror,
 			},
 			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "stress_port0",
+			Name: "stress_dp1",
 			Val: graphics.ChameleonTest{
-				Port:       0,
+				Port:       "dp1",
 				Iterations: 3,
 				Display:    graphics.AlternateExtendedMirror,
 			},
 			Timeout: chrome.LoginTimeout + 5*time.Minute,
 		}, {
-			Name: "stress_port1",
+			Name: "stress_dp2",
 			Val: graphics.ChameleonTest{
-				Port:       1,
+				Port:       "dp2",
 				Iterations: 3,
 				Display:    graphics.AlternateExtendedMirror,
 			},
 			Timeout: chrome.LoginTimeout + 5*time.Minute,
 		}, {
-			Name: "stress_port2",
+			Name: "stress_hdmi1",
 			Val: graphics.ChameleonTest{
-				Port:       2,
+				Port:       "hdmi1",
 				Iterations: 3,
 				Display:    graphics.AlternateExtendedMirror,
 			},
 			Timeout: chrome.LoginTimeout + 5*time.Minute,
 		}, {
-			Name: "stress_port3",
+			Name: "stress_hdmi2",
 			Val: graphics.ChameleonTest{
-				Port:       3,
+				Port:       "hdmi2",
 				Iterations: 3,
 				Display:    graphics.AlternateExtendedMirror,
 			},
@@ -145,7 +145,7 @@ func init() {
 
 func ChameleonSwitchMode(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.ChameleonTest)
-	port := testOpt.Port
+	portStr := testOpt.Port
 	pixelDiffThreshold := 5000
 
 	cham, err := graphics.ChameleonGetConnection(ctx)
@@ -153,10 +153,9 @@ func ChameleonSwitchMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
 
-	// TODO(b:260352485): Avoid hardcoding the port ids as they may change.
-	shouldUsePort, err := graphics.ChameleonShouldUsePort(ctx, cham, port)
+	shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
 	if err != nil {
-		s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
+		s.Fatalf("Failed to determine if plug can be used for port %s: %s", portStr, err)
 	}
 	if !shouldUsePort {
 		s.Logf("Chameleon is not plugged into port %d", port)
@@ -266,7 +265,7 @@ func testMirrorModeMatch(ctx context.Context, cr *chrome.Chrome, cham chameleon.
 	curDisplayPath := filepath.Join(outDir, mirrorDisplayPath+strconv.Itoa(idx)+".png")
 	curChamPath := filepath.Join(outDir, mirrorChamPath+strconv.Itoa(idx)+".png")
 
-	// TODO(b:261600622): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
+	// TODO(b:263163784): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
 	err = screenshot.CaptureChrome(ctx, cr, curDisplayPath)
 	if err != nil {
 		return false, errors.Errorf("failed to screenshot eDP: %s", err)
@@ -295,7 +294,7 @@ func testExtendedModeMatch(ctx context.Context, cr *chrome.Chrome, cham chameleo
 	curDisplayPath := filepath.Join(outDir, extendedDisplayPath+strconv.Itoa(idx)+".png")
 	curChamPath := filepath.Join(outDir, extendedChamPath+strconv.Itoa(idx)+".png")
 
-	// TODO(b:261600622): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
+	// TODO(b:263163784): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
 	err = screenshot.CaptureChrome(ctx, cr, curDisplayPath)
 	if err != nil {
 		return false, errors.Errorf("failed to screenshot eDP: %s", err)

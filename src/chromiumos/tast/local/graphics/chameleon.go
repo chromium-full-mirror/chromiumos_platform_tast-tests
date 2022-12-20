@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/chameleon"
@@ -44,6 +45,8 @@ var (
 		"graphics.chameleon_port",
 		"9992",
 		"Port for chameleond on Chameleon (optional/used)")
+
+	stableVideoTimeout = 30.0
 )
 
 // DisplayMode is an enum used to describe Chrome's display modes.
@@ -62,9 +65,9 @@ const (
 
 // ChameleonTest is used to describe the config used to run each test.
 type ChameleonTest struct {
-	Port       chameleon.PortID // The port number
-	Iterations int              // Number of iterations for stress tests
-	Display    DisplayMode      // The initial display mode
+	Port       string      // The port name
+	Iterations int         // Number of iterations for stress tests
+	Display    DisplayMode // The initial display mode
 }
 
 // RGB is an in-memory image whose At method returns color.RGBA values.
@@ -187,9 +190,12 @@ func ChameleonPlug(ctx context.Context, cham chameleon.Chameleond, port chameleo
 		return errors.Errorf("failed to plug in a physically plugged port %d: %s", port, err)
 	}
 
-	isVideoStable, err := cham.WaitVideoInputStable(ctx, port, 10)
-	if err != nil || !isVideoStable {
-		return errors.Errorf("video not stable after 10 seconds: %s", err)
+	isVideoStable, err := cham.WaitVideoInputStable(ctx, port, stableVideoTimeout)
+	if err != nil {
+		return errors.Errorf("failed to wait for stable video input: %s", err)
+	}
+	if !isVideoStable {
+		return errors.Errorf("video not stable after %.2f seconds", stableVideoTimeout)
 	}
 
 	return nil
@@ -224,31 +230,56 @@ func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 }
 
 // ChameleonShouldUsePort determines whether a port is physically plugged for usage.
-func ChameleonShouldUsePort(ctx context.Context, cham chameleon.Chameleond, port chameleon.PortID) (bool, error) {
-	err := cham.Plug(ctx, port)
+func ChameleonShouldUsePort(ctx context.Context, cham chameleon.Chameleond, portStr string) (bool, chameleon.PortID, error) {
+	var port chameleon.PortID
+	splitIdx := strings.IndexAny(portStr, "0123456789")
+	portType := portStr[:splitIdx]
+	portIdx, err := strconv.Atoi(portStr[splitIdx:])
 	if err != nil {
-		return false, errors.Errorf("failed to plug the port %d : %s", port, err)
+		return false, port, err
 	}
+	portIdx--
+
+	portMap, err := cham.FetchSupportedPortIDsByType(ctx)
+	if err != nil {
+		return false, port, errors.Errorf("failed to fetch supported ports by type: %s", err)
+	}
+
+	if portType == "dp" && len(portMap[chameleon.PortTypeDP]) > portIdx {
+		port = portMap[chameleon.PortTypeDP][portIdx]
+	} else if portType == "hdmi" && len(portMap[chameleon.PortTypeHDMI]) > portIdx {
+		port = portMap[chameleon.PortTypeHDMI][portIdx]
+	} else {
+		return false, port, errors.Errorf("there is no support for DP or HDMI: %s", err)
+	}
+
+	err = cham.Plug(ctx, port)
+	if err != nil {
+		return false, port, errors.Errorf("failed to plug the port %d : %s", port, err)
+	}
+	defer func(ctx context.Context) {
+		cham.Unplug(ctx, port)
+	}(ctx)
 
 	isPhysPlug, err := cham.IsPhysicalPlugged(ctx, port)
 	if err != nil {
-		return false, errors.Errorf("failed to check if port %d is physically plugged: %s", port, err)
-	}
-
-	err = cham.Unplug(ctx, port)
-	if err != nil {
-		return false, errors.Errorf("failed to unplug the port %d : %s", port, err)
+		return false, port, errors.Errorf("failed to check if port %d is physically plugged: %s", port, err)
 	}
 
 	hasVideoSupport, err := cham.HasVideoSupport(ctx, port)
 	if err != nil {
-		return false, errors.Errorf("failed to check if port %d has video support: %s", port, err)
+		return false, port, errors.Errorf("failed to check if port %d has video support: %s", port, err)
 	}
-	return isPhysPlug && hasVideoSupport, nil
+
+	err = cham.Unplug(ctx, port)
+	if err != nil {
+		return false, port, errors.Errorf("failed to unplug the port %d : %s", port, err)
+	}
+	return isPhysPlug && hasVideoSupport, port, nil
 }
 
 // ChameleonResizePng resizes a png to the proper format for ChameleonPerceptualDiff
-// TODO(b/261513203): update perceptualdiff and use the --scale option instead of resizing.
+// TODO(b:263161774): update perceptualdiff and use the --scale option instead of resizing.
 func ChameleonResizePng(ctx context.Context, src, dst string, width, height int) error {
 	imageSize := fmt.Sprintf("%dx%d!", width, height)
 	cmd := testexec.CommandContext(ctx, "convert", "-channel", "RGB", "-colorspace", "RGB", "-depth", "8", "-resize", imageSize, src, dst)

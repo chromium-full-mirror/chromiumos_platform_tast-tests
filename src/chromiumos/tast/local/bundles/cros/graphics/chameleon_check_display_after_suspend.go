@@ -36,68 +36,61 @@ func init() {
 		VarDeps:      []string{"graphics.chameleon_ip"},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
-			Name: "extended_port0",
+			Name: "extended_dp1",
 			Val: graphics.ChameleonTest{
-				Port:    0,
+				Port:    "dp1",
 				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "extended_port1",
+			Name: "extended_dp2",
 			Val: graphics.ChameleonTest{
-				Port:    1,
+				Port:    "dp2",
 				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "extended_port2",
+			Name: "extended_hdmi1",
 			Val: graphics.ChameleonTest{
-				Port:    2,
+				Port:    "hdmi1",
 				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "extended_port3",
+			Name: "extended_hdmi2",
 			Val: graphics.ChameleonTest{
-				Port:    3,
+				Port:    "hdmi2",
 				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port0",
+			Name: "mirror_dp1",
 			Val: graphics.ChameleonTest{
-				Port:    0,
+				Port:    "dp1",
 				Display: graphics.UIMirror,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port1",
+			Name: "mirror_dp2",
 			Val: graphics.ChameleonTest{
-				Port:    1,
+				Port:    "dp2",
 				Display: graphics.UIMirror,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port2",
+			Name: "mirror_hdmi1",
 			Val: graphics.ChameleonTest{
-				Port:    2,
+				Port:    "hdmi1",
 				Display: graphics.UIMirror,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "mirror_port3",
+			Name: "mirror_hdmi2",
 			Val: graphics.ChameleonTest{
-				Port:    3,
+				Port:    "hdmi2",
 				Display: graphics.UIMirror,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}},
+		Timeout: chrome.LoginTimeout + time.Minute,
 	})
 }
 
 func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.ChameleonTest)
-	port := testOpt.Port
+	portStr := testOpt.Port
 	pixelDiffThreshold := 5000
 
 	cham, err := graphics.ChameleonGetConnection(ctx)
@@ -105,10 +98,9 @@ func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
 
-	// TODO(b:260352485): Avoid hardcoding the port ids as they may change.
-	shouldUsePort, err := graphics.ChameleonShouldUsePort(ctx, cham, port)
+	shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
 	if err != nil {
-		s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
+		s.Fatalf("Failed to determine if plug can be used for port %s: %s", portStr, err)
 	}
 	if !shouldUsePort {
 		s.Logf("Chameleon is not plugged into port %d", port)
@@ -164,7 +156,7 @@ func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 
 	preSuspendDisplayPath := filepath.Join(s.OutDir(), "preSuspendDisplay.png")
 	preSuspendChamPath := filepath.Join(s.OutDir(), "preSuspendCham.png")
-	// TODO(b:261600622): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
+	// TODO(b:263163784): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
 	err = screenshot.CaptureChrome(ctx, cr, preSuspendDisplayPath)
 	if err != nil {
 		s.Fatal("Failed to screenshot eDP: ", err)
@@ -201,7 +193,7 @@ func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 
 	postSuspendDisplayPath := filepath.Join(s.OutDir(), "postSuspendDisplay.png")
 	postSuspendChamPath := filepath.Join(s.OutDir(), "postSuspendCham.png")
-	// TODO(b:261600622): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
+	// TODO(b:263163784): Replace CaptureChrome and ChameleonGetScreenshot with screen-util-tools command.
 	err = screenshot.CaptureChrome(ctx, cr, postSuspendDisplayPath)
 	if err != nil {
 		s.Fatal("Failed to screenshot eDP: ", err)

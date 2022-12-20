@@ -53,25 +53,17 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		s.Fatal("outDir is not available")
-	}
-
-	// TODO(ihf|markyacoub): consider creating a fixture for each port so
-	// that all Chameleon tests can focus on testing the active ports only
+	// TODO(b:262981118, ihf|markyacoub): consider creating a fixture for each port
+	// so that all Chameleon tests can focus on testing the active ports only
 	// and ignore inactive ones.
 	cham, err := graphics.ChameleonGetConnection(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
-	supportedPorts, err := cham.GetSupportedPorts(ctx)
-	if err != nil {
-		s.Fatal("Failed to get supported ports: ", err)
-	}
 
-	for _, port := range supportedPorts {
-		shouldUsePort, err := graphics.ChameleonShouldUsePort(ctx, cham, port)
+	supportedPorts := [...]string{"dp1", "dp2", "hdmi1", "hdmi2"}
+	for _, portStr := range supportedPorts {
+		shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
 		if err != nil {
 			s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
 		}
@@ -82,14 +74,21 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 		if err = graphics.ChameleonPlug(ctx, cham, port); err != nil {
 			s.Fatalf("Failed to get stable video input from a physically plugged port %d: %s", port, err)
 		}
+		defer func(ctx context.Context) {
+			err = cham.Unplug(ctx, port)
+			if err != nil {
+				s.Fatalf("Failed to unplug a physically plugged port %d: %s ", port, err)
+			}
+		}(ctx)
 
-		// TODO(b:261600622): Replace ChameleonGetScreenshot with screen-util-tools command.
-		curChamPath := filepath.Join(outDir, "cham_"+strconv.Itoa(int(port))+".png")
+		// TODO(b:263163784): Replace ChameleonGetScreenshot with screen-util-tools command.
+		curChamPath := filepath.Join(s.OutDir(), "cham_"+strconv.Itoa(int(port))+".png")
 		if err = graphics.ChameleonGetScreenshot(ctx, cham, port, curChamPath); err != nil {
 			s.Errorf("Cannot get Chameleon screenshot on port %d: %s", port, err)
 		}
 
-		if err = cham.Unplug(ctx, port); err != nil {
+		err = cham.Unplug(ctx, port)
+		if err != nil {
 			s.Fatalf("Failed to unplug a physically plugged port %d: %s ", port, err)
 		}
 		validPorts++

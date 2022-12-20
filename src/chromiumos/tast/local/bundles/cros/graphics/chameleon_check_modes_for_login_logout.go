@@ -34,49 +34,73 @@ func init() {
 		VarDeps:      []string{"graphics.chameleon_ip"},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
-			Name: "port0",
+			Name: "extended_dp1",
 			Val: graphics.ChameleonTest{
-				Port: 0,
+				Port:    "dp1",
+				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "port1",
+			Name: "extended_dp2",
 			Val: graphics.ChameleonTest{
-				Port: 1,
+				Port:    "dp2",
+				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "port2",
+			Name: "extended_hdmi1",
 			Val: graphics.ChameleonTest{
-				Port: 2,
+				Port:    "hdmi1",
+				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
 		}, {
-			Name: "port3",
+			Name: "extended_hdmi2",
 			Val: graphics.ChameleonTest{
-				Port: 3,
+				Port:    "hdmi2",
+				Display: graphics.UIExtended,
 			},
-			Timeout: chrome.LoginTimeout + time.Minute,
+		}, {
+			Name: "mirror_dp1",
+			Val: graphics.ChameleonTest{
+				Port:    "dp1",
+				Display: graphics.UIMirror,
+			},
+		}, {
+			Name: "mirror_dp2",
+			Val: graphics.ChameleonTest{
+				Port:    "dp2",
+				Display: graphics.UIMirror,
+			},
+		}, {
+			Name: "mirror_hdmi1",
+			Val: graphics.ChameleonTest{
+				Port:    "hdmi1",
+				Display: graphics.UIMirror,
+			},
+		}, {
+			Name: "mirror_hdmi2",
+			Val: graphics.ChameleonTest{
+				Port:    "hdmi2",
+				Display: graphics.UIMirror,
+			},
 		}},
+		Timeout: chrome.LoginTimeout + time.Minute,
 	})
 }
 
 func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.ChameleonTest)
-	port := testOpt.Port
+	portStr := testOpt.Port
 
 	cham, err := graphics.ChameleonGetConnection(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
 
-	// TODO(b:260352485): Avoid hardcoding the port ids as they may change.
-	shouldUsePort, err := graphics.ChameleonShouldUsePort(ctx, cham, port)
+	shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
 	if err != nil {
-		s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
+		s.Fatalf("Failed to determine if plug can be used for port %s: %s", portStr, err)
 	}
 	if !shouldUsePort {
-		s.Logf("Chameleon is not plugged into port %d", port)
+		s.Logf("Chameleon is not plugged into port %s", portStr)
 		return
 	}
 
@@ -123,9 +147,18 @@ func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get test API connection: ", err)
 	}
 
-	err = graphics.SwitchDisplayMode(ctx, cr, false)
+	// Sets Display Mode
+	var isMirrorMode bool
+	if testOpt.Display == graphics.UIMirror {
+		isMirrorMode = true
+	} else if testOpt.Display == graphics.UIExtended {
+		isMirrorMode = false
+	} else {
+		s.Fatal("Failed to set either mirror or extended mode")
+	}
+	err = graphics.SwitchDisplayMode(ctx, cr, isMirrorMode)
 	if err != nil {
-		s.Fatal("Failed to switch to extended mode: ", err)
+		s.Fatal("Failed to switch modes: ", err)
 	}
 
 	postLoginWidth, postLoginHeight, err := cham.DetectResolution(ctx, port)
