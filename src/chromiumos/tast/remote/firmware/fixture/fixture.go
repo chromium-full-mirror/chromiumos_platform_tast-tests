@@ -264,6 +264,15 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 	}
 
+	// Make sure the lid is open
+	if ok, err := i.value.Helper.Servo.HasControl(ctx, string(servo.LidOpen)); err != nil {
+		s.Fatalf("Failed to check control %s: %v", servo.LidOpen, err)
+	} else if ok {
+		if err := i.value.Helper.Servo.SetString(ctx, servo.LidOpen, string(servo.LidOpenYes)); err != nil {
+			s.Fatal("Failed to open lid: ", err)
+		}
+	}
+
 	if i.disallowSSH {
 		return
 	}
