@@ -43,6 +43,46 @@ func isGAIASignInURL(u string) bool {
 		strings.HasPrefix(u, sandboxGAIASignInURLPrefix)
 }
 
+// connectToSingleGAIAWebview polls until it finds a matching WebView target with the specified
+// TargetMatcher function, creates a connection to it and finds the username field, or until timeout.
+// Returns the last polled error. An error is returned if the TargetMatcher finds more or less than one
+// targets, if it fails to connect to the found webview or if the username field can't be found.
+func connectToSingleGAIAWebview(ctx context.Context, sess *driver.Session, targetMatcher cdputil.TargetMatcher, timeout time.Duration) (*driver.Conn, error) {
+	po := &testing.PollOptions{Timeout: timeout}
+	var conn *driver.Conn
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		var target *driver.Target
+
+		if targets, err := sess.FindTargets(ctx, targetMatcher); err != nil {
+			return err
+		} else if len(targets) != 1 {
+			return errors.Errorf("got %d GAIA targets; want 1", len(targets))
+		} else {
+			target = targets[0]
+		}
+
+		conn, err = sess.NewConnForTarget(ctx, driver.MatchTargetID(target.TargetID))
+		if err != nil {
+			return errors.Wrap(sess.Watcher().ReplaceErr(err), "failed to connect to target")
+		}
+
+		// Try to find the username field using the new connection, close the connection in case of a failure.
+		noUsername := true
+		if err = conn.Eval(ctx, "document.querySelector('#identifierId') == null", &noUsername); err != nil || noUsername {
+			conn.Close()
+			return errors.Wrap(err, "failed to wait for GAIA title")
+		}
+
+		return nil
+	}, po); err != nil {
+		return nil, errors.Wrap(sess.Watcher().ReplaceErr(err),
+			"failed to connect to single GAIA webview")
+	}
+
+	return conn, nil
+}
+
 // waitForSingleGAIAWebView waits until it finds a matching WebView target with
 // the specified TargetMatcher function, or until timeout. Returns an error if
 // the TargetMatcher finds more than one target matching the requirements.
@@ -79,7 +119,7 @@ func MatchSignInGAIAWebView(ctx context.Context, sess *driver.Session) cdputil.T
 			return false
 		}
 
-		gaiaConn, err := sess.NewConnForTarget(ctx, driver.MatchTargetID(t.TargetID))
+		gaiaConn, err := sess.TryNewConnForTarget(ctx, driver.MatchTargetID(t.TargetID))
 		if err != nil {
 			return false
 		}
@@ -148,12 +188,7 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		}
 	}
 
-	target, err := waitForSingleGAIAWebView(ctx, sess, MatchSignInGAIAWebView(ctx, sess), pollOpts.Timeout)
-	if err != nil {
-		return errors.Wrap(sess.Watcher().ReplaceErr(err), "failed to find GAIA webview")
-	}
-
-	gaiaConn, err := sess.NewConnForTarget(ctx, driver.MatchTargetID(target.TargetID))
+	gaiaConn, err := connectToSingleGAIAWebview(ctx, sess, MatchSignInGAIAWebView(ctx, sess), pollOpts.Timeout)
 	if err != nil {
 		return errors.Wrap(sess.Watcher().ReplaceErr(err), "failed to connect to GAIA webview")
 	}

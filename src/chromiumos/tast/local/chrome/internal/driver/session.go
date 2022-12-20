@@ -181,6 +181,22 @@ func (s *Session) NewConnForTarget(ctx context.Context, tm TargetMatcher) (*Conn
 	return s.newConnInternal(ctx, t.TargetID, t.URL)
 }
 
+// TryNewConnForTarget tries to connect to the matched target without waiting. It iterates through all
+// available targets and returns a connection to the first one that is matched by tm.
+// An error is returned if no target is found, tm matches multiple targets, or the connection cannot
+// be established.
+func (s *Session) TryNewConnForTarget(ctx context.Context, tm TargetMatcher) (*Conn, error) {
+	matched, err := s.devsess.FindTargets(ctx, tm)
+	if err != nil {
+		return nil, s.watcher.ReplaceErr(err)
+	}
+	if len(matched) != 1 {
+		return nil, errors.Errorf("unexpected numbers of targets: got %v, want 1", len(matched))
+	}
+
+	return s.newConnInternal(ctx, matched[0].TargetID, matched[0].URL)
+}
+
 // FindTargets returns the info about Targets, which satisfies the given cond condition.
 func (s *Session) FindTargets(ctx context.Context, tm TargetMatcher) ([]*Target, error) {
 	return s.devsess.FindTargets(ctx, tm)
