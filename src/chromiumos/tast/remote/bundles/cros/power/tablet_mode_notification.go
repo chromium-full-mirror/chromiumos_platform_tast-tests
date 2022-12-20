@@ -30,7 +30,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Vars:         []string{"servo"},
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Chromeslate, hwdep.Detachable)),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
 	})
 }
 
