@@ -11,6 +11,10 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -18,6 +22,7 @@ import (
 	"github.com/mafredri/cdp/protocol/target"
 
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
@@ -44,6 +49,10 @@ const (
 
 	replayPageLoadingTimeout    = 2 * time.Minute
 	recordingPageLoadingTimeout = 5 * time.Minute
+
+	// LocalWebZIPFile is the name of the ZIP file used to construct the local web pages.
+	LocalWebZIPFile = "TabSwitchLocalWeb.zip"
+	localWebFolder  = "TabSwitchLocalWeb"
 )
 
 // pageLoadingTimeout returns the timeout value when waiting for a page being loaded.
@@ -230,7 +239,7 @@ func (tab *chromeTab) close(ctx context.Context) error {
 //
 // It has been observed that tabs can be discarded when DUT runs low on memory, causing unexpected behaviors
 // and ultimately test failures. For details, please refer to b/184571798.
-func (tab *chromeTab) reconnect(ctx context.Context, cr *chrome.Chrome) error {
+func (tab *chromeTab) reconnect(ctx context.Context, br *browser.Browser) error {
 	var url string
 	// Verify if the tab connection is still usable.
 	err := tab.conn.Eval(ctx, "window.location.href", &url)
@@ -246,7 +255,7 @@ func (tab *chromeTab) reconnect(ctx context.Context, cr *chrome.Chrome) error {
 		return t.Type == "page" && actualURL == expectedURL
 	}
 
-	if tab.conn, err = cr.NewConnForTarget(ctx, matcher); err != nil {
+	if tab.conn, err = br.NewConnForTarget(ctx, matcher); err != nil {
 		return errors.Wrapf(err, "failed to reconnect to target %q", tab.url)
 	}
 
@@ -267,16 +276,11 @@ type chromeWindow struct {
 }
 
 // generateTabSwitchTargets sets all web targets according to the input tier.
-func generateTabSwitchTargets(tier cuj.Tier, webSource string) ([]*chromeWindow, error) {
-	winNum := 1
-	tabNum := 0
-	switch tier {
-	case cuj.Essential:
-		winNum = 2
-		tabNum = 5
-	case cuj.Advanced:
-		winNum = 4
-		tabNum = 9
+func generateTabSwitchTargets(tier cuj.Tier, webSource webSourceType) ([]*chromeWindow, error) {
+	winNum, ok1 := windowNumberMap[tier]
+	tabNum, ok2 := tabNumberMap[tier]
+	if !ok1 || !ok2 {
+		return nil, errors.Errorf("unacceptable tier: %v", tier)
 	}
 
 	var targets []tabTarget
@@ -342,13 +346,33 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 	defer cleanupSetting(cleanupSettingsCtx)
 
 	// The default web source is the external websites.
-	webSource := "external"
+	webSource := externalWebSource
 	if ws, ok := s.Var("spera.web_source"); ok {
-		ws = strings.ToLower(ws)
+		ws := webSourceType(strings.ToLower(ws))
 		if _, ok := tabTargetsMap[ws]; ok {
 			webSource = ws
 		} else {
-			s.Fatal("Unknown web source: ", webSource)
+			s.Fatal("Unknown web source: ", ws)
+		}
+	}
+	if webSource == localWebSource {
+		tabSwitchDirPath := path.Join(os.TempDir(), "spera.tabswitch")
+		if err := os.MkdirAll(tabSwitchDirPath, 0755); err != nil {
+			s.Fatal("Failed to create tab switch directory: ", err)
+		}
+		defer os.RemoveAll(tabSwitchDirPath)
+
+		if err := testexec.CommandContext(ctx, "unzip", "-o", s.DataPath(LocalWebZIPFile), "-d", tabSwitchDirPath).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to unzip local web source file to tab switch directory: ", err)
+		}
+
+		localWebDirPath := path.Join(tabSwitchDirPath, localWebFolder)
+		localWebDir := http.Dir(localWebDirPath)
+		localServer := httptest.NewTLSServer(http.FileServer(localWebDir))
+		defer localServer.Close()
+
+		if err := generateLocalWebsitesTargets(ctx, localWebDirPath, localServer.URL, tier); err != nil {
+			s.Fatal("Failed to generate local web sites: ", err)
 		}
 	}
 	windows, err := generateTabSwitchTargets(tier, webSource)
@@ -435,7 +459,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 			}
 		}(cleanupCtx)
 
-		if err := tabSwitchAction(ctx, cr, tconn, &windows, tsAction, isRecordMode); err != nil {
+		if err := tabSwitchAction(ctx, br, tconn, &windows, tsAction, isRecordMode); err != nil {
 			return errors.Wrap(err, "failed to execute tab switch action")
 		}
 		if err := cuj.GenerateADF(ctx, tconn, isTablet); err != nil {
@@ -503,7 +527,7 @@ func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]
 	return nil
 }
 
-func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, isRecordMode bool) error {
+func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, isRecordMode bool) error {
 	windows := (*targets)
 	scrollActions := tsAction.ScrollChromePage(ctx)
 	plTimeout := pageLoadingTimeout(isRecordMode)
@@ -544,14 +568,14 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 			// discarded tabs due to OOM issue.
 			// After tab switching, the current focused tab should be active again so
 			// reconnect should succeed.
-			if err := tab.reconnect(ctx, cr); err != nil {
+			if err := tab.reconnect(ctx, br); err != nil {
 				return errors.Wrap(err, "cdp connection is invalid and failed to reconnect")
 			}
 
 			timeStart := time.Now()
 			if err := webutil.WaitForRender(ctx, tab.conn, tabSwitchTimeout); err != nil {
 				testing.ContextLog(ctx, "WaitForRender failed. Reconnect and retry")
-				if err := tab.reconnect(ctx, cr); err != nil {
+				if err := tab.reconnect(ctx, br); err != nil {
 					return errors.Wrap(err, "failed to reconnect cdp connection")
 				}
 				if err := webutil.WaitForRender(ctx, tab.conn, tabSwitchTimeout); err != nil {
@@ -575,9 +599,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 				return errors.Wrap(err, "failed update the URL of tab")
 			}
 
-			// To reduce total execution time of this test case,
-			// these specific websites has been chosen to do scroll actions as per requirement.
-			if tab.pageInfo.webName == googleWorkspace || tab.pageInfo.webName == googleHelp || tab.pageInfo.webName == googleStore {
+			if tabIdx%3 == 0 || isRecordMode {
 				for _, act := range scrollActions {
 					if err := act(ctx); err != nil {
 						return errors.Wrap(err, "failed to execute action")
@@ -601,7 +623,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 					return errors.Wrap(err, "failed to click anchor")
 				}
 				if isRecordMode {
-					// Ensure contents are renderred in recording mode.
+					// Ensure contents are rendered in recording mode.
 					if err := webutil.WaitForRender(ctx, tab.conn, plTimeout); err != nil {
 						return errors.Wrap(err, "failed to wait for render to finish")
 					}

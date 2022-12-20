@@ -31,16 +31,17 @@ func init() {
 		Desc:         "Measures the performance of tab-switching, scrolling content with trackpad",
 		Contacts:     []string{"abergman@google.com", "tclaiborne@chromium.org", "xliu@cienet.com", "alfredyu@cienet.com"},
 		SoftwareDeps: []string{"chrome"},
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Vars: []string{
 			"spera.cuj_mute",
 			"spera.cuj_mode",     // Expecting "tablet" or "clamshell".
 			"spera.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".
-			"spera.web_source",   // Optional. Expecting "google" or "external", default is "external".
+			"spera.web_source",   // Optional. Expecting "google", "external" or "local", default is "external".
 			// WPR addresses are only required when running with WPR Proxy.
 			"ui.wpr_http_addr",
 			"ui.wpr_https_addr",
 		},
-		Data: []string{cujrecorder.SystemTraceConfigFile},
+		Data: []string{cujrecorder.SystemTraceConfigFile, tabswitch.LocalWebZIPFile},
 		Params: []testing.Param{
 			{
 				Name:    "essential",

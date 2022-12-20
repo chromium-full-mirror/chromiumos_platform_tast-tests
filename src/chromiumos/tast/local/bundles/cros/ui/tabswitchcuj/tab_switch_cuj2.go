@@ -317,7 +317,7 @@ var allTargets = []struct {
 	{cuj.WikipediaCommunityURL, newPageInfo(cuj.Plus, wikipedia, `/Wikipedia:Community_portal`, `/Special:RecentChanges`)},
 	{cuj.WikipediaContributionURL, newPageInfo(cuj.Premium, wikipedia, `/Help:User_contributions`, `/Wikipedia`)},
 
-	{cuj.RedditWallstreetURL, newPageInfo(cuj.Basic, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
+	{cuj.RedditWallStreetURL, newPageInfo(cuj.Basic, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
 	{cuj.RedditTechNewsURL, newPageInfo(cuj.Basic, reddit, `/r/technews/hot/`, `/r/technews/new/`)},
 	{cuj.RedditOlympicsURL, newPageInfo(cuj.Basic, reddit, `/r/olympics/hot/`, `/r/olympics/new/`)},
 	{cuj.RedditProgrammingURL, newPageInfo(cuj.Plus, reddit, `/r/programming/hot/`, `/r/programming/new/`)},
@@ -335,7 +335,7 @@ var allTargets = []struct {
 	{cuj.YahooUsURL, newPageInfo(cuj.Basic, yahooNews, `/us/`, `/politics/`, `/world/`)},
 	{cuj.YahooWorldURL, newPageInfo(cuj.Basic, yahooNews, `/world/`, `/coronavirus/`, `/health/`)},
 	{cuj.YahooScienceURL, newPageInfo(cuj.Plus, yahooNews, `/science/`, `/originals/`, `/us/`)},
-	{cuj.YahooFinanaceWatchlistURL, newPageInfo(cuj.Premium, yahooFinance, `/watchlists/`, `/news/`)},
+	{cuj.YahooFinanceWatchListURL, newPageInfo(cuj.Premium, yahooFinance, `/watchlists/`, `/news/`)},
 
 	{cuj.CnnWorldURL, newPageInfo(cuj.Plus, cnn, `/world`, `/africa`)},
 	{cuj.CnnAmericasURL, newPageInfo(cuj.Plus, cnn, `/americas`, `/asia`)},

@@ -55,8 +55,8 @@ const (
 	RedditProgrammingURL = "https://www.reddit.com/r/programming"
 	// RedditTechNewsURL specifies the URL for Reddit's tech news.
 	RedditTechNewsURL = "https://www.reddit.com/r/technews"
-	// RedditWallstreetURL specifies the URL for Reddit's Wallstreetbets page.
-	RedditWallstreetURL = "https://www.reddit.com/r/wallstreetbets"
+	// RedditWallStreetURL specifies the URL for Reddit's WallStreetBets page.
+	RedditWallStreetURL = "https://www.reddit.com/r/wallstreetbets"
 	// WikipediaAboutURL specifies the URL for Wikipedia's about page.
 	WikipediaAboutURL = "https://en.wikipedia.org/wiki/Wikipedia:About"
 	// WikipediaCommunityURL specifies the URL for Wikipedia's community page.
@@ -71,8 +71,8 @@ const (
 	WikipediaContributionURL = "https://en.wikipedia.org/wiki/Help:User_contributions"
 	// YahooScienceURL specifies the URL for Yahoo's science page.
 	YahooScienceURL = "https://news.yahoo.com/science/"
-	// YahooFinanaceWatchlistURL specifies the URL for Yahoo's finance page.
-	YahooFinanaceWatchlistURL = "https://finance.yahoo.com/watchlists/"
+	// YahooFinanceWatchListURL specifies the URL for Yahoo's finance page.
+	YahooFinanceWatchListURL = "https://finance.yahoo.com/watchlists/"
 	// YahooUsURL specifies the URL for Yahoo's US page.
 	YahooUsURL = "https://news.yahoo.com/us/"
 	// YahooWorldURL specifies the URL for Yahoo's world page.
