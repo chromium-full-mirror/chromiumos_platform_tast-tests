@@ -73,7 +73,6 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
-		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      5 * time.Minute,
@@ -83,11 +82,14 @@ func init() {
 			Val:  generalLaunchGwTests,
 			// Temporarily restrict it only for ARC R, not T or above version.
 			ExtraSoftwareDeps: []string{"android_vm_r"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 		}, {
+			// Not in mainline since optin is flaky. b/243451887
 			Name:              "fullrestore",
 			Val:               fullrestoreGwTests,
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
+			// Not in mainline since optin is flaky. b/243451887
 			Name: "fullrestore_r",
 			Val:  fullrestoreGwTests,
 			// Temporarily restrict it only for ARC R, not T or above version.
@@ -102,6 +104,7 @@ func init() {
 				// as we cannot chown files over SSHFS.
 				"no_arcvm_virtio_blk_data",
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}},
 	})
 }
