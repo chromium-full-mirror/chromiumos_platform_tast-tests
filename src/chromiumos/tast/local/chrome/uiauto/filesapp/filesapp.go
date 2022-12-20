@@ -307,7 +307,7 @@ func (f *FilesApp) PasteFileFromClipboard(kb *input.KeyboardEventWriter) uiauto.
 func (f *FilesApp) ClickMoreMenuItem(menuItems ...string) uiauto.Action {
 	var steps []uiauto.Action
 	// Open More menu.
-	steps = append(steps, f.LeftClick(nodewith.Name("More…").Role(role.PopUpButton)))
+	steps = append(steps, f.LeftClick(nodewith.Name("More options").Role(role.PopUpButton)))
 	// Iterate over the menu items and click them.
 	for _, menuItem := range menuItems {
 		steps = append(steps, f.LeftClick(nodewith.Name(menuItem).Role(role.MenuItem)))
