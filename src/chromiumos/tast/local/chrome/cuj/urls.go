@@ -108,6 +108,8 @@ const (
 	GoogleNonprofitsProductHelpURL = "https://www.google.com/intl/en-US/nonprofits/resources/product-help"
 	// GoogleNonprofitsSuccessStoriesURL specifies the URL for Google Nonprofits' success stories page.
 	GoogleNonprofitsSuccessStoriesURL = "https://www.google.com/intl/en-US/nonprofits/success-stories"
+	// GoogleNonprofitsWorkspaceURL specifies the URL for Google Nonprofits' workspace page.
+	GoogleNonprofitsWorkspaceURL = "https://www.google.com/nonprofits/offerings/workspace/"
 	// GooglePlayAppsURL specifies the URL for Google Play's apps page.
 	GooglePlayAppsURL = "https://play.google.com/store/apps"
 	// GooglePlayBooksURL specifies the URL for Google Play's books page.

@@ -4,23 +4,40 @@
 
 package tabswitch
 
-import "chromiumos/tast/local/chrome/cuj"
+import (
+	"context"
+	"fmt"
+	"os"
+	"path"
+
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome/cuj"
+)
+
+type webSourceType string
+
+// These are the supported options for the variable "spera.web_source".
+// externalWebSource is the default option if the variable is not set.
+// localWebSource will generate local web pages when testing.
+const (
+	externalWebSource webSourceType = "external"
+	googleWebSource   webSourceType = "google"
+	localWebSource    webSourceType = "local"
+)
 
 // website defines all web site involved in this test case.
 type website string
 
 const (
 	// These are the website name of the Google related websites.
-	googleCloud      website = "Google Cloud"
 	googleFinance    website = "Google Finance"
 	googleHelp       website = "Google Help"
-	googleNews       website = "Google News"
 	googleNonprofits website = "Google Nonprofits"
 	googlePlay       website = "Google Play"
 	googlePolicy     website = "Google Policy"
 	googleStore      website = "Google Store"
 	googleWorkspace  website = "Google Workspace"
-	youtube          website = "Youtube"
 
 	// These are the website name of the external websites.
 	wikipedia    website = "Wikipedia"
@@ -33,6 +50,42 @@ const (
 	hulu         website = "Hulu"
 	pinterest    website = "Pinterest"
 	netflix      website = "Netflix"
+	youtube      website = "Youtube"
+
+	// These are the files' and folder's name of the local websites.
+	localWebsite website = "localWebsite"
+	// These files are stored in the LocalWebZIPFile and will be duplicated in the generateLocalWebsitesTargets function.
+	localGIF    = "TabSwitchLocalGIF"
+	localGraph  = "TabSwitchLocalGraph"
+	localScript = "TabSwitchLocalScript"
+	localVideo  = "TabSwitchLocalVideo"
+	// These HTML files will be generated in the generateLocalWebsitesTargets function.
+	localHyperlink = "TabSwitchLocalHyperLink"
+	localHTML      = "TabSwitchLocalWebsite"
+
+	// Generate multiple HTML elements of each kind: script (file), script (inline), image (static), and image (gif) for each local HTML file.
+	maxDuplicateElements    = 15
+	mediumDuplicateElements = 10
+	minDuplicateElements    = 5
+
+	// localText is an introduction extracted from the wikipedia "Chromebook" page. The text will be shown in the local web pages.
+	localText = `
+	<p>A <b>Chromebook</b> (sometimes stylized in lowercase as <b>chromebook</b>) is a laptop or tablet running the Linux-based ChromeOS as its operating system. Initially designed to heavily rely on web applications for tasks using the Google Chrome browser, Chromebooks have since expanded to be able to run Android and full-fledged Linux apps since 2017 and 2018, respectively. All supported apps can be installed and launched alongside each other.</p>
+	<p>Chromebooks can work offline; applications like Gmail, Google Calendar, Google Keep, and Google Drive synchronize data when reconnecting to the Internet. Google Play video content is available offline using the Google Play Movies &amp; TV extension with the Chrome browser.</p>
+	<p>The first Chromebooks shipped on June 15, 2011. Other form factors include Chromebox desktops, Chromebase, which places the computer in an all-in-one unit, an HDMI stick PC called a Chromebit, and Chromebook tablets.</p>
+	<p>In 2020, Chromebooks outsold Apple Macs for the first time by taking market share from laptops running Microsoft Windows. This rise is attributed to the platform's success in the education market.</p>
+	`
+)
+
+var (
+	windowNumberMap = map[cuj.Tier]int{
+		cuj.Essential: 2,
+		cuj.Advanced:  4,
+	}
+	tabNumberMap = map[cuj.Tier]int{
+		cuj.Essential: 5,
+		cuj.Advanced:  9,
+	}
 )
 
 // webPageInfo records a Chrome page's information, including the current browsing page
@@ -48,14 +101,14 @@ type webPageInfo struct {
 	contentPatterns []string
 }
 
-func newPageInfo(tier cuj.Tier, webname website, patterns ...string) *webPageInfo {
+func newPageInfo(tier cuj.Tier, webName website, patterns ...string) *webPageInfo {
 	if len(patterns) < 2 {
 		panic("Invalid configuration of webPageInfo")
 	}
 
 	return &webPageInfo{
 		tier:            tier,
-		webName:         webname,
+		webName:         webName,
 		contentPatterns: patterns,
 	}
 }
@@ -66,9 +119,12 @@ type tabTarget struct {
 	info *webPageInfo
 }
 
-var tabTargetsMap = map[string][]tabTarget{
-	"google":   googleWebsitesTargets,
-	"external": externalWebsitesTargets,
+// tabTargetsMap maps the web source type to the tab targets.
+var tabTargetsMap = map[webSourceType][]tabTarget{
+	googleWebSource:   googleWebsitesTargets,
+	externalWebSource: externalWebsitesTargets,
+	// Keep the key "localWebSource" in the map to help verify if the given web source is supported.
+	localWebSource: {},
 }
 
 // googleWebsitesTargets defines Google related websites as browse tab targets.
@@ -97,6 +153,7 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GoogleNonprofitsProductHelpURL, newPageInfo(cuj.Essential, googleNonprofits, `/resources/product-help`, `/resources/how-to-guide`)},
 	{cuj.GoogleNonprofitsEligibilityURL, newPageInfo(cuj.Advanced, googleNonprofits, `/eligibility`, `/offerings/youtube-nonprofit-program`, `/resources/faq`)},
 	{cuj.GoogleNonprofitsSuccessStoriesURL, newPageInfo(cuj.Advanced, googleNonprofits, `/success-stories`, `/resources/faq`)},
+	{cuj.GoogleNonprofitsWorkspaceURL, newPageInfo(cuj.Advanced, googleNonprofits, `/offerings/workspace/`, `/offerings/google-ad-grants`, `/resources/faq`)},
 
 	{cuj.GooglePlayBooksURL, newPageInfo(cuj.Advanced, googlePlay, `/books`, `/wishlist`, `/FAMILY`)},
 	{cuj.GooglePlayKidsURL, newPageInfo(cuj.Advanced, googlePlay, `/apps/category/FAMILY`, `/store/apps/category/FAMILY?age=AGE_RANGE1`, `/games`)},
@@ -114,8 +171,6 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GooglePolicyPrivacyURL, newPageInfo(cuj.Advanced, googlePolicy, `privacy`, `faq`, `technologies`)},
 	{cuj.GooglePolicyFAQURL, newPageInfo(cuj.Advanced, googlePolicy, `faq`, `technologies`, `terms`)},
 	{cuj.GooglePolicyTechnologiesURL, newPageInfo(cuj.Advanced, googlePolicy, `technologies`, `terms`, `faq`)},
-
-	{cuj.YoutubeURL, newPageInfo(cuj.Advanced, youtube, `/`, `/feed/library`, `/history`)},
 }
 
 // externalWebsitesTargets defines external websites as browse tab targets.
@@ -127,7 +182,7 @@ var externalWebsitesTargets = []tabTarget{
 	{cuj.WikipediaCommunityURL, newPageInfo(cuj.Advanced, wikipedia, `/Wikipedia:Community_portal`, `/Special:RecentChanges`)},
 	{cuj.WikipediaContributionURL, newPageInfo(cuj.Advanced, wikipedia, `/Help:User_contributions`, `/Wikipedia`)},
 
-	{cuj.RedditWallstreetURL, newPageInfo(cuj.Essential, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
+	{cuj.RedditWallStreetURL, newPageInfo(cuj.Essential, reddit, `/r/wallstreetbets/hot/`, `/r/wallstreetbets/new/`)},
 	{cuj.RedditTechNewsURL, newPageInfo(cuj.Essential, reddit, `/r/technews/hot/`, `/r/technews/new/`)},
 	{cuj.RedditOlympicsURL, newPageInfo(cuj.Essential, reddit, `/r/olympics/hot/`, `/r/olympics/new/`)},
 	{cuj.RedditProgrammingURL, newPageInfo(cuj.Advanced, reddit, `/r/programming/hot/`, `/r/programming/new/`)},
@@ -145,7 +200,7 @@ var externalWebsitesTargets = []tabTarget{
 	{cuj.YahooUsURL, newPageInfo(cuj.Essential, yahooNews, `/us/`, `/politics/`, `/world/`)},
 	{cuj.YahooWorldURL, newPageInfo(cuj.Essential, yahooNews, `/world/`, `/coronavirus/`, `/health/`)},
 	{cuj.YahooScienceURL, newPageInfo(cuj.Advanced, yahooNews, `/science/`, `/originals/`, `/us/`)},
-	{cuj.YahooFinanaceWatchlistURL, newPageInfo(cuj.Advanced, yahooFinance, `/watchlists/`, `/news/`)},
+	{cuj.YahooFinanceWatchListURL, newPageInfo(cuj.Advanced, yahooFinance, `/watchlists/`, `/news/`)},
 
 	{cuj.CnnWorldURL, newPageInfo(cuj.Advanced, cnn, `/world`, `/africa`)},
 	{cuj.CnnAmericasURL, newPageInfo(cuj.Advanced, cnn, `/americas`, `/asia`)},
@@ -166,5 +221,187 @@ var externalWebsitesTargets = []tabTarget{
 
 	{cuj.NetflixURL, newPageInfo(cuj.Advanced, netflix, `/en`, `/en/legal/termsofuse`)},
 
-	{cuj.YoutubeURL, newPageInfo(cuj.Advanced, youtube, `/`, `/feed/explore`)},
+	{cuj.YoutubeURL, newPageInfo(cuj.Advanced, youtube, `/`, `/feed/library`, `/history`)},
+}
+
+// generateLocalWebsitesTargets generates a list of local HTML files.
+func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string, tier cuj.Tier) error {
+	winNum, ok1 := windowNumberMap[tier]
+	tabNum, ok2 := tabNumberMap[tier]
+	if !ok1 || !ok2 {
+		return errors.Errorf("unacceptable tier: %v", tier)
+	}
+
+	hyperlink := fmt.Sprintf(`<a href="./%s.html">test</a>`, localHyperlink)
+
+	videoPath := path.Join(dirPath, localVideo+".mp4")
+	scriptPath := path.Join(dirPath, localScript+".js")
+	graphPath := path.Join(dirPath, localGraph+".jpg")
+	var gifPaths []string
+	for i := 0; i < maxDuplicateElements; i++ {
+		gifFileName := fmt.Sprintf("%s%d.gif", localGIF, i)
+		gifPath := path.Join(dirPath, gifFileName)
+		gifPaths = append(gifPaths, gifPath)
+	}
+	var localWebsitesTargets []tabTarget
+	for i := 0; i < winNum*tabNum+1; i++ {
+		targetVideoFileName := fmt.Sprintf("%s%d.mp4", localVideo, i)
+		targetVideoFilePath := path.Join(dirPath, targetVideoFileName)
+		if err := forceSymlink(ctx, videoPath, targetVideoFilePath); err != nil {
+			return errors.Wrapf(err, "failed to create symbolic link %s", targetVideoFileName)
+		}
+		video := fmt.Sprintf(`
+			<video id="v1" width="200" height="150" autoplay muted >
+				<source src="./%s" type="video/mp4">
+			</video>
+			`, targetVideoFileName)
+
+		duplicateElements := minDuplicateElements
+		if i%3 == 1 {
+			duplicateElements = mediumDuplicateElements
+		} else if i%3 == 2 {
+			duplicateElements = maxDuplicateElements
+		}
+		var externalScript, inlineScript, smallImageDiv, gifImageDiv string
+		for j := 0; j < duplicateElements; j++ {
+			targetScriptFileName := fmt.Sprintf("%s%d.%d.js", localScript, i, j)
+			targetScriptFilePath := path.Join(dirPath, targetScriptFileName)
+			if err := forceSymlink(ctx, scriptPath, targetScriptFilePath); err != nil {
+				return errors.Wrapf(err, "failed to create symbolic link %s", targetScriptFileName)
+			}
+			externalScript += fmt.Sprintf(`<script type="text/javascript" async="" src="./%s"></script>`, targetScriptFileName)
+
+			inlineScript += fmt.Sprint(`<script type="text/javascript">
+				for (let i = 1; i < 6666666; i++) {
+					var j = Math.sqrt(i)}
+				</script>`)
+
+			targetGraphFileName := fmt.Sprintf("%s%d.%d.jpg", localGraph, i, j)
+			targetGraphFilePath := path.Join(dirPath, targetGraphFileName)
+			if err := forceSymlink(ctx, graphPath, targetGraphFilePath); err != nil {
+				return errors.Wrapf(err, "failed to create symbolic link %s", targetGraphFileName)
+			}
+			smallImageDiv += fmt.Sprintf(`<div class="row"><img src="./%s" > </div>`, targetGraphFileName)
+
+			targetGIFFileName := fmt.Sprintf("%s%d.%d.gif", localGIF, i, j)
+			// Each element in gifContents will be used one time in each HTML file.
+			targetGIFFilePath := path.Join(dirPath, targetGIFFileName)
+			if err := forceSymlink(ctx, gifPaths[j], targetGIFFilePath); err != nil {
+				return errors.Wrapf(err, "failed to create symbolic link %s", targetGIFFileName)
+			}
+			gifImageDiv += fmt.Sprintf(`<div class="row"><img src="./%s" style="width:100%%; height:100%%" ></div>`, targetGIFFileName)
+		}
+		htmlContent := fmt.Sprintf(`<!DOCTYPE html>
+	<html>
+	<style>
+		.float-container {
+			display: flex;
+		}
+		.float-child {
+			width: 25%%;
+		}
+		.table{
+			display: grid;
+		}
+		.row {
+		display: flex;
+		height: 10vh;
+		}
+		.column {
+		flex: 20%%;
+		}
+
+		@keyframes move {
+			0%%   {left:0%%; top:0%%;}
+			50%%  {left:0%%; top:50%%;}
+			100%% {left:0%%; top:0%%;}
+		}
+
+		.d1 {
+			z-index: 1;
+			left: 0%%;
+			top: 0%%;
+			position: relative;
+			animation-name: move;
+			animation-duration: 6s;
+			animation-iteration-count: infinite;
+			animation-delay: 1s;
+	}
+	</style>
+	<head>
+		%s
+	</head>
+	<body>
+		%s
+		<div class="float-container">
+			<div class="float-child">
+				%s
+			</div>
+				%s
+			<div class="float-child" >
+				%s
+				<div class="d1">
+					<canvas></canvas>
+					<script>
+					const video = document.getElementById("v1");
+					const canvasList = document.getElementsByTagName("canvas");
+
+					document.addEventListener("visibilitychange", function() {
+						if (!document.hidden){
+							video.play()
+						}
+					});
+
+					video.addEventListener("play", () => {
+					function step() {
+						for (c of canvasList) {
+							const ctx = c.getContext("2d");
+							for (let i = 1; i < 6666666; i++) {
+								var j = Math.sqrt(i)}
+							ctx.drawImage(video, 0, 0, c.width, c.height);
+						}
+						requestAnimationFrame(step);
+					}
+					requestAnimationFrame(step);
+					});
+					</script>
+				</div>
+			</div>
+			<div class="float-child">
+				%s
+			</div>
+			<div class="float-child">
+				%s
+			</div>
+		</div>
+
+		<p>Hyperlinks</p>
+		%s
+	</body>
+	</html>`, externalScript, inlineScript, smallImageDiv, inlineScript, video, gifImageDiv, localText, hyperlink)
+		var htmlFileName string
+		if i == 0 {
+			htmlFileName = fmt.Sprintf("%s.html", localHyperlink)
+		} else {
+			htmlFileName = fmt.Sprintf("%s%d.html", localHTML, i)
+			// Create URL with fmt.Sprintf function since the path.Join function will convert the "https://"" into "http:/" and cause error when reconnecting to the page.
+			htmlURL := fmt.Sprintf("%s/%s", localURL, htmlFileName)
+			localWebsiteTarget := tabTarget{htmlURL, newPageInfo(tier, localWebsite, `/`, fmt.Sprintf(`/%s.html`, localHyperlink))}
+			localWebsitesTargets = append(localWebsitesTargets, localWebsiteTarget)
+		}
+		if err := os.WriteFile(path.Join(dirPath, htmlFileName), []byte(htmlContent), 0644); err != nil {
+			return errors.Wrapf(err, "failed to write HTML file %s", htmlFileName)
+		}
+	}
+	tabTargetsMap[localWebSource] = localWebsitesTargets
+	return nil
+}
+
+// forceSymlink creates the symbolic link and force overwrite if the link already exists.
+// The overwrite flag is needed to avoid the errors caused by the existing files.
+func forceSymlink(ctx context.Context, filePath, linkPath string) error {
+	if err := testexec.CommandContext(ctx, "ln", "-sf", filePath, linkPath).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create the symbolic link with the force overwrite option")
+	}
+	return nil
 }
