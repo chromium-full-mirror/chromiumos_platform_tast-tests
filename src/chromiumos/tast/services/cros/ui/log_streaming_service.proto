@@ -1,0 +1,71 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.ui;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "chromiumos/tast/services/cros/ui";
+
+service LogStreamingService {
+  // StreamLogFiles streams contents of log files.
+  // Note that when user starts streaming log files, it is only streaming new
+  // contents starting from the end of the file. The line will be given a line
+  // number of 1. StreamLogFiles can detect the renaming of files and will
+  // continue to stream from the new files. When log rotation happens, line
+  // number restarts from 1.
+  rpc StreamLogFiles(StreamLogFilesRequest)
+      returns (stream StreamLogFilesResponse) {}
+  // StreamCommand initiates a logging command and streams the output of the
+  // command. The command is expected to be a long running instrumentation
+  // command, e.g. btmon. StreamCommand mananges the lifecycle of the command
+  // and terminates the command when the stream is closed.
+  rpc StreamCommand(StreamCommandRequest)
+      returns (stream StreamCommandResponse) {}
+}
+
+message StreamLogFilesRequest {
+  // IncludeDefaultFiles is an option to include the most common log files.
+  // Default is false.
+  bool include_default_files = 1;
+  // Files specifies the log files to be include in streaming.
+  repeated StreamFile files = 2;
+}
+
+message StreamLogFilesResponse {
+  LogLine line = 1;
+}
+
+message StreamCommandRequest {
+  StreamCommand command = 1;
+}
+
+message StreamCommandResponse {
+  LogLine line = 1;
+}
+
+message StreamCommand {
+  string command = 1;
+  repeated string args = 2;
+}
+
+message StreamFile {
+  string file_name = 1;
+}
+
+// LogLine is a unified representation of single line of a log file or a logging
+// command.
+message LogLine {
+  // Message captures the message content.
+  string message = 1;
+  // FileName captures the origin of the log line. It is either the name of the
+  // log file or the name of the program that generates the logs.
+  string file_name = 2;
+  // LineNum represents the line number of the log line.
+  int64 line_num = 3;
+  // Timestamp captures the timestamp of the log line.
+  google.protobuf.Timestamp timestamp = 4;
+}
