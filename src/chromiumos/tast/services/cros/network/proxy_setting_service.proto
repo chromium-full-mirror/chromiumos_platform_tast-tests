@@ -8,6 +8,7 @@ package tast.cros.network;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "chromiumos/tast/services/cros/network";
 
@@ -34,7 +35,7 @@ service ProxySettingService {
   // Note: It can not include other proxies when specifying the SameHost/SamePort.
   rpc Setup(ProxyConfigs) returns (google.protobuf.Empty) {}
 
-  // FetchProxySettings returns proxy configurations.
+  // FetchProxySettings returns proxy configurations. By default this method will retrieve proxy configurations using OS Settings.
   rpc FetchProxySettings(FetchProxySettingsRequest) returns (ProxyConfigs) {}
 
   // FetchConfigurations returns proxy hosts and ports.
@@ -46,6 +47,18 @@ service ProxySettingService {
 
   // FetchException returns exception settings.
   rpc FetchException(FetchExceptionRequest) returns (FetchExceptionResponse) {}
+
+  // AllowProxiesForSharedNetwork allows or disallows proxies for shared
+  // networks by toggling the "Allow proxies for shared networks" toggle button.
+  rpc AllowProxiesForSharedNetwork(AllowProxiesForSharedNetworkRequest)
+      returns (google.protobuf.Empty) {}
+
+  // IsProxySettingsRestricted checks whether or not the proxy settings section
+  // is restricted by checking the restriction state of a dropdown menu
+  // withinthe proxy settings section.
+  // This method should be called when DUT is Logged in.
+  rpc IsProxySettingsRestricted(IsProxySettingsRestrictedRequest)
+      returns (google.protobuf.BoolValue) {}
 }
 
 message NewRequest {
@@ -81,7 +94,14 @@ message SetExceptionRequest {
 }
 
 message FetchProxySettingsRequest {
+  enum FetchSource {
+    // OSSettings is the default source of the proxy settings data to fetch.
+    OSSettings = 0;
+    // CrosNetworkConfig is the source of the proxy settings data to fetch.
+    CrosNetworkConfig = 1;
+  }
   NetworkInfo network_info = 1;
+  FetchSource fetch_source = 2;
 }
 
 message FetchExceptionRequest {
@@ -104,4 +124,15 @@ enum ProxyConnectionType {
   DirectInternetConnection = 0;
   // ManualProxyConfiguration is the proxy connect type of manual proxy configuration.
   ManualProxyConfiguration = 1;
+}
+
+message AllowProxiesForSharedNetworkRequest {
+  // allow is the option that specifies to allow or disallow the proxies for
+  // shared networks.
+  bool allow = 1;
+  NetworkInfo network_info = 2;
+}
+
+message IsProxySettingsRestrictedRequest {
+  NetworkInfo network_info = 1;
 }

@@ -243,6 +243,12 @@ type ManagedBoolean struct {
 	ActiveValue bool `json:"activeValue"`
 }
 
+// ManagedInt contains active value, if required one may add policy value
+// and source.
+type ManagedInt struct {
+	ActiveValue int `json:"activeValue"`
+}
+
 // ManagedSubjectAltNameMatchList contains active value, if required one may add
 // policy value and source.
 type ManagedSubjectAltNameMatchList struct {
@@ -297,6 +303,7 @@ type NetworkTypeManagedProperties struct {
 type ManagedProperties struct {
 	Type           NetworkType                  `json:"type"`
 	TypeProperties NetworkTypeManagedProperties `json:"typeProperties"`
+	ProxySettings  ManagedProxySettings         `json:"proxySettings"`
 }
 
 // SubjectAltNameType is the type for SubjectAltName.
@@ -513,4 +520,26 @@ type WireGuardPeerProperties struct {
 	AllowedIPs   string  `json:"allowedIps"`
 	Endpoint     string  `json:"endpoint"`
 	KeepAlive    int     `json:"persistentKeepAlive"`
+}
+
+// ManagedProxyLocation contain managed properties of a proxy location.
+type ManagedProxyLocation struct {
+	Host ManagedString `json:"host"`
+	Port ManagedInt    `json:"port"`
+}
+
+// ManagedManualProxySettings contain managed properties of a manual proxy settings.
+type ManagedManualProxySettings struct {
+	HTTPProxy       ManagedProxyLocation `json:"httpProxy"`
+	SecureHTTPProxy ManagedProxyLocation `json:"secureHttpProxy"`
+	FTPProxy        ManagedProxyLocation `json:"ftpProxy"`
+	Socks           ManagedProxyLocation `json:"socks"`
+}
+
+// ManagedProxySettings contain managed properties of a proxy settings.
+type ManagedProxySettings struct {
+	Type           ManagedString              `json:"type"`
+	Manual         ManagedManualProxySettings `json:"manual"`
+	ExcludeDomains ManagedStringList          `json:"excludeDomains"`
+	Pac            ManagedString              `json:"pac"`
 }
