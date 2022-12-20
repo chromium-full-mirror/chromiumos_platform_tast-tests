@@ -537,6 +537,9 @@ func verifyEmbeddedDisplayManufactureDate(ctx context.Context, edp *embeddedDisp
 		}
 	}
 
+	// Reference: VESA E-EDID Standard Release A2 - Table 3.8
+	// https://glenwing.github.io/docs/VESA-EEDID-A2.pdf
+	const maxManufactureWeek = 54
 	manufactureWeekRaw := ""
 	if manufactureWeekMatch := manufactureWeekRegexp.FindStringSubmatch(edidInfo); manufactureWeekMatch != nil {
 		manufactureWeekRaw = manufactureWeekMatch[1]
@@ -546,6 +549,11 @@ func verifyEmbeddedDisplayManufactureDate(ctx context.Context, edp *embeddedDisp
 	} else if manufactureWeekRaw != "" {
 		if manufactureWeek, err := strconv.ParseUint(manufactureWeekRaw, 10, 8); err != nil {
 			return err
+		} else if manufactureWeek == 0 || manufactureWeek > maxManufactureWeek {
+			if edp.ManufactureWeek != nil {
+				return errors.Errorf("ManufactureWeek value %v is out of range [1, %v], but cros_healthd report it: got %v",
+					manufactureWeek, maxManufactureWeek, edp.ManufactureWeek)
+			}
 		} else if err := compareUintPointer(edp.ManufactureWeek, uint8(manufactureWeek), "ManufactureWeek"); err != nil {
 			return err
 		}
