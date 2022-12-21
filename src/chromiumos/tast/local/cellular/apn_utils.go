@@ -90,11 +90,11 @@ var (
 		},
 		carrierAtt: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]string{apn: "broadband", attach: attachTrue, ipType: ipv4v6, apnTypes: typeDefault + "," + typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]string{apn: "broadband"}},
+			KnownAPN{Optional: false, APNInfo: map[string]string{apn: "broadband", apnTypes: typeDefault}},
 		},
 		carrierVerizon: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]string{apn: "vzwinternet", attach: attachTrue, ipType: ipv4v6, apnTypes: typeDefault + "," + typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]string{apn: "vzwinternet"}},
+			KnownAPN{Optional: false, APNInfo: map[string]string{apn: "vzwinternet", apnTypes: typeDefault}},
 		},
 		// Japan
 		carrierKDDI: []KnownAPN{
