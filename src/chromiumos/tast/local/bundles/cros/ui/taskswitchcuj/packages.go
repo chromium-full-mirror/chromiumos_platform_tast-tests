@@ -45,9 +45,6 @@ func getPackages(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) []pa
 		{name: gmailPackageName, query: "Gmail", skipSplash: func(ctx context.Context) error {
 			return skipGmailSplash(ctx, tconn, d)
 		}},
-		{name: playStorePackageName, query: "Play Store", skipSplash: func(ctx context.Context) error {
-			return nil
-		}},
 	}
 }
 

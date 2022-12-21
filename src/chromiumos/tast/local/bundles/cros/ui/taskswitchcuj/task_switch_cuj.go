@@ -16,10 +16,10 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -53,28 +53,20 @@ func Run(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	a := s.FixtValue().(cuj.FixtureData).ARC
 
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, testParam.BrowserType)
+	if err != nil {
+		s.Fatal("Failed to setup Chrome: ", err)
+	}
+	defer closeBrowser(closeCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to the test API connection: ", err)
+		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	var cs ash.ConnSource
-	var bTconn *chrome.TestConn
-	switch testParam.BrowserType {
-	case browser.TypeLacros:
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch Lacros: ", err)
-		}
-		defer l.Close(closeCtx)
-		cs = l
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to connect to the Lacros TestAPIConn: ", err)
-		}
-	case browser.TypeAsh:
-		cs = cr
-		bTconn = tconn
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Falied to connect to browser test API connection: ", err)
 	}
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParam.Tablet)
@@ -143,7 +135,7 @@ func Run(ctx context.Context, s *testing.State) {
 		// mitigate Lacros crashes on lower-end devices. This delay
 		// ensures that the previews are properly loaded before we
 		// interact with the windows in overview mode.
-		if err := ac.WithInterval(2*time.Second).WithTimeout(10*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		if err := ac.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 			s.Log("Failed to wait for overview stabilization: ", err)
 		}
 		return nil
@@ -201,13 +193,6 @@ func Run(ctx context.Context, s *testing.State) {
 
 	defer ash.CloseAllWindows(closeCtx, tconn)
 
-	// Close browser tabs before "CloseAllWindows". If we
-	// simply "CloseAllWindows", the next variant of the test
-	// that tries to open the browser sometimes reopens the previous
-	// set of tabs (like pressing Ctrl+Shift+T after you close a
-	// bunch of tabs within the same window).
-	defer browser.CloseAllTabs(closeCtx, bTconn)
-
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	s.Log("Installing packages")
@@ -228,17 +213,21 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Opening Chrome Tabs")
-		numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, cs, testParam.BrowserType, testParam.Tablet)
+		numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, br, testParam.BrowserType, testParam.Tablet)
 		if err != nil {
 			return errors.Wrap(err, "failed to launch apps")
 		}
+
+		// Increase the count of app windows, to include the PWA that
+		// was opened in openChromeTabs.
+		numAppWindows++
 
 		// Open another Chrome tab so we can save the tab connection.
 		// We will use this tab connection to navigate away from the
 		// page to ensure collection of
 		// PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		extraURL := "https://webglsamples.org/aquarium/aquarium.html?numFish=1000"
-		extraTab, err := cuj.NewTabByURL(ctx, cs, true, extraURL)
+		extraTab, err := cuj.NewTabByURL(ctx, br, true, extraURL)
 		if err != nil {
 			return err
 		}
@@ -296,11 +285,11 @@ func Run(ctx context.Context, s *testing.State) {
 				// helps increase memory pressure, because it forces Chrome
 				// to load more of the page.
 				for _, key := range []string{"Down", "Up"} {
-					if err := inputsimulations.RepeatKeyPress(ctx, kw, key, 300*time.Millisecond, 10); err != nil {
+					if err := inputsimulations.RepeatKeyPress(ctx, kw, key, 100*time.Millisecond, 3); err != nil {
 						return errors.Wrapf(err, "failed to repeatedly press %q in between task switches", key)
 					}
 
-					if err := inputsimulations.RepeatMouseScroll(ctx, mw, key == "Down", 100*time.Millisecond, 20); err != nil {
+					if err := inputsimulations.RepeatMouseScroll(ctx, mw, key == "Down", 50*time.Millisecond, 20); err != nil {
 						return errors.Wrapf(err, "failed to repeatedly mouse scroll %s", key)
 					}
 				}

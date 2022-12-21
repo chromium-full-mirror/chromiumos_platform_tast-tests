@@ -6,8 +6,10 @@ package taskswitchcuj
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -16,12 +18,11 @@ import (
 
 // simpleWebsites are websites to be opened in individual browsers
 // with no additional setup required.
-// 1. WebGL Aquarium -- considerable load on graphics.
-// 2. Chromium issue tracker -- considerable amount of elements.
-// 3. CrosVideo -- customizable video player.
+// 1. Chromium issue tracker -- considerable amount of elements.
+// 2. About Version -- lightweight website.
 var simpleWebsites = []string{
 	"https://bugs.chromium.org/p/chromium/issues/list",
-	"https://crosvideo.appspot.com/?codec=h264_60&loop=true&mute=true",
+	chrome.VersionURL,
 }
 
 // openChromeTabs opens Chrome tabs and returns the number of windows
@@ -30,15 +31,8 @@ var simpleWebsites = []string{
 // This function opens an individual window for each URL in
 // simpleWebsites. It also opens a window with multiple tabs, to
 // increase RAM pressure during the test.
-func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.ConnSource, bt browser.Type, tabletMode bool) (int, error) {
-	const numExtraWebsites = 5
-
-	// Also open a large slide deck for RAM pressure.
-	slidesURL, err := cuj.GetTestSlidesURL(ctx)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get Google Slides URL")
-	}
-	simpleWebsites := append(simpleWebsites, slidesURL)
+func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *browser.Browser, bt browser.Type, tabletMode bool) (int, error) {
+	const numExtraWebsites = 2
 
 	// Keep track of the initial number of windows, to ensure
 	// we open the right number of windows.
@@ -48,8 +42,13 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.
 	}
 	initialNumWindows := len(ws)
 
-	// Open up a single window with a lot of tabs, to increase RAM pressure.
-	tabs, err := cuj.NewTabs(ctx, cs, false, numExtraWebsites)
+	// Install Meet PWA.
+	if err := apps.InstallPWAForURL(ctx, tconn, br, "https://meet.google.com", 30*time.Second); err != nil {
+		return 0, errors.Wrap(err, "failed to install Meet PWA")
+	}
+
+	// Open up a single window with a couple of tabs, to increase RAM pressure.
+	tabs, err := cuj.NewTabs(ctx, br, false, numExtraWebsites)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to bulk open tabs")
 	}
@@ -65,7 +64,7 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.
 	}
 
 	// Open up individual window for each website in simpleWebsites.
-	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, cs, true, simpleWebsites)
+	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, br, true, simpleWebsites)
 	if err != nil {
 		return 0, err
 	}
@@ -86,12 +85,15 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.
 		}
 	}
 
-	// Expected number of browser windows should include the number
-	// of websites in |simpleWebsites|, and the window with many tabs.
+	// Expected number of browser windows should include the number of
+	// websites in |simpleWebsites| and the window with multiple tabs.
+	// This count purposefully does not include the PWA, since the PWA is
+	// technically treated as its own app, since it has its own icon in
+	// the shelf.
 	expectedNumBrowserWindows := len(simpleWebsites) + 1
 	if ws, err := ash.GetAllWindows(ctx, tconn); err != nil {
 		return 0, errors.Wrap(err, "failed to get window list after opening Chrome tabs")
-	} else if expectedNumWindows := expectedNumBrowserWindows + initialNumWindows; len(ws) != expectedNumWindows {
+	} else if expectedNumWindows := expectedNumBrowserWindows + initialNumWindows + 1; len(ws) != expectedNumWindows {
 		return 0, errors.Wrapf(err, "unexpected number of windows open after launching Chrome tabs, got: %d, expected: %d", len(ws), expectedNumWindows)
 	}
 
