@@ -460,12 +460,18 @@ func (u *CryptohomeClient) mountVaultWithAuthFactor(ctx context.Context, label s
 	if err != nil {
 		return errors.Wrap(err, "failed to start Auth session")
 	}
+	// PrepareEphemeralVault handles both authentication and vault preparation for an ephemeral vault.
+	if vaultConfig.Ephemeral {
+		if err := u.PrepareEphemeralVault(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to prepare ephemeral vault")
+		}
+		return nil
+	}
 
 	if create {
 		if err := u.CreatePersistentUser(ctx, authSessionID); err != nil {
 			return errors.Wrap(err, "failed to create persistent user")
 		}
-
 		if err := u.AddAuthFactor(ctx, authSessionID, label, authConfig.Password); err != nil {
 			return errors.Wrap(err, "failed to add credentials with AuthSession")
 		}
@@ -476,17 +482,9 @@ func (u *CryptohomeClient) mountVaultWithAuthFactor(ctx context.Context, label s
 			return errors.Wrap(err, "failed to authenticate AuthFactor")
 		}
 	}
-
-	if !vaultConfig.Ephemeral {
-		if _, err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
-			return errors.Wrap(err, "failed to prepare persistent vault")
-		}
-	} else {
-		if err := u.PrepareEphemeralVault(ctx, authSessionID); err != nil {
-			return errors.Wrap(err, "failed to prepare ephemeral vault")
-		}
+	if _, err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
+		return errors.Wrap(err, "failed to prepare persistent vault")
 	}
-
 	return nil
 }
 

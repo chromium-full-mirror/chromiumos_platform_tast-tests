@@ -48,6 +48,10 @@ func init() {
 func setUpEphemeralVaultAndUser(ctx context.Context, username, password, label string, utility *hwsec.CryptohomeClient) error {
 	config := hwsec.NewVaultConfig()
 	config.Ephemeral = true
+	// Need to unmount all the active vaults and terminate sessions before mounting an ephemeral vault.
+	if err := utility.UnmountAll(ctx); err != nil {
+		return errors.Wrap(err, "failed to logout existing signed in user mount")
+	}
 	if err := utility.MountVault(ctx, label, hwsec.NewPassAuthConfig(username, password), true, config); err != nil {
 		return errors.Wrap(err, "failed to create ephemeral user vault for testing")
 	}
