@@ -6,6 +6,7 @@ package fixtures
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/policyutil/fixtures"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/uidetection"
 	vdiApps "chromiumos/tast/local/vdi/apps"
@@ -152,6 +154,10 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		kioskmode.AutoLaunch(vdiAccountID),
 	)
 	if err != nil {
+		path := filepath.Join(s.OutDir(), "kiosk_fixture_failure.png")
+		if err := screenshot.Capture(ctx, path); err != nil {
+			s.Error("Failed to take screenshot: ", err)
+		}
 		s.Fatal("Failed to start Chrome in kiosk mode: ", err)
 	}
 

@@ -6,6 +6,7 @@ package fixtures
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -17,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
 	vdiApps "chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/apps/citrix"
@@ -196,6 +198,10 @@ func (v *fixtureState) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		chrome.ProdPolicy(),
 	)
 	if err != nil {
+		path := filepath.Join(s.OutDir(), "vdi_usersession_fixture_failure.png")
+		if err := screenshot.Capture(ctx, path); err != nil {
+			s.Error("Failed to take screenshot: ", err)
+		}
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	ok := false

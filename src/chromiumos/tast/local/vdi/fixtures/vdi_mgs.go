@@ -6,6 +6,7 @@ package fixtures
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -21,6 +22,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mgs"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
 	vdiApps "chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/apps/citrix"
@@ -150,6 +152,10 @@ func (v *mgsFixtureState) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}),
 	)
 	if err != nil {
+		path := filepath.Join(s.OutDir(), "vdi_mgs_fixture_failure.png")
+		if err := screenshot.Capture(ctx, path); err != nil {
+			s.Error("Failed to take screenshot: ", err)
+		}
 		s.Fatal("Failed to start Chrome in mgs session: ", err)
 	}
 
