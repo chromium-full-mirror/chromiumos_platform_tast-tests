@@ -43,6 +43,20 @@ func DragDrop(ctx context.Context, tconn *chrome.TestConn, content string) error
 	return nil
 }
 
+// WaitForStableCoordinates waits for coordinates of the target text box to be stable.
+func WaitForStableCoordinates(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+
+	textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
+	// Getting the location also waits for it to be stable.
+	_, err := ui.Location(ctx, textBoxNode)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the location of destination text box")
+	}
+
+	return nil
+}
+
 // CheckDraggedContent checks if a certain |content| appears in the search box.
 func CheckDraggedContent(ctx context.Context, ui *uiauto.Context, content string) error {
 	contentNode := nodewith.NameContaining(content).Role(role.InlineTextBox).State(state.Editable, true).First()

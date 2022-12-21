@@ -155,26 +155,35 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 			// Snap the param.srcURL window to the right.
 			w1, err := ash.FindFirstWindowInOverview(ctx, tconn)
 			if err != nil {
-				s.Fatalf("Failed to find the %s window in the overview mode: %s", param.srcURL, err)
+				s.Fatalf("Failed to find the %s window in the overview mode: %v", param.srcURL, err)
 			}
 
 			if err := ash.SetWindowStateAndWait(ctx, tconn, w1.ID, ash.WindowStateRightSnapped); err != nil {
-				s.Fatalf("Failed to snap the %s window to the right: %s", param.srcURL, err)
+				s.Fatalf("Failed to snap the %s window to the right: %v", param.srcURL, err)
 			}
 
 			// Snap the destination window to the left.
 			w2, err := ash.FindFirstWindowInOverview(ctx, tconn)
 			if err != nil {
-				s.Fatalf("Failed to find the %s window in the overview mode: %s", dstURL, err)
+				s.Fatalf("Failed to find the %s window in the overview mode: %v", dstURL, err)
 			}
 
 			if err := ash.SetWindowStateAndWait(ctx, tconn, w2.ID, ash.WindowStateLeftSnapped); err != nil {
-				s.Fatalf("Failed to snap the %s window to the left: %s", dstURL, err)
+				s.Fatalf("Failed to snap the %s window to the left: %v", dstURL, err)
+			}
+
+			// Activate the drag destination window so coordinates get updates.
+			if err := w2.ActivateWindow(ctx, tconn); err != nil {
+				s.Fatalf("Failed to activate the %s window: %v", param.srcURL, err)
+			}
+
+			if err := dragdrop.WaitForStableCoordinates(ctx, tconn); err != nil {
+				s.Fatal("Failed to wait for the coordinates for the drop textfield gets stable: ", err)
 			}
 
 			// Activate the drag source (param.srcURL) window.
 			if err := w1.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatalf("Failed to activate the %s window: %s", param.srcURL, err)
+				s.Fatalf("Failed to activate the %s window: %v", param.srcURL, err)
 			}
 
 			if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
@@ -192,7 +201,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 			// Verify notification bubble.
 			parsedSrcURL, err := url.Parse(blockedServer.URL)
 			if err != nil {
-				s.Fatalf("Failed to parse blocked server URL %s: %s", blockedServer.URL, err)
+				s.Fatalf("Failed to parse blocked server URL %s: %v", blockedServer.URL, err)
 			}
 
 			notifError := clipboard.CheckClipboardBubble(ctx, ui, parsedSrcURL.Hostname())
