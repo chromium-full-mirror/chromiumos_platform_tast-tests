@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
@@ -40,6 +41,8 @@ func init() {
 		ServiceDeps: []string{wificell.TFServiceName, "tast.cros.network.BluetoothService"},
 		Vars:        []string{"router"},
 		VarDeps:     []string{"wifi.signinProfileTestExtensionManifestKey"},
+		// List of requirements this test satisfies.
+		Requirements: []string{tdreq.WiFiCoexSupportBT},
 	})
 }
 

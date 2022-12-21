@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
@@ -38,6 +39,8 @@ func init() {
 		// As a workaround to b:239583375, we increase the test duration as this test reinitializes a new test fixture
 		// which causes a second router reboot on openwrt routers. We have not noticed timeout cases on gales.
 		Timeout: 10 * time.Minute,
+		// List of requirements this test satisfies.
+		Requirements: []string{tdreq.WiFiCoexSupportBT},
 	})
 }
 
