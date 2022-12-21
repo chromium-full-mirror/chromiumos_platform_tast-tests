@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
@@ -53,6 +54,10 @@ func BlackFlash(ctx context.Context, s *testing.State) {
 		activityName = "MainActivity"
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	a := s.FixtValue().(*arc.PreData).ARC
 	d := s.FixtValue().(*arc.PreData).UIDevice
 	cr := s.FixtValue().(*arc.PreData).Chrome
@@ -61,15 +66,11 @@ func BlackFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
+		s.Fatal("Failed to set clamshell mode: ", err)
 	}
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-
-	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
-		s.Fatal("Failed to set tablet mode enabled to false: ", err)
-	}
+	defer cleanup(cleanupCtx)
 
 	dispInfo, err := display.GetInternalInfo(ctx, tconn)
 	if err != nil {
