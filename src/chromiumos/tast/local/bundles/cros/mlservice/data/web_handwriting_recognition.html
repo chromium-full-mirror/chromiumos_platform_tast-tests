@@ -12,9 +12,11 @@
     // prediction texts contains |expectedText|, and the segmentation result has
     // |expectedGraphemeCount| number of graphemes.
     async function testDrawing(recognizer, name, dataPath, expectedText, expectedGraphemeCount) {
+        console.log(`Testing handwriting from ${dataPath}.`)
         // Build JS Drawing from |dataPath|.
         const jsDrawing = await recognizer.startDrawing();
-        const drawing = await fetch(dataPath).then(resp => resp.json());
+        const resp = await fetch(dataPath);
+        const drawing = await resp.json();
         for (const stroke of drawing) {
             const jsStroke = new HandwritingStroke();
             for (const point of stroke) {

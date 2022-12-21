@@ -17,6 +17,12 @@ import (
 	"chromiumos/tast/testing"
 )
 
+var dataFiles = []string{
+	"web_handwriting_recognition.html",
+	"web_handwriting_recognition_drawing_abc.json",
+	"web_handwriting_recognition_drawing_crossed_out.json",
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebHandwritingRecognition,
@@ -27,7 +33,7 @@ func init() {
 			"qjw@chromium.org",
 		},
 		BugComponent: "b:187682",
-		Timeout:      3 * time.Minute,
+		Timeout:      1 * time.Minute,
 		SoftwareDeps: []string{"chrome", "ondevice_handwriting"},
 		Attr:         []string{"group:mainline", "group:ml_service"},
 		Params: []testing.Param{{
@@ -45,11 +51,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}},
-		Data: []string{
-			"web_handwriting_recognition.html",
-			"web_handwriting_recognition_drawing_abc.json",
-			"web_handwriting_recognition_drawing_crossed_out.json",
-		},
+		Data: dataFiles,
 	})
 }
 
@@ -61,6 +63,20 @@ func WebHandwritingRecognition(ctx context.Context, s *testing.State) {
 	// Setup test HTTP server.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
+
+	// Confirm test HTTP server is working.
+	for _, f := range dataFiles {
+		testURL := server.URL + "/" + f
+		s.Log("Request URL: ", testURL)
+		resp, err := http.Get(testURL)
+		if err != nil {
+			s.Fatal("Test HTTP server isn't serving data files correctly: ", err)
+		}
+
+		if resp.StatusCode != 200 {
+			s.Fatal("Test HTTP server returns non-success HTTP response, status code was: ", resp.StatusCode)
+		}
+	}
 
 	// Open browser.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
