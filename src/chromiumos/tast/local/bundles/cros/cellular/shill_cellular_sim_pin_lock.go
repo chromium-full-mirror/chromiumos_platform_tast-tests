@@ -61,7 +61,7 @@ func ShillCellularSimPinLock(ctx context.Context, s *testing.State) {
 
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	s.Log("Attempting to enable sim lock with correct pin")

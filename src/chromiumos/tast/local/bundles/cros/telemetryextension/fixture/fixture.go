@@ -211,7 +211,8 @@ type Value struct {
 }
 
 func (f *telemetryExtensionFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, cleanupTimeout)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, cleanupTimeout)
 	defer cancel()
 
 	defer func(ctx context.Context) {

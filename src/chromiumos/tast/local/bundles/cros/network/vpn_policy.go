@@ -44,7 +44,8 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create shill manager proxy: ", err)
 	}
 
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	routingEnv := routing.NewTestEnvWithoutResetProfile()

@@ -68,7 +68,8 @@ func PCMarkWorkAndroidApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to setup ARC and Play Store: ", err)
 	}
 
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
 		uiDevice.Close(ctx)

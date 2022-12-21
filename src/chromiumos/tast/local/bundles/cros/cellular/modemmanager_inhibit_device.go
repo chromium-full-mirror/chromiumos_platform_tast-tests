@@ -44,7 +44,8 @@ func ModemmanagerInhibitDevice(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}
 
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	defer func(ctx context.Context) {

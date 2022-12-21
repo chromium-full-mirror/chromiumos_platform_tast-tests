@@ -63,7 +63,8 @@ func Usb4HotplugUnplug(ctx context.Context, s *testing.State) {
 	domainIP := s.RequiredVar("typec.domainIP")
 
 	// Shorten deadline to leave time for cleanup.
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	// Read json config file.

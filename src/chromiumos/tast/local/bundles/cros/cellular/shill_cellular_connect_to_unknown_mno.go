@@ -76,7 +76,8 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	if _, err = helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
 		// Restart shill after deleting |modbOverrideProto|.

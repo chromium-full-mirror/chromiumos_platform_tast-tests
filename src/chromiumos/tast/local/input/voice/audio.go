@@ -66,7 +66,8 @@ func EnableAloop(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.
 // devices to CRAS. Calling cras.SetActiveNode() changes the active devices for a
 // moment, but they soon are reverted by UI. See (b/191602192) for details.
 func activateAloopNodes(ctx context.Context, tconn *chrome.TestConn) error {
-	cleanupCtx, shortCancel := ctxutil.Shorten(ctx, 2*time.Second)
+	cleanupCtx := ctx
+	ctx, shortCancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer shortCancel()
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to show Quick Settings")

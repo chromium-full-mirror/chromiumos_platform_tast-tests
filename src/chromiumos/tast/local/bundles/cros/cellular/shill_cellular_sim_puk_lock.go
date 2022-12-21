@@ -61,7 +61,7 @@ func ShillCellularSimPukLock(ctx context.Context, s *testing.State) {
 
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
-	cleanupCtx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	defer func(ctx context.Context) {
