@@ -8,6 +8,7 @@ import (
 	"context"
 	"net"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/ip"
 	"chromiumos/tast/remote/wificell"
@@ -28,6 +29,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
 		HardwareDeps: hwdep.D(hwdep.WifiMACAddrRandomize()),
+		Requirements: []string{tdreq.WiFiGenSupportMARScan},
 	})
 }
 

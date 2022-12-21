@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/testing"
 )
@@ -19,9 +20,10 @@ func init() {
 			"arowa@google.com",                // Test author
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtCompanionDut",
+		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtCompanionDut",
+		Requirements: []string{tdreq.WiFiGenSupportWFD},
 	})
 }
 

@@ -25,7 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		// List of requirements this test satisfies.
-		Requirements: []string{tdreq.WiFiDrvSupportCfg80211, tdreq.WiFiSpecUlMIMO},
+		Requirements: []string{tdreq.WiFiDrvSupportCfg80211, tdreq.WiFiSpecUlMIMO, tdreq.WiFiGenSupport2x2MIMO},
 	})
 }
 

@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"chromiumos/tast/common/genparams"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 )
 
 type simpleConnectParamsVal struct {
@@ -42,6 +43,7 @@ type simpleConnectParams struct {
 	Val                  []simpleConnectParamsVal
 	ExtraHardwareDeps    string
 	ExtraHardwareDepsDoc []string
+	ExtraRequirements    []string
 }
 
 func simpleConnectDocPref(text string) []string {
@@ -76,17 +78,20 @@ func simpleConnect80211abg() []simpleConnectParams {
 		return p
 	}
 	return []simpleConnectParams{{
-		Name: "80211a",
-		Doc:  simpleConnectDocPref("an open 802.11a network on channels 48, 64."),
-		Val:  mkOps("a", 48, 64),
+		Name:              "80211a",
+		Doc:               simpleConnectDocPref("an open 802.11a network on channels 48, 64."),
+		Val:               mkOps("a", 48, 64),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
-		Name: "80211b",
-		Doc:  simpleConnectDocPref("an open 802.11b network on channels 1, 6, 11."),
-		Val:  mkOps("b", 1, 6, 11),
+		Name:              "80211b",
+		Doc:               simpleConnectDocPref("an open 802.11b network on channels 1, 6, 11."),
+		Val:               mkOps("b", 1, 6, 11),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
-		Name: "80211g",
-		Doc:  simpleConnectDocPref("an open 802.11g network on channels 1, 6, 11."),
-		Val:  mkOps("g", 1, 6, 11),
+		Name:              "80211g",
+		Doc:               simpleConnectDocPref("an open 802.11g network on channels 1, 6, 11."),
+		Val:               mkOps("g", 1, 6, 11),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}}
 }
 
@@ -99,22 +104,26 @@ func simpleConnect80211n() []simpleConnectParams {
 		return p
 	}
 	return []simpleConnectParams{{
-		Name: "80211n24ht20",
-		Doc:  simpleConnectDocPref("an open 802.11n network on 2.4GHz channels 1, 6, 11 with a channel width of 20MHz."),
-		Val:  mkOps("HT20", 1, 6, 11),
+		Name:              "80211n24ht20",
+		Doc:               simpleConnectDocPref("an open 802.11n network on 2.4GHz channels 1, 6, 11 with a channel width of 20MHz."),
+		Val:               mkOps("HT20", 1, 6, 11),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}, {
-		Name: "80211n24ht40",
-		Doc:  simpleConnectDocPref("an open 802.11n network on 2.4GHz channel 6 with a channel width of 40MHz."),
-		Val:  mkOps("HT40", 6),
+		Name:              "80211n24ht40",
+		Doc:               simpleConnectDocPref("an open 802.11n network on 2.4GHz channel 6 with a channel width of 40MHz."),
+		Val:               mkOps("HT40", 6),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}, {
-		Name: "80211n5ht20",
-		Doc:  simpleConnectDocPref("an open 802.11n network on 5GHz channel 48 with a channel width of 20MHz."),
-		Val:  mkOps("HT20", 48),
+		Name:              "80211n5ht20",
+		Doc:               simpleConnectDocPref("an open 802.11n network on 5GHz channel 48 with a channel width of 20MHz."),
+		Val:               mkOps("HT20", 48),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}, {
 		Name: "80211n5ht40",
 		Doc: append(simpleConnectDocPref("an open 802.11n network on 5GHz channel 48"),
 			"(40MHz channel with the second 20MHz chunk of the 40MHz channel on the channel below the center channel)."),
-		Val: mkOps("HT40Minus", 48),
+		Val:               mkOps("HT40Minus", 48),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportLegacyBands},
 	}}
 }
 
@@ -127,6 +136,7 @@ func simpleConnect80211nsgi() simpleConnectParams {
 			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20, ap.HTCapSGI20)"},
 			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus, ap.HTCapSGI40)"},
 		},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}
 }
 
@@ -138,6 +148,7 @@ func simpleConnect80211ac() []simpleConnectParams {
 			ap.Mode(ap.Mode80211acPure), ap.Channel(60), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name: "80211acvht40",
 		Doc:  simpleConnectDocPref("an open 802.11ac network on channel 48 with a channel width of 40MHz."),
@@ -145,6 +156,7 @@ func simpleConnect80211ac() []simpleConnectParams {
 			ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name: "80211acvht80mixed",
 		Doc:  simpleConnectDocPref("an open 802.11ac network on 5GHz channel 36 with center channel of 42 and channel width of 80MHz."),
@@ -152,6 +164,7 @@ func simpleConnect80211ac() []simpleConnectParams {
 			ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name: "80211acvht80pure",
 		Doc: append(simpleConnectDocPref("an open 802.11ac network on channel 157 with center channel of 155 and channel width of 80MHz."),
@@ -160,6 +173,7 @@ func simpleConnect80211ac() []simpleConnectParams {
 			ap.Mode(ap.Mode80211acPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
 		`}},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}}
 }
 
@@ -327,14 +341,16 @@ func simpleConnectWPA() []simpleConnectParams {
 		Name: "wpa2pmf",
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames."),
-		ExtraAttr: []string{"wificell_cq"},
-		Val:       mkOps("ap.PMF(ap.PMFRequired)", "PureWPA2", 0, ccmp),
+		ExtraAttr:         []string{"wificell_cq"},
+		Val:               mkOps("ap.PMF(ap.PMFRequired)", "PureWPA2", 0, ccmp),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
 	}, {
 		Name: "wpa2pmfsha256",
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames.",
 			"And the client uses WPA-PSK-SHA256 for key management suite"),
-		ExtraAttr: []string{"wificell_unstable"},
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
 		Val: []simpleConnectParamsVal{{
 			APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
 			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
@@ -354,7 +370,8 @@ func simpleConnectWPA() []simpleConnectParams {
 		Name: "wpa2pmfoptional",
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client may also negotiate use of 802.11w protected management frames."),
-		Val: mkOps("ap.PMF(ap.PMFOptional)", "PureWPA2", 0, ccmp),
+		Val:               mkOps("ap.PMF(ap.PMFOptional)", "PureWPA2", 0, ccmp),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
 	}, {
 		Name: "wpa2",
 		Doc:  simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) and encrypted under AES."),
@@ -382,9 +399,10 @@ func simpleConnectWPA3() []simpleConnectParams {
 		}}
 	}
 	return []simpleConnectParams{{
-		Name: "wpa3mixed",
-		Doc:  simpleConnectDocPref("an AP in WPA2/WPA3 mixed mode. WiFi alliance suggests PMF in this mode."),
-		Val:  mkOps("Optional", "MixedWPA3"),
+		Name:              "wpa3mixed",
+		Doc:               simpleConnectDocPref("an AP in WPA2/WPA3 mixed mode. WiFi alliance suggests PMF in this mode."),
+		Val:               mkOps("Optional", "MixedWPA3"),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
 	}, {
 		Name:              "wpa3",
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
@@ -392,8 +410,9 @@ func simpleConnectWPA3() []simpleConnectParams {
 			"Not all WiFi chips support SAE. We enable the feature as a Software dependency for now, but eventually",
 			"this will require a hardware dependency (crbug.com/1070299).",
 		},
-		Doc: simpleConnectDocPref(`an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.`),
-		Val: mkOps("Required", "PureWPA3"),
+		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.`),
+		Val:               mkOps("Required", "PureWPA3"),
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
 	}}
 }
 
@@ -859,6 +878,9 @@ func TestSimpleConnect(t *testing.T) {
 	// {{ . }}
 	{{ end }}
 	ExtraHardwareDeps: {{ .ExtraHardwareDeps }},
+	{{ end }}
+	{{ if .ExtraRequirements }}
+	ExtraRequirements: {{ .ExtraRequirements | fmt }},
 	{{ end }}
 },{{ end }}`, ps))
 }

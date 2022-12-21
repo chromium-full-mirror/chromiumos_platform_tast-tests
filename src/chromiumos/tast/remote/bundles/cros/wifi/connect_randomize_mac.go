@@ -10,6 +10,7 @@ import (
 
 	cip "chromiumos/tast/common/network/ip"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/ip"
@@ -33,6 +34,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
 		HardwareDeps: hwdep.D(hwdep.WifiMACAddrRandomize()),
+		Requirements: []string{tdreq.WiFiGenSupportMARConn},
 	})
 }
 

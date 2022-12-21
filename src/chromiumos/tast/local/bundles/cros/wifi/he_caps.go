@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/network/iw"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -24,6 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		HardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
+		Requirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiGenSupport6E},
 	})
 }
 

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
@@ -46,6 +47,7 @@ func init() {
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,
+		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
 		Params: []testing.Param{
 			{
 				Name: "home_to_home",

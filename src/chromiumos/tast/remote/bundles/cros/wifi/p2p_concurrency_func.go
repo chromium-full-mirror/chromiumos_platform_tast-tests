@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/testing"
 )
@@ -23,6 +24,7 @@ func init() {
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtCompanionDut",
+		Requirements: []string{tdreq.WiFiGenSupportWFD},
 	})
 }
 

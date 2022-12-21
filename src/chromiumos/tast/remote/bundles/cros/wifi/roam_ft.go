@@ -16,6 +16,7 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/common/wifi/security/wpaeap"
@@ -46,9 +47,10 @@ func init() {
 			"chharry@google.com",              // Test author
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
+		Requirements: []string{tdreq.WiFiGenSupportMBO},
 		Params: []testing.Param{{
 			Name: "psk",
 			Val: roamFTparam{

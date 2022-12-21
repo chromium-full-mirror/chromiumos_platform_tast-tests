@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
@@ -48,9 +49,10 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
+		Requirements: []string{tdreq.WiFiGenSupportMBO},
 		Params: []testing.Param{
 			{
 				Val: bssTMReqTestCase{},

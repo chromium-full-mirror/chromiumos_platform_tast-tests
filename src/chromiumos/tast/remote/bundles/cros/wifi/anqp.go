@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/wpacli"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/cmd"
@@ -66,10 +67,11 @@ func init() {
 			"damiendejean@chromium.org",       // Test author
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
-		Timeout:     10 * time.Minute,
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
+		Timeout:      10 * time.Minute,
+		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
 		Params: []testing.Param{
 			{
 				Name: "anqp_basic_info",

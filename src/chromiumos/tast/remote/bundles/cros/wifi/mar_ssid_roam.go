@@ -12,6 +12,7 @@ import (
 
 	cip "chromiumos/tast/common/network/ip"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/ip"
@@ -30,9 +31,10 @@ func init() {
 			"jck@semihalf.com",                // Author.
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
+		Requirements: []string{tdreq.WiFiGenSupportMARConn},
 	})
 }
 

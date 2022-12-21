@@ -33,9 +33,10 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Removed wificell_func_ax Attr due to router stability issues (b/235887204)
-		Attr:        []string{"group:wificell", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Vars:        []string{"router", "pcap", "routertype"},
+		Attr:         []string{"group:wificell", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Vars:         []string{"router", "pcap", "routertype"},
+		Requirements: []string{tdreq.WiFiGenSupport80211ax},
 		Params: []testing.Param{
 			/* Disabled due to <1% pass rate over 30 days. See b/246820339
 			{
@@ -158,6 +159,7 @@ func init() {
 					secConfFac:       wpa.NewConfigFactory("helloworld", wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherCCMP)),
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{tdreq.WiFiGenSupport6E, tdreq.WiFiGenSupport6GHz},
 			}
 			*/
 			/* Disabled due to <1% pass rate over 30 days. See b/241943857
@@ -176,6 +178,7 @@ func init() {
 					secConfFac:       wpa.NewConfigFactory("helloworld", wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherCCMP)),
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{tdreq.WiFiGenSupport6E, tdreq.WiFiGenSupport6GHz},
 			}
 			*/
 			{
@@ -188,6 +191,7 @@ func init() {
 					secConfFac:       wpa.NewConfigFactory("helloworld", wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherCCMP)),
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{tdreq.WiFiGenSupport6E, tdreq.WiFiGenSupport6GHz},
 			},
 			{
 				// Verifies that DUT can connect to a broadcasted wpa (AES) 802.11ax with 80Mhz channel width on the 6ghz band
@@ -199,6 +203,7 @@ func init() {
 					secConfFac:       wpa.NewConfigFactory("helloworld", wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherCCMP)),
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{tdreq.WiFiGenSupport6E, tdreq.WiFiGenSupport6GHz},
 			},
 			{
 				// Verifies that DUT can connect to a broadcasted wpa (AES) 802.11ax with 40Mhz channel width on the 6ghz band
@@ -210,7 +215,7 @@ func init() {
 					secConfFac:       wpa.NewConfigFactory("helloworld", wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherCCMP)),
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
-				ExtraRequirements: []string{tdreq.WiFiRf6E160MHz},
+				ExtraRequirements: []string{tdreq.WiFiRf6E160MHz, tdreq.WiFiGenSupport6E, tdreq.WiFiGenSupport6GHz},
 			},
 		},
 	})

@@ -19,6 +19,7 @@ import (
 	"github.com/google/gopacket/layers"
 
 	"chromiumos/tast/common/network/wpacli"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/ieee80211"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/ctxutil"
@@ -43,6 +44,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtRouters",
 		SoftwareDeps: []string{"rrm_support"},
+		Requirements: []string{tdreq.WiFiGenSupportMBO},
 	})
 }
 
