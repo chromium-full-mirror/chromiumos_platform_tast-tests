@@ -6,6 +6,9 @@ package platform
 
 import (
 	"context"
+	"io/ioutil"
+	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -40,7 +43,7 @@ func init() {
 	})
 }
 
-func checkSetGameMode(ctx context.Context, rm *resourced.Client) (resErr error) {
+func checkSetGameMode(ctx context.Context, rm *resourced.Client, checkSwappinessTuning bool) (resErr error) {
 	// Get the original game mode.
 	origGameMode, err := rm.GameMode(ctx)
 	if err != nil {
@@ -69,6 +72,12 @@ func checkSetGameMode(ctx context.Context, rm *resourced.Client) (resErr error) 
 	}
 	testing.ContextLog(ctx, "Set game mode: ", newGameMode)
 
+	if checkSwappinessTuning {
+		if err := validateSwappiness(ctx, newGameMode); err != nil {
+			return errors.Wrap(err, "validate swappiness failed")
+		}
+	}
+
 	// Check game mode is set to the new value.
 	gameMode, err := rm.GameMode(ctx)
 	if err != nil {
@@ -80,12 +89,17 @@ func checkSetGameMode(ctx context.Context, rm *resourced.Client) (resErr error) 
 	return nil
 }
 
-func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client) (resErr error) {
+func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client, checkSwappinessTuning bool) (resErr error) {
 	var newGameMode uint8 = resourced.GameModeBorealis
 	if err := rm.SetGameModeWithTimeout(ctx, newGameMode, 1); err != nil {
 		return errors.Wrap(err, "failed to set game mode state")
 	}
 	testing.ContextLog(ctx, "Set game mode with 1 second timeout: ", newGameMode)
+	if checkSwappinessTuning {
+		if err := validateSwappiness(ctx, newGameMode); err != nil {
+			return errors.Wrap(err, "validate swappiness failed")
+		}
+	}
 
 	// Check game mode is set to the new value.
 	gameMode, err := rm.GameMode(ctx)
@@ -110,6 +124,53 @@ func checkSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client) (res
 		return errors.Wrap(err, "failed to wait for game mode reset")
 	}
 
+	// Check swappiness is reset after timeout.
+	if checkSwappinessTuning {
+		if err := validateSwappiness(ctx, resourced.GameModeOff); err != nil {
+			return errors.Wrap(err, "Reset swapiness failed")
+		}
+	}
+	return nil
+}
+
+func readSwappiness(ctx context.Context) (int, error) {
+	fileBytes, err := ioutil.ReadFile("/proc/sys/vm/swappiness")
+
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to read swappiness")
+	}
+	swappinessVal, errConv := strconv.Atoi(strings.TrimSuffix(string(fileBytes), "\n"))
+	if errConv != nil {
+		return 0, errors.Wrap(errConv, "failed to parse swappiness to int")
+	}
+	return swappinessVal, nil
+}
+
+// validateSwappiness checks swappiness is tuned correctly:
+//  1. for borealis game, tuned to 30;
+//  2. for others, not tuned.
+func validateSwappiness(ctx context.Context, newGameMode uint8) error {
+	const BorealisSwappiness = 30
+	const DefaultSwappiness = 60
+	// Add a sleep to avoid possbile flakiness that can be caused by
+	// the async modification of swappiness.
+	testing.Sleep(ctx, 500*time.Millisecond)
+	swappinessVal, err := readSwappiness(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read swappiness")
+	}
+	if newGameMode == resourced.GameModeBorealis {
+		// For borealis Game, swappiness should be 30.
+		if swappinessVal != BorealisSwappiness {
+			return errors.Errorf("swappiness value should be 30, but get %d", swappinessVal)
+		}
+	} else {
+		// For other cases, swappiness should be default 60.
+		if swappinessVal != DefaultSwappiness {
+			return errors.Errorf("swappiness value should be 60, but get %d", swappinessVal)
+		}
+	}
+	testing.ContextLog(ctx, "Swappiness validation succeed")
 	return nil
 }
 
@@ -293,7 +354,7 @@ func Resourced(ctx context.Context, s *testing.State) {
 
 	if s.Param().(resourcedTestParams).isBaseline {
 		// Baseline checks.
-		if err := checkSetGameMode(ctx, rm); err != nil {
+		if err := checkSetGameMode(ctx, rm, false); err != nil {
 			s.Fatal("Checking SetGameMode failed: ", err)
 		}
 
@@ -305,7 +366,7 @@ func Resourced(ctx context.Context, s *testing.State) {
 			s.Fatal("Checking memory pressure signal failed: ", err)
 		}
 
-		if err := checkSetGameModeWithTimeout(ctx, rm); err != nil {
+		if err := checkSetGameModeWithTimeout(ctx, rm, false); err != nil {
 			s.Fatal("Checking SetGameModeWithTimeout failed: ", err)
 		}
 
@@ -327,5 +388,13 @@ func Resourced(ctx context.Context, s *testing.State) {
 	// New tests will be added here. Stable tests are promoted to baseline.
 	if err := checkSetMemoryMargins(ctx, rm); err != nil {
 		s.Fatal("Setting memory margins failed: ", err)
+	}
+
+	if err := checkSetGameMode(ctx, rm, true); err != nil {
+		s.Fatal("Checking swappiness tuning with SetGameMode failed: ", err)
+	}
+
+	if err := checkSetGameModeWithTimeout(ctx, rm, true); err != nil {
+		s.Fatal("Checking swappiness tuning with SetGameModeWithTimeout failed: ", err)
 	}
 }
