@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
@@ -24,6 +25,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:firmware", "firmware_ec", "group:labqual"},
+		Requirements: []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR},
 		Params: []testing.Param{
 			{
 				// This test only runs on devices which do not use VPD SAR tables.
