@@ -88,6 +88,8 @@ func init() {
 	})
 }
 
+var tabletModeAngleHasChanged = false
+
 func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 	// getChargerPollOptions sets the time to retry the GetChargerAttached command.
 	getChargerPollOptions := testing.PollOptions{
@@ -183,7 +185,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}
-	setPowerSupply := func(ctx context.Context, connectPower, hasHibernated bool) error {
+	setPowerSupply := func(ctx context.Context, connectPower, waitConnectAfterACPower bool) error {
 		if connectPower {
 			// Connect power supply.
 			if err := h.SetDUTPower(ctx, true); err != nil {
@@ -211,9 +213,9 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 
 			// If DUT has hibernated before, reconnecting power supply will wake up the device.
 			// Wait for DUT to reconnect.
-			if hasHibernated {
+			if waitConnectAfterACPower {
 				s.Log("Waiting for DUT to power ON")
-				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
 				defer cancelWaitConnect()
 
 				var opts []firmware.WaitConnectOption
@@ -304,7 +306,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to set lid state: ", err)
 			}
 		}
-		if args.formFactor == "convertible" {
+		if args.formFactor == "convertible" && tabletModeAngleHasChanged {
 			// Check for tablet mode angles, and if they are different
 			// than the default values, restore them to default.
 			cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
@@ -356,9 +358,9 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			break
 		}
 
-		var deviceHasHibernated bool
+		var waitConnectAfterACPower bool
 		s.Log("Stopping AC Power")
-		if err := setPowerSupply(ctx, false, deviceHasHibernated); err != nil {
+		if err := setPowerSupply(ctx, false, waitConnectAfterACPower); err != nil {
 			s.Fatal("Failed to stop power supply: ", err)
 		}
 
@@ -383,7 +385,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 					return testing.PollBreak(err)
 				}
 				return nil
-			}, &testing.PollOptions{Timeout: 1 * time.Minute, Interval: 1 * time.Second}); err != nil {
+			}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 1 * time.Second}); err != nil {
 				s.Fatal("Failed to set lid state: ", err)
 			}
 			// There's a chance that CCD would close when lid closed.
@@ -406,7 +408,9 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			if err := hibernateDUT(ctx, h, s.DUT(), checkedInfo.hasMicroOrC2D2, tc.lidOpen, args.formFactor, args.tabletModeOff); err != nil {
 				s.Fatal("Failed to hibernate DUT: ", err)
 			}
-			deviceHasHibernated = true
+			if checkedInfo.hasMicroOrC2D2 || tc.lidOpen == "yes" {
+				waitConnectAfterACPower = true
+			}
 		} else {
 			// For DUTs that do not support the ec hibernation command, when lid is open, we could use
 			// a long power button press instead to put DUT in deep sleep. But, when lid is closed without
@@ -424,7 +428,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Reconnecting AC")
-		if err := setPowerSupply(ctx, true, deviceHasHibernated); err != nil {
+		if err := setPowerSupply(ctx, true, waitConnectAfterACPower); err != nil {
 			if _, ok := err.(*retriableErr); ok {
 				s.Log("Retriable error: ", err.(*retriableErr))
 				switch tc.lidOpen {
@@ -548,6 +552,7 @@ func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT, 
 				if err := cmd.ForceTabletModeAngle(ctx, "360", "0"); err != nil {
 					return errors.Wrap(err, "failed to set DUT in clamshell mode")
 				}
+				tabletModeAngleHasChanged = true
 				return nil
 			}
 			return errors.Wrapf(err, "failed to run %s", tabletModeOff)
