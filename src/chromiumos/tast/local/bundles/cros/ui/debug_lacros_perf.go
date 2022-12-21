@@ -23,6 +23,9 @@ const (
 
 	// This URL has black text on a white page. It automatically scrolls up and down.
 	textScrollingURL = "https://petermcneeleychromium.github.io/small_scroll_text/index.html"
+
+	// This URL has a background color that switches between orange and blue at 60fps.
+	colorChangeURL = "https://petermcneeleychromium.github.io/color_change_60fps/index.html"
 )
 
 type debugLacrosTest struct {
@@ -44,17 +47,33 @@ func init() {
 		Timeout:      cuj.CPUStablizationTimeout + debugLacrosTestWaitDuration,
 
 		Params: []testing.Param{{
+			Name: "test_scroll_ash",
 			Val: debugLacrosTest{
 				browserType: browser.TypeAsh,
 				windowURL:   textScrollingURL,
 			},
 			Fixture: "loggedInToCUJUser",
 		}, {
-			Name:              "lacros",
+			Name:              "text_scroll_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: debugLacrosTest{
 				browserType: browser.TypeLacros,
 				windowURL:   textScrollingURL,
+			},
+			Fixture: "loggedInToCUJUserLacros",
+		}, {
+			Name: "color_change_ash",
+			Val: debugLacrosTest{
+				browserType: browser.TypeAsh,
+				windowURL:   colorChangeURL,
+			},
+			Fixture: "loggedInToCUJUser",
+		}, {
+			Name:              "color_change_lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: debugLacrosTest{
+				browserType: browser.TypeLacros,
+				windowURL:   colorChangeURL,
 			},
 			Fixture: "loggedInToCUJUserLacros",
 		}},
