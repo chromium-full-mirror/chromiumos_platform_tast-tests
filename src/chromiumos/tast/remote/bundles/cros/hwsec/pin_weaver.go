@@ -192,6 +192,9 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	if ec := replyWithError.GetError(); ec != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_AUTHORIZATION_KEY_FAILED {
 		s.Fatal("TPM is locked out: ", ec)
 	}
+	if pa := replyWithError.GetErrorInfo().PrimaryAction; pa != uda.PrimaryAction_PRIMARY_INCORRECT_AUTH {
+		s.Fatal("Incorrect pin should result in IncorrectAuth primary action, but got: ", pa)
+	}
 
 	// Since the pin is not locked out yet, we should be able to log back in again.
 	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
@@ -243,6 +246,9 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	// Ensure AutheneticateAuthFactor error code relays TPM is locked out.
 	if ec := replyWithError.GetError(); ec != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
 		s.Fatal("AuthenticateAuthFactor indicates that the TPM is not locked out: ", ec)
+	}
+	if pa := replyWithError.GetErrorInfo().PrimaryAction; pa != uda.PrimaryAction_PRIMARY_TPM_LOCKOUT {
+		s.Fatal("Incorrect pin should result in TpmLockout primary action, but got: ", pa)
 	}
 
 	// Check to make sure that PIN AuthFactor does not appear in StartAuthSessionReply.
