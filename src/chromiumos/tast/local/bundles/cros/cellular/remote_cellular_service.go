@@ -68,7 +68,7 @@ func (s *RemoteCellularService) SetUp(ctx context.Context, req *empty.Empty) (*e
 	}
 
 	// wait for hermes to stabilize before leaving
-	if upstart.JobExists(ctx, "hermes") {
+	if upstart.JobExists(ctx, hermes.JobName) {
 		if err := hermes.WaitForHermesIdle(ctx, 30*time.Second); err != nil {
 			testing.ContextLog(ctx, "Could not confirm if Hermes is idle: ", err)
 		}

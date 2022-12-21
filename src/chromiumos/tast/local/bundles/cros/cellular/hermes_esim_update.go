@@ -48,9 +48,8 @@ func performFWUpdate(ctx context.Context, fwPath string, isValidUpdate bool) err
 	if err := os.Chmod(fwPath, 0644); err != nil {
 		return errors.Wrapf(err, "unable to change permissions of %q", fwPath)
 	}
-	const hermesJobName = "hermes"
-	if err := upstart.RestartJob(ctx, hermesJobName, upstart.WithArg("LOG_LEVEL", "-2"), upstart.WithArg("ESIM_FW_PATH", fwPath)); err != nil {
-		return errors.Wrapf(err, "failed to restart %q", hermesJobName)
+	if err := upstart.RestartJob(ctx, hermes.JobName, upstart.WithArg("LOG_LEVEL", "-2"), upstart.WithArg("ESIM_FW_PATH", fwPath)); err != nil {
+		return errors.Wrapf(err, "failed to restart %q", hermes.JobName)
 	}
 	euicc, _, err := hermes.WaitForEUICC(ctx, false)
 	if err != nil {

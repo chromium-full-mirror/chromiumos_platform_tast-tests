@@ -17,6 +17,11 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	// JobName is the name of the hermes process
+	JobName = "hermes"
+)
+
 // WaitForHermesIdle waits for Chrome to refresh installed profiles before returning.
 func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
 	euiccPaths, err := GetEUICCPaths(ctx)

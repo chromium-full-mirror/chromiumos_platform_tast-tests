@@ -72,8 +72,6 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 	return fd.fdms
 }
 
-const hermesJobName = "hermes"
-
 const uptimeBeforeTest = 2 * time.Minute
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -117,7 +115,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Logf("%q not running", modemfwd.JobName)
 		}
 	}
-	if !upstart.JobExists(ctx, hermesJobName) {
+	if !upstart.JobExists(ctx, hermes.JobName) {
 		return &FixtData{fdms}
 	}
 	// Hermes is usually idle 2 minutes after boot, so go on with the test even if we cannot be sure.
