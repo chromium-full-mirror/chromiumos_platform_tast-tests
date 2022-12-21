@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/ping"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/dut"
@@ -138,6 +139,7 @@ func init() {
 					routerSecConfFac: ax.NewSecOpenConfigParamFac(),
 					secConfFac:       base.NewConfigFactory(),
 				}},
+				ExtraRequirements: []string{tdreq.WiFiRf6E160MHz},
 			}
 			*/
 			/* Disabled due to <1% pass rate over 30 days. See b/241943857
@@ -208,6 +210,7 @@ func init() {
 					secConfFac:       wpa.NewConfigFactory("helloworld", wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherCCMP)),
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{tdreq.WiFiRf6E160MHz},
 			},
 		},
 	})
