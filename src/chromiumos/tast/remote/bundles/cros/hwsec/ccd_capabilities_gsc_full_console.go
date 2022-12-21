@@ -16,15 +16,15 @@ import (
 )
 
 type cCDCapabilitiesGscFullConsoleParam struct {
-	cap_state                        servo.CCDCapState
-	commands_succeed_when_ccd_open   bool
-	commands_succeed_when_ccd_locked bool
+	capState                     servo.CCDCapState
+	commandsSucceedWhenCcdOpen   bool
+	commandsSucceedWhenCcdLocked bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesGscFullConsole,
-		Desc: "Test to verify GscFullConsole locks out restricted console commands.",
+		Desc: "Test to verify GscFullConsole locks out restricted console commands",
 		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
@@ -40,30 +40,30 @@ func init() {
 		Params: []testing.Param{{
 			Name: "cap_default",
 			Val: cCDCapabilitiesGscFullConsoleParam{
-				cap_state:                        servo.CapDefault,
-				commands_succeed_when_ccd_open:   true,
-				commands_succeed_when_ccd_locked: false,
+				capState:                     servo.CapDefault,
+				commandsSucceedWhenCcdOpen:   true,
+				commandsSucceedWhenCcdLocked: false,
 			},
 		}, {
 			Name: "cap_always",
 			Val: cCDCapabilitiesGscFullConsoleParam{
-				cap_state:                        servo.CapAlways,
-				commands_succeed_when_ccd_open:   true,
-				commands_succeed_when_ccd_locked: true,
+				capState:                     servo.CapAlways,
+				commandsSucceedWhenCcdOpen:   true,
+				commandsSucceedWhenCcdLocked: true,
 			},
 		}, {
 			Name: "cap_unless_locked",
 			Val: cCDCapabilitiesGscFullConsoleParam{
-				cap_state:                        servo.CapUnlessLocked,
-				commands_succeed_when_ccd_open:   true,
-				commands_succeed_when_ccd_locked: false,
+				capState:                     servo.CapUnlessLocked,
+				commandsSucceedWhenCcdOpen:   true,
+				commandsSucceedWhenCcdLocked: false,
 			},
 		}, {
 			Name: "cap_if_opened",
 			Val: cCDCapabilitiesGscFullConsoleParam{
-				cap_state:                        servo.CapIfOpened,
-				commands_succeed_when_ccd_open:   true,
-				commands_succeed_when_ccd_locked: false,
+				capState:                     servo.CapIfOpened,
+				commandsSucceedWhenCcdOpen:   true,
+				commandsSucceedWhenCcdLocked: false,
 			},
 		}},
 	})
@@ -74,15 +74,15 @@ func CCDCapabilitiesGscFullConsole(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(cCDCapabilitiesGscFullConsoleParam)
 
 	if err := h.OpenCCD(ctx, true, false); err != nil {
-		s.Fatal("Failed to get open CCD: ", err)
+		s.Fatal("Failed to open CCD: ", err)
 	}
 
-	ccdSettings := map[servo.CCDCap]servo.CCDCapState{"GscFullConsole": userParams.cap_state}
+	ccdSettings := map[servo.CCDCap]servo.CCDCapState{"GscFullConsole": userParams.capState}
 	if err := h.Servo.SetCCDCapability(ctx, ccdSettings); err != nil {
 		s.Fatal("Failed to set `GscFullConsole` capability state: ", err)
 	}
 
-	run_gsc_full_console_commands(ctx, s, userParams.commands_succeed_when_ccd_open)
+	runGscFullConsoleCommands(ctx, s, userParams.commandsSucceedWhenCcdOpen)
 
 	if err := h.Servo.LockCCD(ctx); err != nil {
 		s.Fatal("Failed to lock ccd: ", err)
@@ -91,44 +91,44 @@ func CCDCapabilitiesGscFullConsole(ctx context.Context, s *testing.State) {
 	// Open CCD when finished
 	defer func() {
 		if err := h.OpenCCD(ctx, true, false); err != nil {
-			s.Fatal("Failed to get open CCD: ", err)
+			s.Fatal("Failed to open CCD: ", err)
 		}
 	}()
 
-	run_gsc_full_console_commands(ctx, s, userParams.commands_succeed_when_ccd_locked)
+	runGscFullConsoleCommands(ctx, s, userParams.commandsSucceedWhenCcdLocked)
 }
 
-func run_gsc_full_console_commands(ctx context.Context, s *testing.State, expect_success bool) {
+func runGscFullConsoleCommands(ctx context.Context, s *testing.State, expectSuccess bool) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	for _, tc := range []struct {
-		command       string
-		success_regex string
-		failure_regex string
+		command      string
+		successRegex string
+		failureRegex string
 	}{
 		{
-			command:       "idle s",
-			success_regex: "idle action: sleep",
-			failure_regex: "Console is locked|Access Denied",
+			command:      "idle s",
+			successRegex: "idle action: sleep",
+			failureRegex: "Console is locked|Access Denied",
 		},
 		{
-			command:       "recbtnforce enable",
-			success_regex: "RecBtn",
-			failure_regex: "Access Denied",
+			command:      "recbtnforce enable",
+			successRegex: "RecBtn",
+			failureRegex: "Access Denied",
 		},
 		{
-			command:       "rddkeepalive true",
-			success_regex: "Forcing",
-			failure_regex: "Parameter 1 invalid|Access Denied",
+			command:      "rddkeepalive true",
+			successRegex: "Forcing",
+			failureRegex: "Parameter 1 invalid|Access Denied",
 		},
 	} {
-		regex := tc.success_regex
-		if !expect_success {
-			regex = tc.failure_regex
+		regex := tc.successRegex
+		if !expectSuccess {
+			regex = tc.failureRegex
 		}
 
 		if err := h.Servo.CheckGSCCommandOutput(ctx, tc.command, []string{regex}); err != nil {
-			s.Fatal("Failed to match GSC command output, expected command `"+tc.command+"` to succeed = "+strconv.FormatBool(expect_success)+": ", err)
+			s.Fatal("Failed to match GSC command output, expected command `"+tc.command+"` to succeed = "+strconv.FormatBool(expectSuccess)+": ", err)
 		}
 	}
 }
