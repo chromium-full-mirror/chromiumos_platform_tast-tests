@@ -216,3 +216,29 @@ func (e *EUICC) DisableProfile(ctx context.Context) error {
 	}
 	return nil
 }
+
+// EnableAnyProfile enables any profile (if any).
+func (e *EUICC) EnableAnyProfile(ctx context.Context) error {
+	p, err := e.EnabledProfile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "could not read profile status")
+	}
+
+	if p != nil {
+		return nil
+	}
+
+	// Skip the following if p is not nil
+	profiles, err := e.InstalledProfiles(ctx, true)
+	if err != nil {
+		return errors.Wrap(err, "failed to get installed profiles")
+	}
+	if len(profiles) < 1 {
+		return errors.Wrap(err, "no profiles found on euicc - expected atleast one installed profile")
+	}
+	if err := profiles[0].Call(ctx, hermesconst.ProfileMethodEnable).Err; err != nil {
+		return errors.Wrap(err, "failed to enable profile")
+
+	}
+	return nil
+}

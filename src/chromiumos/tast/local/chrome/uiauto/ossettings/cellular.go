@@ -30,6 +30,27 @@ func WaitUntilRefreshProfileCompletes(ctx context.Context, tconn *chrome.TestCon
 	return nil
 }
 
+// GoToNetworkWithNickName will go to the network details page of the cellular network with the name of |name|.
+func GoToNetworkWithNickName(ctx context.Context, tconn *chrome.TestConn, name string) error {
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+
+	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until refresh profile complete")
+	}
+
+	var NetworkButton = nodewith.NameContaining(name).Role(role.Button)
+
+	if err := ui.WithTimeout(90 * time.Second).WaitUntilExists(NetworkButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find cellular network with name: "+name)
+	}
+
+	if err := ui.LeftClick(NetworkButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click into cellular networks detail view with name: "+name)
+	}
+
+	return nil
+}
+
 // GoToActiveNetworkDetails will go to the network details page of the active cellular network.
 func GoToActiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)

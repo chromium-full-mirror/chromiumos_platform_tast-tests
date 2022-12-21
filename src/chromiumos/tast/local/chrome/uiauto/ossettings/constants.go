@@ -174,6 +174,15 @@ var ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Anc
 
 // Elements in "Cellular detail page"
 var (
+	// MoreActionsBtn is the finder for the more actions button on an eSIM profile detail view.
+	MoreActionsBtn = nodewith.Name("More actions").Role(role.Button)
+
+	// RenameProfileBtn is the finder for the rename profiles button on an eSIM profile detail view.
+	RenameProfileBtn = nodewith.Name("Rename Profile").Role(role.MenuItem)
+
+	// RenameProfileDoneButton is the finder for the Done button in the rename eSIM profile nickname dialog.
+	RenameProfileDoneButton = nodewith.NameContaining("Rename profile to").Role(role.Button)
+
 	// ConnectedStatus is the finder for the connected status text UI in the cellular detail page.
 	ConnectedStatus = nodewith.Name("Connected").Role(role.StaticText)
 
