@@ -13,6 +13,7 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/policy"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/tunneled1x"
 	"chromiumos/tast/common/wifi/security/wpa"
@@ -52,6 +53,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.policy.PolicyService"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "wificellFixtEnrolled",
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{
 				// Verify that DUT can connect to a WPA-EAP AP before sign in and still connect to the same WPA-EAP AP after sign in (b/192279295)

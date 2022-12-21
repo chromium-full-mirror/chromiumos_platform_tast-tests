@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"chromiumos/tast/common/network/iw"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	localiw "chromiumos/tast/local/network/iw"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -28,6 +29,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi"},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

@@ -42,7 +42,7 @@ func init() {
 		Vars:        []string{"router"},
 		VarDeps:     []string{"wifi.signinProfileTestExtensionManifestKey"},
 		// List of requirements this test satisfies.
-		Requirements: []string{tdreq.WiFiCoexSupportBT},
+		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

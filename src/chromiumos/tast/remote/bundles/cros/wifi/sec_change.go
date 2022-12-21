@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/errors"
@@ -27,6 +28,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_cq"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtWithCapture",
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

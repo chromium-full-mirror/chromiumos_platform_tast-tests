@@ -41,7 +41,7 @@ func init() {
 		// which causes a second router reboot on openwrt routers. We have not noticed timeout cases on gales.
 		Timeout: 10 * time.Minute,
 		// List of requirements this test satisfies.
-		Requirements: []string{tdreq.WiFiCoexSupportBT},
+		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

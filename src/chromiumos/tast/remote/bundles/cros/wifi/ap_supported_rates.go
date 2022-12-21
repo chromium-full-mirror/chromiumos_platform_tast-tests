@@ -11,6 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/ip"
 	"chromiumos/tast/remote/wificell"
@@ -39,6 +40,7 @@ func init() {
 		SoftwareDeps: []string{"no_ath10k_4_4"},
 		// Low flake rate for Marvell devices that are trending towards AUE. Skip on those platforms.
 		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{
 				Name: "11g",

@@ -26,7 +26,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		HardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
-		Requirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiGenSupport6E},
+		Requirements: []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiGenSupport6E, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

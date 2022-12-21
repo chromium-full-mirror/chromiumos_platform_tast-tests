@@ -35,7 +35,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothService"},
 		Vars:         []string{"router"},
 		// List of requirements this test satisfies.
-		Requirements: []string{tdreq.WiFiCoexSupportBT},
+		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

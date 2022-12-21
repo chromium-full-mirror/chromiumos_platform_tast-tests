@@ -8,6 +8,7 @@ import (
 	"context"
 	"strconv"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/network/iw"
@@ -27,6 +28,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_cq"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

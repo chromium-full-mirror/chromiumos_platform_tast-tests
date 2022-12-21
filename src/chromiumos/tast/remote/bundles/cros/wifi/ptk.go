@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/ctxutil"
 	remoteping "chromiumos/tast/remote/network/ping"
@@ -32,6 +33,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtWithCapture",
 		Timeout:      8 * time.Minute,
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

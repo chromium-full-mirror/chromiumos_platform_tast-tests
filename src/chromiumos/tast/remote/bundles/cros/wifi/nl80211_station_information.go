@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
@@ -40,6 +41,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 		Fixture:      "wificellFixt",
 		Timeout:      2 * time.Minute,
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

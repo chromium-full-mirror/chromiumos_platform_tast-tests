@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/wpacli"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/network/cmd"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
@@ -27,6 +28,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

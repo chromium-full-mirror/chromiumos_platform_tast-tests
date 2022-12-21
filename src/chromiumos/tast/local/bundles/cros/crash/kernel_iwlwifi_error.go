@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/network/iface"
@@ -46,6 +47,7 @@ func init() {
 		// If the test is skipping when it should run or vice versa, check the hwdep
 		// to see if your board is incorrectly included/excluded.
 		HardwareDeps: hwdep.D(hwdep.WifiIntel()),
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 

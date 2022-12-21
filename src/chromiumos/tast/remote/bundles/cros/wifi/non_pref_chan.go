@@ -17,6 +17,7 @@ import (
 	"github.com/google/gopacket/layers"
 
 	"chromiumos/tast/common/network/wpacli"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/ieee80211"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -41,6 +42,7 @@ func init() {
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
 		SoftwareDeps: []string{"mbo"},
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 
