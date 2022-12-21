@@ -19,8 +19,8 @@ type bootConfig struct {
 	numTrials int
 	// Use O_DIRECT in disk access for ARCVM
 	oDirect bool
-	// Use io_uring async executor in crosvm devices for ARCVM
-	ioUring bool
+	// Use io_uring-enabled virtio-blk in crosvm.
+	ioUringBlock bool
 	// Extra Chrome command line options
 	chromeArgs []string
 }
@@ -92,10 +92,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           5 * time.Minute,
 		}, {
-			Name: "vm_io_uring",
+			Name: "vm_io_uring_blk",
 			Val: bootConfig{
-				numTrials: 1,
-				ioUring:   true,
+				numTrials:    1,
+				ioUringBlock: true,
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm", "io_uring"},
@@ -137,8 +137,8 @@ func runBoot(ctx context.Context, s *testing.State) {
 	if s.Param().(bootConfig).oDirect {
 		arcvmConf += "O_DIRECT=true\n"
 	}
-	if s.Param().(bootConfig).ioUring {
-		arcvmConf += "!--async-executor\n--async-executor=uring\n"
+	if s.Param().(bootConfig).ioUringBlock {
+		arcvmConf += "BLOCK_ASYNC_EXECUTOR=uring\n"
 	}
 	if arcvmConf != "" {
 		if err := arc.WriteArcvmDevConf(ctx, arcvmConf); err != nil {
