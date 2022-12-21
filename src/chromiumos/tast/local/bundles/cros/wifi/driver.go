@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
@@ -28,6 +29,8 @@ func init() {
 		// Run on both Tast CQ and suite:wifi_matfunc.
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi", "no_kernel_upstream"},
+		// List of requirements this test satisfies.
+		Requirements: []string{tdreq.WiFiDrvSupportCrOS},
 	})
 }
 

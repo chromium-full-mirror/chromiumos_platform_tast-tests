@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/network/iw"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/wlan"
@@ -23,6 +24,8 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
+		// List of requirements this test satisfies.
+		Requirements: []string{tdreq.WiFiDrvSupportCfg80211},
 	})
 }
 
