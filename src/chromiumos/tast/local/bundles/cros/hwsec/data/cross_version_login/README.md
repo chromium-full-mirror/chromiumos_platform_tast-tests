@@ -6,7 +6,7 @@ states, collected on various versions of ChromeOS.
 ### Collecting snapshots
 
 To collect such a snapshot, use the
-`hwsec-test-utils/cross_version_login/prepare_cross_version_login_data.py`
+`hwsec-host-utils/cross_version_login/prepare_cross_version_login_data.py`
 script.
 
 Note that some snapshots are collected from "custombuild" VMs, which are

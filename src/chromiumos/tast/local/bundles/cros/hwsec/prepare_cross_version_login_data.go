@@ -38,7 +38,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, s *testing.State) {
 	daemonController := helper.DaemonController()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
 
-	// This test is only running manually to generate the login data for hwsec.CrossVersionLogin. The data would be uploaded by the scripts (See src/platform2/hwsec-test-utils/cross_version_login/prepare_cross_version_login_data.sh)..
+	// This test is only running manually to generate the login data for hwsec.CrossVersionLogin. The data would be uploaded by the scripts (See src/platform2/hwsec-host-utils/cross_version_login/prepare_cross_version_login_data.sh).
 	// Therefore, the tmpDir would not be removed at the end of test because the data would be uploaded laterand then fetched when running hwsec.CrossVersionLogin.
 	const tmpDir = "/tmp/cross_version_login"
 	if err := os.MkdirAll(tmpDir, 0700); err != nil {
