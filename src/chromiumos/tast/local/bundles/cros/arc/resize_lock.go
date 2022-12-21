@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/adb"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
@@ -138,6 +139,10 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -156,7 +161,7 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set shelf alignment to Bottom: ", err)
 	}
 	// Be nice and restore shelf alignment to its original state on exit.
-	defer ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, origShelfAlignment)
+	defer ash.SetShelfAlignment(cleanupCtx, tconn, dispInfo.ID, origShelfAlignment)
 
 	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
 	if err != nil {
@@ -166,17 +171,13 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
 	}
 	// Be nice and restore shelf behavior to its original state on exit.
-	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
+	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
 
-	tabletModeStatus, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
-	}
-	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set device to clamshell mode: ", err)
 	}
-	// Be nice and restore tablet mode to its original state on exit.
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeStatus)
+	defer cleanup(cleanupCtx)
 
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
@@ -348,15 +349,16 @@ func testTablet(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
-	tabletModeStatus, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get tablet mode status")
-	}
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeStatus)
+	// Reserve a short time for tablet mode cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
-	if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
+	if err != nil {
 		return errors.Wrap(err, "failed to change device to tablet mode")
 	}
+	defer cleanup(cleanupCtx)
 
 	activity, err := arc.NewActivity(a, packageName, activityName)
 	if err != nil {
@@ -367,9 +369,9 @@ func testTablet(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
-	defer activity.Stop(ctx, tconn)
+	defer activity.Stop(cleanupCtx, tconn)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_dump_"+testName)
 
 	// Verify that resize lock isn't enabled in tablet mode.
 	if err := wm.CheckResizeLockState(ctx, tconn, cr, activity, wm.NoneResizeLockMode, false /* isSplashVisible */); err != nil {
