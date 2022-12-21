@@ -113,6 +113,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/spera"
 	_ "chromiumos/tast/local/bundles/cros/starfish"
 	_ "chromiumos/tast/local/bundles/cros/storage"
+	_ "chromiumos/tast/local/bundles/cros/supporttool"
 	_ "chromiumos/tast/local/bundles/cros/system"
 	_ "chromiumos/tast/local/bundles/cros/tape"
 	_ "chromiumos/tast/local/bundles/cros/taskmanager"
