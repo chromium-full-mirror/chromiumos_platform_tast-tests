@@ -149,7 +149,16 @@ func Run(ctx context.Context, s *testing.State) {
 		if err := p.language.Install(tconn)(ctx); err != nil {
 			s.Fatalf("Failed to install %s: %v", p.language.Name, err)
 		}
+
+		if p.language != ime.DefaultInputMethod {
+			defer action.Combine(
+				fmt.Sprintf("remove %v", p.language),
+				p.language.Remove(tconn),
+				p.language.WaitUntilRemoved(tconn),
+			)(closeCtx)
+		}
 	}
+	defer ime.DefaultInputMethod.Activate(tconn)(closeCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		const docsURL = "https://docs.new"
