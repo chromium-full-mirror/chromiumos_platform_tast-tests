@@ -47,7 +47,7 @@ func init() {
 			// * the first version that has type set in password KeyData - R93,
 			// * Long-term Support (LTS) version - R96.
 			// * Long-term Support (LTS) version - R102.
-			// * the newest snapshotted version - R107.
+			// * the newest snapshotted version - R108.
 			Name: "small",
 			// These data are generated on betty but could be used on both betty and
 			// amd64-generic. However it could not be used on board with dynamic tpm,
@@ -63,7 +63,7 @@ func init() {
 				"R93-14092.106.0-custombuild20220713_betty_20220719",
 				"R96-14268.94.0-custombuild20220714_betty_20220719",
 				"R102-14695.114.0-custombuild20220718_betty_20220719",
-				"R107-15117.112.0_betty_20221129",
+				"R108-15183.69.0_betty_20221221",
 			},
 			ExtraData: []string{
 				// See cross_version_login/README.md on how to create these.
@@ -77,8 +77,8 @@ func init() {
 				"cross_version_login/R96-14268.94.0-custombuild20220714_betty_20220719_data.tar.gz",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_betty_20220719_config.json",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_betty_20220719_data.tar.gz",
-				"cross_version_login/R107-15117.112.0_betty_20221129_config.json",
-				"cross_version_login/R107-15117.112.0_betty_20221129_data.tar.gz",
+				"cross_version_login/R108-15183.69.0_betty_20221221_config.json",
+				"cross_version_login/R108-15183.69.0_betty_20221221_data.tar.gz",
 			},
 		}, {
 			// This test contains all versions that were omitted from the "small"
@@ -102,6 +102,7 @@ func init() {
 				"R104-14909.132.0_betty_20221202",
 				"R105-14989.107.0_betty_20221202",
 				"R106-15054.114.0_betty_20221129",
+				"R107-15117.112.0_betty_20221129",
 			},
 			ExtraData: []string{
 				"cross_version_login/R89-13729.85.0-custombuild20220715_betty_20220719_config.json",
@@ -132,13 +133,15 @@ func init() {
 				"cross_version_login/R105-14989.107.0_betty_20221202_data.tar.gz",
 				"cross_version_login/R106-15054.114.0_betty_20221129_config.json",
 				"cross_version_login/R106-15054.114.0_betty_20221129_data.tar.gz",
+				"cross_version_login/R107-15117.112.0_betty_20221129_config.json",
+				"cross_version_login/R107-15117.112.0_betty_20221129_data.tar.gz",
 			},
 		}, {
 			// This test contains a minimal set of "interesting" versions to be tested
 			// on tpm_dynamic boards on the CQ.
 			// * the oldest snapshotted version - R96,
 			// * Long-term Support (LTS) version - R102.
-			// * the newest snapshotted version - R107.
+			// * the newest snapshotted version - R108.
 			Name:              "tpm_dynamic_small",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraAttr:         []string{"group:mainline"},
@@ -146,15 +149,15 @@ func init() {
 			Val: []string{
 				"R96-14268.94.0-custombuild20220715_reven-vmtest_20220719",
 				"R102-14695.114.0-custombuild20220718_reven-vmtest_20220719",
-				"R107-15117.112.0_reven-vmtest_20221129",
+				"R108-15183.69.0_reven-vmtest_20221221",
 			},
 			ExtraData: []string{
 				"cross_version_login/R96-14268.94.0-custombuild20220715_reven-vmtest_20220719_config.json",
 				"cross_version_login/R96-14268.94.0-custombuild20220715_reven-vmtest_20220719_data.tar.gz",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_reven-vmtest_20220719_config.json",
 				"cross_version_login/R102-14695.114.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
-				"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_config.json",
-				"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_data.tar.gz",
+				"cross_version_login/R108-15183.69.0_reven-vmtest_20221221_config.json",
+				"cross_version_login/R108-15183.69.0_reven-vmtest_20221221_data.tar.gz",
 			},
 		}, {
 			// This test contains all versions that were omitted from the
@@ -174,6 +177,7 @@ func init() {
 				"R104-14909.132.0_reven-vmtest_20221202",
 				"R105-14989.108.0_reven-vmtest_20221202",
 				"R106-15054.114.0_reven-vmtest_20221129",
+				"R107-15117.112.0_reven-vmtest_20221129",
 			},
 			ExtraData: []string{
 				"cross_version_login/R97-14324.81.0-custombuild20220716_reven-vmtest_20220719_config.json",
@@ -196,6 +200,8 @@ func init() {
 				"cross_version_login/R105-14989.108.0_reven-vmtest_20221202_data.tar.gz",
 				"cross_version_login/R106-15054.114.0_reven-vmtest_20221129_config.json",
 				"cross_version_login/R106-15054.114.0_reven-vmtest_20221129_data.tar.gz",
+				"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_config.json",
+				"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_data.tar.gz",
 			},
 		}, {
 			// To test data migration from the current device to itself. This is for verifying the functionality of hwsec.CrossVersionLogin and hwsec.PrepareCrossVersionLoginData.
