@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
@@ -153,6 +154,10 @@ func WindowState(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -162,23 +167,13 @@ func WindowState(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install WM24 app: ", err)
 	}
 
-	// Restore tablet mode to its original state on exit.
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
-	}
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-
 	testParams := s.Param().(windowStateParams)
 
-	deviceMode := "clamshell"
-	if testParams.tabletMode {
-		deviceMode = "tablet"
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParams.tabletMode)
+	if err != nil {
+		s.Fatalf("Failed to set tablet mode to %v: %v", testParams.tabletMode, err)
 	}
-	s.Logf("Setting device to %v mode", deviceMode)
-	if err := ash.SetTabletModeEnabled(ctx, tconn, testParams.tabletMode); err != nil {
-		s.Fatalf("Failed to set tablet mode enabled to %t: %v", testParams.tabletMode, err)
-	}
+	defer cleanup(cleanupCtx)
 
 	// Run the different test cases.
 	for _, test := range testParams.tests {
