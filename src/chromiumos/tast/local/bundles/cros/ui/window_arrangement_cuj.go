@@ -18,9 +18,9 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -110,30 +110,6 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test api: ", err)
 	}
 
-	var cs ash.ConnSource
-	var br *browser.Browser
-	var bTconn *chrome.TestConn
-	switch testParam.BrowserType {
-	case browser.TypeAsh:
-		cs = cr
-		br = cr.Browser()
-		bTconn = tconn
-	case browser.TypeLacros:
-		// Launch lacros.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(closeCtx)
-		cs = l
-		br = l.Browser()
-
-		bTconn, err = l.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
-		}
-	}
-
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srv.Close()
 	pipVideoTestURL := srv.URL + "/pip.html"
@@ -191,6 +167,18 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	connNoPiP, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.BrowserType, chrome.BlankURL)
+	if err != nil {
+		s.Fatal("Failed to setup Chrome: ", err)
+	}
+	defer closeBrowser(closeCtx)
+	defer connNoPiP.Close()
+
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API connection: ", err)
+	}
+
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to create TabCrashChecker: ", err)
@@ -242,11 +230,9 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
-	connNoPiP, err := cs.NewConn(ctx, pipVideoTestURL)
-	if err != nil {
+	if err := connNoPiP.Navigate(ctx, pipVideoTestURL); err != nil {
 		s.Fatal("Failed to load pip.html: ", err)
 	}
-	defer connNoPiP.Close()
 	// Close the browser window at the end of the test. If it is left playing a video, it
 	// will cause the test server's Close() function to block for a few minutes.
 	defer connNoPiP.CloseTarget(closeCtx)
@@ -255,7 +241,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for pip.html to achieve quiescence: ", err)
 	}
 
-	connPiP, err := cs.NewConn(ctx, pipVideoTestURL)
+	connPiP, err := br.NewConn(ctx, pipVideoTestURL)
 	if err != nil {
 		s.Fatal("Failed to load pip.html: ", err)
 	}
@@ -282,14 +268,6 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	}
 	if err := webutil.WaitForQuiescence(ctx, connPiP, timeout); err != nil {
 		s.Fatal("Failed to wait for quiescence: ", err)
-	}
-
-	// Lacros specific setup.
-	if testParam.BrowserType == browser.TypeLacros {
-		// Close blank tab created at startup after creating other tabs.
-		if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-			s.Fatal("Failed to close blank tab: ", err)
-		}
 	}
 
 	// For clamshell variants, activate the tab on the left.
