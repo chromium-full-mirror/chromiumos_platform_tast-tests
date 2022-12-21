@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -53,7 +52,7 @@ func ShillCellularModemmanager(ctx context.Context, s *testing.State) {
 		s.Fatalf("Path mismatch, got: %q, want: %q", modemPath, modem1.String())
 	}
 
-	if err := upstart.RestartJob(ctx, "modemmanager"); err != nil {
+	if err := cellular.RestartModemManager(ctx); err != nil {
 		s.Fatal("Failed to restart modemmanager: ", err)
 	}
 

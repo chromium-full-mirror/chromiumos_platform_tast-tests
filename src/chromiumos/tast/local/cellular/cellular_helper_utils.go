@@ -14,8 +14,15 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"chromiumos/tast/local/modemmanager"
+	"chromiumos/tast/local/shill"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/timing"
 )
+
+const verboseShillLogLevel = -3
+const verboseShillLogScopes = "cellular+modem+device+dbus+manager"
 
 var (
 	deviceVariant = ""
@@ -302,4 +309,55 @@ func TagKnownBugOnBoard(ctx context.Context, errIn error, bugNumber string, boar
 		}
 	}
 	return errIn
+}
+
+// GetShillUpstartArgsForVerboseLogging Returns the upstart arguments to configure verbose logging in shill.
+func GetShillUpstartArgsForVerboseLogging() []upstart.Arg {
+	return []upstart.Arg{upstart.WithArg("SHILL_LOG_SCOPES", verboseShillLogScopes),
+		upstart.WithArg("SHILL_LOG_LEVEL", strconv.Itoa(verboseShillLogLevel))}
+}
+
+// GetMMUpstartArgsForVerboseLogging Returns the upstart arguments to configure verbose logging in modemmanager.
+func GetMMUpstartArgsForVerboseLogging() []upstart.Arg {
+	return []upstart.Arg{upstart.WithArg("MM_LOGLEVEL", "DEBUG")}
+}
+
+func setShillLoggingConfig(ctx context.Context, level int, scopes []string) error {
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create shill manager proxy")
+	}
+
+	if err := manager.SetDebugLevel(ctx, level); err != nil {
+		return errors.Wrap(err, "failed to set the debug level")
+	}
+
+	if err := manager.SetDebugTags(ctx, scopes); err != nil {
+		return errors.Wrap(err, "failed to set the debug tags")
+	}
+
+	return nil
+}
+
+// SetShillVerboseLogging sets the device logging configuration in shill to verbose.
+func SetShillVerboseLogging(ctx context.Context) error {
+	return setShillLoggingConfig(ctx, verboseShillLogLevel, strings.Split(verboseShillLogScopes, "+"))
+}
+
+// SetShillDefaultLogging sets the device logging to its default level.
+func SetShillDefaultLogging(ctx context.Context) error {
+	return setShillLoggingConfig(ctx, 0, []string{})
+}
+
+// RestartModemManager  - restart modemmanager with debug logs enabled
+// Return nil if restart succeeds, else return error.
+func RestartModemManager(ctx context.Context) error {
+	ctx, st := timing.Start(ctx, "Helper.RestartModemManager")
+	defer st.End()
+
+	if err := upstart.RestartJob(ctx, modemmanager.JobName, GetMMUpstartArgsForVerboseLogging()...); err != nil {
+		return errors.Wrap(err, "failed to restart modemmanager")
+	}
+
+	return nil
 }

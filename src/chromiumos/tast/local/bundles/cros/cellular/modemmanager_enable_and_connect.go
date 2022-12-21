@@ -66,7 +66,7 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		defer cancel()
 		defer enableFunc(ctx)
 		// Restart ModemManager after test
-		defer helper.RestartModemManager(ctx, true)
+		defer cellular.RestartModemManager(ctx)
 		ctx = newCtx
 	}
 

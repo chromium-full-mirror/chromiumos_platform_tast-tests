@@ -525,24 +525,6 @@ func initProperty(ctx context.Context, properties *shill.PropertyHolder, prop st
 
 }
 
-// RestartModemManager  - restart modemmanager with debug logs enabled/disabled.
-// Return nil if restart succeeds, else return error.
-func (h *Helper) RestartModemManager(ctx context.Context, enableDebugLogs bool) error {
-	ctx, st := timing.Start(ctx, "Helper.RestartModemManager")
-	defer st.End()
-
-	logLevel := "INFO"
-	if enableDebugLogs {
-		logLevel = "DEBUG"
-	}
-
-	if err := upstart.RestartJob(ctx, "modemmanager", upstart.WithArg("MM_LOGLEVEL", logLevel)); err != nil {
-		return errors.Wrap(err, "failed to restart modemmanager")
-	}
-
-	return nil
-}
-
 // ResetShill restarts shill and clears all profiles.
 func (h *Helper) ResetShill(ctx context.Context) []error {
 	var errs []error
@@ -552,7 +534,7 @@ func (h *Helper) ResetShill(ctx context.Context) []error {
 	if err := os.Remove(shillconst.DefaultProfilePath); err != nil && !os.IsNotExist(err) {
 		errs = append(errs, errors.Wrap(err, "failed to remove default profile"))
 	}
-	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName, GetShillUpstartArgsForVerboseLogging()...); err != nil {
 		// No more can be done if shill doesn't start
 		return append(errs, errors.Wrap(err, "failed to restart shill"))
 	}

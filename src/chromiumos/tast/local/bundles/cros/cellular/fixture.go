@@ -103,7 +103,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := cellular.EnsureUptime(ctx, uptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
 	}
-
+	if err := cellular.SetShillVerboseLogging(ctx); err != nil {
+		s.Fatal("Failed to set shill's logging config to verbose: ", err)
+	}
 	if f.sf == nil {
 		var err error
 		if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
@@ -172,10 +174,10 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 		if _, err := stopJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", modemmanager.JobName, err)
 		}
-		if err := upstart.StartJob(ctx, shill.JobName); err != nil {
+		if err := upstart.StartJob(ctx, shill.JobName, cellular.GetShillUpstartArgsForVerboseLogging()...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", shill.JobName, err)
 		}
-		if err := upstart.StartJob(ctx, modemmanager.JobName); err != nil {
+		if err := upstart.StartJob(ctx, modemmanager.JobName, cellular.GetMMUpstartArgsForVerboseLogging()...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
 		}
 		if _, err := modemmanager.NewModem(ctx); err != nil {
@@ -198,6 +200,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		if err := f.sf.Teardown(ctx); err != nil {
 			s.Fatalf("Failed to teardown starfish: %s", err)
 		}
+	}
+	if err := cellular.SetShillDefaultLogging(ctx); err != nil {
+		s.Fatal("Failed to reset shill's logging config: ", err)
 	}
 }
 

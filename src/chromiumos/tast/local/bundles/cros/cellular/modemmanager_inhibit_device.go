@@ -39,7 +39,7 @@ func ModemmanagerInhibitDevice(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read autotest_host_info_labels: ", err)
 	}
 
-	helper, err := cellular.NewHelperWithLabels(ctx, labels)
+	_, err = cellular.NewHelperWithLabels(ctx, labels)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}
@@ -49,7 +49,7 @@ func ModemmanagerInhibitDevice(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		// Restart ModemManager after Inhibit test
-		if err := helper.RestartModemManager(ctx, true); err != nil {
+		if err := cellular.RestartModemManager(ctx); err != nil {
 			s.Fatal("Failed to restart ModemManager: ", err)
 		}
 	}(cleanupCtx)
