@@ -79,7 +79,7 @@ func setUp(ctx context.Context, env *TestEnv, isGuest bool) error {
 	env.CreatedDirectories = append(env.CreatedDirectories, "/var/cache/shill", "/run/shill", "/run/state/logged-in", "/run/dhcpcd", "/var/lib/dhcpcd")
 
 	// Stop shill temporarily.
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		return errors.Wrap(err, "failed stopping shill")
 	}
 
@@ -111,7 +111,7 @@ func setUp(ctx context.Context, env *TestEnv, isGuest bool) error {
 // tearDown performs cleanup at the end of the test.
 func tearDown(ctx context.Context, env *TestEnv) {
 	// Stop any shill instances started during testing.
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		testing.ContextLog(ctx, errors.Wrap(err, "failed stopping shill"))
 	}
 
@@ -119,7 +119,7 @@ func tearDown(ctx context.Context, env *TestEnv) {
 		testing.ContextLog(ctx, errors.Wrap(err, "failed erasing the system state"))
 	}
 
-	if err := upstart.RestartJob(ctx, "shill"); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 		testing.ContextLog(ctx, errors.Wrap(err, "failed restarting shill"))
 	}
 }

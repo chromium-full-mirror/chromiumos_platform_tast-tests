@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/starfish"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -72,7 +73,6 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 }
 
 const hermesJobName = "hermes"
-const shillJobName = "shill"
 
 const uptimeBeforeTest = 2 * time.Minute
 
@@ -168,14 +168,14 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 	if s.HasError() {
 		testing.ContextLog(ctx, "Fixture detected a test failure, restarting MM and Shill")
 		// stop and start jobs instead of upstart.Restart to emulate a reboot.
-		if _, err := stopJob(ctx, shillJobName); err != nil {
-			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", shillJobName, err)
+		if _, err := stopJob(ctx, shill.JobName); err != nil {
+			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", shill.JobName, err)
 		}
 		if _, err := stopJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", modemmanager.JobName, err)
 		}
-		if err := upstart.StartJob(ctx, shillJobName); err != nil {
-			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", shillJobName, err)
+		if err := upstart.StartJob(ctx, shill.JobName); err != nil {
+			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", shill.JobName, err)
 		}
 		if err := upstart.StartJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)

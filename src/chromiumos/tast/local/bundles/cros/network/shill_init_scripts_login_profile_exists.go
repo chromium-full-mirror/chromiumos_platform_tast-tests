@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/shillscript"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -39,7 +40,7 @@ func ShillInitScriptsLoginProfileExists(ctx context.Context, s *testing.State) {
 // Login script should only push (and not create) the user profile
 // if a user profile already exists.
 func testLoginProfileExists(ctx context.Context, env *shillscript.TestEnv) error {
-	if err := upstart.StartJob(ctx, "shill"); err != nil {
+	if err := upstart.StartJob(ctx, shill.JobName); err != nil {
 		return errors.Wrap(err, "failed starting shill")
 	}
 

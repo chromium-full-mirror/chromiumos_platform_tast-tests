@@ -128,7 +128,7 @@ func ShillVeth(ctx context.Context, s *testing.State) {
 	// Note: that should not include the Priority set above.
 	// On restart Shill will create a Device for the built-in Ethernet with properties from the default profile.
 	s.Log("Restarting Shill")
-	if err := upstart.RestartJob(ctx, "shill"); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed starting Shill: ", err)
 	}
 	restarted = true

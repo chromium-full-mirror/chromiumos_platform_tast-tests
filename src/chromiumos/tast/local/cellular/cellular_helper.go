@@ -546,13 +546,13 @@ func (h *Helper) RestartModemManager(ctx context.Context, enableDebugLogs bool) 
 // ResetShill restarts shill and clears all profiles.
 func (h *Helper) ResetShill(ctx context.Context) []error {
 	var errs []error
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		errs = append(errs, errors.Wrap(err, "failed to stop shill"))
 	}
 	if err := os.Remove(shillconst.DefaultProfilePath); err != nil && !os.IsNotExist(err) {
 		errs = append(errs, errors.Wrap(err, "failed to remove default profile"))
 	}
-	if err := upstart.RestartJob(ctx, "shill"); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 		// No more can be done if shill doesn't start
 		return append(errs, errors.Wrap(err, "failed to restart shill"))
 	}

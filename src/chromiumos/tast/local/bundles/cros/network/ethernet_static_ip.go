@@ -108,11 +108,11 @@ func EthernetStaticIP(ctx context.Context, s *testing.State) {
 
 	func() {
 		// Stop shill temporarily and remove the default profile.
-		if err := upstart.StopJob(ctx, "shill"); err != nil {
+		if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 			s.Fatal("Failed stopping shill: ", err)
 		}
 		defer func() {
-			if err := upstart.RestartJob(ctx, "shill"); err != nil {
+			if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 				s.Fatal("Failed starting shill: ", err)
 			}
 		}()
@@ -142,9 +142,9 @@ func EthernetStaticIP(ctx context.Context, s *testing.State) {
 		manager.PopProfile(ctx, testDefaultProfileName)
 		manager.RemoveProfile(ctx, testDefaultProfileName)
 
-		upstart.StopJob(ctx, "shill")
+		upstart.StopJob(ctx, shill.JobName)
 		os.Remove(shillconst.DefaultProfilePath)
-		upstart.RestartJob(ctx, "shill")
+		upstart.RestartJob(ctx, shill.JobName)
 	}()
 
 	// Pop user profiles and push a temporary default profile on top.

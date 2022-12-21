@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -34,7 +35,7 @@ func ShillStability(ctx context.Context, s *testing.State) {
 	// Returns PID of main shill process. Calls s.Fatal if we can't find
 	// shill.
 	getPID := func() int {
-		_, _, pid, err := upstart.JobStatus(ctx, "shill")
+		_, _, pid, err := upstart.JobStatus(ctx, shill.JobName)
 		if err != nil {
 			s.Fatal("Failed to find shill job: ", err)
 		} else if pid == 0 {

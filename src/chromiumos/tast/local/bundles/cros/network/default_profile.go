@@ -48,11 +48,11 @@ func DefaultProfile(ctx context.Context, s *testing.State) {
 	defer unlock()
 
 	// Stop shill temporarily and remove the default profile.
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed stopping shill: ", err)
 	}
 	os.Remove(shillconst.DefaultProfilePath)
-	if err := upstart.RestartJob(ctx, "shill"); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed starting shill: ", err)
 	}
 

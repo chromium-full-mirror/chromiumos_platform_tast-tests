@@ -162,7 +162,7 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 	defer unlock()
 
 	// Stop shill to trigger the persistence logic.
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed stopping shill: ", err)
 	}
 
@@ -202,7 +202,7 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 
 	// Re-start shill now that the tokens are re-ordered.
 	// Shill's persistence logic should be able to fix mismatched slots.
-	if err := upstart.StartJob(ctx, "shill"); err != nil {
+	if err := upstart.StartJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed starting shill: ", err)
 	}
 

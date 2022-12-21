@@ -5,4 +5,9 @@
 // Package shill provides D-Bus wrappers and utilities for shill service.
 package shill
 
-const dbusService = "org.chromium.flimflam"
+const (
+	// dbus constants
+	dbusService = "org.chromium.flimflam"
+	// JobName is the name of the shill process
+	JobName = "shill"
+)

@@ -107,7 +107,7 @@ func ConfigureServiceForUserProfile(ctx context.Context, s *testing.State) {
 		}
 		defer unlock()
 
-		if err := upstart.RestartJob(ctx, "shill"); err != nil {
+		if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 			s.Fatal("Failed restarting shill: ", err)
 		}
 	}()

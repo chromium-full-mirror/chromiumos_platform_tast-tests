@@ -55,13 +55,13 @@ func init() {
 // configuration and resetting it in a known default state.
 func ResetShill(ctx context.Context) []error {
 	var errs []error
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		errs = append(errs, errors.Wrap(err, "failed to stop shill"))
 	}
 	if err := os.Remove(shillconst.DefaultProfilePath); err != nil && !os.IsNotExist(err) {
 		errs = append(errs, errors.Wrap(err, "failed to remove default profile"))
 	}
-	if err := upstart.RestartJob(ctx, "shill"); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 		// No more can be done if shill doesn't start
 		return append(errs, errors.Wrap(err, "failed to restart shill"))
 	}

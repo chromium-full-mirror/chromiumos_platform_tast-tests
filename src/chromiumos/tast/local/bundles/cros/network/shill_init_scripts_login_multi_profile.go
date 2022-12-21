@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/shillscript"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -38,7 +39,7 @@ func ShillInitScriptsLoginMultiProfile(ctx context.Context, s *testing.State) {
 // if called more than once without an intervening logout.  Only
 // the initial user profile should be created.
 func testLoginMultiProfile(ctx context.Context, env *shillscript.TestEnv) error {
-	if err := upstart.StartJob(ctx, "shill"); err != nil {
+	if err := upstart.StartJob(ctx, shill.JobName); err != nil {
 		return errors.Wrap(err, "failed starting shill")
 	}
 

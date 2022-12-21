@@ -10,6 +10,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/shillscript"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -36,7 +37,7 @@ func ShillInitLoginScript(ctx context.Context, s *testing.State) {
 // Login should create a profile directory, then create and push
 // a user profile, given no previous state.
 func testLogin(ctx context.Context, env *shillscript.TestEnv) error {
-	if err := upstart.StartJob(ctx, "shill"); err != nil {
+	if err := upstart.StartJob(ctx, shill.JobName); err != nil {
 		return errors.Wrap(err, "failed starting shill")
 	}
 

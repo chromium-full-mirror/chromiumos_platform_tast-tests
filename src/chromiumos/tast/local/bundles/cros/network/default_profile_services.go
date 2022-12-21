@@ -48,11 +48,11 @@ func DefaultProfileServices(ctx context.Context, s *testing.State) {
 
 	func() {
 		// Stop shill temporarily and remove the default profile.
-		if err := upstart.StopJob(ctx, "shill"); err != nil {
+		if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 			s.Fatal("Failed stopping shill: ", err)
 		}
 		defer func() {
-			if err := upstart.RestartJob(ctx, "shill"); err != nil {
+			if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 				s.Fatal("Failed starting shill: ", err)
 			}
 		}()
@@ -85,10 +85,10 @@ func DefaultProfileServices(ctx context.Context, s *testing.State) {
 	}
 
 	// Restart shill to ensure that configurations persist across reboot.
-	if err := upstart.StopJob(ctx, "shill"); err != nil {
+	if err := upstart.StopJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed stopping shill: ", err)
 	}
-	if err := upstart.RestartJob(ctx, "shill"); err != nil {
+	if err := upstart.RestartJob(ctx, shill.JobName); err != nil {
 		s.Fatal("Failed starting shill: ", err)
 	}
 
