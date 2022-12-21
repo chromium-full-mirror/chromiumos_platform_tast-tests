@@ -66,11 +66,9 @@ func RightClickLongPress(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q: %v", activityName, err)
 	}
-	defer act.Close()
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
 	}
-	defer act.Stop(cleanupCtx, tconn)
 
 	// Close the splash screen if it's shown.
 	if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, true); err == nil {

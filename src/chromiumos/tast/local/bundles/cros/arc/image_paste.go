@@ -64,7 +64,6 @@ func ImagePaste(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	s.Log("Start the Web server")
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -109,17 +108,19 @@ func ImagePaste(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
 	}
-	defer act.Stop(ctx, tconn)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close()
+
+	// We put this "defer" statement after the defer calls for cleaning up the state
+	// so that we can capture the state *before* cleaning up the state.
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Focus the input field and paste the image.
 	if err := d.Object(ui.ID(fieldID)).WaitForExists(ctx, 30*time.Second); err != nil {

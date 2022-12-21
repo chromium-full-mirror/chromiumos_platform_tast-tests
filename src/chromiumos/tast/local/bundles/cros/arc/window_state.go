@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
@@ -159,13 +158,9 @@ func WindowState(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	ctxDefer := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
 	if err := a.Install(ctx, arc.APKPath(wm.APKNameArcWMTestApp24)); err != nil {
 		s.Fatal("Failed to install WM24 app: ", err)
 	}
-	defer a.Uninstall(ctxDefer, wm.Pkg24)
 
 	// Restore tablet mode to its original state on exit.
 	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)

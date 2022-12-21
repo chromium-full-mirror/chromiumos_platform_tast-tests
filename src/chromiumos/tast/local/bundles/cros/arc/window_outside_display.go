@@ -75,12 +75,9 @@ func WindowOutsideDisplay(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create the settings activity: ", err)
 	}
-	defer act.Close()
-
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the settings activity: ", err)
 	}
-	defer act.Stop(cleanupCtx, tconn)
 
 	window, err := ash.FindWindow(ctx, tconn, func(window *ash.Window) bool {
 		return window.ARCPackageName == pkg

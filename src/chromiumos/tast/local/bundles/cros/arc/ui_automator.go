@@ -19,6 +19,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Sample test to manipulate an app with UI automator",
 		Contacts:     []string{"nya@chromium.org", "arc-eng@google.com"},
+		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
+		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"todo-mvp.apk"},
@@ -62,21 +64,16 @@ func UIAutomator(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Starting app")
-
 	if err := a.Install(ctx, s.DataPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
-
 	act, err := arc.NewActivity(a, pkg, cls)
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q: %v", cls, err)
 	}
-	defer act.Close()
-
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the app: ", err)
 	}
-	defer act.Stop(ctx, tconn)
 
 	must := func(err error) {
 		if err != nil {

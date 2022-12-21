@@ -185,18 +185,16 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 	if err := a.Install(ctx, arc.APKPath(wm.ResizeLockApkName), adb.InstallOptionFromPlayStore); err != nil {
 		s.Fatal("Failed to install app from PlayStore: ", err)
 	}
-	defer a.Uninstall(cleanupCtx, wm.ResizeLockTestPkgName)
 
 	// Launch the test app.
 	act, err := arc.NewActivity(a, wm.ResizeLockTestPkgName, wm.ResizeLockMainActivityName)
 	if err != nil {
 		s.Fatal("Failed to create a new activity: ", err)
 	}
-	defer act.Close()
 	if err := act.Start(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}
-	defer act.Stop(cleanupCtx, tconn)
+
 	if err := ash.WaitForVisible(ctx, tconn, act.PackageName()); err != nil {
 		s.Fatal("Failed to wait until the activity gets visible: ", err)
 	}

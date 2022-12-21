@@ -100,12 +100,9 @@ func ConfigChanges(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed starting app: ", err)
 	}
-	defer act.Close()
-
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed starting app: ", err)
 	}
-	defer act.Stop(cleanupCtx, tconn)
 
 	const (
 		resumeCountID = "org.chromium.arc.testapp.configchanges:id/resume_count"

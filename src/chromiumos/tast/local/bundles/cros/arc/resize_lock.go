@@ -11,7 +11,6 @@ import (
 
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
@@ -202,9 +201,6 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close()
 
-	ctxDefer := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
 	for _, app := range []struct {
 		apkName string
 		pkgName string
@@ -217,7 +213,6 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 		if err := a.Install(ctx, arc.APKPath(app.apkName), adb.InstallOptionFromPlayStore); err != nil {
 			s.Fatal("Failed to install app from PlayStore: ", err)
 		}
-		defer a.Uninstall(ctxDefer, app.pkgName)
 	}
 
 	// Set a pure white wallpaper to reduce the noises on a screenshot because currently checking the visibility of the translucent window border relies on a screenshot.

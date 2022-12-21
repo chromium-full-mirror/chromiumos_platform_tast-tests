@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/testing"
 )
@@ -55,10 +54,6 @@ func LaunchIntent(ctx context.Context, s *testing.State) {
 		parcelExtraID = pkg + ":id/parcel_extra"
 	)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel()
-
 	s.Log("Installing app")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed to install app: ", err)
@@ -68,12 +63,9 @@ func LaunchIntent(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q: %v", activity, err)
 	}
-	defer act.Close()
-
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q: %v", activity, err)
 	}
-	defer act.Stop(cleanupCtx, tconn)
 
 	if err := d.Object(ui.ID(buttonID)).WaitForExists(ctx, 30*time.Second); err != nil {
 		s.Fatal("Failed to find the button: ", err)

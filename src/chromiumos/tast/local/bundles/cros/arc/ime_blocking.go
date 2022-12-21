@@ -61,12 +61,9 @@ func IMEBlocking(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new Activity: ", err)
 	}
-	defer act.Close()
-
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}
-	defer act.Stop(ctx, tconn)
 
 	const (
 		fieldID  = "org.chromium.arc.testapp.imeblocking:id/text"
