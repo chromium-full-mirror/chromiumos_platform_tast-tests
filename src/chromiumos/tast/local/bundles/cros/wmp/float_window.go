@@ -27,11 +27,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test that the float shortcut works on a floatable window",
 		Contacts: []string{
-			"hewer@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"hewer@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		// ChromeOS > Software > Window Management > FloatingWindow
+		BugComponent: "b:1252568",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
@@ -51,7 +53,7 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 
 	bt := s.Param().(browser.Type)
 	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.EnableFeatures("CrOSLabsFloatWindow"))
+		chrome.EnableFeatures("FloatWindow"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

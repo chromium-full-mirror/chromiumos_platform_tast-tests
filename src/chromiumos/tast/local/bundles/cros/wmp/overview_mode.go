@@ -33,6 +33,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"sammiequon@chromium.org",
 		},
+		// ChromeOS > Software > Window Management > OverviewMode
 		BugComponent: "b:1252584",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
