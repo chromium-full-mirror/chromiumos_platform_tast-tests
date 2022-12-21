@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/dumputil"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/testing"
 )
 
@@ -24,7 +23,7 @@ type vpnTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     VPNConnect,
-		Desc:     "Ensure that we can connect to a VPN",
+		Desc:     "Ensure that we can connect to a VPN under different configurations",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
@@ -37,31 +36,10 @@ func init() {
 		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name: "ikev2_psk_ipv4",
+			Name: "ikev2_psk",
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:     vpn.TypeIKEv2,
-					IPType:   vpn.IPTypeIPv4,
-					AuthType: vpn.AuthTypePSK,
-				},
-			},
-			ExtraSoftwareDeps: []string{"ikev2"},
-		}, {
-			Name: "ikev2_psk_ipv6",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:     vpn.TypeIKEv2,
-					IPType:   vpn.IPTypeIPv6,
-					AuthType: vpn.AuthTypePSK,
-				},
-			},
-			ExtraSoftwareDeps: []string{"ikev2"},
-		}, {
-			Name: "ikev2_psk_ipv4_ipv6",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:     vpn.TypeIKEv2,
-					IPType:   vpn.IPTypeIPv4AndIPv6,
 					AuthType: vpn.AuthTypePSK,
 				},
 			},
@@ -92,15 +70,6 @@ func init() {
 				config: vpn.Config{
 					Type:     vpn.TypeL2TPIPsec,
 					AuthType: vpn.AuthTypePSK,
-				},
-			},
-		}, {
-			Name: "l2tp_ipsec_psk_evil",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                  vpn.TypeL2TPIPsec,
-					AuthType:              vpn.AuthTypePSK,
-					UnderlayIPIsOverlayIP: true,
 				},
 			},
 		}, {
@@ -241,36 +210,6 @@ func init() {
 				},
 			},
 			ExtraSoftwareDeps: []string{"wireguard"},
-		}, {
-			Name: "wireguard_ipv4_two_peers",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:       vpn.TypeWireGuard,
-					IPType:     vpn.IPTypeIPv4,
-					WGTwoPeers: true,
-				},
-			},
-			ExtraSoftwareDeps: []string{"wireguard"},
-		}, {
-			Name: "wireguard_ipv6",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:       vpn.TypeWireGuard,
-					IPType:     vpn.IPTypeIPv6,
-					WGTwoPeers: true,
-				},
-			},
-			ExtraSoftwareDeps: []string{"wireguard"},
-		}, {
-			Name: "wireguard_ipv4_ipv6",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:       vpn.TypeWireGuard,
-					IPType:     vpn.IPTypeIPv4AndIPv6,
-					WGTwoPeers: true,
-				},
-			},
-			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
 	})
 }
@@ -292,29 +231,6 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 			testing.ContextLog(ctx, "Failed to tear down routing env: ", err)
 		}
 	}()
-	// Create another env and connect it to the router. This can be used to verify
-	// if physical network is reachable.
-	physicalEnv, err := virtualnet.CreateEnv(ctx, "phy")
-	if err != nil {
-		s.Fatal("Failed to setup env for verifying physical connection: ", err)
-	}
-	defer func() {
-		if err := physicalEnv.Cleanup(cleanupCtx); err != nil {
-			testing.ContextLog(ctx, "Failed to tear down physical env: ", err)
-		}
-	}()
-	if err := physicalEnv.ConnectToRouterWithPool(ctx, routingEnv.BaseRouter, routingEnv.Pool); err != nil {
-		s.Fatal("Failed to connect physical env to router: ", err)
-	}
-
-	// Verify physicalEnv can be reached by IPv6 before connecting VPN.
-	physicalAddrs, err := physicalEnv.GetVethInAddrs(ctx)
-	if err != nil {
-		s.Fatal("Failed to addrs from physical env: ", err)
-	}
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos", 10*time.Second); err != nil {
-		s.Fatal("Cannot reach physical env by IPv6: ", err)
-	}
 
 	config := s.Param().(vpnTestParams).config
 	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
@@ -347,37 +263,8 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	if config.IPType == vpn.IPTypeIPv4 || config.IPType == vpn.IPTypeIPv4AndIPv6 {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-			s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
-		}
-		if conn.SecondServer != nil {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.SecondServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-				s.Fatalf("Failed to ping %s: %v", conn.SecondServer.OverlayIPv4, err)
-			}
-		}
-	}
-	if config.IPType == vpn.IPTypeIPv6 || config.IPType == vpn.IPTypeIPv4AndIPv6 {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv6, "chronos", 10*time.Second); err != nil {
-			s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv6, err)
-		}
-		if conn.SecondServer != nil {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.SecondServer.OverlayIPv6, "chronos", 10*time.Second); err != nil {
-				s.Fatalf("Failed to ping %s: %v", conn.SecondServer.OverlayIPv6, err)
-			}
-		}
-	}
-
-	// In IPv4-only case, IPv6 should be blackholed.
-	if config.IPType != vpn.IPTypeIPv4 {
-		return
-	}
-	// TODO(b/257379393): WireGuard does not support this properly now.
-	if config.Type == vpn.TypeWireGuard {
-		testing.ContextLog(ctx, "Skip IPv6 blocking check for WireGuard")
-		return
-	}
-	if err := routing.ExpectPingFailure(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos"); err != nil {
-		s.Fatal("IPv6 ping should fail: ", err)
+	// Do a simple ping check to make sure we are really connected.
+	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+		s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
 	}
 }

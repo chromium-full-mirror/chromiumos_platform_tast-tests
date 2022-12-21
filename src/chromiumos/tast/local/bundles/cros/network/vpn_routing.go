@@ -1,0 +1,216 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package network
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/network/vpn"
+	"chromiumos/tast/local/network/dumputil"
+	"chromiumos/tast/local/network/routing"
+	"chromiumos/tast/local/network/virtualnet"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:     VPNRouting,
+		Desc:     "Ensure that routing works properly when a VPN is connected",
+		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline", "informational"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{{
+			Name: "ikev2_ipv4",
+			Val: vpn.Config{
+				Type:     vpn.TypeIKEv2,
+				IPType:   vpn.IPTypeIPv4,
+				AuthType: vpn.AuthTypePSK,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name: "ikev2_ipv6",
+			Val: vpn.Config{
+				Type:     vpn.TypeIKEv2,
+				IPType:   vpn.IPTypeIPv6,
+				AuthType: vpn.AuthTypePSK,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name: "ikev2_ipv4_ipv6",
+			Val: vpn.Config{
+				Type:     vpn.TypeIKEv2,
+				IPType:   vpn.IPTypeIPv4AndIPv6,
+				AuthType: vpn.AuthTypePSK,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name: "l2tp_ipsec",
+			Val: vpn.Config{
+				Type:     vpn.TypeL2TPIPsec,
+				AuthType: vpn.AuthTypePSK,
+			},
+			Fixture: "vpnEnvWithCerts",
+		}, {
+			Name: "l2tp_ipsec_evil",
+			Val: vpn.Config{
+				Type:                  vpn.TypeL2TPIPsec,
+				AuthType:              vpn.AuthTypePSK,
+				UnderlayIPIsOverlayIP: true,
+			},
+			Fixture: "vpnEnvWithCerts",
+		}, {
+			Name: "openvpn",
+			Val: vpn.Config{
+				Type:     vpn.TypeOpenVPN,
+				AuthType: vpn.AuthTypeCert,
+			},
+			Fixture: "vpnEnvWithCerts",
+		}, {
+			Name: "wireguard_ipv4",
+			Val: vpn.Config{
+				Type:   vpn.TypeWireGuard,
+				IPType: vpn.IPTypeIPv4,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"wireguard"},
+		}, {
+			Name: "wireguard_ipv4_two_peers",
+			Val: vpn.Config{
+				Type:       vpn.TypeWireGuard,
+				IPType:     vpn.IPTypeIPv4,
+				WGTwoPeers: true,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"wireguard"},
+		}, {
+			Name: "wireguard_ipv6",
+			Val: vpn.Config{
+				Type:       vpn.TypeWireGuard,
+				IPType:     vpn.IPTypeIPv6,
+				WGTwoPeers: true,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"wireguard"},
+		}, {
+			Name: "wireguard_ipv4_ipv6",
+			Val: vpn.Config{
+				Type:       vpn.TypeWireGuard,
+				IPType:     vpn.IPTypeIPv4AndIPv6,
+				WGTwoPeers: true,
+			},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraSoftwareDeps: []string{"wireguard"},
+		}},
+	})
+}
+
+func VPNRouting(ctx context.Context, s *testing.State) {
+	// If the main body of the test times out, we still want to reserve a few
+	// seconds to allow for our cleanup code to run.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
+	// Create envs for holding servers.
+	routingEnv := routing.NewTestEnvWithoutResetProfile()
+	if err := routingEnv.SetUp(ctx); err != nil {
+		s.Fatal("Failed to setup routing env: ", err)
+	}
+	defer func() {
+		if err := routingEnv.TearDown(cleanupCtx); err != nil {
+			testing.ContextLog(ctx, "Failed to tear down routing env: ", err)
+		}
+	}()
+	// Create another env and connect it to the router. This can be used to verify
+	// if physical network is reachable.
+	physicalEnv, err := virtualnet.CreateEnv(ctx, "phy")
+	if err != nil {
+		s.Fatal("Failed to setup env for verifying physical connection: ", err)
+	}
+	defer func() {
+		if err := physicalEnv.Cleanup(cleanupCtx); err != nil {
+			testing.ContextLog(ctx, "Failed to tear down physical env: ", err)
+		}
+	}()
+	if err := physicalEnv.ConnectToRouterWithPool(ctx, routingEnv.BaseRouter, routingEnv.Pool); err != nil {
+		s.Fatal("Failed to connect physical env to router: ", err)
+	}
+
+	// Verify physicalEnv can be reached by IPv6 before connecting VPN.
+	physicalAddrs, err := physicalEnv.GetVethInAddrs(ctx)
+	if err != nil {
+		s.Fatal("Failed to addrs from physical env: ", err)
+	}
+	if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos", 10*time.Second); err != nil {
+		s.Fatal("Cannot reach physical env by IPv6: ", err)
+	}
+
+	config := s.Param().(vpn.Config)
+	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
+	conn, err := vpn.NewConnectionWithEnvs(ctx, config, routingEnv.BaseServer, routingEnv.BaseRouter)
+	if err != nil {
+		s.Fatal("Failed to create connection object: ", err)
+	}
+
+	defer func() {
+		if err := conn.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up connection: ", err)
+		}
+	}()
+
+	if err := conn.SetUp(ctx); err != nil {
+		s.Fatal("Failed to setup VPN server: ", err)
+	}
+	connected, err := conn.Connect(ctx)
+	if err := dumputil.DumpNetworkInfo(ctx, "network_dump_after_vpn_connect.txt"); err != nil {
+		testing.ContextLog(ctx, "Failed to dump network info after VPN connect")
+	}
+	if err != nil {
+		s.Fatal("Failed to connect to VPN server: ", err)
+	} else if !connected {
+		s.Fatal("Failed to connect to VPN server: the service state changed to failure")
+	}
+
+	if config.IPType == vpn.IPTypeIPv4 || config.IPType == vpn.IPTypeIPv4AndIPv6 {
+		if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+			s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
+		}
+		if conn.SecondServer != nil {
+			if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.SecondServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+				s.Fatalf("Failed to ping %s: %v", conn.SecondServer.OverlayIPv4, err)
+			}
+		}
+	}
+	if config.IPType == vpn.IPTypeIPv6 || config.IPType == vpn.IPTypeIPv4AndIPv6 {
+		if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv6, "chronos", 10*time.Second); err != nil {
+			s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv6, err)
+		}
+		if conn.SecondServer != nil {
+			if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.SecondServer.OverlayIPv6, "chronos", 10*time.Second); err != nil {
+				s.Fatalf("Failed to ping %s: %v", conn.SecondServer.OverlayIPv6, err)
+			}
+		}
+	}
+
+	// In IPv4-only case, IPv6 should be blackholed.
+	if config.IPType != vpn.IPTypeIPv4 {
+		return
+	}
+	// TODO(b/257379393): WireGuard does not support this properly now.
+	if config.Type == vpn.TypeWireGuard {
+		testing.ContextLog(ctx, "Skip IPv6 blocking check for WireGuard")
+		return
+	}
+	if err := routing.ExpectPingFailure(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos"); err != nil {
+		s.Fatal("IPv6 ping should fail: ", err)
+	}
+}
