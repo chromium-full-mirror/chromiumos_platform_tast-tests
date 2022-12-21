@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
@@ -25,9 +26,10 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
 		// TODO(b/187362093): Add a SoftwareDep for wake_on_wifi.
-		Attr:        []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		Attr:         []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
+		Requirements: []string{tdreq.WiFiPwrTimingWoW},
 	})
 }
 
