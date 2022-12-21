@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
@@ -26,7 +25,7 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-type resizeLockTestFunc func(context.Context, *chrome.TestConn, *arc.ARC, *ui.Device, *chrome.Chrome, *input.KeyboardEventWriter, *testing.State, string) error
+type resizeLockTestFunc func(context.Context, *chrome.TestConn, *input.KeyboardEventWriter, *testing.State, string) error
 
 type resizeLockTestCase struct {
 	name string
@@ -115,6 +114,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      5 * time.Minute,
+		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(append(smallDisplayModelsListMap, brokenKeyboardModelsListMap...)...)),
@@ -135,30 +135,13 @@ func init() {
 }
 
 func ResizeLock(ctx context.Context, s *testing.State) {
-	// Ensure to enable the finch flag.
-	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
-		chrome.ExtraArgs("--enable-features=ArcResizeLock"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
-
-	dev, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed to initialize UI Automator: ", err)
-	}
-	defer dev.Close(ctx)
 
 	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
@@ -225,7 +208,7 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 	for _, test := range testCases {
 		s.Logf("Running test %q", test.name)
 
-		if err := test.fn(ctx, tconn, a, dev, cr, keyboard, s, test.name); err != nil {
+		if err := test.fn(ctx, tconn, keyboard, s, test.name); err != nil {
 			path := fmt.Sprintf("%s/screenshot-resize-lock-failed-test-%s.png", s.OutDir(), test.name)
 			if err := screenshot.CaptureChrome(ctx, cr, path); err != nil {
 				s.Log("Failed to capture screenshot: ", err)
@@ -236,16 +219,20 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 }
 
 // testToggleImmersiveMode verifies that a resize locked app rejects a fullscreen event.
-func testToggleImmersiveMode(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
-	return testChangeWindowState(ctx, tconn, a, d, cr, keyboard, ash.WMEventFullscreen, ash.WindowStateNormal, s, testName)
+func testToggleImmersiveMode(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+	return testChangeWindowState(ctx, tconn, keyboard, ash.WMEventFullscreen, ash.WindowStateNormal, s, testName)
 }
 
 // testChangeWindowState verifies that the given WM event transitions a resize-locked app to the expected state.
-func testChangeWindowState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, event ash.WMEventType, expectedState ash.WindowStateType, s *testing.State, testName string) (retErr error) {
+func testChangeWindowState(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, event ash.WMEventType, expectedState ash.WindowStateType, s *testing.State, testName string) (retErr error) {
 	const (
 		packageName  = wm.ResizeLockTestPkgName
 		activityName = wm.ResizeLockMainActivityName
 	)
+
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+
 	activity, err := arc.NewActivity(a, packageName, activityName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
@@ -283,11 +270,15 @@ func testChangeWindowState(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 }
 
 // testPIP verifies that a resize locked app can enter PIP and becomes resizable in PIP mode.
-func testPIP(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
+func testPIP(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
 	const (
 		packageName  = wm.ResizeLockTestPkgName
 		activityName = wm.ResizeLockPipActivityName
 	)
+
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+
 	activity, err := arc.NewActivity(a, packageName, activityName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
@@ -323,35 +314,39 @@ func testPIP(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devi
 }
 
 // testO4CApp verifies that an O4C app is not resize locked even if it's newly-installed.
-func testO4CApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
-	return testNonResizeLocked(ctx, tconn, a, d, cr, keyboard, wm.Pkg24, wm.APKNameArcWMTestApp24, wm.ResizableUnspecifiedActivity, false /* checkRestoreMaximize */, s, testName)
+func testO4CApp(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+	return testNonResizeLocked(ctx, tconn, keyboard, wm.Pkg24, wm.APKNameArcWMTestApp24, wm.ResizableUnspecifiedActivity, false /* checkRestoreMaximize */, s, testName)
 }
 
 // testUnresizableMaximizedApp verifies that an unresizable, maximized app is not resize locked even if it's newly-installed.
-func testUnresizableMaximizedApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
-	return testNonResizeLocked(ctx, tconn, a, d, cr, keyboard, wm.ResizeLockTestPkgName, wm.ResizeLockApkName, wm.ResizeLockUnresizableUnspecifiedActivityName, false /* checkRestoreMaximize */, s, testName)
+func testUnresizableMaximizedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+	return testNonResizeLocked(ctx, tconn, keyboard, wm.ResizeLockTestPkgName, wm.ResizeLockApkName, wm.ResizeLockUnresizableUnspecifiedActivityName, false /* checkRestoreMaximize */, s, testName)
 }
 
 // testResizableMaximizedApp verifies that a resizable, maximized app is not resize locked even if it's newly-installed.
-func testResizableMaximizedApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
-	return testNonResizeLocked(ctx, tconn, a, d, cr, keyboard, wm.ResizeLockTestPkgName, wm.ResizeLockApkName, wm.ResizeLockResizableUnspecifiedMaximizedActivityName, true /* checkRestoreMaximize */, s, testName)
+func testResizableMaximizedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+	return testNonResizeLocked(ctx, tconn, keyboard, wm.ResizeLockTestPkgName, wm.ResizeLockApkName, wm.ResizeLockResizableUnspecifiedMaximizedActivityName, true /* checkRestoreMaximize */, s, testName)
 }
 
 // testAppFromOutsideOfPlayStore verifies that an resize-lock-eligible app installed from outside of PlayStore is not resize locked even if it's newly-installed.
-func testAppFromOutsideOfPlayStore(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+func testAppFromOutsideOfPlayStore(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+	a := s.FixtValue().(*arc.PreData).ARC
 	if err := a.Install(ctx, arc.APKPath(wm.APKNameArcWMTestApp24PhoneSize)); err != nil {
 		return errors.Wrap(err, "failed to install app from outside of PlayStore")
 	}
 	defer a.Uninstall(ctx, wm.Pkg24InPhoneSizeList)
-	return testNonResizeLocked(ctx, tconn, a, d, cr, keyboard, wm.Pkg24InPhoneSizeList, wm.APKNameArcWMTestApp24PhoneSize, wm.ResizableUnspecifiedActivity, false /* checkRestoreMaximize */, s, testName)
+	return testNonResizeLocked(ctx, tconn, keyboard, wm.Pkg24InPhoneSizeList, wm.APKNameArcWMTestApp24PhoneSize, wm.ResizableUnspecifiedActivity, false /* checkRestoreMaximize */, s, testName)
 }
 
 // testTablet verifies that tablet conversion properly updates the resize lock state of an app.
-func testTablet(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
+func testTablet(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
 	const (
 		packageName  = wm.ResizeLockTestPkgName
 		activityName = wm.ResizeLockMainActivityName
 	)
+
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	tabletModeStatus, err := ash.TabletModeEnabled(ctx, tconn)
 	if err != nil {
@@ -403,7 +398,10 @@ func testTablet(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.D
 }
 
 // testNonResizeLocked verifies that the given app is not resize locked.
-func testNonResizeLocked(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, packageName, apkName, activityName string, checkRestoreMaximize bool, s *testing.State, testName string) (retErr error) {
+func testNonResizeLocked(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, packageName, apkName, activityName string, checkRestoreMaximize bool, s *testing.State, testName string) (retErr error) {
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+
 	activity, err := arc.NewActivity(a, packageName, activityName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
@@ -469,7 +467,10 @@ func testNonResizeLocked(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC
 }
 
 // testFullyLockedApp verifies that the given app is fully locked.
-func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
+func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+
 	activity, err := arc.NewActivity(a, wm.ResizeLockTestPkgName, wm.ResizeLockUnresizablePortraitActivityName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", wm.ResizeLockUnresizablePortraitActivityName)
@@ -514,11 +515,20 @@ func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 
 // testSplash installs 3 different resize-locked app, launches an activity twice, and verifies that the splash screen works as expected.
 // The spec of visibility: The splash must be shown twice per user, once per app at most.
-func testSplash(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
+func testSplash(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
 	const (
 		// The splash must be shown twice per user at most.
-		showSplashLimit = 2
+		showSplashLimit     = 2
+		splashLimitPrefName = "arc.show_resize_lock_splash_screen_limits"
 	)
+
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+
+	// Make sure the splash screen shows |showSplashLimit| times.
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.setAllowedPref)", splashLimitPrefName, showSplashLimit); err != nil {
+		return errors.Wrap(err, "failed to set splash screen show limit pref")
+	}
 
 	for i, test := range []struct {
 		apkName      string
@@ -575,7 +585,10 @@ func testSplash(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.D
 }
 
 // testResizeLockedAppCUJ goes though the critical user journey of a resize-locked app via both click and keyboard, and verifies the app behaves expectedly.
-func testResizeLockedAppCUJ(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+func testResizeLockedAppCUJ(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) error {
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+
 	for _, test := range []struct {
 		packageName  string
 		apkName      string
