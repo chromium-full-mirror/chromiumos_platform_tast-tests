@@ -27,6 +27,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/crostini"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
+	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/httpserver"
@@ -427,6 +428,11 @@ func connectVPN(ctx context.Context, s *server) (*vpn.Connection, error) {
 	}
 	if _, err := conn.Connect(ctx); err != nil {
 		return nil, err
+	}
+	// Make sure routing is ready for VPN.
+	testing.ContextLog(ctx, "Waiting for routing for VPN ready")
+	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to verify VPN routing")
 	}
 	return conn, nil
 }
