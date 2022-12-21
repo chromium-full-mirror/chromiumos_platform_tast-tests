@@ -26,6 +26,18 @@ const certOpTimeout = 30 * time.Second
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
+		Name: "vpnEnv",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill",
+		Contacts: []string{
+			"jiejiang@google.com",        // fixture maintainer
+			"cros-networking@google.com", // platform networking team
+		},
+		SetUpTimeout:    shill.ResetShillTimeout + 5*time.Second,
+		ResetTimeout:    shill.ResetShillTimeout + 5*time.Second,
+		TearDownTimeout: shill.ResetShillTimeout + 5*time.Second,
+		Impl:            &vpnFixture{useCert: false, useCr: false},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCerts",
 		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill and installing certs",
 		Contacts: []string{
@@ -35,7 +47,7 @@ func init() {
 		SetUpTimeout:    shill.ResetShillTimeout + certOpTimeout + 5*time.Second,
 		ResetTimeout:    shill.ResetShillTimeout + 5*time.Second,
 		TearDownTimeout: shill.ResetShillTimeout + certOpTimeout + 5*time.Second,
-		Impl:            &vpnFixture{useCr: false},
+		Impl:            &vpnFixture{useCert: true, useCr: false},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCertsAndChromeLoggedIn",
@@ -47,7 +59,7 @@ func init() {
 		SetUpTimeout:    shill.ResetShillTimeout + certOpTimeout + chrome.LoginTimeout + 5*time.Second,
 		ResetTimeout:    shill.ResetShillTimeout + chrome.ResetTimeout + 5*time.Second,
 		TearDownTimeout: shill.ResetShillTimeout + certOpTimeout + chrome.LoginTimeout + 5*time.Second,
-		Impl:            &vpnFixture{useCr: true},
+		Impl:            &vpnFixture{useCert: true, useCr: true},
 	})
 }
 
@@ -82,6 +94,7 @@ func resetShillWithLockingHook(ctx context.Context) error {
 // there is no Chrome, and a full restart of this fixture will happen if there is Chrome.
 type vpnFixture struct {
 	hasError  bool // if the previous test has error
+	useCert   bool // if we need to install certs
 	useCr     bool // if Chrome is needed
 	cr        *chrome.Chrome
 	certStore *netcertstore.Store
@@ -118,19 +131,26 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Fatal("Failed to reset shill: ", err)
 	}
 
-	var err error
-	runner := hwsec.NewCmdRunner()
-	f.certStore, err = netcertstore.CreateStore(ctx, runner)
-	if err != nil {
-		s.Fatal("Failed to create cert store: ", err)
-	}
+	var certVals CertVals
+	if f.useCert {
+		runner := hwsec.NewCmdRunner()
+		certStore, err := netcertstore.CreateStore(ctx, runner)
+		if err != nil {
+			s.Fatal("Failed to create cert store: ", err)
+		}
+		f.certStore = certStore
 
-	certVals, err := installUserCert(ctx, f.certStore)
-	if err != nil {
-		s.Fatal("Failed to install cert: ", err)
+		certVals, err = installUserCert(ctx, f.certStore)
+		if err != nil {
+			s.Fatal("Failed to install cert: ", err)
+		}
 	}
 
 	if f.useCr {
+		if !f.useCert {
+			s.Fatal("Cert and Chrome should be enabled together")
+		}
+
 		// Install CA cert to TPM. Since CA certs are stored as raw strings in
 		// shill's profile, this is only required when Chrome is involved.
 		if _, err := f.certStore.InstallCertKeyPair(ctx, "", certificate.TestCert1().CACred.Cert); err != nil {
@@ -138,7 +158,7 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		}
 
 		cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
-		f.cr, err = chrome.New(
+		cr, err := chrome.New(
 			ctx,
 			chrome.KeepState(),     // to avoid resetting TPM
 			chrome.FakeLogin(cred), // to use the same user as certs are installed for
@@ -146,6 +166,7 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
+		f.cr = cr
 	}
 
 	if err := f.stopLogSaver(ctx, "net.setup.log"); err != nil {
@@ -213,8 +234,10 @@ func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		f.cr = nil
 	}
 
-	if err := f.certStore.Cleanup(ctx); err != nil {
-		s.Error("Failed to clean up cert store: ", err)
+	if f.useCert {
+		if err := f.certStore.Cleanup(ctx); err != nil {
+			s.Error("Failed to clean up cert store: ", err)
+		}
 	}
 
 	// Restart ui so that cryptohome unmounts all user mounts before shill is

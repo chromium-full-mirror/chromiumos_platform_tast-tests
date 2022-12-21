@@ -32,7 +32,7 @@ func init() {
 				IPType:   vpn.IPTypeIPv4,
 				AuthType: vpn.AuthTypePSK,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv6",
@@ -41,7 +41,7 @@ func init() {
 				IPType:   vpn.IPTypeIPv6,
 				AuthType: vpn.AuthTypePSK,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv4_ipv6",
@@ -50,7 +50,7 @@ func init() {
 				IPType:   vpn.IPTypeIPv4AndIPv6,
 				AuthType: vpn.AuthTypePSK,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
@@ -58,7 +58,7 @@ func init() {
 				Type:     vpn.TypeL2TPIPsec,
 				AuthType: vpn.AuthTypePSK,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_evil",
 			Val: vpn.Config{
@@ -66,7 +66,7 @@ func init() {
 				AuthType:              vpn.AuthTypePSK,
 				UnderlayIPIsOverlayIP: true,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture: "vpnEnv",
 		}, {
 			Name: "openvpn",
 			Val: vpn.Config{
@@ -80,7 +80,7 @@ func init() {
 				Type:   vpn.TypeWireGuard,
 				IPType: vpn.IPTypeIPv4,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv4_two_peers",
@@ -89,7 +89,7 @@ func init() {
 				IPType:     vpn.IPTypeIPv4,
 				WGTwoPeers: true,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv6",
@@ -98,7 +98,7 @@ func init() {
 				IPType:     vpn.IPTypeIPv6,
 				WGTwoPeers: true,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv4_ipv6",
@@ -107,7 +107,7 @@ func init() {
 				IPType:     vpn.IPTypeIPv4AndIPv6,
 				WGTwoPeers: true,
 			},
-			Fixture:           "vpnEnvWithCerts",
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
 	})
