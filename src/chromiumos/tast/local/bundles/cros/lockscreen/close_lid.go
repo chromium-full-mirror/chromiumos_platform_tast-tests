@@ -64,6 +64,8 @@ func CloseLid(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	cr, err := chrome.New(ctx,
+		// b/228256145 to avoid powerd restart.
+		chrome.DisableFeatures("FirmwareUpdaterApp"),
 		chrome.FieldTrialConfig(s.Param().(string)),
 		chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
 	if err != nil {
