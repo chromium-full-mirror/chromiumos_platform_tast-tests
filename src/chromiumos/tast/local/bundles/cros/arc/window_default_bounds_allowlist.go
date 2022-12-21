@@ -58,15 +58,11 @@ func wmAllowlistResizableUnspecified(ctx context.Context, tconn *chrome.TestConn
 	defer cancel()
 
 	// Turn the device into clamshell.
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		return errors.Wrap(err, "failed to get tablet mode")
-	}
-
-	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
 		return errors.Wrap(err, "failed to set tablet mode to false")
 	}
-	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, tabletModeEnabled)
+	defer cleanup(cleanupCtx)
 
 	// Then we verify the launch logic for allow listed apps is correct.
 	apkPath := map[string]string{
