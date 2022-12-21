@@ -34,7 +34,7 @@ func init() {
 		// proactively, and thus we need Chrome is logged-in as the same user with
 		// our fake TPM. Also see b/192425378#comment5.
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "vpnShillResetWithChromeLoggedIn",
+		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_psk_ipv4",

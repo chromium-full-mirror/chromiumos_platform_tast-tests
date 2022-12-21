@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "vpnShillResetWithChromeLoggedIn",
+		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_cert",

@@ -32,7 +32,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "vpnShillReset",
+		Fixture:      "vpnEnvWithCerts",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{

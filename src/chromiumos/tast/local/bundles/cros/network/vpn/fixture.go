@@ -26,7 +26,7 @@ const certOpTimeout = 30 * time.Second
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "vpnShillReset",
+		Name: "vpnEnvWithCerts",
 		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill and installing certs",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer
@@ -38,7 +38,7 @@ func init() {
 		Impl:            &vpnFixture{useCr: false},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "vpnShillResetWithChromeLoggedIn",
+		Name: "vpnEnvWithCertsAndChromeLoggedIn",
 		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill, installing certs, and starting Chrome session",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer

@@ -38,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:237712133",
-		Fixture:      "vpnShillReset",
+		Fixture:      "vpnEnvWithCerts",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
