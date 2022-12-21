@@ -26,6 +26,7 @@ func init() {
 		Func:         SuspendToS0ixStress,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies suspend stress test with S0ix switching",
+		BugComponent: "b:167191",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},

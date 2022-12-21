@@ -27,6 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeUSBCDisplay,
 		Desc:         "Verifies suspend-resume with USB type-C display functionality check",
+		BugComponent: "b:167191",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},

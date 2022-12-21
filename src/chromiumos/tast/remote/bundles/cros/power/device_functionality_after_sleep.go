@@ -42,6 +42,7 @@ func init() {
 		Func:         DeviceFunctionalityAfterSleep,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Device functionality after sleep (Keep system idle)/(Close lid)",
+		BugComponent: "b:167191",
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.power.USBService"},

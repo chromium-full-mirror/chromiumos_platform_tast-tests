@@ -24,6 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyFastLidCloseOpen,
 		Desc:         "To verify Fast lid close open multiple times",
+		BugComponent: "b:167191",
 		Vars:         []string{"power.iterations"},
 		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

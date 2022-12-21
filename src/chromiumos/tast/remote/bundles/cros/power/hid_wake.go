@@ -33,6 +33,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HidWake,
 		Desc:         "Checks that HID events correctly wake the DUT",
+		BugComponent: "b:167191",
 		Contacts:     []string{"jthies@google.com", "chromeos-power@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"usb_hid_wake"},

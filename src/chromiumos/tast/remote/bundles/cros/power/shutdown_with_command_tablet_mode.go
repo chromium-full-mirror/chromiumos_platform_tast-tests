@@ -27,7 +27,10 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShutdownWithCommandTabletMode, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Verifies that system comes back after executing shutdown command in tabletmode",
+		Func:         ShutdownWithCommandTabletMode,
+		LacrosStatus: testing.LacrosVariantUnknown,
+		Desc:         "Verifies that system comes back after executing shutdown command in tabletmode",
+		BugComponent: "b:167191",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},

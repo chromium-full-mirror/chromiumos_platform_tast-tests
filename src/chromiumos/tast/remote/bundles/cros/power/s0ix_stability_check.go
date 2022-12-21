@@ -34,6 +34,7 @@ func init() {
 		Func:         S0ixStabilityCheck,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies S0ix stability with suspend-resume",
+		BugComponent: "b:167191",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},

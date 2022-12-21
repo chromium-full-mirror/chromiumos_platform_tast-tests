@@ -23,6 +23,7 @@ func init() {
 		Func:         WakeFromHibernation,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Wake from hibernation by AC plug",
+		BugComponent: "b:167191",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},

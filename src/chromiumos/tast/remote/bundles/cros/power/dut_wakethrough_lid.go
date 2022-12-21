@@ -24,6 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DUTWakethroughLid,
 		Desc:         "Verifies that system comes back after lid open in iterations",
+		BugComponent: "b:167191",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
