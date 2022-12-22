@@ -65,17 +65,11 @@ func TitleBar(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get : ", err)
+		s.Fatal("Failed to enter clamshell mode: ", err)
 	}
-
-	// Force Chrome to be in clamshell mode, where title bar buttons are visible.
-	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
-		s.Fatal("Failed to get : ", err)
-	}
-	// Restore tablet mode to its original state on exit.
-	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, tabletModeEnabled)
+	defer cleanup(cleanupCtx)
 
 	act, err := arc.NewActivity(a, pkgName, cls)
 	if err != nil {
