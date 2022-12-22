@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
@@ -135,7 +136,12 @@ func init() {
 }
 
 func CompanionLibrary(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
+	a := s.FixtValue().(*arc.PreData).ARC
+	d := s.FixtValue().(*arc.PreData).UIDevice
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -143,20 +149,12 @@ func CompanionLibrary(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
-	}
-	// Restore tablet mode to its original state on exit.
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-
-	// Force Chrome to be in clamshell mode, where windows are resizable.
-	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to disable tablet mode: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
-	a := s.FixtValue().(*arc.PreData).ARC
-	d := s.FixtValue().(*arc.PreData).UIDevice
 	if err := a.Install(ctx, s.DataPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
@@ -780,11 +778,7 @@ func testDeviceMode(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *ch
 	if err := setWindowStateSync(ctx, tconn, act, arc.WindowStateNormal); err != nil {
 		return errors.Wrap(err, "failed to set window normal state before testing device mode change")
 	}
-	originalTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain the tablet mode status")
-	}
-	defer ash.SetTabletModeEnabled(ctx, tconn, originalTabletMode)
+
 	for _, test := range []struct {
 		// isTabletMode represents current mode of system which is Tablet mode or clamshell mode.
 		isTabletMode bool
