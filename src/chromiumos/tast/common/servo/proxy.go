@@ -47,47 +47,70 @@ type Proxy struct {
 	sdc             string         // empty if servod is not running inside a docker container
 }
 
-func createDockerClient(ctx context.Context) (*client.Client, error) {
+func createDockerClient(ctx context.Context, dockerHost string) (*client.Client, error) {
 	// Create Docker Client.
-	// If the dockerd socket exists, use the default option.
-	// Otherwise, try to use the tcp connection local host IP 192.168.231.1:2375
-	// for satlab device.
-	if _, err := os.Stat("/var/run/docker.sock"); err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
+	// If no user-provided docker host exists but a unix domain socket does, then use that.
+	if dockerHost == "" {
+		_, err := os.Stat("/var/run/docker.sock")
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return nil, err
 		}
-		testing.ContextLog(ctx, "Docker client connecting over TCP")
-
-		// b/207133139, default HTTPClient inside the Docker Client object fails to
-		// connects to docker deamon. Create the transport with DialContext and use
-		// this while initializing new docker client object.
-		timeout := time.Duration(1 * time.Second)
-		transport := &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout: timeout,
-			}).DialContext,
+		if err == nil {
+			testing.ContextLog(ctx, "Docker client connecting over docker.sock")
+			return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 		}
-		c := http.Client{Transport: transport}
-
-		return client.NewClientWithOpts(client.WithHost("tcp://192.168.231.1:2375"), client.WithHTTPClient(&c), client.WithAPIVersionNegotiation())
+		// Default to satlab docker settings.
+		dockerHost = "tcp://192.168.231.1:2375"
 	}
-	testing.ContextLog(ctx, "Docker client connecting over docker.sock")
-	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	// Otherwise connect over TCP
+	testing.ContextLogf(ctx, "Docker client connecting over TCP to %q", dockerHost)
+
+	// b/207133139, default HTTPClient inside the Docker Client object fails to
+	// connects to docker deamon. Create the transport with DialContext and use
+	// this while initializing new docker client object.
+	timeout := time.Duration(1 * time.Second)
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout: timeout,
+		}).DialContext,
+	}
+	c := http.Client{Transport: transport}
+
+	return client.NewClientWithOpts(client.WithHost(dockerHost), client.WithHTTPClient(&c), client.WithAPIVersionNegotiation())
 }
 
-func splitHostPort(servoHostPort string) (string, int, int, error) {
-	host := "localhost"
-	port := 9999
-	sshPort := 22
+type connectInfo struct {
+	Hostname        string
+	ServoPort       int
+	ServoSSHPort    int
+	DockerContainer string
+	DockerHost      string
+}
 
-	if strings.Contains(servoHostPort, "docker_servod") {
-		hostInfo := strings.Split(servoHostPort, ":")
-		return hostInfo[0], port, 0, nil
-	}
+func splitHostPort(servoHostPort string) (*connectInfo, error) {
+	var result connectInfo
+	result.Hostname = "localhost"
+	result.ServoPort = 9999
+	result.ServoSSHPort = 22
 
 	hostport := servoHostPort
+
+	dockerParts := strings.SplitN(hostport, ":docker:", 2)
+	if len(dockerParts) > 1 {
+		hostport = dockerParts[0]
+		dockerArgs := strings.SplitN(dockerParts[1], ":", 2)
+		if len(dockerArgs) == 0 {
+			return nil, errors.New("servo arg must be of the form hostname:9999:docker:container_name or hostname:9999:docker:container_name:tcp://docker_host:2375")
+		}
+		result.DockerContainer = dockerArgs[0]
+		if len(dockerArgs) > 1 {
+			result.DockerHost = dockerArgs[1]
+		}
+		result.ServoSSHPort = 0
+	}
+
 	if strings.HasSuffix(hostport, ":nossh") {
-		sshPort = 0
+		result.ServoSSHPort = 0
 		hostport = strings.TrimSuffix(hostport, ":nossh")
 	}
 	sshParts := strings.SplitN(hostport, ":ssh:", 2)
@@ -102,55 +125,62 @@ func splitHostPort(servoHostPort string) (string, int, int, error) {
 			// Expect the first ']' just before the last ':'.
 			end := strings.IndexByte(hostport, ']')
 			if end < 0 {
-				return "", 0, 0, errors.New("missing ']' in address")
+				return nil, errors.New("missing ']' in address")
 			}
 			switch end + 1 {
 			case len(hostport): // No port
 				if hostport[1:end] != "" {
-					host = hostport[1:end]
+					result.Hostname = hostport[1:end]
 				}
 				i = -1
 			case i: // ] before :
 				if hostport[1:end] != "" {
-					host = hostport[1:end]
+					result.Hostname = hostport[1:end]
 				}
 			default:
-				return "", 0, 0, errors.New("servo arg must be of the form hostname:9999 or hostname:9999:ssh:22 or [::1]:9999")
+				return nil, errors.New("servo arg must be of the form hostname:9999 or hostname:9999:ssh:22 or [::1]:9999")
 			}
 		} else {
 			if hostport[:i] != "" {
-				host = hostport[:i]
+				result.Hostname = hostport[:i]
 			}
-			if strings.IndexByte(host, ':') >= 0 {
-				return "", 0, 0, errors.New("unexpected colon in hostname")
+			if strings.IndexByte(result.Hostname, ':') >= 0 {
+				return nil, errors.New("unexpected colon in hostname")
 			}
 		}
 		if i >= 0 {
 			var err error
-			if port, err = strconv.Atoi(hostport[i+1:]); err != nil {
-				return "", 0, 0, errors.Wrap(err, "parsing servo port")
+			if result.ServoPort, err = strconv.Atoi(hostport[i+1:]); err != nil {
+				return nil, errors.Wrap(err, "parsing servo port")
 			}
-			if port <= 0 {
-				return "", 0, 0, errors.New("invalid servo port")
+			if result.ServoPort <= 0 {
+				return nil, errors.New("invalid servo port")
 			}
 		}
 	} else if hostport != "" {
-		host = hostport
+		result.Hostname = hostport
+	}
+	// If hostname looks like docker, then it is.
+	if strings.HasSuffix(result.Hostname, "docker_servod") && result.DockerContainer == "" {
+		result.DockerContainer = result.Hostname
+		result.ServoSSHPort = 0
+		result.Hostname = ""
+		return &result, nil
 	}
 	// If localhost, default to no ssh.
-	if host == "localhost" || host == "127.0.0.1" || host == "::1" {
-		sshPort = 0
+	if result.Hostname == "localhost" || result.Hostname == "127.0.0.1" || result.Hostname == "::1" {
+		result.ServoSSHPort = 0
 	}
 	if len(sshParts) > 1 {
 		var err error
-		if sshPort, err = strconv.Atoi(sshParts[1]); err != nil {
-			return "", 0, 0, errors.Wrap(err, "parsing servo host ssh port")
+		if result.ServoSSHPort, err = strconv.Atoi(sshParts[1]); err != nil {
+			return nil, errors.Wrap(err, "parsing servo host ssh port")
 		}
-		if sshPort <= 0 {
-			return "", 0, 0, errors.New("invalid servo host ssh port")
+		if result.ServoSSHPort <= 0 {
+			return nil, errors.New("invalid servo host ssh port")
 		}
 	}
-	return host, port, sshPort, nil
+	return &result, nil
 }
 
 // NewProxy returns a Proxy object for communicating with the servod instance at spec,
@@ -176,54 +206,49 @@ func splitHostPort(servoHostPort string) (string, int, int, error) {
 // CONTAINER_NAME must end with docker_servod.
 func NewProxy(ctx context.Context, servoHostPort, keyFile, keyDir string) (newProxy *Proxy, retErr error) {
 	var pxy Proxy
-	toClose := &pxy
 	defer func() {
-		if toClose != nil {
-			toClose.Close(ctx)
+		if retErr != nil {
+			pxy.Close(ctx)
 		}
 	}()
 
-	host, port, sshPort, err := splitHostPort(servoHostPort)
+	connectInfo, err := splitHostPort(servoHostPort)
 	if err != nil {
 		return nil, err
 	}
-	pxy.port = port
-	pxy.servoHostname = host
-	pxy.sshPort = sshPort
+	pxy.port = connectInfo.ServoPort
+	pxy.servoHostname = connectInfo.Hostname
+	pxy.sshPort = connectInfo.ServoSSHPort
 	pxy.keyFile = keyFile
 	pxy.keyDir = keyDir
 
 	if err := pxy.connectSSH(ctx); err != nil {
 		return nil, err
 	}
-
-	if pxy.hst == nil && !strings.Contains(host, "docker_servod") {
-		testing.ContextLogf(ctx, "Connecting to servod directly at %s:%d", host, port)
-		pxy.svo, err = New(ctx, host, port)
-		if err != nil {
-			return nil, err
-		}
+	if pxy.hst != nil {
+		return &pxy, nil
 	}
-
-	if strings.Contains(host, "docker_servod") {
-		pxy.dcl, err = createDockerClient(ctx)
+	if connectInfo.DockerContainer != "" {
+		pxy.dcl, err = createDockerClient(ctx, connectInfo.DockerHost)
 		if err != nil {
 			return nil, err
 		}
 		// b/227630721: For servod containers, create the XLMRpc connection using IP address instead of hostname.
-		ip, err := getServodContainerIP(ctx, pxy.dcl, host)
-		if err != nil {
-			return nil, err
+		if pxy.servoHostname == "" {
+			ip, err := getServodContainerIP(ctx, pxy.dcl, connectInfo.DockerContainer)
+			if err != nil {
+				return nil, err
+			}
+			pxy.servoHostname = ip
 		}
-		testing.ContextLogf(ctx, "Connecting to servod container directly at %s:%d", ip, port)
-		pxy.svo, err = New(ctx, ip, port)
-		if err != nil {
-			return nil, err
-		}
-
-		pxy.sdc = host
+		pxy.sdc = connectInfo.DockerContainer
 	}
-	toClose = nil // disarm cleanup
+
+	testing.ContextLogf(ctx, "Connecting to servod directly at %s:%d", pxy.servoHostname, pxy.port)
+	pxy.svo, err = New(ctx, pxy.servoHostname, pxy.port)
+	if err != nil {
+		return nil, err
+	}
 	return &pxy, nil
 }
 

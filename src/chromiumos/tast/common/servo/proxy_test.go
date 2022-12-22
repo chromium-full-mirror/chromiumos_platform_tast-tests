@@ -5,63 +5,59 @@
 package servo
 
 import (
+	"reflect"
 	"testing"
 )
 
 func TestSplitHostPort(t *testing.T) {
 	for _, tc := range []struct {
-		input           string
-		expectedHost    string
-		expectedPort    int
-		expectedSSHPort int
-		expectErr       bool
+		input    string
+		expected *connectInfo
 	}{
-		{"", "localhost", 9999, 0, false},
-		{":ssh:", "", 0, 0, true},
-		{":ssh:33", "localhost", 9999, 33, false},
-		{"rutabaga", "rutabaga", 9999, 22, false},
-		{"rutabaga:ssh:33", "rutabaga", 9999, 33, false},
-		{"rutabaga:1234", "rutabaga", 1234, 22, false},
-		{"rutabaga:1234:ssh:33", "rutabaga", 1234, 33, false},
-		{"rutabaga:localhost:1234", "", 0, 0, true},
-		{":1234", "localhost", 1234, 0, false},
-		{":1234:ssh:", "", 0, 0, true},
-		{":1234:ssh:33", "localhost", 1234, 33, false},
-		{"[::2]", "::2", 9999, 22, false},
-		{"[::2]:ssh:33", "::2", 9999, 33, false},
-		{"[::2]:1234", "::2", 1234, 22, false},
-		{"[::2]:1234:ssh:33", "::2", 1234, 33, false},
-		{"[::2]:localhost:1234", "", 0, 0, true},
-		{"::2", "", 0, 0, true},
-		{"::2:1234", "", 0, 0, true},
-		{"[::1]", "::1", 9999, 0, false},
-		{"[::1]:ssh:33", "::1", 9999, 33, false},
-		{"[::1]:1234", "::1", 1234, 0, false},
-		{"[::1]:1234:ssh:33", "::1", 1234, 33, false},
-		{"[::1]:localhost:1234", "", 0, 0, true},
-		{"::1", "", 0, 0, true},
-		{"::1:1234", "", 0, 0, true},
-		{"dut1-docker_servod", "dut1-docker_servod", 9999, 0, false},
-		{"dut1-docker_servod:9998", "dut1-docker_servod", 9999, 0, false},
-		{"dut1-docker_servod:9998::", "dut1-docker_servod", 9999, 0, false},
+		{"", &connectInfo{Hostname: "localhost", ServoPort: 9999}},
+		{":ssh:", nil},
+		{":ssh:33", &connectInfo{Hostname: "localhost", ServoPort: 9999, ServoSSHPort: 33}},
+		{"rutabaga", &connectInfo{Hostname: "rutabaga", ServoPort: 9999, ServoSSHPort: 22}},
+		{"rutabaga:ssh:33", &connectInfo{Hostname: "rutabaga", ServoPort: 9999, ServoSSHPort: 33}},
+		{"rutabaga:1234", &connectInfo{Hostname: "rutabaga", ServoPort: 1234, ServoSSHPort: 22}},
+		{"rutabaga:1234:ssh:33", &connectInfo{Hostname: "rutabaga", ServoPort: 1234, ServoSSHPort: 33}},
+		{"rutabaga:localhost:1234", nil},
+		{":1234", &connectInfo{Hostname: "localhost", ServoPort: 1234}},
+		{":1234:ssh:", nil},
+		{":1234:ssh:33", &connectInfo{Hostname: "localhost", ServoPort: 1234, ServoSSHPort: 33}},
+		{"[::2]", &connectInfo{Hostname: "::2", ServoPort: 9999, ServoSSHPort: 22}},
+		{"[::2]:ssh:33", &connectInfo{Hostname: "::2", ServoPort: 9999, ServoSSHPort: 33}},
+		{"[::2]:1234", &connectInfo{Hostname: "::2", ServoPort: 1234, ServoSSHPort: 22}},
+		{"[::2]:1234:ssh:33", &connectInfo{Hostname: "::2", ServoPort: 1234, ServoSSHPort: 33}},
+		{"[::2]:localhost:1234", nil},
+		{"::2", nil},
+		{"::2:1234", nil},
+		{"[::1]", &connectInfo{Hostname: "::1", ServoPort: 9999}},
+		{"[::1]:ssh:33", &connectInfo{Hostname: "::1", ServoPort: 9999, ServoSSHPort: 33}},
+		{"[::1]:1234", &connectInfo{Hostname: "::1", ServoPort: 1234}},
+		{"[::1]:1234:ssh:33", &connectInfo{Hostname: "::1", ServoPort: 1234, ServoSSHPort: 33}},
+		{"[::1]:localhost:1234", nil},
+		{"::1", nil},
+		{"::1:1234", nil},
+		{"dut1-docker_servod", &connectInfo{DockerContainer: "dut1-docker_servod", ServoPort: 9999}},
+		{"dut1-docker_servod:9998", &connectInfo{DockerContainer: "dut1-docker_servod", ServoPort: 9998}},
+		{"dut1-docker_servod:9998::", nil},
+		// Redirected ports to satlab docker servod
+		{"rutabaga:1234:docker:dut1-docker_servod:tcp://localhost:5678", &connectInfo{
+			Hostname: "rutabaga", ServoPort: 1234, DockerContainer: "dut1-docker_servod", DockerHost: "tcp://localhost:5678",
+		}},
 	} {
-		actualHost, actualPort, actualSSHPort, err := splitHostPort(tc.input)
-		if err != nil && !tc.expectErr {
+		info, err := splitHostPort(tc.input)
+		if err != nil && tc.expected != nil {
 			t.Errorf("splitHostPort(%q) returned unexpected error: %v", tc.input, err)
 			continue
 		}
-		if err == nil && tc.expectErr {
-			t.Errorf("splitHostPort(%q) unexpectedly succeeded %s %d %d", tc.input, actualHost, actualPort, actualSSHPort)
+		if err == nil && tc.expected == nil {
+			t.Errorf("splitHostPort(%q) unexpectedly succeeded %+v", tc.input, info)
 			continue
 		}
-		if actualHost != tc.expectedHost {
-			t.Errorf("splitHostPort(%q) returned host %q; want %q", tc.input, actualHost, tc.expectedHost)
-		}
-		if actualPort != tc.expectedPort {
-			t.Errorf("splitHostPort(%q) returned port %d; want %d", tc.input, actualPort, tc.expectedPort)
-		}
-		if actualSSHPort != tc.expectedSSHPort {
-			t.Errorf("splitHostPort(%q) returned port %d; want %d", tc.input, actualSSHPort, tc.expectedSSHPort)
+		if !reflect.DeepEqual(info, tc.expected) {
+			t.Errorf("splitHostPort(%q) got %+v, want %+v", tc.input, info, tc.expected)
 		}
 	}
 }
