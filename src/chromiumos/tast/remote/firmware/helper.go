@@ -28,7 +28,6 @@ import (
 	"chromiumos/tast/remote/firmware/rpm"
 	"chromiumos/tast/rpc"
 	fwpb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
@@ -597,15 +596,14 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
 		return errors.Wrap(err, "failed to remove ccd watchdog")
 	}
-
-	// Copying the behavior from src/third_party/hdctools/servo/drv/usb_downloader.py.
-	// Write the chromiumos_test_image.bin straight over /dev/sdx (usbdev).
-	// That code expects a url to a unpacked chromiumos_test_image.bin, but cloudStorage.Open doesn't handle devserver artifacts like `test_image`,
-	// so we need to manually untar the file and write it over the usb device.
+	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
+		return errors.Wrap(err, "failed to remove main watchdog")
+	}
 
 	// TODO if needed, recovery images are at .../recovery_image.tar.xz.
 	testImageURL := "build-artifact:///chromiumos_test_image.tar.xz"
 	// TODO(b/217635723): Revisit later when we have a solution for accessing dev servers on non-DUT machines.
+	// It would be nicer if CloudStorage had a method ExtractURL(ctx, gsPath, filename) that returned the extract url.
 	dataURL, err := cloudStorage.Stage(ctx, testImageURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to download test image %s", dutBuilderPath)
@@ -613,40 +611,24 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	if dataURL.Scheme != "http" && dataURL.Scheme != "https" {
 		return errors.Errorf("CloudStorage url is not http(s): %q", dataURL)
 	}
+	gsBucket := dataURL.Query().Get("gs_bucket")
+	if gsBucket != "" {
+		dataURL.Path = strings.Replace(dataURL.Path, "/static/", fmt.Sprintf("/extract/%s/", gsBucket), 1)
+		query := dataURL.Query()
+		query.Del("gs_bucket")
+		query.Set("file", "chromiumos_test_image.bin")
+		dataURL.RawQuery = query.Encode()
+	} else {
+		dataURL.Path = strings.Replace(dataURL.Path, "chromiumos_test_image.tar.xz", "chromiumos_test_image.bin", 1)
+	}
 
-	testing.ContextLog(ctx, "Flashing test OS image to USB")
-	// Make sure the device is synced whether or not the command succeeds.
-	defer func(ctx context.Context) {
-		if err = h.ServoProxy.RunCommand(ctx, true, "sync", usbdev); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "sync failed")
-			} else {
-				testing.ContextLogf(ctx, "Sync failed: %s", err)
-			}
-		}
-		if err = h.ServoProxy.RunCommand(ctx, true, "blockdev", "--rereadpt", usbdev); err != nil && retErr == nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "blockdev failed")
-			} else {
-				testing.ContextLogf(ctx, "blockdev failed: %s", err)
-			}
-		}
-	}(ctx)
+	testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", dataURL.String())
 
-	// Reduce the context deadline to let the deferred calls succeed.
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel()
 	// If it did have tast files, it won't shortly.
 	h.dutUsbHasTastFiles = false
-	if err = h.ServoProxy.RunCommand(ctx, true, "wget", "-nv", "--method=HEAD", dataURL.String()); err != nil {
-		return errors.Wrapf(err, "failed to download image from %s (%s)", dataURL.String(), testImageURL)
-	}
-	// On my computer with a servo v4, this takes 7 minutes.
-	if err = h.ServoProxy.RunCommand(ctx, true, "sh", "-c", fmt.Sprintf("wget -nv -O - %s | tar -JxOf - | dd of=%s bs=1M iflag=fullblock conv=nocreat,fsync", shutil.Escape(dataURL.String()), shutil.Escape(usbdev))); err != nil {
-		if err := h.validateUSBConn(ctx); err != nil {
-			return errors.Wrap(err, "failed while verifying usb connection to DUT")
-		}
-		return errors.Wrapf(err, "failed to flash os image %q to USB %q", testImageURL, usbdev)
+
+	if err = h.Servo.SetStringTimeout(ctx, servo.DownloadImageToUSBDev, dataURL.String(), 2*time.Hour); err != nil {
+		return errors.Wrapf(err, "failed to flash os image %q to USB %q from url %q", testImageURL, usbdev, dataURL.String())
 	}
 	testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbdev, testImageURL)
 	return nil
