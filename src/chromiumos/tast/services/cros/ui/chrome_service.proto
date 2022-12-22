@@ -22,6 +22,15 @@ service ChromeService {
   // Close releases the chrome session obtained by New.
   // When there is no chrome session, calling Close returns an error.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Reconnect reconnects to the current browser session.
+  //
+  // This method is called when connection need to be re-established, e.g. after suspend/resume.
+  // After the session is reconnected, all existing connections associated with chrome.Chrome instance also
+  // needs to be re-established. For example, chrome.TestAPIConn(), chrome.NewConn().
+  //
+  // Note that this method cannot be used to recover Chrome after crashes since the devtools port may change.
+  rpc Reconnect(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 // NewRequest to login to Chrome with configurable features, arguments and GAIA

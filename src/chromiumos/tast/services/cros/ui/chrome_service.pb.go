@@ -713,7 +713,7 @@ var file_chrome_service_proto_rawDesc = []byte{
 	0x53, 0x41, 0x42, 0x4c, 0x45, 0x44, 0x10, 0x01, 0x12, 0x14, 0x0a, 0x10, 0x41, 0x52, 0x43, 0x5f,
 	0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x45, 0x4e, 0x41, 0x42, 0x4c, 0x45, 0x44, 0x10, 0x02, 0x12, 0x16,
 	0x0a, 0x12, 0x41, 0x52, 0x43, 0x5f, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x53, 0x55, 0x50, 0x50, 0x4f,
-	0x52, 0x54, 0x45, 0x44, 0x10, 0x03, 0x32, 0x8a, 0x01, 0x0a, 0x0d, 0x43, 0x68, 0x72, 0x6f, 0x6d,
+	0x52, 0x54, 0x45, 0x44, 0x10, 0x03, 0x32, 0xc9, 0x01, 0x0a, 0x0d, 0x43, 0x68, 0x72, 0x6f, 0x6d,
 	0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3e, 0x0a, 0x03, 0x4e, 0x65, 0x77, 0x12,
 	0x1d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x62, 0x72, 0x6f, 0x77,
 	0x73, 0x65, 0x72, 0x2e, 0x4e, 0x65, 0x77, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
@@ -722,9 +722,13 @@ var file_chrome_service_proto_rawDesc = []byte{
 	0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
 	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74,
-	0x79, 0x22, 0x00, 0x42, 0x22, 0x5a, 0x20, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f,
-	0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f,
-	0x63, 0x72, 0x6f, 0x73, 0x2f, 0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x79, 0x22, 0x00, 0x12, 0x3d, 0x0a, 0x09, 0x52, 0x65, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74,
+	0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x42, 0x22, 0x5a, 0x20, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73,
+	0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
+	0x72, 0x6f, 0x73, 0x2f, 0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -760,10 +764,12 @@ var file_chrome_service_proto_depIdxs = []int32{
 	3, // 5: tast.cros.browser.Lacros.selection:type_name -> tast.cros.browser.Lacros.Selection
 	4, // 6: tast.cros.browser.ChromeService.New:input_type -> tast.cros.browser.NewRequest
 	7, // 7: tast.cros.browser.ChromeService.Close:input_type -> google.protobuf.Empty
-	7, // 8: tast.cros.browser.ChromeService.New:output_type -> google.protobuf.Empty
-	7, // 9: tast.cros.browser.ChromeService.Close:output_type -> google.protobuf.Empty
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
+	7, // 8: tast.cros.browser.ChromeService.Reconnect:input_type -> google.protobuf.Empty
+	7, // 9: tast.cros.browser.ChromeService.New:output_type -> google.protobuf.Empty
+	7, // 10: tast.cros.browser.ChromeService.Close:output_type -> google.protobuf.Empty
+	7, // 11: tast.cros.browser.ChromeService.Reconnect:output_type -> google.protobuf.Empty
+	9, // [9:12] is the sub-list for method output_type
+	6, // [6:9] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name
 	6, // [6:6] is the sub-list for extension extendee
 	0, // [0:6] is the sub-list for field type_name
@@ -853,6 +859,14 @@ type ChromeServiceClient interface {
 	// Close releases the chrome session obtained by New.
 	// When there is no chrome session, calling Close returns an error.
 	Close(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Reconnect reconnects to the current browser session.
+	//
+	// This method is called when connection need to be re-established, e.g. after suspend/resume.
+	// After the session is reconnected, all existing connections associated with chrome.Chrome instance also
+	// needs to be re-established. For example, chrome.TestAPIConn(), chrome.NewConn().
+	//
+	// Note that this method cannot be used to recover Chrome after crashes since the devtools port may change.
+	Reconnect(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type chromeServiceClient struct {
@@ -881,6 +895,15 @@ func (c *chromeServiceClient) Close(ctx context.Context, in *emptypb.Empty, opts
 	return out, nil
 }
 
+func (c *chromeServiceClient) Reconnect(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.browser.ChromeService/Reconnect", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChromeServiceServer is the server API for ChromeService service.
 type ChromeServiceServer interface {
 	// New enables testing for Chrome and logs into a Chrome session.
@@ -891,6 +914,14 @@ type ChromeServiceServer interface {
 	// Close releases the chrome session obtained by New.
 	// When there is no chrome session, calling Close returns an error.
 	Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Reconnect reconnects to the current browser session.
+	//
+	// This method is called when connection need to be re-established, e.g. after suspend/resume.
+	// After the session is reconnected, all existing connections associated with chrome.Chrome instance also
+	// needs to be re-established. For example, chrome.TestAPIConn(), chrome.NewConn().
+	//
+	// Note that this method cannot be used to recover Chrome after crashes since the devtools port may change.
+	Reconnect(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedChromeServiceServer can be embedded to have forward compatible implementations.
@@ -902,6 +933,9 @@ func (*UnimplementedChromeServiceServer) New(context.Context, *NewRequest) (*emp
 }
 func (*UnimplementedChromeServiceServer) Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Close not implemented")
+}
+func (*UnimplementedChromeServiceServer) Reconnect(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reconnect not implemented")
 }
 
 func RegisterChromeServiceServer(s *grpc.Server, srv ChromeServiceServer) {
@@ -944,6 +978,24 @@ func _ChromeService_Close_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChromeService_Reconnect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChromeServiceServer).Reconnect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.browser.ChromeService/Reconnect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChromeServiceServer).Reconnect(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ChromeService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.browser.ChromeService",
 	HandlerType: (*ChromeServiceServer)(nil),
@@ -955,6 +1007,10 @@ var _ChromeService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Close",
 			Handler:    _ChromeService_Close_Handler,
+		},
+		{
+			MethodName: "Reconnect",
+			Handler:    _ChromeService_Reconnect_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

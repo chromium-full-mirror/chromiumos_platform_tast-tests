@@ -139,6 +139,28 @@ func (svc *ChromeService) Close(ctx context.Context, req *empty.Empty) (*empty.E
 	return &empty.Empty{}, err
 }
 
+// Reconnect reconnects to the current browser session.
+//
+// This method is called when connection need to be re-established, e.g. after suspend/resume.
+// After the session is reconnected, all existing connections associated with chrome.Chrome instance also
+// needs to be re-established. For example, chrome.TestAPIConn(), chrome.NewConn().
+//
+// Note that this method cannot be used to recover Chrome after crashes since the devtools port may change.
+func (svc *ChromeService) Reconnect(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	if svc.sharedObject.Chrome == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	if err := svc.sharedObject.Chrome.Reconnect(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to reconnect to current browser session")
+	}
+
+	return &empty.Empty{}, nil
+}
+
 func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 	// TODO(jonfan): Find a creative way to unit test this function
 	// The underlying object Config and MutableConfig are private
