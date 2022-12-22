@@ -91,6 +91,7 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("EventLatency.GestureScrollUpdate.Touchscreen.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("EventLatency.GestureScrollUpdate.Wheel.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("PageLoad.InteractiveTiming.InputDelay3", "ms", perf.SmallerIsBetter),
+		NewCustomMetricConfig("PageLoad.InteractiveTiming.TimeToNextPaint", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Event.Latency.EndToEnd.KeyPress", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("EventLatency.KeyPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Event.Latency.EndToEnd.Mouse", "microseconds", perf.SmallerIsBetter),
