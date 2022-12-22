@@ -42,7 +42,7 @@ import (
 )
 
 const (
-	shortUITimeout = 3 * time.Second
+	shortUITimeout = 5 * time.Second
 
 	tabSwitchTimeout = 2 * time.Minute
 	clickLinkTimeout = 1 * time.Minute
@@ -548,22 +548,11 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 		for tabIdx := 0; tabIdx < tabTotalNum; tabIdx++ {
 			testing.ContextLogf(ctx, "Switching tab to window %d, tab %d", idx+1, tabIdx+1)
 
-			tab := window.tabs[tabIdx]
-			if tab.pageInfo.webName == youtube || tab.pageInfo.webName == reddit {
-				notificationsDialog := nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
-				allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
-				if err := uiauto.IfSuccessThen(
-					ui.WaitUntilExists(notificationsDialog),
-					tsAction.Click(allowButton),
-				)(ctx); err != nil {
-					return errors.Wrap(err, "failed to close alert dialog")
-				}
-			}
-
 			if err := tsAction.SwitchToChromeTabByIndex(tabIdx)(ctx); err != nil {
 				return errors.Wrap(err, "failed to switch tab")
 			}
 
+			tab := window.tabs[tabIdx]
 			// Test the tab connection and reconnect if necessary. This is necessary for
 			// discarded tabs due to OOM issue.
 			// After tab switching, the current focused tab should be active again so
@@ -637,6 +626,27 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 				// Given some time after clicking any anchor before doing next operation.
 				if err := testing.Sleep(ctx, time.Second); err != nil {
 					return errors.Wrapf(err, "failed to sleep for %v", time.Second)
+				}
+			}
+
+			// The tab.pageInfo.webName is the website name of the tab after switching.
+			// After switching to Youtube or Reddit tabs, there might be a dialog popping up,
+			// causing the test fails to switch to the next tab.
+			// If the dialog exists, keep clicking the "Allow" button to ensure it is closed.
+			if tab.pageInfo.webName == youtube || tab.pageInfo.webName == reddit {
+				// The alert dialog pops up after the tab achieves quiescence.
+				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
+					return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
+				}
+				notificationsDialog := nodewith.NameContaining("Show notifications").Role(role.AlertDialog).HasClass("RootView")
+				allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
+				if err := uiauto.IfSuccessThen(
+					ui.WithTimeout(shortUITimeout).WaitUntilExists(notificationsDialog),
+					tsAction.ClickUntil(
+						allowButton,
+						ui.WithTimeout(shortUITimeout).WaitUntilGone(notificationsDialog)),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to close alert dialog")
 				}
 			}
 		}
