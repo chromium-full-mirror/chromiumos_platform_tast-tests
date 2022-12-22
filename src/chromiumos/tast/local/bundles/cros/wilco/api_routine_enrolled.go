@@ -76,7 +76,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 	for _, tc := range []struct {
 		name                         string
 		request                      *dtcpb.RunRoutineRequest
-		wantRoutineStatus            dtcpb.DiagnosticRoutineStatus
+		wantRoutineStatus            []dtcpb.DiagnosticRoutineStatus
 		postRoutineValidityCheckFunc func() error
 	}{
 		{
@@ -89,7 +89,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED},
 		},
 		{
 			name: "urandom_cancel",
@@ -101,7 +101,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 		},
 		{
 			name: "battery",
@@ -111,7 +111,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					BatteryParams: &dtcpb.BatteryRoutineParameters{},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED},
 		},
 		{
 			name: "battery_sysfs",
@@ -121,17 +121,19 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					BatterySysfsParams: &dtcpb.BatterySysfsRoutineParameters{},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED},
 		},
 		{
 			name: "smartctl",
 			request: &dtcpb.RunRoutineRequest{
 				Routine: dtcpb.DiagnosticRoutine_ROUTINE_SMARTCTL_CHECK,
 				Parameters: &dtcpb.RunRoutineRequest_SmartctlCheckParams{
+					// Passing nil to the optional parameter results in the same
+					// behaviour as calling the old routine version.
 					SmartctlCheckParams: &dtcpb.SmartctlCheckRoutineParameters{},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED, dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED},
 		},
 		// Success is not tested because the CPU cache routine takes too much time.
 		{
@@ -146,7 +148,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 			},
 			// The length of seconds is zero (the length of seconds for the test
 			// should larger than zero).
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED},
 		},
 		{
 			name: "cpu_cache_cancelled",
@@ -158,7 +160,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 		},
 		// Success is not tested because the CPU stress routine takes too much time.
 		{
@@ -173,7 +175,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 			},
 			// The length of seconds is zero (the length of seconds for the test
 			// should larger than zero).
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED},
 		},
 		{
 			name: "cpu_stress_cancelled",
@@ -185,7 +187,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 		},
 		{
 			name: "floating_point_accuracy",
@@ -197,7 +199,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED},
 		},
 		{
 			name: "floating_point_accuracy_cancelled",
@@ -209,7 +211,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 		},
 		// Success is not tested because there are many DUTs in the lab that
 		// have SSD with wear level >99%.
@@ -225,7 +227,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 			},
 			// The result will fail due to the threshold of the wear level is zero as
 			// well as the wear level value always larger or equal to zero.
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_FAILED},
 		},
 		// Success is not tested because the NVMe short self-test routine takes too
 		// much time.
@@ -237,7 +239,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					NvmeShortSelfTestParams: &dtcpb.NvmeShortSelfTestRoutineParameters{},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 		},
 		// Success is not tested because the NVMe long self-test routine takes too
 		// much time.
@@ -249,7 +251,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					NvmeLongSelfTestParams: &dtcpb.NvmeLongSelfTestRoutineParameters{},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 		},
 		{
 			name: "disk_read_linear",
@@ -262,7 +264,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED},
 		},
 		{
 			name: "disk_read_random",
@@ -275,7 +277,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_PASSED},
 		},
 		{
 			name: "disk_read_linear_cancelled",
@@ -288,7 +290,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 					},
 				},
 			},
-			wantRoutineStatus: dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED,
+			wantRoutineStatus: []dtcpb.DiagnosticRoutineStatus{dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED},
 			// Disk read test routine will create a test file, ensure it is deleted after cancellation.
 			postRoutineValidityCheckFunc: func() error {
 				const testFile = "/var/cache/diagnostics_disk_read_routine_data/fio-test-file"
@@ -315,8 +317,17 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 				}
 			}(ctx)
 
+			contains := func(all []dtcpb.DiagnosticRoutineStatus, expected dtcpb.DiagnosticRoutineStatus) bool {
+				for _, e := range all {
+					if expected == e {
+						return true
+					}
+				}
+				return false
+			}
+
 			wantRoutineStatus := dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_RUNNING
-			if tc.wantRoutineStatus == dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED {
+			if contains(tc.wantRoutineStatus, dtcpb.DiagnosticRoutineStatus_ROUTINE_STATUS_CANCELLED) {
 				if err := routines.CancelRoutine(ctx, uuid); err != nil {
 					s.Error("Unable to cancel routine: ", err)
 				}
@@ -340,7 +351,7 @@ func APIRoutineEnrolled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to get routine status: ", err)
 			}
 
-			if response.Status != tc.wantRoutineStatus {
+			if !contains(tc.wantRoutineStatus, response.Status) {
 				s.Errorf("Unexpected status = got %v, want %v", response.Status, tc.wantRoutineStatus)
 			}
 		})
