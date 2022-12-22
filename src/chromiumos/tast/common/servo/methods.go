@@ -39,6 +39,8 @@ const (
 	UARTCmd               StringControl = "servo_v4_uart_cmd"
 	UARTCmdV4p1           StringControl = "servo_v4p1_uart_cmd"
 	WarmReset             StringControl = "warm_reset"
+	USBArbKey             StringControl = "usb_arb_key"
+	USBArbKeyConfig       StringControl = "usb_arb_key_config"
 	Watchdog              StringControl = "watchdog"
 	WatchdogAdd           StringControl = "watchdog_add"
 	WatchdogRemove        StringControl = "watchdog_remove"
@@ -687,6 +689,25 @@ func (s *Servo) PressKey(ctx context.Context, key string, value KeypressDuration
 	}
 	// Set timeout of keypress to make it doesn't timeout before keypress is complete.
 	return s.SetStringTimeout(ctx, ArbKey, string(value), timeout)
+}
+
+// PressUSBKey sends an arbitrary USB KB key for a KeypressDuration.
+func (s *Servo) PressUSBKey(ctx context.Context, key string, value KeypressDuration) error {
+	// The default duration with SetString is 10s.
+	timeout := 10 * time.Second
+	// If duration is string (e.g. press, tab, long_press) don't parse as duration string.
+	if match := regexp.MustCompile(`\d+(.|\.\d+)?`).FindStringSubmatch(string(value)); match != nil {
+		out, err := time.ParseDuration(fmt.Sprintf("%ss", string(value)))
+		if err != nil {
+			return errors.Wrap(err, "parsing duration")
+		}
+		timeout = out + 1*time.Second
+	}
+	if err := s.SetString(ctx, USBArbKeyConfig, key); err != nil {
+		return errors.Wrapf(err, "failed to press key %q", key)
+	}
+	// Set timeout of keypress so that it doesn't time out before keypress is complete.
+	return s.SetStringTimeout(ctx, USBArbKey, string(value), timeout)
 }
 
 // GetUSBMuxState determines whether the servo USB mux is on, and if so, which direction it is pointed.
