@@ -174,6 +174,10 @@ type Recorder struct {
 	perfettoCfgPath           string
 	perfettoTracingFilePrefix string
 
+	// stopMetricsBeforeTracing corresponds to
+	// RecorderOptions.StopMetricsBeforeTracing.
+	stopMetricsBeforeTracing bool
+
 	// duration is the total running time of the recorder.
 	duration time.Duration
 
@@ -214,6 +218,8 @@ type Recorder struct {
 	batteryInfoTracker *perfSrc.BatteryInfoTracker
 	memInfoTracker     *perfSrc.MemoryInfoTracker
 	loginEventRecorder *perfSrc.LoginEventRecorder
+
+	pv *perf.Values
 }
 
 // RecorderOptions contains options to control the recorder setup.
@@ -230,6 +236,11 @@ type RecorderOptions struct {
 	DoNotChangeDPTF      bool
 	DoNotChangeAudio     bool
 	DoNotChangeBluetooth bool
+	// StopMetricsBeforeTracing causes the recorder to stop the performance metrics
+	// timelines before stopping tracing. The motivation is that it takes about two
+	// minutes to clean up the tracing session, and those two minutes are evidently
+	// problematic for the performance metrics timelines. See b/263167309.
+	StopMetricsBeforeTracing bool
 }
 
 var performanceCUJDischargeThreshold = 55.0
@@ -370,7 +381,12 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	if bTconn != nil && *tconn != *bTconn {
 		tconns[browser.TypeLacros] = bTconn
 	}
-	r := &Recorder{cr: cr, tconn: tconn, tconns: tconns}
+	r := &Recorder{
+		cr:                       cr,
+		tconn:                    tconn,
+		tconns:                   tconns,
+		stopMetricsBeforeTracing: options.StopMetricsBeforeTracing,
+	}
 
 	powerTestOptions := setup.PowerTestOptions{
 		// The default for the following options is to disable these setting.
@@ -622,6 +638,8 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	}
 	defer func(ctx context.Context) {
 		// If this function finishes without errors, cleanup will happen in stopRecording
+		// if r.stopMetricsBeforeTracing is false, and in Run if r.stopMetricsBeforeTracing
+		// is true.
 		if e == nil {
 			return
 		}
@@ -742,16 +760,20 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		return errors.New("Stop requested but recorder was not fully started: " + fmt.Sprintf(" mr=%v, r.cleanup=%p", r.mr, r.cleanup))
 	}
 
-	defer func(ctx context.Context) {
-		err := r.cleanup(ctx)
-		if err != nil {
-			testing.ContextLogf(ctx, "Failed to stop recording: %s", err)
-		}
-		if e == nil && err != nil {
-			e = errors.Wrap(err, "failed to cleanup after stopRecording")
-		}
-		r.cleanup = nil
-	}(ctx)
+	// r.cleanup stops tracing. Do that here in stopRecording
+	// only if r.stopMetricsBeforeTracing is false.
+	if !r.stopMetricsBeforeTracing {
+		defer func(ctx context.Context) {
+			err := r.cleanup(ctx)
+			if err != nil {
+				testing.ContextLogf(ctx, "Failed to clean up after stopRecording: %s", err)
+			}
+			if e == nil && err != nil {
+				e = errors.Wrap(err, "failed to clean up after stopRecording")
+			}
+			r.cleanup = nil
+		}(ctx)
+	}
 	r.duration += time.Now().Sub(r.startedAtTm)
 	r.startedAtTm = time.Time{} // Reset to zero.
 
@@ -807,57 +829,9 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 	return nil
 }
 
-// Run conducts the test scenario f, and collects the related metrics for the
-// test scenario, and updates the internal data.
-//
-// This function should be kept to the bare minimum, all relevant changes
-// should go into startRecording()/stopRecording() to allow tests with
-// different runners to accommodate them.
-//
-// This function also serves as an example for test developers on how to
-// incorporate CUJ data recording into other tests.
-func (r *Recorder) Run(ctx context.Context, f func(ctx context.Context) error) (e error) {
-	runCtx, err := r.startRecording(ctx)
-	if err != nil {
-		return err
-	}
-	defer func(ctx, runCtx context.Context) {
-		err := r.stopRecording(ctx, runCtx)
-		if e == nil && err != nil {
-			e = err
-		} else if err != nil {
-			testing.ContextLogf(ctx, "Failed to stop recording: %s", err)
-		}
-	}(ctx, runCtx)
-	if err := f(runCtx); err != nil {
-		return err
-	}
-	r.testCyclesCount++
-	return nil
-}
-
-// RunFor conducts the test scenario f repeatedly for a given minimum
-// duration. It may exceed that duration to complete the last call to f.
-func (r *Recorder) RunFor(ctx context.Context, f func(ctx context.Context) error, minimumDuration time.Duration) error {
-	return r.Run(ctx, func(ctx context.Context) error {
-		for end := time.Now().Add(minimumDuration); time.Now().Before(end); {
-			if err := f(ctx); err != nil {
-				return err
-			}
-			r.testCyclesCount++
-		}
-
-		// Decrement test cycles to prevent double counting, since
-		// Run() increments cycles count independently
-		r.testCyclesCount--
-
-		return nil
-	})
-}
-
-// Record creates the reporting values from the currently stored data points and
-// sets the values into pv.
-func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
+// stopMetrics stops the performance metrics timelines and sets the values into r.pv.
+// When this function fails, it may have already set some useful values into r.pv.
+func (r *Recorder) stopMetrics(ctx context.Context) error {
 	// We want to conduct all of Stop tasks even when some of them fails.  Return
 	// an error when one of them has failed.
 	var stopErr error
@@ -914,8 +888,9 @@ func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
 	if stopErr != nil {
 		return stopErr
 	}
-	pv.Merge(tpsData)
-	pv.Merge(powerData)
+	r.pv = perf.NewValues()
+	r.pv.Merge(tpsData)
+	r.pv.Merge(powerData)
 
 	displayInfo, err := perfSrc.NewDisplayInfo(ctx, r.tconn)
 	if err != nil {
@@ -933,7 +908,7 @@ func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
 			// Append metric name with browser type as the new metric name, for example:
 			// - EventLatency.TotalLatency_ash-Chrome,
 			// - PageLoad.InteractiveTiming.InputDelay3_lacros-Chrome
-			rec.saveMetric(pv, fmt.Sprintf("%s_%s-Chrome", name, bt))
+			rec.saveMetric(r.pv, fmt.Sprintf("%s_%s-Chrome", name, bt))
 			// Combine the record.
 			if _, ok := allRecords[name]; !ok {
 				allRecords[name] = &record{config: rec.config}
@@ -955,12 +930,12 @@ func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
 		// Metric name recorded is the original histogram name. For example:
 		// - EventLatency.TotalLatency
 		// - PageLoad.InteractiveTiming.InputDelay3
-		rec.saveMetric(pv, name)
+		rec.saveMetric(r.pv, name)
 	}
 
 	// Derive Cras.UnderrunsPerDevicePerMinute. Ideally, the audio playing time and number of CRAS audio device
 	// should be captured. For now use the recorder running duration and assume there is only one device.
-	pv.Set(perf.Metric{
+	r.pv.Set(perf.Metric{
 		Name:      "Media.Cras.UnderrunsPerDevicePerMinute",
 		Unit:      "count",
 		Direction: perf.SmallerIsBetter,
@@ -970,33 +945,110 @@ func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
 	if r.batteryDischarge {
 		batteryDischargeReport = 1
 	}
-	pv.Set(perf.Metric{
+	r.pv.Set(perf.Metric{
 		Name:      powerMetricPrefix + "MetricsCollectedWithBatteryDischarge",
 		Unit:      "unitless",
 		Direction: perf.BiggerIsBetter,
 	}, batteryDischargeReport)
 
-	pv.Set(perf.Metric{
+	r.pv.Set(perf.Metric{
 		Name:      "TestMetrics.TestCyclesCount",
 		Unit:      "count",
 		Direction: perf.SmallerIsBetter,
 	}, float64(r.testCyclesCount))
 
-	pv.Set(perf.Metric{
+	r.pv.Set(perf.Metric{
 		Name: "TestMetrics.TotalTestRunTime",
 		Unit: "s",
 		// Longer runtime correlates to better performance data, so bigger is better
 		Direction: perf.BiggerIsBetter,
 	}, r.duration.Seconds())
 
-	displayInfo.Record(pv)
-	r.frameDataTracker.Record(pv)
-	r.zramInfoTracker.Record(pv)
-	r.batteryInfoTracker.Record(pv)
-	r.memInfoTracker.Record(pv)
-	r.loginEventRecorder.Record(ctx, pv)
+	displayInfo.Record(r.pv)
+	r.frameDataTracker.Record(r.pv)
+	r.zramInfoTracker.Record(r.pv)
+	r.batteryInfoTracker.Record(r.pv)
+	r.memInfoTracker.Record(r.pv)
+	r.loginEventRecorder.Record(ctx, r.pv)
 
 	return nil
+}
+
+// Run conducts the test scenario f, and collects the related metrics for the
+// test scenario, and updates the internal data.
+func (r *Recorder) Run(ctx context.Context, f func(ctx context.Context) error) (e error) {
+	runCtx, err := r.startRecording(ctx)
+	if err != nil {
+		return err
+	}
+
+	// If r.stopMetricsBeforeTracing is false, cleanup will happen in stopRecording.
+	if r.stopMetricsBeforeTracing {
+		defer func(ctx context.Context) {
+			if err := r.cleanup(ctx); err != nil {
+				if e == nil {
+					e = errors.Wrap(err, "failed to clean up after stopRecording")
+				} else {
+					testing.ContextLog(ctx, "Failed to clean up after stopRecording: ", err)
+				}
+			}
+			r.cleanup = nil
+		}(ctx)
+	}
+
+	if errF := f(runCtx); errF != nil {
+		if errStopRecording := r.stopRecording(ctx, runCtx); errStopRecording != nil {
+			testing.ContextLog(ctx, "Failed to stop recording: ", errStopRecording)
+		}
+		return errF
+	}
+	r.testCyclesCount++
+	if errStopRecording := r.stopRecording(ctx, runCtx); errStopRecording != nil {
+		return errors.Wrap(errStopRecording, "failed to stop recording")
+	}
+
+	if r.stopMetricsBeforeTracing {
+		// Use a short timeout value so it can return fast in case of failure.
+		// Some tests do this by passing a shortened context to Record (see
+		// QuickCheckCUJ for example), but when r.stopMetricsBeforeTracing is
+		// true, that's not going to work, so do it here instead.
+		ctxStopMetrics, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+		if err := r.stopMetrics(ctxStopMetrics); err != nil {
+			return errors.Wrap(err, "failed to stop metrics")
+		}
+	}
+
+	return nil
+}
+
+// RunFor conducts the test scenario f repeatedly for a given minimum
+// duration. It may exceed that duration to complete the last call to f.
+func (r *Recorder) RunFor(ctx context.Context, f func(ctx context.Context) error, minimumDuration time.Duration) error {
+	return r.Run(ctx, func(ctx context.Context) error {
+		for end := time.Now().Add(minimumDuration); time.Now().Before(end); {
+			if err := f(ctx); err != nil {
+				return err
+			}
+			r.testCyclesCount++
+		}
+
+		// Decrement test cycles to prevent double counting,
+		// as Run increments the cycle count independently.
+		r.testCyclesCount--
+
+		return nil
+	})
+}
+
+// Record sets the performance metrics timeline values into pv.
+func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
+	var err error
+	if !r.stopMetricsBeforeTracing {
+		err = r.stopMetrics(ctx)
+	}
+	pv.Merge(r.pv)
+	return err
 }
 
 // SaveHistograms saves histogram raw data to a given directory in a
