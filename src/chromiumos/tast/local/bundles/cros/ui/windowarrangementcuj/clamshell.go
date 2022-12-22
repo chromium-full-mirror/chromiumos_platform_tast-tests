@@ -114,6 +114,13 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 		return errors.Wrap(err, "failed to wait for the browser window animation")
 	}
 
+	// Wait a little longer because the following resizing drag has
+	// had several flaky problems which do not cause test failures
+	// but lead to misleading performance data. See b/263131909.
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
 	// Resize window.
 	upperLeftPt := coords.NewPoint(bounds.Left, bounds.Top)
 	middlePt := coords.NewPoint(bounds.Left+bounds.Width/2, bounds.Top+bounds.Height/2)
