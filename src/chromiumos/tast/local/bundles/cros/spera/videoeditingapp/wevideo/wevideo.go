@@ -89,14 +89,17 @@ func (w *WeVideo) Login(account string) action.Action {
 	ui := w.ui
 	loginRequired := func(ctx context.Context) error {
 		if err := ui.Exists(weVideoWebArea)(ctx); err == nil {
-			return errors.New("It has been loged in")
+			return errors.New("It has been logged in")
 		}
 		return nil
 	}
+
 	// weVideoBeforeLoginWebArea is the web area of the WeVideo page before login.
 	// The current name of the web area is "Video Creation | Interactivity | WeVideo".
 	// WeVideo may change ui frequently, so NameContaining is used here.
 	weVideoBeforeLoginWebArea := nodewith.NameContaining("WeVideo").Role(role.RootWebArea)
+	primaryHeader := nodewith.Role(role.Header).Ancestor(weVideoBeforeLoginWebArea)
+	navigationButton := nodewith.Role(role.Button).Ancestor(primaryHeader).Collapsed()
 	// The role of loginLink may be button or link, so use First() to select the first one.
 	loginLink := nodewith.Name("Log in").Ancestor(weVideoBeforeLoginWebArea).Linked().First()
 	loginReg := regexp.MustCompile(`(Login|Log in) to your account`)
@@ -123,7 +126,9 @@ func (w *WeVideo) Login(account string) action.Action {
 		// There is a bug in Wevideo login process, sometimes it needs to login twice with google account.
 		// So add retry login here.
 		uiauto.Retry(retryTimes, uiauto.NamedCombine("log in WeVideo",
-			uiauto.IfSuccessThen(ui.Exists(loginLink), ui.DoDefault(loginLink)),
+			// Click navigation button to display login link.
+			uiauto.IfSuccessThen(ui.Exists(navigationButton), ui.DoDefault(navigationButton)),
+			uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(loginLink), ui.DoDefault(loginLink)),
 			ui.WaitUntilExists(loginWebArea),
 			loginWithGoogle,
 			// Sign up if there is a sign up page.
@@ -238,7 +243,7 @@ func (w *WeVideo) AddStockVideo(clipName, previousClipName, clipTime, expectedTr
 func (w *WeVideo) AddText(clipName, expectedTrack, text string) action.Action {
 	ui := w.ui
 	textTab := nodewith.Name("Text").Role(role.Tab).HasClass(editorTabClass)
-	// It removes the text info, so it can only capture "Basic text" node by classname.
+	// It removes the text info, so it can only capture "Basic text" node by class name.
 	// The first one is "Basic text".
 	basicText := nodewith.Role(role.GenericContainer).ClassName("ui-draggable-handle").First()
 	dragTextToTrack := func(ctx context.Context) error {
