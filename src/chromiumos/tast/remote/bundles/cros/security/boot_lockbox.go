@@ -28,7 +28,9 @@ func init() {
 		Func:         BootLockbox,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot lockbox read/store test",
-		Contacts:     []string{"xzhou@chromium.org", "victorhsieh@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com"},
+		// ChromeOS > Platform > System > Hardware Security > HwSec AP
+		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
