@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -34,7 +35,7 @@ func init() {
 			"chrome_internal",
 			"play_store",
 		},
-		Timeout: 7 * time.Minute,
+		Timeout: 15 * time.Minute,
 		VarDeps: []string{unicorn.ParentUserVar, unicorn.ParentPasswordVar, unicorn.ChildUserVar, unicorn.ChildPasswordVar},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -42,6 +43,9 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
