@@ -29,7 +29,8 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "cpiao@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
+		// TODO(b/262904090): Unicorn paid Aapps dialog is missing which breaks the test.
+		// Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Vars:         []string{"arc.parentUser"},
