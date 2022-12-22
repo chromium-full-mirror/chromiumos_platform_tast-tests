@@ -81,7 +81,7 @@ func simpleConnect80211abg() []simpleConnectParams {
 		Name:              "80211a",
 		Doc:               simpleConnectDocPref("an open 802.11a network on channels 48, 64."),
 		Val:               mkOps("a", 48, 64),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy, tdreq.WiFiSecSupportOpen},
 	}, {
 		Name:              "80211b",
 		Doc:               simpleConnectDocPref("an open 802.11b network on channels 1, 6, 11."),
@@ -234,6 +234,7 @@ func simpleConnectWEP() []simpleConnectParams {
 			Name:              "wep" + strconv.Itoa(keyLen),
 			Doc:               simpleConnectDocPref(fmt.Sprintf("a WEP network with both open and shared system authentication and %d-bit pre-shared keys.", keyLen)),
 			ExtraHardwareDeps: `hwdep.D(hwdep.WifiWEP())`,
+			ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 		}
 		for _, algo := range []string{"Open", "Shared"} {
 			for key := 0; key < 4; key++ {
@@ -265,6 +266,7 @@ func simpleConnectWEPHidden() simpleConnectParams {
 		Doc:               simpleConnectDocPref("a hidden WEP network with open/shared system authentication and 40/104-bit pre-shared keys."),
 		Val:               p,
 		ExtraHardwareDeps: `hwdep.D(hwdep.WifiWEP())`,
+		ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 	}
 }
 
@@ -334,23 +336,24 @@ func simpleConnectWPA() []simpleConnectParams {
 		ExtraAttr: []string{"wificell_cq"},
 		Val:       mkOps("", "PureWPA", tkip|ccmp, 0),
 	}, {
-		Name: "wpa2tkip",
-		Doc:  simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) with TKIP. Some AP still uses TKIP in WPA2."),
-		Val:  mkOps("", "PureWPA2", 0, tkip),
+		Name:              "wpa2tkip",
+		Doc:               simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) with TKIP. Some AP still uses TKIP in WPA2."),
+		Val:               mkOps("", "PureWPA2", 0, tkip),
+		ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
 	}, {
 		Name: "wpa2pmf",
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames."),
 		ExtraAttr:         []string{"wificell_cq"},
 		Val:               mkOps("ap.PMF(ap.PMFRequired)", "PureWPA2", 0, ccmp),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 	}, {
 		Name: "wpa2pmfsha256",
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames.",
 			"And the client uses WPA-PSK-SHA256 for key management suite"),
 		ExtraAttr:         []string{"wificell_unstable"},
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 		Val: []simpleConnectParamsVal{{
 			APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
 			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
@@ -371,11 +374,12 @@ func simpleConnectWPA() []simpleConnectParams {
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client may also negotiate use of 802.11w protected management frames."),
 		Val:               mkOps("ap.PMF(ap.PMFOptional)", "PureWPA2", 0, ccmp),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 	}, {
-		Name: "wpa2",
-		Doc:  simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) and encrypted under AES."),
-		Val:  mkOps("", "PureWPA2", 0, ccmp),
+		Name:              "wpa2",
+		Doc:               simpleConnectDocPref("a protected network supporting for WPA2 (aka RSN) and encrypted under AES."),
+		Val:               mkOps("", "PureWPA2", 0, ccmp),
+		ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
 	}, {
 		Name: "wpamixed",
 		Doc:  simpleConnectDocPref("a protected network supporting for both WPA and WPA2 with TKIP/AES supported for WPA and AES supported for WPA2."),
@@ -402,7 +406,7 @@ func simpleConnectWPA3() []simpleConnectParams {
 		Name:              "wpa3mixed",
 		Doc:               simpleConnectDocPref("an AP in WPA2/WPA3 mixed mode. WiFi alliance suggests PMF in this mode."),
 		Val:               mkOps("Optional", "MixedWPA3"),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
 	}, {
 		Name:              "wpa3",
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
@@ -412,7 +416,7 @@ func simpleConnectWPA3() []simpleConnectParams {
 		},
 		Doc:               simpleConnectDocPref(`an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.`),
 		Val:               mkOps("Required", "PureWPA3"),
-		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF},
+		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
 	}}
 }
 
@@ -570,6 +574,7 @@ func simpleConnect8021xWEP() simpleConnectParams {
 			"Qualcomm looks at the security fixes in the FW.",
 			"TODO(b/194644867): revisit after FW fix and verification."},
 		ExtraHardwareDeps: `hwdep.D(hwdep.WifiNotMarvell(), hwdep.SkipOnPlatform("trogdor", "strongbad", "trogdor-kernelnext"), hwdep.WifiWEP())`,
+		ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 		Val: []simpleConnectParamsVal{{
 			APOpts: simpleConnectCommonSecApOpts,
 			SecConfFac: `dynamicwep.NewConfigFactory(
@@ -590,6 +595,7 @@ func simpleConnect8021xWPA() simpleConnectParams {
 		Doc:                  simpleConnectDocPref("a protected network supporting for WPA-EAP encryption."),
 		ExtraHardwareDepsDoc: []string{"TODO(b/189986748): Remove the skiplist once those flaky boards have reached AUE."},
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("banjo", "candy", "gnawty", "kip", "ninja", "sumo", "swanky", "winky"))`,
+		ExtraRequirements:    []string{tdreq.WiFiSecSupportWPA2Enterprise},
 		Val: []simpleConnectParamsVal{{
 			APOpts: simpleConnectCommonSecApOpts,
 			SecConfFac: `wpaeap.NewConfigFactory(
@@ -661,14 +667,16 @@ func simpleConnect8021xWPA3() []simpleConnectParams {
 	}
 	return []simpleConnectParams{
 		{
-			Name: "8021xwpa3mixed",
-			Doc:  simpleConnectDocPref("an WPA3-Enterprise-transition AP"),
-			Val:  mkOps("Optional", "MixedWPA3"),
+			Name:              "8021xwpa3mixed",
+			Doc:               simpleConnectDocPref("an WPA3-Enterprise-transition AP"),
+			Val:               mkOps("Optional", "MixedWPA3"),
+			ExtraRequirements: []string{tdreq.WiFiSecSupportWPA3Enterprise},
 		},
 		{
-			Name: "8021xwpa3",
-			Doc:  simpleConnectDocPref("an WPA3-Enterprise-only AP"),
-			Val:  mkOps("Required", "PureWPA3"),
+			Name:              "8021xwpa3",
+			Doc:               simpleConnectDocPref("an WPA3-Enterprise-only AP"),
+			Val:               mkOps("Required", "PureWPA3"),
+			ExtraRequirements: []string{tdreq.WiFiSecSupportWPA3Enterprise},
 		},
 	}
 

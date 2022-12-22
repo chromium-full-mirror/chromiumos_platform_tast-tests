@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
@@ -97,6 +98,7 @@ func init() {
 						secConfFac:   wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
 			},
 			{
 				Name:      "stress_80211n24ht40",

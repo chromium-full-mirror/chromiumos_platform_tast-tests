@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wep"
 	"chromiumos/tast/common/wifi/security/wpa"
@@ -68,6 +69,7 @@ func init() {
 					secConfFac: wep.NewConfigFactory([]string{"abcde", "fedcba9876", "ab\xe4\xb8\x89", "\xe4\xb8\x89\xc2\xa2"}, wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name: "8021xwpa",
@@ -76,6 +78,7 @@ func init() {
 					apOpts2:    []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20)},
 					secConfFac: wpaeap.NewConfigFactory(roamCert.CACred.Cert, roamCert.ServerCred, wpaeap.ClientCACert(roamCert.CACred.Cert), wpaeap.ClientCred(roamCert.ClientCred)),
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
 			},
 		},
 	})

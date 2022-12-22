@@ -67,7 +67,7 @@ func init() {
 				}, {
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211a), ap.Channel(64), ap.SpectrumManagement()},
 				}},
-				ExtraRequirements: []string{"wifi-gen-0004-v01"},
+				ExtraRequirements: []string{"wifi-gen-0004-v01", "wifi-sec-0001-v01"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11b network on channels 1, 6, 11.
 				Name: "80211b",
@@ -264,6 +264,7 @@ func init() {
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
+				ExtraRequirements: []string{"wifi-sec-0007-v01"},
 			}, {
 				// Verifies that DUT can connect to a WEP network with both open and shared system authentication and 104-bit pre-shared keys.
 				Name: "wep104",
@@ -301,6 +302,7 @@ func init() {
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
+				ExtraRequirements: []string{"wifi-sec-0007-v01"},
 			}, {
 				// Verifies that DUT can connect to a hidden WEP network with open/shared system authentication and 40/104-bit pre-shared keys.
 				Name: "wephidden",
@@ -322,6 +324,7 @@ func init() {
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
+				ExtraRequirements: []string{"wifi-sec-0007-v01"},
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for pure WPA with TKIP.
 				Name: "wpatkip",
@@ -367,6 +370,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
+				ExtraRequirements: []string{"wifi-sec-0005-v01"},
 			}, {
 				// Verifies that DUT can connect to an AP broadcasting a WPA2 network using AES based CCMP.
 				// In addition, the client must also support 802.11w protected management frames.
@@ -380,7 +384,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
-				ExtraRequirements: []string{"wifi-gen-0006-v01"},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0005-v01"},
 			}, {
 				// Verifies that DUT can connect to an AP broadcasting a WPA2 network using AES based CCMP.
 				// In addition, the client must also support 802.11w protected management frames.
@@ -402,7 +406,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
-				ExtraRequirements: []string{"wifi-gen-0006-v01"},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0005-v01"},
 			}, {
 				// Verifies that DUT can connect to an AP broadcasting a WPA2 network using AES based CCMP.
 				// In addition, the client may also negotiate use of 802.11w protected management frames.
@@ -415,7 +419,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
-				ExtraRequirements: []string{"wifi-gen-0006-v01"},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0005-v01"},
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for WPA2 (aka RSN) and encrypted under AES.
 				Name: "wpa2",
@@ -427,6 +431,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
+				ExtraRequirements: []string{"wifi-sec-0005-v01"},
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for both WPA and WPA2 with TKIP/AES supported for WPA and AES supported for WPA2.
 				Name: "wpamixed",
@@ -453,7 +458,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2WPA3,
 				}},
-				ExtraRequirements: []string{"wifi-gen-0006-v01"},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
 			}, {
 				// Verifies that DUT can connect to an AP in WPA3-SAE ("pure") mode. WiFi alliance requires PMF in this mode.
 				Name: "wpa3",
@@ -472,7 +477,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
-				ExtraRequirements: []string{"wifi-gen-0006-v01"},
+				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
 			}, {
 				// Verifies that DUT can connect to a protected 802.11ac network supporting for WPA.
 				Name: "wpavht80",
@@ -649,6 +654,7 @@ func init() {
 				// Qualcomm looks at the security fixes in the FW.
 				// TODO(b/194644867): revisit after FW fix and verification.
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell(), hwdep.SkipOnPlatform("trogdor", "strongbad", "trogdor-kernelnext"), hwdep.WifiWEP()),
+				ExtraRequirements: []string{"wifi-sec-0007-v01"},
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for WPA-EAP encryption.
 				Name: "8021xwpa",
@@ -707,6 +713,7 @@ func init() {
 				}},
 				// TODO(b/189986748): Remove the skiplist once those flaky boards have reached AUE.
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("banjo", "candy", "gnawty", "kip", "ninja", "sumo", "swanky", "winky")),
+				ExtraRequirements: []string{"wifi-sec-0006-v01"},
 			}, {
 				// Verifies that DUT can connect to an WPA3-Enterprise-transition AP
 				Name: "8021xwpa3mixed",
@@ -720,6 +727,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA2WPA3Enterprise,
 				}},
+				ExtraRequirements: []string{"wifi-sec-0003-v01"},
 			}, {
 				// Verifies that DUT can connect to an WPA3-Enterprise-only AP
 				Name: "8021xwpa3",
@@ -733,6 +741,7 @@ func init() {
 					),
 					expectedSecurity: shillconst.SecurityWPA3Enterprise,
 				}},
+				ExtraRequirements: []string{"wifi-sec-0003-v01"},
 			}, {
 				// Verifies that DUT CANNOT connect to a PEAP network with wrong settings.
 				// We do these tests for only one inner authentication protocol because we
