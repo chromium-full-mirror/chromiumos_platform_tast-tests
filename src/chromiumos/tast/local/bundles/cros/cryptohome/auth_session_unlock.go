@@ -102,6 +102,23 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		replyWithError, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword)
+		if err == nil {
+			return errors.New("auth with non-existent user succeeded with AuthenticateAuthFactor")
+		}
+		if replyWithError == nil {
+			return errors.Wrap(err, "invalid reply from AuthenticateAuthFactor when checking non-existent user")
+		}
+		if err = hwsec.CheckForPossibleAction(replyWithError.GetErrorInfo(), uda.PossibleAction_POSSIBLY_DEV_CHECK_UNEXPECTED_STATE); err != nil {
+			return errors.Wrap(err, "non-existent user with AuthenticateAuthFactor doesn't raise PossibleAction_POSSIBLY_DEV_CHECK_UNEXPECTED_STATE")
+		}
+
+		return nil
+	}); err != nil {
+		s.Fatal("AuthenticateAuthFactor with non-existent user results in incorrect behaviour: ", err)
+	}
+
 	// Create and mount the user with a password auth factor.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
