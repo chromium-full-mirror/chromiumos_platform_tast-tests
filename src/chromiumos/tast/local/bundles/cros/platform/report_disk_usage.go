@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/platform/fsinfo"
 	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/firmware"
 	"chromiumos/tast/testing"
 )
 
@@ -77,6 +78,29 @@ func ReportDiskUsage(ctx context.Context, s *testing.State) {
 			Unit:      "bytes",
 			Direction: perf.SmallerIsBetter,
 		}, float64(info.Used))
+	}
+
+	// Report the size of the kernel partition.
+	kernelPartition, err := firmware.ActiveKernelDevicePartition(ctx)
+	if err != nil {
+		s.Fatal("Failed to get kernel partition: ", err)
+	}
+	s.Logf("Measuring kernel partition %s", kernelPartition)
+	showCmd := testexec.CommandContext(ctx, "futility",
+		"show",
+		kernelPartition)
+	awkCmd := testexec.CommandContext(ctx, "awk",
+		"/Body size:/ { print $3 }")
+	if b, err := pipeAndGetOutput(showCmd, awkCmd); err == nil {
+		if kernelSize, err := strconv.ParseInt(string(bytes.TrimSpace(b)), 0, 64); err != nil {
+			s.Errorf("Failed to parse %q: %v", string(bytes.TrimSpace(b)), err)
+		} else {
+			pv.Set(perf.Metric{
+				Name:      "bytes_kernel_image",
+				Unit:      "bytes",
+				Direction: perf.SmallerIsBetter,
+			}, float64(kernelSize))
+		}
 	}
 
 	// Report the size of specific directories that are particularly large.

@@ -19,12 +19,13 @@ import (
 )
 
 // rePartition finds the partition number at the end of a device name.
-var rePartition = regexp.MustCompile("p?[0-9]+$")
+var rePartition = regexp.MustCompile("(p?)([0-9]+)$")
 
 // CheckCrossystemValues calls crossystem to check whether the specified key-value pairs are present.
 // We use the following crossystem syntax, which returns an error code of 0
 // if (and only if) all key-value pairs match:
-//     crossystem param1?value1 [param2?value2 [...]]
+//
+//	crossystem param1?value1 [param2?value2 [...]]
 func CheckCrossystemValues(ctx context.Context, values map[string]string) bool {
 	cmdArgs := make([]string, len(values))
 	i := 0
@@ -43,6 +44,23 @@ func RootDevice(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return rePartition.ReplaceAllString(strings.TrimSpace(string(b)), ""), nil
+}
+
+// ActiveKernelDevicePartition finds the name of the root device, subtracts one from the partition
+// number, and returns it in string form.
+// Sample output: '/dev/mmcblk1p2' (having replaced the partition number from 'dev/mmcblk1p3')
+func ActiveKernelDevicePartition(ctx context.Context) (string, error) {
+	blk, err := testexec.CommandContext(ctx, "rootdev", "-s").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "command 'rootdev -s'")
+	}
+	dev := strings.TrimSpace(string(blk))
+	matches := rePartition.FindStringSubmatch(dev)
+	partNum, err := strconv.ParseInt(matches[len(matches)-1], 10, 64)
+	if err != nil {
+		return "", errors.Wrap(err, "parsing partition number")
+	}
+	return rePartition.ReplaceAllString(dev, fmt.Sprintf("${1}%d", partNum-1)), nil
 }
 
 // BootDeviceRemovable checks whether the current boot device is removable.
