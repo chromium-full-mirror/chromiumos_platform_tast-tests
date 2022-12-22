@@ -79,7 +79,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Data:         []string{"shipped-firmwares.json"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Model("vilboz", "dirinboz", "sparky360", "apel", "delbin", "hayato", "astronaut", "kasumi360", "kakadu", "dragonair", "maglia")), // Temporarily constraining the test to a few models.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
 }
 
@@ -376,8 +376,8 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, 
 	h.CloseRPCConnection(ctx)
 
 	// Reboot DUT for flash to take effect.
-	testing.ContextLog(ctx, "Power-cycling DUT with a warm reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+	testing.ContextLog(ctx, "Power-cycling DUT with a cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT by servo")
 	}
 
