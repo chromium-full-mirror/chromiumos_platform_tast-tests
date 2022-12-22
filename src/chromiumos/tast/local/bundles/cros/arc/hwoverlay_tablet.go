@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
@@ -44,23 +45,22 @@ func init() {
 func HWOverlayTablet(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get a Test API connection: ", err)
 	}
 
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
-	}
-	// Be nice and restore tablet mode to its original state on exit.
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-
 	// TODO(ricardoq): Add clamshell mode tests.
 	// Force Chrome to be in tablet mode.
-	if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {
-		s.Fatal("Failed to disable tablet mode: ", err)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
+	if err != nil {
+		s.Fatal("Failed to enter tablet mode: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
