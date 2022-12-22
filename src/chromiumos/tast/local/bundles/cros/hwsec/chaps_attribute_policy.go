@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/pkcs11/pkcs11test"
 	"chromiumos/tast/ctxutil"
@@ -33,10 +34,22 @@ func init() {
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			Name:              "with_uss",
+			Fixture:           "ussAuthSessionFixture",
 		}, {
-			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			Name:              "with_vk",
+			Fixture:           "vkAuthSessionFixture",
+		}, {
+			Name:              "tpm_dynamic_with_uss",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			Fixture:           "ussAuthSessionFixture",
+		}, {
+			Name:              "tpm_dynamic_with_vk",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			Fixture:           "vkAuthSessionFixture",
 		}},
 		Timeout: 3 * time.Minute,
 	})
@@ -133,6 +146,7 @@ func ChapsAttributePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	pkcs11Util, err := pkcs11.NewChaps(ctx, r, utility)
 	if err != nil {
 		s.Fatal("Failed to create PKCS#11 Utility: ", err)
