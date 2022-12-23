@@ -71,12 +71,26 @@ func AshWindowState(ctx context.Context, s *testing.State) {
 		wmEvent             ash.WMEventType
 		expectedWindowState ash.WindowStateType
 	}{
+		// TODO(b/264965692) Investigate what regressed between RVC and TM.
+		// We first set to a known state and then test fullscreen and return to
+		// normal again.  This is because as per the remote shell documentation, the
+		// compositor can choose to ignore a fullscreen event.
+		// https://source.chromium.org/chromium/chromium/src/+/main:third_party/wayland-protocols/unstable/remote-shell/remote-shell-unstable-v2.xml;drc=d654e85745b56e94ce5ecdf306e476a252bc1404;l=262
+
+		//  Initial state
 		{ash.WMEventNormal, ash.WindowStateNormal},
-		{ash.WMEventMaximize, ash.WindowStateMaximized},
-		{ash.WMEventMinimize, ash.WindowStateMinimized},
+
+		// Fullscreen
 		{ash.WMEventFullscreen, ash.WindowStateFullscreen},
+
+		// Reset for other tests
+		{ash.WMEventNormal, ash.WindowStateNormal},
+
+		// Remaining tests
+		{ash.WMEventMaximize, ash.WindowStateMaximized},
 		{ash.WMEventSnapLeft, ash.WindowStateLeftSnapped},
 		{ash.WMEventSnapRight, ash.WindowStateRightSnapped},
+		{ash.WMEventMinimize, ash.WindowStateMinimized},
 	} {
 		s.Logf("Sending event %s to Settings app", test.wmEvent)
 
