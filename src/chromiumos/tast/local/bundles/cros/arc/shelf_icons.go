@@ -11,6 +11,7 @@ import (
 	"time"
 
 	androidui "chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
@@ -78,6 +79,10 @@ func ShelfIcons(ctx context.Context, s *testing.State) {
 	a := p.ARC
 	d := p.UIDevice
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	s.Log("Creating Test API connection")
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -85,30 +90,22 @@ func ShelfIcons(ctx context.Context, s *testing.State) {
 	}
 
 	// Make sure we are not in tablet mode:
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
+		s.Fatal("Failed to enter clamshell mode: ", err)
 	}
-	// Be nice and restore tablet mode to its original state on exit.
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-
-	if tabletModeEnabled {
-		s.Log("Disabling tablet mode")
-		if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
-			s.Fatal("Failed to set tablet mode enabled to false: ", err)
-		}
-	}
+	defer cleanup(cleanupCtx)
 
 	s.Log("Installing app")
 	if err := a.Install(ctx, s.DataPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
 	for i, color := range iconColors {
+		// TODO(yhanada): Use act.Start()
 		// This command creates a new app window.
 		if err := a.Command(ctx,
 			"am", "start", "-W", "-n", pkg+"/"+cls,
-			// These flags (NEW_TASK, MULTIPLE_TASK) ensure that a new window is created.
-			"-f", "0x18000000",
+			"--activity-multiple-task",
 			// Specify color, window title and window grouping via extras.
 			"-e", "color", color,
 			"-e", "title", color+titleSuffix,
@@ -121,8 +118,6 @@ func ShelfIcons(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the app shown: ", err)
 		}
 	}
-	// In the end, close all windows.
-	defer a.Command(ctx, "pm", "clear", pkg).Run()
 
 	// Get the root view to translate coordinates in different resolutions.
 	ui := uiauto.New(tconn)
