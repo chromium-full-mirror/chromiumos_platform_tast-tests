@@ -489,8 +489,9 @@ func (conf *GoogleMeetConference) SwitchTabs(ctx context.Context) error {
 func (conf *GoogleMeetConference) TypingInChat(ctx context.Context) error {
 	const message = "Hello! How are you?"
 	chatButton := nodewith.Name("Chat with everyone").Role(role.ToggleButton)
-	chatTextButton := nodewith.NameContaining("Send a message to everyone").Role(role.Button)
-	chatTextField := nodewith.NameContaining("Send a message to everyone").Role(role.TextField)
+	chatText := nodewith.NameContaining("Send a message to everyone")
+	chatTextButton := chatText.Role(role.Button).First()
+	chatTextField := chatText.Role(role.TextField).First()
 	messageText := nodewith.NameContaining(message).Role(role.StaticText).First()
 	messageInChatTextField := nodewith.NameContaining(message).Role(role.StaticText).Ancestor(chatTextField)
 	openChatBox := uiauto.NamedCombine("open chat box",
