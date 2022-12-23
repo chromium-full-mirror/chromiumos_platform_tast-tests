@@ -110,6 +110,7 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		// Browser Render Latency.
 		NewCustomMetricConfig("PageLoad.PaintTiming.NavigationToLargestContentfulPaint2", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("PageLoad.PaintTiming.NavigationToFirstContentfulPaint", "ms", perf.SmallerIsBetter),
+		NewCustomMetricConfig("PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Responsiveness.JankyIntervalsPerThirtySeconds", "janks", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Browser.Responsiveness.JankyIntervalsPerThirtySeconds3", "janks", perf.SmallerIsBetter),
 
