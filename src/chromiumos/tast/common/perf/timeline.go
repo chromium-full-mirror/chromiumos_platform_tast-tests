@@ -200,6 +200,14 @@ func (t *Timeline) stop(ctx context.Context, v *Values) error {
 	return nil
 }
 
+// handleError passes an error to t.recordingStatus, and also logs
+// the error immediately. Do not pass a nil error to handleError. If
+// you want to signal success, just write t.recordingStatus <- nil.
+func (t *Timeline) handleError(ctx context.Context, err error) {
+	testing.ContextLogf(ctx, "%s timeline defunct: %v", t.prefix, err)
+	t.recordingStatus <- err
+}
+
 // StartRecording starts capturing metrics in a goroutine. The sampling
 // interval is specified as a parameter of NewTimeline. StartRecording
 // may not be called twice, unless StopRecording is called in-between.
@@ -220,7 +228,7 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 			sleepTime := nextTime.Sub(now)
 			if sleepTime < 0 {
 				if !t.enableGracePeriod {
-					t.recordingStatus <- errors.Errorf("trying to snapshot every %v, but taking the last snapshot took %v", t.interval, lastSnapshotDuration)
+					t.handleError(ctx, errors.Errorf("trying to snapshot every %v, but taking the last snapshot took %v", t.interval, lastSnapshotDuration))
 					return
 				}
 
@@ -230,7 +238,7 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 				// fail the timeline collection.
 				sleepTime += t.interval
 				if sleepTime < 0 {
-					t.recordingStatus <- errors.Errorf("failed to take snapshot; trying to snapshot every %v with 1-interval grace period, but taking the last snapshot already took more than 2 intervals (%v)", t.interval, lastSnapshotDuration)
+					t.handleError(ctx, errors.Errorf("failed to take snapshot; trying to snapshot every %v with 1-interval grace period, but taking the last snapshot already took more than 2 intervals (%v)", t.interval, lastSnapshotDuration))
 					return
 				}
 
@@ -251,7 +259,7 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 					t.recordingStatus <- nil
 				} else {
 					// Actual error during snapshotting.
-					t.recordingStatus <- err
+					t.handleError(ctx, err)
 				}
 				return
 			}
