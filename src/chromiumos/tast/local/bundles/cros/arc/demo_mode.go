@@ -84,7 +84,7 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	uia := uiauto.New(tconn)
 
 	// Wait for ARC to start and ADB to be setup, which would take a bit long.
-	arc, err := arc.NewWithTimeout(ctx, s.OutDir(), 2*time.Minute)
+	arc, err := arc.NewWithTimeout(ctx, s.OutDir(), 4*time.Minute)
 	if err != nil {
 		s.Fatal("Failed to get ARC: ", err)
 	}
@@ -97,7 +97,7 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	// Verify that Play Store window shows up.
 	classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
 	playStoreUI := nodewith.Name("Play Store").Role(role.Window).ClassNameRegex(classNameRegexp)
-	if err := uia.WithTimeout(10 * time.Second).WaitUntilExists(playStoreUI)(ctx); err != nil {
+	if err := uia.WithTimeout(30 * time.Second).WaitUntilExists(playStoreUI)(ctx); err != nil {
 		s.Fatal("Failed to see Play Store window: ", err)
 	}
 
@@ -111,7 +111,7 @@ func DemoMode(ctx context.Context, s *testing.State) {
 
 	// Ensure that the "Install" button is disabled.
 	opButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches(installButtonText), ui.Enabled(false))
-	if err := opButton.WaitForExists(ctx, 5*time.Second); err != nil {
+	if err := opButton.WaitForExists(ctx, 20*time.Second); err != nil {
 		s.Fatal("Failed to find greyed Install button in Play Store: ", err)
 	}
 }

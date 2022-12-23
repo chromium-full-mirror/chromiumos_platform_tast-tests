@@ -33,7 +33,7 @@ func init() {
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
 		// is only shown for chrome-branded builds when the device is ARC-capable.
 		SoftwareDeps: []string{"chrome", "arc", "tpm", "play_store"},
-		Timeout:      10 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_p"},
@@ -49,8 +49,8 @@ func init() {
 
 func DemoModeOfflineProvision(ctx context.Context, s *testing.State) {
 	const (
-		bootTimeout            = 4 * time.Minute
-		provisioningTimeout    = 3 * time.Minute
+		bootTimeout            = 6 * time.Minute
+		provisioningTimeout    = 5 * time.Minute
 		playStoreWindowTimeout = 10 * time.Second
 	)
 
