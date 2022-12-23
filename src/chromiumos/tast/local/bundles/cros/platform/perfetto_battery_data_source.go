@@ -34,7 +34,7 @@ func init() {
 			tracing.TraceProcessorAmd64,
 			tracing.TraceProcessorArm,
 			tracing.TraceProcessorArm64},
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:mainline"},
 	})
 }
 
