@@ -219,15 +219,12 @@ func testLaunchFromFullRestorePlayStoreInTabletMode(ctx context.Context, s *test
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	tabletModeStatus, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get tablet mode status: ", err)
-	}
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeStatus)
 
-	if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
+	if err != nil {
 		s.Fatal("Failed to change device to tablet mode: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	creds := cr.Creds()
 	if err := optinAndLaunchPlayStore(ctx, cr); err != nil {
