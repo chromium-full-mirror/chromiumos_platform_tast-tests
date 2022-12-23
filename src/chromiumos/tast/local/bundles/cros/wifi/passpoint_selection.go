@@ -363,6 +363,8 @@ type selectionTestContext struct {
 	clientIface string
 	// expectedAP is the access point instance where to expect the device connection.
 	expectedAP *hostapd.Server
+	// expectedSSID is the name of the network where to expect the device connection.
+	expectedSSID string
 }
 
 func PasspointSelection(ctx context.Context, s *testing.State) {
@@ -427,8 +429,15 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	wifi, err := shill.NewWifiManager(ctx, tc.manager)
+	if err != nil {
+		s.Fatal("Failed to obtain Wi-Fi manager: ", err)
+	}
+
+	// Delay to wait for a network to be discovered.
+	const scanAndWaitTimeout = time.Minute
 	// Trigger a scan
-	if err := tc.manager.RequestScan(ctx, shill.TechnologyWifi); err != nil {
+	if err := wifi.ScanAndWaitForService(ctx, tc.expectedSSID, scanAndWaitTimeout); err != nil {
 		s.Fatal("Failed to request an active scan: ", err)
 	}
 
@@ -476,10 +485,11 @@ func prepareSelectionTest(ctx context.Context, s *testing.State) (tc *selectionT
 	}
 
 	return &selectionTestContext{
-		manager:     m,
-		aps:         servers,
-		credentials: params.credentials,
-		clientIface: ifaces.Client[0],
-		expectedAP:  expectedServer,
+		manager:      m,
+		aps:          servers,
+		credentials:  params.credentials,
+		clientIface:  ifaces.Client[0],
+		expectedAP:   expectedServer,
+		expectedSSID: params.expectedSSID,
 	}, nil
 }

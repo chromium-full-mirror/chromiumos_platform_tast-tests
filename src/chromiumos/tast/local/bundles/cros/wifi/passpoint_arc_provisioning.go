@@ -185,8 +185,15 @@ func runARCProvisioningTestCase(ctx context.Context, s *testing.State, m *shill.
 		a.Command(ctx, "cmd", "wifi", "remove-passpoint-config", tc.creds.FQDN()).Run(testexec.DumpLogOnError)
 	}(cleanupCtx)
 
+	wifi, err := shill.NewWifiManager(ctx, m)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain Wi-Fi manager")
+	}
+
+	// Delay to wait for a network to be discovered.
+	const scanAndWaitTimeout = time.Minute
 	// Trigger a scan.
-	if err := m.RequestScan(ctx, shill.TechnologyWifi); err != nil {
+	if err := wifi.ScanAndWaitForService(ctx, tc.ap.SSID, scanAndWaitTimeout); err != nil {
 		return errors.Wrap(err, "failed to request an active scan")
 	}
 

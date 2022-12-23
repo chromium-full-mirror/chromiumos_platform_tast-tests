@@ -6,11 +6,8 @@ package wifi
 
 import (
 	"context"
-	"encoding/hex"
-	"strings"
 	"time"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
@@ -295,12 +292,19 @@ func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
+	wifi, err := shill.NewWifiManager(ctx, tc.manager)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain Wi-Fi manager")
+	}
+
+	// Delay to wait for a network to be discovered.
+	const scanAndWaitTimeout = time.Minute
 	// Trigger a scan and wait for the network to be discovered by Shill.
 	// b/245919543: a scan request might be refused because a scan is
 	// automatically started after the previous AP disappeared. If the new
 	// AP appears during the ongoing scan but late, it might not be discovered
 	// and the test will fail.
-	if err := scanAndWaitForService(ctx, tc, ap.ssid); err != nil {
+	if err := wifi.ScanAndWaitForService(ctx, ap.ssid, scanAndWaitTimeout); err != nil {
 		return errors.Wrap(err, "failed to request an active scan")
 	}
 
@@ -347,51 +351,4 @@ func prepareRoamingTest(ctx context.Context, s *testing.State) (*roamingTestCont
 		credentials: params.credentials,
 		aps:         aps,
 	}, nil
-}
-
-// scanAndWaitForService scan and wait for the service to appear in Shill.
-func scanAndWaitForService(ctx context.Context, tc *roamingTestContext, ssid string) error {
-	const (
-		// discoveryTimeout is the delay left to the device to discover the
-		// network. It is long enough to let slower devices find the network
-		// but the discovery delay will be way shorter most of the time.
-		discoveryTimeout = time.Minute
-		// discoveryInterval is the delay between two polls, it allows to avoid
-		// spamming Shill with D-Bus requests.
-		discoveryInterval = time.Second
-	)
-
-	d, err := tc.manager.DeviceByName(ctx, tc.clientIface)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get %s device from Shill", tc.clientIface)
-	}
-
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		properties, err := d.GetProperties(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get device scanning state"))
-		}
-
-		scanning, err := properties.GetBool(shillconst.DevicePropertyScanning)
-		if err != nil {
-			return testing.PollBreak(errors.Wrapf(err, "failed to get %q property", shillconst.DevicePropertyScanning))
-		}
-
-		if !scanning {
-			if err := tc.manager.RequestScan(ctx, shill.TechnologyWifi); err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to request an active scan"))
-			}
-		}
-
-		hexSSID := hex.EncodeToString([]byte(ssid))
-		props := map[string]interface{}{
-			shillconst.ServicePropertyType:        shillconst.TypeWifi,
-			shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hexSSID),
-		}
-		_, err = tc.manager.FindMatchingService(ctx, props)
-		return err
-	}, &testing.PollOptions{
-		Timeout:  discoveryTimeout,
-		Interval: discoveryInterval,
-	})
 }
