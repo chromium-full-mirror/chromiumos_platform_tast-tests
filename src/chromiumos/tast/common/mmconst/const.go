@@ -56,8 +56,9 @@ const (
 
 // ModemManager1.Bearer properties
 const (
-	BearerPropertyConnected  = "Connected"
-	BearerPropertyProperties = "Properties"
+	BearerPropertyConnected       = "Connected"
+	BearerPropertyConnectionError = "ConnectionError"
+	BearerPropertyProperties      = "Properties"
 	// APN related properties
 	BearerPropertyAllowRoaming = "allow-roaming"
 	BearerPropertyAllowedAuth  = "allowed-auth"
@@ -163,7 +164,8 @@ const (
 // Modem DBus methods
 const (
 	// Modem interface methods
-	ModemEnable = "Enable"
+	ModemDeleteBearer = "DeleteBearer"
+	ModemEnable       = "Enable"
 
 	// Modem.Simple interface methods
 	ModemConnect    = "Connect"

@@ -328,16 +328,33 @@ func GetDeviceVariant(ctx context.Context) (string, error) {
 	return deviceVariant, nil
 }
 
-// IsVariantKnown checks if the DUT's variant is in |knownVariants|.
-func IsVariantKnown(ctx context.Context) error {
+func getDevice(ctx context.Context) (deviceInfo, error) {
 	dutVariant, err := GetDeviceVariant(ctx)
 	if err != nil {
+		return deviceInfo{}, err
+	}
+	device, ok := knownVariants[dutVariant]
+	if !ok {
+		return deviceInfo{}, errors.Errorf("variant %q is not in |knownVariants|", dutVariant)
+	}
+	return device, nil
+}
+
+// IsVariantKnown checks if the DUT's variant is in |knownVariants|.
+func IsVariantKnown(ctx context.Context) error {
+	if _, err := getDevice(ctx); err != nil {
 		return err
 	}
-	if _, ok := knownVariants[dutVariant]; !ok {
-		return errors.Errorf("variant %q is not in |knownVariants|", dutVariant)
-	}
 	return nil
+}
+
+// IsModemType checks if the DUT's modem matches  |knownVariants|.
+func IsModemType(ctx context.Context, modemType ModemType) (bool, error) {
+	device, err := getDevice(ctx)
+	if err != nil {
+		return false, err
+	}
+	return device.Modem == modemType, nil
 }
 
 // TagKnownBugOnVariant adds a tag to the error code if any of the |variants| matches the DUT's variant.

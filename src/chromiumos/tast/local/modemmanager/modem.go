@@ -797,6 +797,24 @@ func (m *Modem) GetInitialEpsBearerSettings(ctx context.Context, modem *Modem) (
 	return bearerProps, nil
 }
 
+// GetFirstDataBearer gets the object path of the first data bearer.
+// This function doesn't check the status of the bearer.
+func (m *Modem) GetFirstDataBearer(ctx context.Context, modem *Modem) (dbus.ObjectPath, error) {
+	modemPath := ObjectPath{dbus.ObjectPath(m.String()), nil}
+	bearerPaths := modemPath.GetPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface).
+		GetProperties(ctx).
+		GetObjectPaths(mmconst.ModemPropertyBearers)
+
+	bearerPath := dbus.ObjectPath("")
+	if bearerPaths.err != nil {
+		return bearerPath, errors.Wrap(bearerPaths.err, "failed to read Bearer paths")
+	}
+	if len(bearerPaths.objectPaths) > 0 {
+		bearerPath = bearerPaths.objectPaths[0]
+	}
+	return bearerPath, nil
+}
+
 // GetFirstConnectedBearer gets the apn information of the first connected bearer.
 func (m *Modem) GetFirstConnectedBearer(ctx context.Context, modem *Modem) (map[string]interface{}, error) {
 	modemPath := ObjectPath{dbus.ObjectPath(m.String()), nil}
@@ -831,4 +849,22 @@ func (m *Modem) GetFirstConnectedBearer(ctx context.Context, modem *Modem) (map[
 		}
 	}
 	return nil, nil
+}
+
+// DeleteAllBearers deletes all data bearers.
+func (m *Modem) DeleteAllBearers(ctx context.Context, modem *Modem) error {
+	modemPath := ObjectPath{dbus.ObjectPath(m.String()), nil}
+	bearerPaths := modemPath.GetPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface).
+		GetProperties(ctx).
+		GetObjectPaths(mmconst.ModemPropertyBearers)
+
+	if bearerPaths.err != nil {
+		return errors.Wrap(bearerPaths.err, "failed to read Bearer paths")
+	}
+	for _, opath := range bearerPaths.objectPaths {
+		if c := modem.Call(ctx, mmconst.ModemDeleteBearer, opath); c.Err != nil {
+			return errors.Wrapf(c.Err, "failed to delete bearer: %q", opath)
+		}
+	}
+	return nil
 }
