@@ -215,7 +215,7 @@ func getNVMEWearLevelThreshold(ctx context.Context, defaultValue int) (int, erro
 // getSupportedLED returns a map of the list of supported colors for each
 // supported LED. For example, {"battery": ["red", "yellow", "green"], ...}.
 func getSupportedLED(ctx context.Context) (map[string][]string, error) {
-	re := regexp.MustCompile(`([^:]+): 0x(\d+)`)
+	re := regexp.MustCompile(`([^:]+): 0x([a-fA-F0-9]+)`)
 	possibleLEDColor := map[string]bool{
 		"red":    true,
 		"green":  true,
