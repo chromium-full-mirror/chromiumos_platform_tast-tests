@@ -162,11 +162,11 @@ func wifiVerificationWithPassphrase(ctx context.Context, wifiExp *nc.WiFiConfigP
 func peapVerification(ctx context.Context, peapExp *nc.EAPConfigProperties, peapSet *nc.ManagedEAPProperties) bool {
 	// Password is not passed via cros_network_config, instead mojo passes a
 	// constant value if a password is configured. Only check for non-empty.
-	// TODO(crisguerrero): Add check of Eap.Inner when b/227605505 is fixed.
-	// TODO(crisguerrero): Add check of Eap.ClientCertType when b/227734735 is
+	// TODO(b/256569126): Add check of Eap.ClientCertType when b/227734735 is
 	// fixed.
 	if peapSet.AnonymousIdentity.ActiveValue != peapExp.AnonymousIdentity ||
 		peapSet.Identity.ActiveValue != peapExp.Identity ||
+		peapSet.Inner.ActiveValue != peapExp.Inner ||
 		peapSet.Outer.ActiveValue != peapExp.Outer ||
 		peapSet.Password.ActiveValue == "" ||
 		peapSet.SaveCredentials.ActiveValue != peapExp.SaveCredentials ||
@@ -175,6 +175,7 @@ func peapVerification(ctx context.Context, peapExp *nc.EAPConfigProperties, peap
 		testing.ContextLogf(ctx, "PEAP set: %+v", peapSet)
 		testing.ContextLogf(ctx, "PEAP.AnonymousIdentity set: %+v", peapSet.AnonymousIdentity.ActiveValue)
 		testing.ContextLogf(ctx, "PEAP.Identity set: %+v", peapSet.Identity.ActiveValue)
+		testing.ContextLogf(ctx, "PEAP.Inner set: %+v", peapSet.Inner.ActiveValue)
 		testing.ContextLogf(ctx, "PEAP.Outer set: %+v", peapSet.Outer.ActiveValue)
 		testing.ContextLogf(ctx, "PEAP.Password set: %+v", peapSet.Password.ActiveValue)
 		testing.ContextLogf(ctx, "PEAP.SaveCredentials set: %+v", peapSet.SaveCredentials.ActiveValue)
