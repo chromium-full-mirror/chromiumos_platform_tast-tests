@@ -69,15 +69,15 @@ func (*AdbSideloadService) SetRequestAdbSideloadFlag(ctx context.Context, reques
 }
 
 func (*AdbSideloadService) ConfirmEnablingAdbSideloading(ctx context.Context, request *arcpb.AdbSideloadServiceRequest) (*empty.Empty, error) {
-	fullCtx := ctx
-	ctx, cancel := ctxutil.Shorten(fullCtx, 10*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 	cr, err := chrome.New(ctx, chrome.NoLogin(), chrome.KeepState())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}
 	defer func() error {
-		if err := cr.Close(fullCtx); err != nil {
+		if err := cr.Close(cleanupCtx); err != nil {
 			return errors.Wrap(err, "failed to close Chrome")
 		}
 		return nil

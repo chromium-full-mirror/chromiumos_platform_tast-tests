@@ -111,14 +111,14 @@ func waitForSpokenFeedbackReady(ctx context.Context, cr *chrome.Chrome, a *arc.A
 // for ChromeVox to be ready. It requires an array activities containing the list of activities
 // to run the test cases over, and the currently running activity is passed as a string to f().
 func RunTest(ctx context.Context, s *testing.State, activities []TestActivity, f func(context.Context, *a11y.ChromeVoxConn, *chrome.TestConn, TestActivity) error) {
-	fullCtx := ctx
-	ctx, cancel := ctxutil.Shorten(fullCtx, 10*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	if err := crastestclient.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute device: ", err)
 	}
-	defer crastestclient.Unmute(fullCtx)
+	defer crastestclient.Unmute(cleanupCtx)
 
 	d := s.FixtValue().(*arc.PreData)
 	a := d.ARC
@@ -137,7 +137,7 @@ func RunTest(ctx context.Context, s *testing.State, activities []TestActivity, f
 		s.Fatal("Failed to enable spoken feedback: ", err)
 	}
 	defer func() {
-		if err := a11y.SetFeatureEnabled(fullCtx, tconn, a11y.SpokenFeedback, false); err != nil {
+		if err := a11y.SetFeatureEnabled(cleanupCtx, tconn, a11y.SpokenFeedback, false); err != nil {
 			s.Fatal("Failed to disable spoken feedback: ", err)
 		}
 	}()
@@ -175,8 +175,8 @@ func RunTest(ctx context.Context, s *testing.State, activities []TestActivity, f
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				s.Fatal("Failed to start activity: ", err)
 			}
-			defer act.Stop(ctx, tconn)
-			defer faillog.DumpUITreeOnErrorToFile(ctx, s.OutDir(), s.HasError, tconn, "ui_tree"+activity.Name)
+			defer act.Stop(cleanupCtx, tconn)
+			defer faillog.DumpUITreeOnErrorToFile(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_tree"+activity.Name)
 
 			if err := func() error {
 				application := nodewith.Name(activity.Title).Role(role.Application)

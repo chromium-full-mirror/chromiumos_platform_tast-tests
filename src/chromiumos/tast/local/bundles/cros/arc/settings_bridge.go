@@ -81,8 +81,8 @@ func disableAccessibilityFeatures(ctx context.Context, tconn *chrome.TestConn, f
 // testAccessibilitySync runs the test to ensure spoken feedback settings
 // are synchronized between Chrome and Android.
 func testAccessibilitySync(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, features []a11y.Feature) (retErr error) {
-	fullCtx := ctx
-	ctx, cancel := ctxutil.Shorten(fullCtx, 10*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
 	if res, err := arca11y.IsEnabledAndroid(ctx, a); err != nil {
@@ -99,7 +99,7 @@ func testAccessibilitySync(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 				testing.ContextLog(ctx, "Failed to disable accessibliity features: ", err)
 			}
 		}
-	}(fullCtx)
+	}(cleanupCtx)
 
 	for _, feature := range features {
 		testing.ContextLog(ctx, "Testing ", feature)

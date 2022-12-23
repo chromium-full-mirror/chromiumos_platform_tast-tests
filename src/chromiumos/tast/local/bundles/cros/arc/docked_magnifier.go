@@ -50,10 +50,6 @@ func DockedMagnifier(ctx context.Context, s *testing.State) {
 		dmMainActivityName = dmPackageName + ".MainActivity"
 	)
 
-	fullCtx := ctx
-	ctx, cancel := ctxutil.Shorten(fullCtx, 10*time.Second)
-	defer cancel()
-
 	d := s.FixtValue().(*arc.PreData)
 	a := d.ARC
 	cr := d.Chrome
@@ -88,6 +84,10 @@ func DockedMagnifier(ctx context.Context, s *testing.State) {
 }
 
 func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, activity *arc.Activity, pc pointer.Context) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Maximize the window
 	if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, activity.PackageName(), ash.WindowStateMaximized); err != nil {
 		return errors.Wrap(err, "failed to set window state to maximized")
@@ -100,7 +100,7 @@ func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.DockedMagnifier, true); err != nil {
 		return errors.Wrap(err, "failed to enable Docked Magnifier feature")
 	}
-	defer a11y.SetFeatureEnabled(ctx, tconn, a11y.DockedMagnifier, false)
+	defer a11y.SetFeatureEnabled(cleanupCtx, tconn, a11y.DockedMagnifier, false)
 	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		return errors.Wrap(err, "failed to verify window bounds and content resize properly after enabling Docked Magnifier")
 	}
