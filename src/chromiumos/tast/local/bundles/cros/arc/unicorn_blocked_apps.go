@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/unicorn"
@@ -108,33 +107,18 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 			return rl.Retry("wait for provisioning", err)
 		}
 
+		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
+			return retErr != nil
+		}, a, filepath.Join(s.OutDir(), "bugreport.zip"))
+
 		d, err := a.NewUIDevice(ctx)
 		if err != nil {
 			return rl.Exit("initialize UI Automator", err)
 		}
 		defer d.Close(cleanupCtx)
 
-		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
-			return retErr != nil
-		}, a, filepath.Join(s.OutDir(), "bugreport.zip"))
-
 		if err := arcent.PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
-			installButton, err := arcent.WaitForInstallButton(ctx, d)
-			if err != nil {
-				return errors.Wrap(err, "failed to find the install button")
-			}
-
-			enabled, err := installButton.IsEnabled(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to check the install button state")
-			}
-
-			if !enabled {
-				testing.ContextLog(ctx, "Install button is disabled")
-				return nil
-			}
-
-			if err := arcent.ValidateAutoUninstall(ctx, a, installButton, blockedPackage); err != nil {
+			if err := arcent.ValidateBlockedAppInstall(ctx, a, d, blockedPackage); err != nil {
 				testing.PollBreak(err)
 			}
 

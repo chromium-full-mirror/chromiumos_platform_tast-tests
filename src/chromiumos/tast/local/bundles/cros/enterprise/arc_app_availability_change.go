@@ -10,11 +10,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
+	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
@@ -34,6 +36,9 @@ func init() {
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -146,8 +151,9 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 				return errors.New("install button is disabled")
 			}
 
+			testing.ContextLog(ctx, "Install button is enabled")
 			return nil
-		}, time.Minute); err != nil {
+		}, 3*time.Minute); err != nil {
 			rl.Exit("confirm availability", err)
 		}
 
@@ -160,16 +166,26 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			return rl.Exit("update policies", err)
 		}
 
-		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) error {
+		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) (retErr error) {
 			if err := arcent.WaitForAppUnavailableMessage(ctx, d, time.Minute); err == nil {
 				return nil
 			}
 
 			return errors.New("App unavailable message not found")
-		}, 5*time.Minute); err != nil {
-			return rl.Exit("confirm unavailability", err)
+		}, 3*time.Minute); err == nil {
+			testing.ContextLog(ctx, "App unavailable for install as expected")
+			return nil
 		}
 
+		if err := playstore.OpenAppPage(ctx, a, testPackage); err != nil {
+			return rl.Exit("open play store", err)
+		}
+
+		if err := arcent.ValidateBlockedAppInstall(ctx, a, d, testPackage); err != nil {
+			return rl.Exit("validate auto-install", err)
+		}
+
+		testing.ContextLog(ctx, "Blocked app uninstalled")
 		return nil
 	}, nil); err != nil {
 		s.Fatal("Availability transition test failed: ", err)

@@ -149,16 +149,6 @@ func WaitForAppUnavailableMessage(ctx context.Context, d *ui.Device, timeout tim
 	return obj.WaitForExists(ctx, timeout)
 }
 
-// WaitForInstallButton waits for Install button to show up on the app detail page.
-func WaitForInstallButton(ctx context.Context, d *ui.Device) (*ui.Object, error) {
-	const installButtonText = "install"
-	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText))
-	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
-		return nil, err
-	}
-	return installButton, nil
-}
-
 // PollAppPageState polls the Play Store app detail page for desired state.
 func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, testPackage string, assertFn func(ctx context.Context) error, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
@@ -173,7 +163,7 @@ func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, t
 			playstore.Close(ctx, a)
 		}
 		return err
-	}, &testing.PollOptions{Timeout: timeout, Interval: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: timeout, Interval: 30 * time.Second})
 }
 
 // EnsurePlayStoreEmpty ensures that the asset browser displays empty screen.

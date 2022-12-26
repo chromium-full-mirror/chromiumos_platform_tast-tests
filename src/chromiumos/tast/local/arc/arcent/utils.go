@@ -87,8 +87,33 @@ func IncreaseLogcatBufferSize(ctx context.Context, a *arc.ARC) error {
 	return a.Command(ctx, "logcat", "-G", "10M").Run(testexec.DumpLogOnError)
 }
 
-// ValidateAutoUninstall validates that the blocked app is uninstalled automatically.
-func ValidateAutoUninstall(ctx context.Context, a *arc.ARC, installButton *ui.Object, blockedPackage string) error {
+// WaitForInstallButton waits for Install button to show up on the app detail page.
+func WaitForInstallButton(ctx context.Context, d *ui.Device) (*ui.Object, error) {
+	const installButtonText = "install"
+	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText))
+	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
+		return nil, err
+	}
+	return installButton, nil
+}
+
+// ValidateBlockedAppInstall validates that the blocked app is uninstalled automatically.
+func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, blockedPackage string) error {
+	installButton, err := WaitForInstallButton(ctx, d)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the install button")
+	}
+
+	enabled, err := installButton.IsEnabled(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check the install button state")
+	}
+
+	if !enabled {
+		testing.ContextLog(ctx, "Install button is disabled")
+		return nil
+	}
+
 	testing.ContextLog(ctx, "Install button is enabled. Attempting install")
 	if err := installButton.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the install button")
