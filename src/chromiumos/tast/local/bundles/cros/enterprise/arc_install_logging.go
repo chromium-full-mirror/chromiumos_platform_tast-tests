@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/tape"
@@ -40,12 +41,28 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      arcInstallLoggingTestTimeout,
 		VarDeps:      []string{tape.ServiceAccountVar, arcent.LoginPoolVar},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ArcAppInstallEventLoggingEnabled{}, pci.VerifiedFunctionalityOS),
+		},
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"android_p", "no_qemu"},
+			},
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			},
+			{
+				Name:              "betty",
+				ExtraSoftwareDeps: []string{"android_p", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vm_betty",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			}},
 	})
 }
 

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
@@ -34,13 +35,26 @@ func init() {
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+		},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_p", "no_qemu"},
 			},
 			{
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "betty",
+				ExtraSoftwareDeps: []string{"android_p", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "vm_betty",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			}},
 	})

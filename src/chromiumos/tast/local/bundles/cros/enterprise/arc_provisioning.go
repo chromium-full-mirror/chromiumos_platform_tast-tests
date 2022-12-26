@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
@@ -39,18 +40,26 @@ func init() {
 			"chrome_internal",
 			"play_store",
 		},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p", "no_qemu"},
-		}, {
-			Name:              "betty",
-			ExtraSoftwareDeps: []string{"android_p", "qemu"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-		}, {
-			Name:              "vm_betty",
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ArcPolicy{}, pci.VerifiedFunctionalityOS),
+		},
+		Params: []testing.Param{
+			{
+				ExtraSoftwareDeps: []string{"android_p", "no_qemu"},
+			},
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			},
+			{
+				Name:              "betty",
+				ExtraSoftwareDeps: []string{"android_p", "qemu"},
+			},
+			{
+				Name:              "vm_betty",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			}},
 		Timeout: 7 * time.Minute,
 	})
 }
