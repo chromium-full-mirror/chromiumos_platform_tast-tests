@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
@@ -135,7 +134,7 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 				return nil
 			}
 
-			if err := validateAutoUninstall(ctx, a, installButton, blockedPackage); err != nil {
+			if err := arcent.ValidateAutoUninstall(ctx, a, installButton, blockedPackage); err != nil {
 				testing.PollBreak(err)
 			}
 
@@ -149,22 +148,4 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	}, nil); err != nil {
 		s.Fatal("Failed to verify blocked apps flow: ", err)
 	}
-}
-
-func validateAutoUninstall(ctx context.Context, a *arc.ARC, installButton *ui.Object, blockedPackage string) error {
-	testing.ContextLog(ctx, "Install button is enabled. Attempting install")
-	if err := installButton.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the install button")
-	}
-
-	if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
-		return errors.Wrap(err, "package installation failed")
-	}
-
-	testing.ContextLog(ctx, "Waiting for package to uninstall")
-	if err := arcent.WaitForUninstall(ctx, a, blockedPackage); err != nil {
-		return errors.Wrap(err, "package not uninstalled")
-	}
-
-	return nil
 }

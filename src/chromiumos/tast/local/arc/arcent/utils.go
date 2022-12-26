@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -84,6 +85,25 @@ func ConfigureProvisioningLogs(ctx context.Context, a *arc.ARC) error {
 // IncreaseLogcatBufferSize increases the log buffer size to 10 MB.
 func IncreaseLogcatBufferSize(ctx context.Context, a *arc.ARC) error {
 	return a.Command(ctx, "logcat", "-G", "10M").Run(testexec.DumpLogOnError)
+}
+
+// ValidateAutoUninstall validates that the blocked app is uninstalled automatically.
+func ValidateAutoUninstall(ctx context.Context, a *arc.ARC, installButton *ui.Object, blockedPackage string) error {
+	testing.ContextLog(ctx, "Install button is enabled. Attempting install")
+	if err := installButton.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the install button")
+	}
+
+	if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
+		return errors.Wrap(err, "package installation failed")
+	}
+
+	testing.ContextLog(ctx, "Waiting for package to uninstall")
+	if err := WaitForUninstall(ctx, a, blockedPackage); err != nil {
+		return errors.Wrap(err, "package not uninstalled")
+	}
+
+	return nil
 }
 
 // WaitForProvisioning waits for provisioning to finish and dumps logcat if doesn't.
