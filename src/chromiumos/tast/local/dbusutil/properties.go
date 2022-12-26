@@ -62,6 +62,36 @@ func (p *Properties) GetMap(prop string) (*Properties, error) {
 	return NewProperties(ret), nil
 }
 
+// GetStruct returns the property value representing a dbus struct of the type (*)
+func (p *Properties) GetStruct(prop string) ([]interface{}, error) {
+	value, err := p.Get(prop)
+	if err != nil {
+		return nil, err
+	}
+	ret, ok := value.([]interface{})
+	if !ok {
+		return nil, errors.Errorf("property %s is not a struct: %q", prop, value)
+	}
+	return ret, nil
+}
+
+// GetStructOfStrings returns the property value representing a dbus struct of strings of the type (ss...)
+func (p *Properties) GetStructOfStrings(prop string) ([]string, error) {
+	value, err := p.GetStruct(prop)
+	if err != nil {
+		return nil, err
+	}
+	ret := make([]string, len(value))
+	for i, v := range value {
+		vs, ok := v.(string)
+		if !ok {
+			return nil, errors.Errorf("property %s is not a struct of strings: %q", prop, value)
+		}
+		ret[i] = vs
+	}
+	return ret, nil
+}
+
 // GetString returns string property value.
 func (p *Properties) GetString(prop string) (string, error) {
 	value, err := p.Get(prop)
