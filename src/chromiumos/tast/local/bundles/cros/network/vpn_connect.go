@@ -28,13 +28,14 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		// Note that this test does not involve Chrome by intention, but for VPN
-		// services with certificates, Chrome may change the cert properties of them
-		// proactively, and thus we need Chrome is logged-in as the same user with
-		// our fake TPM. Also see b/192425378#comment5.
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		// We use different fixtures in different tests, based on whether they need
+		// certificates or not. Note that for tests of IKEv2 and L2TP/IPsec with
+		// certs, although they do not involve Chrome by intention, but Chrome may
+		// change the cert properties of them proactively, and thus we need Chrome
+		// is logged-in as the same user with our fake TPM. Also see
+		// b/192425378#comment5.
 		Params: []testing.Param{{
 			Name: "ikev2_psk",
 			Val: vpnTestParams{
@@ -43,6 +44,7 @@ func init() {
 					AuthType: vpn.AuthTypePSK,
 				},
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_cert",
@@ -53,6 +55,7 @@ func init() {
 					AuthType: vpn.AuthTypeCert,
 				},
 			},
+			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_eap_mschapv2",
@@ -63,6 +66,7 @@ func init() {
 					AuthType: vpn.AuthTypeEAP,
 				},
 			},
+			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec_psk",
@@ -72,6 +76,7 @@ func init() {
 					AuthType: vpn.AuthTypePSK,
 				},
 			},
+			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth",
 			Val: vpnTestParams{
@@ -81,6 +86,7 @@ func init() {
 					IPsecUseXauth: true,
 				},
 			},
+			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_missing_user",
 			Val: vpnTestParams{
@@ -92,6 +98,7 @@ func init() {
 				},
 				shouldFail: true,
 			},
+			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_wrong_user",
 			Val: vpnTestParams{
@@ -103,6 +110,7 @@ func init() {
 				},
 				shouldFail: true,
 			},
+			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_cert",
 			Val: vpnTestParams{
@@ -111,6 +119,7 @@ func init() {
 					AuthType: vpn.AuthTypeCert,
 				},
 			},
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 		}, {
 			Name: "openvpn",
 			Val: vpnTestParams{
@@ -120,6 +129,7 @@ func init() {
 					OpenVPNTLSAuth: true,
 				},
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_user_pass",
 			Val: vpnTestParams{
@@ -129,6 +139,7 @@ func init() {
 					OpenVPNUseUserPassword: true,
 				},
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify",
 			Val: vpnTestParams{
@@ -138,6 +149,7 @@ func init() {
 					OpenVPNCertVerify: true,
 				},
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_wrong_hash",
 			Val: vpnTestParams{
@@ -149,6 +161,7 @@ func init() {
 				},
 				shouldFail: true,
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_wrong_subject",
 			Val: vpnTestParams{
@@ -160,6 +173,7 @@ func init() {
 				},
 				shouldFail: true,
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_wrong_cn",
 			Val: vpnTestParams{
@@ -171,6 +185,7 @@ func init() {
 				},
 				shouldFail: true,
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_cn_only",
 			Val: vpnTestParams{
@@ -181,6 +196,7 @@ func init() {
 					OpenVPNCertVerifyCNOnly: true,
 				},
 			},
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "wireguard",
 			Val: vpnTestParams{
@@ -189,6 +205,7 @@ func init() {
 					IPType: vpn.IPTypeIPv4,
 				},
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_psk",
@@ -199,6 +216,7 @@ func init() {
 					AuthType: vpn.AuthTypePSK,
 				},
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_generate_key",
@@ -209,6 +227,7 @@ func init() {
 					WGAutoGenKey: true,
 				},
 			},
+			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
 	})
