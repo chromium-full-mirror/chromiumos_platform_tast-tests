@@ -8,13 +8,31 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/graphics"
+	"chromiumos/tast/local/graphics/deqprunner"
 	"chromiumos/tast/testing"
 )
+
+var (
+	deqpApis   []graphics.APIType
+	deqpEnv    []string
+	deqpLogDir string
+)
+
+type deqpParms struct {
+	api        graphics.APIType
+	caselist   string
+	isParallel bool
+	name       string
+	shardNum   int
+	shardCount int
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -27,13 +45,59 @@ func init() {
 			"ihf@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu"},
-		Attr:         []string{"group:mainline"},
-		Fixture:      "gpuWatchHangs",
+		Fixture:      "graphicsNoChrome",
+		Attr:         []string{"group:graphics"},
+		Params: []testing.Param{{
+			//TODO(ihf): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
+			Name:      "gles2",
+			ExtraAttr: []string{"graphics_nightly"},
+			Timeout:   20 * time.Minute,
+			Val: deqpParms{
+				api:        graphics.GLES2,
+				caselist:   "/usr/local/deqp/caselists/gles2.txt",
+				isParallel: true,
+				name:       "gles2",
+				shardNum:   0,
+				shardCount: 1,
+			},
+		}, {
+			//TODO(ihf): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
+			Name:    "gles3",
+			Timeout: 60 * time.Minute,
+			Val: deqpParms{
+				api:        graphics.GLES3,
+				caselist:   "/usr/local/deqp/caselists/gles3.txt",
+				isParallel: true,
+				name:       "gles3",
+				shardNum:   0,
+				shardCount: 1,
+			},
+		}, {
+			//TODO(ihf): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
+			Name:    "gles31",
+			Timeout: 120 * time.Minute,
+			Val: deqpParms{
+				api:        graphics.GLES31,
+				caselist:   "/usr/local/deqp/caselists/gles31.txt",
+				isParallel: true,
+				name:       "gles31",
+				shardNum:   0,
+				shardCount: 1,
+			},
+		}, {
+			//TODO(syedfaaiz): split this test into gles2_smoke, gles3_smoke, gles31_smoke, vk_smoke
+			Name:      "smoke",
+			ExtraAttr: []string{"group:mainline"},
+			Val: deqpParms{
+				isParallel: false,
+			},
+		}},
 	})
 }
 
-// deqpTests contains the names of the DEQP tests to run. Some may be skipped depending on the supported graphics APIs.
-var deqpTests = []string{
+// deqpSmokeTests contains the names of the DEQP tests to run. Some may be skipped depending on the supported graphics APIs.
+var deqpSmokeTests = []string{
+	//TODO(syedfaaiz) : move these into a file deqp_gles2_smoke.txt under the data directory
 	"dEQP-GLES2.info.vendor",
 	"dEQP-GLES2.info.renderer",
 	"dEQP-GLES2.info.version",
@@ -43,6 +107,7 @@ var deqpTests = []string{
 	"dEQP-GLES2.functional.prerequisite.state_reset",
 	"dEQP-GLES2.functional.prerequisite.clear_color",
 	"dEQP-GLES2.functional.prerequisite.read_pixels",
+	//TODO(syedfaaiz) : move these into a file deqp_gles3_smoke.txt under the data directory
 	"dEQP-GLES3.info.vendor",
 	"dEQP-GLES3.info.renderer",
 	"dEQP-GLES3.info.version",
@@ -52,12 +117,14 @@ var deqpTests = []string{
 	"dEQP-GLES3.functional.prerequisite.state_reset",
 	"dEQP-GLES3.functional.prerequisite.clear_color",
 	"dEQP-GLES3.functional.prerequisite.read_pixels",
+	//TODO(syedfaaiz) : move these into a file deqp_gles31_smoke.txt under the data directory
 	"dEQP-GLES31.info.vendor",
 	"dEQP-GLES31.info.renderer",
 	"dEQP-GLES31.info.version",
 	"dEQP-GLES31.info.shading_language_version",
 	"dEQP-GLES31.info.extensions",
 	"dEQP-GLES31.info.render_target",
+	//TODO(syedfaaiz) : move these into a file deqp_vk_smoke.txt under the data directory
 	"dEQP-VK.info.build",
 	"dEQP-VK.info.device",
 	"dEQP-VK.info.platform",
@@ -112,9 +179,9 @@ func canRunTest(test string, apis []graphics.APIType) (bool, error) {
 
 // runSingleTest runs a single DEQP test named test, e.g.,
 // "dEQP-GLES2.info.vendor" in a child process (which means, e.g., a new
-// graphics context for the test). env lists the environment variables to set
+// graphics context for the test). deqpEnv lists the environment variables to set
 // when running the test, e.g., "SHELL=/bin/bash". The test's log is written to
-// a file named <test>.log within logDir.
+// a file named <test>.log within deqpLogDir.
 //
 // This function returns the outcome of the test determined by the result of
 // parsing the test's log file. If an unrecoverable parsing error occurs,
@@ -130,7 +197,7 @@ func canRunTest(test string, apis []graphics.APIType) (bool, error) {
 //
 //   - The _get_executable() method of graphics_dEQP in
 //     autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
-func runSingleTest(ctx context.Context, s *testing.State, test string, env []string, logDir string) string {
+func runSingleTest(ctx context.Context, s *testing.State, test string, env []string, deqpLogDir string) string {
 	// Get the path to the DEQP binary to run for the test.
 	api, err := testNameToAPI(test)
 	if err != nil {
@@ -145,7 +212,7 @@ func runSingleTest(ctx context.Context, s *testing.State, test string, env []str
 	// "pbuffer". The latter avoids DEQP assumptions. The --deqp-surface-width
 	// and --deqp-surface-height should be the smallest for which all tests
 	// run/pass.
-	logFile := filepath.Join(logDir, test+".log")
+	logFile := filepath.Join(deqpLogDir, test+".log")
 	cmd := testexec.CommandContext(ctx, p,
 		"--deqp-case="+test,
 		"--deqp-surface-type=pbuffer",
@@ -204,67 +271,12 @@ func runSingleTest(ctx context.Context, s *testing.State, test string, env []str
 	return outcome
 }
 
-func DEQP(ctx context.Context, s *testing.State) {
-	// Start of setup code - this is a port from multiple places:
-	//
-	//  - Initialization of GraphicsApiHelper in
-	//    autotest/files/client/cros/graphics/graphics_utils.py.
-	//
-	//  - Initialization of graphics_dEQP in
-	//    autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
-	//
-	//  - The run_once() method of graphics_dEQP in
-	//    autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
-
-	// TODO(andrescj): port GraphicsTest initialization and clean up from
-	// autotest/files/client/cros/graphics/graphics_utils.py to prepare for the
-	// test and clean up at the end.
-
-	// Step 1: query the supported graphics APIs.
-	glMajor, glMinor, err := graphics.GLESVersion(ctx)
-	if err != nil {
-		s.Fatal("Could not obtain the OpenGL version: ", err)
-	}
-	s.Logf("Found gles%d.%d", glMajor, glMinor)
-
-	hasVulkan, err := graphics.SupportsVulkanForDEQP(ctx)
-	if err != nil {
-		s.Fatal("Could not check for Vulkan support: ", err)
-	}
-	s.Log("Vulkan support: ", hasVulkan)
-
-	apis := graphics.SupportedAPIs(glMajor, glMinor, hasVulkan)
-	s.Log("Supported APIs: ", apis)
-
-	// TODO(andrescj): also extract/log the following in the configuration per
-	// graphics_dEQP initialization: board, CPU type, and GPU type. Right now,
-	// the board and CPU type seem to be used only for logging. The GPU type is
-	// used to deduce test expectations (tests that we expect to pass/fail
-	// depending on the GPU).
-
-	// Step 2: get the environment for the DEQP binaries.
-	env := graphics.DEQPEnvironment(os.Environ())
-	s.Logf("Using environment: %q", env)
-
-	// Step 3: create a location for storing detailed logs.
-	logDir := filepath.Join(s.OutDir(), "dEQP-results")
-	if err := os.Mkdir(logDir, 0700); err != nil {
-		s.Fatalf("Could not create %v: %v", logDir, err)
-	}
-
-	// TODO(andrescj): stop services per graphics_dEQP initialization - ui and
-	// powerd. Restore after tests are done.
-
-	// End of setup code
-
-	// Step 4: get the list of tests to execute and run them. This is based on
-	// the _run_once() and _run_tests_individually() methods of graphics_dEQP in
-	// autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
-	for i, t := range deqpTests {
-		s.Logf("[%d/%d] Test: %v", i+1, len(deqpTests), t)
+func deqpNonParallel(ctx context.Context, s *testing.State) {
+	for i, t := range deqpSmokeTests {
+		s.Logf("[%d/%d] Test: %v", i+1, len(deqpSmokeTests), t)
 
 		// Check if the test is supported in the DUT.
-		if canRun, err := canRunTest(t, apis); err != nil {
+		if canRun, err := canRunTest(t, deqpApis); err != nil {
 			s.Fatal("Could not check if test is supported: ", err)
 		} else if !canRun {
 			// TODO(andrescj): add the GPU type to this log message.
@@ -273,14 +285,98 @@ func DEQP(ctx context.Context, s *testing.State) {
 		}
 
 		// Actually run the test.
-		if o := runSingleTest(ctx, s, t, env, logDir); graphics.DEQPOutcomeIsFailure(o) {
+		if o := runSingleTest(ctx, s, t, deqpEnv, deqpLogDir); graphics.DEQPOutcomeIsFailure(o) {
 			s.Errorf("Result for %q: %v", t, strings.ToUpper(o))
 		} else {
 			s.Logf("Result for %q: %v", t, strings.ToUpper(o))
 		}
 	}
+}
 
-	// TODO(andrescj): maybe output some counts, like # passes, # failures,
-	// #skipped per the run_once() method of graphics_dEQP in
-	// autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
+func deqpParallel(ctx context.Context, s *testing.State, opts deqpParms) {
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		s.Fatal("Failed to created temp dir: ", err)
+	}
+	defer os.RemoveAll(tmpDir)
+	filters, err := deqprunner.GetCaseListFilters(ctx, "deqp")
+	if err != nil {
+		s.Fatal("Could not get filters from file: ", err)
+	}
+	deqpExe, err := graphics.DEQPExecutable(opts.api)
+	if err != nil {
+		s.Fatal("Failed to get DEQP executable: ", err)
+	}
+	cmd := []string{
+		"run",
+		"--deqp=" + deqpExe,
+		"--caselist=" + opts.caselist,
+		"--output=" + deqpLogDir,
+	}
+	if opts.shardNum > 0 {
+		val := strconv.Itoa(opts.shardNum + 1)
+		cmd = append(cmd, "--fraction-start="+val)
+	}
+	if opts.shardCount > 1 {
+		val := strconv.Itoa(opts.shardCount)
+		cmd = append(cmd, "--fraction="+val)
+	}
+
+	commands, err := deqprunner.MakeFilterCmd(filters, tmpDir)
+	if err != nil {
+		s.Fatal("Could not make filter file(s) : ", err)
+	}
+	cmd = append(cmd, commands...)
+	cmd = append(cmd, []string{"--",
+		"--deqp-surface-type=pbuffer",
+		"--deqp-gl-config-name=rgba8888d24s8ms0",
+		"--deqp-watchdog=enable",
+		"--deqp-log-images=disable",
+		"--deqp-surface-width=256",
+		"--deqp-surface-height=256"}...)
+	command := testexec.CommandContext(ctx, "deqp-runner", cmd...)
+
+	// We should be in the executable's directory when running it so that it can
+	// find its test data files.
+	s.Logf("Using environment: %q", deqpEnv)
+	command.Dir = filepath.Dir(deqpExe)
+	command.Env = deqpEnv
+	_, stderr, err := command.SeparatedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("Failed to run deqp-runner %s : %s ", string(stderr), err)
+	}
+}
+
+func DEQP(ctx context.Context, s *testing.State) {
+	glMajor, glMinor, err := graphics.GLESVersion(ctx)
+	if err != nil {
+		s.Fatal("Could not obtain the OpenGL version: ", err)
+	}
+	s.Logf("Found gles%d.%d", glMajor, glMinor)
+
+	// Step 1: query the supported graphics APIs.
+	hasVulkan, err := graphics.SupportsVulkanForDEQP(ctx)
+	if err != nil {
+		s.Fatal("Could not check for Vulkan support: ", err)
+	}
+	s.Log("Vulkan support: ", hasVulkan)
+	deqpApis = graphics.SupportedAPIs(glMajor, glMinor, hasVulkan)
+	s.Log("Supported APIs: ", deqpApis)
+
+	// Step 2: get the environment for the DEQP binaries.
+	deqpEnv = graphics.DEQPEnvironment(os.Environ())
+
+	// Step 3: create a location for storing detailed logs.
+	deqpLogDir = filepath.Join(s.OutDir(), "dEQP-results")
+	if err := os.Mkdir(deqpLogDir, 0700); err != nil {
+		s.Fatalf("Could not create %v: %v", deqpLogDir, err)
+	}
+
+	// Step 4: run the test based on whether it is parallel or not.
+	opts := s.Param().(deqpParms)
+	if opts.isParallel {
+		deqpParallel(ctx, s, opts)
+	} else {
+		deqpNonParallel(ctx, s)
+	}
 }
