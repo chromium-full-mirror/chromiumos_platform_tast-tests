@@ -207,8 +207,14 @@ var (
 	// AutoconnectToggle is the finder for the autoconnect toggle UI in the cellular detail page.
 	AutoconnectToggle = nodewith.Name("Automatically connect to cellular network").Role(role.ToggleButton)
 
-	// CellularAdvanced is the finder for the button that collpases/expands the advanced section of cellular details page.
+	// CellularAdvanced is the finder for the button that collapses/expands the advanced section of cellular details page.
 	CellularAdvanced = nodewith.Name("Show advanced network properties").Role(role.Button)
+
+	// CellularNetwork is the finder for the button that collapses/expands the network section of cellular details page.
+	CellularNetwork = nodewith.Name("Show network address settings").Role(role.Button)
+
+	// CellularProxy is the finder for the button that collapses/expands the proxy section of cellular details page.
+	CellularProxy = nodewith.Name("Show proxy settings").Role(role.Button)
 
 	// LockSimToggle is the finder for the Lock SIM toggle UI in the cellular details page.
 	LockSimToggle = nodewith.NameStartingWith("Lock").Role(role.ToggleButton)
