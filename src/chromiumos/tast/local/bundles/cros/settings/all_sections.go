@@ -27,7 +27,12 @@ func init() {
 		Func:         AllSections,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Open OS Settings and check main sections are displayed properly",
-		Contacts:     []string{"tim.chang@cienet.com", "cienet-development@googlegroups.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+			"awendy@google.com",
+		},
+		// OS > Systems > Settings
+		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
