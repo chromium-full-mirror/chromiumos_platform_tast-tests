@@ -258,9 +258,20 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 				testing.ContextLog(ctx, "Checking final kb light pwm failed: ", err)
 			}
 			hwdepResults := checkKBLightDependency(ctx, h)
+			// Check for KB brightness from the powerd log at timeout.
+			bashCmd := "grep keyboard_backlight_controller.*Setting' 'brightness /var/log/power_manager/powerd.LATEST | tail -1"
+			out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", bashCmd).Output()
+			if err != nil {
+				testing.ContextLog(ctx, "Capturing powerd log failed: ", err)
+			}
+			kbLightLog := "unknwon"
+			if len(out) != 0 {
+				output := strings.TrimSpace(string(out))
+				kbLightLog = output[strings.Index(output, "Setting"):]
+			}
 			return &timeoutError{E: errors.Errorf(
-				"timeout in adjusting kb backlight. Got kb light initial pwm val: %s, final pwm val: %s, and hwdep val: %q, backlight_tool returns kb light present: %t",
-				initialPwm, finalPwm, hwdepResults, hasKbLight)}
+				"timeout in adjusting kb backlight. Got kb light initial pwm val: %s, final pwm val: %s, and hwdep val: %q, backlight_tool returns kb light present: %t, powerd log: %s",
+				initialPwm, finalPwm, hwdepResults, hasKbLight, kbLightLog)}
 		}
 		testing.ContextLogf(ctx, "Attempting to match, current: %d, expected: %d", kbLight, extremeValue)
 		if err := pressShortcut(ctx, h, actionKey); err != nil {
