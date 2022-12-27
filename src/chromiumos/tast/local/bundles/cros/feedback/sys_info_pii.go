@@ -140,8 +140,8 @@ func SysInfoPII(ctx context.Context, s *testing.State) {
 		// We use a third-party website to reduce the risk of false positives:
 		// some utilities hard-code "www.google.com" and log that string,
 		// which is acceptable (as it's not in response to any user actions).
-		sensitiveURL = "https://www.facebook.com/"
-		sensitiveURLWithoutScheme = "www.facebook.com"
+		sensitiveURL = "https://www.yahoo.com/"
+		sensitiveURLWithoutScheme = "www.yahoo.com"
 	}
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
