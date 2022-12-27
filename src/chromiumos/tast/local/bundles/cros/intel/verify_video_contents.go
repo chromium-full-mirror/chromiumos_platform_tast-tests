@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,6 +41,7 @@ type videoContent struct {
 	display             string
 	drmLogMsg           string
 	is4KDisplay         bool
+	isTBTDevice         bool
 }
 
 func init() {
@@ -49,7 +50,8 @@ func init() {
 		Func:         VerifyVideoContents,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies different widevine secure content using shaka player",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInRootfsRemoved",
 		HardwareDeps: hwdep.D(setup.PerfHDCPDevices()),
@@ -128,6 +130,46 @@ func init() {
 				contentUrls:         []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
 				proxyURL:            urlconst.ProxyHDCPV2},
 			Timeout: 7 * time.Minute,
+		}, {
+			// Test H/W topology requires DUT connected to external typec DP 4K display.
+			Name: "play_all_hevc_contents_4k_display",
+			Val: videoContent{display: "DP",
+				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
+				hdcpVer:             "HDCP2.2",
+				typeVal:             "Type1=1",
+				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+				is4KDisplay:         true,
+				contentUrls: []string{urlconst.HEVCclip, urlconst.HEVC4K, urlconst.HEVCclipSD, urlconst.HEVCclipHD,
+					urlconst.HEVCCBCS, urlconst.HEVCCBCS2},
+				proxyURL: urlconst.ProxyHDCPV2},
+			Timeout: 12 * time.Minute,
+		}, {
+			// Test H/W topology required as below:
+			// DUT ---> TBT Dock station ---> typec 4K DP display.
+			Name: "hevc_hdcp2_tbt_dock_4k_display",
+			Val: videoContent{display: "DP",
+				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
+				hdcpVer:             "HDCP2.2",
+				typeVal:             "Type1=1",
+				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+				is4KDisplay:         true,
+				contentUrls:         []string{urlconst.HEVCCBCS, urlconst.HEVCclip},
+				proxyURL:            urlconst.ProxyHDCPV2},
+			Timeout: 7 * time.Minute,
+		}, {
+			// Test H/W topology required as below:
+			// DUT ---> USB4 Gatkex ---> typec 4K DP display.
+			Name: "vp9_hdcp2_usb4_gatkex_4k_display",
+			Val: videoContent{display: "DP",
+				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
+				hdcpVer:             "HDCP2.2",
+				typeVal:             "Type1=1",
+				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+				is4KDisplay:         true,
+				isTBTDevice:         true,
+				contentUrls:         []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
+				proxyURL:            urlconst.ProxyHDCPV2},
+			Timeout: 7 * time.Minute,
 		}},
 	})
 }
@@ -181,6 +223,13 @@ func VerifyVideoContents(ctx context.Context, s *testing.State) {
 		}
 
 		if testData.display != "" {
+			// If test requires Thunderbolt dock/USB4 Gatkex check for its detection.
+			if testData.isTBTDevice {
+				const expected = true
+				if err := typecutils.CheckTBTDevice(expected); err != nil {
+					s.Fatal("Failed to verify connected Thunderbolt device: ", err)
+				}
+			}
 			// Clear dmesg before taking any logs.
 			if err := testexec.CommandContext(ctx, "dmesg", "-C").Run(); err != nil {
 				s.Error("Failed to clear dmesg log: ", err)
@@ -263,6 +312,12 @@ func VerifyVideoContents(ctx context.Context, s *testing.State) {
 			}
 			if !strings.Contains(string(modetestOut), testData.typeVal) {
 				s.Fatalf("Failed to find %s in modetest", testData.typeVal)
+			}
+
+			if testData.isTBTDevice {
+				if err := videoConn.VerifyL0Response(ctx); err != nil {
+					s.Fatal("Failed to verify L0 response: ", err)
+				}
 			}
 		}
 

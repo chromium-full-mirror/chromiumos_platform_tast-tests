@@ -7,6 +7,7 @@ package hdcputils
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -327,4 +328,87 @@ func (s *ShakaPlayer) currentTime(ctx context.Context) (int, error) {
 	}
 	timeInSecs := mins*60 + secs
 	return timeInSecs, nil
+}
+
+// VerifyL0Response clicks on L0 button while video playing and verify track level HD/SD/UHD, there should be HW_SECURE_ALL.
+func (s *ShakaPlayer) VerifyL0Response(ctx context.Context) error {
+	// Example of L0 response json .
+	/*
+	{
+	  "key":[{
+	    ...
+	  },
+	  {
+	    "id":"MDAwMDAwMDAwMDAwMDAwMg==",
+	    "iv":"3mbEJJd7e1E9gGaLEPabwQ==",
+	    "type":"CONTENT",
+	    "level":"HW_SECURE_ALL",
+	    "requiredProtection":{
+	      "hdcp":"HDCP_V2"
+	    },
+	    "requestedProtection":{
+	      "hdcp":"HDCP_V2"
+	    },
+	    "keyControl":{
+	      "keyControlBlock":"Cbjs7CzPdhkohG47GznriHLtdWFuL1nynqGk4Vkwiac=",
+	      "iv":"gObIccyvcDNa2G8j+hyjpg=="
+	    },
+	    "trackLabel":"HD"
+	  },
+	  {
+	    ...
+	  }
+	]}
+        */
+	type l0ResponseValues struct {
+		// Level contains expected levels like "SW_SECURE_CRYPTO", "HW_SECURE_ALL".
+		Level string `json:"level"`
+		// TrackLabel contains expected label like "HD", "SD", "UD".
+		TrackLabel string `json:"trackLabel"`
+	}
+
+	// Key refers to Level and TrackLable of json data.
+	type l0ResponseKeyValues struct {
+		// Mapping the Key in the L0 response data.
+		Key []l0ResponseValues `json:"key"`
+	}
+
+	ui := uiauto.New(s.Tconn).WithPollOpts(*rdpPollOpts)
+	// Click on L0 button.
+	l0Button := nodewith.Name("L 0").Role(role.Button).First()
+	if err := uiauto.IfSuccessThen(ui.WaitUntilExists(l0Button), ui.LeftClick(l0Button))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on L0")
+	}
+	// Get the response json data.
+	var res string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := s.Conn.Eval(ctx, `document.getElementsByClassName('md-dialog-content')[0].innerText`, &res); err != nil && res == "" {
+			return errors.Wrap(err, "failed to get response of L0")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "failed to get response")
+	}
+	var jsonData l0ResponseKeyValues
+	if err := json.Unmarshal([]byte(res), &jsonData); err != nil {
+		return errors.Wrap(err, "failed to unmarshal json data")
+	}
+
+	trackLabelCount := 0
+	for _, value := range jsonData.Key {
+		if value.TrackLabel == "HD" || value.TrackLabel == "SD" || value.TrackLabel == "UHD" {
+			if value.Level != hwSecureAll {
+				return errors.Errorf("%s is not found for %s in response", hwSecureAll, value.TrackLabel)
+			}
+			trackLabelCount++
+		}
+	}
+	if trackLabelCount == 0 {
+		return errors.New("no track label found(HD,SD,UHD)")
+	}
+	// Close the response popup window.
+	if err := s.Conn.Eval(ctx, `document.querySelector('[ng-click="ctrl.close()"]').click()`, nil); err != nil {
+		return errors.Wrap(err, "failed to close response popup window")
+	}
+	return nil
 }
