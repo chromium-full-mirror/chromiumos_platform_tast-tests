@@ -518,7 +518,7 @@ func (y *YtWeb) Close(ctx context.Context) {
 
 // clearNotificationPrompts finds and clears some youtube web prompts.
 func (y *YtWeb) clearNotificationPrompts(ctx context.Context) error {
-	tartgetPrompts := nodewith.NameRegex(regexp.MustCompile("(Allow|Never|NO THANKS)")).Role(role.Button)
+	tartgetPrompts := nodewith.NameRegex(regexp.MustCompile("(Allow|Never|NO THANKS|Got it)")).Role(role.Button)
 	nodes, err := y.ui.NodesInfo(ctx, tartgetPrompts)
 	if err != nil {
 		return err
@@ -528,7 +528,7 @@ func (y *YtWeb) clearNotificationPrompts(ctx context.Context) error {
 	}
 
 	testing.ContextLog(ctx, "Start to clear notification prompts")
-	prompts := []string{"Allow", "Never", "NO THANKS"}
+	prompts := []string{"Allow", "Never", "NO THANKS", "Got it"}
 	for _, name := range prompts {
 		tartgetPrompt := nodewith.Name(name).Role(role.Button)
 		if err := uiauto.IfSuccessThen(
