@@ -34,7 +34,12 @@ func init() {
 		Func:         KeyboardBinding,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change and disable keyboard key bindings from OS settings",
-		Contacts:     []string{"lance.wang@cienet.com", "cienet-development@googlegroups.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+			"awendy@google.com",
+		},
+		// OS > Systems > Settings
+		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Keyboard()),
