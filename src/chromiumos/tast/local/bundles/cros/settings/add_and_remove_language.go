@@ -27,8 +27,12 @@ func init() {
 		Func:         AddAndRemoveLanguage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if it is able to add and remove language",
-		Contacts:     []string{"cros-borders-eng@google.com", "vivian.tsai@cienet.com", "cienet-development@googlegroups.com", "chromeos-sw-engprod@google.com"},
-		BugComponent: "b:1282854",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+			"awendy@google.com",
+		},
+		// OS > Systems > Settings
+		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "chromeLoggedIn",
