@@ -23,6 +23,7 @@ func init() {
 		Func:         TimeQuery,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant time query response",
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"meilinw@chromium.org", "xiaohuic@chromium.org", "assistive-eng@google.com", "chromeos-sw-engprod@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
@@ -96,7 +97,10 @@ func TimeQuery(ctx context.Context, s *testing.State) {
 // parseTimeNearNow extracts the numeric components in the HTML string to construct a time
 // object based on now time. A typical time result will have a format like: "6:25 PM".
 func parseTimeNearNow(ctx context.Context, html string, now time.Time) ([]time.Time, error) {
-	re := regexp.MustCompile(`(\d{1,2})(:\d\d)? ([AaPp][Mm])?`)
+	// Use \p{Zs} instead of \s as \s contains \n. In HTML, there can be a text with [Year]\n
+	// (e.g. 2022\n). \s can match with it. \p{Zs} matches a unicode character with general
+	// category=Space Separator.
+	re := regexp.MustCompile(`(\d{1,2})(:\d\d)?\p{Zs}([AaPp][Mm])?`)
 	matches := re.FindStringSubmatch(html)
 
 	// Writes the HTML response to logName file for debugging if no matching results found.
