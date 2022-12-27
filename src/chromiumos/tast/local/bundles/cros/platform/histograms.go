@@ -20,7 +20,8 @@ func init() {
 		Func:         Histograms,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that libmetrics reports histograms to Chrome",
-		Contacts:     []string{"chromeos-systems@google.com"},
+		Contacts:     []string{"cros-telemetry@google.com"},
+		BugComponent: "b:1087262",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 	})
