@@ -27,11 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Check the ChromeOS page shows enough information to user",
 		Contacts: []string{
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
-			"lyle.lai@cienet.com",
-			"ting.chen@cienet.com",
+			"awendy@google.com",
 		},
+		// OS > Systems > Settings
 		BugComponent: "b:1246072",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
