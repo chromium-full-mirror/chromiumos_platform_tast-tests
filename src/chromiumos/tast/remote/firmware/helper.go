@@ -1166,7 +1166,8 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	})
 	if err != nil {
 		if stderr != nil {
-			return "", errors.Errorf("validate usb key at %q, got stderr: %s, usb model: %s, serial number: %s", usbdev, stderr, modelName, serialNumber)
+			stderrResult := regexp.MustCompile(`\n`).ReplaceAllString(string(stderr), " ")
+			return "", errors.Errorf("validate usb key at %q, got stderr: %s, usb model: %s, serial number: %s", usbdev, strings.TrimSpace(stderrResult), modelName, serialNumber)
 		}
 		return "", errors.Wrapf(err, "validate usb key at %q", usbdev)
 	}
@@ -1356,6 +1357,14 @@ func (h *Helper) CheckBrokenScreen(ctx context.Context, usbdev string) error {
 	testing.ContextLog(ctx, "Rebooting the DUT with warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		return errors.Wrap(err, "failed to reboot the DUT with warm reset")
+	}
+	waitDisconnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 10*time.Second)
+	defer cancelWaitConnect()
+	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+		testing.ContextLog(ctx, "DUT is still connected. Attempting the local reboot command on DUT")
+		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil {
+			return errors.Wrap(err, "failed to run the reboot cmd")
+		}
 	}
 	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
