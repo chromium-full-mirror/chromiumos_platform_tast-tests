@@ -181,8 +181,8 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 
 		// Wait for the recommended videos section to load.
 		recommendedVideosLandmark := d.Object(
-			ui.ClassName("android.view.ViewGroup"),
-			ui.DescriptionMatches(".+ - play video"),
+			ui.ClassName("android.widget.ImageView"),
+			ui.Description("Action menu"),
 			ui.PackageName(ytAppPkgName),
 		)
 		if err := recommendedVideosLandmark.WaitForExists(ctx, time.Minute); err != nil {
