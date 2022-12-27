@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
@@ -48,7 +49,7 @@ func init() {
 			},
 		},
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		Timeout:      5 * time.Minute,
 	})
 }
