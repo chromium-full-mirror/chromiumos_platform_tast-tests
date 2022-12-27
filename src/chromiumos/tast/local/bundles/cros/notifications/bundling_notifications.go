@@ -35,10 +35,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that bundling notifications appear in notification centre can be interacted with",
 		Contacts: []string{
-			"lance.wang@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
+			"awendy@google.com",
 		},
+		// ChromeOS > Software > System UI Surfaces > Notifications
+		BugComponent: "b:1246021",
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{bundlingNotificationApkFileName},
 		SoftwareDeps: []string{"chrome", "arc"},
