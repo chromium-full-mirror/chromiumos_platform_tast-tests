@@ -58,7 +58,8 @@ func init() {
 				},
 				// b/261363619: Skip "beetley" before b/261363619 is fixed.
 				// b/261361770: Skip "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne" before b/261361770 is fixed.
-				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("beetley", "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne")),
+				// b/198322358: Skip "nautilus", "nautiluslte", "soraka", "ekko" before b/198322358 is fixed.
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("beetley", "akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne", "ekko", "nautilus", "nautiluslte", "soraka")),
 			},
 		},
 	})
