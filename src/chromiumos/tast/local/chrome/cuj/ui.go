@@ -62,6 +62,10 @@ func CloseAllTabs(ctx context.Context, bTconn *chrome.TestConn, bt browser.Type)
 // If lfixtVal is given, it will open the lacros-Chrome, and return the lacros instance.
 func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 	closeTabs, tabletMode bool, bt browser.Type) (*lacros.Lacros, time.Duration, error) {
+	const (
+		retryTimes       = 3
+		appLaunchTimeout = 10 * time.Second
+	)
 	var l *lacros.Lacros
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
@@ -88,21 +92,25 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 	}
 	testing.ContextLog(ctx, "Launch Google Chrome from "+msg)
 
-	var startTime time.Time
+	var startTime, totalStartTime time.Time
+	retryCount := 0
+
 	launchChromeApp := func(ctx context.Context) error {
+		retryCount++
 		startTime, err = launchFunc(ctx, tconn, "Chrome", "Chromium", "Lacros")
 		if err != nil {
 			return errors.Wrap(err, "failed to open Chrome")
 		}
 		// Make sure app is launched.
-		if err := ash.WaitForApp(ctx, tconn, chromeApp.ID, 30*time.Second); err != nil {
+		if err := ash.WaitForApp(ctx, tconn, chromeApp.ID, appLaunchTimeout); err != nil {
 			return errors.Wrap(err, "failed to wait for the app to be launched")
 		}
 		return nil
 	}
 	ui := uiauto.New(tconn)
-	if err := ui.Retry(3, launchChromeApp)(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to launch the Chrome app after 3 retries")
+	totalStartTime = time.Now()
+	if err := ui.Retry(retryTimes, launchChromeApp)(ctx); err != nil {
+		testing.ContextLogf(ctx, "Failed to launch the Chrome app after %v retries in %v", retryTimes, time.Since(totalStartTime))
 		// Browser launch time is calculated from opening the extension launcher.
 		// Expect to take longer than starting straight from the shelf.
 		startTime = time.Now()
@@ -110,12 +118,15 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 			return nil, -1, errors.Wrap(err, "failed to launch the Chrome app from launcher")
 		}
 		// Make sure app is launched.
-		if err := ash.WaitForApp(ctx, tconn, chromeApp.ID, 30*time.Second); err != nil {
+		if err := ash.WaitForApp(ctx, tconn, chromeApp.ID, appLaunchTimeout); err != nil {
 			return nil, -1, errors.Wrap(err, "failed to wait for the app to be launched")
 		}
+	} else {
+		testing.ContextLogf(ctx, "Attempts %v to successfully launch the Chrome app", retryCount)
 	}
 	browserStartTime := time.Since(startTime)
-
+	totalLaunchTime := time.Since(totalStartTime)
+	testing.ContextLogf(ctx, "It took a total of %v to launch the Chrome app, browser start time is %v", totalLaunchTime, browserStartTime)
 	// If it's ash-Chrome, we will close all existing tabs so the test case will start with a
 	// clean Chrome.
 	closeTabsFunc := browser.CloseAllTabs
