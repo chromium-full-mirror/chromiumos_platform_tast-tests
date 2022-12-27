@@ -62,7 +62,7 @@ func connectToSingleGAIAWebview(ctx context.Context, sess *driver.Session, targe
 			target = targets[0]
 		}
 
-		conn, err = sess.NewConnForTarget(ctx, driver.MatchTargetID(target.TargetID))
+		conn, err = sess.TryNewConnForTarget(ctx, driver.MatchTargetID(target.TargetID))
 		if err != nil {
 			return errors.Wrap(sess.Watcher().ReplaceErr(err), "failed to connect to target")
 		}
