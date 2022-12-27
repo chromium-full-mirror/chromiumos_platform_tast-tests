@@ -81,12 +81,15 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 	defer kw.Close()
 
-	// Create a virtual mouse.
-	mw, err := input.Mouse(ctx)
-	if err != nil {
-		s.Fatal("Failed to create a mouse: ", err)
+	// Create a virtual mouse for clamshell tests.
+	var mw *input.MouseEventWriter
+	if !testParam.Tablet {
+		mw, err = input.Mouse(ctx)
+		if err != nil {
+			s.Fatal("Failed to create a mouse: ", err)
+		}
+		defer mw.Close()
 	}
-	defer mw.Close()
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
@@ -273,10 +276,12 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to sleep")
 				}
 
-				// Move mouse to center of window to ensure we are
-				// scrolling on the currently active window.
-				if err := mouse.Move(tconn, activeWindow.BoundsInRoot.CenterPoint(), 500*time.Millisecond)(ctx); err != nil {
-					return errors.Wrap(err, "failed to move mouse to center of window")
+				if !testParam.Tablet {
+					// Move mouse to center of window to ensure we are
+					// scrolling on the currently active window.
+					if err := mouse.Move(tconn, activeWindow.BoundsInRoot.CenterPoint(), 500*time.Millisecond)(ctx); err != nil {
+						return errors.Wrap(err, "failed to move mouse to center of window")
+					}
 				}
 
 				// Try to scroll down and up by pressing the down and up
@@ -289,8 +294,18 @@ func Run(ctx context.Context, s *testing.State) {
 						return errors.Wrapf(err, "failed to repeatedly press %q in between task switches", key)
 					}
 
-					if err := inputsimulations.RepeatMouseScroll(ctx, mw, key == "Down", 50*time.Millisecond, 20); err != nil {
-						return errors.Wrapf(err, "failed to repeatedly mouse scroll %s", key)
+					if testParam.Tablet {
+						// Since tablets are unable to scroll with the mouse,
+						// scroll again with the keyboard. Avoid swiping on
+						// the screen, to limit unintentionally tapping on
+						// links within each window.
+						if err := inputsimulations.RepeatKeyPress(ctx, kw, key, 50*time.Millisecond, 20); err != nil {
+							return errors.Wrapf(err, "failed to repeatedly and rapidly press %q in between task switches", key)
+						}
+					} else {
+						if err := inputsimulations.RepeatMouseScroll(ctx, mw, key == "Down", 50*time.Millisecond, 20); err != nil {
+							return errors.Wrapf(err, "failed to repeatedly mouse scroll %s", key)
+						}
 					}
 				}
 
