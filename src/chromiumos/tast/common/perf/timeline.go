@@ -242,7 +242,7 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 					return
 				}
 
-				testing.ContextLogf(ctx, "Skipping snapshot because the last snapshot took more than the %v interval (%v), but completed within the 1-interval grace period", t.interval, lastSnapshotDuration)
+				testing.ContextLogf(ctx, "Skipping %s snapshot because the last snapshot took more than the %v interval (%v), but completed within the 1-interval grace period", t.prefix, t.interval, lastSnapshotDuration)
 				nextTime = nextTime.Add(t.interval)
 				t.snapshotsSkipped++
 			}
