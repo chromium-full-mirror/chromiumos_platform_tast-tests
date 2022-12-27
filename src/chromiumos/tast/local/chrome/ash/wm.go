@@ -514,6 +514,22 @@ func GetWindow(ctx context.Context, tconn *chrome.TestConn, windowID int) (*Wind
 	return nil, errors.Errorf("failed to find the window with ID %d", windowID)
 }
 
+// CloseAllButOneLacrosWindow closes all windows except for one lacros window. Useful for cleaning up windows at the beginning of a test using browserfixt (which is expected to spawn one lacros window at the beginning of the test).
+func CloseAllButOneLacrosWindow(ctx context.Context, tconn *chrome.TestConn) error {
+	hasLacrosWindow := false
+	// The anonymous function here is supposed to return true for all windows except for the first identified lacros window.
+	if err := CloseAllWindowsMatching(ctx, tconn, func(window *Window) bool {
+		if !hasLacrosWindow && window.WindowType == WindowTypeLacros {
+			hasLacrosWindow = true
+			return false
+		}
+		return true
+	}); err != nil {
+		return errors.Wrap(err, "failed to close all but one lacros window")
+	}
+	return nil
+}
+
 // CloseAllWindowsMatching closes all windows matching the predicate.
 func CloseAllWindowsMatching(ctx context.Context, tconn *chrome.TestConn, predicate func(*Window) bool) error {
 	ws, err := GetAllWindows(ctx, tconn)

@@ -85,16 +85,8 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Ensure there is no window open before test starts. (Except as mentioned above we should have one lacros window open in lacros)
-	// The anonymous function here is supposed to return true for all windows except for the first identified lacros window.
-	hasLacrosWindow := false
-	if err := ash.CloseAllWindowsMatching(ctx, tconn, func(window *ash.Window) bool {
-		if !hasLacrosWindow && window.WindowType == ash.WindowTypeLacros {
-			hasLacrosWindow = true
-			return false
-		}
-		return true
-	}); err != nil {
+	// Ensure there is no window open before test starts. (Except we should have one lacros window open in lacros)
+	if err := ash.CloseAllButOneLacrosWindow(ctx, tconn); err != nil {
 		s.Fatal("Failed to ensure no unexpected windows are open: ", err)
 	}
 
