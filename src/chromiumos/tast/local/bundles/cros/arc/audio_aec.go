@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		// Disable this test case as AEC is currently disabled in ARCVM. (b/201378884)
-		Attr:    []string{},
+		Attr:    []string{"group:audio"},
 		Timeout: 2 * time.Minute,
 		Fixture: "arcBooted",
 	})

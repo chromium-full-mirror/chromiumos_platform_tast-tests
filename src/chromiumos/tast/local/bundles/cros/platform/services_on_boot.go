@@ -53,6 +53,7 @@ func init() {
 			{
 				Name:              "cras",
 				Val:               checkStatus("cras", upstartcommon.StartGoal, upstartcommon.RunningState),
+				ExtraAttr:         []string{"group:audio"},
 				ExtraSoftwareDeps: []string{"cras"},
 			},
 			{
@@ -60,6 +61,7 @@ func init() {
 				Val:  checkStatus("sound_card_init", upstartcommon.StopGoal, upstartcommon.WaitingState),
 				// TODO(b/254566972): hwdep.SmartAmp() is narrower than having /etc/init/sound_card_init.conf
 				// If we can have sound_card_init as a SoftwareDep, use that instead.
+				ExtraAttr:         []string{"group:audio"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SmartAmp()),
 				ExtraSoftwareDeps: []string{"cras"},
 			},

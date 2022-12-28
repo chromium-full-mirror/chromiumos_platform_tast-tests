@@ -35,7 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc"},
 		Fixture:      "arcBooted",
 		Data:         []string{"oboetester_debug.apk"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "aaudio",
