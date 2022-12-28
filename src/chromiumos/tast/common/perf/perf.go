@@ -187,6 +187,11 @@ func (p *Values) GetValues() map[Metric][]float64 {
 	return p.values
 }
 
+// GetValueByMetric returns specific metric values.
+func (p *Values) GetValueByMetric(metric Metric) []float64 {
+	return p.values[metric]
+}
+
 // MergeWithSuffix merges all data points of vs into this Values structure
 // optionally adding suffix to the value name.
 func (p *Values) MergeWithSuffix(suffix string, vs ...*Values) {
