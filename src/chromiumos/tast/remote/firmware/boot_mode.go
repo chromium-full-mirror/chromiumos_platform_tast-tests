@@ -10,6 +10,7 @@ This file implements functions to check or switch the DUT's boot mode.
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -985,9 +986,33 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 			}
 		}
 	}
+	// According to Stainless, some DUTs were stuck at G3 while
+	// booting to recovery mode. Their ec logs reported that they
+	// were experiencing thermal shutdown. Match for the relevant
+	// texts and report in the returned error.
+	testing.ContextLog(ctx, "Capturing EC log")
+	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
+		return errors.Wrap(err, "failed to set ec_uart_capture on")
+	}
+	defer func() {
+		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
+			testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
+		}
+	}()
+
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
 		return errors.Wrapf(err, "setting power state to %s", servo.PowerStateRec)
 	}
+	ecStream, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+	if err != nil {
+		return errors.Wrap(err, "failed to read ec stream")
+	}
+	var regexpThermalShutdown = `(?i)thermal shutdown`
+	thermalShutdown := regexp.MustCompile(regexpThermalShutdown).FindStringSubmatch(ecStream)
+	if len(thermalShutdown) != 0 {
+		return errors.Errorf("captured %s after rebooting dut to recovery", thermalShutdown)
+	}
+
 	if usbMux == servo.USBMuxDUT {
 		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 			return errors.Wrapf(err, "sleeping before setting usb mux state to %s", usbMux)
