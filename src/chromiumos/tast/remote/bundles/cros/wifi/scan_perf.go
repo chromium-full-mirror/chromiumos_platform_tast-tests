@@ -123,7 +123,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		fgFullScanThreshold        = 4 * time.Second
 		bgFullScanThreshold        = 7 * time.Second
 		fgFullScanThresholdRelaxed = 5 * time.Second
-		bgFullScanThresholdRelaxed = 8 * time.Second
+		bgFullScanThresholdRelaxed = 9 * time.Second
 		fgFullScanThresholdWiFi6E  = 15 * time.Second
 		bgFullScanThresholdWiFi6E  = 20 * time.Second
 	)
