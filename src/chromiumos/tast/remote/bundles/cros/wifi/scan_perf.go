@@ -263,7 +263,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			s.Logf("There is a known issue (b/253099273) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
 		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
 			threshold = fgFullScanThresholdWiFi6E
-			s.Logf("There is a known issue (b/256486257) for this WiFi6E chips (%s) and this test will pass", devInfo.Name)
+			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
 	}
 	for i := 1; i <= scanTimes; i++ {
@@ -320,7 +320,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
 		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
 			threshold = bgFullScanThresholdWiFi6E
-			s.Logf("There is a known issue (b/256486257) for this WiFi6E chips (%s) and this test will pass", devInfo.Name)
+			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
 	}
 	for i := 1; i <= scanTimes; i++ {
