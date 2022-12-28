@@ -119,11 +119,13 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to power off dut: ", err)
 	}
 
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
-		s.Log("Failed to set powerstate to ON, retrying with power button: ", err)
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-			s.Fatal("Failed to press power button: ", err)
-		}
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		s.Fatal("Failed to sleep for 5 seconds: ", err)
+	}
+
+	s.Log("Rebooting the DUT with cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to reboot the DUT with cold reset: ", err)
 	}
 
 	// Store a copy of the firmware log on the local machine,
@@ -172,6 +174,10 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	// When there's no valid usb, pressing ctrl_d would help duts
 	// leave the firmware screen and continue booting to ChromeOS.
 	if !testOpt.validUSB {
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			s.Fatal("Failed to sleep for 2 seconds: ", err)
+		}
+
 		s.Log("Pressing ctrl_d to leave firmware screen")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 			s.Fatalf("Failed to press %s: %v", servo.CtrlD, err)
