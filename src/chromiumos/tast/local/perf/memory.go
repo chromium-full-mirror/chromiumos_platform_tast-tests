@@ -18,10 +18,11 @@ const diffWait = 5 * time.Second
 
 // memoryDataSource is a perf.TimelineDatasource reporting the memory usage and its diff from certain point.
 type memoryDataSource struct {
-	name        string
-	diffName    string
-	percentName string
-	previous    float64
+	name         string
+	diffName     string
+	percentName  string
+	intervalName string
+	previous     float64
 }
 
 // NewMemoryDataSource creates a new instance of memoryDataSource with the
@@ -31,10 +32,11 @@ func NewMemoryDataSource(name, diffName, percentName string) *memoryDataSource {
 }
 
 // Setup implements perf.TimelineDatasource.Setup.
-func (s *memoryDataSource) Setup(ctx context.Context, prefix string) error {
+func (s *memoryDataSource) Setup(ctx context.Context, prefix, intervalName string) error {
 	s.name = prefix + s.name
 	s.diffName = prefix + s.diffName
 	s.percentName = prefix + s.percentName
+	s.intervalName = intervalName
 	return nil
 }
 
@@ -60,18 +62,21 @@ func (s *memoryDataSource) Snapshot(ctx context.Context, values *perf.Values) er
 		Unit:      "bytes",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
+		Interval:  s.intervalName,
 	}, used-s.previous)
 	values.Append(perf.Metric{
 		Name:      s.name,
 		Unit:      "bytes",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
+		Interval:  s.intervalName,
 	}, float64(used))
 	values.Append(perf.Metric{
 		Name:      s.percentName,
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
+		Interval:  s.intervalName,
 	}, memInfo.UsedPercent)
 	s.previous = used
 

@@ -19,9 +19,10 @@ import (
 
 // GPUDataSource is helper to get gpu data from Chrome.
 type GPUDataSource struct {
-	prefix   string
-	tconns   map[browser.Type]*chrome.TestConn
-	previous map[browser.Type]float64
+	prefix       string
+	intervalName string
+	tconns       map[browser.Type]*chrome.TestConn
+	previous     map[browser.Type]float64
 
 	stopc chan struct{}
 
@@ -46,8 +47,9 @@ func (ds *GPUDataSource) Close() {
 }
 
 // Setup implements perf.TimelineDatasource.Setup.
-func (ds *GPUDataSource) Setup(ctx context.Context, prefix string) error {
+func (ds *GPUDataSource) Setup(ctx context.Context, prefix, intervalName string) error {
 	ds.prefix = prefix
+	ds.intervalName = intervalName
 	return nil
 }
 
@@ -160,6 +162,7 @@ func (ds *GPUDataSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			Unit:      "KB",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
+			Interval:  ds.intervalName,
 		}, memory)
 		GPUMemory += memory
 	}
@@ -169,6 +172,7 @@ func (ds *GPUDataSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		Unit:      "KB",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
+		Interval:  ds.intervalName,
 	}, GPUMemory)
 
 	var exceeds float64
@@ -180,6 +184,7 @@ func (ds *GPUDataSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		Unit:      "boolean",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
+		Interval:  ds.intervalName,
 	}, exceeds)
 	return nil
 }

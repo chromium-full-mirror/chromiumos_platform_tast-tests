@@ -169,7 +169,7 @@ func (c *PowerPerfService) StartMeasurement(ctx context.Context, _ *emptypb.Empt
 		power.NewRAPLPowerMetrics(),
 	}
 	for _, metric := range c.metrics {
-		if err := metric.Setup(ctx, ""); err != nil {
+		if err := metric.Setup(ctx, "", ""); err != nil {
 			return nil, errors.Wrap(err, "failed to setup metric")
 		}
 	}

@@ -79,7 +79,7 @@ func NewSysfsThermalMetrics() *SysfsThermalMetrics {
 }
 
 // Setup checks which thermal sensors are available.
-func (b *SysfsThermalMetrics) Setup(ctx context.Context, prefix string) error {
+func (b *SysfsThermalMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	b.metrics = []ThermalMetric{}
 
 	thermalSensors, err := ListSysfsThermalSensors(ctx)
@@ -96,7 +96,7 @@ func (b *SysfsThermalMetrics) Setup(ctx context.Context, prefix string) error {
 		// Some sensor names contain characters that are not allowed in metric names.
 		reg := regexp.MustCompile("[^a-zA-Z0-9]+")
 		metricName := prefix + reg.ReplaceAllString(name, "_")
-		perfMetric := perf.Metric{Name: metricName, Unit: "deg_C", Direction: perf.SmallerIsBetter, Multiple: true}
+		perfMetric := perf.Metric{Name: metricName, Unit: "deg_C", Direction: perf.SmallerIsBetter, Multiple: true, Interval: intervalName}
 		thermalMetric := ThermalMetric{name: name, path: path, metric: perfMetric}
 		b.metrics = append(b.metrics, thermalMetric)
 	}

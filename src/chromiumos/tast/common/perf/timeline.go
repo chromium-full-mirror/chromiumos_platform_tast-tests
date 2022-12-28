@@ -26,7 +26,7 @@ import (
 // TimelineDatasource is an interface that is implemented to add a source of
 // metrics to a Timeline.
 type TimelineDatasource interface {
-	Setup(ctx context.Context, prefix string) error
+	Setup(ctx context.Context, prefix, intervalName string) error
 	Start(ctx context.Context) error
 	Snapshot(ctx context.Context, values *Values) error
 	Stop(ctx context.Context, values *Values) error
@@ -41,8 +41,9 @@ type timestampSource struct {
 }
 
 // Setup created the metric used for recording the timestamps with the correct
-// prefix.
-func (t *timestampSource) Setup(_ context.Context, prefix string) error {
+// prefix. As this is a special default timeline that does not need an interval
+// field, the intervalName is ignored.
+func (t *timestampSource) Setup(_ context.Context, prefix, _ string) error {
 	t.metric = Metric{
 		Name:     prefix + "t",
 		Unit:     "s",
@@ -157,7 +158,7 @@ func NewTimeline(ctx context.Context, sources []TimelineDatasource, setters ...N
 
 	ss := append(sources, &timestampSource{})
 	for _, s := range ss {
-		if err := s.Setup(ctx, args.Prefix); err != nil {
+		if err := s.Setup(ctx, args.Prefix, args.Prefix+"t"); err != nil {
 			return nil, errors.Wrap(err, "failed to setup TimelineDatasource")
 		}
 	}

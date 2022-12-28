@@ -18,6 +18,7 @@ import (
 const (
 	frameDataFetchInterval = time.Minute
 	throughputInterval     = 5 * time.Second
+	frameSinkBucketSize    = 1
 )
 
 // FrameDataTracker is helper to get animation frame data from Chrome.
@@ -55,7 +56,7 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn) er
 
 	// Start frame counting with a bucket size of 1, to capture frames
 	// per second.
-	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.startFrameCounting)`, 1); err != nil {
+	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.startFrameCounting)`, frameSinkBucketSize); err != nil {
 		return errors.Wrap(err, "failed to start frame counting per sink")
 	}
 
@@ -183,6 +184,7 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 			Unit:      "count",
 			Direction: perf.BiggerIsBetter,
 			Multiple:  true,
+			Interval:  fmt.Sprintf("%vs", frameSinkBucketSize),
 		}
 
 		for _, count := range sink.PresentedFrames {
@@ -224,6 +226,7 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 		Multiple:  true,
 		Unit:      "percent",
 		Direction: perf.BiggerIsBetter,
+		Interval:  fmt.Sprintf("%vs", throughputInterval.Seconds()),
 	}
 	for _, data := range t.dsData.Throughput {
 		pv.Append(smMetric, float64(data))

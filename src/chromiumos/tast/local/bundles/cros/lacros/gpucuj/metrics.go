@@ -480,7 +480,7 @@ func runHistogram(ctx context.Context, tconn *chrome.TestConn, tracer traceable,
 	sort.Strings(keys)
 
 	thermal := power.NewSysfsThermalMetrics()
-	thermal.Setup(ctx, "") // No prefix, we use our own naming scheme.
+	thermal.Setup(ctx, "", "") // No prefix, we use our own naming scheme.
 
 	rapl, err := power.NewRAPLSnapshot()
 	if err != nil {

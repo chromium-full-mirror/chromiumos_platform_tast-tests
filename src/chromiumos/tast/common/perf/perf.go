@@ -87,6 +87,9 @@ var (
 	nameRe = regexp.MustCompile("^[a-zA-Z0-9._-]{1,256}$")
 	// unitRe defines valid units.
 	unitRe = regexp.MustCompile("^[a-zA-Z0-9._-]{1,32}$")
+	// intervalRe defines valid intervals. Interval can either be a metric
+	// name ending in ".t", just "t", or a number followed by "s".
+	intervalRe = regexp.MustCompile("t|(^[a-zA-Z0-9._-]{1,254}.t$)|(^[0-9(.)*[0-9]+s)$")
 )
 
 // DefaultVariantName is the default variant name treated specially by the dashboard.
@@ -135,6 +138,14 @@ type Metric struct {
 
 	// Multiple specifies if this performance metric can contain multiple values at a time.
 	Multiple bool
+
+	// Interval is an optional field that specifies the timing of the measurements, if this
+	// metric is a timeline with Multiple set to true. Interval can either be the name of
+	// another metric, where that metric holds time values that directly correspond to the
+	// performance values in this metric, or the number in seconds specifying how much time
+	// passes in between performance values in this metric. This number in seconds must be
+	// followed by "s". If Multiple is false, the Interval is ignored.
+	Interval string
 }
 
 func (s *Metric) setDefaults() {
@@ -286,6 +297,7 @@ type traceData struct {
 	Units                string `json:"units"`
 	ImprovementDirection string `json:"improvement_direction"`
 	Type                 string `json:"type"`
+	Interval             string `json:"interval,omitempty"`
 
 	// These are pointers to permit us to include zero values in JSON representations.
 	Value  *float64   `json:"value,omitempty"`
@@ -364,6 +376,7 @@ func (p *Values) toCrosbolt() ([]byte, error) {
 		}
 		if s.Multiple {
 			t.Type = "list_of_scalar_values"
+			t.Interval = s.Interval
 			t.Values = &vs
 		} else {
 			t.Type = "scalar"
@@ -456,6 +469,7 @@ func (p *Values) Proto() *perfpb.Values {
 			Unit:      k.Unit,
 			Direction: perfpb.Direction(k.Direction),
 			Multiple:  k.Multiple,
+			Interval:  k.Interval,
 			Value:     v,
 		})
 	}
@@ -498,5 +512,13 @@ func validate(s Metric, vs []float64) {
 	}
 	if !s.Multiple && len(vs) != 1 {
 		panic(fmt.Sprintf("Metric requires single-valued: %v", s))
+	}
+	if s.Interval != "" {
+		if !s.Multiple {
+			panic("Metric Interval is non-empty but Multiple is false")
+		}
+		if !intervalRe.MatchString(s.Interval) {
+			panic(fmt.Sprintf("Metric has illegal Interval: %v", s))
+		}
 	}
 }

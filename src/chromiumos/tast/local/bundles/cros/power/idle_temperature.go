@@ -30,7 +30,7 @@ func init() {
 
 func IdleTemperature(ctx context.Context, s *testing.State) {
 	thermal := power.NewSysfsThermalMetrics()
-	thermal.Setup(ctx, "")
+	thermal.Setup(ctx, "", "")
 
 	// First wait for CPU idle. This is the same timeout WaitUntilCoolDown uses by default.
 	testing.Sleep(ctx, 300*time.Second)

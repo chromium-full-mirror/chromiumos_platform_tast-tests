@@ -20,6 +20,7 @@ message Value {
   Direction direction = 4;
   bool multiple = 5;
   repeated double value = 6;
+  string interval = 7;
 }
 
 message Values {

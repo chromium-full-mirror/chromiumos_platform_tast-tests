@@ -237,6 +237,7 @@ type PackageCStatesMetrics struct {
 	perPackageCPUs []int
 	lastStats      map[string]uint64
 	metrics        map[string]perf.Metric
+	intervalName   string
 }
 
 // Assert that PackageCStatesMetrics can be used in perf.Timeline.
@@ -245,11 +246,11 @@ var _ perf.TimelineDatasource = &PackageCStatesMetrics{}
 // NewPackageCStatesMetrics creates a timeline metric to collect package
 // C-state numbers.
 func NewPackageCStatesMetrics() *PackageCStatesMetrics {
-	return &PackageCStatesMetrics{nil, nil, nil, make(map[string]perf.Metric)}
+	return &PackageCStatesMetrics{nil, nil, nil, make(map[string]perf.Metric), ""}
 }
 
 // Setup determines what C-states are supported and which CPUs should be queried.
-func (cs *PackageCStatesMetrics) Setup(ctx context.Context, prefix string) error {
+func (cs *PackageCStatesMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	// ARM is not supported
 	if arch := runtime.GOARCH; arch == "arm" || arch == "arm64" {
 		return nil
@@ -269,6 +270,7 @@ func (cs *PackageCStatesMetrics) Setup(ctx context.Context, prefix string) error
 	}
 	cs.pCStates = pCStates
 	cs.perPackageCPUs = perPackageCPUs
+	cs.intervalName = intervalName
 	return nil
 }
 
@@ -284,7 +286,7 @@ func (cs *PackageCStatesMetrics) Start(ctx context.Context) error {
 	}
 	for name := range stats {
 		cs.metrics[name] = perf.Metric{Name: "package-" + name, Unit: "percent",
-			Direction: perf.SmallerIsBetter, Multiple: true}
+			Direction: perf.SmallerIsBetter, Multiple: true, Interval: cs.intervalName}
 	}
 	cs.lastStats = stats
 	return nil

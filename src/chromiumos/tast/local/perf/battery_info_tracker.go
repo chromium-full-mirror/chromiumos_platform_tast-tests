@@ -6,6 +6,7 @@ package perf
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -232,5 +233,6 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 		Unit:      "watt",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
+		Interval:  fmt.Sprintf("%v%s", batteryCheckInterval.Seconds(), "s"),
 	}, t.power...)
 }

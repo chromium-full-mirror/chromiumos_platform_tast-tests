@@ -169,7 +169,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 			chromiumURL     = "https://chromium.org/Home"
 			issueTrackerURL = "https://bugs.chromium.org/p/chromium/issues/list"
 			searchQuery     = "This is my example search query for the Chromium website"
-			testDuration    = 10 * time.Minute
+			testDuration    = 1 * time.Minute
 		)
 
 		// We want the test to run for about 10 minutes to collect

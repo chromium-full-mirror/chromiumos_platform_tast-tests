@@ -88,7 +88,7 @@ type batteryState struct {
 
 var _ perf.TimelineDatasource = &batteryState{}
 
-func (b *batteryState) Setup(ctx context.Context, prefix string) error {
+func (b *batteryState) Setup(ctx context.Context, prefix, intervalName string) error {
 	// Obtain the status before modifying internal state.
 	status, err := power.ReadBatteryStatus(ctx, b.sysfsPowerPath)
 	if err != nil {
@@ -101,6 +101,7 @@ func (b *batteryState) Setup(ctx context.Context, prefix string) error {
 		Unit:      "percent",
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
+		Interval:  intervalName,
 	}
 	if status == power.BatteryStatusDischarging {
 		b.metrics["energy rate (W)"] = perf.Metric{
@@ -108,6 +109,7 @@ func (b *batteryState) Setup(ctx context.Context, prefix string) error {
 			Unit:      "W",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
+			Interval:  intervalName,
 		}
 	}
 	return nil

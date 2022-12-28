@@ -22,6 +22,7 @@ import (
 // the CPU usage.
 type CPUUsageSource struct {
 	name            string
+	intervalName    string
 	prevStats       map[string]cpu.TimesStat
 	maxFreqReported map[string]bool
 }
@@ -65,8 +66,9 @@ func NewCPUUsageSource(name string) *CPUUsageSource {
 }
 
 // Setup implements perf.TimelineDatasource.Setup.
-func (s *CPUUsageSource) Setup(ctx context.Context, prefix string) error {
+func (s *CPUUsageSource) Setup(ctx context.Context, prefix, intervalName string) error {
 	s.name = prefix + s.name
+	s.intervalName = intervalName
 	return nil
 }
 
@@ -105,6 +107,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			Multiple:  true,
 			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
+			Interval:  s.intervalName,
 		}, percent)
 		totalPercent += percent
 		s.prevStats[time.CPU] = time
@@ -117,6 +120,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			Multiple:  true,
 			Unit:      "MHz",
 			Direction: perf.BiggerIsBetter,
+			Interval:  s.intervalName,
 		}, freq)
 		if !s.maxFreqReported[time.CPU] {
 			maxFreq, err := cpuFreq(time.CPU, "max")
@@ -137,6 +141,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		Multiple:  true,
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
+		Interval:  s.intervalName,
 	}, totalPercent/float64(len(times)))
 
 	return nil

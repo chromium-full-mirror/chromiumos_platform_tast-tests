@@ -1,0 +1,41 @@
+{
+  "metric1": {
+    "summary": {
+      "units": "unit",
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "interval": "5s",
+      "values": [
+	1,
+	2,
+	3
+      ]
+    }
+  },
+  "metric2": {
+    "summary": {
+      "units": "unit",
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "interval": "TPS.t",
+      "values": [
+        1,
+        2,
+        3
+      ]
+    }
+  },
+    "metric3": {
+    "summary": {
+      "units": "unit",
+      "improvement_direction": "down",
+      "type": "list_of_scalar_values",
+      "interval": "t",
+      "values": [
+        1,
+        2,
+        3
+      ]
+    }
+  }
+}

@@ -33,7 +33,7 @@ func NewThermalDataSource() *thermalDataSource {
 }
 
 // Setup implements perf.TimelineDatasource.Setup.
-func (ds *thermalDataSource) Setup(ctx context.Context, prefix string) error {
+func (ds *thermalDataSource) Setup(ctx context.Context, prefix, intervalName string) error {
 	thermalSensors, err := power.ListSysfsThermalSensors(ctx)
 	if err != nil {
 		return err
@@ -76,7 +76,8 @@ func (ds *thermalDataSource) Setup(ctx context.Context, prefix string) error {
 				Name:      prefix + "Thermal." + groupName,
 				Unit:      "deg_C",
 				Direction: perf.SmallerIsBetter,
-				Multiple:  true}}
+				Multiple:  true,
+				Interval:  intervalName}}
 			ds.metrics[groupName] = metric
 		}
 		metric.paths = append(metric.paths, filepath.Join(path, "temp"))

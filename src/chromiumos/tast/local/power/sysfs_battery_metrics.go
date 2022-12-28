@@ -282,7 +282,7 @@ func NewSysfsBatteryMetrics() *SysfsBatteryMetrics {
 
 // Setup reads the low battery shutdown percent that that we can error out a
 // test if the battery is ever too low.
-func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix string) error {
+func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	batteryPaths, err := ListSysfsBatteryPaths(ctx)
 	if err != nil {
 		return err
@@ -303,7 +303,7 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix string) error {
 	if err != nil {
 		return err
 	}
-	b.powerMetric = perf.Metric{Name: prefix + "system", Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true}
+	b.powerMetric = perf.Metric{Name: prefix + "system", Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true, Interval: intervalName}
 	b.dischargeMetric = perf.Metric{Name: prefix + "discharge_mwh", Unit: "mWh", Direction: perf.SmallerIsBetter, Multiple: false}
 	return nil
 }

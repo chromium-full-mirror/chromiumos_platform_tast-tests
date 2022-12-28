@@ -172,6 +172,55 @@ func TestSave_Zero(t *testing.T) {
 	saveAndCompare(t, p, "testdata/TestSave_Zero.json")
 }
 
+func TestSetInterval(t *testing.T) {
+	metric1 := Metric{Name: "metric1", Unit: "unit", Direction: SmallerIsBetter, Multiple: true, Interval: "5s"}
+	metric2 := Metric{Name: "metric2", Unit: "unit", Direction: SmallerIsBetter, Multiple: true, Interval: "TPS.t"}
+	metric3 := Metric{Name: "metric3", Unit: "unit", Direction: SmallerIsBetter, Multiple: true, Interval: "t"}
+
+	p := NewValues()
+
+	p.Set(metric1, 1, 2, 3)
+	p.Set(metric2, 1, 2, 3)
+	p.Set(metric3, 1, 2, 3)
+
+	saveAndCompare(t, p, "testdata/TestSetInterval.json")
+}
+
+func TestIntervalForSingleMetricPanic(t *testing.T) {
+	metric := Metric{Name: "metric", Unit: "unit", Direction: SmallerIsBetter, Interval: "5s"}
+	p := NewValues()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Did not panic")
+		}
+	}()
+
+	p.Set(metric, 1)
+}
+
+func testSetMalformedInterval(t *testing.T, metric Metric) {
+	t.Helper()
+
+	p := NewValues()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Did not panic")
+		}
+	}()
+
+	p.Set(metric, 1)
+}
+
+func TestSetMalformedInterval(t *testing.T) {
+	// Intervals must end in "s" or ".t", or simply be "t".
+	testSetMalformedInterval(t, Metric{Name: "metric", Unit: "unit", Interval: "5ms"})
+	testSetMalformedInterval(t, Metric{Name: "metric", Unit: "unit", Interval: "TPSt"})
+	testSetMalformedInterval(t, Metric{Name: "metric", Unit: "unit", Interval: "555"})
+
+}
+
 func saveAsAndCompare(t *testing.T, p *Values, goldenPath string, format Format, expectedFileName string) {
 	t.Helper()
 

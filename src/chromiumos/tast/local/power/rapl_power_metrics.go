@@ -15,9 +15,10 @@ const package0PowerConstraintName = "package-0-pl"
 
 // RAPLPowerMetrics records the power consumption in Watt of the DUT.
 type RAPLPowerMetrics struct {
-	snapshot *RAPLSnapshot
-	metrics  map[string]perf.Metric
-	prefix   string
+	snapshot     *RAPLSnapshot
+	metrics      map[string]perf.Metric
+	prefix       string
+	intervalName string
 }
 
 // Assert that RAPLPowerMetrics can be used in perf.Timeline.
@@ -26,19 +27,20 @@ var _ perf.TimelineDatasource = &RAPLPowerMetrics{}
 // NewRAPLPowerMetrics creates a timeline metric to collect Intel RAPL energy
 // numbers.
 func NewRAPLPowerMetrics() *RAPLPowerMetrics {
-	return &RAPLPowerMetrics{nil, make(map[string]perf.Metric), ""}
+	return &RAPLPowerMetrics{nil, make(map[string]perf.Metric), "", ""}
 }
 
 // Setup creates a RAPLSnapshot which lets us sample energy numbers without
 // worrying about overflow. We do this in Setup because there's some extra work
 // scanning sysfs that might be expensive if done during the test.
-func (r *RAPLPowerMetrics) Setup(_ context.Context, prefix string) error {
+func (r *RAPLPowerMetrics) Setup(_ context.Context, prefix, intervalName string) error {
 	snapshot, err := NewRAPLSnapshot()
 	if err != nil {
 		return errors.Wrap(err, "failed to create RAPL Snapshot")
 	}
 	r.snapshot = snapshot
 	r.prefix = prefix
+	r.intervalName = intervalName
 	return nil
 }
 
@@ -54,9 +56,9 @@ func (r *RAPLPowerMetrics) Start(_ context.Context) error {
 	}
 	for name := range r.snapshot.start.joules {
 		r.metrics[name] = perf.Metric{Name: r.prefix + name, Unit: "W",
-			Direction: perf.SmallerIsBetter, Multiple: true}
+			Direction: perf.SmallerIsBetter, Multiple: true, Interval: r.intervalName}
 	}
-	r.metrics[package0PowerConstraintName] = perf.Metric{Name: r.prefix + package0PowerConstraintName, Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true}
+	r.metrics[package0PowerConstraintName] = perf.Metric{Name: r.prefix + package0PowerConstraintName, Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true, Interval: r.intervalName}
 	return nil
 }
 

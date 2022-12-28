@@ -21,6 +21,8 @@ type testTimelineDatasource struct {
 	snapshotDuration                         time.Duration
 	stopCount                                int
 	clock                                    *fakeClock
+	testMetricName                           string
+	intervalName                             string
 }
 
 func newDatasource() *testTimelineDatasource {
@@ -30,11 +32,13 @@ func newDatasource() *testTimelineDatasource {
 	return ds
 }
 
-func (d *testTimelineDatasource) Setup(_ context.Context, _ string) error {
+func (d *testTimelineDatasource) Setup(_ context.Context, _, intervalName string) error {
 	if d.errSetup != nil {
 		return d.errSetup
 	}
 	d.setUp = true
+	d.testMetricName = "TestCountMetric"
+	d.intervalName = intervalName
 	return nil
 }
 
@@ -57,6 +61,14 @@ func (d *testTimelineDatasource) Snapshot(ctx context.Context, v *Values) error 
 	}
 
 	d.snapshotCount++
+
+	v.Append(Metric{
+		Name:      d.testMetricName,
+		Unit:      "count",
+		Direction: SmallerIsBetter,
+		Multiple:  true,
+		Interval:  d.intervalName,
+	}, float64(d.snapshotCount))
 
 	select {
 	case d.snapshotChannel <- d.snapshotCount - 1:
@@ -293,6 +305,12 @@ func TestTimeline(t *testing.T) {
 	for k, v := range p.values {
 		if k.Name == "t" {
 			timestamps = v
+		}
+		if k.Name == d1.testMetricName && k.Interval != "t" {
+			t.Fatalf(`Wrong interval name on d1 metric, got %q, want "t"`, k.Interval)
+		}
+		if k.Name == d2.testMetricName && k.Interval != "t" {
+			t.Fatalf(`Wrong interval name on d2 metric, got %q, want "t"`, k.Interval)
 		}
 	}
 	if timestamps == nil {
