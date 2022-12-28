@@ -23,9 +23,17 @@ import (
 	"chromiumos/tast/testing/wlan"
 )
 
-// TODO(b/260276685): The following chipsets are known to fail the first bg scan with dtim=1.
-// Separate those chipsets from dtim1 subtest and move into dtim1unstable subtest.
-var deviceWithUnstableDTIM1BgScan = []wlan.DeviceID{
+// scanPerfTestCase holds parameters of a ScanPerf test variant.
+type scanPerfTestCase struct {
+	// apOpts holds options to configure hostapd.
+	apOpts []ap.Option
+	// useRelaxedThreshold indicates whether to allow extra time for "iw scan".
+	useRelaxedThreshold bool
+}
+
+// TODO(b/263890395): The following chipsets are known to fail the AVL requirement.
+// Separate these chipsets and move into wificell_unstable suite until fixed.
+var deviceWithUnstableScan = []wlan.DeviceID{
 	wlan.QualcommAtherosQCA6174,
 	wlan.QualcommAtherosQCA6174SDIO,
 	wlan.QualcommWCN3990,
@@ -40,26 +48,43 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell", "wificell_perf"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_perf"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
 		Params: []testing.Param{
 			{
 				// Default case, DTIM = 2
 				// See https://source.corp.google.com/chromeos_public/src/third_party/wpa_supplicant-cros/next/src/ap/ap_config.c;rcl=20a522b9ebe52bac34cc4ecfc1a9722cc1e77cdc;l=88
 				// Since crrev.com/c/3996676, averages of full scan times are recorded in stead of one full scan.
-				Val: []ap.Option{},
+				Val: scanPerfTestCase{
+					useRelaxedThreshold: true,
+				},
 			},
 			{
-				Name:              "dtim1",
-				Val:               []ap.Option{ap.DTIMPeriod(1)},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(deviceWithUnstableDTIM1BgScan...)),
-			},
-			{
-				Name:              "dtim1unstable",
-				Val:               []ap.Option{ap.DTIMPeriod(1)},
+				// This variant runs on unstable chipsets with default parameters.
+				Name: "unstable",
+				Val: scanPerfTestCase{
+					useRelaxedThreshold: false,
+				},
 				ExtraAttr:         []string{"wificell_unstable"},
-				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(deviceWithUnstableDTIM1BgScan...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(deviceWithUnstableScan...)),
+			},
+			{
+				Name: "dtim1",
+				Val: scanPerfTestCase{
+					apOpts:              []ap.Option{ap.DTIMPeriod(1)},
+					useRelaxedThreshold: true,
+				},
+			},
+			{
+				Name: "dtim1unstable",
+				Val: scanPerfTestCase{
+					apOpts:              []ap.Option{ap.DTIMPeriod(1)},
+					useRelaxedThreshold: false,
+				},
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(deviceWithUnstableScan...)),
 			},
 		},
 	})
@@ -141,8 +166,8 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	devID := wlan.DeviceID(devInfo.Id)
 
 	options := wificell.DefaultOpenNetworkAPOptions()
-	testOptions := s.Param().([]ap.Option)
-	options = append(options, testOptions...)
+	tc := s.Param().(scanPerfTestCase)
+	options = append(options, tc.apOpts...)
 
 	apIface, err := tf.ConfigureAP(ctx, options, nil)
 	if err != nil {
@@ -227,12 +252,16 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	count := 0
 	var sum time.Duration
 	threshold := fgFullScanThreshold
-	if _, ok := fgRelaxedChipsets[devID]; ok {
-		threshold = fgFullScanThresholdRelaxed
-		s.Logf("There is a known issue (b/253099273) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
-	} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
-		threshold = fgFullScanThresholdWiFi6E
-		s.Logf("There is a known issue (b/256486257) for this WiFi6E chips (%s) and this test will pass", devInfo.Name)
+	// In wificell_perf suite, use relaxed thresholds for pre-certified chipsets and monitor if the perf gets worse.
+	// In wificell_unstable suite, use AVL requirements (non-relaxed thresholds) for vendors.
+	if tc.useRelaxedThreshold {
+		if _, ok := fgRelaxedChipsets[devID]; ok {
+			threshold = fgFullScanThresholdRelaxed
+			s.Logf("There is a known issue (b/253099273) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
+		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
+			threshold = fgFullScanThresholdWiFi6E
+			s.Logf("There is a known issue (b/256486257) for this WiFi6E chips (%s) and this test will pass", devInfo.Name)
+		}
 	}
 	for i := 1; i <= scanTimes; i++ {
 		if duration, err := pollTimedScan(ctx, nil, fgFullScanTimeout, pollTimeout, ssid, iface, iwr); err != nil {
@@ -282,12 +311,14 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	count = 0
 	sum = 0
 	threshold = bgFullScanThreshold
-	if _, ok := bgRelaxedChipsets[devID]; ok {
-		threshold = bgFullScanThresholdRelaxed
-		s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
-	} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
-		threshold = bgFullScanThresholdWiFi6E
-		s.Logf("There is a known issue (b/256486257) for this WiFi6E chips (%s) and this test will pass", devInfo.Name)
+	if tc.useRelaxedThreshold {
+		if _, ok := bgRelaxedChipsets[devID]; ok {
+			threshold = bgFullScanThresholdRelaxed
+			s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
+		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
+			threshold = bgFullScanThresholdWiFi6E
+			s.Logf("There is a known issue (b/256486257) for this WiFi6E chips (%s) and this test will pass", devInfo.Name)
+		}
 	}
 	for i := 1; i <= scanTimes; i++ {
 		if duration, err := pollTimedScan(ctx, nil, bgFullScanTimeout, pollTimeout, ssid, iface, iwr); err != nil {
