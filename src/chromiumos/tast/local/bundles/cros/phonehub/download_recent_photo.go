@@ -38,9 +38,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedAllFeatures",
-			},
-			{
 				Name:    "rerun",
 				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
 			},

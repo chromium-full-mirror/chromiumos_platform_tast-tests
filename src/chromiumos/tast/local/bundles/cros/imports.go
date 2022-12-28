@@ -26,6 +26,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/clipboardhistory"
 	_ "chromiumos/tast/local/bundles/cros/crash"
 	_ "chromiumos/tast/local/bundles/cros/crosh"
+	_ "chromiumos/tast/local/bundles/cros/crossdevice"
 	_ "chromiumos/tast/local/bundles/cros/crostini"
 	_ "chromiumos/tast/local/bundles/cros/cryptohome"
 	_ "chromiumos/tast/local/bundles/cros/dbus"
