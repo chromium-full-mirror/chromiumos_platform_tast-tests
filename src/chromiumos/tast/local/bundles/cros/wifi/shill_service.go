@@ -22,6 +22,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/common/network/iw"
@@ -3064,6 +3065,7 @@ func waitForTetheringState(ctx context.Context, manager *shill.Manager, state st
 // This is the implementation of wifi.ShillService/StartTethering gRPC.
 func (s *ShillService) StartTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
 	var err error
+	startTime := time.Now()
 	if request.UseWpaCliApi {
 		err = s.startSupplicantTethering(ctx, request)
 	} else {
@@ -3077,7 +3079,9 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 		return nil, errors.Wrap(err, "failed to detect running AP configuration")
 	}
 
-	return &wifi.TetheringResponse{DownlinkTech: "WiFi", Channel: uint32(info.Number), ChannelWidth: uint32(info.Width)}, nil
+	return &wifi.TetheringResponse{
+		DownlinkTech: "WiFi", Channel: uint32(info.Number),
+		ChannelWidth: uint32(info.Width), ExecutionTime: durationpb.New(time.Since(startTime))}, nil
 }
 
 func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) error {
@@ -3240,14 +3244,18 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 
 // StopTethering attempts to stop the tethering session.
 // This is the implementation of wifi.ShillService/StopTethering gRPC.
-func (s *ShillService) StopTethering(ctx context.Context, request *wifi.StopTetheringRequest) (*empty.Empty, error) {
+func (s *ShillService) StopTethering(ctx context.Context, request *wifi.StopTetheringRequest) (*wifi.TetheringResponse, error) {
+	var err error
+	startTime := time.Now()
 	if request.UseWpaCliApi {
-		return s.stopSupplicantTethering(ctx, nil)
+		err = s.stopSupplicantTethering(ctx, nil)
+	} else {
+		err = s.stopShillTethering(ctx, nil)
 	}
-	return s.stopShillTethering(ctx, nil)
+	return &wifi.TetheringResponse{ExecutionTime: durationpb.New(time.Since(startTime))}, err
 }
 
-func (s *ShillService) stopSupplicantTethering(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+func (s *ShillService) stopSupplicantTethering(ctx context.Context, _ *empty.Empty) error {
 	var firstErr error
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
@@ -3267,10 +3275,10 @@ func (s *ShillService) stopSupplicantTethering(ctx context.Context, _ *empty.Emp
 	s.RemoveInterface(ctx, apIfName)
 	local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 
-	return &empty.Empty{}, firstErr
+	return firstErr
 }
 
-func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) error {
 	var firstErr error
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
@@ -3285,7 +3293,7 @@ func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) (
 
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+		return errors.Wrap(err, "failed to create shill manager proxy")
 	}
 
 	if err := manager.DisableTethering(ctx); err != nil {
@@ -3303,7 +3311,7 @@ func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) (
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to remove fake profile %q", wifiTestProfileName))
 	}
 
-	return &empty.Empty{}, firstErr
+	return firstErr
 }
 
 func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringRequest) error {

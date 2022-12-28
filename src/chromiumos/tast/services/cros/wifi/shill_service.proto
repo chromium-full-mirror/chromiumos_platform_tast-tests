@@ -7,6 +7,7 @@ syntax = "proto3";
 package tast.cros.wifi;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "chromiumos/tast/services/cros/wifi";
 
@@ -211,7 +212,7 @@ service ShillService {
   rpc StartTethering(TetheringRequest) returns (TetheringResponse) {}
 
   // StopTethering attempts to stop the tethering session.
-  rpc StopTethering(StopTetheringRequest) returns (google.protobuf.Empty) {}
+  rpc StopTethering(StopTetheringRequest) returns (TetheringResponse) {}
 
   // SetPortalDetectionEnabled persistently enables/disables PortalDection via shill.
   rpc SetPortalDetectionEnabled(SetPortalDetectionEnabledRequest) returns (google.protobuf.Empty) {}
@@ -624,6 +625,7 @@ message TetheringResponse {
   string downlink_tech = 2;
   uint32 channel = 3;
   uint32 channel_width = 4;
+  google.protobuf.Duration execution_time = 5;
 }
 
 message ServicePathRequest {

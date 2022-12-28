@@ -360,7 +360,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)
 		}
 		defer func(ctx context.Context) {
-			if err := tf.StopTethering(ctx, wificell.DefaultDUT); err != nil {
+			if _, err := tf.StopTethering(ctx, wificell.DefaultDUT); err != nil {
 				s.Error("Failed to stop tethering session on DUT, err: ", err)
 			}
 		}(ctx)

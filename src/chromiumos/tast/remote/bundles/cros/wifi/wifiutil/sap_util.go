@@ -7,18 +7,23 @@ package wifiutil
 import (
 	"context"
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"chromiumos/tast/common/network/ping"
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/common/wifi/security"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
@@ -52,6 +57,13 @@ type resourceInfoData struct {
 
 // ResourceInfo is a collection of resource data, in the [process][counter]value format.
 type ResourceInfo map[string]*resourceInfoData
+
+// SAPOnOffStressTestcase defines test parameters for Sof AP On/Off Stress Testcase.
+type SAPOnOffStressTestcase struct {
+	PrintableName string
+	TetheringOpts []tethering.Option
+	SecConfFac    security.ConfigFactory
+}
 
 func (ri ResourceInfo) keysSorted() []string {
 	// The data read from map via range comes in a random order.
@@ -234,6 +246,99 @@ func SAPAssocStressRound(ctx context.Context, tf *wificell.TestFixture, tetherin
 	return nil
 }
 
+// SAPOnOffStressTest runs Soft AP On/Off Stress Test.
+func SAPOnOffStressTest(ctx context.Context, s *testing.State, tf *wificell.TestFixture, tc SAPOnOffStressTestcase,
+	rounds int, thresholds ResourceThreshold, processes string, pv *perf.Values) error {
+	options := tc.TetheringOpts
+	fac := tc.SecConfFac
+	resInfo, err := GetResourceInfo(ctx, tf.DUT(wificell.DefaultDUT).Conn(), processes)
+	if err != nil {
+		return errors.Wrap(err, "failed to get resource info")
+	}
+	resInfos := []ResourceInfo{resInfo}
+
+	// Make sure output is recorded even in case of error, this might be the reason of the issue.
+	defer func(ctx context.Context) {
+		if err := ReportResources(ctx, resInfos, s.OutDir(), fmt.Sprintf("%s.tsv", "sap_on_off_"+tc.PrintableName)); err != nil {
+			s.Error("Failed to write resources report: ", err)
+		}
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	var startupTimes, shutdownTimes []float64
+	// We're running in a simple loop instead of s.Run() on purpose, we want to bail out on the first error.
+	for i := 0; i < rounds; i++ {
+		testing.ContextLogf(ctx, "Tethering round #%v", i+1)
+
+		startupTime, shutdownTime, err := SAPOnOffStressRound(ctx, tf, options, fac)
+		if err != nil {
+			return errors.Wrap(err, "failure during stress round")
+		}
+		// Convert to a standard understandable by perf.
+		startupTimes = append(startupTimes, float64(startupTime.Milliseconds())/1000)
+		shutdownTimes = append(shutdownTimes, float64(shutdownTime.Milliseconds())/1000)
+		resInfo, err := GetResourceInfo(ctx, tf.DUT(wificell.DefaultDUT).Conn(), processes)
+		if err != nil {
+			return errors.Wrap(err, "failed to get resource info")
+		}
+		// Check if pid of processes changed.
+		if err := ValidatePids(resInfos[0], resInfo); err != nil {
+			return errors.Wrap(err, "error while validating PIDs")
+		}
+		resInfos = append(resInfos, resInfo)
+	}
+	testing.ContextLog(ctx, "Start: ", resInfos[0].String())
+	testing.ContextLog(ctx, "End:   ", resInfos[len(resInfos)-1].String())
+	if err := ValidateResourceInfo(ctx, resInfos[0], resInfos[len(resInfos)-1], thresholds); err != nil {
+		return errors.Wrap(err, "resource validation failed")
+	}
+
+	// Calculate the fastest, slowest, and average startup time.
+	SummarizeExecutionTime(ctx, "sap_on_off_stress_startup_time_"+tc.PrintableName, pv, startupTimes)
+
+	// Calculate the fastest, slowest, and average shutdown time.
+	SummarizeExecutionTime(ctx, "sap_on_off_stress_shutdown_time_"+tc.PrintableName, pv, shutdownTimes)
+
+	return nil
+}
+
+// SAPOnOffStressRound sets up tethering, makes sure teardown is run then runs actions from Assoc Stress round.
+func SAPOnOffStressRound(ctx context.Context, tf *wificell.TestFixture, tetheringOpts []tethering.Option,
+	secConfFac security.ConfigFactory) (startupTime, shutdownTime time.Duration, retErr error) {
+	// Configure AP according to the testcase specs.
+	tetheringConf, tetheringResp, err := tf.StartTethering(ctx, wificell.DefaultDUT, tetheringOpts, secConfFac)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to start tethering session on DUT")
+	}
+	startupTime = tetheringResp.ExecutionTime.AsDuration()
+	defer func(ctx context.Context) {
+		tetheringResp, err = tf.StopTethering(ctx, wificell.DefaultDUT)
+		if retErr != nil {
+			// We can't overwrite ret value.
+			if err != nil {
+				// Double error, just log disconnect's one.
+				testing.ContextLog(ctx, "Encountered error when stopping tethering that cannot be returned: ", err)
+			}
+		} else {
+			retErr = err
+		}
+		shutdownTime = tetheringResp.ExecutionTime.AsDuration()
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	testing.ContextLog(ctx, "Tethering session started")
+
+	// Rest of the round is functionally identical to SAPAssocStressRound.
+	err = SAPAssocStressRound(ctx, tf, tetheringConf)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to associate to DUT")
+	}
+	return startupTime, 0, nil
+}
+
+// writeResourceInfoTSV stores the content of provided ResourceInfo slice to a file handle.
 func writeResourceInfoTSV(ctx context.Context, f *os.File, ri []ResourceInfo) error {
 	// Check for empty slice. If it misses data series or process list, there's no point in saving anything.
 	if len(ri) == 0 || len(ri[0]) == 0 {
@@ -293,4 +398,38 @@ func ReportResources(ctx context.Context, ri []ResourceInfo, outDir, filename st
 		return errors.Wrap(err, "cannot dump resources into file")
 	}
 	return nil
+}
+
+// SummarizeExecutionTime summarizes stats for the execution time.
+func SummarizeExecutionTime(ctx context.Context, name string, pv *perf.Values, samples []float64) {
+	fastest := math.Inf(1)
+	slowest := math.Inf(-1)
+	var total float64
+	for _, t := range samples {
+		fastest = math.Min(fastest, t)
+		slowest = math.Max(slowest, t)
+		total += t
+	}
+	average := total / float64(len(samples))
+	testing.ContextLogf(ctx, "%s (seconds): fastest=%f, slowest=%f, average=%f", name, fastest, slowest, average)
+
+	pv.Set(perf.Metric{
+		Name:      name,
+		Variant:   "Fastest",
+		Unit:      "seconds",
+		Direction: perf.SmallerIsBetter,
+	}, fastest)
+	pv.Set(perf.Metric{
+		Name:      name,
+		Variant:   "Slowest",
+		Unit:      "seconds",
+		Direction: perf.SmallerIsBetter,
+	}, slowest)
+	pv.Set(perf.Metric{
+		Name:      name,
+		Variant:   "Average",
+		Unit:      "seconds",
+		Direction: perf.SmallerIsBetter,
+	}, average)
+
 }
