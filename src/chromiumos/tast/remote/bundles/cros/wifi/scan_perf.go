@@ -37,8 +37,11 @@ var deviceWithUnstableScan = []wlan.DeviceID{
 	wlan.QualcommAtherosQCA6174,
 	wlan.QualcommAtherosQCA6174SDIO,
 	wlan.QualcommWCN3990,
+	wlan.QualcommWCN6750,
+	wlan.QualcommWCN6855,
 	wlan.MediaTekMT7921PCIE,
 	wlan.MediaTekMT7921SDIO,
+	wlan.Realtek8852CPCIE,
 }
 
 func init() {
