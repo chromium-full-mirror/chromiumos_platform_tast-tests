@@ -359,7 +359,8 @@ func (conf *ZoomConference) TypingInChat(ctx context.Context) error {
 		return errors.Wrap(err, "failed to close otifications")
 	}
 	chatButton := nodewith.Name("open the chat pane").Role(role.Button)
-	chatTextField := nodewith.Name("Type message here ...").Role(role.TextField)
+	chatTextRe := regexp.MustCompile("(Type message here ...|chat message)")
+	chatTextField := nodewith.NameRegex(chatTextRe).Role(role.TextField)
 	messageText := nodewith.Name(message).Role(role.StaticText).First()
 	manageChatPanel := nodewith.Name("Manage Chat Panel").Role(role.PopUpButton)
 	manageChatPanelMenu := nodewith.Name("Manage Chat Panel").Role(role.Menu)
