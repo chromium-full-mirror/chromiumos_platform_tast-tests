@@ -1,5 +1,5 @@
 {
     "sha256sum": "6a740c9df194fdba686f2c9acf73103bbb4715e380b4a78af236497ae1a6775d",
     "size": 8931984,
-    "url": "gs://chromiumos-test-assets-public/slim-vm-vmlinuz"
+    "url": "gs://chromiumos-test-assets-public/tatl-slim-vm-vmlinuz-20230110"
 }

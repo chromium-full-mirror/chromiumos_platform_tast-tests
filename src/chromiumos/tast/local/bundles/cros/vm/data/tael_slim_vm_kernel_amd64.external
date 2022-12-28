@@ -1,0 +1,5 @@
+{
+    "sha256sum": "c1cd486fe7d441f62deb6cd61fcf5a6fd4d3a4c65fbcf5e49951827df97d40da",
+    "size": 14430216,
+    "url": "gs://chromiumos-test-assets-public/tael-slim-vm-vmlinuz-20230110"
+}
