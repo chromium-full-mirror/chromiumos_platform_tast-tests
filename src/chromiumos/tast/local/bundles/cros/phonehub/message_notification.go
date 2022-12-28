@@ -37,9 +37,6 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedAllFeatures",
-			},
-			{
 				Name:    "rerun",
 				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
 			},
