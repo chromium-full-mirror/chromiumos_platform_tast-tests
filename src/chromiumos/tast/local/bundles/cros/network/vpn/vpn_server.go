@@ -381,7 +381,7 @@ type Server struct {
 }
 
 // StartL2TPIPsecServer starts a L2TP/IPsec server.
-func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType string, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
+func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthType, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,
@@ -463,7 +463,7 @@ func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType string, ip
 }
 
 // StartIKEv2Server starts an IKEv2 server.
-func StartIKEv2Server(ctx context.Context, env *env.Env, authType string, ipType IPType) (*Server, error) {
+func StartIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType, ipType IPType) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,

@@ -28,50 +28,50 @@ func init() {
 		Params: []testing.Param{{
 			Name: "ikev2_ipv4",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				IPType:   vpn.IPTypeIPv4,
-				AuthType: vpn.AuthTypePSK,
+				Type:          vpn.TypeIKEv2,
+				IPType:        vpn.IPTypeIPv4,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv6",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				IPType:   vpn.IPTypeIPv6,
-				AuthType: vpn.AuthTypePSK,
+				Type:          vpn.TypeIKEv2,
+				IPType:        vpn.IPTypeIPv6,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv4_ipv6",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				IPType:   vpn.IPTypeIPv4AndIPv6,
-				AuthType: vpn.AuthTypePSK,
+				Type:          vpn.TypeIKEv2,
+				IPType:        vpn.IPTypeIPv4AndIPv6,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
 			Val: vpn.Config{
-				Type:     vpn.TypeL2TPIPsec,
-				AuthType: vpn.AuthTypePSK,
+				Type:          vpn.TypeL2TPIPsec,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_evil",
 			Val: vpn.Config{
 				Type:                  vpn.TypeL2TPIPsec,
-				AuthType:              vpn.AuthTypePSK,
+				IPsecAuthType:         vpn.AuthTypePSK,
 				UnderlayIPIsOverlayIP: true,
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "openvpn",
 			Val: vpn.Config{
-				Type:     vpn.TypeOpenVPN,
-				AuthType: vpn.AuthTypeCert,
+				Type:          vpn.TypeOpenVPN,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {

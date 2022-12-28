@@ -232,11 +232,8 @@ func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, https
 	}()
 
 	// Connect to VPN.
-	config := vpn.Config{
-		Type:     vpn.TypeL2TPIPsec,
-		AuthType: vpn.AuthTypePSK,
-	}
-	conn, err = vpn.NewConnectionWithEnvs(ctx, config, server, nil)
+	config := vpn.NewConfig(vpn.TypeL2TPIPsec)
+	conn, err = vpn.NewConnectionWithEnvs(ctx, *config, server, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create connection object")
 	}

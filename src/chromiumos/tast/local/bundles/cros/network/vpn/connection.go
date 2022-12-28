@@ -28,11 +28,12 @@ import (
 // VPN connection.
 type Config struct {
 	Type          string
-	AuthType      string
 	MTU           int
 	Metered       bool
 	PushDNS       bool
 	SearchDomains []string
+
+	IPsecAuthType IPsecAuthType
 
 	// Parameters for an L2TP/IPsec VPN connection.
 	IPsecUseXauth         bool
@@ -50,6 +51,8 @@ type Config struct {
 	OpenVPNTLSAuth                bool
 
 	// Parameters for a WireGuard connection.
+	// WGUsePSK indicates whether the connection uses PSK in authentication.
+	WGUsePSK bool
 	// WGTwoPeers indicates whether the connection will use one peer or two
 	// peers. If true, two peers will be created in two separate network
 	// namespace, and the service will use a split routing (for the subnet
@@ -77,12 +80,20 @@ const (
 	TypeWireGuard = "WireGuard"
 )
 
-// Authentication types.
+// IPsecAuthType represent the authentication type for an IPsec-based VPN
+// connection.
+type IPsecAuthType int
+
+// IPsec authentication types.
 const (
-	AuthTypeCert = "cert"
-	AuthTypeEAP  = "eap"
-	AuthTypePSK  = "psk"
+	AuthTypePSK IPsecAuthType = iota
+	AuthTypeCert
+	AuthTypeEAP
 )
+
+func (t IPsecAuthType) String() string {
+	return []string{"PSK", "cert", "EAP"}[t]
+}
 
 // Option is used in NewConfig() function to generate a VPN Config object
 type Option = func(*Config)
@@ -90,10 +101,8 @@ type Option = func(*Config)
 // NewConfig creates a config object for a given VPN type
 func NewConfig(vpnType string, opts ...Option) *Config {
 	c := &Config{
-		Type: vpnType,
-	}
-	if vpnType == TypeOpenVPN {
-		c.AuthType = AuthTypeCert
+		Type:          vpnType,
+		IPsecAuthType: AuthTypePSK,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -306,9 +315,9 @@ func (c *Connection) startServer(ctx context.Context) error {
 	var err error
 	switch c.config.Type {
 	case TypeIKEv2:
-		c.Server, err = StartIKEv2Server(ctx, c.serverEnv, c.config.AuthType, c.config.IPType)
+		c.Server, err = StartIKEv2Server(ctx, c.serverEnv, c.config.IPsecAuthType, c.config.IPType)
 	case TypeL2TPIPsec:
-		c.Server, err = StartL2TPIPsecServer(ctx, c.serverEnv, c.config.AuthType, c.config.IPsecUseXauth, c.config.UnderlayIPIsOverlayIP)
+		c.Server, err = StartL2TPIPsecServer(ctx, c.serverEnv, c.config.IPsecAuthType, c.config.IPsecUseXauth, c.config.UnderlayIPIsOverlayIP)
 	case TypeOpenVPN:
 		c.Server, err = StartOpenVPNServer(ctx, c.serverEnv, &c.config)
 	case TypeWireGuard:
@@ -318,7 +327,7 @@ func (c *Connection) startServer(ctx context.Context) error {
 				return errors.Wrap(err, "failed to get public key")
 			}
 		}
-		c.Server, err = StartWireGuardServer(ctx, c.serverEnv, clientKey, c.config.AuthType == AuthTypePSK, false /*isSecondServer*/)
+		c.Server, err = StartWireGuardServer(ctx, c.serverEnv, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
 		if err == nil && c.config.WGTwoPeers {
 			// Always sets preshared key for the second peer.
 			c.SecondServer, err = StartWireGuardServer(ctx, c.secondServerEnv, clientKey, true /*usePSK*/, true /*isSecondServer*/)
@@ -426,17 +435,17 @@ func (c *Connection) createL2TPIPsecProperties() (map[string]interface{}, error)
 		"SaveCredentials":    true,
 	}
 
-	if c.config.AuthType == AuthTypePSK {
+	if c.config.IPsecAuthType == AuthTypePSK {
 		properties["Name"] = "test-vpn-l2tp-psk"
 		properties["L2TPIPsec.PSK"] = ipsecPresharedKey
-	} else if c.config.AuthType == AuthTypeCert {
+	} else if c.config.IPsecAuthType == AuthTypeCert {
 		properties["Name"] = "test-vpn-l2tp-cert"
 		properties["L2TPIPsec.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
 		properties["L2TPIPsec.ClientCertID"] = c.config.CertVals.id
 		properties["L2TPIPsec.ClientCertSlot"] = c.config.CertVals.slot
 		properties["L2TPIPsec.PIN"] = c.config.CertVals.pin
 	} else {
-		return nil, errors.Errorf("unexpected auth type %s for L2TP/IPsec", c.config.AuthType)
+		return nil, errors.Errorf("unexpected auth type %s for L2TP/IPsec", c.config.IPsecAuthType)
 	}
 
 	if c.config.IPsecUseXauth && !c.config.IPsecXauthMissingUser {
@@ -460,7 +469,7 @@ func (c *Connection) createIKEv2Properties() (map[string]interface{}, error) {
 		"Type":          "vpn",
 	}
 
-	switch c.config.AuthType {
+	switch c.config.IPsecAuthType {
 	case AuthTypePSK:
 		properties["IKEv2.AuthenticationType"] = "PSK"
 		properties["IKEv2.LocalIdentity"] = ikeClientIdentity
@@ -479,7 +488,7 @@ func (c *Connection) createIKEv2Properties() (map[string]interface{}, error) {
 		properties["EAP.Identity"] = xauthUser
 		properties["EAP.Password"] = xauthPassword
 	default:
-		return nil, errors.Errorf("unexpected auth type %s for IKEv2", c.config.AuthType)
+		return nil, errors.Errorf("unexpected auth type %s for IKEv2", c.config.IPsecAuthType)
 	}
 
 	return properties, nil
@@ -548,7 +557,7 @@ func (c *Connection) createWireGuardProperties() map[string]interface{} {
 			"PublicKey": wgServerPublicKey,
 			"Endpoint":  c.Server.UnderlayIP + ":" + wgServerListenPort,
 		}
-		if c.config.AuthType == AuthTypePSK {
+		if c.config.WGUsePSK {
 			peer["PresharedKey"] = wgPresharedKey
 		}
 		switch c.config.IPType {

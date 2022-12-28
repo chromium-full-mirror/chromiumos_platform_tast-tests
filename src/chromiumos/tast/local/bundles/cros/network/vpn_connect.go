@@ -40,8 +40,8 @@ func init() {
 			Name: "ikev2_psk",
 			Val: vpnTestParams{
 				config: vpn.Config{
-					Type:     vpn.TypeIKEv2,
-					AuthType: vpn.AuthTypePSK,
+					Type:          vpn.TypeIKEv2,
+					IPsecAuthType: vpn.AuthTypePSK,
 				},
 			},
 			Fixture:           "vpnEnv",
@@ -50,9 +50,9 @@ func init() {
 			Name: "ikev2_cert",
 			Val: vpnTestParams{
 				config: vpn.Config{
-					Type:     vpn.TypeIKEv2,
-					IPType:   vpn.IPTypeIPv4,
-					AuthType: vpn.AuthTypeCert,
+					Type:          vpn.TypeIKEv2,
+					IPType:        vpn.IPTypeIPv4,
+					IPsecAuthType: vpn.AuthTypeCert,
 				},
 			},
 			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
@@ -61,9 +61,9 @@ func init() {
 			Name: "ikev2_eap_mschapv2",
 			Val: vpnTestParams{
 				config: vpn.Config{
-					Type:     vpn.TypeIKEv2,
-					IPType:   vpn.IPTypeIPv4,
-					AuthType: vpn.AuthTypeEAP,
+					Type:          vpn.TypeIKEv2,
+					IPType:        vpn.IPTypeIPv4,
+					IPsecAuthType: vpn.AuthTypeEAP,
 				},
 			},
 			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
@@ -72,8 +72,8 @@ func init() {
 			Name: "l2tp_ipsec_psk",
 			Val: vpnTestParams{
 				config: vpn.Config{
-					Type:     vpn.TypeL2TPIPsec,
-					AuthType: vpn.AuthTypePSK,
+					Type:          vpn.TypeL2TPIPsec,
+					IPsecAuthType: vpn.AuthTypePSK,
 				},
 			},
 			Fixture: "vpnEnv",
@@ -82,7 +82,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:          vpn.TypeL2TPIPsec,
-					AuthType:      vpn.AuthTypePSK,
+					IPsecAuthType: vpn.AuthTypePSK,
 					IPsecUseXauth: true,
 				},
 			},
@@ -92,7 +92,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                  vpn.TypeL2TPIPsec,
-					AuthType:              vpn.AuthTypePSK,
+					IPsecAuthType:         vpn.AuthTypePSK,
 					IPsecUseXauth:         true,
 					IPsecXauthMissingUser: true,
 				},
@@ -104,7 +104,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                vpn.TypeL2TPIPsec,
-					AuthType:            vpn.AuthTypePSK,
+					IPsecAuthType:       vpn.AuthTypePSK,
 					IPsecUseXauth:       true,
 					IPsecXauthWrongUser: true,
 				},
@@ -115,8 +115,8 @@ func init() {
 			Name: "l2tp_ipsec_cert",
 			Val: vpnTestParams{
 				config: vpn.Config{
-					Type:     vpn.TypeL2TPIPsec,
-					AuthType: vpn.AuthTypeCert,
+					Type:          vpn.TypeL2TPIPsec,
+					IPsecAuthType: vpn.AuthTypeCert,
 				},
 			},
 			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
@@ -125,7 +125,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:           vpn.TypeOpenVPN,
-					AuthType:       vpn.AuthTypeCert,
+					IPsecAuthType:  vpn.AuthTypeCert,
 					OpenVPNTLSAuth: true,
 				},
 			},
@@ -135,7 +135,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                   vpn.TypeOpenVPN,
-					AuthType:               vpn.AuthTypeCert,
+					IPsecAuthType:          vpn.AuthTypeCert,
 					OpenVPNUseUserPassword: true,
 				},
 			},
@@ -145,7 +145,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:              vpn.TypeOpenVPN,
-					AuthType:          vpn.AuthTypeCert,
+					IPsecAuthType:     vpn.AuthTypeCert,
 					OpenVPNCertVerify: true,
 				},
 			},
@@ -155,7 +155,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                       vpn.TypeOpenVPN,
-					AuthType:                   vpn.AuthTypeCert,
+					IPsecAuthType:              vpn.AuthTypeCert,
 					OpenVPNCertVerify:          true,
 					OpenVPNCertVerifyWrongHash: true,
 				},
@@ -167,7 +167,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                          vpn.TypeOpenVPN,
-					AuthType:                      vpn.AuthTypeCert,
+					IPsecAuthType:                 vpn.AuthTypeCert,
 					OpenVPNCertVerify:             true,
 					OpenVPNCertVeirfyWrongSubject: true,
 				},
@@ -179,7 +179,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                     vpn.TypeOpenVPN,
-					AuthType:                 vpn.AuthTypeCert,
+					IPsecAuthType:            vpn.AuthTypeCert,
 					OpenVPNCertVerify:        true,
 					OpenVPNCertVerifyWrongCN: true,
 				},
@@ -191,7 +191,7 @@ func init() {
 			Val: vpnTestParams{
 				config: vpn.Config{
 					Type:                    vpn.TypeOpenVPN,
-					AuthType:                vpn.AuthTypeCert,
+					IPsecAuthType:           vpn.AuthTypeCert,
 					OpenVPNCertVerify:       true,
 					OpenVPNCertVerifyCNOnly: true,
 				},
@@ -213,7 +213,7 @@ func init() {
 				config: vpn.Config{
 					Type:     vpn.TypeWireGuard,
 					IPType:   vpn.IPTypeIPv4,
-					AuthType: vpn.AuthTypePSK,
+					WGUsePSK: true,
 				},
 			},
 			Fixture:           "vpnEnv",

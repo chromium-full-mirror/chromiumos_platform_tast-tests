@@ -39,24 +39,21 @@ func init() {
 			Name: "openvpn",
 			Val: vpn.Config{
 				Type:           vpn.TypeOpenVPN,
-				AuthType:       vpn.AuthTypeCert,
 				OpenVPNTLSAuth: true,
 				PushDNS:        true,
 			},
 		}, {
 			Name: "ikev2",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				AuthType: vpn.AuthTypePSK,
-				PushDNS:  true,
+				Type:    vpn.TypeIKEv2,
+				PushDNS: true,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
 			Val: vpn.Config{
-				Type:     vpn.TypeL2TPIPsec,
-				AuthType: vpn.AuthTypePSK,
-				PushDNS:  true,
+				Type:    vpn.TypeL2TPIPsec,
+				PushDNS: true,
 			},
 		},
 		},

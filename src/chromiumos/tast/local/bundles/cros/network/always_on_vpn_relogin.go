@@ -44,43 +44,29 @@ func init() {
 			{
 				Name: "strict_mode_l2tp_ipsec",
 				Val: alwaysOnVPNReloginTestCase{
-					mode: shillconst.AlwaysOnVPNModeStrict,
-					config: vpn.Config{
-						Type:     vpn.TypeL2TPIPsec,
-						AuthType: vpn.AuthTypePSK,
-					},
+					mode:   shillconst.AlwaysOnVPNModeStrict,
+					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
 				},
 			},
 			{
 				Name: "best_effort_mode_l2tp_ipsec",
 				Val: alwaysOnVPNReloginTestCase{
-					mode: shillconst.AlwaysOnVPNModeBestEffort,
-					config: vpn.Config{
-						Type:     vpn.TypeL2TPIPsec,
-						AuthType: vpn.AuthTypePSK,
-					},
+					mode:   shillconst.AlwaysOnVPNModeBestEffort,
+					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
 				},
 			},
 			{
 				Name: "strict_mode_openvpn",
 				Val: alwaysOnVPNReloginTestCase{
-					mode: shillconst.AlwaysOnVPNModeStrict,
-					config: vpn.Config{
-						Type:           vpn.TypeOpenVPN,
-						AuthType:       vpn.AuthTypeCert,
-						OpenVPNTLSAuth: true,
-					},
+					mode:   shillconst.AlwaysOnVPNModeStrict,
+					config: *vpn.NewConfig(vpn.TypeOpenVPN),
 				},
 			},
 			{
 				Name: "best_effort_mode_openvpn",
 				Val: alwaysOnVPNReloginTestCase{
-					mode: shillconst.AlwaysOnVPNModeBestEffort,
-					config: vpn.Config{
-						Type:           vpn.TypeOpenVPN,
-						AuthType:       vpn.AuthTypeCert,
-						OpenVPNTLSAuth: true,
-					},
+					mode:   shillconst.AlwaysOnVPNModeBestEffort,
+					config: *vpn.NewConfig(vpn.TypeOpenVPN),
 				},
 			},
 		},

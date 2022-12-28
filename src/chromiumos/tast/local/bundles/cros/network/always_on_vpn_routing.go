@@ -21,7 +21,7 @@ import (
 type alwaysOnVPNRoutingTestCase struct {
 	// mode of Always-on VPN we want to test.
 	mode string
-	// configurarion of host VPN.
+	// configuration of host VPN.
 	config vpn.Config
 }
 
@@ -38,43 +38,31 @@ func init() {
 			{
 				Name: "strict_mode_ikev2",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode: shillconst.AlwaysOnVPNModeStrict,
-					config: vpn.Config{
-						Type:     vpn.TypeIKEv2,
-						AuthType: vpn.AuthTypePSK,
-					},
+					mode:   shillconst.AlwaysOnVPNModeStrict,
+					config: *vpn.NewConfig(vpn.TypeIKEv2),
 				},
 				ExtraSoftwareDeps: []string{"ikev2"},
 			},
 			{
 				Name: "strict_mode_l2tp_ipsec_psk",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode: shillconst.AlwaysOnVPNModeStrict,
-					config: vpn.Config{
-						Type:     vpn.TypeL2TPIPsec,
-						AuthType: vpn.AuthTypePSK,
-					},
+					mode:   shillconst.AlwaysOnVPNModeStrict,
+					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
 				},
 			},
 			{
 				Name: "best_effort_mode_ikev2",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode: shillconst.AlwaysOnVPNModeBestEffort,
-					config: vpn.Config{
-						Type:     vpn.TypeIKEv2,
-						AuthType: vpn.AuthTypePSK,
-					},
+					mode:   shillconst.AlwaysOnVPNModeBestEffort,
+					config: *vpn.NewConfig(vpn.TypeIKEv2),
 				},
 				ExtraSoftwareDeps: []string{"ikev2"},
 			},
 			{
 				Name: "best_effort_mode_l2tp_ipsec_psk",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode: shillconst.AlwaysOnVPNModeBestEffort,
-					config: vpn.Config{
-						Type:     vpn.TypeL2TPIPsec,
-						AuthType: vpn.AuthTypePSK,
-					},
+					mode:   shillconst.AlwaysOnVPNModeBestEffort,
+					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
 				},
 			},
 		},

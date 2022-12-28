@@ -35,48 +35,47 @@ func init() {
 		Params: []testing.Param{{
 			Name: "ikev2_cert",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				AuthType: vpn.AuthTypeCert,
+				Type:          vpn.TypeIKEv2,
+				IPsecAuthType: vpn.AuthTypeCert,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_eap",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				AuthType: vpn.AuthTypeEAP,
+				Type:          vpn.TypeIKEv2,
+				IPsecAuthType: vpn.AuthTypeEAP,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_psk",
 			Val: vpn.Config{
-				Type:     vpn.TypeIKEv2,
-				AuthType: vpn.AuthTypePSK,
+				Type:          vpn.TypeIKEv2,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec_cert",
 			Val: vpn.Config{
-				Type:     vpn.TypeL2TPIPsec,
-				AuthType: vpn.AuthTypeCert,
+				Type:          vpn.TypeL2TPIPsec,
+				IPsecAuthType: vpn.AuthTypeCert,
 			},
 		}, {
 			Name: "l2tp_ipsec_psk",
 			Val: vpn.Config{
-				Type:     vpn.TypeL2TPIPsec,
-				AuthType: vpn.AuthTypePSK,
+				Type:          vpn.TypeL2TPIPsec,
+				IPsecAuthType: vpn.AuthTypePSK,
 			},
 		}, {
 			Name: "openvpn",
 			Val: vpn.Config{
 				Type:                   vpn.TypeOpenVPN,
-				AuthType:               vpn.AuthTypeCert,
 				OpenVPNUseUserPassword: true,
 			},
 		}, {
 			Name: "wireguard",
 			Val: vpn.Config{
 				Type:     vpn.TypeWireGuard,
-				AuthType: vpn.AuthTypePSK,
+				WGUsePSK: true,
 			},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
@@ -137,9 +136,6 @@ func VPNUI(ctx context.Context, s *testing.State) {
 
 	// Inputs VPN properties via UI.
 	svcName := "vpn-test-" + config.Type
-	if len(config.AuthType) > 0 {
-		svcName += "-" + config.AuthType
-	}
 
 	// Configures service on the VPN dialog page.
 	v := vpnDialogConfigger{ui, ew, config, vpnConn, svcName}
@@ -236,7 +232,7 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 	if err := v.inputTextField(ctx, "Server hostname", v.conn.Properties["Provider.Host"].(string)); err != nil {
 		return err
 	}
-	switch v.cfg.AuthType {
+	switch v.cfg.IPsecAuthType {
 	case vpn.AuthTypeCert:
 		// Server CA is selected by default.
 		if err := v.selectListOption(ctx, "Authentication type", "User certificate"); err != nil {
@@ -273,7 +269,7 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 			return err
 		}
 	default:
-		return errors.Errorf("unknown auth type %s", v.cfg.AuthType)
+		return errors.Errorf("unknown auth type %s", v.cfg.IPsecAuthType)
 	}
 	return nil
 }
@@ -292,7 +288,7 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 		return err
 	}
 
-	switch v.cfg.AuthType {
+	switch v.cfg.IPsecAuthType {
 	case vpn.AuthTypeCert:
 		// Server CA is selected by default.
 		if err := v.selectListOption(ctx, "Authentication type", "User certificate"); err != nil {
@@ -307,7 +303,7 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 			return err
 		}
 	default:
-		return errors.Errorf("unknown auth type %s", v.cfg.AuthType)
+		return errors.Errorf("unknown auth type %s", v.cfg.IPsecAuthType)
 	}
 	return nil
 }

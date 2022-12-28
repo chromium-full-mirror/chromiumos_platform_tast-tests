@@ -42,11 +42,8 @@ func SetUpHostVPN(ctx context.Context) (*vpn.Connection, action.Action, error) {
 	// test to log out of the user during setup otherwise we won't have access to adb anymore.
 	// For example, vpn.AuthTypeCert VPNs will log the user out while trying to prep the cert
 	// store.
-	config := vpn.Config{
-		Type:     vpn.TypeL2TPIPsec,
-		AuthType: vpn.AuthTypePSK,
-	}
-	return SetUpHostVPNWithConfig(ctx, config)
+	config := vpn.NewConfig(vpn.TypeL2TPIPsec)
+	return SetUpHostVPNWithConfig(ctx, *config)
 }
 
 // SetUpHostVPNWithConfig create the host VPN server, but does not initiate a connection. The
