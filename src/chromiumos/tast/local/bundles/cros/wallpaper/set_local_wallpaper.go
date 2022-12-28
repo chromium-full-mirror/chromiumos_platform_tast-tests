@@ -83,15 +83,14 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
 		wallpaper.SelectImage(ui, constants.LocalWallpaperFilename),
+		ui.LeftClick(nodewith.Name("Fill").Role(role.ToggleButton)),
 		wallpaper.MinimizeWallpaperPicker(ui),
 	)(ctx); err != nil {
 		s.Fatal("Failed to set new wallpaper: ", err)
 	}
 
-	// percentage takes into account the center cropped image is similar to the filled
-	// one.
-	const expectedPercent = 70
-	if err := wallpaper.ValidateBackground(cr, constants.LocalWallpaperColor, expectedPercent)(ctx); err != nil {
+	const expectedFilledPercent = 90
+	if err := wallpaper.ValidateBackground(cr, constants.LocalWallpaperColor, expectedFilledPercent)(ctx); err != nil {
 		s.Error("Failed to validate wallpaper background: ", err)
 	}
 
@@ -117,7 +116,9 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the wallpaper has indeed changed.
-	if err = wallpaper.ValidateDiff(firstScreenshot, secondScreenshot, expectedPercent); err != nil {
+	// The percentage takes into account the center cropped image is similar to the filled image.
+	const expectedSimilarityPercent = 70
+	if err = wallpaper.ValidateDiff(firstScreenshot, secondScreenshot, expectedSimilarityPercent); err != nil {
 		firstScreenshotPath := filepath.Join(s.OutDir(), "screenshot_1.png")
 		secondScreenshotPath := filepath.Join(s.OutDir(), "screenshot_2.png")
 		if err := imgcmp.DumpImageToPNG(ctx, &firstScreenshot, firstScreenshotPath); err != nil {
