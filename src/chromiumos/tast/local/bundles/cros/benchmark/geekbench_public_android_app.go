@@ -7,11 +7,13 @@ package benchmark
 import (
 	"context"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
 
 	androidui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
@@ -19,25 +21,30 @@ import (
 	"chromiumos/tast/local/bundles/cros/benchmark/setup"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
 
 const (
-	benchMarkTesting = 30 * time.Minute
-	shortUITimeout   = 5 * time.Second
+	shortUITimeout       = 5 * time.Second
+	defaultUITimeout     = 15 * time.Second
+	benchmarkTestTimeout = 30 * time.Minute
+
 	geekbenchPkgName = "com.primatelabs.geekbench5"
 	activityName     = "com.primatelabs.geekbench.HomeActivity"
+	buttonClassName  = "android.widget.Button"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GeekbenchPublicAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Desc:         "Execute Geekbench public Android App to do benchmark testing and retrieve the results",
 		Contacts:     []string{"phuang@cienet.com", "cienet-development@googlegroups.com"},
 		// Purposely leave the empty Attr here. Public benchmark tests are not included in crosbolt group for now.
@@ -48,7 +55,7 @@ func init() {
 			// Since the public benchmark will publish data online, run it only on certain approved models.
 			setup.PublicBenchmarkAllowed(),
 		),
-		Timeout: benchMarkTesting + 5*time.Minute,
+		Timeout: benchmarkTestTimeout + 5*time.Minute,
 		Fixture: setup.BenchmarkARCFixture,
 	})
 }
@@ -56,6 +63,15 @@ func init() {
 func GeekbenchPublicAndroidApp(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
+		a.DumpUIHierarchyOnError(ctx, filepath.Join(s.OutDir(), "arc"), s.HasError)
+	}(cleanupCtx)
 
 	device, err := a.NewUIDevice(ctx)
 	if err != nil {
@@ -77,122 +93,36 @@ func GeekbenchPublicAndroidApp(ctx context.Context, s *testing.State) {
 	}
 
 	const (
-		benchMarkRun     = "RUN CPU BENCHMARK"
-		benchMarkResults = "Benchmark Results"
-		moreOptions      = "More options"
-		viewOnline       = "View Online"
-
-		resultPollInterval = 10 * time.Second
+		runCPUBenchmark  = "RUN CPU BENCHMARK"
+		benchmarkResults = "Benchmark Results"
 	)
+
 	startTime := time.Now() // Geekbench test start time.
-	if err := findUIObjAndClick(ctx, device.Object(androidui.TextContains(benchMarkRun)), true); err != nil {
-		s.Fatalf("Failed to click %q: %v", benchMarkRun, err)
+	runCPUBenchmarkButton := device.Object(androidui.Text(runCPUBenchmark), androidui.ClassName(buttonClassName))
+	if err := cuj.FindAndClick(runCPUBenchmarkButton, defaultUITimeout)(ctx); err != nil {
+		s.Fatalf("Failed to click %q: %v", runCPUBenchmark, err)
 	}
-	// Wait for the geekbench to produce test result.
+
+	// Wait for the Geekbench to produce test result.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		resultLabel := device.Object(androidui.TextContains(benchMarkResults))
+		resultLabel := device.Object(androidui.TextContains(benchmarkResults))
 		if err := resultLabel.WaitForExists(ctx, time.Second); err != nil {
-			s.Logf("Result label not found - geekbench test is still running. Elapsed time: %s", time.Now().Sub(startTime))
+			s.Logf("Result label not found - Geekbench test is still running. Elapsed time: %s", time.Since(startTime))
 			return errors.Wrap(err, "failed to find benchmark result label")
 		}
 		return nil
-	}, &testing.PollOptions{
-		Timeout:  benchMarkTesting,
-		Interval: resultPollInterval,
-	}); err != nil {
+	}, &testing.PollOptions{Timeout: benchmarkTestTimeout}); err != nil {
 		s.Fatal("Failed to run Geekbench: ", err)
 	}
 
-	if err := screenshot.CaptureChrome(ctx, cr, filepath.Join(s.OutDir(), "result.png")); err != nil {
-		s.Error("Failed to take screenshot: ", err)
+	// If the "Open with" popup appears, select open Geekbench browser with Chrome.
+	if err := openGeekbenchBrowserWithChrome(device)(ctx); err != nil {
+		s.Fatal("Failed to open Geekbench Browser with Chrome: ", err)
 	}
 
-	if err := readAndSaveResult(ctx, device, s.OutDir()); err != nil {
-		s.Fatal("Failed to reand and save result: ", err)
+	if err := readAndSaveResult(ctx, tconn, s.OutDir()); err != nil {
+		s.Fatal("Failed to read and save result: ", err)
 	}
-}
-
-// readAndSaveResult locates the test score from GeekBench UI and saves it as performance value.
-//
-// It locates the score with the following node hierarchy:
-// <node index="0" text="Geekbench Score" resource-id="" class="android.webkit.WebView" ...>
-//     <node index="0" text="" resource-id="" ...>
-//         <node index="0" text="Geekbench Score" resource-id="" ... />
-//         <node index="1" text="" resource-id="" class="android.view.View" ...>
-//             <node index="0" text="990" resource-id="" .../>
-//             <node index="1" text="Single-Core Score" resource-id="" .../>
-//             <node index="2" text="3972" resource-id="" .../>
-//             <node index="3" text="Multi-Core Score" resource-id="" .../>
-//             ...
-//         </node>
-//     </node>
-// </node>
-func readAndSaveResult(ctx context.Context, device *androidui.Device, outputDir string) error {
-	root := device.Object(androidui.Text("Geekbench Score"), androidui.ClassName("android.webkit.WebView"))
-	if err := root.GetObject(ctx); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Score web view element")
-	}
-	nodeIndex0 := device.Object(androidui.Index(0))
-	if err := root.GetChild(ctx, nodeIndex0); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Score second layer child element")
-	}
-	nodeIndex1 := device.Object(androidui.Index(1))
-	if err := nodeIndex0.GetChild(ctx, nodeIndex1); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Score third layer child element")
-	}
-	// Next, make sure the score labels are correct.
-	nSingleLabel := device.Object(androidui.Index(1), androidui.Text("Single-Core Score"))
-	if err := nodeIndex1.GetChild(ctx, nSingleLabel); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Single-Core Score label")
-	}
-	nMultiLabel := device.Object(androidui.Index(3), androidui.Text("Multi-Core Score"))
-	if err := nodeIndex1.GetChild(ctx, nMultiLabel); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Multi-Core Score label")
-	}
-	// Get the score element.
-	nSingleScore := device.Object(androidui.Index(0))
-	if err := nodeIndex1.GetChild(ctx, nSingleScore); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Single-Core Score number")
-	}
-	nMultiScore := device.Object(androidui.Index(2))
-	if err := nodeIndex1.GetChild(ctx, nMultiScore); err != nil {
-		return errors.Wrap(err, "failed to locate Geekbench Multi-Core Score number")
-	}
-	singleCoreScore, err := nSingleScore.GetText(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain Geekbench Single-Core Score number")
-	}
-	multiCoreScore, err := nMultiScore.GetText(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain Geekbench Multi-Core Score number")
-	}
-
-	testing.ContextLogf(ctx, "Single-Core Score: %s; Multi-Core Score: %s", singleCoreScore, multiCoreScore)
-
-	sScore, err := strconv.ParseFloat(singleCoreScore, 64)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse Geekbench single core score")
-	}
-	mScore, err := strconv.ParseFloat(multiCoreScore, 64)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse Geekbench multi core score")
-	}
-	pv := perf.NewValues()
-	pv.Set(perf.Metric{
-		Name:      "Benchmark.GeekBench.SingleCore",
-		Unit:      "score",
-		Direction: perf.BiggerIsBetter,
-	}, sScore)
-	pv.Set(perf.Metric{
-		Name:      "Benchmark.GeekBench.MultiCore",
-		Unit:      "score",
-		Direction: perf.BiggerIsBetter,
-	}, mScore)
-
-	if err := pv.Save(outputDir); err != nil {
-		return errors.Wrap(err, "failed to store performance values")
-	}
-	return nil
 }
 
 func openGeekbench(ctx context.Context, tconn *chrome.TestConn, device *androidui.Device, ar *arc.ARC) error {
@@ -207,9 +137,11 @@ func openGeekbench(ctx context.Context, tconn *chrome.TestConn, device *androidu
 	}
 
 	ui := uiauto.New(tconn)
-	btnGotIt := nodewith.Name("Got it").Role(role.Button)
-	// Click the "Got it" button if it shows up.
-	if err := uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(btnGotIt), ui.LeftClick(btnGotIt))(ctx); err != nil {
+	gotItButton := nodewith.Name("Got it").Role(role.Button)
+	if err := uiauto.IfSuccessThen(
+		ui.WithTimeout(shortUITimeout).WaitUntilExists(gotItButton),
+		ui.LeftClick(gotItButton),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find button Got it and click it")
 	}
 
@@ -223,8 +155,8 @@ func openGeekbench(ctx context.Context, tconn *chrome.TestConn, device *androidu
 		return errors.Wrap(err, "failed to dismiss 'designed for mobile' prompt")
 	}
 
-	// Click the "ACCEPT" button if it shows up.
-	if err := findUIObjAndClick(ctx, device.Object(androidui.TextContains("ACCEPT")), false); err != nil {
+	acceptButton := device.Object(androidui.TextContains("ACCEPT"))
+	if err := cuj.ClickIfExist(acceptButton, defaultUITimeout)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find button ACCEPT and click it")
 	}
 
@@ -246,16 +178,55 @@ func installGeekbench(ctx context.Context, tconn *chrome.TestConn, device *andro
 	return nil
 }
 
-func findUIObjAndClick(ctx context.Context, uiObj *androidui.Object, mandatory bool) error {
-	if err := uiObj.WaitForExists(ctx, 5*time.Second); err != nil {
-		if !mandatory {
-			// If object is not found, just return.
-			return nil
-		}
-		return errors.Wrap(err, "failed to find ui object")
+func openGeekbenchBrowserWithChrome(device *androidui.Device) uiauto.Action {
+	chromeButton := device.Object(androidui.TextContains("Chrome"), androidui.ClassName(buttonClassName))
+	alwaysButton := device.Object(androidui.TextContains("Always"), androidui.ClassName(buttonClassName))
+	return uiauto.NamedCombine("open with Chrome browser",
+		cuj.ClickIfExist(chromeButton, shortUITimeout),
+		cuj.ClickIfExist(alwaysButton, shortUITimeout),
+	)
+}
+
+func readAndSaveResult(ctx context.Context, tconn *chrome.TestConn, outDir string) error {
+	ui := uiauto.New(tconn)
+
+	geekbenchRootWebArea := nodewith.NameContaining("Geekbench Browser").Role(role.RootWebArea)
+	cpuScoreTable := nodewith.HasClass("cpu").Ancestor(geekbenchRootWebArea)
+	scoreReg := regexp.MustCompile(`^(\d+)$`)
+	scoreNode := nodewith.NameRegex(scoreReg).Role(role.StaticText).Ancestor(cpuScoreTable)
+	nodes, err := ui.NodesInfo(ctx, scoreNode)
+	if err != nil {
+		return errors.Wrap(err, "failed to find score")
 	}
-	if err := uiObj.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click ui object")
+	if len(nodes) != 2 {
+		return errors.Errorf("unexpected number of score nodes: got %d; want 2", len(nodes))
+	}
+
+	singleCoreScore, err := strconv.ParseFloat(nodes[0].Name, 64)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse Geekbench single core score; got: %s", nodes[0].Name)
+	}
+	multiCoreScore, err := strconv.ParseFloat(nodes[1].Name, 64)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse Geekbench multi core score; got: %s", nodes[1].Name)
+	}
+
+	pv := perf.NewValues()
+
+	pv.Set(perf.Metric{
+		Name:      "Benchmark.GeekBench.SingleCore",
+		Unit:      "score",
+		Direction: perf.BiggerIsBetter,
+	}, singleCoreScore)
+
+	pv.Set(perf.Metric{
+		Name:      "Benchmark.GeekBench.MultiCore",
+		Unit:      "score",
+		Direction: perf.BiggerIsBetter,
+	}, multiCoreScore)
+
+	if err := pv.Save(outDir); err != nil {
+		return errors.Wrap(err, "failed to store performance values")
 	}
 	return nil
 }
