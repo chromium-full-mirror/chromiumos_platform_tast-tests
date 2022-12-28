@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
@@ -25,13 +26,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "User is able to launch feedback app from power button",
 		Contacts: []string{
-			"zhangwenyu@google.com",
-			"xiangdongkong@google.com",
 			"cros-feedback-app@google.com",
+			"xiangdongkong@google.com",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
+		Attr:         []string{"group:mainline", "informational"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
+			"tast.cros.inputs.KeyboardService",
 			"tast.cros.ui.AutomationService",
 		},
 		SoftwareDeps: []string{"chrome"},
@@ -87,38 +90,54 @@ func LaunchFeedbackFromPowerButton(ctx context.Context, s *testing.State) {
 
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 
-	// Press power button.
-	if err := pxy.Servo().KeypressWithDuration(
-		ctx, servo.PowerKey, servo.DurPress); err != nil {
-		s.Fatal("Failed to power long press: ", err)
+	// The feedback app is a SWA. It may not be ready when clicking the feedback
+	// button in the power menu. When the app does not show up, just try to launch
+	// it again until the app is launched successfully or when it times out.
+	launchApp := func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+
+			// Press power button.
+			if err := pxy.Servo().KeypressWithDuration(
+				ctx, servo.PowerKey, servo.DurPress); err != nil {
+				return errors.Wrap(err, "failed to power long press")
+			}
+
+			// Find feedback button and click.
+			feedbackButtonFinder := &ui.Finder{
+				NodeWiths: []*ui.NodeWith{
+					{Value: &ui.NodeWith_Name{Name: "Feedback"}},
+					{Value: &ui.NodeWith_First{First: true}},
+				},
+			}
+			if _, err := uiautoSvc.WaitUntilExists(
+				ctx, &ui.WaitUntilExistsRequest{Finder: feedbackButtonFinder}); err != nil {
+				return errors.Wrap(err, "failed to find feedback button on DUT UI")
+			}
+
+			if _, err := uiautoSvc.LeftClick(
+				ctx, &ui.LeftClickRequest{Finder: feedbackButtonFinder}); err != nil {
+				return errors.Wrap(err, "failed to click feedback button")
+			}
+
+			// Verify issue description input exists.
+			issueDescriptionInputFinder := &ui.Finder{
+				NodeWiths: []*ui.NodeWith{
+					{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TEXT_FIELD}},
+					{Value: &ui.NodeWith_First{First: true}},
+				},
+			}
+			if _, err := uiautoSvc.WaitUntilExists(
+				ctx, &ui.WaitUntilExistsRequest{
+					Finder:  issueDescriptionInputFinder,
+					Timeout: durationpb.New(100 * time.Millisecond)}); err != nil {
+				return errors.Wrap(err, "failed to find feedback issue description input")
+			}
+			return nil
+		}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 2 * time.Minute})
 	}
 
-	// Find feedback button and click.
-	feedbackButtonFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Name{Name: "Feedback"}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
-	if _, err := uiautoSvc.WaitUntilExists(
-		ctx, &ui.WaitUntilExistsRequest{Finder: feedbackButtonFinder}); err != nil {
-		s.Fatal("Failed to find feedback button on DUT UI: ", err)
-	}
-	if _, err := uiautoSvc.LeftClick(
-		ctx, &ui.LeftClickRequest{Finder: feedbackButtonFinder}); err != nil {
-		s.Fatal("Failed to click feedback button: ", err)
-	}
-
-	// Verify issue description input exists.
-	issueDescriptionInputFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TEXT_FIELD}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
-	if _, err := uiautoSvc.WaitUntilExists(
-		ctx, &ui.WaitUntilExistsRequest{Finder: issueDescriptionInputFinder}); err != nil {
-		s.Fatal("Failed to find feedback issue description input: ", err)
+	if err := launchApp(ctx); err != nil {
+		s.Fatal("Failed to launch feedback app")
 	}
 
 	// Verify continue button exists.
