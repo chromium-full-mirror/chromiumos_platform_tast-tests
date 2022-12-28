@@ -57,6 +57,666 @@ func init() {
 			useCurrent: true,
 		},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R88",
+		Desc: "Loads the data of milestone R88 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R88-13597.108.0-custombuild20220717_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R88-13597.108.0-custombuild20220717_betty_20220719_config.json",
+			"cross_version_login/R88-13597.108.0-custombuild20220717_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R89",
+		Desc: "Loads the data of milestone R89 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R89-13729.85.0-custombuild20220715_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R89-13729.85.0-custombuild20220715_betty_20220719_config.json",
+			"cross_version_login/R89-13729.85.0-custombuild20220715_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R90",
+		Desc: "Loads the data of milestone R90 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R90-13816.106.0-custombuild20220712_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R90-13816.106.0-custombuild20220712_betty_20220719_config.json",
+			"cross_version_login/R90-13816.106.0-custombuild20220712_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R91",
+		Desc: "Loads the data of milestone R91 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R91-13904.98.0-custombuild20220712_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R91-13904.98.0-custombuild20220712_betty_20220719_config.json",
+			"cross_version_login/R91-13904.98.0-custombuild20220712_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R92",
+		Desc: "Loads the data of milestone R92 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R92-13982.89.0-custombuild20220712_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R92-13982.89.0-custombuild20220712_betty_20220719_config.json",
+			"cross_version_login/R92-13982.89.0-custombuild20220712_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R93",
+		Desc: "Loads the data of milestone R93 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R93-14092.106.0-custombuild20220713_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R93-14092.106.0-custombuild20220713_betty_20220719_config.json",
+			"cross_version_login/R93-14092.106.0-custombuild20220713_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R94",
+		Desc: "Loads the data of milestone R94 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R94-14150.592.0-custombuild20220714_betty_20220720",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R94-14150.592.0-custombuild20220714_betty_20220720_config.json",
+			"cross_version_login/R94-14150.592.0-custombuild20220714_betty_20220720_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R96",
+		Desc: "Loads the data of milestone R96 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R96-14268.94.0-custombuild20220714_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R96-14268.94.0-custombuild20220714_betty_20220719_config.json",
+			"cross_version_login/R96-14268.94.0-custombuild20220714_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R97",
+		Desc: "Loads the data of milestone R97 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R97-14324.81.0-custombuild20220715_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R97-14324.81.0-custombuild20220715_betty_20220719_config.json",
+			"cross_version_login/R97-14324.81.0-custombuild20220715_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R98",
+		Desc: "Loads the data of milestone R98 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R98-14388.65.0-custombuild20220715_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R98-14388.65.0-custombuild20220715_betty_20220719_config.json",
+			"cross_version_login/R98-14388.65.0-custombuild20220715_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R99",
+		Desc: "Loads the data of milestone R99 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R99-14469.76.0-custombuild20220717_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R99-14469.76.0-custombuild20220717_betty_20220719_config.json",
+			"cross_version_login/R99-14469.76.0-custombuild20220717_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R100",
+		Desc: "Loads the data of milestone R100 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R100-14526.122.0-custombuild20220718_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R100-14526.122.0-custombuild20220718_betty_20220719_config.json",
+			"cross_version_login/R100-14526.122.0-custombuild20220718_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R101",
+		Desc: "Loads the data of milestone R101 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R101-14588.134.0-custombuild20220718_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R101-14588.134.0-custombuild20220718_betty_20220719_config.json",
+			"cross_version_login/R101-14588.134.0-custombuild20220718_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R102",
+		Desc: "Loads the data of milestone R102 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R102-14695.114.0-custombuild20220718_betty_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R102-14695.114.0-custombuild20220718_betty_20220719_config.json",
+			"cross_version_login/R102-14695.114.0-custombuild20220718_betty_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R103",
+		Desc: "Loads the data of milestone R103 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R103-14816.99.0_betty_20220712",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R103-14816.99.0_betty_20220712_config.json",
+			"cross_version_login/R103-14816.99.0_betty_20220712_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R104",
+		Desc: "Loads the data of milestone R104 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R104-14909.132.0_betty_20221202",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R104-14909.132.0_betty_20221202_config.json",
+			"cross_version_login/R104-14909.132.0_betty_20221202_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R105",
+		Desc: "Loads the data of milestone R105 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R105-14989.107.0_betty_20221202",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R105-14989.107.0_betty_20221202_config.json",
+			"cross_version_login/R105-14989.107.0_betty_20221202_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R106",
+		Desc: "Loads the data of milestone R106 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R106-15054.114.0_betty_20221129",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R106-15054.114.0_betty_20221129_config.json",
+			"cross_version_login/R106-15054.114.0_betty_20221129_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R107",
+		Desc: "Loads the data of milestone R107 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R107-15117.112.0_betty_20221129",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R107-15117.112.0_betty_20221129_config.json",
+			"cross_version_login/R107-15117.112.0_betty_20221129_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R108",
+		Desc: "Loads the data of milestone R108 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R108-15183.69.0_betty_20221221",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R108-15183.69.0_betty_20221221_config.json",
+			"cross_version_login/R108-15183.69.0_betty_20221221_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR96",
+		Desc: "Loads the data of milestone R96 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R96-14268.94.0-custombuild20220715_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R96-14268.94.0-custombuild20220715_reven-vmtest_20220719_config.json",
+			"cross_version_login/R96-14268.94.0-custombuild20220715_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR97",
+		Desc: "Loads the data of milestone R97 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R97-14324.81.0-custombuild20220716_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R97-14324.81.0-custombuild20220716_reven-vmtest_20220719_config.json",
+			"cross_version_login/R97-14324.81.0-custombuild20220716_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR98",
+		Desc: "Loads the data of milestone R98 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R98-14388.65.0-custombuild20220719_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R98-14388.65.0-custombuild20220719_reven-vmtest_20220719_config.json",
+			"cross_version_login/R98-14388.65.0-custombuild20220719_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR99",
+		Desc: "Loads the data of milestone R99 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R99-14469.76.0-custombuild20220718_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R99-14469.76.0-custombuild20220718_reven-vmtest_20220719_config.json",
+			"cross_version_login/R99-14469.76.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR100",
+		Desc: "Loads the data of milestone R100 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R100-14526.122.0-custombuild20220718_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R100-14526.122.0-custombuild20220718_reven-vmtest_20220719_config.json",
+			"cross_version_login/R100-14526.122.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR101",
+		Desc: "Loads the data of milestone R101 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R101-14588.134.0-custombuild20220718_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R101-14588.134.0-custombuild20220718_reven-vmtest_20220719_config.json",
+			"cross_version_login/R101-14588.134.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR102",
+		Desc: "Loads the data of milestone R102 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R102-14695.114.0-custombuild20220718_reven-vmtest_20220719",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R102-14695.114.0-custombuild20220718_reven-vmtest_20220719_config.json",
+			"cross_version_login/R102-14695.114.0-custombuild20220718_reven-vmtest_20220719_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR103",
+		Desc: "Loads the data of milestone R103 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R103-14816.99.0_reven-vmtest_20220712",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R103-14816.99.0_reven-vmtest_20220712_config.json",
+			"cross_version_login/R103-14816.99.0_reven-vmtest_20220712_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR104",
+		Desc: "Loads the data of milestone R104 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R104-14909.132.0_reven-vmtest_20221202",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R104-14909.132.0_reven-vmtest_20221202_config.json",
+			"cross_version_login/R104-14909.132.0_reven-vmtest_20221202_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR105",
+		Desc: "Loads the data of milestone R105 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R105-14989.108.0_reven-vmtest_20221202",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R105-14989.108.0_reven-vmtest_20221202_config.json",
+			"cross_version_login/R105-14989.108.0_reven-vmtest_20221202_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR106",
+		Desc: "Loads the data of milestone R106 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R106-15054.114.0_reven-vmtest_20221129",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R106-15054.114.0_reven-vmtest_20221129_config.json",
+			"cross_version_login/R106-15054.114.0_reven-vmtest_20221129_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR107",
+		Desc: "Loads the data of milestone R107 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R107-15117.112.0_reven-vmtest_20221129",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_config.json",
+			"cross_version_login/R107-15117.112.0_reven-vmtest_20221129_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR108",
+		Desc: "Loads the data of milestone R108 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R108-15183.69.0_reven-vmtest_20221221",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R108-15183.69.0_reven-vmtest_20221221_config.json",
+			"cross_version_login/R108-15183.69.0_reven-vmtest_20221221_data.tar.gz",
+		},
+	})
 }
 
 type cleanupFunc func(context.Context) error
