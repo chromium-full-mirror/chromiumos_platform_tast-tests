@@ -22,6 +22,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/common/network/iw"
@@ -3041,6 +3042,7 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 
 	ctx, st := timing.Start(ctx, "wifi_service.StartTethering")
 	defer st.End()
+	startTime := time.Now()
 	testing.ContextLog(ctx, "Attempting to start tethering with config: ", request)
 
 	// TODO(b/235758932): Change to use Shill dbus call instead of wpa_supplicant when tethering support in Shill is ready.
@@ -3100,18 +3102,19 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 		return nil, errors.Wrap(err, "failed to start DHCP server")
 	}
 
-	return &wifi.TetheringResponse{DownlinkTech: "WiFi", Channel: channel}, nil
+	return &wifi.TetheringResponse{DownlinkTech: "WiFi", Channel: channel, ExecutionTime: durationpb.New(time.Since(startTime))}, nil
 }
 
 // StopTethering attempts to stop the tethering session.
 // This is the implementation of wifi.ShillService/StopTethering gRPC.
-func (s *ShillService) StopTethering(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+func (s *ShillService) StopTethering(ctx context.Context, _ *empty.Empty) (*wifi.TetheringResponse, error) {
 	var firstErr error
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
 	ctx, st := timing.Start(ctx, "wifi_service.StopTethering")
 	defer st.End()
+	startTime := time.Now()
 	testing.ContextLog(ctx, "Attempting to stop the tethering session")
 
 	if err := s.stopDHCPServer(ctx); err != nil {
@@ -3126,7 +3129,7 @@ func (s *ShillService) StopTethering(ctx context.Context, _ *empty.Empty) (*empt
 	s.RemoveInterface(ctx, apIfName)
 	local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 
-	return &empty.Empty{}, firstErr
+	return &wifi.TetheringResponse{ExecutionTime: durationpb.New(time.Since(startTime))}, firstErr
 }
 
 func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringRequest) (uint32, error) {
