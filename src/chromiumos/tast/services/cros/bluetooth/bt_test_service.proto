@@ -55,6 +55,10 @@ service BTTestService {
   // PairDeviceWithQuickSettings pairs with the specified device through UI
   // interactions with the Quick Settings.
   rpc PairDeviceWithQuickSettings(PairDeviceWithQuickSettingsRequest) returns (google.protobuf.Empty) {}
+
+  // ForgetBluetoothDevice will attempt to navigate to the Device Detail subpage for the device specified in the request, then
+  // click "Forget" to forget the device.
+  rpc ForgetBluetoothDevice(ForgetBluetoothDeviceRequest) returns (google.protobuf.Empty) {}
 }
 
 message Device {
@@ -108,4 +112,8 @@ message ConfirmSavedDevicesStateRequest {
 
 message PairDeviceWithQuickSettingsRequest {
   string advertisedName = 1;
+}
+
+message ForgetBluetoothDeviceRequest {
+  string device_name = 1;
 }

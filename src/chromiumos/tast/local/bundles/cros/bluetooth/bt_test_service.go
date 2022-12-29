@@ -628,3 +628,38 @@ func (bts *BTTestService) PairDeviceWithQuickSettings(ctx context.Context, req *
 
 	return &emptypb.Empty{}, nil
 }
+
+// ForgetBluetoothDevice will attempt to navigate to the Device Details subpage for the device specified in the request, then
+// click "Forget" to forget the device.
+func (bts *BTTestService) ForgetBluetoothDevice(ctx context.Context, request *pb.ForgetBluetoothDeviceRequest) (*emptypb.Empty, error) {
+	cr := bts.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome has not been started")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
+	}
+
+	app, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, request.DeviceName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", request.DeviceName)
+	}
+	defer app.Close(ctx)
+
+	testing.ContextLogf(ctx, "Opened Bluetooth Device Details subpage for device %s", request.DeviceName)
+
+	ui := uiauto.New(tconn)
+
+	if err := uiauto.Combine("Focus and click the Forget device buttons in the forget flow",
+		ui.FocusAndWait(ossettings.BluetoothForgetDeviceButton),
+		ui.LeftClick(ossettings.BluetoothForgetDeviceButton),
+		ui.FocusAndWait(ossettings.BluetoothConfirmForgetButton),
+		ui.LeftClick(ossettings.BluetoothConfirmForgetButton),
+	)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to forget device from Bluetooth Device Details subpage")
+	}
+
+	testing.ContextLogf(ctx, "Successfully forgot device %s", request.DeviceName)
+	return &emptypb.Empty{}, nil
+}

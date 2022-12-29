@@ -28,6 +28,16 @@ var BluetoothPairNewDeviceButton = nodewith.NameContaining("Pair new device").Ro
 // device" button within either the OS Settings or Bluetooth Settings is pressed.
 var BluetoothPairNewDeviceModal = nodewith.NameContaining("Pair new device").Role(role.Heading)
 
+// BluetoothConnectedDeviceRows are the list items in the "Connected devices" list on the Bluetooth Settings page.
+var BluetoothConnectedDeviceRows = nodewith.NameContaining("connected").HasClass("list-item").Role(role.Button)
+
+// BluetoothForgetDeviceButton is the "Forget" button on the Bluetooth Device Details subpage.
+var BluetoothForgetDeviceButton = nodewith.NameContaining("Forget").HasClass("cancel-button").Role(role.Button)
+
+// BluetoothConfirmForgetButton is the confirmation button on the "Forget device" modal that is opened
+// after clicking BluetoothForgetDeviceButton.
+var BluetoothConfirmForgetButton = nodewith.NameContaining("Forget").HasClass("action-button").Role(role.Button)
+
 // NavigateToBluetoothSettingsPage will navigate to the Bluetooth sub-page
 // within the OS Settings by clicking the sub-page button. This is safe to call
 // when the OS Settings are already open.
@@ -48,6 +58,31 @@ func NavigateToBluetoothSettingsPage(ctx context.Context, tconn *chrome.TestConn
 		ui.LeftClick(osBluetoothSettingsButton),
 	)(ctx); err != nil {
 		return app, err
+	}
+
+	return app, nil
+}
+
+// NavigateToBluetoothDeviceDetailsPage will navigate to the Bluetooth Device Details
+// subpage for the device specified by |deviceName|. This is safe to call when OS Settings
+// are already open.
+func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, tconn *chrome.TestConn, deviceName string) (*OSSettings, error) {
+	app, err := Launch(ctx, tconn)
+	if err != nil {
+		return nil, err
+	}
+
+	ui := uiauto.New(tconn)
+
+	var connectedDevice = BluetoothConnectedDeviceRows.NameContaining(deviceName)
+
+	if err := uiauto.Combine("Focus and click the Bluetooth Settings button and the Connected device's Device Details subpage button",
+		ui.FocusAndWait(osBluetoothSettingsButton),
+		ui.LeftClick(osBluetoothSettingsButton),
+		ui.FocusAndWait(connectedDevice),
+		ui.LeftClick(connectedDevice),
+	)(ctx); err != nil {
+		return nil, err
 	}
 
 	return app, nil
