@@ -145,8 +145,11 @@ func EndProcess(ctx context.Context, s *testing.State) {
 			defer resources.taskManager.Close(cleanupCtx, tconn)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, test.getDescription()+"_before_closing_tm")
 
-			if err := resources.taskManager.WaitUntilStable(ctx); err != nil {
-				s.Fatal("Failed to wait until the Task Manager becomes stable: ", err)
+			if err := uiauto.Combine("order the processes and wait until the task manager to be stable",
+				resources.taskManager.OrderBy(taskmanager.ProcessIDColumn, true /* ascending */),
+				resources.taskManager.WaitUntilStable,
+			)(ctx); err != nil {
+				s.Fatal("Failed to order the process by id: ", err)
 			}
 
 			if err := test.terminateAndVerify(ctx, resources); err != nil {

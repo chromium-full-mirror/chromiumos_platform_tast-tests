@@ -7,6 +7,7 @@ package taskmanager
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -164,4 +165,32 @@ func (tm *TaskManager) TerminateProcess(nameInTaskManager string) uiauto.Action 
 		tm.SelectProcess(nameInTaskManager),
 		tm.ui.DoDefault(EndProcessFinder), // The end process button on the lower right of the maximized task manager window might be hidden by the notifications. Use DoDefault to trigger the button.
 	)
+}
+
+type columnHeader string
+
+const (
+	// TaskColumn is the name of the "Task" column.
+	TaskColumn columnHeader = "Task"
+	// MemoryColumn is the name of the "Memory footprint" column.
+	MemoryColumn columnHeader = "Memory footprint"
+	// CPUColumn is the name of the "CPU" column.
+	CPUColumn columnHeader = "CPU"
+	// NetworkColumn is the name of the "Network" column.
+	NetworkColumn columnHeader = "Network"
+	// ProcessIDColumn is the name of the "Process ID" column.
+	ProcessIDColumn columnHeader = "Process ID"
+)
+
+// OrderBy orders the processes in the task manager by the given column header.
+func (tm *TaskManager) OrderBy(column columnHeader, ascending bool) uiauto.Action {
+	columnHeaderFinder := nodewith.Name(string(column)).HasClass("AXVirtualView").Role(role.ColumnHeader).Ancestor(rootFinder)
+
+	order := "ascending"
+	if !ascending {
+		order = "descending"
+	}
+	itemsOrderedText := nodewith.Name(fmt.Sprintf("Column %s sorted in %s order.", column, order)).Role(role.StaticText).Ancestor(rootFinder)
+
+	return tm.ui.LeftClickUntil(columnHeaderFinder, tm.ui.Exists(itemsOrderedText))
 }
