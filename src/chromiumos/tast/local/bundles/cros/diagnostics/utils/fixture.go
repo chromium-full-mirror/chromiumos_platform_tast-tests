@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/diagnosticsapp"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -93,8 +94,8 @@ func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState
 		}
 	}()
 
-	if err := EnsureCrosHealthdRunning(ctx); err != nil {
-		s.Fatal("Failed to ensure cros healthd running: ", err)
+	if err := upstart.EnsureJobRunning(ctx, "cros_healthd"); err != nil {
+		s.Fatal(err, "failed to start cros_healthd")
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
