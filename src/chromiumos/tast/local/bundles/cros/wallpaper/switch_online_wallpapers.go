@@ -6,6 +6,7 @@ package wallpaper
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -76,8 +77,11 @@ func SwitchOnlineWallpapers(ctx context.Context, s *testing.State) {
 	// Make sure yellow is last in the slice. We will be comparing the background wallpaper
 	// with the given rgba color.
 	for _, image := range []string{"Light Blue", "Google Green", "Google Yellow", constants.YellowWallpaperName} {
-		if err := wallpaper.SelectImage(ui, image)(ctx); err != nil {
-			s.Fatalf("Failed to select image %q: %v", image, err)
+		// Select the given image, then check the selected wallpaper loads.
+		if err := uiauto.Combine(fmt.Sprintf("Change the wallpaper to %q", image),
+			wallpaper.SelectImage(ui, image),
+			ui.WaitUntilExists(wallpaper.CurrentWallpaperWithSpecificNameFinder(image)))(ctx); err != nil {
+			s.Fatalf("Failed to select and validate wallpaper %q: %v", image, err)
 		}
 	}
 
