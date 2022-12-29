@@ -271,6 +271,33 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 		}, t.energy/(t.energyFullDesign*(1-t.lowBatteryShutdownPercent/100))*100)
 	}
 	pv.Set(perf.Metric{
+		Name:      "Power.MinutesBatteryLifeTested",
+		Unit:      "minute",
+		Direction: perf.SmallerIsBetter,
+	}, t.duration.Minutes())
+	if (t.batteryChargeStart - t.batteryChargeEnd) > 0 {
+		var MinutesBatteryLife float64
+		batSizeScale := 1 - t.lowBatteryShutdownPercent/100
+		// For longer tests, use charge to calculate battery life since it is not affected by battery voltage swing.
+		// For shorter tests, energy is a better estimate since energy is more granular.
+		if t.duration.Minutes() >= 60 || t.energy <= 0 {
+			chargeUsed := t.batteryChargeStart - t.batteryChargeEnd
+			chargeRate := chargeUsed / t.duration.Minutes()
+			MinutesBatteryLife = t.chargeFullDesign * batSizeScale / chargeRate
+		} else {
+			energyRate := t.energy / t.duration.Minutes()
+			MinutesBatteryLife = t.energyFullDesign * batSizeScale / energyRate
+		}
+		if t.lowBatteryShutdownTime > 0 {
+			MinutesBatteryLife -= float64(t.lowBatteryShutdownTime) / 60
+		}
+		pv.Set(perf.Metric{
+			Name:      "Power.MinutesBatteryLife",
+			Unit:      "minute",
+			Direction: perf.BiggerIsBetter,
+		}, MinutesBatteryLife)
+	}
+	pv.Set(perf.Metric{
 		Name:      t.prefix + "Battery.Capacity.change",
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
@@ -290,4 +317,10 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 		Multiple:  true,
 		Interval:  powerTimesName,
 	}, t.power...)
+	pv.Set(perf.Metric{
+		Name:      "Power.BatteryRemainingCharge",
+		Unit:      "mAh",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+	}, t.chargeNow...)
 }
