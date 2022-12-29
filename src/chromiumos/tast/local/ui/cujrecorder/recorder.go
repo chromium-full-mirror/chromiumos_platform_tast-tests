@@ -971,8 +971,6 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	r.memInfoTracker.Record(r.pv)
 	r.loginEventRecorder.Record(ctx, r.pv)
 
-	collectCLCP(ctx, pv)
-
 	return nil
 }
 
@@ -1102,25 +1100,4 @@ func histsWithSamples(hists []*metrics.Histogram) []string {
 		}
 	}
 	return histNames
-}
-
-// collectCLCP collects cLCP(LCP2-TTFB) values.
-func collectCLCP(ctx context.Context, pv *perf.Values) {
-	testing.ContextLog(ctx, "Collect cLCP metric")
-
-	var (
-		lcp2Metric = perf.Metric{Name: "PageLoad.PaintTiming.NavigationToLargestContentfulPaint2", Variant: "average", Unit: "ms", Direction: 0, Multiple: false}
-		ttfbMetric = perf.Metric{Name: "PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart", Variant: "average", Unit: "ms", Direction: 0, Multiple: false}
-	)
-	lcp2Values := pv.GetValueByMetric(lcp2Metric)
-	ttfbValues := pv.GetValueByMetric(ttfbMetric)
-	if len(lcp2Values) == 0 || len(ttfbValues) == 0 {
-		return
-	}
-	pv.Set(perf.Metric{
-		Name:      "TPS.Browser.cLCP",
-		Variant:   "average",
-		Unit:      "ms",
-		Direction: perf.SmallerIsBetter,
-	}, lcp2Values[0]-ttfbValues[0])
 }
