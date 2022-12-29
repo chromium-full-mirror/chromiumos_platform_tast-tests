@@ -57,7 +57,7 @@ type TestParams struct {
 	ExtendedDisplay bool
 	CheckPIP        bool
 	TraceConfigPath string
-	YoutubeApkPath  string
+	YoutubeApkURL   string
 }
 
 // VideoApp declares video operation.
@@ -113,9 +113,6 @@ var premiumVideoSrc = []VideoSrc{
 	},
 }
 
-// knownGoodVersions represents relatively stable versions of the YouTube app.
-var knownGoodVersions = []string{"16.35.38", "17.33.42"}
-
 // Run runs the VideoCUJ test.
 func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	var (
@@ -131,7 +128,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 		tier            = param.Tier
 		extendedDisplay = param.ExtendedDisplay
 		traceConfigPath = param.TraceConfigPath
-		youtubeApkPath  = param.YoutubeApkPath
+		youtubeApkURL   = param.YoutubeApkURL
 	)
 
 	testing.ContextLogf(ctx, "Run app appName: %s tabletMode: %t, extendedDisplay: %t", appName, tabletMode, extendedDisplay)
@@ -219,7 +216,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	case YoutubeWeb:
 		videoApp = NewYtWeb(br, tconn, kb, extendedDisplay, ui, uiHandler)
 	case YoutubeApp:
-		videoApp = NewYtApp(tconn, kb, a, d, outDir, youtubeApkPath)
+		videoApp = NewYtApp(tconn, kb, a, d, outDir, youtubeApkURL)
 		if err := videoApp.Install(ctx); err != nil {
 			return errors.Wrap(err, "failed to install Youtube app")
 		}

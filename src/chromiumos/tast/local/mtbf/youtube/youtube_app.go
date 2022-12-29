@@ -6,6 +6,10 @@ package youtube
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -41,37 +45,37 @@ var appStartTime time.Duration
 
 // YtApp defines the members related to youtube app.
 type YtApp struct {
-	tconn          *chrome.TestConn
-	kb             *input.KeyboardEventWriter
-	a              *arc.ARC
-	d              *androidui.Device
-	act            *arc.Activity
-	outDir         string
-	youtubeApkPath string
-	premium        bool // Indicate if the account is premium.
+	tconn         *chrome.TestConn
+	kb            *input.KeyboardEventWriter
+	a             *arc.ARC
+	d             *androidui.Device
+	act           *arc.Activity
+	outDir        string
+	youtubeApkURL string
+	premium       bool // Indicate if the account is premium.
 }
 
 // NewYtApp creates an instance of YtApp.
-func NewYtApp(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, outDir, youtubeApkPath string) *YtApp {
+func NewYtApp(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, outDir, youtubeApkURL string) *YtApp {
 	return &YtApp{
-		tconn:          tconn,
-		kb:             kb,
-		a:              a,
-		d:              d,
-		outDir:         outDir,
-		youtubeApkPath: youtubeApkPath,
-		premium:        true,
+		tconn:         tconn,
+		kb:            kb,
+		a:             a,
+		d:             d,
+		outDir:        outDir,
+		youtubeApkURL: youtubeApkURL,
+		premium:       true,
 	}
 }
 
 // Install installs the Youtube app using the apk.
 func (y *YtApp) Install(ctx context.Context) error {
-	// If youtubeApkPath is an empty string, it means install the latest youtube app from the play store.
-	if y.youtubeApkPath == "" {
+	// If youtubeApkURL is an empty string, it means install the latest youtube app from the play store.
+	if y.youtubeApkURL == "" {
 		if err := playstore.InstallOrUpdateAppAndClose(ctx, y.tconn, y.a, y.d, youtubePkg, &playstore.Options{TryLimit: -1}); err != nil {
 			return errors.Wrap(err, "failed to install Youtube app from playstore")
 		}
-		appVersion, err := dumpAppInfo(ctx, y.a, y.d, youtubePkg)
+		appVersion, _, err := dumpAppInfo(ctx, y.a, y.d, youtubePkg)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get %s version: %v", youtubePkg, appVersion)
 		}
@@ -81,23 +85,65 @@ func (y *YtApp) Install(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	var appVersion string
+	apkFileName := path.Base(y.youtubeApkURL)
+	knownGoodVersionCode, err := parseKnownGoodVersionCode(apkFileName)
+	if err != nil {
+		return err
+	}
+	testing.ContextLog(ctx, "Known good version code: ", knownGoodVersionCode)
 	if installed {
-		appVersion, err = dumpAppInfo(ctx, y.a, y.d, youtubePkg)
+		appVersion, appVersionCode, err := dumpAppInfo(ctx, y.a, y.d, youtubePkg)
 		if err != nil {
-			return errors.Wrapf(err, "failed to get %s version", youtubePkg)
+			return errors.Wrapf(err, "failed to get %s version: %v", youtubePkg, appVersion)
 		}
-		for _, version := range knownGoodVersions {
-			if appVersion == version {
-				return nil
-			}
+		if appVersionCode == knownGoodVersionCode {
+			return nil
 		}
 		testing.ContextLog(ctx, "Uninstall the Youtube app")
 		if err := y.a.Uninstall(ctx, youtubePkg); err != nil {
 			return errors.Wrapf(err, "failed to uninstall %s version", youtubePkg)
 		}
 	}
-	return y.a.Install(ctx, y.youtubeApkPath)
+	downloadPath := filepath.Join(os.TempDir(), apkFileName)
+	if err := downloadToLocalFile(y.youtubeApkURL, downloadPath); err != nil {
+		return err
+	}
+	defer os.Remove(downloadPath)
+	return y.a.Install(ctx, downloadPath)
+}
+
+// parseKnownGoodVersionCode parses known good version code by apk filename.
+// The correct format for the apk filename is "youtube_<versioncode>_<date>".
+func parseKnownGoodVersionCode(apkFileName string) (string, error) {
+	filenameSplit := strings.Split(apkFileName, "_")
+	if len(filenameSplit) == 3 {
+		knownGoodVersionCode := filenameSplit[1]
+		return knownGoodVersionCode, nil
+	}
+	return "", errors.Errorf("APK file name is incorrect got %s; want youtube_<versioncode>_<date>.apk", apkFileName)
+}
+
+func downloadToLocalFile(url, downloadPath string) error {
+	dest, err := os.Create(downloadPath)
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("download failed: %s", resp.Status)
+	}
+
+	if _, err := io.Copy(dest, resp.Body); err != nil {
+		return err
+	}
+	return nil
 }
 
 // OpenAndPlayVideo opens a video on youtube app.
@@ -511,7 +557,7 @@ func (y *YtApp) IsPlaying() uiauto.Action {
 }
 
 // dumpAppInfo dumps Youtube app version name and code.
-func dumpAppInfo(ctx context.Context, a *arc.ARC, d *ui.Device, appPkgName string) (string, error) {
+func dumpAppInfo(ctx context.Context, a *arc.ARC, d *ui.Device, appPkgName string) (string, string, error) {
 	var versionName, versionCode string
 	out, err := a.Command(ctx, "dumpsys", "package", appPkgName).Output(testexec.DumpLogOnError)
 	if err == nil {
@@ -538,7 +584,7 @@ func dumpAppInfo(ctx context.Context, a *arc.ARC, d *ui.Device, appPkgName strin
 		}
 	}
 	testing.ContextLogf(ctx, "Youtube app version: %s; Version code: %s", versionName, versionCode)
-	return versionName, err
+	return versionName, versionCode, err
 }
 
 func (y *YtApp) skipAds(ctx context.Context) error {

@@ -22,8 +22,6 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-const youtubeApkName = "youtube_1531188672.apk"
-
 type videoCUJParam struct {
 	tier        cuj.Tier
 	app         string
@@ -35,12 +33,14 @@ func init() {
 		// TODO (b/242590511): Deprecated after moving all performance cuj test cases to chromiumos/tast/local/bundles/cros/spera directory.
 		Func:         VideoCUJ2,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the smoothess of switch between full screen YouTube video and another browser window",
+		Desc:         "Measures the smoothness of switch between full screen YouTube video and another browser window",
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Contacts:     []string{"tim.chang@cienet.com", "cienet-development@googlegroups.com"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{
 			"ui.install_apk",  // Optional. Whether to install the youtube app via apk, the default is "false".
+			"ui.apk_url",      // Optional. The url of apk file.
 			"ui.cuj_mode",     // Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".
 			"ui.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".
 			"ui.checkPIP",
@@ -104,10 +104,9 @@ func init() {
 					app:  youtube.YoutubeWeb,
 				},
 			}, {
-				Name:      "basic_youtube_app",
-				Fixture:   "loggedInAndKeepState",
-				Timeout:   10 * time.Minute,
-				ExtraData: []string{youtubeApkName},
+				Name:    "basic_youtube_app",
+				Fixture: "loggedInAndKeepState",
+				Timeout: 10 * time.Minute,
 				Val: videoCUJParam{
 					tier: cuj.Basic,
 					app:  youtube.YoutubeApp,
@@ -117,7 +116,6 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraData:         []string{youtubeApkName},
 				Val: videoCUJParam{
 					tier:        cuj.Basic,
 					app:         youtube.YoutubeApp,
@@ -129,16 +127,14 @@ func init() {
 				Timeout:           10 * time.Minute,
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				ExtraData:         []string{youtubeApkName},
 				Val: videoCUJParam{
 					tier: cuj.Basic,
 					app:  youtube.YoutubeApp,
 				},
 			}, {
-				Name:      "premium_youtube_app",
-				Fixture:   "loggedInAndKeepState",
-				Timeout:   10 * time.Minute,
-				ExtraData: []string{youtubeApkName},
+				Name:    "premium_youtube_app",
+				Fixture: "loggedInAndKeepState",
+				Timeout: 10 * time.Minute,
 				Val: videoCUJParam{
 					tier: cuj.Premium,
 					app:  youtube.YoutubeApp,
@@ -148,7 +144,6 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraData:         []string{youtubeApkName},
 				Val: videoCUJParam{
 					tier:        cuj.Premium,
 					app:         youtube.YoutubeApp,
@@ -160,7 +155,6 @@ func init() {
 				Timeout:           10 * time.Minute,
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 				ExtraHardwareDeps: hwdep.D(setup.PerfCUJDevices()),
-				ExtraData:         []string{youtubeApkName},
 				Val: videoCUJParam{
 					tier: cuj.Plus,
 					app:  youtube.YoutubeApp,
@@ -193,7 +187,7 @@ func VideoCUJ2(ctx context.Context, s *testing.State) {
 
 	videoCUJParams := s.Param().(videoCUJParam)
 	app := videoCUJParams.app
-	youtubeApkPath := ""
+	youtubeApkURL := ""
 	if app == youtube.YoutubeApp {
 		if v, ok := s.Var("ui.install_apk"); ok {
 			installApk, err := strconv.ParseBool(v)
@@ -201,7 +195,13 @@ func VideoCUJ2(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to parse ui.installApk value %v: %v", v, err)
 			}
 			if installApk {
-				youtubeApkPath = s.DataPath(youtubeApkName)
+				if v, ok := s.Var("ui.apk_url"); ok {
+					youtubeApkURL = v
+				} else {
+					// If no url is provided, fallback to install the latest version.
+					s.Logf("Failed to parse ui.apk_url value %v: %v; will install latest version", v, err)
+					installApk = false
+				}
 			}
 		}
 	}
@@ -213,6 +213,7 @@ func VideoCUJ2(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to parse ui.checkPIP value %v: %v", v, err)
 		}
 	}
+
 	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.Var, "ui.cuj_mode")
 	if err != nil {
 		s.Fatal("Failed to enable tablet mode: ", err)
@@ -257,7 +258,7 @@ func VideoCUJ2(ctx context.Context, s *testing.State) {
 		ExtendedDisplay: false,
 		CheckPIP:        checkPIP,
 		TraceConfigPath: traceConfigPath,
-		YoutubeApkPath:  youtubeApkPath,
+		YoutubeApkURL:   youtubeApkURL,
 	}
 
 	if err := youtube.Run(ctx, testResources, testParams); err != nil {

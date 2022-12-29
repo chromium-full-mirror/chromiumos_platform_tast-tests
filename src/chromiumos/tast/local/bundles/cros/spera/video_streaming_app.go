@@ -21,8 +21,6 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-const youtubeApkName = "youtube_1531188672.apk"
-
 type videoStreamingAppParam struct {
 	tier        cuj.Tier
 	app         string
@@ -33,12 +31,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoStreamingApp,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the smoothess of switch between full screen YouTube video and another browser window",
+		Desc:         "Measures the smoothness of switch between full screen YouTube video and another browser window",
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com", "cienet-development@googlegroups.com"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{
 			"spera.install_apk",  // Optional. Whether to install the youtube app via apk, the default is "false".
+			"spera.apk_url",      // Optional. The url of apk file.
 			"spera.cuj_mode",     // Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".
 			"spera.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".
 			"spera.checkPIP",
@@ -46,10 +46,9 @@ func init() {
 		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Name:      "essential",
-				Fixture:   "loggedInAndKeepState",
-				Timeout:   10 * time.Minute,
-				ExtraData: []string{youtubeApkName},
+				Name:    "essential",
+				Fixture: "loggedInAndKeepState",
+				Timeout: 10 * time.Minute,
 				Val: videoStreamingAppParam{
 					tier: cuj.Essential,
 					app:  youtube.YoutubeApp,
@@ -59,17 +58,15 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraData:         []string{youtubeApkName},
 				Val: videoStreamingAppParam{
 					tier:        cuj.Essential,
 					app:         youtube.YoutubeApp,
 					browserType: browser.TypeLacros,
 				},
 			}, {
-				Name:      "advanced",
-				Fixture:   "loggedInAndKeepState",
-				Timeout:   10 * time.Minute,
-				ExtraData: []string{youtubeApkName},
+				Name:    "advanced",
+				Fixture: "loggedInAndKeepState",
+				Timeout: 10 * time.Minute,
 				Val: videoStreamingAppParam{
 					tier: cuj.Advanced,
 					app:  youtube.YoutubeApp,
@@ -79,7 +76,6 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           12 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraData:         []string{youtubeApkName},
 				Val: videoStreamingAppParam{
 					tier:        cuj.Advanced,
 					app:         youtube.YoutubeApp,
@@ -112,7 +108,7 @@ func VideoStreamingApp(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	app := videoStreamingAppParams.app
-	youtubeApkPath := ""
+	youtubeApkURL := ""
 	if app == youtube.YoutubeApp {
 		if v, ok := s.Var("spera.install_apk"); ok {
 			installApk, err := strconv.ParseBool(v)
@@ -120,7 +116,13 @@ func VideoStreamingApp(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to parse spera.installApk value %v: %v", v, err)
 			}
 			if installApk {
-				youtubeApkPath = s.DataPath(youtubeApkName)
+				if v, ok := s.Var("spera.apk_url"); ok {
+					youtubeApkURL = v
+				} else {
+					// If no url is provided, fallback to install the latest version.
+					s.Logf("Failed to parse spera.apk_url value %v: %v; will install latest version", v, err)
+					installApk = false
+				}
 			}
 		}
 	}
@@ -175,7 +177,7 @@ func VideoStreamingApp(ctx context.Context, s *testing.State) {
 		ExtendedDisplay: false,
 		CheckPIP:        checkPIP,
 		TraceConfigPath: traceConfigPath,
-		YoutubeApkPath:  youtubeApkPath,
+		YoutubeApkURL:   youtubeApkURL,
 	}
 
 	if err := youtube.Run(ctx, testResources, testParams); err != nil {
