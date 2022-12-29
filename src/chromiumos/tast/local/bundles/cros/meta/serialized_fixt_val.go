@@ -43,16 +43,16 @@ func init() {
 }
 
 func SerializedFixtVal(ctx context.Context, s *testing.State) {
-	serializedVal, err := s.FixtSerializedValue()
-	if err != nil {
-		s.Fatal("Failed to get serialized fixture value: ", err)
-	}
-	if err := s.Param().(func([]byte) error)(serializedVal); err != nil {
+	if err := s.Param().(func(*testing.State) error)(s); err != nil {
 		s.Fatal("Failed to verify deserialized value: ", err)
 	}
 }
 
-func verifyDeserializedStringVal(serializedData []byte) error {
+func verifyDeserializedStringVal(s *testing.State) error {
+	serializedData, err := s.FixtSerializedValue()
+	if err != nil {
+		errors.Wrap(err, "failed to get serialized fixture value")
+	}
 	strVal, err := meta.DeserializedTestStringVal(serializedData)
 	if err != nil {
 		return errors.Wrap(err, "failed to deserialize string data")
@@ -60,16 +60,35 @@ func verifyDeserializedStringVal(serializedData []byte) error {
 	if strVal != meta.RemoteFixtureExpectedStringVal {
 		return errors.Errorf("failed to get expected fixture value; got %q, want %q", strVal, meta.RemoteFixtureExpectedStringVal)
 	}
+	strValue := ""
+	if err := s.FixtFillValue(&strValue); err != nil {
+		return errors.Wrap(err, "failed to deserialize string data with FixtDeserializedValue")
+	}
+	if strValue != meta.RemoteFixtureExpectedStringVal {
+		return errors.Errorf("failed to get expected fixture value with FixtDeserializedValue; got %q, want %q", strVal, meta.RemoteFixtureExpectedStringVal)
+	}
 	return nil
 }
 
-func verifyDeserializedStructVal(serializedData []byte) error {
+func verifyDeserializedStructVal(s *testing.State) error {
+	// TODO: b/264292451: Remove the use of FixtSerializedValue().
+	serializedData, err := s.FixtSerializedValue()
+	if err != nil {
+		errors.Wrap(err, "failed to get serialized fixture value")
+	}
 	structVal, err := meta.DeserializedTestStructVal(serializedData)
 	if err != nil {
 		return errors.Wrap(err, "failed to deserialize string data")
 	}
 	if diff := cmp.Diff(structVal, meta.RemoteFixtureExpectedStructVal); diff != "" {
 		return errors.Errorf("failed to get expected fixture value; (-got +want): %s", diff)
+	}
+	structValue := meta.TestStruct{}
+	if err := s.FixtFillValue(&structValue); err != nil {
+		return errors.Wrap(err, "failed to deserialize struct data with FixtDeserializedValue")
+	}
+	if diff := cmp.Diff(structVal, meta.RemoteFixtureExpectedStructVal); diff != "" {
+		return errors.Errorf("failed to get expected fixture value with FixtDeserializedValue; (-got +want): %s", diff)
 	}
 	return nil
 }
