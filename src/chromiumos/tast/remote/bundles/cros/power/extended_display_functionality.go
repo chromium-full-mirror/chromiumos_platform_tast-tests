@@ -27,7 +27,7 @@ type extendedDisplayFunctionTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ExtendedDisplayFunctionality, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
+		Func: ExtendedDisplayFunctionality, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
 		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},

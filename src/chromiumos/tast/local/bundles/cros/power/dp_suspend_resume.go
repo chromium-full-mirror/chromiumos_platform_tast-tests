@@ -21,7 +21,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DpSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies DP native port functionality with suspend-resume cycles",
 		BugComponent: "b:167191",
 		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
