@@ -154,16 +154,23 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		return err
 	}
 
-	var url string
-	if err := oobeConn.Eval(ctx, "window.location.href", &url); err != nil {
+	// When there are existing users on the device, the user login screen will be displayed
+	// instead of GAIA webview. Navigate to the user creation flow in order to reuse the same
+	// login logic below. If the user already exists, Chrome will just login as usual.
+	var isUserLoginScreen bool
+	if err := oobeConn.Call(ctx, &isUserLoginScreen, `() => {
+	    if (!window.location.href.startsWith('chrome://oobe/gaia-signin'))
+	      return false;
+	    // There is no dedicated element for user login screen, so we check that
+	    // neither initial gaia sign-in nor user creation screens are shown.
+	    let gaiaSignin = document.getElementById('gaia-signin');
+	    let userCreation = document.getElementById('user-creation');
+	    return (!gaiaSignin || gaiaSignin.hidden) && (!userCreation || userCreation.hidden);
+	}`); err != nil {
 		return err
 	}
-	if strings.HasPrefix(url, "chrome://oobe/gaia-signin") && !cfg.ReauthMode() {
-		// Force show GAIA webview even if the cryptohome exists. When there is an existing
-		// user on the device, the login screen would be chrome://oobe/gaia-signin instead
-		// of the accounts.google.com webview. Use Oobe.showAddUserForTesting() to open that
-		// webview so we can reuse the same login logic below.
-		testing.ContextLogf(ctx, "Found %s, force opening GAIA webview", url)
+	if isUserLoginScreen && !cfg.ReauthMode() {
+		testing.ContextLog(ctx, "Found user login screen, force opening GAIA webview")
 		if err := oobeConn.Call(ctx, nil, "Oobe.showAddUserForTesting"); err != nil {
 			return err
 		}
