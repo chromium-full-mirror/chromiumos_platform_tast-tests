@@ -30,7 +30,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Quick smoke check for GL/GLES2",
 		Contacts: []string{
 			"vsuley@chromium.org",

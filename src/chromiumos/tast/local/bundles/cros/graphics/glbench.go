@@ -22,7 +22,7 @@ type config struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GLBench,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run glbench (a benchmark that times graphics intensive activities), check results and report its performance",
 		Contacts: []string{
 			"andrescj@chromium.org",

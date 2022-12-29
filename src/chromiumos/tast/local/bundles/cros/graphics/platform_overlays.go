@@ -32,7 +32,7 @@ type overlaysTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlatformOverlays,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that certain configurations of primary and overlay planes are indeed supported",
 		Contacts: []string{
 			"mcasas@chromium.org",
