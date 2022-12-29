@@ -6,7 +6,7 @@ package runtimeprobe
 
 import "testing"
 
-func TestTryTrimQid(t *testing.T) {
+func TestNormalizeComponentName(t *testing.T) {
 	for i, tc := range []struct {
 		model, category, input, expected string
 	}{
@@ -70,8 +70,14 @@ func TestTryTrimQid(t *testing.T) {
 			input:    "model_display_panel_1234_5678",
 			expected: "model_display_panel_1234_{Any}",
 		},
+		{ // category which contains uppercases.
+			model:    "model",
+			category: "display_panel",
+			input:    "model_display_panel_MixedCase",
+			expected: "model_display_panel_mixedcase",
+		},
 	} {
-		got := tryTrimQid(tc.model, tc.category, tc.input)
+		got := normalizeComponentName(tc.model, tc.category, tc.input)
 		if got != tc.expected {
 			t.Errorf("testcase %d failed; input %v; got %v; want %v", i, tc.input, got, tc.expected)
 		}

@@ -124,11 +124,16 @@ func categoryAliases(category string) []string {
 	return []string{category}
 }
 
-// tryTrimQid tries to trim the "_{qid}" suffix in the component name and
-// append a fixed string "_{Any}" because tast tests do not care about the
-// mutable fields (e.g. firmware) which usually differ in qid but just make
-// sure hardware components are probed by probe configs.
-func tryTrimQid(model, category, compName string) string {
+// normalizeComponentName returns an normalized identifier of the component
+// name which is performed the following conversions:
+//  1. Lowercase the component name as the hwid_component cros labels are
+//     lowercased by the infra.
+//  2. Trim the "_{qid}" suffix in the component name and append a
+//     fixed string "_{Any}" because tast tests do not care about the mutable
+//     fields (e.g. firmware) which usually differ in qid but just make sure
+//     hardware components are probed by probe configs.
+func normalizeComponentName(model, category, compName string) string {
+	compName = strings.ToLower(compName)
 	aliases := categoryAliases(category)
 	aliasPatterns := make([]string, 0, len(aliases))
 	for _, alias := range aliases {
@@ -158,7 +163,7 @@ func collectKnownComponents(ctx context.Context, model, category string, tryCoun
 	}
 	var components = make(map[string]struct{})
 	for _, name := range result.GetComponentNames() {
-		trimmedName := tryTrimQid(model, category, name)
+		trimmedName := normalizeComponentName(model, category, name)
 		components[trimmedName] = struct{}{}
 	}
 	return components, nil
@@ -176,7 +181,7 @@ func countComponents(labels []string, category, model string, knownComponents ma
 				continue
 			}
 			label := strings.TrimPrefix(label, categoryPrefix)
-			key := tryTrimQid(model, category, model+"_"+label)
+			key := normalizeComponentName(model, category, model+"_"+label)
 			if _, found := knownComponents[key]; found {
 				count[key]++
 			}
@@ -200,7 +205,7 @@ func decreaseComponentCount(count map[string]int, model, category string, compon
 	if name == "generic" {
 		return false, name
 	}
-	trimmedName := tryTrimQid(model, category, name)
+	trimmedName := normalizeComponentName(model, category, name)
 	if _, exists := count[trimmedName]; !exists {
 		return false, name
 	}
