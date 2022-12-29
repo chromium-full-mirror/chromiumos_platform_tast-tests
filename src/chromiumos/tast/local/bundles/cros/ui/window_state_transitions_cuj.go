@@ -71,6 +71,23 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
+	// Ensure landscape orientation so that we will be able to set the window bounds to
+	// half the work area dimensions without infringing the minimum size of the window.
+	orientation, err := display.GetOrientation(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to obtain the orientation info: ", err)
+	}
+	if orientation.Type == display.OrientationPortraitPrimary {
+		info, err := display.GetPrimaryInfo(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to get the primary display info: ", err)
+		}
+		if err := display.SetDisplayRotationSync(ctx, tconn, info.ID, display.Rotate90); err != nil {
+			s.Fatal("Failed to rotate display: ", err)
+		}
+		defer display.SetDisplayRotationSync(cleanupCtx, tconn, info.ID, display.Rotate0)
+	}
+
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get the primary display info: ", err)
