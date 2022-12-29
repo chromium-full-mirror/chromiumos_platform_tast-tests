@@ -57,6 +57,19 @@ func TestCompanionDeviceHostnames(t *testing.T) {
 			result:     "",
 			shouldFail: true,
 		},
+		// Multidut.
+		{
+			host:       "dut1",
+			suffix:     "-suffix",
+			result:     "dut1-suffix",
+			shouldFail: false,
+		},
+		{
+			host:       "dut1a",
+			suffix:     "-suffix",
+			result:     "dut1-suffix",
+			shouldFail: false,
+		},
 	}
 	for _, tc := range testcases {
 		ret, err := CompanionDeviceHostname(tc.host, tc.suffix)
