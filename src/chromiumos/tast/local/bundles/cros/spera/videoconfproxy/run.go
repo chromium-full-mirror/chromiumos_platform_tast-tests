@@ -157,6 +157,21 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 		if err := videoConfProxyScenario(ctx, tconn, videoConn, kb, pv); err != nil {
 			return err
 		}
+		// To collect the ADF/PDF histogram, clicking on the first video to make video
+		// page as the active window. Through the switch window, the focus will be on
+		// the url field on lacros, so click on the content of the web page to make the
+		// window active.
+		firstVideo := nodewith.Role(role.Video).First()
+		if err := ui.LeftClick(firstVideo)(ctx); err != nil {
+			return err
+		}
+		if err := cuj.GeneratePDF(ctx, bTconn, kb); err != nil {
+			testing.ContextLog(ctx, "Failed to generate PDF histogram: ", err)
+		}
+		if err := cuj.GenerateADF(ctx, tconn, p.TabletMode); err != nil {
+			return errors.Wrap(err, "failed to generate ADF")
+		}
+
 		// Stop WebRTC to generate WebRTC video metrics.
 		// window.stopWebRTC() is a function exposed by JavaScript in video_conf_proxy.html.
 		if err := videoConn.Eval(ctx, "window.stopWebRTC()", nil); err != nil {

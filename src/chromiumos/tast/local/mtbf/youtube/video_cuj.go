@@ -262,7 +262,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 				}
 			}(cleanupCtx)
 
-			if err := videoScenario(ctx, resources, param, br, videoApp, videoSource, tabChecker); err != nil {
+			if err := videoScenario(ctx, resources, param, br, bTconn, videoApp, videoSource, tabChecker); err != nil {
 				return errors.Wrap(err, "failed to run video test")
 			}
 			if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
@@ -311,7 +311,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	return nil
 }
 
-func videoScenario(ctx context.Context, resources TestResources, param TestParams, br *browser.Browser,
+func videoScenario(ctx context.Context, resources TestResources, param TestParams, br *browser.Browser, bTconn *chrome.TestConn,
 	videoApp VideoApp, videoSrc VideoSrc, tabChecker *cuj.TabCrashChecker) error {
 
 	var (
@@ -320,8 +320,10 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		checkPIP        = param.CheckPIP
 		uiHandler       = resources.UIHandler
 		tconn           = resources.Tconn
+		kb              = resources.Kb
 	)
 
+	ui := uiauto.New(tconn)
 	openGoogleHelp := func(ctx context.Context) error {
 		// If there's a lacros browser, bring it to active.
 		lacrosWindow, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
@@ -347,6 +349,13 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		if err := cuj.GenerateEventLatency(ctx, tconn, "Google Help"); err != nil {
 			return errors.Wrap(err, "failed to generate event latency histograms")
 		}
+		googleHelpHeading := nodewith.Name("How can we help you?").Role(role.Heading)
+		if err := ui.LeftClick(googleHelpHeading)(ctx); err != nil {
+			return err
+		}
+		if err := cuj.GeneratePDF(ctx, bTconn, kb); err != nil {
+			testing.ContextLog(ctx, "Failed to generate PDF histogram: ", err)
+		}
 		return nil
 	}
 
@@ -371,7 +380,6 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 
 	// YouTube sometimes pops up a prompt to notice users how to operate YouTube
 	// if there're new features. Dismiss prompt if it exist.
-	ui := uiauto.New(tconn)
 	gotItPrompt := nodewith.Name("Got it").Role(role.Button)
 	if err := uiauto.IfSuccessThen(
 		ui.WaitUntilExists(gotItPrompt),
