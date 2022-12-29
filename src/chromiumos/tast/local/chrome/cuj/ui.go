@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -394,6 +395,36 @@ func GenerateADF(ctx context.Context, tconn *chrome.TestConn, isTablet bool) err
 	if err = inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
 		return errors.Wrap(err, "failed to do Ash workflows")
 	}
+	return nil
+}
+
+// GeneratePDF scrolls web page by keyboard to generate "Graphics.Smoothness.PercentDroppedFrames3.AllSequences" histogram.
+func GeneratePDF(ctx context.Context, bTconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+	const (
+		histogramName = "Graphics.Smoothness.PercentDroppedFrames3.AllSequences"
+		repeatCount   = 10
+	)
+	initHistogram, err := metrics.GetHistogram(ctx, bTconn, histogramName)
+	if err != nil {
+		return errors.Wrap(err, "failed to get initial histogram")
+	}
+	testing.ContextLog(ctx, "Got initial histogram: ", initHistogram)
+
+	// Scrolling a web page may generates a PDF histogram.
+	testing.ContextLog(ctx, "Scroll page by keyboard")
+	if err := uiauto.Repeat(repeatCount, uiauto.Combine("scroll page by keyboard",
+		kb.AccelAction("Down"),
+		uiauto.Sleep(200*time.Millisecond),
+		kb.AccelAction("Up"),
+		uiauto.Sleep(200*time.Millisecond),
+	))(ctx); err != nil {
+		return errors.Wrap(err, "failed to scroll Chrome page")
+	}
+	histogramDiff, err := metrics.WaitForHistogramUpdate(ctx, bTconn, histogramName, initHistogram, time.Second)
+	if err != nil {
+		return errors.Wrap(err, "failed to get histogram update")
+	}
+	testing.ContextLog(ctx, "Got histogram update: ", histogramDiff)
 	return nil
 }
 
