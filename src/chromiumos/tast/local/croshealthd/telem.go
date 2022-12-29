@@ -8,7 +8,6 @@ package croshealthd
 
 import (
 	"context"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,7 +17,6 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/upstart"
 )
 
 // TelemCategory represents a category flag that can be passed to the
@@ -67,10 +65,6 @@ const NotApplicable = "N/A"
 // error is returned if there is a failure to run the command or save the output
 // to a file.
 func RunTelem(ctx context.Context, params TelemParams, outDir string) ([]byte, error) {
-	if err := upstart.EnsureJobRunning(ctx, "cros_healthd"); err != nil {
-		return nil, errors.Wrap(err, "failed to start cros_healthd")
-	}
-
 	args := []string{"telem"}
 	if params.Category != "" {
 		args = append(args, fmt.Sprintf("--category=%s", params.Category))
@@ -100,24 +94,6 @@ func RunTelem(ctx context.Context, params TelemParams, outDir string) ([]byte, e
 	}
 
 	return b, nil
-}
-
-// RunAndParseTelem runs RunTelem and parses the CSV output into a
-// two-dimensional array. An error is returned if there is a failure to obtain
-// or parse the output or if a line of output has an unexpected number of
-// fields.
-func RunAndParseTelem(ctx context.Context, params TelemParams, outDir string) ([][]string, error) {
-	b, err := RunTelem(ctx, params, outDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to run telem command")
-	}
-
-	records, err := csv.NewReader(strings.NewReader(string(b))).ReadAll()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse output [%q]", b)
-	}
-
-	return records, nil
 }
 
 // RunAndParseJSONTelem runs RunTelem and parses the JSON output.
