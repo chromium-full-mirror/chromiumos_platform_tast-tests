@@ -40,10 +40,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensure deletion of files & folders work fine",
 		Contacts: []string{
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
-			"ting.chen@cienet.com",
+			"chromeos-files-syd@google.com",
+			"jinrongwu@google.com",
 		},
+		// ChromeOS > Software > Files
+		BugComponent: "b:167289",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{testFile},
