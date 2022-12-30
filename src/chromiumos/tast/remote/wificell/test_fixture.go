@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/common/network/arping"
 	"chromiumos/tast/common/network/firewall"
@@ -1945,6 +1946,76 @@ func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
 	session := iperf.NewSession(client, server)
 
 	finalResult, _, err := session.Run(ctx, p2pIperfConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run Iperf session")
+	}
+
+	return finalResult, nil
+}
+
+// SAPPerf verifies performance between AP and STA.
+func (tf *TestFixture) SAPPerf(ctx context.Context, protocol iperf.Protocol, reverse bool, opts ...iperf.ConfigOption) (*iperf.Result, error) {
+	addrsReq := &wifi.GetIPv4AddrsRequest{
+		InterfaceName: shillconst.ApInterfaceName,
+	}
+	addrsRespAP, err := tf.DUTWifiClient(DefaultDUT).GetIPv4Addrs(ctx, addrsReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the IPv4 addresses")
+	}
+	if len(addrsRespAP.Ipv4) == 0 {
+		return nil, errors.New("no AP IP address returned")
+	}
+	apIP := strings.Split(addrsRespAP.Ipv4[0], "/")[0]
+	ifResp, err := tf.DUTWifiClient(DutIdx(1)).GetInterface(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get interface name")
+	}
+	addrsReq.InterfaceName = ifResp.GetName()
+	addrsRespAP, err = tf.DUTWifiClient(DutIdx(1)).GetIPv4Addrs(ctx, addrsReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the IPv4 addresses")
+	}
+	if len(addrsRespAP.Ipv4) == 0 {
+		return nil, errors.New("no STA IP address returned")
+	}
+	staIP := strings.Split(addrsRespAP.Ipv4[0], "/")[0]
+
+	var perfConfig *iperf.Config
+	var serverConn, clientConn *ssh.Conn
+	if reverse {
+		// Configuring AP as an iperf client and STA as an iperf server.
+		serverConn = tf.DUT(DutIdx(1)).Conn()
+		clientConn = tf.DUT(DefaultDUT).Conn()
+		perfConfig, err = iperf.NewConfig(protocol, apIP, staIP, opts...)
+	} else {
+		// Configuring AP as an iperf server and STA as an iperf client.
+		serverConn = tf.DUT(DefaultDUT).Conn()
+		clientConn = tf.DUT(DutIdx(1)).Conn()
+		perfConfig, err = iperf.NewConfig(protocol, staIP, apIP, opts...)
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to configure iperf")
+	}
+
+	client, err := iperf.NewRemoteClient(ctx, clientConn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed ot create Iperf client")
+	}
+	defer client.Close(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	server, err := iperf.NewRemoteServer(ctx, serverConn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed ot create Iperf server")
+	}
+	defer server.Close(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	session := iperf.NewSession(client, server)
+
+	finalResult, _, err := session.Run(ctx, perfConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run Iperf session")
 	}
