@@ -13,6 +13,13 @@ import (
 	"chromiumos/tast/local/crosconfig"
 )
 
+func TestReadStringFileWithLeadingSpaces(t *testing.T) {
+	readFile = func(string) ([]byte, error) { return []byte(" test  \n"), nil }
+	if v, _ := ReadStringFileWithLeadingSpaces(""); v != " test" {
+		t.Fatal("ReadStringFileWithLeadingSpaces failed to read file, got:", v)
+	}
+}
+
 func TestReadStringFile(t *testing.T) {
 	readFile = func(string) ([]byte, error) { return []byte(" test  \n"), nil }
 	if v, _ := ReadStringFile(""); v != "test" {

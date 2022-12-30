@@ -19,6 +19,16 @@ import (
 // For mocking
 var readFile = ioutil.ReadFile
 
+// ReadStringFileWithLeadingSpaces reads a file and returns its content as
+// string while keeping the leading spaces.
+func ReadStringFileWithLeadingSpaces(fpath string) (string, error) {
+	v, err := readFile(fpath)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read file: %v", fpath)
+	}
+	return strings.TrimRight(string(v), " \n"), nil
+}
+
 // ReadStringFile reads a file and returns its content as string.
 func ReadStringFile(fpath string) (string, error) {
 	v, err := readFile(fpath)

@@ -60,7 +60,9 @@ func checkBatteryStringProperty(sysfsPath, field, got string) error {
 	// Our goal:
 	// 1. Make sure there is no crash when fetching data.
 	// 2. Make sure that cros_healthd can have same output with powerd.
-	want, _ := utils.ReadStringFile(sysfsPath + "/" + field)
+	//
+	// Keep the leading spaces since there might be spaces at the beginning of the serial number.
+	want, _ := utils.ReadStringFileWithLeadingSpaces(sysfsPath + "/" + field)
 	if got != want {
 		return errors.Errorf("unexpected value for %v: got %v, want %v", field, got, want)
 	}
