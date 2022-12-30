@@ -50,6 +50,12 @@ const (
 	replayPageLoadingTimeout    = 2 * time.Minute
 	recordingPageLoadingTimeout = 5 * time.Minute
 
+	// shortHistogramTimeout is the histogram update timeout for clicking an anchor in the tab.
+	shortHistogramTimeout = time.Second
+	// longHistogramTimeout is the histogram update timeout for closing tabs.
+	longHistogramTimeout = 10 * time.Second
+	lcp2HistogramName    = "PageLoad.PaintTiming.NavigationToLargestContentfulPaint2"
+
 	// LocalWebZIPFile is the name of the ZIP file used to construct the local web pages.
 	LocalWebZIPFile = "TabSwitchLocalWeb.zip"
 	localWebFolder  = "TabSwitchLocalWeb"
@@ -147,11 +153,7 @@ func (tab *chromeTab) searchElementWithPatternAndClick(ctx context.Context, patt
 	return foundPatternIndex, nil
 }
 
-func (tab *chromeTab) clickAnchor(ctx context.Context, timeout time.Duration, tconn *chrome.TestConn) error {
-	const (
-		histogramName     = "PageLoad.PaintTiming.NavigationToLargestContentfulPaint2"
-		histogramWaitTime = time.Second
-	)
+func (tab *chromeTab) clickAnchor(ctx context.Context, timeout time.Duration, tconn, bTconn *chrome.TestConn) error {
 	p := tab.currentPattern
 	pn := p + 1
 	numPatterns := len(tab.pageInfo.contentPatterns)
@@ -171,11 +173,11 @@ func (tab *chromeTab) clickAnchor(ctx context.Context, timeout time.Duration, tc
 		testing.ContextLogf(ctx, "%s could not reach quiescence within %v, but document state has passed loading", tab.url, timeout)
 	}
 
-	h1, err := metrics.GetHistogram(ctx, tconn, histogramName)
+	histogram, err := metrics.GetHistogram(ctx, bTconn, lcp2HistogramName)
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram")
 	}
-	testing.ContextLog(ctx, "Got LCP2 histogram: ", h1)
+	testing.ContextLog(ctx, "Got LCP2 histogram: ", histogram)
 
 	patternsToFind := append(tab.pageInfo.contentPatterns[pn:numPatterns], tab.pageInfo.contentPatterns[0:p]...)
 	foundPatternIndex, err := tab.searchElementWithPatternAndClick(ctx, patternsToFind)
@@ -187,12 +189,19 @@ func (tab *chromeTab) clickAnchor(ctx context.Context, timeout time.Duration, tc
 		return errors.Wrapf(err, "failed to click anchor on page %s", tab.url)
 	}
 
-	testing.ContextLogf(ctx, "Waiting for %v histogram update", histogramName)
-	h2, err := metrics.WaitForHistogramUpdate(ctx, tconn, histogramName, h1, histogramWaitTime)
+	if err := webutil.WaitForQuiescence(ctx, tab.conn, timeout); err != nil {
+		if err := tab.conn.WaitForExprFailOnErrWithTimeout(ctx, `document.readyState === "interactive" || document.readyState === "complete"`, 3*time.Second); err != nil {
+			return errors.Wrapf(err, "failed to wait for tab to load within %v before clicking anchor", timeout)
+		}
+		testing.ContextLogf(ctx, "%s could not reach quiescence within %v, but document state has passed loading", tab.url, timeout)
+	}
+
+	testing.ContextLogf(ctx, "Waiting for %v histogram update", lcp2HistogramName)
+	histogramDiff, err := metrics.WaitForHistogramUpdate(ctx, bTconn, lcp2HistogramName, histogram, shortHistogramTimeout)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get histogram update: ", err)
+		testing.ContextLog(ctx, "Failed to wait for histogram update: ", err)
 	} else {
-		testing.ContextLog(ctx, "Got LCP2 histogram update: ", h2)
+		testing.ContextLog(ctx, "Got LCP2 histogram update: ", histogramDiff)
 	}
 
 	tab.currentPattern = (pn + foundPatternIndex) % numPatterns
@@ -454,12 +463,10 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 
 		defer func(ctx context.Context) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_tree")
-			if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
-				testing.ContextLog(ctx, "Failed to close all tabs: ", err)
-			}
+			closeAllTabsAndWaitForHistogram(ctx, bTconn, bt)
 		}(cleanupCtx)
 
-		if err := tabSwitchAction(ctx, br, tconn, &windows, tsAction, isRecordMode); err != nil {
+		if err := tabSwitchAction(ctx, br, tconn, bTconn, &windows, tsAction, isRecordMode); err != nil {
 			return errors.Wrap(err, "failed to execute tab switch action")
 		}
 		if err := cuj.GenerateADF(ctx, tconn, isTablet); err != nil {
@@ -513,13 +520,8 @@ func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]
 				return errors.Wrap(err, "failed to wait for render to finish")
 			}
 
-			// In replay mode, user won't be able to know whether the page is quiescence or not,
-			// and it is not necessary to wait for quiescence in replay mode.
-			// In record mode, needs to wait for quiescence to properly record web content.
-			if isRecordMode {
-				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
-					return errors.Wrapf(err, "failed to wait for tab to achieve quiescence within %v", plTimeout)
-				}
+			if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
+				testing.ContextLogf(ctx, "Failed to wait for tab to achieve quiescence within %v: , %v", plTimeout, err)
 			}
 		}
 	}
@@ -527,7 +529,7 @@ func openAllWindowsAndTabs(ctx context.Context, br *browser.Browser, targets *[]
 	return nil
 }
 
-func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, isRecordMode bool) error {
+func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *chrome.TestConn, targets *[]*chromeWindow, tsAction cuj.UIActionHandler, isRecordMode bool) error {
 	windows := (*targets)
 	scrollActions := tsAction.ScrollChromePage(ctx)
 	plTimeout := pageLoadingTimeout(isRecordMode)
@@ -608,7 +610,7 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 			// Click on 1 link per 2 tabs, or click on 1 link for every tab under Record mode to ensure all links are
 			// accessible under any other tiers.
 			if tabIdx%2 == 0 || isRecordMode {
-				if err := tab.clickAnchor(ctx, plTimeout, tconn); err != nil {
+				if err := tab.clickAnchor(ctx, plTimeout, tconn, bTconn); err != nil {
 					return errors.Wrap(err, "failed to click anchor")
 				}
 				if isRecordMode {
@@ -616,16 +618,6 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 					if err := webutil.WaitForRender(ctx, tab.conn, plTimeout); err != nil {
 						return errors.Wrap(err, "failed to wait for render to finish")
 					}
-					if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
-						return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
-					}
-				} else {
-					// It is normal that tabs might remain loading, hence no handle error here.
-					webutil.WaitForQuiescence(ctx, tab.conn, clickLinkTimeout)
-				}
-				// Given some time after clicking any anchor before doing next operation.
-				if err := testing.Sleep(ctx, time.Second); err != nil {
-					return errors.Wrapf(err, "failed to sleep for %v", time.Second)
 				}
 			}
 
@@ -652,4 +644,25 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 		}
 	}
 	return nil
+}
+
+// closeAllTabsAndWaitForHistogram closes all tabs and wait for the LCP2 histogram to update.
+func closeAllTabsAndWaitForHistogram(ctx context.Context, bTconn *chrome.TestConn, bt browser.Type) {
+	histogram, err := metrics.GetHistogram(ctx, bTconn, lcp2HistogramName)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get LCP2 histogram count before closing tabs: ", err)
+	} else {
+		testing.ContextLog(ctx, "Got LCP2 histogram count: ", histogram.TotalCount())
+	}
+
+	if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+		testing.ContextLog(ctx, "Failed to close all tabs: ", err)
+	}
+
+	histogramDiff, err := metrics.WaitForHistogramUpdate(ctx, bTconn, lcp2HistogramName, histogram, longHistogramTimeout)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to wait for histogram updated after closing tabs: ", err)
+		return
+	}
+	testing.ContextLog(ctx, "LCP2 histogram count difference after closing all tabs: ", histogramDiff.TotalCount())
 }

@@ -111,15 +111,15 @@ const (
 	// GoogleNonprofitsWorkspaceURL specifies the URL for Google Nonprofits' workspace page.
 	GoogleNonprofitsWorkspaceURL = "https://www.google.com/nonprofits/offerings/workspace/"
 	// GooglePlayAppsURL specifies the URL for Google Play's apps page.
-	GooglePlayAppsURL = "https://play.google.com/store/apps"
+	GooglePlayAppsURL = "https://play.google.com/store/apps?gl=US"
 	// GooglePlayBooksURL specifies the URL for Google Play's books page.
-	GooglePlayBooksURL = "https://play.google.com/store/books"
+	GooglePlayBooksURL = "https://play.google.com/store/books?gl=US"
 	// GooglePlayGameURL specifies the URL for Google Play's game page.
-	GooglePlayGameURL = "https://play.google.com/store/games"
+	GooglePlayGameURL = "https://play.google.com/store/games?gl=US"
 	// GooglePlayKidsURL specifies the URL for Google Play's kids page.
-	GooglePlayKidsURL = "https://play.google.com/store/apps/category/FAMILY"
+	GooglePlayKidsURL = "https://play.google.com/store/apps/category/FAMILY?gl=US"
 	// GooglePlayMoviesURL specifies the URL for Google Play's movies page.
-	GooglePlayMoviesURL = "https://play.google.com/store/movies"
+	GooglePlayMoviesURL = "https://play.google.com/store/movies?gl=US"
 	// GooglePolicyURL specifies the URL for Google Policy's home page.
 	GooglePolicyURL = "https://policies.google.com/"
 	// GooglePolicyPrivacyURL specifies the URL for Google Policy's privacy page.
@@ -132,12 +132,10 @@ const (
 	GoogleStoreURL = "https://store.google.com/us/"
 	// GoogleStoreInstallationURL specifies the URL for Google Store's installation page.
 	GoogleStoreInstallationURL = "https://store.google.com/us/magazine/installation"
-	// GoogleStoreEarbudsURL specifies the URL for Google Store's earbuds page.
-	GoogleStoreEarbudsURL = "https://store.google.com/us/category/earbuds"
+	// GoogleStoreRepairCenterURL specifies the URL for Google Store's repair center page.
+	GoogleStoreRepairCenterURL = "https://store.google.com/us/magazine/repaircenter"
 	// GoogleStorePhonesURL specifies the URL for Google Store's phones page.
 	GoogleStorePhonesURL = "https://store.google.com/us/category/phones"
-	// GoogleStoreSmartHomeURL specifies the URL for Google Store's Smart Home page.
-	GoogleStoreSmartHomeURL = "https://store.google.com/us/category/connected_home"
 	// GoogleStoreSubscriptionsURL specifies the URL for Google Store's subscriptions page.
 	GoogleStoreSubscriptionsURL = "https://store.google.com/us/category/subscriptions"
 	// GoogleWorkspaceBusinessURL specifies the URL for Google Workspace's business page.
@@ -152,6 +150,8 @@ const (
 	GoogleWorkspaceResourcesURL = "https://workspace.google.com/intl/en/resources"
 	// GoogleWorkspaceSecurityURL specifies the URL for Google Workspace's security page.
 	GoogleWorkspaceSecurityURL = "https://workspace.google.com/intl/en/security"
+	// GoogleWorkspaceGmailURL specifies the URL for Google Workspace's gmail page.
+	GoogleWorkspaceGmailURL = "https://workspace.google.com/intl/en/products/gmail/"
 
 	// URLs used by QuickCheckCUJ2.
 

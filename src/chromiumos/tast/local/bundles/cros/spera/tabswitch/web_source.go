@@ -135,11 +135,11 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GoogleWorkspaceFAQURL, newPageInfo(cuj.Advanced, googleWorkspace, `/faq`, `/products/slides`)},
 	{cuj.GoogleWorkspaceBusinessURL, newPageInfo(cuj.Advanced, googleWorkspace, `/business`, `/new-business`, `/products/drive`)},
 	{cuj.GoogleWorkspaceResourcesURL, newPageInfo(cuj.Advanced, googleWorkspace, `/resources`, `/working-remotely`, `/products/sheets`)},
+	{cuj.GoogleWorkspaceGmailURL, newPageInfo(cuj.Advanced, googleWorkspace, `/products/gmail`, `/products/chat`, `/products/admin`)},
 
 	{cuj.GoogleStoreURL, newPageInfo(cuj.Essential, googleStore, `/`, `/ideas`, `/cart`)},
 	{cuj.GoogleStorePhonesURL, newPageInfo(cuj.Essential, googleStore, `/category/phones`, `/category/earbuds`, `/cart`)},
-	{cuj.GoogleStoreEarbudsURL, newPageInfo(cuj.Essential, googleStore, `/category/earbuds`, `/category/connected_home`, `/cart`)},
-	{cuj.GoogleStoreSmartHomeURL, newPageInfo(cuj.Advanced, googleStore, `/category/connected_home`, `/product/pixelbook`, `/cart`)},
+	{cuj.GoogleStoreRepairCenterURL, newPageInfo(cuj.Essential, googleStore, `/magazine/repaircenter`, `/repair`, `/cart`)},
 	{cuj.GoogleStoreInstallationURL, newPageInfo(cuj.Advanced, googleStore, `/magazine/installation`, `/category/watches`, `/cart`)},
 	{cuj.GoogleStoreSubscriptionsURL, newPageInfo(cuj.Advanced, googleStore, `/category/subscriptions`, `/support`, `/cart`)},
 
@@ -163,9 +163,9 @@ var googleWebsitesTargets = []tabTarget{
 
 	{cuj.GoogleFinanceURL, newPageInfo(cuj.Advanced, googleFinance, `/`, `/markets/indexes`)},
 	{cuj.GoogleFinanceIndexesURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/indexes`, `/markets/most-active`, `/markets/gainers`)},
-	{cuj.GoogleFinanceMostActiveURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/most-active`, `/markets/gainers`, `/markets/losers`)},
+	{cuj.GoogleFinanceMostActiveURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/most-active`, `/markets/currencies`, `/markets/losers`)},
 	{cuj.GoogleFinanceGainersURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/gainers`, `/markets/losers`, `/markets/currencies`)},
-	{cuj.GoogleFinanceLosersURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/losers`, `/markets/currencies`, `/`)},
+	{cuj.GoogleFinanceLosersURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/losers`, `/markets/gainers`, `/`)},
 
 	{cuj.GooglePolicyURL, newPageInfo(cuj.Advanced, googlePolicy, `/`, `privacy`, `terms`)},
 	{cuj.GooglePolicyPrivacyURL, newPageInfo(cuj.Advanced, googlePolicy, `privacy`, `faq`, `technologies`)},
