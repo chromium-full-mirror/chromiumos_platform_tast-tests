@@ -180,9 +180,18 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 			}
 
 			// Snap the destination window to the left.
-			_, err = snapFirstWindowInOverview(ctx, tconn, ash.WindowStateLeftSnapped)
+			w2, err := snapFirstWindowInOverview(ctx, tconn, ash.WindowStateLeftSnapped)
 			if err != nil {
 				s.Fatalf("Failed to snap the %s window to the left: %s", dstURL, err)
+			}
+
+			// Activate the drag destination window so coordinates get updates.
+			if err := w2.ActivateWindow(ctx, tconn); err != nil {
+				s.Fatalf("Failed to activate the %s window: %v", param.srcURL, err)
+			}
+
+			if err := dragdrop.WaitForStableCoordinates(ctx, tconn); err != nil {
+				s.Fatal("Failed to wait for the coordinates for the drop textfield gets stable: ", err)
 			}
 
 			// Activate the drag source (param.srcURL) window.
