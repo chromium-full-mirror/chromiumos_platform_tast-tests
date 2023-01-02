@@ -72,6 +72,12 @@ func FpTpmSeed(ctx context.Context, s *testing.State) {
 		s.Fatal("Initialization failed: ", err)
 	}
 
+	// Reboot DUT to make sure that there was an opportunity to initialize
+	// FPMCU with TPM seed.
+	if err := d.Reboot(ctx); err != nil {
+		s.Fatal("Failed to reboot DUT: ", err)
+	}
+
 	// The seed is only set after bio_crypto_init runs. The boot-services
 	// service is blocked until bio_crypto_init finishes.
 	// The system-services starts after boot-services, then failsafe and
