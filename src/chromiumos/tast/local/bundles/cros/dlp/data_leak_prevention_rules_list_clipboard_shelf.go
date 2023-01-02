@@ -24,7 +24,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -172,10 +171,7 @@ func DataLeakPreventionRulesListClipboardShelf(ctx context.Context, s *testing.S
 func pasteShelfbox(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, url string, wantAllowed bool) error {
 	ui := uiauto.New(tconn)
 
-	searchNode := nodewith.ClassName("SearchBoxView").First()
-	if err := uiauto.Combine("Paste content in shelf box",
-		ui.LeftClick(searchNode),
-		keyboard.AccelAction("Ctrl+V"))(ctx); err != nil {
+	if err := keyboard.AccelAction("Ctrl+V")(ctx); err != nil {
 		return errors.Wrap(err, "failed to paste content in shelf box")
 	}
 
