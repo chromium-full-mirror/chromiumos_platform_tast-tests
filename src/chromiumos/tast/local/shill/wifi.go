@@ -297,23 +297,24 @@ func (wifi *WifiManager) ForgetAP(ctx context.Context, ssid string) error {
 
 // ScanAndWaitForService starts a Wi-Fi scan and waits for a service with
 // ssid to appear.
-func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string, timeout time.Duration) error {
+func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string, timeout time.Duration) (*Service, error) {
 	// discoveryInterval is the delay between two polls, it allows to avoid
 	// spamming Shill with D-Bus requests.
 	const discoveryInterval = time.Second
 
 	iface, err := wifi.Interface(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to obtain Wi-Fi interface")
+		return nil, errors.Wrap(err, "failed to obtain Wi-Fi interface")
 	}
 
 	d, err := wifi.m.DeviceByName(ctx, iface)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get %s device from Shill", iface)
+		return nil, errors.Wrapf(err, "failed to get %s device from Shill", iface)
 	}
 
 	// Always ensure the device is scanning and check if the service appeared.
-	return testing.Poll(ctx, func(ctx context.Context) error {
+	var service *Service
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		properties, err := d.GetProperties(ctx)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get device scanning state"))
@@ -334,10 +335,13 @@ func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string,
 			shillconst.ServicePropertyType:        shillconst.TypeWifi,
 			shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
 		}
-		_, err = wifi.m.FindMatchingService(ctx, props)
+		service, err = wifi.m.FindMatchingService(ctx, props)
 		return err
 	}, &testing.PollOptions{
 		Timeout:  timeout,
 		Interval: discoveryInterval,
-	})
+	}); err != nil {
+		return nil, errors.Wrap(err, "service not found")
+	}
+	return service, nil
 }

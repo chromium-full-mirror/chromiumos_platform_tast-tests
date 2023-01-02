@@ -195,7 +195,7 @@ func runARCProvisioningTestCase(ctx context.Context, s *testing.State, m *shill.
 	// Delay to wait for a network to be discovered.
 	const scanAndWaitTimeout = time.Minute
 	// Trigger a scan.
-	if err := wifi.ScanAndWaitForService(ctx, tc.ap.SSID, scanAndWaitTimeout); err != nil {
+	if _, err := wifi.ScanAndWaitForService(ctx, tc.ap.SSID, scanAndWaitTimeout); err != nil {
 		return errors.Wrap(err, "failed to request an active scan")
 	}
 

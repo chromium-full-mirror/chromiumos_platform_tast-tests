@@ -439,7 +439,7 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 	// Delay to wait for a network to be discovered.
 	const scanAndWaitTimeout = time.Minute
 	// Trigger a scan
-	if err := wifi.ScanAndWaitForService(ctx, tc.expectedSSID, scanAndWaitTimeout); err != nil {
+	if _, err := wifi.ScanAndWaitForService(ctx, tc.expectedSSID, scanAndWaitTimeout); err != nil {
 		s.Fatal("Failed to request an active scan: ", err)
 	}
 

@@ -421,15 +421,17 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 		return nil, errors.Wrap(err, "failed to enable WiFi device")
 	}
 
-	// Trigger a scan and wait for shill to find this service. This may take some
-	// time.
-	testing.ContextLogf(ctx, "Waiting for WiFi service for %s in shill", ssid)
-	if err := m.RequestScan(ctx, shill.TechnologyWifi); err != nil {
-		return nil, errors.Wrap(err, "failed to request an active scan")
-	}
-	wifi.Service, err = m.WaitForServiceProperties(ctx, svcProps, 30*time.Second)
+	wifim, err := shill.NewWifiManager(ctx, m)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to wait for WiFi service to appear")
+		return nil, errors.Wrap(err, "failed to obtain Wi-Fi manager")
+	}
+
+	// Delay to wait for a network to be discovered.
+	const scanAndWaitTimeout = 30 * time.Second
+	// Trigger a scan.
+	wifi.Service, err = wifim.ScanAndWaitForService(ctx, ssid, scanAndWaitTimeout)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request an active scan")
 	}
 
 	success = true

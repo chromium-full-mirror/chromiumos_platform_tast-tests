@@ -306,7 +306,7 @@ func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext
 	// automatically started after the previous AP disappeared. If the new
 	// AP appears during the ongoing scan but late, it might not be discovered
 	// and the test will fail.
-	if err := wifi.ScanAndWaitForService(ctx, ap.ssid, scanAndWaitTimeout); err != nil {
+	if _, err := wifi.ScanAndWaitForService(ctx, ap.ssid, scanAndWaitTimeout); err != nil {
 		return errors.Wrap(err, "failed to request an active scan")
 	}
 
