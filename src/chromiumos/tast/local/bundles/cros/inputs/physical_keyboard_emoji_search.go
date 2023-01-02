@@ -28,20 +28,18 @@ func init() {
 		Desc:         "Check that emoji search works well",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:input-tools", "group:mainline"},
+		Attr:         []string{"group:input-tools", "group:mainline", "group:input-tools-upstream"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...), hwdep.SkipOnModel("kefka")),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Params: []testing.Param{
 			{
-				Fixture:   fixture.ClamshellNonVK,
-				ExtraAttr: []string{"group:input-tools-upstream"},
+				Fixture: fixture.ClamshellNonVK,
 			},
 			{
 				Name:              "lacros",
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})
