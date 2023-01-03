@@ -97,6 +97,8 @@ func init() {
 			},
 		}},
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceTargetVersionSelector{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceRollbackToTargetVersion{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedFunctionalityOS),
 		},
