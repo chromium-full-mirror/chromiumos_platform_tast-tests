@@ -51,6 +51,7 @@ func init() {
 					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				},
+				ExtraAttr: []string{"cross-device_cq"},
 				ExtraData: []string{"small_jpg.zip"},
 				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
