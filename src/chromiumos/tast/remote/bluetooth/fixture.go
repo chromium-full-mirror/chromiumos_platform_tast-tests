@@ -17,6 +17,7 @@ import (
 
 	btc "chromiumos/tast/common/bluetooth"
 	"chromiumos/tast/common/chameleon"
+	"chromiumos/tast/common/tape"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dbus"
@@ -38,6 +39,14 @@ const (
 	fixtureVarBTPeers = "btpeers"
 
 	fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
+
+	// If cleanup is not called for the OTAs leased by Tape for the duration of the
+	// fixture, the accounts will be released after |fixtureVarFastPairTapeCleanupTimeout|
+	// expires. Thus the timeout should be longer than the duration of the fixture setup and
+	// all tests that it will run.
+	// TODO(b/264412597): This timeout must be kept in sync with the total timeouts of all tests that
+	// can run on the fixtures that use Tast.
+	fixtureVarFastPairTapeCleanupTimeout = 15 * time.Minute
 
 	// These variables can be overridden by specifying a custom value in the command
 	// line, e.g. "--vars=bluetooth.FastPairChromeUsername=XXXX", which can be used
@@ -231,12 +240,13 @@ func init() {
 			EnableFeatures:          []string{"FastPair", fixtureVarFastPairSavedDevicesFeature},
 			DisableFeatures:         []string{},
 			LoginMode:               chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
-			RequireFastPairUserVars: true,
+			UseFastPairTapeAccount:  true,
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
 			fixtureVarFastPairChromeUsername,
 			fixtureVarFastPairChromePassword,
+			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
 		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
@@ -258,13 +268,14 @@ func init() {
 			EnableFeatures:          []string{"FastPair", fixtureVarFastPairSavedDevicesFeature},
 			DisableFeatures:         []string{},
 			LoginMode:               chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
-			RequireFastPairUserVars: true,
+			UseFastPairTapeAccount:  true,
 			RequireCompanionDUT:     true,
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
 			fixtureVarFastPairChromeUsername,
 			fixtureVarFastPairChromePassword,
+			tape.ServiceAccountVar,
 		},
 		SetUpTimeout:    2*setUpTimeout + btpeerTimeoutBuffer,
 		ResetTimeout:    2*resetTimeout + btpeerTimeoutBuffer,
@@ -297,6 +308,10 @@ type fixtureFeatures struct {
 	// EnableHidScreenOnOobe enables HID detection screen when in OOBE.
 	EnableHidScreenOnOobe bool
 
+	// UseFastPairTapeAccount uses an OTA to login, selected by TAPE from the Fast
+	// Pair OTA pool.
+	UseFastPairTapeAccount bool
+
 	// RequireFastPairUserVars enables retrieving chrome user credentials from
 	// fixture vars, and requires that they are provided. Required for all Fast
 	// Pair tests that use a GAIA login.
@@ -315,6 +330,12 @@ type FixtValue struct {
 	// BTPeers is a list of chameleond clients that are connected to each btpeer
 	// available to the test fixture.
 	BTPeers []chameleon.Chameleond
+
+	// tapeAccountManager stores the OTA Manager returned by tape.NewClient.
+	tapeAccountManager *tape.OwnedTestAccountManager
+
+	// tapeAccount stores the OTA returned by tape.NewClient.
+	tapeAccount *tape.OwnedTestAccount
 
 	// DUT is the connection to the primary DUT.
 	DUT *dut.DUT
@@ -369,6 +390,19 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 	if err := tf.resetBTPeers(ctx); err != nil {
 		s.Fatal("Failed to reset all btpeers: ", err)
+	}
+
+	// We'll setup the Tape Account Manager once, and re-use the credentials for each
+	// DUT if necessary.
+	if tf.features.UseFastPairTapeAccount {
+		timeout := int32(fixtureVarFastPairTapeCleanupTimeout.Seconds())
+		// Create an account manager and lease a test account for the duration of the fixture.
+		var err error
+		tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManager(ctx,
+			[]byte(s.RequiredVar(tape.ServiceAccountVar)) /*credsJSON*/, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.CrossDeviceFastPair))
+		if err != nil {
+			s.Fatal("Failed to create an account manager and lease an account: ", err)
+		}
 	}
 
 	tf.fv.DUT = s.DUT()
@@ -451,6 +485,12 @@ func (tf *fixture) setupForDUT(ctx context.Context, s *testing.FixtState, dut *d
 		chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
 		chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
 		s.Log("Logging in as Fast Pair test user: ", chromeUsername)
+	} else if tf.features.UseFastPairTapeAccount {
+		// The Tape Account we provisioned earlier can be used to log in on multiple
+		// DUTs in the same fixture.
+		chromeUsername = tf.fv.tapeAccount.Username
+		chromePassword = tf.fv.tapeAccount.Password
+		s.Log("Logging in as Fast Pair OTA using Tape: ", chromeUsername)
 	} else {
 		// By default, use the default username/password used for Fake login.
 		chromeUsername = defaultChromeUsername
@@ -607,6 +647,16 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		if err := tf.companionDbusMonitorBluetoothServices.Close(); err != nil {
 			s.Error("Failed to close companion dbus-monitor: ", err)
 		}
+	}
+
+	// Clean up Tape helpers if it was used for credentials.
+	if tf.features.UseFastPairTapeAccount {
+		s.Log("Cleaning up Fast Pair OTA provisioned with Tape: ", tf.fv.tapeAccount.Username)
+		if err := tf.fv.tapeAccountManager.CleanUp(ctx); err != nil {
+			s.Error("Failed to clean up Tape OTA: ", err)
+		}
+
+		// tapeClient.DeprovisionHelper() is this required?
 	}
 }
 

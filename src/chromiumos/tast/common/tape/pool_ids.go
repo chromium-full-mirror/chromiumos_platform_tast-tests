@@ -30,6 +30,7 @@ const (
 	ArcDataMigrationUnmanaged               = "arc_data_migration_unmanaged"
 	ArcEnterpriseLoginManagedUnmanagedFalse = "arc_enterprise_login_managed_unmanaged_false"
 	ArcEnterpriseLoginManagedUnmanagedTrue  = "arc_enterprise_login_managed_unmanaged_true"
+	CrossDeviceFastPair                     = "crossdevicefastpair"
 	DefaultUnmanaged                        = "default_unmanaged"
 	UIDefault                               = "ui_default"
 )
