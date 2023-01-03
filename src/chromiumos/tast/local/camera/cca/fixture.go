@@ -41,7 +41,6 @@ type feature string
 
 const (
 	lowStorageWarning feature = "CameraAppLowStorageWarning"
-	multiPageDocScan  feature = "CameraAppMultiPageDocScan"
 )
 
 var (
@@ -209,30 +208,6 @@ func init() {
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{arcBooted: true},
 		SetUpTimeout:    setUpTimeout + arc.BootTimeout + ui.StartTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	// TODO(b/223089758): Remove this fixture and use ccaTestBridgeReadyWithFakeCamera once multi-page doc scan fully lands.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithMultiPageDocScan",
-		Desc:            "Set up test bridge for CCA and chrome for testing multi-page document scanning",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
-		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, enableFeatures: []feature{multiPageDocScan}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	// TODO(b/223089758): Remove this fixture once multi-page doc scan fully lands.
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaTestBridgeReadyWithMultiPageDocScanDisabled",
-		Desc:            "Set up test bridge for CCA and chrome for testing single-page document scanning",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, disableFeatures: []feature{multiPageDocScan}},
-		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
 	})
