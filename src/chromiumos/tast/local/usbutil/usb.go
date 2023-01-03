@@ -330,7 +330,8 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 				// a serial number or this line is a descriptor of other string,
 				// e.g. Manufacturer or Product.
 				if m != nil {
-					serial = m[1]
+					// Remove the trailing spaces to align with fwupd's behavior.
+					serial = strings.TrimRight(m[1], " ")
 				}
 			default:
 				// It is safe to ignore other cases.

@@ -77,6 +77,15 @@ S:  Product=UNITEK Y-3470B
 S:  SerialNumber=001000001
 C:* #Ifs= 1 Cfg#= 1 Atr=a0 MxPwr=288mA
 I:* If#= 0 Alt= 0 #EPs= 3 Cls=ff(vend.) Sub=ff Prot=00 Driver=r8152
+
+T:  Bus=07 Lev=01 Prnt=01 Port=00 Cnt=03 Dev#=  1 Spd=12   MxCh= 0
+D:  Ver= 2.01 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=2a2b ProdID=1234 Rev= 1.23
+S:  Manufacturer=Bob
+S:  Product=Test Serial With Trailing Spaces
+S:  SerialNumber=serial  
+C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=100mA
+I:* If#= 0 Alt= 0 #EPs= 0 Cls=fe(app. ) Sub=01 Prot=01 Driver=(none)
 `,
 }
 
@@ -207,6 +216,22 @@ Device Descriptor:
   iSerial                 3 0000074f7cb5
   bNumConfigurations      1
 `,
+	"lsusb -v -d2a2b:1234 -s07:1": `Bus 007 Device 001: ID 2a2b:1234 Bob Corp. Test Serial With Trailing Spaces
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.01
+  bDeviceClass            0
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor           0x2a2b Bob Corp.
+  idProduct          0x1234
+  iManufacturer           1 Bob
+  iProduct                2 Test Serial With Trailing Spaces
+  iSerial                 2 serial  
+  bNumConfigurations      1
+`,
 	"fwupdmgr get-devices --show-all --json": `{
   "Devices": [
     {
@@ -219,7 +244,17 @@ Device Descriptor:
       "VendorId" : "USB:0x1FC9",
       "Version" : "6.45",
       "VersionFormat" : "bcd"
-    }
+    },
+	{
+	  "Name" : "Test Serial With Trailing Spaces",
+	  "Guid" : [
+		"27b7e656-278a-5d76-8a78-5829322b74a1"
+	  ],
+	  "Serial" : "serial",
+	  "VendorId" : "USB:0x2A2B",
+	  "Version" : "trailing_spaces_version",
+	  "VersionFormat" : "plain"
+	}
   ]
 }`,
 }
@@ -374,6 +409,28 @@ func TestAttachedDevices(t *testing.T) {
 			FwupdFirmwareVersionInfo: &FwupdFirmwareVersionInfo{
 				Version:       "6.45",
 				VersionFormat: "bcd",
+			},
+		},
+		Device{
+			VendorID:    "2a2b",
+			ProdID:      "1234",
+			VendorName:  "Bob Corp.",
+			ProductName: "Test Serial With Trailing Spaces",
+			Class:       "00",
+			SubClass:    "00",
+			Protocol:    "00",
+			Interfaces: []Interface{
+				Interface{
+					InterfaceNumber: 0,
+					Class:           "fe",
+					SubClass:        "01",
+					Protocol:        "01",
+					Driver:          nil,
+				},
+			},
+			FwupdFirmwareVersionInfo: &FwupdFirmwareVersionInfo{
+				Version:       "trailing_spaces_version",
+				VersionFormat: "plain",
 			},
 		},
 	}
