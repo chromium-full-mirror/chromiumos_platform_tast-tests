@@ -291,3 +291,11 @@ func (c *Cras) SelectedOutputDevice(ctx context.Context) (deviceName, deviceType
 	}
 	return
 }
+
+// GetNumberOfNonChromeOutputStreams returns the number of active output streams,
+// excluding those from Chrome and LaCrOS.
+func (c *Cras) GetNumberOfNonChromeOutputStreams(ctx context.Context) (int, error) {
+	var numNonChromeOutputStreams int
+	err := c.call(ctx, "GetNumberOfNonChromeOutputStreams").Store(&numNonChromeOutputStreams)
+	return numNonChromeOutputStreams, err
+}
