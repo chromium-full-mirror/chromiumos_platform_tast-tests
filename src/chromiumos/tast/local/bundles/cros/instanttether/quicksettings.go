@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/instanttether"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
@@ -45,11 +46,20 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*crossdevice.FixtData).TestConn
 	cr := s.FixtValue().(*crossdevice.FixtData).Chrome
 	ui := uiauto.New(tconn)
+	androidDevice := s.FixtValue().(*crossdevice.FixtData).AndroidDevice
 
 	cleanupCtx := ctx
 
 	ctx, cancel := ctxutil.Shorten(ctx, 2*shill.EnableWaitTime+10*time.Second)
 	defer cancel()
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+	// Open settings as we need to interact with this page throughout the test.
+	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, instanttether.TetherURL, func(context.Context) error { return nil })
+	if err != nil {
+		s.Fatal("Failed to open OS Settings to tethered networks page: ", err)
+	}
 
 	// Open Quick Settings network menu.
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, true); err != nil {
@@ -57,7 +67,7 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Determine the device's name to find it in the Quick Settings panel.
-	deviceInfo, err := s.FixtValue().(*crossdevice.FixtData).AndroidDevice.GetAndroidAttributes(ctx)
+	deviceInfo, err := androidDevice.GetAndroidAttributes(ctx)
 	if err != nil {
 		s.Fatal("Failed to retrieve information about paired phone")
 	}
@@ -71,6 +81,16 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click on the instant tether device in Quick Settings menu: ", err)
 	}
 
+	// Accept first-use onboarding dialogs on both CrOS and Android.
+	if err := instanttether.HandleFirstUseDialog(ctx, cr, settings, androidDevice); err != nil {
+		s.Fatal("Failed to accept first-use dialog: ", err)
+	}
+
+	// Open Quick Settings network menu.
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, true); err != nil {
+		s.Fatal("Failed to open Network Quick Settings menu: ", err)
+	}
+
 	// Ensure a connection has been established.
 	detailsBtn := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)open settings for .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedViewRevamp)
 
@@ -82,7 +102,6 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 
 	// Because Quick Settings does not show when the connection is established, and we don't
 	// want to wait an arbitrary time, we'll check OS Settings for tethering confirmation.
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, instanttether.TetherURL, func(context.Context) error { return nil })
 
 	// Ensure the CrOS UI updates to reflect the tethered network's status.
 	if err := settings.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`(?i)instant tethering network, signal strength \d+%`)))(ctx); err != nil {

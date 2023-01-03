@@ -605,7 +605,7 @@ func (c *AndroidDevice) AcceptTetherNotification(ctx context.Context) error {
 		return errors.Wrap(err, "failed to click notification")
 	}
 
-	continueBtn := uiDevice.Object(ui.ClassName("android.widget.Button"))
+	continueBtn := uiDevice.Object(ui.ClassName("android.widget.Button"), ui.ResourceID("android:id/button1"))
 	if err := continueBtn.WaitForExists(ctx, 30*time.Second); err != nil {
 		return errors.Wrap(err, "continue button did not appear")
 	}

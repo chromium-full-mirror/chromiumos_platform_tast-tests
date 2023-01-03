@@ -290,8 +290,15 @@ func ConfigureDevice(ctx context.Context, d *adb.Device, rooted bool) error {
 	if err := d.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_WAKEUP))); err != nil {
 		return errors.Wrap(err, "failed to wake screen")
 	}
+
+	// Certain UI states (like 'swipe to unlock') may block the Instant Tethering menu from appearing.
+	// Clear any widget using KEYCODE_MENU, then exit the opened menu using KEYCODE_BACK to ensure tests
+	// are not interfered with.
 	if err := d.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_MENU))); err != nil {
 		return errors.Wrap(err, "failed to wake screen")
+	}
+	if err := d.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_BACK))); err != nil {
+		return errors.Wrap(err, "failed to dismiss menu")
 	}
 
 	if rooted {
