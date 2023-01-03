@@ -64,6 +64,54 @@ func HandleMicrosoftLogin(username, password string) LoginFunc {
 	}
 }
 
+// HandleTestIdPLogin navigates through the Test IdP page, handles the login using the username and enters a password for ChromeOS to scrape.
+// The function is using a TestAPIConn and thus, requires the signin profile extension to be loaded.
+func HandleTestIdPLogin(username, password string) LoginFunc {
+	return func(ctx context.Context, cr *chrome.Chrome) error {
+		tconn, err := cr.SigninProfileTestAPIConn(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Creating login test API connection failed")
+		}
+
+		kb, err := input.VirtualKeyboard(ctx)
+		if err != nil {
+			return errors.New("failed to get keyboard")
+		}
+		defer kb.Close()
+
+		ui := uiauto.New(tconn).WithTimeout(samlDefaultUITimeout)
+
+		root := nodewith.Role(role.RootWebArea).NameContaining("Test SAML IdP")
+
+		samlEmailField := nodewith.Name("NameID:").Role(role.TextField).Ancestor(root).Focusable()
+		changeButton := nodewith.Name("Change").Role(role.Button).Ancestor(root).Focusable()
+		passwordField := nodewith.Role(role.TextField).Ancestor(root).Focusable().Protected()
+		goButton := nodewith.NameContaining("Go").Role(role.Button).Ancestor(root).Focusable()
+
+		if err := uiauto.Combine("Enter SAML email and password",
+			// Clear the user name field and enter the correct user name.
+			ui.WaitUntilExists(samlEmailField),
+			ui.LeftClickUntil(samlEmailField, ui.Exists(samlEmailField.Focused())),
+			kb.AccelAction("Ctrl+A+Backspace"),
+			kb.TypeAction(username),
+			// Change the SAML assertion to reflect the new user name.
+			ui.WaitUntilExists(changeButton),
+			ui.DoDefault(changeButton),
+			// Enter the Password for ChromeOS to scrape.
+			ui.WaitUntilExists(passwordField),
+			ui.LeftClickUntil(passwordField, ui.Exists(passwordField.Focused())),
+			kb.TypeAction(password),
+			// Send the SAML assertion back to GAIA.
+			ui.WaitUntilExists(goButton),
+			ui.DoDefault(goButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to enter SAML email and password")
+		}
+
+		return nil
+	}
+}
+
 // LoginWithSAMLAccount handles real SAML logins by starting a SAML redirection using username and navigating through the IdP using loginFunc.
 func LoginWithSAMLAccount(ctx context.Context, username string, loginFunc LoginFunc, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
 	opts = append(opts, chrome.SAMLLogin((chrome.Creds{User: username, Pass: ""})))

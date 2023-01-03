@@ -31,8 +31,8 @@ func init() {
 			"group:mainline", "informational",
 		},
 		VarDeps: []string{
-			"accountmanager.samlusername",
-			"accountmanager.samlpassword",
+			"saml.testidp_username",
+			"saml.testidp_password",
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		Timeout: chrome.GAIALoginTimeout + time.Minute,
@@ -40,13 +40,13 @@ func init() {
 }
 
 func ChromeSAML(ctx context.Context, s *testing.State) {
-	username := s.RequiredVar("accountmanager.samlusername")
-	password := s.RequiredVar("accountmanager.samlpassword")
+	username := s.RequiredVar("saml.testidp_username")
+	password := s.RequiredVar("saml.testidp_password")
 
 	cr, err := saml.LoginWithSAMLAccount(
 		ctx,
 		username,
-		saml.HandleMicrosoftLogin(username, password),
+		saml.HandleTestIdPLogin(username, password),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	)
 	if err != nil {
