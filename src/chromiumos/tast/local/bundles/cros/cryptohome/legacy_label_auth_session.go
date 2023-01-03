@@ -8,8 +8,10 @@ import (
 	"context"
 	"time"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
@@ -86,24 +88,26 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmount vaults for re-mounting: ", err)
 	}
 
-	// Verify authenticate fails if no or incorrect label is passed.
-	if _, err := cryptohome.AuthenticateWithAuthSession(ctx, userName, userPassword /* keyLabel= */, "", false, false); err == nil {
-		s.Fatal("Authentication with empty label succeeded unexpectedly")
-	}
-	if _, err := cryptohome.AuthenticateWithAuthSession(ctx, userName, userPassword, wrongKeyLabel, false, false); err == nil {
-		s.Fatal("Authentication with incorrect label succeeded unexpectedly")
-	}
-
-	// Verify authentication succeeds if the legacy label is explicitly passed.
-	authSessionID, err := cryptohome.AuthenticateWithAuthSession(ctx, userName, userPassword, legacyKeyLabel, false, false)
-	if err != nil {
-		s.Fatal("Failed to authenticate persistent user: ", err)
-	}
-	defer client.InvalidateAuthSession(cleanupCtx, authSessionID)
-
-	// Verify mounting succeeds.
-	if _, err := client.PreparePersistentVault(ctx, authSessionID, false); err != nil {
-		s.Fatal("Failed to prepare persistent vault: ", err)
+	// Verify authentication using the new APIs.
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Verify authenticate fails if no or incorrect label is passed.
+		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, "" /*keyLabel*/, userPassword); err == nil {
+			return errors.Wrap(err, "authentication with empty label succeeded unexpectedly")
+		}
+		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, wrongKeyLabel, userPassword); err == nil {
+			return errors.Wrap(err, "authentication with incorrect label succeeded unexpectedly")
+		}
+		// Verify authentication succeeds if the legacy label is explicitly passed.
+		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, legacyKeyLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate user")
+		}
+		// Verify mounting succeeds.
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false); err != nil {
+			return errors.Wrap(err, "failed to prepare persistent vault")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to authenticate the legacy user: ", err)
 	}
 	defer client.UnmountAll(cleanupCtx)
 
