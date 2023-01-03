@@ -337,8 +337,12 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 					if err := h.WaitConnect(ctx); err != nil {
 						s.Fatal("DUT did not wake up: ", err)
 					}
-					if err := h.OpenCCD(ctx, true, true); err != nil {
-						s.Fatal("CCD not opened: ", err)
+					if hasCCD, err := h.Servo.HasCCD(ctx); err != nil {
+						s.Fatal("While checking if servo has a CCD connection: ", err)
+					} else if hasCCD {
+						if err := h.OpenCCD(ctx, true, true); err != nil {
+							s.Fatal("CCD not opened: ", err)
+						}
 					}
 				}
 			}(cleanupCtx)
@@ -388,8 +392,12 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		}
 		// Cr50 goes to sleep when the battery is disconnected, and when DUT wakes,
 		// CCD might be locked. Open CCD after waking DUT and before talking to the EC.
-		if err := h.OpenCCD(ctx, true, true); err != nil {
-			s.Fatal("CCD not opened: ", err)
+		if hasCCD, err := h.Servo.HasCCD(ctx); err != nil {
+			s.Fatal("While checking if servo has a CCD connection: ", err)
+		} else if hasCCD {
+			if err := h.OpenCCD(ctx, true, true); err != nil {
+				s.Fatal("CCD not opened: ", err)
+			}
 		}
 
 		s.Log("Saving crossystem params and their values after a power-cycle")

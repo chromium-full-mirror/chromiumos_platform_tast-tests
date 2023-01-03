@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_trial"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery(), hwdep.GSCUART()),
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"gsc"},
 		Timeout:      60 * time.Minute, // Long timeout to account for the long PP sequence.

@@ -845,10 +845,10 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 		return errors.Wrap(err, "failed to get CCD level")
 	}
 
-	// Check testlab status.
-	testlab, err := h.Servo.GetString(ctx, servo.CR50Testlab)
+	// Check testlab state.
+	testlab, err := h.GetTestlabState(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get cr50_testlab")
+		return errors.Wrap(err, "failed to get testlab state")
 	}
 
 	switch ccdLevel {
@@ -892,6 +892,47 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 	return nil
 }
 
+// GetTestlabState will try to get the current ccd testlab state by servo or gsctool command.
+func (h *Helper) GetTestlabState(ctx context.Context) (string, error) {
+	// Verify if cr50_testlab control exists.
+	hasTestlab, err := h.Servo.HasControl(ctx, string(servo.CR50Testlab))
+	if err != nil {
+		return "", errors.Wrap(err, "failed while checking for cr50_testlab control")
+	}
+
+	var testlab string
+	if hasTestlab {
+		testlab, err = h.Servo.GetString(ctx, servo.CR50Testlab)
+		if err != nil {
+			testing.ContextLog(ctx, "WARNING: failed to get cr50_testlab: ", err)
+		}
+	}
+
+	if testlab == "" {
+		out, err := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "-I").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to run 'gsctool -a -I'")
+		}
+		re := regexp.MustCompile(`Flags:\D+(\w+)`)
+		flags := re.FindStringSubmatch(string(out))
+		if len(flags) != 2 {
+			return "", errors.New("failed to find ccd flags from gsctool")
+		}
+		value, err := strconv.ParseInt(flags[1], 0, 64)
+		if err != nil {
+			return "", errors.Wrapf(err, "bad flag value from gsctool %s", flags)
+		}
+		// An odd number indicates testlab is enabled: b/172219984.
+		if value&1 != 0 {
+			testlab = "on"
+		} else {
+			testlab = "off"
+		}
+	}
+
+	return testlab, nil
+}
+
 // GetCCDLevel will try to get the current ccd level by servo or gsctool command.
 func (h *Helper) GetCCDLevel(ctx context.Context) (string, error) {
 	// Verify if gsc_ccd_level control exists.
@@ -904,9 +945,11 @@ func (h *Helper) GetCCDLevel(ctx context.Context) (string, error) {
 	if hasCCDLevel {
 		ccdLevel, err = h.Servo.GetString(ctx, servo.GSCCCDLevel)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to get gsc_ccd_level")
+			testing.ContextLog(ctx, "WARNING! failed to get gsc_ccd_level: ", err)
 		}
-	} else {
+	}
+
+	if ccdLevel == "" {
 		out, err := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "-I").Output(ssh.DumpLogOnError)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to run 'gsctool -a -I'")
