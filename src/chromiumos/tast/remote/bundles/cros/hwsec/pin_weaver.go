@@ -26,9 +26,6 @@ import (
 type pinWeaverParam struct {
 	// Specifies whether to use user secret stash.
 	useUserSecretStash hwsec.UserSecretStashStatus
-	// Specifies whether to use AuthFactor.
-	// This, for now, also assumes that AuthSession would be used with AuthFactors.
-	useAuthFactor bool
 }
 
 func init() {
@@ -43,39 +40,21 @@ func init() {
 		Attr:         []string{"informational", "group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "reboot"},
 		Params: []testing.Param{{
-			Name: "pin_weaver_with_auth_factor_with_no_uss",
+			Name: "with_auth_factor_with_no_uss",
 			Val: pinWeaverParam{
 				useUserSecretStash: hwsec.NotEnabled,
-				useAuthFactor:      true,
 			},
 		}, {
-			Name: "pin_weaver_with_auth_session",
+			Name: "with_auth_factor_with_uss",
 			Val: pinWeaverParam{
-				useUserSecretStash: hwsec.NotEnabled,
-				useAuthFactor:      false,
+				useUserSecretStash: hwsec.Enabled,
 			},
 		}, {
-			Name: "pin_weaver_with_auth_session_legacy_pin_add",
+			Name: "with_auth_factor_after_uss_rollback",
 			Val: pinWeaverParam{
-				useUserSecretStash: hwsec.NotEnabled,
-				useAuthFactor:      false,
+				useUserSecretStash: hwsec.Rolledback,
 			},
-		},
-			{
-				Name: "pin_weaver_with_auth_factor_with_uss",
-				Val: pinWeaverParam{
-					useUserSecretStash: hwsec.Enabled,
-					useAuthFactor:      true,
-				},
-			},
-			{
-				Name: "pin_weaver_with_auth_factor_after_uss_rollback",
-				Val: pinWeaverParam{
-					useUserSecretStash: hwsec.Rolledback,
-					useAuthFactor:      true,
-				},
-			},
-		},
+		}},
 	})
 }
 
@@ -210,7 +189,7 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure AutheneticateAuthFactor error code relays TPM is not locked out.
-	if userParam.useAuthFactor && replyWithError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_AUTHORIZATION_KEY_FAILED {
+	if replyWithError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_AUTHORIZATION_KEY_FAILED {
 		s.Fatal("TPM is locked out: ", replyWithError.Error)
 	}
 
@@ -262,7 +241,7 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 	// Ensure AutheneticateAuthFactor error code relays TPM is locked out.
-	if userParam.useAuthFactor && replyWithError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
+	if replyWithError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
 		s.Fatal("AuthenticateAuthFactor indicates that the TPM is not locked out: ", replyWithError.Error)
 	}
 
@@ -337,11 +316,7 @@ func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRu
 	}
 	defer cryptohomeHelper.Unmount(ctx, userName)
 
-	if userParam.useAuthFactor {
-		err = cryptohomeHelper.AddAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
-	} else {
-		err = cryptohomeHelper.AddCredentialsWithAuthSession(ctx, userName, passwordAuthFactorSecret, passwordAuthFactorLabel, authSessionID, false /*kiosk*/)
-	}
+	err = cryptohomeHelper.AddAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to add password auth factor")
@@ -353,11 +328,7 @@ func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRu
 	}
 
 	// Add a PIN auth factor to the user.
-	if userParam.useAuthFactor {
-		err = cryptohomeHelper.AddPinAuthFactor(ctx, authSessionID, authFactorLabelPIN, correctPINSecret)
-	} else {
-		err = cryptohomeHelper.AddPinCredentialsWithAuthSession(ctx, authFactorLabelPIN, correctPINSecret, authSessionID)
-	}
+	err = cryptohomeHelper.AddPinAuthFactor(ctx, authSessionID, authFactorLabelPIN, correctPINSecret)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to add le credential")
@@ -387,11 +358,7 @@ func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hws
 	reply := &uda.AuthenticateAuthFactorReply{}
 	// Supply invalid credentials five times to trigger firmware lockout of the credential.
 	for i := 0; i < numberOfWrongAttempts; i++ {
-		if userParam.useAuthFactor {
-			reply, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret)
-		} else {
-			err = cryptohomeHelper.AuthenticatePinWithAuthSession(ctx, incorrectPINSecret, authFactorLabelPIN, authSessionID)
-		}
+		reply, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret)
 		if err == nil {
 			return nil, errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
 		}
@@ -412,11 +379,7 @@ func authenticateWithCorrectPIN(ctx, ctxForCleanUp context.Context, testUser str
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	reply := &uda.AuthenticateAuthFactorReply{}
-	if userParam.useAuthFactor {
-		reply, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPIN, correctPINSecret)
-	} else {
-		err = cryptohomeHelper.AuthenticatePinWithAuthSession(ctx, correctPINSecret, authFactorLabelPIN, authSessionID)
-	}
+	reply, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPIN, correctPINSecret)
 	if (err == nil) != shouldAuthenticate {
 		return reply, errors.Wrapf(err, "failed to authenticated auth factor with correct PIN. got %v, want %v", (err == nil), shouldAuthenticate)
 	}
@@ -435,25 +398,18 @@ func authenticateWithCorrectPassword(ctx, ctxForCleanUp context.Context, testUse
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	// Authenticate with correct password.
-	if userParam.useAuthFactor {
-		reply, err := cryptohomeHelper.AuthenticateAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
-		if err != nil {
-			return errors.Wrap(err, "failed to authenticate auth factor")
-		}
-		if !reply.Authenticated {
-			return errors.New("AuthSession not authenticated despite successful reply")
-		}
-		if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{
-			uda.AuthIntent_AUTH_INTENT_DECRYPT,
-			uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
-		}); err != nil {
-			return errors.Wrap(err, "unexpected AuthSession authorized intents")
-		}
-	} else {
-		err = cryptohomeHelper.AuthenticateAuthSession(ctx, passwordAuthFactorSecret, passwordAuthFactorLabel, authSessionID, false /*kiosk_mount*/)
-		if err != nil {
-			return errors.Wrap(err, "failed to authenticate AuthSession")
-		}
+	reply, err := cryptohomeHelper.AuthenticateAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
+	if err != nil {
+		return errors.Wrap(err, "failed to authenticate auth factor")
+	}
+	if !reply.Authenticated {
+		return errors.New("AuthSession not authenticated despite successful reply")
+	}
+	if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{
+		uda.AuthIntent_AUTH_INTENT_DECRYPT,
+		uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
+	}); err != nil {
+		return errors.Wrap(err, "unexpected AuthSession authorized intents")
 	}
 
 	return nil
@@ -470,25 +426,18 @@ func removeLeCredential(ctx, ctxForCleanUp context.Context, testUser, label stri
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	// Authenticate with correct password.
-	if userParam.useAuthFactor {
-		reply, err := cryptohomeHelper.AuthenticateAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
-		if err != nil {
-			return errors.Wrap(err, "failed to authenticate auth factor")
-		}
-		if !reply.Authenticated {
-			return errors.New("AuthSession not authenticated despite successful reply")
-		}
-		if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{
-			uda.AuthIntent_AUTH_INTENT_DECRYPT,
-			uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
-		}); err != nil {
-			return errors.Wrap(err, "unexpected AuthSession authorized intents")
-		}
-	} else {
-		err = cryptohomeHelper.AuthenticateAuthSession(ctx, passwordAuthFactorSecret, passwordAuthFactorLabel, authSessionID, false /*kiosk_mount*/)
-		if err != nil {
-			return errors.Wrap(err, "failed to authenticate AuthSession")
-		}
+	reply, err := cryptohomeHelper.AuthenticateAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
+	if err != nil {
+		return errors.Wrap(err, "failed to authenticate auth factor")
+	}
+	if !reply.Authenticated {
+		return errors.New("AuthSession not authenticated despite successful reply")
+	}
+	if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{
+		uda.AuthIntent_AUTH_INTENT_DECRYPT,
+		uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
+	}); err != nil {
+		return errors.Wrap(err, "unexpected AuthSession authorized intents")
 	}
 
 	leCredsBeforeRemove, err := getLeCredsFromDisk(ctx, r)
