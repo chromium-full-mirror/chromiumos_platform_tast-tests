@@ -274,6 +274,9 @@ func testRecordVideoWithWindowChanged(ctx context.Context, app *cca.App) error {
 
 func testVideoProfile(ctx context.Context, app *cca.App) error {
 	file, err := app.RecordVideo(ctx, cca.TimerOn, time.Second)
+	if err != nil {
+		return err
+	}
 
 	path, err := app.FilePathInSavedDir(ctx, file.Name())
 	if err != nil {
