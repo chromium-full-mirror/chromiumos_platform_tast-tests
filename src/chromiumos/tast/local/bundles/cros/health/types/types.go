@@ -22,12 +22,14 @@ type BusInfo struct {
 
 // PCIBusInfo represents the PciBusInfo in cros-healthd mojo interface.
 type PCIBusInfo struct {
-	ClassID    uint8   `json:"class_id"`
-	SubClassID uint8   `json:"subclass_id"`
-	ProgIfID   uint8   `json:"prog_if_id"`
-	VendorID   uint16  `json:"vendor_id"`
-	DeviceID   uint16  `json:"device_id"`
-	Driver     *string `json:"driver"`
+	ClassID     uint8   `json:"class_id"`
+	SubClassID  uint8   `json:"subclass_id"`
+	ProgIfID    uint8   `json:"prog_if_id"`
+	VendorID    uint16  `json:"vendor_id"`
+	DeviceID    uint16  `json:"device_id"`
+	SubVendorID *uint16 `json:"sub_vendor_id"`
+	SubDeviceID *uint16 `json:"sub_device_id"`
+	Driver      *string `json:"driver"`
 }
 
 // USBBusInfo represents the UsbBusInfo in cros-healthd mojo interface.

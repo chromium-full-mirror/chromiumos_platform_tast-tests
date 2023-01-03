@@ -185,14 +185,27 @@ func validatePCIDevices(ctx context.Context, devs []types.BusDevice, checkProgIf
 	for _, d := range devs {
 		pciBusInfo := d.BusInfo.PCIBusInfo
 		// TODO:(b/199683963): Validation of types.BusDevice.DeviceClass is skipped.
+		var subVendorID *string = nil
+		if pciBusInfo.SubVendorID != nil {
+			tmpSvd := fmt.Sprintf("%04x", *pciBusInfo.SubVendorID)
+			subVendorID = &tmpSvd
+		}
+		var subDeviceID *string = nil
+		if pciBusInfo.SubDeviceID != nil {
+			tmpSdd := fmt.Sprintf("%04x", *pciBusInfo.SubDeviceID)
+			subDeviceID = &tmpSdd
+		}
+
 		pd := pci.Device{
-			VendorID: fmt.Sprintf("%04x", pciBusInfo.VendorID),
-			DeviceID: fmt.Sprintf("%04x", pciBusInfo.DeviceID),
-			Vendor:   d.VendorName,
-			Device:   d.ProductName,
-			Class:    fmt.Sprintf("%02x%02x", pciBusInfo.ClassID, pciBusInfo.SubClassID),
-			ProgIf:   fmt.Sprintf("%02x", pciBusInfo.ProgIfID),
-			Driver:   pciBusInfo.Driver,
+			VendorID:    fmt.Sprintf("%04x", pciBusInfo.VendorID),
+			DeviceID:    fmt.Sprintf("%04x", pciBusInfo.DeviceID),
+			SubVendorID: subVendorID,
+			SubDeviceID: subDeviceID,
+			Vendor:      d.VendorName,
+			Device:      d.ProductName,
+			Class:       fmt.Sprintf("%02x%02x", pciBusInfo.ClassID, pciBusInfo.SubClassID),
+			ProgIf:      fmt.Sprintf("%02x", pciBusInfo.ProgIfID),
+			Driver:      pciBusInfo.Driver,
 		}
 		if !checkProgIf {
 			pd.ProgIf = "(skip)"

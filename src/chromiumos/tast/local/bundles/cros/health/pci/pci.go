@@ -19,13 +19,15 @@ import (
 
 // Device holds the result from lspci.
 type Device struct {
-	VendorID string
-	DeviceID string
-	Vendor   string
-	Device   string
-	Class    string
-	ProgIf   string
-	Driver   *string
+	VendorID    string
+	DeviceID    string
+	SubVendorID *string
+	SubDeviceID *string
+	Vendor      string
+	Device      string
+	Class       string
+	ProgIf      string
+	Driver      *string
 }
 
 // For mocking.
@@ -85,6 +87,12 @@ func ExpectedDevices(ctx context.Context) ([]Device, error) {
 		if v, ok := d["ProgIf"]; ok {
 			r.ProgIf = v
 		}
+		if v, ok := d["SVendor"]; ok {
+			r.SubVendorID = &v
+		}
+		if v, ok := d["SDevice"]; ok {
+			r.SubDeviceID = &v
+		}
 		if v, ok := d["Driver"]; ok {
 			r.Driver = &v
 		}
@@ -119,9 +127,19 @@ func Sort(d []Device) {
 		if d.Driver != nil {
 			dr = *d.Driver
 		}
+		subVendorID := "(none)"
+		subDeviceID := "(none)"
+		if d.SubDeviceID != nil {
+			subDeviceID = *d.SubDeviceID
+		}
+		if d.SubVendorID != nil {
+			subVendorID = *d.SubVendorID
+		}
 		return []string{
 			d.VendorID,
 			d.DeviceID,
+			subVendorID,
+			subDeviceID,
 			d.Vendor,
 			d.Device,
 			d.Class,

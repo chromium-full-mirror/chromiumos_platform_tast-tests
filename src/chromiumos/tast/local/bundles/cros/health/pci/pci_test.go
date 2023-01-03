@@ -25,8 +25,17 @@ Slot:   00:00.2
 Class:  1a2b                                
 Vendor: 12ab                
 Device: 34cd                                       
-SVendor:        1a2b        
-SDevice:        34cd                               
+SVendor:        12ab        
+SDevice:        12ab                               
+ProgIf: 02
+Rev:    1a
+Driver: iwlwifi
+Module: iwlwifi
+
+Slot:   00:00.3
+Class:  1a2b
+Vendor: 12eh
+Device: 35cd
 ProgIf: 02
 Rev:    1a
 Driver: iwlwifi
@@ -47,7 +56,17 @@ Class:  Network controller
 Vendor: Alice Bob Carol, Inc. [ABC]                       
 Device: Device 34cd                                       
 SVendor:        Alice Bob Carol, Inc. [ABC]               
-SDevice:        Device 34cd                               
+SDevice:        Device 12ab                               
+ProgIf: 02
+Rev:    1a
+Driver: iwlwifi
+Module: iwlwifi
+
+`,
+	"-d12eh:35cd": `Slot:   00:00.3                                           
+Class:  Network controller                                
+Vendor: Alice Bob Carol, Inc. [ABC]                       
+Device: Device 34cd                                                                    
 ProgIf: 02
 Rev:    1a
 Driver: iwlwifi
@@ -70,24 +89,41 @@ func TestExpectedDevices(t *testing.T) {
 		t.Fatal("Failed to run ExpectedDevices: ", err)
 	}
 	dr := "iwlwifi"
+	subVendorID := "12ab"
+	subDeviceID := "12ab"
 	e := []Device{
 		Device{
-			VendorID: "12ab",
-			DeviceID: "12ab",
-			Vendor:   "Alice Bob Carol, Inc. [ABC]",
-			Device:   "Device 12ab",
-			Class:    "0123",
-			ProgIf:   "00",
-			Driver:   nil,
+			VendorID:    "12ab",
+			DeviceID:    "12ab",
+			SubVendorID: &subVendorID,
+			SubDeviceID: &subDeviceID,
+			Vendor:      "Alice Bob Carol, Inc. [ABC]",
+			Device:      "Device 12ab",
+			Class:       "0123",
+			ProgIf:      "00",
+			Driver:      nil,
 		},
 		Device{
-			VendorID: "12ab",
-			DeviceID: "34cd",
-			Vendor:   "Alice Bob Carol, Inc. [ABC]",
-			Device:   "Device 34cd",
-			Class:    "1a2b",
-			ProgIf:   "02",
-			Driver:   &dr,
+			VendorID:    "12ab",
+			DeviceID:    "34cd",
+			SubVendorID: &subVendorID,
+			SubDeviceID: &subDeviceID,
+			Vendor:      "Alice Bob Carol, Inc. [ABC]",
+			Device:      "Device 34cd",
+			Class:       "1a2b",
+			ProgIf:      "02",
+			Driver:      &dr,
+		},
+		Device{
+			VendorID:    "12eh",
+			DeviceID:    "35cd",
+			SubVendorID: nil,
+			SubDeviceID: nil,
+			Vendor:      "Alice Bob Carol, Inc. [ABC]",
+			Device:      "Device 34cd",
+			Class:       "1a2b",
+			ProgIf:      "02",
+			Driver:      &dr,
 		},
 	}
 	if d := cmp.Diff(e, g); d != "" {
