@@ -56,40 +56,6 @@ func init() {
 			ExtraAttr: []string{"group:mainline", "informational"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
-			Name: "auth_factor_experiment_on",
-			Val: chromeTestParams{
-				numTrial: 1,
-				opts:     []chrome.Option{chrome.EnableFeatures("UseAuthFactors")},
-				bt:       browser.TypeAsh},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Timeout:   chrome.LoginTimeout + 45*time.Second,
-		}, {
-			Name:              "auth_factor_experiment_on_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: chromeTestParams{
-				numTrial: 1,
-				opts:     []chrome.Option{chrome.EnableFeatures("UseAuthFactors")},
-				bt:       browser.TypeLacros},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Timeout:   chrome.LoginTimeout + 45*time.Second,
-		}, {
-			Name: "auth_factor_experiment_off",
-			Val: chromeTestParams{
-				numTrial: 1,
-				opts:     []chrome.Option{chrome.DisableFeatures("UseAuthFactors")},
-				bt:       browser.TypeAsh},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Timeout:   chrome.LoginTimeout + 45*time.Second,
-		}, {
-			Name:              "auth_factor_experiment_off_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: chromeTestParams{
-				numTrial: 1,
-				opts:     []chrome.Option{chrome.DisableFeatures("UseAuthFactors")},
-				bt:       browser.TypeLacros},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Timeout:   chrome.LoginTimeout + 45*time.Second,
-		}, {
 			Name: "stress",
 			Val: chromeTestParams{
 				numTrial: 50,
