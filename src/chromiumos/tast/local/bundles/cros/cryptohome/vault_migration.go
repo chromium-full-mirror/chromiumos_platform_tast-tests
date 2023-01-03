@@ -8,8 +8,10 @@ import (
 	"context"
 	"time"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
@@ -70,60 +72,65 @@ func VaultMigration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	if err := cryptohome.CreateUserWithAuthSession(ctx, userName, userPassword, keyLabel, false); err != nil {
-		s.Fatal("Failed to create the user: ", err)
+	// Create and set up the user.
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		s.Log("Create ecryptfs vault with a file")
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, true /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+		if err := client.AddAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to add initial user password")
+		}
+		// Write a test file to verify persistence.
+		if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to write test file")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to create and set up the user: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
-	s.Log("Create ecryptfs vault with a file")
-	authSessionID, err := cryptohome.AuthenticateWithAuthSession(ctx, userName, userPassword, keyLabel, false /*ephemeral*/, false /*kiosk*/)
-	if err != nil {
-		s.Fatal("Failed to authenticate persistent user: ", err)
-	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
-
-	if _, err := client.PreparePersistentVault(ctx, authSessionID, true /*ecryptfs*/); err != nil {
-		s.Fatal("Failed to prepare ecryptfs vault: ", err)
-	}
-	defer client.UnmountAll(ctxForCleanUp)
-
-	// Write a test file to verify persistence.
-	if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
-		s.Fatal("Failed to write test file: ", err)
-	}
-
+	// Unmount the user and verify that we cannot read the persistent file.
 	if err := client.UnmountAll(ctx); err != nil {
 		s.Fatal("Failed to unmount vaults for re-mounting: ", err)
 	}
 
-	if err := cryptohome.VerifyFileUnreadability(ctx, cryptohome.KioskUser); err != nil {
+	if err := cryptohome.VerifyFileUnreadability(ctx, userName); err != nil {
 		s.Fatal("File is readable after unmount")
 	}
 
-	authSessionID, err = cryptohome.AuthenticateWithAuthSession(ctx, userName, userPassword, keyLabel, false /*ephemeral*/, false /*kiosk*/)
-	if err != nil {
-		s.Fatal("Failed to authenticate persistent user: ", err)
+	// Migrate the user vault.
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate user")
+		}
+		if err := client.PrepareVaultForMigration(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to prepare vault for migration")
+		}
+		if err := client.MigrateToDircrypto(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to migrate vault to dircrypto")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to migrate the user vault: ", err)
 	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
-	if err := client.PrepareVaultForMigration(ctx, authSessionID); err != nil {
-		s.Fatal("Failed to prepare vault for migration: ", err)
-	}
-	defer client.UnmountAll(ctxForCleanUp)
-
-	if err := client.MigrateToDircrypto(ctx, userName); err != nil {
-		s.Fatal("Failed to migrate vault to dircrypto: ", err)
-	}
-
-	s.Log("Mount as fscrypt")
-	authSessionID, err = cryptohome.AuthenticateWithAuthSession(ctx, userName, userPassword, keyLabel, false /*ephemeral*/, false /*kiosk*/)
-	if err != nil {
-		s.Fatal("Failed to authenticate persistent user: ", err)
-	}
-	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
-
-	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-		s.Fatal("Failed to prepare fscrypt vault: ", err)
+	// Mount the user vault as fscrypt.
+	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, keyLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate user")
+		}
+		s.Log("Mount as fscrypt")
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to mount the user vault")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to mount the user fscrypt vault: ", err)
 	}
 	defer client.UnmountAll(ctxForCleanUp)
 
