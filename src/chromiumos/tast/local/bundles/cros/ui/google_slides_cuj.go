@@ -89,7 +89,7 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{StopMetricsBeforeTracing: true})
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}

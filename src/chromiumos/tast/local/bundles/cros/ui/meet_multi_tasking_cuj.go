@@ -282,7 +282,7 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	pv := perf.NewValues()
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{StopMetricsBeforeTracing: true})
 	if err != nil {
 		s.Fatal("Failed to create a new CUJ recorder: ", err)
 	}

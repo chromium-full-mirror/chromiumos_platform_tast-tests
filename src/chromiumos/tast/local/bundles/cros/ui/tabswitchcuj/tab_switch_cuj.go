@@ -96,7 +96,7 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 		return nil, errors.Wrap(err, "failed to get browser TestAPIConn")
 	}
 
-	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.bTconn, nil, cujrecorder.RecorderOptions{})
+	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.bTconn, nil, cujrecorder.RecorderOptions{StopMetricsBeforeTracing: true})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a recorder")
 	}
