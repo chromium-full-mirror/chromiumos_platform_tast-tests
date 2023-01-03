@@ -42,6 +42,7 @@ const (
 	WatchdogAdd           StringControl = "watchdog_add"
 	WatchdogRemove        StringControl = "watchdog_remove"
 	PDCommunication       StringControl = "servo_pd_comm"
+	SupportCrosECComm     StringControl = "supports_cros_ec_communication"
 
 	// DUTConnectionType was previously known as V4Type ("servo_v4_type")
 	DUTConnectionType StringControl = "root.dut_connection_type"

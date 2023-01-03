@@ -580,7 +580,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
-			lidStateEC, err := h.Servo.RunECCommandGetOutput(ctx, "lidstate", []string{`lid state:\s*([^\n]*)`})
+			lidStateEC, err := h.Servo.RunECCommandGetOutput(ctx, "lidstate", []string{`lid state:\s*([^\n]*)[\n\r]`})
 			if err != nil {
 				return errors.Wrap(err, "failed to read lidstate from EC console")
 			}

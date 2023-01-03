@@ -273,6 +273,30 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 	}
 
+	// Check whether the DUT has a CrOS EC that can talk through servo UART.
+	// If CrOS EC exists, check for ec responsiveness. Fail the test as
+	// "test did not run" if ec is not responsive because a non-responsive EC
+	// would cause failure in communicating information from/to the EC, and
+	// there are a good number of such commands used in FAFT tests.
+	supportCrosEC, err := i.value.Helper.Servo.GetString(ctx, servo.SupportCrosECComm)
+	if err != nil {
+		s.Logf("Failed to get value for %s: %v", servo.SupportCrosECComm, err)
+	}
+	if supportCrosEC == "yes" {
+		// If CrOS ec exists, verify that ec is responsive.
+		s.Log("Sending an ec command to check if ec is responsive")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := i.value.Helper.Servo.RunECCommandGetOutput(ctx, "version", []string{`[^\x00]+`}); err != nil {
+				return errors.Wrap(err, "ec not responsive")
+			}
+			return nil
+		}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 2 * time.Minute}); err != nil {
+			s.Error("Test did not run")
+			s.Fatal("Sending ec command failed: ", err)
+		}
+		s.Log("EC is active")
+	}
+
 	if i.disallowSSH {
 		return
 	}
