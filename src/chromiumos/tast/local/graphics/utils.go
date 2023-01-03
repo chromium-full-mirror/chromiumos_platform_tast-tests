@@ -172,6 +172,9 @@ func GetSysfsMemory(ctx context.Context) (int, error) {
 	file, err := GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_gem_objects",
 	})
+	if err != nil {
+		return 0, err
+	}
 	parsedResults, err := parseSysfsMemory(ctx, file)
 	if err != nil {
 		return 0, err

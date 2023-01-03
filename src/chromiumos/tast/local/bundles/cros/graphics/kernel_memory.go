@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/memory/kernelmeter"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -20,12 +21,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that no errors occur while examining graphics memory usage",
 		// TODO(syedfaaiz): Add to CQ once it is green and stable.
-		Attr: []string{"group:graphics", "graphics_nightly"},
-		Contacts: []string{"syedfaaiz@google.com",
-			"chromeos-gfx@google.com",
+		Attr:         []string{"group:graphics", "graphics_nightly"},
+		HardwareDeps: hwdep.D(hwdep.IntelSOC()),
+		Contacts: []string{"chromeos-gfx@google.com",
+			"syedfaaiz@google.com",
 		},
-		Fixture: "chromeGraphics",
-		Timeout: 2 * time.Minute,
+		// ChromeOS > Platform > Graphics > GPU
+		BugComponent: "b:995569",
+		Fixture:      "chromeGraphics",
+		Timeout:      2 * time.Minute,
 	})
 }
 func KernelMemory(ctx context.Context, s *testing.State) {
