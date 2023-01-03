@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/media/devtools"
 	"chromiumos/tast/testing"
 )
@@ -47,6 +48,8 @@ var (
 	HEVC4K60FPS        = VideoOption{"HEVC 60FPS", common4K}
 )
 
+const longUITimeout = time.Minute // Used for situations where UI might take a long time to respond.
+
 // CrosVideo defines the struct related to cros video web.
 type CrosVideo struct {
 	ui   *uiauto.Context
@@ -60,6 +63,9 @@ func NewCrosVideo(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIA
 	conn, err := uiHandler.NewChromeTab(ctx, br, cuj.CrosVideoURL, true)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open cros video URL %q", cuj.CrosVideoURL)
+	}
+	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for tab to achieve quiescence")
 	}
 	return &CrosVideo{
 		ui:   uiauto.New(tconn),
