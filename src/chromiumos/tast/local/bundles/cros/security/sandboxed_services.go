@@ -139,6 +139,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"spaced", "spaced", "spaced", restrictCaps},
 		{"cros-disks", "cros-disks", "cros-disks", restrictCaps},
 		{"dnsproxyd", "dns-proxy", "dns-proxy", restrictCaps},
+		{"shadercached", "shadercached", "shadercached", restrictCaps},
 
 		// These processes run as root in the ARC container.
 		{"app_process", "android-root", "android-root", pidNS | mntNS},
