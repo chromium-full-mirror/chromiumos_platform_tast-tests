@@ -91,7 +91,7 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 	pipeWireSinksPattern := regexp.MustCompile(
 		"[0-9]+\talsa-sink\tPipeWire\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 	pulseAudioSinksPattern := regexp.MustCompile(
-		"1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+		"1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
 
 	if out, err := cont.Command(
 		ctx, "pactl", "list", "sinks", "short",
@@ -126,7 +126,7 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 	pipeWireSourcesPattern := regexp.MustCompile(
 		"[0-9]+\talsa-source\tPipeWire\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 	pulseAudioSourcesPattern := regexp.MustCompile(
-		"[0-9]+\talsa_input.hw_0_0\tmodule-alsa-source.c\ts16le 2ch 44100Hz\t(IDLE|SUSPENDED)\n")
+		"[0-9]+\talsa_input.hw_0_0\tmodule-alsa-source.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
 
 	if out, err := cont.Command(
 		ctx, "pactl", "list", "sources", "short",
