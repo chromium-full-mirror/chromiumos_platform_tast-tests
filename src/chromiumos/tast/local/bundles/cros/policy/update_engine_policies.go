@@ -43,6 +43,7 @@ const (
 	deviceTargetVersionSelectorVal = "0,1626155736-"
 	deviceTargetVersionPrefixVal   = "1000."
 	deviceReleaseLtsTagVal         = "lts"
+	deviceChannelVal               = "beta-channel"
 )
 
 func init() {
@@ -95,12 +96,24 @@ func init() {
 				testValue:   "true",
 				policyParam: "rollback_allowed",
 			},
+		}, {
+			Name: "device_channel",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Val: deviceChannelVal},
+					&policy.ChromeOsReleaseChannelDelegated{Val: false},
+				},
+				testValue:   deviceChannelVal,
+				policyParam: "track",
+			},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceTargetVersionSelector{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceRollbackToTargetVersion{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
