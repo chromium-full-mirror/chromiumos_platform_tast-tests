@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Smoke test of cras_bench",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:875484",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
