@@ -87,8 +87,16 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	// Close all existing windows.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all windows: ", err)
+	}
 
 	ac := uiauto.New(tconn)
+	// Delete all existing saved desks.
+	if err := saveddesks.DeleteSavedDesks(cleanupCtx, tconn, ac); err != nil {
+		s.Fatal("Failed to delete saved desks: ", err)
+	}
 
 	// Opens PlayStore, Browser and Files.
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
@@ -161,9 +169,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	// Exit overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
 	// Verify window count.
@@ -245,17 +250,21 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch saved desk 'Saved Desk 1' of type 'SaveAndRecall': ", err)
 	}
 
-	// Wait for apps to launch.
-	if err := saveddesks.WaitforAppsToLaunch(ctx, tconn, ac, appsList); err != nil {
-		s.Fatal("Failed to wait for app to launch: ", err)
+	for _, app := range appsList {
+		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
+			s.Fatal("App did not appear in shelf after launch: ", err)
+		}
 	}
-
 	// Exit overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
 	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 		s.Fatal("Failed to wait for the animation to be completed: ", err)
+	}
+
+	if err := saveddesks.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
+		s.Fatal("Failed to verify window count: ", err)
 	}
 
 	// Close Play Store.

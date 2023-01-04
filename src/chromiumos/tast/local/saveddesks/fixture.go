@@ -48,7 +48,7 @@ func init() {
 				chrome.DisableFeatures("DeskTemplateSync"),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
@@ -92,7 +92,7 @@ func init() {
 				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
 			}, nil
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,

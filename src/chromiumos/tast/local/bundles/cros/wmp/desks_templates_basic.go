@@ -86,9 +86,15 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
+	// Close all existing windows.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all windows: ", err)
+	}
 	ac := uiauto.New(tconn)
-
+	// Delete all existing saved desks.
+	if err := saveddesks.DeleteSavedDesks(cleanupCtx, tconn, ac); err != nil {
+		s.Fatal("Failed to delete saved desks: ", err)
+	}
 	// Opens PlayStore, Browser and Files.
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
@@ -124,9 +130,6 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 	// Exit overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
 	// Verify window count.

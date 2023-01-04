@@ -74,10 +74,9 @@ func WaitforAppsToLaunch(ctx context.Context, tconn *chrome.TestConn, ac *uiauto
 		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
 			return errors.Wrapf(err, "%s did not appear in shelf after launch", app.Name)
 		}
-
 		// Some apps may take a long time to load such as Play Store. Wait for launch event to be completed.
-		if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for the app launch event to be completed")
+		if _, err := ash.WaitForAppWindow(ctx, tconn, app.ID); err != nil {
+			return errors.Wrapf(err, "failed to wait for the %s app launch event to be completed", app.Name)
 		}
 	}
 
@@ -137,7 +136,7 @@ func DeleteSavedDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Co
 	// Check if library button is visible.
 	libraryButtonVisible, err := ash.IsLibraryButtonVisible(ctx, ac)
 	if err != nil {
-		return errors.Wrap(err, "ailed to check if library is visible")
+		return errors.Wrap(err, "failed to check if library is visible")
 	}
 
 	// Enter library page, and delete all saved desks.

@@ -80,9 +80,15 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
+	// Close all existing windows.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all windows: ", err)
+	}
 	ac := uiauto.New(tconn)
-
+	// Delete all existing saved desks.
+	if err := saveddesks.DeleteSavedDesks(cleanupCtx, tconn, ac); err != nil {
+		s.Fatal("Failed to delete saved desks: ", err)
+	}
 	// Set up metrics recorder for TPS calculation
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
