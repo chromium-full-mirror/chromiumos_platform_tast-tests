@@ -277,3 +277,31 @@ func (s *Servo) LockCCD(ctx context.Context) error {
 	}
 	return nil
 }
+
+/*
+GetAPState runs the 'ccdstate' command in the cr50 console,
+and returns information about AP's status as follows:
+1. "off", which means that the ap is off.
+2. "on (K)", which means that the dut has completely booted to ChromeOS.
+3. "on (F)", which means that the dut has booted to a firmware screen.
+*/
+func (s *Servo) GetAPState(ctx context.Context) (string, string, error) {
+	cmd := "ccdstate"
+	regex := []string{`AP:\s*(on|off)\s*(\S[A-Z]?\S)?[\n\r]`}
+	matches, err := s.RunCR50CommandGetOutput(ctx, cmd, regex)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "while running %s", cmd)
+	}
+
+	var apPower, screenState = "unknown", "unknown"
+	switch len(matches[0]) {
+	case 2:
+		apPower = matches[0][1]
+	case 3:
+		apPower = matches[0][1]
+		screenState = matches[0][2]
+	default:
+		return apPower, screenState, errors.Errorf("found unexpected number of matches: %v", matches)
+	}
+	return apPower, screenState, nil
+}

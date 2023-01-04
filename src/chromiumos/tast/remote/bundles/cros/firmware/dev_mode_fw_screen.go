@@ -221,6 +221,13 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("DUT has already booted past the firmware screen")
 		}
 
+		// Document the screen status prior to pressing the up key.
+		apPower, screenState, err := h.Servo.GetAPState(ctx)
+		if err != nil {
+			s.Log("Failed to get information about ap status: ", err)
+		}
+		s.Logf("Found ap status: %s %s", apPower, screenState)
+
 		dutAtFwScreen := false
 		if goRoutineRequired {
 			index := 0
@@ -282,7 +289,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			defer cancelWaitConnectShort()
 			err := h.WaitConnect(waitConnectShortCtx)
 			if err == nil {
-				s.Fatal("DUT exited fw screen and reconnected unexpectedly")
+				s.Fatalf("DUT exited fw screen and reconnected unexpectedly, got ap info prior to pressing the up key: %s %s", apPower, screenState)
 			}
 			if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 				s.Fatal("Unexpected error in waiting for DUT to reconnect: ", err)

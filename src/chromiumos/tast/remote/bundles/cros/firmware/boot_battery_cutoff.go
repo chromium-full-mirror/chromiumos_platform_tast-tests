@@ -347,8 +347,11 @@ func wakeDUTS0(ctx context.Context, h *firmware.Helper) error {
 		}
 		value := checkPowerState()
 		if value == "S0" {
-			apState := verifyAPOn(ctx, h)
-			return errors.Wrapf(err, "found DUT's power state at S0, status of ap: %s", apState)
+			apPower, screenState, err := h.Servo.GetAPState(ctx)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to get ap power and screen state from cr50 console: ", err)
+			}
+			return errors.Wrapf(err, "found DUT's power state at S0, power of ap: %s, status of screen: %s", apPower, screenState)
 		}
 		return errors.Wrapf(err, "DUT disconnected due to other reasons, found power state %s", value)
 	}
@@ -377,25 +380,4 @@ func verifyECSoftwareWPStatus(ctx context.Context, s *testing.State, expected st
 	}
 	testing.ContextLog(ctx, "WARNING: ectool returned a non-zero exit, but the wp status changed as expected")
 	return nil
-}
-
-// verifyAPOn checks for the AP state by running ccdstate
-// in the cr50 console.
-func verifyAPOn(ctx context.Context, h *firmware.Helper) string {
-	cmd := "ccdstate"
-	regex := []string{`AP:\s*(on|off)\s\((\w*)\)`}
-	matches, err := h.Servo.RunCR50CommandGetOutput(ctx, cmd, regex)
-	if err != nil || len(matches) == 0 {
-		return "unknown"
-	}
-	if matches[0][1] != "on" {
-		return fmt.Sprintf("ap is not \"on\" after plugging in charger, got: %s", matches[0][1])
-	}
-	if matches[0][2] == "K" {
-		return "dut might be at the log-in screen"
-	}
-	if matches[0][2] == "F" {
-		return "dut might be stuck at a firmware screen"
-	}
-	return fmt.Sprintf("got DUT AP state: %s", matches[0][2])
 }
