@@ -7,6 +7,7 @@
 package secagentdprocfsscraper
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -17,12 +18,16 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	xdr "chromiumos/xdr/reporting"
 )
+
+const cmdLineRetryTimes = 5
 
 var (
 	procNsRe     = regexp.MustCompile("(?m)^[a-z]+:\\[(?P<nsId>[[:digit:]]+)\\]")
@@ -40,20 +45,34 @@ var (
 )
 
 // GetCmdLineParts returns a list of cmdline arguments for the given pid.
-func GetCmdLineParts(pid uint64) ([]string, error) {
-	cmdLine := fmt.Sprintf("/proc/%d/cmdline", pid)
-	buff, err := ioutil.ReadFile(cmdLine)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read %s", cmdLine)
+func GetCmdLineParts(ctx context.Context, pid uint64) ([]string, error) {
+	var buff []byte
+	// Procfs cmdline is read from the process' VM and may read an empty string
+	// if the process is currently swapped out. Add a few retries to hopefully
+	// catch the process while it's swapped in.
+	if err := action.Retry(cmdLineRetryTimes, func(context.Context) error {
+		cmdLine := fmt.Sprintf("/proc/%d/cmdline", pid)
+		var err error
+		buff, err = ioutil.ReadFile(cmdLine)
+		if err != nil {
+			return err
+		}
+		if len(buff) == 0 {
+			return errors.Errorf("%s was read but found empty", cmdLine)
+		}
+		return nil
+	}, 100*time.Millisecond)(ctx); err != nil {
+		return nil, err
 	}
+
 	// Split on NUL and returns the parts.
 	return strings.Split(string(buff), string(rune(0))), nil
 }
 
 // GetCmdLine returns a joined and quoted string of cmdline arguments for the
 // given pid.
-func GetCmdLine(pid uint64) (string, error) {
-	parts, err := GetCmdLineParts(pid)
+func GetCmdLine(ctx context.Context, pid uint64) (string, error) {
+	parts, err := GetCmdLineParts(ctx, pid)
 	if err != nil {
 		return "", err
 	}

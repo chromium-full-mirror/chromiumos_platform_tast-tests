@@ -31,7 +31,7 @@ func getSecagentdDbusConn(ctx context.Context, dbo *dbusutil.DBusObject, dbusCon
 		if err := dbo.Call(ctx, "GetConnectionUnixProcessID", name).Store(&pid); err != nil {
 			continue
 		}
-		cmd, err := secagentdprocfsscraper.GetCmdLineParts(pid)
+		cmd, err := secagentdprocfsscraper.GetCmdLineParts(ctx, pid)
 		if err != nil {
 			continue
 		}

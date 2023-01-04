@@ -39,7 +39,7 @@ func init() {
 
 // makeProcessForPid fills the provided Process and Namespaces proto for the
 // given process pid and sets ppid to the pid of the parent process.
-func makeProcessForPid(pid uint64, p *xdr.Process, ns *xdr.Namespaces, ppid *uint64) error {
+func makeProcessForPid(ctx context.Context, pid uint64, p *xdr.Process, ns *xdr.Namespaces, ppid *uint64) error {
 	if err := secagentdprocfsscraper.FillNamespaces(pid, ns); err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func makeProcessForPid(pid uint64, p *xdr.Process, ns *xdr.Namespaces, ppid *uin
 	if *ppid, err = secagentdprocfsscraper.FillProcStatus(pid, p); err != nil {
 		return err
 	}
-	cmdline, err := secagentdprocfsscraper.GetCmdLine(pid)
+	cmdline, err := secagentdprocfsscraper.GetCmdLine(ctx, pid)
 	if err != nil {
 		return err
 	}
@@ -63,21 +63,21 @@ func makeProcessForPid(pid uint64, p *xdr.Process, ns *xdr.Namespaces, ppid *uin
 // process pid. Proto contents reflect what we expect secagentd to emit as the
 // Exec event for the given process. Except for any UUIDs which are random and
 // unpredictable.
-func makeExpectedExec(pid uint64, exec *xdr.ProcessExecEvent) error {
+func makeExpectedExec(ctx context.Context, pid uint64, exec *xdr.ProcessExecEvent) error {
 	exec.SpawnProcess = &xdr.Process{}
 	exec.SpawnNamespaces = &xdr.Namespaces{}
 	var ppid, gpid, ggpid uint64
-	if err := makeProcessForPid(pid, exec.GetSpawnProcess(), exec.GetSpawnNamespaces(), &ppid); err != nil {
+	if err := makeProcessForPid(ctx, pid, exec.GetSpawnProcess(), exec.GetSpawnNamespaces(), &ppid); err != nil {
 		return err
 	}
 
 	exec.Process = &xdr.Process{}
-	if err := makeProcessForPid(ppid, exec.GetProcess(), &xdr.Namespaces{}, &gpid); err != nil {
+	if err := makeProcessForPid(ctx, ppid, exec.GetProcess(), &xdr.Namespaces{}, &gpid); err != nil {
 		return err
 	}
 
 	exec.ParentProcess = &xdr.Process{}
-	if err := makeProcessForPid(gpid, exec.GetParentProcess(), &xdr.Namespaces{}, &ggpid); err != nil {
+	if err := makeProcessForPid(ctx, gpid, exec.GetParentProcess(), &xdr.Namespaces{}, &ggpid); err != nil {
 		return err
 	}
 
@@ -120,7 +120,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 		s.Fatalf("Error starting %q: %v ", cmd, err)
 	}
 	expExec := xdr.ProcessExecEvent{}
-	if err := makeExpectedExec(uint64(cmd.Process.Pid), &expExec); err != nil {
+	if err := makeExpectedExec(ctx, uint64(cmd.Process.Pid), &expExec); err != nil {
 		s.Fatal("Failed to make expected ProcessExec proto: ", err)
 	}
 	expTerm := xdr.ProcessTerminateEvent{}
