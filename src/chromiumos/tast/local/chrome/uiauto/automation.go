@@ -507,6 +507,29 @@ func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 	}
 }
 
+// WaitUntilAnyExists returns a function that waits until any of the input finder exists.
+// Use it when you are waiting for different situations. E.g.
+//
+//	if err := ac.WaitUntilAnyExists(finderA, finderB); err != nil{
+//	    // None of these node found.
+//	}
+//
+//	if ac.Exists(finderA)(ctx) == nil{
+//	    // Do something here if finderA found.
+//	}
+func (ac *Context) WaitUntilAnyExists(finders ...*nodewith.Finder) Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			for _, finder := range finders {
+				if err := ac.Exists(finder)(ctx); err == nil {
+					return nil
+				}
+			}
+			return errors.New("none of these nodes are found")
+		}, &ac.pollOpts)
+	}
+}
+
 // WaitUntilEnabled returns a function that waits until the node found by the
 // input finder is not disabled. Use it when an action should be taken after
 // the node is enabled. E.g.
