@@ -23,8 +23,10 @@ func init() {
 			"hesling@chromium.org",
 			"chromeos-fingerprint@google.com",
 		},
-		Attr:        []string{"group:mainline"},
-		ServiceDeps: []string{dutfs.ServiceName},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
+		Attr:         []string{"group:mainline"},
+		ServiceDeps:  []string{dutfs.ServiceName},
 	})
 }
 
