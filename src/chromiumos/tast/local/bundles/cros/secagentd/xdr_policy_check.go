@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
@@ -27,13 +28,19 @@ func init() {
 		Desc: "Checks that the daemon adheres to the XDR reporting policy",
 		Contacts: []string{
 			"cros-enterprise-security@google.com",
+			"aashay@google.com",
+			"jasonling@google.com",
 		},
+		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceReportXDREvents{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 

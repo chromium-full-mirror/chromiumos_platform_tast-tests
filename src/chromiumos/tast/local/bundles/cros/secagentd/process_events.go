@@ -26,7 +26,10 @@ func init() {
 		Desc: "Checks that Process XDR events are correctly being reported",
 		Contacts: []string{
 			"cros-enterprise-security@google.com",
+			"aashay@google.com",
+			"jasonling@google.com",
 		},
+		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
