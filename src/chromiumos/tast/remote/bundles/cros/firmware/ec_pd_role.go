@@ -89,6 +89,21 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 			expectStatus: servo.USBPdDualRoleOff,
 		},
 	} {
+		if step.expectStatus == servo.USBPdDualRoleSink {
+			// When powered off, we found two duts on Stainless with their pd dual-role status
+			// reported as "off", rather than "force sink".
+			modelsWithPDOffDurG3 := []string{"elm", "hana"}
+			if func(modelName string, modelPool []string) bool {
+				for _, m := range modelPool {
+					if modelName == m {
+						return true
+					}
+				}
+				return false
+			}(h.Model, modelsWithPDOffDurG3) {
+				step.expectStatus = servo.USBPdDualRoleOff
+			}
+		}
 		if err := step.testAction(ctx, h); err != nil {
 			s.Fatal("Action failed: ", err)
 		}
