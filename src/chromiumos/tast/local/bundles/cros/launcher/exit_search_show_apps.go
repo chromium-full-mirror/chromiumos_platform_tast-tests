@@ -89,7 +89,7 @@ func ExitSearchShowApps(ctx context.Context, s *testing.State) {
 		},
 		{
 			name:             "Close Button",
-			exitSearchAction: ui.LeftClick(nodewith.ClassName("SearchBoxImageButton")),
+			exitSearchAction: ui.DoDefault(nodewith.ClassName("SearchBoxImageButton")),
 		},
 		{
 			name: "Multiple Backspace",
