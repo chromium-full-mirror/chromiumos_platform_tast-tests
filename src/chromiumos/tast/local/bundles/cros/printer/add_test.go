@@ -45,6 +45,12 @@ func test2(name, ppdFile, expectedFile string, options ...string) base {
 	return base{PrintFile: "2page.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
+// iTest2 adds informational parametrized tests (one proxy, one regular)
+// that use "2page.pdf" for printing.
+func iTest2(name, ppdFile, expectedFile string, options ...string) base {
+	return base{PrintFile: "2page.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
+}
+
 func TestAddParams(t *testing.T) {
 	code := genparams.Template(t, `{{ range . }} {
         Name: {{ .Name | fmt }},
@@ -83,6 +89,7 @@ func TestAddParams(t *testing.T) {
 		test("oki_tray4", "printer_add_oki.ppd.gz", "printer_add_oki_tray4_golden.ps", "media-source=tray-4"),
 
 		// Add
+		iTest2("canon", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin"),
 		test("dymo_lw", "printer_add_dymo_printer_lw450.ppd", "printer_add_dymo_lw_printer_golden.bin"),
 		test("dymo_lm", "printer_add_dymo_printer_lm450.ppd", "printer_add_dymo_lm_printer_golden.bin"),
 		test("epson", "printer_EpsonWF3620.ppd", "printer_add_epson_printer_golden.ps"),

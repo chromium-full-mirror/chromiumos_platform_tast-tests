@@ -120,6 +120,14 @@ func init() {
 				},
 				ExtraData: []string{"to_print.pdf", "printer_add_oki.ppd.gz", "printer_add_oki_tray4_golden.ps"},
 			}, {
+				Name: "canon",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_canonmg2900.ppd",
+					PrintFile:    "2page.pdf",
+					ExpectedFile: "printer_add_canonmg2900_golden.bin",
+				},
+				ExtraData: []string{"2page.pdf", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin"},
+			}, {
 				Name: "dymo_lw",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_add_dymo_printer_lw450.ppd",
