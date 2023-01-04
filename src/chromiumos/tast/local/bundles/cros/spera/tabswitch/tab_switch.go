@@ -607,6 +607,27 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 				}
 			}
 
+			switch tab.pageInfo.webName {
+			// After switching to Youtube or Reddit tabs, there might be a dialog popping up,
+			// causing the test fails to switch to the next tab.
+			case youtube, reddit:
+				// The alert dialog pops up after the tab achieves quiescence.
+				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
+					return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
+				}
+				if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
+					return errors.Wrap(err, "failed to close alert dialog")
+				}
+			case wikipedia, googleHelp, localWebsite:
+				webName := tab.pageInfo.webName
+				// For local websites, only apply actions at the first tab in each window to reduce the execution time of the test.
+				if !(webName == localWebsite && tabIdx != 0) {
+					if err := cuj.GenerateEventLatency(ctx, tconn, string(webName)); err != nil {
+						return errors.Wrap(err, "failed to generate event latency histograms")
+					}
+				}
+			}
+
 			// Click on 1 link per 2 tabs, or click on 1 link for every tab under Record mode to ensure all links are
 			// accessible under any other tiers.
 			if tabIdx%2 == 0 || isRecordMode {
@@ -618,21 +639,6 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 					if err := webutil.WaitForRender(ctx, tab.conn, plTimeout); err != nil {
 						return errors.Wrap(err, "failed to wait for render to finish")
 					}
-				}
-			}
-
-			// The tab.pageInfo.webName is the website name of the tab after switching.
-			// After switching to Youtube or Reddit tabs, there might be a dialog popping up,
-			// causing the test fails to switch to the next tab.
-			// If the dialog exists, keep clicking the "Allow" button to ensure it is closed.
-			if tab.pageInfo.webName == youtube || tab.pageInfo.webName == reddit {
-				// The alert dialog pops up after the tab achieves quiescence.
-				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
-					return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
-				}
-
-				if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
-					return errors.Wrap(err, "failed to close alert dialog")
 				}
 			}
 		}

@@ -234,6 +234,28 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 
 	hyperlink := fmt.Sprintf(`<a href="./%s.html">test</a>`, localHyperlink)
 
+	inputTextBox := `
+		<label for="input text">Input your text:</label><br>
+		<input type="text" id="input text" name="input text"><br>
+	`
+
+	hideTextButtonAndScript := `
+		<button id="text button" onclick="hideText()">Hide text</button>
+		<script>
+		function hideText() {
+			let text = document.getElementById("text");
+			let button = document.getElementById("text button");
+			if (text.style.display === "none") {
+				text.style.display = "block";
+				button.textContent = "Hide text";
+			} else {
+				text.style.display = "none";
+				button.textContent = "Show text";
+			}
+		}
+		</script>
+	`
+
 	videoPath := path.Join(dirPath, localVideo+".mp4")
 	scriptPath := path.Join(dirPath, localScript+".js")
 	graphPath := path.Join(dirPath, localGraph+".jpg")
@@ -340,6 +362,7 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 				%s
 			<div class="float-child" >
 				%s
+				%s
 				<div class="d1">
 					<canvas></canvas>
 					<script>
@@ -372,13 +395,16 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 			</div>
 			<div class="float-child">
 				%s
+				<div id="text">
+					%s
+				</div>
 			</div>
 		</div>
 
 		<p>Hyperlinks</p>
 		%s
 	</body>
-	</html>`, externalScript, inlineScript, smallImageDiv, inlineScript, video, gifImageDiv, localText, hyperlink)
+	</html>`, externalScript, inlineScript, smallImageDiv, inlineScript, inputTextBox, video, gifImageDiv, hideTextButtonAndScript, localText, hyperlink)
 		var htmlFileName string
 		if i == 0 {
 			htmlFileName = fmt.Sprintf("%s.html", localHyperlink)

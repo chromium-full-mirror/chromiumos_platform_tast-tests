@@ -344,6 +344,9 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		if err := webutil.WaitForQuiescence(ctx, conn, 2*time.Minute); err != nil {
 			return errors.Wrap(err, "failed to wait for Google Help to finish loading")
 		}
+		if err := cuj.GenerateEventLatency(ctx, tconn, "Google Help"); err != nil {
+			return errors.Wrap(err, "failed to generate event latency histograms")
+		}
 		return nil
 	}
 

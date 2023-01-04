@@ -39,7 +39,7 @@ const (
 	// HelloWorldAppName indicates to test against a "Hello world" ARC app.
 	HelloWorldAppName = "Hello world"
 	// YoutubeMusicAppName indicates to test against YoutubeMusic.
-	YoutubeMusicAppName = "ytmusic"
+	YoutubeMusicAppName = "YouTube Music"
 	// SpotifyAppName indicates to test against Spotify.
 	SpotifyAppName = spotify.AppName
 
@@ -366,8 +366,14 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 			}
 
 			if params.appName == YoutubeMusicAppName && url == cuj.YoutubeMusicURL {
+				if err := cuj.MaximizeBrowserWindow(ctx, tconn, params.tabletMode, YoutubeMusicAppName); err != nil {
+					return errors.Wrap(err, "failed to maximize the YouTube Music window")
+				}
 				if err := playYoutubeMusic(ctx, resources); err != nil {
 					return errors.Wrap(err, "failed to play Youtube Music")
+				}
+				if err := cuj.GenerateEventLatency(ctx, tconn, YoutubeMusicAppName); err != nil {
+					return errors.Wrap(err, "failed to generate event latency histograms")
 				}
 			}
 		}
