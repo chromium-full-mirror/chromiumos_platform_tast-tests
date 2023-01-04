@@ -82,6 +82,8 @@ func ARCProvisioning(ctx context.Context, s *testing.State) {
 
 	arcPolicy := &policy.ArcPolicy{
 		Val: &policy.ArcPolicyValue{
+			Applications:              []policy.Application{},
+			PlayStoreMode:             arcent.PlayStoreModeAllowList,
 			DpsInteractionsDisabled:   true,
 			PlayEmmApiInstallDisabled: true,
 		},
