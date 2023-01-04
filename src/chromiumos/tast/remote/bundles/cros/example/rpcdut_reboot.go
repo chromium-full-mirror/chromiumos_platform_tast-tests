@@ -25,7 +25,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		ServiceDeps:  []string{dutfs.ServiceName},
 	})
 }
