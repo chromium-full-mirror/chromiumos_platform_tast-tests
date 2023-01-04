@@ -150,6 +150,26 @@ func init() {
 				Key:   "feature_id",
 				Value: "screenplay-ffe64e90-9827-4dde-8f66-ac0143a9b71b",
 			}},
+		}, {
+			Name: "device_channel_ltc",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Val: "ltc-channel"},
+					&policy.ChromeOsReleaseChannelDelegated{Val: false},
+				},
+				testValue:   "ltc-channel",
+				policyParam: "track",
+			},
+		}, {
+			Name: "device_channel_lts",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Val: "lts-channel"},
+					&policy.ChromeOsReleaseChannelDelegated{Val: false},
+				},
+				testValue:   "lts-channel",
+				policyParam: "track",
+			},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceTargetVersionSelector{}, pci.VerifiedFunctionalityOS),
