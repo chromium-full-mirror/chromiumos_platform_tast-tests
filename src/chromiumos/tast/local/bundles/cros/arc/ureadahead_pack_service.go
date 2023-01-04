@@ -128,8 +128,10 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	}
 
 	testing.ContextLog(ctx, "Login Chrome")
-
-	chromeArgs := append(arc.DisableSyncFlags(), "--arc-force-show-optin-ui")
+	// Switch to ureadahead generation mode in order to bind all services properly.
+	chromeArgs := append(arc.DisableSyncFlags(),
+		"--arc-force-show-optin-ui",
+		"--arc-host-ureadahead-generation")
 	if vmEnabled {
 		chromeArgs = append(chromeArgs, "--arcvm-ureadahead-mode=generate")
 	}
@@ -195,6 +197,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 	logPath := filepath.Join(ureadaheadDataDir, logName)
 	log, err := os.Create(logPath)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create log file")
 	}

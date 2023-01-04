@@ -149,6 +149,17 @@ func init() {
 				dataDir:        "",
 			},
 		}, {
+			Name:              "container_r",
+			ExtraAttr:         []string{"group:arc-data-collector"},
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			Val: testParam{
+				vmEnabled:      false,
+				androidPackage: "android-container-rvc",
+				upload:         true,
+				uprevBranch:    false,
+				dataDir:        "",
+			},
+		}, {
 			Name:              "vm_r",
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
@@ -165,6 +176,16 @@ func init() {
 			Val: testParam{
 				vmEnabled:      false,
 				androidPackage: "android-container-pi",
+				upload:         false,
+				uprevBranch:    false,
+				dataDir:        "/tmp/data_collector",
+			},
+		}, {
+			Name:              "container_r_local",
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			Val: testParam{
+				vmEnabled:      false,
+				androidPackage: "android-container-rvc",
 				upload:         false,
 				uprevBranch:    false,
 				dataDir:        "/tmp/data_collector",
@@ -209,6 +230,19 @@ func init() {
 				upload:                        true,
 				uprevBranch:                   true,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
+				dataDir:                       "/tmp/data_collector",
+			},
+		}, {
+			Name:              "container_r_branch_uprev",
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya", "careena")),
+			Val: testParam{
+				vmEnabled:                     false,
+				androidPackage:                "android-container-rvc",
+				upload:                        true,
+				uprevBranch:                   true,
+				requiredCPUAbisForBranchUprev: []string{"x86_64"},
 				dataDir:                       "/tmp/data_collector",
 			},
 		}, {
