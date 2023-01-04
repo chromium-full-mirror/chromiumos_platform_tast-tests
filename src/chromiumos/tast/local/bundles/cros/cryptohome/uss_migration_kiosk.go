@@ -35,8 +35,11 @@ func init() {
 
 func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 	const (
-		ownerName   = "owner@bar.baz"
-		cleanupTime = 20 * time.Second
+		ownerName       = "owner@bar.baz"
+		cleanupTime     = 20 * time.Second
+		kioskKeysetFile = "master.0" // nocheck
+		ussFile         = "/user_secret_stash/uss.0"
+		kioskFactorFile = "/auth_factors/kiosk.public_mount"
 	)
 
 	cleanupCtx := ctx
@@ -85,6 +88,12 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 			if err := client.AddKioskAuthFactor(ctx, authSessionID); err != nil {
 				return errors.Wrap(err, "failed to add kiosk credentials")
 			}
+
+			// Check that the kiosk VaultKeyset file is created.
+			if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskKeysetFile, cryptohome.KioskUser); err != nil {
+				return errors.Wrap(err, "kiosk keyset file was not created")
+			}
+
 			if err := cryptohome.WriteFileForPersistence(ctx, cryptohome.KioskUser); err != nil {
 				return errors.Wrap(err, "failed to write test file")
 			}
@@ -112,6 +121,11 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		}
 		defer enableUssCleanup(cleanupCtx)
 
+		// Check that migrated Kiosk factor has not been migrated.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskFactorFile, cryptohome.KioskUser); err == nil {
+			return errors.New("kiosk auth factor file was created before migration should have happened")
+		}
+
 		// Start a new auth session and mount the persistent vault.
 		// This should do migration.
 		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
@@ -126,13 +140,32 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to authenticate and mount the user vault with migration")
 		}
 
-		// TODO(b/262008437): Verify that this most recent session was backed
-		// by factors from VK (before the migration happened).
+		// Check that migrated Kiosk factor has now been migrated. There should be both a USS
+		// and a file for the kiosk auth factor.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "USS file was not created")
+		}
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskFactorFile, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "kiosk auth factor file was not created")
+		}
 
 		// Unmount user vault.
 		if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
 			return errors.Wrap(err, "failed to unmount vault after migration mount")
 		}
+		return nil
+	}); err != nil {
+		s.Fatal("Validation during USS migration failed: ", err)
+	}
+
+	// Enable migration to verify that the migrated factor works.
+	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
+		// Switch cryptohome into USS mode.
+		enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
+		if err != nil {
+			return errors.Wrap(err, "unable to enable USS after creating credentials")
+		}
+		defer enableUssCleanup(cleanupCtx)
 
 		// Start a new auth session and mount the persistent vault.
 		// This should work with the migrated factor.
@@ -148,16 +181,13 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to authenticate and mount the user vault")
 		}
 
-		// TODO(b/262008437): Verify that the most recent session was backed by
-		// factors from USS.
-
 		// Unmount user vault.
 		if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
 			return errors.Wrap(err, "failed to unmount vault after post-migration mount")
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Validation while USS migration was enabled failed: ", err)
+		s.Fatal("Validation after USS migration failed: ", err)
 	}
 
 	// Disable migration and re-run authentication to verify the rollback process.
@@ -183,8 +213,16 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to authenticate and mount the user vault with rollback")
 		}
 
-		// TODO(b/262008437): Verify that this most recent session was backed
-		// by factors from VK (rolled back).
+		// After migration is disabled, all of the backing stores (VK and USS) should still exist.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskKeysetFile, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "kiosk keyset file no longer exists")
+		}
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "USS file no longer exists")
+		}
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskFactorFile, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "kiosk auth factor file no longer exists")
+		}
 
 		// Unmount user vault.
 		if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
