@@ -115,17 +115,17 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 		recorder.EnableTracing(p.OutDir, p.TraceConfigPath)
 	}
 
-	docsConn, err := br.NewConn(ctx, cuj.VideoCallDocsURL, browser.WithNewWindow())
-	if err != nil {
-		return errors.Wrap(err, "failed to open docs window")
-	}
-	defer func(ctx context.Context) {
-		faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return retErr != nil }, cr, "ui_dump_docs")
-		docsConn.CloseTarget(ctx)
-		docsConn.Close()
-	}(cleanupCtx)
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) (recorderErr error) {
+		docsConn, err := br.NewConn(ctx, cuj.VideoCallDocsURL, browser.WithNewWindow())
+		if err != nil {
+			return errors.Wrap(err, "failed to open docs window")
+		}
+		defer func(ctx context.Context) {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return retErr != nil }, cr, "ui_dump_docs")
+			docsConn.CloseTarget(ctx)
+			docsConn.Close()
+		}(cleanupCtx)
 		videoConn, err := uiHandler.NewChromeTab(ctx, br, p.VideoCallURL, true)
 		if err != nil {
 			return errors.Wrapf(err, "failed to open URL: %s", p.VideoCallURL)
