@@ -6,6 +6,7 @@ package uidetection
 
 import (
 	"context"
+	"image"
 	"strings"
 
 	pb "google.golang.org/genproto/googleapis/chromeos/uidetection/v1"
@@ -283,7 +284,7 @@ func (f *Finder) RightOfA11yNode(other *nodewith.Finder) *Finder {
 // locationPx resolves the UI detection request and stores the bounding boxes of the matching element in pixels.
 func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float64) (*Location, error) {
 	// Take the screenshot depending on the provided strategy.
-	var imagePng []byte
+	var image image.Image
 	var err error
 	boundingBox := coords.Rect{Left: 0, Top: 0, Width: maxScreenSizePx, Height: maxScreenSizePx}
 
@@ -297,17 +298,22 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 
 	switch uda.screenshotStrategy {
 	case StableScreenshot:
-		imagePng, err = takeStableScreenshot(ctx, uda.tconn, uda.pollOpts, boundingBox)
+		image, err = takeStableScreenshot(ctx, uda.tconn, uda.pollOpts, boundingBox)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to take stable screenshot")
 		}
 	case ImmediateScreenshot:
-		imagePng, err = takeScreenshot(ctx, uda.tconn, boundingBox)
+		image, err = takeScreenshot(ctx, uda.tconn, boundingBox)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to take screenshot")
 		}
 	default:
 		return nil, errors.New("invalid screenshot strategy")
+	}
+
+	imagePng, err := encodePNG(image)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to encode screenshot as a png")
 	}
 
 	failure := func(err error) (*Location, error) {
@@ -339,6 +345,8 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 				Text: location.GetText(),
 			})
 	}
+
+	saveDebugImages(ctx, imagePng, image, locations, f.desc)
 
 	numMatches := len(locations)
 	switch {

@@ -8,11 +8,13 @@ import (
 	"bytes"
 	"context"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -23,6 +25,7 @@ import (
 )
 
 const (
+	outputDir         = "uidetection"
 	screenshotFile    = "uidetection_screenshot.png"
 	oldScreenshotFile = "old_uidetection_screenshot.png"
 )
@@ -59,8 +62,71 @@ func crop(img image.Image, boundingBox coords.Rect) (image.Image, error) {
 	return cropped, nil
 }
 
-// takeScreenshot takes a screentshot in PNG format and reads it to []byte.
-func takeScreenshot(ctx context.Context, tconn *chrome.TestConn, boundingBox coords.Rect) ([]byte, error) {
+// saveDebugImages saves two images for debugging:
+//
+// 1. The screenshot that was sent to ACUITI.
+//
+// 2. The screenshot with detection outlines drawn over the image.
+func saveDebugImages(ctx context.Context, imagePng []byte, image image.Image, locations []Location, desc string) {
+	filename := time.Now().UTC().Format("2006-01-02T15:04:05.000000Z") + "-" + desc
+	debugFilename := filename + "png"
+	if err := saveBytesImageToOutput(ctx, imagePng, debugFilename); err != nil {
+		testing.ContextLogf(ctx, "INFO: couldn't save debug screenshot to %s: %s", debugFilename, err)
+	}
+
+	outlinesFilename := filename + "-" + strconv.Itoa(len(locations)) + "_detection_outlines.png"
+	if err := saveDetectionOutlineImage(ctx, image, locations, outlinesFilename); err != nil {
+		testing.ContextLogf(ctx, "INFO: couldn't save debug screenshot with detection outlines to %s: %s", outlinesFilename, err)
+	}
+}
+
+// saveDetectionOutlineImage saves a screenshot with rectangles drawn around the
+// detection regions.
+func saveDetectionOutlineImage(ctx context.Context, img image.Image, locations []Location, filename string) error {
+	if len(locations) == 0 {
+		return saveImageToOutput(ctx, img, filename)
+	}
+
+	// Cast because image.Image is readonly.
+	imgRGBA, ok := img.(*image.RGBA)
+	if !ok {
+		return errors.New("failed to cast image to RGBA")
+	}
+
+	color := color.RGBA{255, 0, 255, 255} // pink
+	var detectionImg draw.Image
+	for _, loc := range locations {
+		// Draw a rectangle 1px outside the detection region, bounded to the
+		// size of the image.
+		rec := loc.WithInset(-2, -2)
+
+		bounds := img.Bounds()
+		boundsRec := coords.NewRectLTRB(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y)
+		rec = rec.Intersection(boundsRec)
+
+		x1, y1, x2, y2 := rec.TopLeft().X, rec.TopLeft().Y, rec.BottomRight().X, rec.BottomRight().Y
+		detectionImg = drawRectangle(imgRGBA, color, x1, y1, x2, y2)
+	}
+
+	return saveImageToOutput(ctx, detectionImg, filename)
+}
+
+// drawRectangle draws an unfilled rectangle on an image.
+func drawRectangle(img draw.Image, color color.Color, x1, y1, x2, y2 int) draw.Image {
+	for i := x1; i < x2; i++ {
+		img.Set(i, y1, color)
+		img.Set(i, y2, color)
+	}
+
+	for i := y1; i <= y2; i++ {
+		img.Set(x1, i, color)
+		img.Set(x2, i, color)
+	}
+	return img
+}
+
+// takeScreenshot takes a screenshot in PNG format.
+func takeScreenshot(ctx context.Context, tconn *chrome.TestConn, boundingBox coords.Rect) (image.Image, error) {
 	uncropped, err := screenshot.CaptureChromeImageWithTestAPI(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to take the screenshot")
@@ -71,16 +137,12 @@ func takeScreenshot(ctx context.Context, tconn *chrome.TestConn, boundingBox coo
 		return nil, err
 	}
 
-	imgBuf := new(bytes.Buffer)
-	if err := png.Encode(imgBuf, cropped); err != nil {
-		return nil, errors.Wrap(err, "failed to write the PNG image into byte buffer")
-	}
-
-	return imgBuf.Bytes(), nil
+	return cropped, nil
 }
 
-// takeStableScreenshot takes a stable screenshot that doesn't changed between two pollings.
-func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts testing.PollOptions, boundingBox coords.Rect) ([]byte, error) {
+// takeStableScreenshot takes a stable screenshot in PNG format that doesn't
+// change between two polls.
+func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts testing.PollOptions, boundingBox coords.Rect) (image.Image, error) {
 	var currentScreen image.Image
 	var lastScreen image.Image
 	start := time.Now()
@@ -109,10 +171,13 @@ func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts 
 		}
 		return nil, errors.Wrap(err, "failed to take stable screenshot")
 	}
+	return currentScreen, nil
+}
 
-	// Convert image.Image to []byte.
+// encodePNG converts an image.Image to a PNG.
+func encodePNG(img image.Image) ([]byte, error) {
 	imgBuf := new(bytes.Buffer)
-	if err := png.Encode(imgBuf, currentScreen); err != nil {
+	if err := png.Encode(imgBuf, img); err != nil {
 		return nil, errors.Wrap(err, "failed to write the PNG image into byte buffer")
 	}
 	return imgBuf.Bytes(), nil
@@ -146,14 +211,30 @@ func equal(imgA, imgB image.Image) error {
 	return nil
 }
 
+// findOutputPath returns the path to the uidetection output directory and creates
+// it if it does not already exist.
+func findOutputPath(ctx context.Context) (string, error) {
+	outputPath, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return "", errors.New("failed to get the testing output directory")
+	}
+	outputPath = filepath.Join(outputPath, outputDir)
+
+	// Create the output directory if it does not exist.
+	if err := os.MkdirAll(outputPath, 0755); err != nil {
+		return "", errors.Wrap(err, "failed to create the testing output directory")
+	}
+	return outputPath, nil
+}
+
 // saveImageToOutput saves an image in image.Image format to the testing output
 // dir that will be uploaded to the test log folder.
 func saveImageToOutput(ctx context.Context, img image.Image, filename string) error {
-	outputDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return errors.New("failed to get the output dir")
+	outputPath, err := findOutputPath(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get the output directory to save file %s", filename)
 	}
-	if err := saveImage(img, filepath.Join(outputDir, filename)); err != nil {
+	if err := saveImage(img, filepath.Join(outputPath, filename)); err != nil {
 		return errors.Wrapf(err, "failed to save file %s", filename)
 	}
 	return nil
@@ -162,11 +243,11 @@ func saveImageToOutput(ctx context.Context, img image.Image, filename string) er
 // saveBytesImageToOutput saves an image in []byte format to the testing output
 // dir that will be uploaded to the test log folder.
 func saveBytesImageToOutput(ctx context.Context, img []byte, filename string) error {
-	outputDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return errors.New("failed to get the output dir")
+	outputPath, err := findOutputPath(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get the output directory to save file %s", filename)
 	}
-	if err := ioutil.WriteFile((filepath.Join(outputDir, filename)), img, 0644); err != nil {
+	if err := ioutil.WriteFile((filepath.Join(outputPath, filename)), img, 0644); err != nil {
 		return errors.Wrapf(err, "failed to save file %s", filename)
 	}
 	return nil
