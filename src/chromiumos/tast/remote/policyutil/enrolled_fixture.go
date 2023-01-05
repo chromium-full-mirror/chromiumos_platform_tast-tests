@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/sysutil"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
@@ -127,7 +128,14 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	if err := checkVPDState(ctx, s.DUT()); err != nil {
-		s.Fatal("VPD is broken: ", err)
+		if isVM := sysutil.IsRunningOnVM(ctx, s.DUT()); isVM {
+			// TODO(b/264435654): This fixture is best-effort and also requires
+			// some manual setup on the VM. Add formal support for using the
+			// fixture on VMs.
+			s.Log("VPD is broken but running on a VM so trying to enroll anyway: ", err)
+		} else {
+			s.Fatal("VPD is broken: ", err)
+		}
 	}
 
 	ok := false
