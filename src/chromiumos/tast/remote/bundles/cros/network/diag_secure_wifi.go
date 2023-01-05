@@ -64,7 +64,7 @@ func init() {
 		},
 		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		Fixture:      "wificellFixt",
 		Params: []testing.Param{{
 			Name: "none",

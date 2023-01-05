@@ -39,7 +39,7 @@ func init() {
 			"chadduffin@google.com",
 			"cros-connectivity@google.com",
 		},
-		Attr: []string{"group:wificell", "wificell_func"},
+		Attr: []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
