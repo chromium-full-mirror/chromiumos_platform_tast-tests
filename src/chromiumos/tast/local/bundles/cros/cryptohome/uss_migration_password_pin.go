@@ -128,19 +128,21 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 	// Cleanup user vault before UssMigrationPasswordPin exists.
 	defer client.RemoveVault(ctxForCleanup, userName)
 
-	// 2. Enable USS and USS migration for the second phase of the test. Test
-	// that only successful authentication migrates the password and PIN factors,
-	// and after the migration PIN reset mechanism works. Also updating a PIN
-	// succeeds after the migration.
-	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
-		// Enable UserSecretStash.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to enable the UserSecretStash experiment")
-		}
-		defer cleanupUSSExperiment(ctxForCleanup)
+	// 2. Test the migration of the two created factors. Test that only successful
+	// authentication migrates the password and PIN factors, and after the migration
+	// PIN reset mechanism works. Also updating a PIN succeeds after the migration.
 
-		// 2.1. Test password migration.
+	// Enable USS and USS migration for the second phase of the test.
+
+	// Enable UserSecretStash.
+	cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
+	if err != nil {
+		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
+	}
+	defer cleanupUSSExperiment(ctxForCleanup)
+
+	// 2.1. Test password migration.
+	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
 			// Try authenticate with wrong password.
@@ -180,9 +182,14 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 		}); err != nil {
 			return errors.Wrap(err, "failed to test password migration")
 		}
+		return nil
+	}); err != nil {
+		s.Fatal("Setup while USS migration was enabled failed: ", err)
+	}
 
-		// 2.2 Run a soft test on the PIN lock counter. Since entering correct PIN migrates
-		// the PIN run this test partially to see password can reset the counter.
+	// 2.2 Run a soft test on the PIN lock counter. Since entering correct PIN migrates
+	// the PIN run this test partially to see password can reset the counter.
+	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			const numberOfWrongAttemptToLock = 6
 
@@ -256,8 +263,13 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 		}); err != nil {
 			return errors.Wrap(err, "failed to test PIN migration")
 		}
+		return nil
+	}); err != nil {
+		s.Fatal("Setup while USS migration was enabled failed: ", err)
+	}
 
-		// 2.4 Test update PIN AuthFactor after migration.
+	// 2.4 Test update PIN AuthFactor after migration.
+	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
 			// Authenticate with password as a prerequisite to update PIN.
