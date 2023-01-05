@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
+	"chromiumos/tast/remote/wificell/router/common/support"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
 )
@@ -49,6 +51,26 @@ func CSAReconnect(ctx context.Context, s *testing.State) {
 	}(ctx)
 	s.Log("AP setup done")
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
+	defer cancel()
+
+	// Setup capture at the destination channel (The channel the AP is on after CSA).
+	pcapPrimCh, ok := tf.Pcap().(support.Capture)
+	if !ok {
+		s.Fatalf("Router type %q does not have sufficient support for this test", ap.Router().RouterType().String())
+	}
+
+	freqOps, err := ap.Config().PcapFreqOptions()
+	if err != nil {
+		s.Fatal("Failed to get Freq Opts: ", err)
+	}
+	capturer, err := pcapPrimCh.StartCapture(ctx, tf.UniqueAPName(), alterChannel, freqOps)
+	if err != nil {
+		s.Fatal("Failed to start capturer: ", err)
+	}
+	defer func(ctx context.Context) {
+		pcapPrimCh.StopCapture(ctx, capturer)
+	}(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	// Connect to the AP.
