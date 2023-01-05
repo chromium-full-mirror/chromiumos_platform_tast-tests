@@ -135,7 +135,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	}
 
 	// Inputs VPN properties via UI.
-	svcName := "vpn-test-" + config.Type
+	svcName := "vpn-test-" + config.Type.String()
 
 	// Configures service on the VPN dialog page.
 	v := vpnDialogConfigger{ui, ew, config, vpnConn, svcName}

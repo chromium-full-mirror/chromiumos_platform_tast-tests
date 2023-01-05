@@ -27,7 +27,7 @@ import (
 // Config contains the parameters (for both client and server) to configure a
 // VPN connection.
 type Config struct {
-	Type          string
+	Type          Type
 	MTU           int
 	Metered       bool
 	PushDNS       bool
@@ -72,13 +72,20 @@ type Config struct {
 	includedRoutesV4 []net.IPNet
 }
 
+// Type represents the VPN type.
+type Type int
+
 // VPN types.
 const (
-	TypeIKEv2     = "IKEv2"
-	TypeL2TPIPsec = "L2TP/IPsec"
-	TypeOpenVPN   = "OpenVPN"
-	TypeWireGuard = "WireGuard"
+	TypeIKEv2 Type = iota
+	TypeL2TPIPsec
+	TypeOpenVPN
+	TypeWireGuard
 )
+
+func (t Type) String() string {
+	return []string{"IKEv2", "L2TP/IPsec", "OpenVPN", "WireGuard"}[t]
+}
 
 // IPsecAuthType represent the authentication type for an IPsec-based VPN
 // connection.
@@ -99,7 +106,7 @@ func (t IPsecAuthType) String() string {
 type Option = func(*Config)
 
 // NewConfig creates a config object for a given VPN type
-func NewConfig(vpnType string, opts ...Option) *Config {
+func NewConfig(vpnType Type, opts ...Option) *Config {
 	c := &Config{
 		Type:          vpnType,
 		IPsecAuthType: AuthTypePSK,

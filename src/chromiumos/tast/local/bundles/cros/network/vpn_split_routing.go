@@ -39,7 +39,7 @@ func init() {
 	})
 }
 
-func configFromType(vpnType string, fixtureEnv vpn.FixtureEnv) *vpn.Config {
+func configFromType(vpnType vpn.Type, fixtureEnv vpn.FixtureEnv) *vpn.Config {
 	if vpnType == vpn.TypeOpenVPN {
 		return vpn.NewConfig(vpn.TypeOpenVPN,
 			vpn.WithCertVals(fixtureEnv.CertVals),
@@ -83,7 +83,7 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect vpn server to router: ", err)
 	}
 
-	vpnConfig := configFromType(s.Param().(string), s.FixtValue().(vpn.FixtureEnv))
+	vpnConfig := configFromType(s.Param().(vpn.Type), s.FixtValue().(vpn.FixtureEnv))
 	conn, err := vpn.NewConnectionWithEnvs(ctx, *vpnConfig, vpnServer, nil)
 	if err != nil {
 		s.Fatal("Failed to create vpn connection object: ", err)
