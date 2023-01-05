@@ -13,7 +13,9 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -27,13 +29,16 @@ const (
 	longUITimeout   = time.Minute      // Used for situations where UI might take a long time to respond.
 	mediumUITimeout = 30 * time.Second // Used for situations where UI response are slower.
 	shortUITimeout  = 3 * time.Second  // Used for situations where UI response are faster.
+
+	newMeetingURL = "http://meet.google.com/new"
+	pwaInstallURL = "https://meet.google.com"
 )
 
 var (
 	// Find the web view of Meet window.
-	meetingWebview = nodewith.ClassName("ContentsWebView").Role(role.WebView)
+	meetRootWebArea = nodewith.NameContaining("Meet").Role(role.RootWebArea)
 
-	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetingWebview)
+	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetRootWebArea)
 )
 
 // GoogleMeet represents a type of GoogleMeet meeting instance.
@@ -67,13 +72,13 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatch
 // The caller should explicitly call cleanup function to release resources and close Chrome browser.
 // Example:
 //
-//	gm, cleanup, err := googlemeet.StartNewMeeting(ctx, cr, browserType,nil)
+//	gm, cleanup, err := googlemeet.StartNewMeeting(ctx, cr, browserType, nil)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer cleanup(cleanupCtx)
 func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, urlParams map[string]string) (*GoogleMeet, action.Action, error) {
-	newMeetingURL := "http://meet.google.com/new"
+	newMeetingURL := newMeetingURL
 	if urlParams != nil && len(urlParams) > 0 {
 		values := url.Values{}
 		for k, v := range urlParams {
@@ -98,12 +103,77 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser
 
 	gm := New(conn, tconn)
 
-	// Close the "Your meeting's ready" dialog.
 	if err := gm.ClearPromptsForNewMeeting(ctx); err != nil {
 		return nil, closeBrowser, err
 	}
 
 	return gm, closeBrowser, nil
+}
+
+// StartNewMeetingUsingPWA starts a new Google Meeting in PWA mode.
+// It automatically installs PWA if it is not installed yet.
+// The caller should explicitly call cleanup function to release resources and close the app.
+// Example:
+//
+//	gm, cleanup, err := googlemeet.StartNewMeetingUsingPWA(ctx, cr, browserType)
+//	if err != nil {
+//	     s.Fatal("Failed to start meeting: ", err)
+//	}
+//	defer cleanup(cleanupCtx)
+func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*GoogleMeet, action.Action, error) {
+	if err := InstallPWA(ctx, cr, browserType); err != nil {
+		return nil, nil, err
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pwaTitle := "Google Meet"
+	pwaTargetMatcher := func(t *chrome.Target) bool {
+		return t.Title == pwaTitle
+	}
+
+	// PWA is automatically launched after installation.
+	// Check if app is already running to avoid double launch.
+	isRunning, err := ash.AppRunning(ctx, tconn, apps.Meet.ID)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to check whether Meet is already running")
+	}
+
+	if !isRunning {
+		if err := apps.Launch(ctx, tconn, apps.Meet.ID); err != nil {
+			return nil, nil, err
+		}
+	} else {
+		// Bring existing Meet PWA to front.
+		if _, err := ash.BringWindowToForeground(ctx, tconn, pwaTitle); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to bring Meet PWA to front")
+		}
+	}
+
+	closeApp := func(ctx context.Context) error {
+		return apps.Close(ctx, tconn, apps.Meet.ID)
+	}
+
+	gm, err := NewFromTarget(ctx, cr, pwaTargetMatcher)
+	if err != nil {
+		return nil, closeApp, errors.Wrap(err, "failed to connect to Meet PWA")
+	}
+
+	if err := gm.conn.Navigate(ctx, newMeetingURL); err != nil {
+		return nil, closeApp, errors.Wrap(err, "failed to start new meeting")
+	}
+	if err := webutil.WaitForQuiescence(ctx, gm.conn, longUITimeout); err != nil {
+		return nil, closeApp, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
+	}
+
+	if err := gm.ClearPromptsForNewMeeting(ctx); err != nil {
+		return nil, closeApp, err
+	}
+
+	return gm, closeApp, nil
 }
 
 // Conn returns the connection to the Meet page target.
@@ -113,7 +183,7 @@ func (gm *GoogleMeet) Conn() *chrome.Conn {
 
 // EnterFullScreen changes setting to turn full screen mode.
 func (gm *GoogleMeet) EnterFullScreen(ctx context.Context) error {
-	fullScreenButton := nodewith.Name("Full screen").Role(role.MenuItem).Ancestor(meetingWebview)
+	fullScreenButton := nodewith.Name("Full screen").Role(role.MenuItem).Ancestor(meetRootWebArea)
 
 	return uiauto.Combine("enter full screen",
 		gm.ui.DoDefault(moreOptionsButton),
@@ -186,4 +256,30 @@ func (gm *GoogleMeet) ApplyVideoEffects(actions ...action.Action) action.Action 
 	return uiauto.NamedCombine("apply video effects",
 		actionsToPerform...,
 	)
+}
+
+// InstallPWA installs Google Meet PWA.
+func InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return err
+	}
+
+	if alreadyInstalled, err := ash.ChromeAppInstalled(ctx, tconn, apps.Meet.ID); err != nil {
+		return errors.Wrap(err, "failed to check whether Meet PWA has already been installed")
+	} else if alreadyInstalled {
+		return nil
+	}
+
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
+	if err != nil {
+		return err
+	}
+	defer closeBrowser(ctx)
+
+	// Install Meet PWA.
+	if err := apps.InstallPWAForURL(ctx, tconn, br, pwaInstallURL, 30*time.Second); err != nil {
+		return errors.Wrap(err, "failed to install Meet PWA")
+	}
+	return ash.WaitForChromeAppInstalled(ctx, tconn, apps.Meet.ID, time.Minute)
 }

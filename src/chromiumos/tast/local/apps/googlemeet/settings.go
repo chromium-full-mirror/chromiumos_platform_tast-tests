@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	settingsDialog           = nodewith.Name("Settings").Role(role.Dialog).Ancestor(meetingWebview)
+	settingsDialog           = nodewith.Name("Settings").Role(role.Dialog).Ancestor(meetRootWebArea)
 	videoSettingsTabButton   = nodewith.Name("Video").Role(role.Tab).Ancestor(settingsDialog)
 	generalSettingsTabButton = nodewith.Name("General").Role(role.Tab).Ancestor(settingsDialog)
 	closeSettingsButton      = nodewith.Name("Close dialog").Role(role.Button).Ancestor(settingsDialog)
@@ -27,7 +27,7 @@ var (
 
 // OpenSettings opens settings page in GoogleMeet.
 func (gm *GoogleMeet) OpenSettings(ctx context.Context) error {
-	settingsButton := nodewith.Name("Settings").Role(role.MenuItem).Ancestor(meetingWebview)
+	settingsButton := nodewith.Name("Settings").Role(role.MenuItem).Ancestor(meetRootWebArea)
 
 	if err := gm.ui.Exists(settingsDialog)(ctx); err == nil {
 		testing.ContextLog(ctx, "Settings page is already opened")
@@ -127,11 +127,11 @@ func (gm *GoogleMeet) setDropdownValue(dropdown, option *nodewith.Finder, value 
 	}
 }
 
-var videoEffectsPageHeading = nodewith.Name("Effects").Role(role.Heading).Ancestor(meetingWebview)
+var videoEffectsPageHeading = nodewith.Name("Effects").Role(role.Heading).Ancestor(meetRootWebArea)
 
 // OpenVideoEffects opens video effects page in GoogleMeet.
 func (gm *GoogleMeet) OpenVideoEffects(ctx context.Context) error {
-	applyVisualEffectsButton := nodewith.Name("Apply visual effects").Role(role.MenuItem).Ancestor(meetingWebview)
+	applyVisualEffectsButton := nodewith.Name("Apply visual effects").Role(role.MenuItem).Ancestor(meetRootWebArea)
 
 	return uiauto.Combine("open video effects setting dialog",
 		gm.ui.DoDefault(moreOptionsButton),
@@ -141,7 +141,7 @@ func (gm *GoogleMeet) OpenVideoEffects(ctx context.Context) error {
 
 // CloseVideoEffects closes the video effects page.
 func (gm *GoogleMeet) CloseVideoEffects(ctx context.Context) error {
-	closeApplyVisualEffectsButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetingWebview).First()
+	closeApplyVisualEffectsButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).First()
 
 	return uiauto.Combine("close video effects setting dialog",
 		gm.ui.DoDefaultUntil(
@@ -157,6 +157,6 @@ func (gm *GoogleMeet) SetEffectBlur(value bool) action.Action {
 	if value {
 		blurButtonName = "Blur your background"
 	}
-	blurButton := nodewith.Name(blurButtonName).Role(role.ToggleButton).Ancestor(meetingWebview)
+	blurButton := nodewith.Name(blurButtonName).Role(role.ToggleButton).Ancestor(meetRootWebArea)
 	return gm.setToggleValue(blurButton, value)
 }

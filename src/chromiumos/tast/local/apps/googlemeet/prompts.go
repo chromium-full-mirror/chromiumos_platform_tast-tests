@@ -41,21 +41,21 @@ var (
 		clearButtonFinder: generalAllowButtonFinder.Ancestor(avPermFinder),
 	}
 
-	yourMeetingIsReadyDialogFinder = nodewith.Name("Your meeting's ready").Role(role.Dialog).Ancestor(meetingWebview)
+	yourMeetingIsReadyDialogFinder = nodewith.Name("Your meeting's ready").Role(role.Dialog).Ancestor(meetRootWebArea)
 	meetingReadyPrompt             = promptType{
 		name:              "Your meeting's ready",
 		promptFinder:      yourMeetingIsReadyDialogFinder,
 		clearButtonFinder: generalCloseButtonFinder.Ancestor(yourMeetingIsReadyDialogFinder),
 	}
 
-	meetKeepsYouSafeDialogFinder = nodewith.Name("Meet keeps you safe").Role(role.Dialog).Ancestor(meetingWebview)
+	meetKeepsYouSafeDialogFinder = nodewith.Name("Meet keeps you safe").Role(role.Dialog).Ancestor(meetRootWebArea)
 	meetKeepsYouSafePrompt       = promptType{
 		name:              "Meet keeps you safe",
 		promptFinder:      meetKeepsYouSafeDialogFinder,
 		clearButtonFinder: generalGotItButtonFinder.Ancestor(meetKeepsYouSafeDialogFinder),
 	}
 
-	whiteboardDialogFinder = nodewith.Name("Gather around a whiteboard").Role(role.Dialog).Ancestor(meetingWebview)
+	whiteboardDialogFinder = nodewith.Name("Gather around a whiteboard").Role(role.Dialog).Ancestor(meetRootWebArea)
 	whiteboardPrompt       = promptType{
 		name:              "Gather around a whiteboard",
 		promptFinder:      whiteboardDialogFinder,

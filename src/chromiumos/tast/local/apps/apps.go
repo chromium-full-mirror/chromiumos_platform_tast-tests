@@ -181,6 +181,12 @@ var Maps = App{
 	Name: "Maps",
 }
 
+// Meet has details about Google Meet PWA.
+var Meet = App{
+	ID:   "kjgfgldnnfoeklkmfkjfagphfepbbdan",
+	Name: "Meet",
+}
+
 // Photos has details about the Photos app.
 var Photos = App{
 	ID:   "fdbkkojdbojonckghlanfaopfakedeca",
