@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/gtest"
+	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 )
 
@@ -34,6 +35,8 @@ func V4L2Unittest(ctx context.Context, s *testing.State) {
 	const exec = "v4l2_unittest"
 	if report, err := gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
+		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
+		gtest.UID(int(sysutil.ChronosUID)),
 	).Run(ctx); err != nil {
 		s.Errorf("Failed to run %v: %v", exec, err)
 		if report != nil {
