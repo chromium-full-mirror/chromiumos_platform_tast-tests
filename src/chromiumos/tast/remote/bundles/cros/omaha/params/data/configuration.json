@@ -18,11 +18,12 @@
 	  "104": 14909,
 	  "105": 14989,
 	  "106": 15054,
-	  "107": 15117
+	  "107": 15117,
+	  "108": 15183
 	},
 	"ChromeOSLTRMilestoneWithMinimumMinor": {
 		"102": 128,
 		"96": 73
 	},
-	"CurrentChromeOSLTC": 102
+	"CurrentChromeOSLTC": 108
   }
