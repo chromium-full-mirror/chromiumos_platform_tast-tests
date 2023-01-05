@@ -251,7 +251,10 @@ func TestPlaybackPerfParams(t *testing.T) {
 	// multi-playback
 	type taskRunnerType int
 	const (
-		dedicatedThread taskRunnerType = iota // Default
+		oneThreadPoolSequenceSharedByAllDecoders taskRunnerType = iota
+		oneThreadPoolThreadSharedByAllDecoders
+		oneDedicatedThreadSharedByAllDecoders
+		oneThreadPoolThreadPerDecoder
 	)
 	for _, codec := range []string{"h264", "vp9"} {
 		// 1080p x 2 ~= 2K, 480p x 9  ~= 2K, 360p x 16 ~= 2K, 180p x 49 ~= 1260p
@@ -259,14 +262,27 @@ func TestPlaybackPerfParams(t *testing.T) {
 		for _, resGrid := range [][3]int{{1080, 2, 1}, {480, 3, 3}, {360, 4, 4}} {
 			resolution, gridW, gridH := resGrid[0], resGrid[1], resGrid[2]
 			numVideos := gridW * gridH
-			for _, decoderTaskRunnerType := range []taskRunnerType{dedicatedThread} {
+			for _, decoderTaskRunnerType := range []taskRunnerType{
+				oneThreadPoolSequenceSharedByAllDecoders,
+				oneThreadPoolThreadSharedByAllDecoders,
+				oneDedicatedThreadSharedByAllDecoders,
+				oneThreadPoolThreadPerDecoder} {
 				fps, dec := 30, "hw"
 				testNameSuffix := fmt.Sprintf("x%d", numVideos)
 				var fixtureName string
 				switch decoderTaskRunnerType {
-				case dedicatedThread:
-					testNameSuffix += "_dedicatedthread"
+				case oneThreadPoolThreadPerDecoder:
+					testNameSuffix += "_1dedicatedthreadperdecoder"
 					fixtureName = "chromeVideoWithGlobalVaapiLockDisabled"
+				case oneDedicatedThreadSharedByAllDecoders:
+					testNameSuffix += "_1dedicatedthreadsharedbyalldecoders"
+					fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneDedicatedThreadSharedByAllDecoders"
+				case oneThreadPoolThreadSharedByAllDecoders:
+					testNameSuffix += "_1poolthreadsharedbyalldecoders"
+					fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolThreadSharedByAllDecoders"
+				case oneThreadPoolSequenceSharedByAllDecoders:
+					testNameSuffix += "_1poolsequencesharedbyalldecoders"
+					fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolSequenceSharedByAllDecoders"
 				}
 				param := genPlaybackParam(codec,
 					genPlaybackPerfDataPath(codec, resolution, fps),

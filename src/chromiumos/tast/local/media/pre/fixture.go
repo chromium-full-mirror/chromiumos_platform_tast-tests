@@ -266,6 +266,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs("--disable-features=GlobalVaapiLock"),
+				chrome.ExtraArgs("--disable-features=LimitConcurrentDecoderInstances"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -775,6 +776,60 @@ func init() {
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
 				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithGlobalVaapiLockDisabledAndOneDedicatedThreadSharedByAllDecoders",
+		Desc:     "Similar to chromeVideoWithGlobalVaapiLockDisabled but use a single decoder specific thread for all hardware decoders",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs("--disable-features=GlobalVaapiLock"),
+				chrome.ExtraArgs("--disable-features=LimitConcurrentDecoderInstances"),
+				chrome.ExtraArgs("--chromeos-video-decoder-task-runner=OneDedicatedThreadSharedByAllDecoders"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolThreadSharedByAllDecoders",
+		Desc:     "Similar to chromeVideoWithGlobalVaapiLockDisabled but use a SingleThreadTaskRunner obtained from a ThreadPool for all hardware decoders",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs("--disable-features=GlobalVaapiLock"),
+				chrome.ExtraArgs("--disable-features=LimitConcurrentDecoderInstances"),
+				chrome.ExtraArgs("--chromeos-video-decoder-task-runner=OneThreadPoolThreadSharedByAllDecoders"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolSequenceSharedByAllDecoders",
+		Desc:     "Similar to chromeVideoWithGlobalVaapiLockDisabled but use a SequencedTaskRunner obtained from a ThreadPool for all hardware decoders",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs("--disable-features=GlobalVaapiLock"),
+				chrome.ExtraArgs("--disable-features=LimitConcurrentDecoderInstances"),
+				chrome.ExtraArgs("--chromeos-video-decoder-task-runner=OneThreadPoolSequenceSharedByAllDecoders"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
