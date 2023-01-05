@@ -49,6 +49,10 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
+	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	if err != nil {
+		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
+	}
 	daemonController := helper.DaemonController()
 
 	// Ensure cryptohomed is started and wait for it to be available.
@@ -66,13 +70,8 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	}
 
 	// Create persistent user with a vault keyset that has an empty label.
-	authConfig := hwsec.NewPassAuthConfig(userName, userPassword)
-	vaultConfig := hwsec.NewVaultConfig()
-	vaultConfig.CreateEmptyLabel = true
-	// Pass a random label as Cryptohome would refuse a request if none was passed.
-	// CreateEmptyLabel takes precedence over this label when performing the actual mount.
-	if err := client.MountVault(ctx /* keyLabel= */, "label not needed", authConfig /*create=*/, true, vaultConfig); err != nil {
-		s.Fatal("Failed to create the user: ", err)
+	if err := testTool.CreateVaultKeyset(ctx, userName /*keyDataLabel=*/, "", userPassword /*enableKeyData=*/, true); err != nil {
+		s.Fatal("Failed to create VaultKeyset: ", err)
 	}
 	defer cryptohome.RemoveVault(cleanupCtx, userName)
 

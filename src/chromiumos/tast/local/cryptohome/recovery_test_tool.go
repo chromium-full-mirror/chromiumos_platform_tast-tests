@@ -199,6 +199,20 @@ func (c *RecoveryTestTool) CreateRecoveryRequest(ctx context.Context) error {
 	return c.call(ctx, args...)
 }
 
+// CreateVaultKeyset calls "--action=create_vault_keyset".
+func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, username, keyDataLabel, passkey string, enableKeyData bool) error {
+	args := []string{
+		"--action=create_vault_keyset",
+		"--username=" + username,
+		"--key_data_label=" + keyDataLabel,
+		"--passkey=" + passkey,
+	}
+	if !enableKeyData {
+		args = append(args, "--enable_key_data=false")
+	}
+	return c.call(ctx, args...)
+}
+
 // FakeMediate calls "--action=recovery_crypto_mediate" step.
 func (c *RecoveryTestTool) FakeMediate(ctx context.Context) error {
 	if !c.useFakeMediator() {
