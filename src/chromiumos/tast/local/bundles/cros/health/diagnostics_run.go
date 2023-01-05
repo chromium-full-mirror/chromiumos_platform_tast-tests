@@ -136,9 +136,10 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 			ExtraAttr:         []string{"informational"},
 		}, {
-			Name:      "led_lit_up",
-			Val:       newRoutineParams(croshealthd.RoutineLedLitUp),
-			ExtraAttr: []string{"informational"},
+			Name:              "led_lit_up",
+			Val:               newRoutineParams(croshealthd.RoutineLedLitUp),
+			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
