@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
-	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/testing"
@@ -55,29 +54,25 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:           "ccaLaunched",
+			Fixture:           "ccaTestBridgeReady",
 			Timeout:           5 * time.Minute,
-			Val:               testutil.UseRealCamera,
 		}, {
 			Name:              "vivid",
 			ExtraSoftwareDeps: []string{caps.VividCamera},
 			ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:           "ccaLaunched",
+			Fixture:           "ccaTestBridgeReady",
 			Timeout:           5 * time.Minute,
-			Val:               testutil.UseVividCamera,
 		}, {
 			Name:      "fake_vcd",
 			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
-			Fixture:   "ccaLaunchedWithFakeVCDCamera",
+			Fixture:   "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
 			Timeout:   5 * time.Minute,
-			Val:       testutil.UseFakeVCDCamera,
 		}, {
 			// For stress testing manually with real camera and longer timeout.
 			Name:              "manual",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-			Fixture:           "ccaLaunched",
+			Fixture:           "ccaTestBridgeReady",
 			Timeout:           30 * 24 * time.Hour,
-			Val:               testutil.UseRealCamera,
 		}},
 		BugComponent: "b:978428",
 	})
@@ -128,9 +123,7 @@ func switchToRearCamera(ctx context.Context, app cca.App) error {
 	return nil
 }
 
-func clickPhotoShutterContinuously(ctx context.Context, s *testing.State) error {
-	app := s.FixtValue().(cca.FixtureData).App()
-
+func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *cca.App) error {
 	const timerState = cca.TimerOff
 	iterations := intVar(s, "iterations", defaultIterations)
 	seed := intVar(s, "seed", defaultSeed)
@@ -176,9 +169,7 @@ func clickPhotoShutterContinuously(ctx context.Context, s *testing.State) error 
 	return nil
 }
 
-func clickVideoShutterContinuously(ctx context.Context, s *testing.State) error {
-	app := s.FixtValue().(cca.FixtureData).App()
-
+func clickVideoShutterContinuously(ctx context.Context, s *testing.State, app *cca.App) error {
 	iterations := intVar(s, "iterations", defaultIterations)
 	seed := intVar(s, "seed", defaultSeed)
 	rand.Seed(int64(seed))
@@ -211,11 +202,9 @@ func clickVideoShutterContinuously(ctx context.Context, s *testing.State) error 
 	return nil
 }
 
-func takeActionsRandomly(ctx context.Context, s *testing.State) error {
+func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) error {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
-	app := s.FixtValue().(cca.FixtureData).App()
 	tb := s.FixtValue().(cca.FixtureData).TestBridge()
-	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true})
 
 	const defaultSkipIterations = 0
 	const actionTimeout = 30 * time.Second
@@ -404,10 +393,12 @@ func takeActionsRandomly(ctx context.Context, s *testing.State) error {
 }
 
 func CCAUIStress(ctx context.Context, s *testing.State) {
+	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
+	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true, SaveCameraFolderWhenFail: true})
 	subTestTimeout := 5 * time.Minute
 	for _, tst := range []struct {
 		name     string
-		testFunc func(context.Context, *testing.State) error
+		testFunc func(context.Context, *testing.State, *cca.App) error
 	}{{
 		"takeActionsRandomly",
 		takeActionsRandomly,
@@ -420,7 +411,9 @@ func CCAUIStress(ctx context.Context, s *testing.State) {
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
-			if err := tst.testFunc(ctx, s); err != nil {
+			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
+				return tst.testFunc(ctx, s, app)
+			}, cca.TestWithAppParams{}); err != nil {
 				s.Fatalf("Test %v failed : %v", tst.name, err)
 			}
 		})

@@ -179,6 +179,17 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
+		Desc:            `Set up test bridge for CCA with fake camera without fake scene`,
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: "ccaTestBridgeReadyWithFakeCameraLacros",
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
