@@ -40,7 +40,8 @@ func init() {
 		Func:         RemoteDesktop,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Connect to Chrome Remote Desktop for working remotely",
-		Contacts:     []string{"shik@chromium.org", "tast-users@chromium.org"},
+		Contacts:     []string{"chromoting-team@google.com", "shik@chromium.org"},
+		BugComponent: "b:47377", // Chrome > Chromoting
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			// For running manually.
@@ -103,7 +104,8 @@ func getVars(s *testing.State) rdpVars {
 
 	resetStr, ok := s.Var("reset")
 	if !ok {
-		resetStr = "false"
+		// Default to reset Chrome between tests. Note that setting false means that the test will pick up whatever dirty state the device is in (eg. profile used from a previous test).
+		resetStr = "true"
 	}
 	reset, err := strconv.ParseBool(resetStr)
 	if err != nil {
