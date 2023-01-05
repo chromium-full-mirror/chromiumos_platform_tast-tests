@@ -461,3 +461,16 @@ func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn) e
 		uiauto.Combine("close security alert", ui.DoDefault(close), ui.WaitUntilGone(close)),
 	)(ctx)
 }
+
+// RunAndWaitLCPHistograms runs the function and waits for the LCP2 and TTFB histograms to update.
+func RunAndWaitLCPHistograms(ctx context.Context, bTconn *chrome.TestConn, f func(ctx context.Context) error) error {
+	histograms, err := metrics.RunAndWaitAll(ctx, bTconn, time.Second, f,
+		"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
+		"PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart",
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to collect histograms")
+	}
+	testing.ContextLog(ctx, "Collect histograms: ", histograms)
+	return nil
+}

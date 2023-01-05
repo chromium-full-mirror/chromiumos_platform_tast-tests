@@ -31,13 +31,13 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
-	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
@@ -50,12 +50,6 @@ const (
 
 	replayPageLoadingTimeout    = 2 * time.Minute
 	recordingPageLoadingTimeout = 5 * time.Minute
-
-	// shortHistogramTimeout is the histogram update timeout for clicking an anchor in the tab.
-	shortHistogramTimeout = time.Second
-	// longHistogramTimeout is the histogram update timeout for closing tabs.
-	longHistogramTimeout = 10 * time.Second
-	lcp2HistogramName    = "PageLoad.PaintTiming.NavigationToLargestContentfulPaint2"
 
 	// LocalWebZIPFile is the name of the ZIP file used to construct the local web pages.
 	LocalWebZIPFile = "TabSwitchLocalWeb.zip"
@@ -174,38 +168,39 @@ func (tab *chromeTab) clickAnchor(ctx context.Context, timeout time.Duration, tc
 		testing.ContextLogf(ctx, "%s could not reach quiescence within %v, but document state has passed loading", tab.url, timeout)
 	}
 
-	histogram, err := metrics.GetHistogram(ctx, bTconn, lcp2HistogramName)
-	if err != nil {
-		return errors.Wrap(err, "failed to get histogram")
-	}
-	testing.ContextLog(ctx, "Got LCP2 histogram: ", histogram)
-
-	patternsToFind := append(tab.pageInfo.contentPatterns[pn:numPatterns], tab.pageInfo.contentPatterns[0:p]...)
-	foundPatternIndex, err := tab.searchElementWithPatternAndClick(ctx, patternsToFind)
-	if err != nil {
-		// Check whether the failure to search and click pattern was due to issues on the content site.
-		if contentSiteErr := contentSiteUnavailable(ctx, tconn); contentSiteErr != nil {
-			return errors.Wrapf(contentSiteErr, "failed to show content on page %s", tab.url)
+	clickAnchor := func(ctx context.Context) error {
+		patternsToFind := append(tab.pageInfo.contentPatterns[pn:numPatterns], tab.pageInfo.contentPatterns[0:p]...)
+		foundPatternIndex, err := tab.searchElementWithPatternAndClick(ctx, patternsToFind)
+		if err != nil {
+			// Check whether the failure to search and click pattern was due to issues on the content site.
+			if contentSiteErr := contentSiteUnavailable(ctx, tconn); contentSiteErr != nil {
+				return errors.Wrapf(contentSiteErr, "failed to show content on page %s", tab.url)
+			}
+			return errors.Wrapf(err, "failed to click anchor on page %s", tab.url)
 		}
-		return errors.Wrapf(err, "failed to click anchor on page %s", tab.url)
-	}
 
-	if err := webutil.WaitForQuiescence(ctx, tab.conn, timeout); err != nil {
-		if err := tab.conn.WaitForExprFailOnErrWithTimeout(ctx, `document.readyState === "interactive" || document.readyState === "complete"`, 3*time.Second); err != nil {
-			return errors.Wrapf(err, "failed to wait for tab to load within %v before clicking anchor", timeout)
+		if err := webutil.WaitForQuiescence(ctx, tab.conn, timeout); err != nil {
+			if err := tab.conn.WaitForExprFailOnErrWithTimeout(ctx, `document.readyState === "interactive" || document.readyState === "complete"`, 3*time.Second); err != nil {
+				return errors.Wrapf(err, "failed to wait for tab to load within %v before clicking anchor", timeout)
+			}
+			testing.ContextLogf(ctx, "%s could not reach quiescence within %v, but document state has passed loading", tab.url, timeout)
 		}
-		testing.ContextLogf(ctx, "%s could not reach quiescence within %v, but document state has passed loading", tab.url, timeout)
+
+		tab.currentPattern = (pn + foundPatternIndex) % numPatterns
+		return nil
 	}
 
-	testing.ContextLogf(ctx, "Waiting for %v histogram update", lcp2HistogramName)
-	histogramDiff, err := metrics.WaitForHistogramUpdate(ctx, bTconn, lcp2HistogramName, histogram, shortHistogramTimeout)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to wait for histogram update: ", err)
-	} else {
-		testing.ContextLog(ctx, "Got LCP2 histogram update: ", histogramDiff)
+	clickAnchorMessage := "click anchor on page"
+	clickAnchorAction := uiauto.NamedAction(clickAnchorMessage, clickAnchor)
+	if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, clickAnchorAction); err != nil {
+		// For the websites belonging to the single-page application, clicking the anchor does not generate the LCP histograms.
+		// Only return an error if the error is related to the click anchor action.
+		if strings.Contains(err.Error(), clickAnchorMessage) {
+			return err
+		}
+		testing.ContextLog(ctx, "Failed to wait for LCP histograms to update: ", err)
 	}
 
-	tab.currentPattern = (pn + foundPatternIndex) % numPatterns
 	return nil
 }
 
@@ -464,7 +459,15 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 
 		defer func(ctx context.Context) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, cr, "ui_tree")
-			closeAllTabsAndWaitForHistogram(ctx, bTconn, bt)
+			closeFunc := func(ctx context.Context) error {
+				if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
+				}
+				return nil
+			}
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
+				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+			}
 		}(cleanupCtx)
 
 		if err := tabSwitchAction(ctx, br, tconn, bTconn, &windows, tsAction, isRecordMode); err != nil {
@@ -646,23 +649,82 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 	return nil
 }
 
-// closeAllTabsAndWaitForHistogram closes all tabs and wait for the LCP2 histogram to update.
-func closeAllTabsAndWaitForHistogram(ctx context.Context, bTconn *chrome.TestConn, bt browser.Type) {
-	histogram, err := metrics.GetHistogram(ctx, bTconn, lcp2HistogramName)
+// closeAlertDialog checks and closes the alert dialog by clicking the "Allow" button.
+func closeAlertDialog(ui *uiauto.Context, tsAction cuj.UIActionHandler) uiauto.Action {
+	notificationsDialog := nodewith.NameContaining("Show notifications").Role(role.AlertDialog).HasClass("RootView")
+	allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
+	return uiauto.IfSuccessThen(
+		ui.WithTimeout(shortUITimeout).WaitUntilExists(notificationsDialog),
+		tsAction.ClickUntil(
+			allowButton,
+			ui.WithTimeout(shortUITimeout).WaitUntilGone(notificationsDialog)),
+	)
+}
+
+// clickButtonsAndTypeText clicks buttons and type the text on specified websites to generate EventLatency metrics.
+func clickButtonsAndTypeText(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, kb *input.KeyboardEventWriter, webName website) error {
+	// Specify nodes with the active window to avoid finding nodes from the inactive windows.
+	window, err := ash.GetActiveWindow(ctx, tconn)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get LCP2 histogram count before closing tabs: ", err)
-	} else {
-		testing.ContextLog(ctx, "Got LCP2 histogram count: ", histogram.TotalCount())
+		return errors.Wrap(err, "failed to get active window")
+	}
+	windowClass := "BrowserFrame"
+	if window.WindowType == ash.WindowTypeLacros {
+		windowClass = "ExoShellSurface"
+	}
+	activeWindow := nodewith.Name(window.Title).Role(role.Window).HasClass(windowClass)
+	activeWindowDescendant := nodewith.Ancestor(activeWindow)
+
+	makeVisibleThenClick := func(node *nodewith.Finder) uiauto.Action {
+		return uiauto.Combine("make the node visible then click",
+			ui.MakeVisible(node),
+			ui.LeftClick(node),
+		)
 	}
 
-	if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
-		testing.ContextLog(ctx, "Failed to close all tabs: ", err)
+	var clickActions uiauto.Action
+	var textField *nodewith.Finder
+	switch webName {
+	case wikipedia:
+		textField = activeWindowDescendant.Name("Search Wikipedia").Role(role.SearchBox)
+		languageSettingsButton := activeWindowDescendant.Name("Language settings").Role(role.Button)
+		languageSettingsHeading := activeWindowDescendant.Name("Language settings").Role(role.Heading)
+		clickActions = uiauto.Combine("click language settings button",
+			makeVisibleThenClick(languageSettingsButton),
+			ui.WaitUntilExists(languageSettingsHeading),
+			ui.LeftClick(languageSettingsButton),
+			ui.WaitUntilGone(languageSettingsHeading),
+		)
+	case googleHelp:
+		textField = activeWindowDescendant.NameStartingWith("Describe your issue").Role(role.TextFieldWithComboBox)
+		mainMenuButton := activeWindowDescendant.Name("Main menu").Role(role.Button)
+		closeMenuButton := activeWindowDescendant.Name("Close menu").Role(role.Button)
+		clickActions = uiauto.Combine("click menu buttons",
+			ui.LeftClick(mainMenuButton),
+			ui.LeftClick(closeMenuButton),
+			ui.WaitUntilExists(mainMenuButton.Collapsed()),
+		)
+	case localWebsite:
+		textField = activeWindowDescendant.Name("Input your text:").Role(role.TextField)
+		hideTextButton := activeWindowDescendant.Name("Hide text").Role(role.Button)
+		showTextButton := activeWindowDescendant.Name("Show text").Role(role.Button)
+		clickActions = uiauto.Combine("click text buttons",
+			ui.LeftClick(hideTextButton),
+			ui.LeftClick(showTextButton),
+			ui.WaitUntilExists(hideTextButton),
+		)
 	}
 
-	histogramDiff, err := metrics.WaitForHistogramUpdate(ctx, bTconn, lcp2HistogramName, histogram, longHistogramTimeout)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to wait for histogram updated after closing tabs: ", err)
-		return
-	}
-	testing.ContextLog(ctx, "LCP2 histogram count difference after closing all tabs: ", histogramDiff.TotalCount())
+	typeTextActions := uiauto.Combine("type the text",
+		makeVisibleThenClick(textField),
+		ui.WaitUntilExists(textField.Focused()),
+		kb.TypeAction("Chromebook"),
+		kb.AccelAction("Ctrl+A"),
+		kb.AccelAction("Backspace"),
+	)
+
+	return uiauto.NamedCombine("click buttons and type the text on "+string(webName),
+		clickActions,
+		typeTextActions,
+	)(ctx)
 }

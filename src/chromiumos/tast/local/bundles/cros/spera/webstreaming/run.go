@@ -180,14 +180,22 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		if err := webStreamingScenario(ctx, tconn, kb, video); err != nil {
 			return err
 		}
-		return uiauto.NamedCombine("collect metrics",
+		if err := uiauto.NamedCombine("collect frames data",
 			uiHandler.SwitchToAppWindowByName(chromeApp.Name, crosVideoTitle),
 			video.Pause(),
 			setFramesData,
-			// Close browsers to generate LCP2 metrics.
-			video.Close,
-			cleanupGoogleDoc,
-		)(ctx)
+		)(ctx); err != nil {
+			return err
+		}
+
+		// Close browsers to generate LCP2 metrics.
+		if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, video.Close); err != nil {
+			testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+		}
+		if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, cleanupGoogleDoc); err != nil {
+			testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+		}
+		return nil
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the web streaming scenario")
 	}

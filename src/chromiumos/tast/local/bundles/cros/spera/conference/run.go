@@ -212,9 +212,8 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			}
 		}
 		if !isNoRoom {
-			// Close conference to collect metrics.
-			if err := conf.CloseConference(ctx); err != nil {
-				return errors.Wrap(err, "failed to close conference")
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, conf.CloseConference); err != nil {
+				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
 			}
 		}
 		// Wait for meetTimeout expires in goroutine and get GPU result.

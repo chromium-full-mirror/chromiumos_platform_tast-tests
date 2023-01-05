@@ -256,9 +256,15 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 				if appName == YoutubeApp {
 					faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 					videoApp.Close(ctx)
+				}
+				closeFunc := func(ctx context.Context) error {
 					if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
 						testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 					}
+					return nil
+				}
+				if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
+					testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
 				}
 			}(cleanupCtx)
 

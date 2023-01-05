@@ -272,18 +272,24 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 
 			shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 			defer cancel()
-			// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
-			if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
-				testing.ContextLog(ctx, "Failed to close all tabs: ", err)
-				// When closing the "Youtube Music" website, the popup "Leave site?" might appear.
-				leaveWindow := nodewith.Name("Leave site?").Role(role.Window).First()
-				leaveButton := nodewith.Name("Leave").Role(role.Button).Ancestor(leaveWindow)
-				if err := uiauto.IfSuccessThen(
-					ui.WithTimeout(time.Second).WaitUntilExists(leaveWindow),
-					ui.RetryUntil(ui.LeftClick(leaveButton), ui.WithTimeout(time.Second).WaitUntilGone(leaveWindow)),
-				)(ctx); err != nil {
-					testing.ContextLog(ctx, "Failed to click leave site button: ", err)
+			closeFunc := func(ctx context.Context) error {
+				// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
+				if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
+					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
+					// When closing the "Youtube Music" website, the popup "Leave site?" might appear.
+					leaveWindow := nodewith.Name("Leave site?").Role(role.Window).First()
+					leaveButton := nodewith.Name("Leave").Role(role.Button).Ancestor(leaveWindow)
+					if err := uiauto.IfSuccessThen(
+						ui.WithTimeout(time.Second).WaitUntilExists(leaveWindow),
+						ui.RetryUntil(ui.LeftClick(leaveButton), ui.WithTimeout(time.Second).WaitUntilGone(leaveWindow)),
+					)(ctx); err != nil {
+						testing.ContextLog(ctx, "Failed to click leave site button: ", err)
+					}
 				}
+				return nil
+			}
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
+				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
 			}
 		}(cleanupCtx)
 
