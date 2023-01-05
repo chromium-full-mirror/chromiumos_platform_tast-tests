@@ -110,6 +110,141 @@ func NewConfig(vpnType string, opts ...Option) *Config {
 	return c
 }
 
+// WithMTU configures the MTU for this VPN connection.
+func WithMTU(val int) Option {
+	return func(c *Config) {
+		c.MTU = val
+	}
+}
+
+// WithMetered sets the Metered property to true on the shill service.
+func WithMetered() Option {
+	return func(c *Config) {
+		c.Metered = true
+	}
+}
+
+// WithPushDNS configures the VPN server to push the DNS configuration.
+// TODO(b/257379393): This option is off by default now. Change this behavior
+// later.
+func WithPushDNS() Option {
+	return func(c *Config) {
+		c.PushDNS = true
+	}
+}
+
+// WithSearchDomains configures the search domains for this VPN connection.
+// Empty by default.
+func WithSearchDomains(val []string) Option {
+	return func(c *Config) {
+		c.SearchDomains = val
+	}
+}
+
+// WithIPsecAuthType configures the authentication type for an IPsec-based VPN
+// connection.
+func WithIPsecAuthType(val IPsecAuthType) Option {
+	return func(c *Config) {
+		c.IPsecAuthType = val
+	}
+}
+
+// L2TPIPSecXauthType represents how Xauth is configured for L2TP/IPsec.
+// TODO(b/257379393): Remove this type after we move the related code into
+// VPNConnect.
+type L2TPIPSecXauthType int
+
+// Xauth types.
+const (
+	L2TPIPsecXauthNone L2TPIPSecXauthType = iota
+	L2TPIPsecXauthCorrect
+	L2TPIPsecXauthWrongUser
+	L2TPIPsecXauthMissingUser
+)
+
+// WithL2TPIPsecXAuth configures Xauth for L2TP/IPsec.
+func WithL2TPIPsecXAuth(val L2TPIPSecXauthType) Option {
+	return func(c *Config) {
+		c.IPsecUseXauth = (val != L2TPIPsecXauthNone)
+		switch val {
+		case L2TPIPsecXauthNone, L2TPIPsecXauthCorrect:
+			break
+		case L2TPIPsecXauthWrongUser:
+			c.IPsecXauthWrongUser = true
+		case L2TPIPsecXauthMissingUser:
+			c.IPsecXauthMissingUser = true
+		}
+	}
+}
+
+// WithOpenVPNUseUserPassword configures an OpenVPN connection with username and
+// password.
+func WithOpenVPNUseUserPassword() Option {
+	return func(c *Config) {
+		c.OpenVPNUseUserPassword = true
+	}
+}
+
+// OpenVPNCertVerifyType represents how cert verify is configured for OpenVPN.
+// TODO(b/257379393): Remove this type after we move the related code into
+// VPNConnect.
+type OpenVPNCertVerifyType int
+
+// Cert verify types.
+const (
+	OpenVPNCertVerifyNone OpenVPNCertVerifyType = iota
+	OpenVPNCertVerifyCorrect
+	OpenVPNCertVerifyWrongHash
+	OpenVPNCertVerifyWrongSubject
+	OpenVPNCertVerifyWrongCN
+	OpenVPNCertVerifyCNOnly
+)
+
+// WithOpenVPNCertVerify configures cert verify for OpenVPN.
+func WithOpenVPNCertVerify(val OpenVPNCertVerifyType) Option {
+	return func(c *Config) {
+		c.OpenVPNCertVerify = (val != OpenVPNCertVerifyNone)
+		switch val {
+		case OpenVPNCertVerifyNone, OpenVPNCertVerifyCorrect:
+			break
+		case OpenVPNCertVerifyWrongHash:
+			c.OpenVPNCertVerifyWrongHash = true
+		case OpenVPNCertVerifyWrongSubject:
+			c.OpenVPNCertVeirfyWrongSubject = true
+		case OpenVPNCertVerifyWrongCN:
+			c.OpenVPNCertVerifyWrongCN = true
+		case OpenVPNCertVerifyCNOnly:
+			c.OpenVPNCertVerifyCNOnly = true
+		}
+	}
+}
+
+// WithWGUsePSK enables PSK for WireGuard authentication.
+func WithWGUsePSK() Option {
+	return func(c *Config) {
+		c.WGUsePSK = true
+	}
+}
+
+// WithWGTwoPeers configures the WireGuard connection with two peers.
+// TODO(b/257379393): Remove this function after we the related code into
+// VPNConnect.
+func WithWGTwoPeers() Option {
+	return func(c *Config) {
+		c.WGTwoPeers = true
+	}
+}
+
+// WithWGAutoGenKey lets shill generate a key pair for WireGuard instead of
+// using a given one.
+// TODO(b/257379393): Remove this function after we the related code into
+// VPNConnect.
+func WithWGAutoGenKey() Option {
+	return func(c *Config) {
+		c.WGAutoGenKey = true
+	}
+}
+
 // WithCertVals sets up the certificate value used by client.
 // This is mandatory by connections using certificates for authentication.
 func WithCertVals(val CertVals) Option {
@@ -122,6 +257,22 @@ func WithCertVals(val CertVals) Option {
 func WithOpenVPNTLSAuth() Option {
 	return func(c *Config) {
 		c.OpenVPNTLSAuth = true
+	}
+}
+
+// WithIPType configures the IP family type of the overlay network. It’s
+// IPv4-only by default. Note that not all VPN types support IPv6.
+func WithIPType(val IPType) Option {
+	return func(c *Config) {
+		c.IPType = val
+	}
+}
+
+// WithUnderlayIPIsOverlayIP makes the VPN connection use the same IP address for
+// overlay network and underlay network.
+func WithUnderlayIPIsOverlayIP() Option {
+	return func(c *Config) {
+		c.UnderlayIPIsOverlayIP = true
 	}
 }
 
