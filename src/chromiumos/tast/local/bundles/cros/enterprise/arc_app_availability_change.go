@@ -13,10 +13,8 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
-	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
@@ -88,7 +86,12 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable)
+	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable)
+	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeAllowList
+	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+
+	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 	if err != nil {
 		rl.Exit("setup fake policy server", err)
 	}
@@ -136,29 +139,16 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			rl.Exit("create test API Connection", err)
 		}
 
-		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) error {
-			installButton, err := arcent.WaitForInstallButton(ctx, d)
-			if err != nil {
-				return errors.Wrap(err, "failed to find the install button")
-			}
-
-			enabled, err := installButton.IsEnabled(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to check the install button state")
-			}
-
-			if !enabled {
-				return errors.New("install button is disabled")
-			}
-
-			testing.ContextLog(ctx, "Install button is enabled")
-			return nil
-		}, 3*time.Minute); err != nil {
-			rl.Exit("confirm availability", err)
+		// In Play Store mode set to AllowList only available and force-installed apps show.
+		// Since there is only single available app in the policy, catalog will be non-empty.
+		if err := arcent.EnsurePlayStoreNotEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
+			return rl.Exit("verify Play Store is not empty", err)
 		}
 
-		s.Log("Changing the policy to block the installed app")
+		s.Log("Changing the policy to block the available app")
+
 		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
+		arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeAllowList
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
@@ -166,26 +156,11 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			return rl.Exit("update policies", err)
 		}
 
-		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) (retErr error) {
-			if err := arcent.WaitForAppUnavailableMessage(ctx, d, time.Minute); err == nil {
-				return nil
-			}
-
-			return errors.New("App unavailable message not found")
-		}, 3*time.Minute); err == nil {
-			testing.ContextLog(ctx, "App unavailable for install as expected")
-			return nil
+		// Since the only app in the policy is now blocked, the Play Store catalog should be empty.
+		if err := arcent.EnsurePlayStoreEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
+			return rl.Exit("verify Play Store is empty", err)
 		}
 
-		if err := playstore.OpenAppPage(ctx, a, testPackage); err != nil {
-			return rl.Exit("open play store", err)
-		}
-
-		if err := arcent.ValidateBlockedAppInstall(ctx, a, d, testPackage); err != nil {
-			return rl.Exit("validate auto-install", err)
-		}
-
-		testing.ContextLog(ctx, "Blocked app uninstalled")
 		return nil
 	}, nil); err != nil {
 		s.Fatal("Availability transition test failed: ", err)
