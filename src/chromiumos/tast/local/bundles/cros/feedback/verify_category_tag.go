@@ -90,7 +90,8 @@ func VerifyCategoryTag(ctx context.Context, s *testing.State) {
 	}
 
 	// Open feedback app in the Camera app.
-	settingsButton := nodewith.Name("Settings")
+	cameraWebArea := nodewith.NameContaining("Camera").Role(role.RootWebArea)
+	settingsButton := nodewith.Name("Settings").Ancestor(cameraWebArea)
 	sendFeedbackButton := nodewith.Name("Send feedback").Role(role.Button)
 	if err := ui.DoDefault(settingsButton)(ctx); err != nil {
 		s.Fatal("Failed to click Settings button: ", err)
