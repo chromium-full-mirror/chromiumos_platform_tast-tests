@@ -41,7 +41,11 @@ func init() {
 }
 
 // durationTolerance is the tolerate difference when comparing video duration.
-const durationTolerance = 300 * time.Millisecond
+// There is a known issue that pause/resume event might be fired before it
+// actually happens so the aggregated duration difference is expected to be
+// higher if it involves many pause/resume actions.
+// See: https://crbug.com/1397837 for more details.
+const durationTolerance = 500 * time.Millisecond
 
 type videoState string
 
