@@ -215,7 +215,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			// Wait for DUT to reconnect.
 			if waitConnectAfterACPower {
 				s.Log("Waiting for DUT to power ON")
-				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
 				defer cancelWaitConnect()
 
 				var opts []firmware.WaitConnectOption

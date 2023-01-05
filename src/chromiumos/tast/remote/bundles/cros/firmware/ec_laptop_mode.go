@@ -98,12 +98,6 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
-	// Ensure CCD open and testlab enabled. With CCD locked,
-	// power presses may not be successful later during the test.
-	if err := h.OpenCCD(ctx, true, true); err != nil {
-		s.Fatal("While attempting to open CCD: ", err)
-	}
-
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to create mode switcher: ", err)
@@ -158,15 +152,12 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power off DUT: ", err)
 		}
 
-		// Rather than send a tab on power button, set DUT's powerstate to ON.
-		// Some DUTs might require longer press on the power button to power
-		// on, i.e. Kukui/Kakadu. But, if SetPowerState fails, retry with the
-		// power button.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
-			s.Log("Failed to set powerstate to ON, retrying with power button: ", err)
-			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-				s.Fatal("Failed to press power button: ", err)
-			}
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep for 5 seconds: ", err)
+		}
+		s.Log("Rebooting the DUT with cold reset")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			s.Fatal("Failed to reboot the DUT with cold reset: ", err)
 		}
 
 		s.Log("Waiting for the boot to complete")

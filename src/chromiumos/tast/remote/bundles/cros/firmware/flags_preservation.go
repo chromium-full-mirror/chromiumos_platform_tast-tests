@@ -153,10 +153,6 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		return "all fw versions are up to date"
 	}
 	fwStatus := needFwUpdate()
-	// Ensure CCD open and testlab enabled prior to power-cycling the DUT.
-	if err := h.OpenCCD(ctx, true, true); err != nil {
-		s.Fatal("CCD not opened: ", err)
-	}
 	for _, tc := range []struct {
 		powerDisruption string
 		fwVboot2        bool
