@@ -173,8 +173,12 @@ func NavigateEduCoexistenceFlow(ctx context.Context, cr *chrome.Chrome, tconn *c
 		return errors.Wrap(err, "failed to click Next button")
 	}
 
-	gaiaConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix("https://accounts.google.com/"))
-	if err != nil {
+	var gaiaConn *chrome.Conn
+	// Connecting to GAIA may fail because of forced reloads.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		gaiaConn, err = cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix("https://accounts.google.com/"))
+		return err
+	}, &testing.PollOptions{Interval: 10 * time.Millisecond}); err != nil {
 		return errors.Wrap(err, "failed to connect to GAIA webview target")
 	}
 	defer gaiaConn.Close()
