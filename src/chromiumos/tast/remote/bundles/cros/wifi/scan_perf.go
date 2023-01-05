@@ -54,7 +54,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_perf"},
 		ServiceDeps:  []string{wificell.TFServiceName},
-		Fixture:      "wificellFixt",
+		Vars:         []string{"router"},
 		Params: []testing.Param{
 			{
 				// Default case, DTIM = 2
@@ -151,7 +151,23 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		wlan.Realtek8852CPCIE: {},
 	}
 
-	tf := s.FixtValue().(*wificell.TestFixture)
+	// TODO(b/260276685): Shared fixture among test variants causes a longer 1st bg when dtim config is different from the last subtest.
+	// Create a new test fixture for each test variant. Use shared |wificellFixt| when fixed.
+	var tfOps []wificell.TFOption
+	if router, ok := s.Var("router"); ok && router != "" {
+		tfOps = append(tfOps, wificell.TFRouter(router))
+	}
+	tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
+	if err != nil {
+		s.Fatal("Failed to set up test fixture: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := tf.Close(ctx); err != nil {
+			s.Error("Failed to properly take down test fixture: ", err)
+		}
+	}(ctx)
+	ctx, cancel := tf.ReserveForClose(ctx)
+	defer cancel()
 
 	r, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -181,7 +197,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			s.Error("Failed to deconfig the AP: ", err)
 		}
 	}(ctx)
-	ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
+	ctx, cancel = tf.ReserveForDeconfigAP(ctx, apIface)
 	defer cancel()
 	s.Log("AP setup done")
 
