@@ -346,7 +346,7 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 			}
 
 			// Run tmpfiles to restore the removed folders and permissions.
-			if out, err := h.cmdRunner.Run(ctx, "/bin/systemd-tmpfiles", "--create", "--remove", "--boot", "--prefix", "/home", "--prefix", "/var/lib"); err != nil {
+			if out, err := h.cmdRunner.Run(ctx, "/usr/bin/systemd-tmpfiles", "--create", "--remove", "--boot", "--prefix", "/home", "--prefix", "/var/lib"); err != nil {
 				testing.ContextLog(ctx, "Failed to run tmpfiles: ", err, string(out))
 			}
 		}
