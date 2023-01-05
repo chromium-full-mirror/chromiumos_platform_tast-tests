@@ -171,14 +171,14 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Verify active copy is correctly changed after corrupting")
-	activeCopy, err := testCorruptActiveSectionAndReboot(ctx, h, s.DUT(), initialHash)
+	activeCopy, err := testCorruptActiveSectionAndReboot(ctx, h, s.DUT(), initialHash.Hash)
 	if err != nil {
 		s.Fatal("Failed to test changing active copy after corruption: ", err)
 	}
 	s.Log("Current active copy: ", string(activeCopy))
 
 	s.Log("Verify active copy is correctly changed back after corrupting secondary copy")
-	activeCopy, err = testCorruptActiveSectionAndReboot(ctx, h, s.DUT(), initialHash)
+	activeCopy, err = testCorruptActiveSectionAndReboot(ctx, h, s.DUT(), initialHash.Hash)
 	if err != nil {
 		s.Fatal("Failed to test changing active copy after corruption: ", err)
 	}
@@ -221,8 +221,8 @@ func testCorruptActiveSectionAndReboot(ctx context.Context, h *firmware.Helper, 
 	currHash, err := firmware.NewECTool(d, firmware.ECToolNameMain).Hash(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get current ec hash")
-	} else if currHash != initHash {
-		return "", errors.Errorf("expected hash to remain %q but is now %q", initHash, currHash)
+	} else if currHash.Hash != initHash {
+		return "", errors.Errorf("expected hash to remain %q but is now %q", initHash, currHash.Hash)
 	}
 
 	testing.ContextLog(ctx, "Verify active copy is correctly changed")

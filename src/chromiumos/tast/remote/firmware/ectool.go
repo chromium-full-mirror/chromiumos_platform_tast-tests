@@ -48,7 +48,7 @@ var (
 	reFirmwareCopy  = regexp.MustCompile(`Firmware copy:\s*(RO|RW)`)
 	reROVersion     = regexp.MustCompile(`RO version:\s*(\S+)\s`)
 	reRWVersion     = regexp.MustCompile(`RW version:\s*(\S+)\s`)
-	reECHash        = regexp.MustCompile(`hash:\s*(\S+)\s*`)
+	reECHash        = regexp.MustCompile(`status:\s*(\S+)\s*type:\s*(\S+)\s*offset:\s*(\S+)\s*size:\s*(\S+)\s*hash:\s*(\S+)\s*`)
 	reTabletModeAng = regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
 	reFlashSize     = regexp.MustCompile(`FlashSize\s*(\d+)`)
 	reChipInfo      = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S*)`)
@@ -94,20 +94,44 @@ func (ec *ECTool) Version(ctx context.Context) (string, error) {
 	return string(match[1]), nil
 }
 
+type hashinfo struct {
+	Status string
+	Type   string
+	Offset string
+	Size   string
+	Hash   string
+}
+
 // Hash returns the EC hash of the active firmware.
-func (ec *ECTool) Hash(ctx context.Context) (string, error) {
-	out, err := ec.Command(ctx, "echash").Output(ssh.DumpLogOnError)
+func (ec *ECTool) Hash(ctx context.Context, args ...string) (*hashinfo, error) {
+	var err error = nil
+	var outBytes []byte
+	if len(args) > 0 {
+		cmdAndArgs := append([]string{string("echash")}, args...)
+		outBytes, err = ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
+	} else {
+		outBytes, err = ec.Command(ctx, "echash").Output(ssh.DumpLogOnError)
+	}
 	if err != nil {
-		return "", errors.Wrap(err, "running 'ectool echash' on DUT")
+		return nil, errors.Wrap(err, "running 'ectool echash' on DUT")
 	}
 
+	out := string(outBytes)
 	// Parse output to determine whether RO or RW is the active firmware.
-	match := reECHash.FindSubmatch(out)
-	if len(match) == 0 {
-		return "", errors.Errorf("did not find ec hash 'ectool hash' output: %s", out)
+	match := reECHash.FindStringSubmatch(out)
+	if len(match) != 6 {
+		return nil, errors.Errorf("could not parse 'ectool echash' output: %s", out)
 	}
 
-	return string(match[1]), nil
+	info := hashinfo{
+		Status: match[1],
+		Type:   match[2],
+		Offset: match[3],
+		Size:   match[4],
+		Hash:   match[5],
+	}
+
+	return &info, nil
 }
 
 // BatteryCutoff runs the ectool batterycutoff command.
