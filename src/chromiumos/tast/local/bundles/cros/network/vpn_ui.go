@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
@@ -20,6 +21,11 @@ import (
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/testing"
 )
+
+type vpnUITestCase struct {
+	vpnType       vpn.Type
+	ipsecAuthType vpn.IPsecAuthType
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -34,48 +40,46 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_cert",
-			Val: vpn.Config{
-				Type:          vpn.TypeIKEv2,
-				IPsecAuthType: vpn.AuthTypeCert,
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypeCert,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_eap",
-			Val: vpn.Config{
-				Type:          vpn.TypeIKEv2,
-				IPsecAuthType: vpn.AuthTypeEAP,
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypeEAP,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_psk",
-			Val: vpn.Config{
-				Type:          vpn.TypeIKEv2,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypePSK,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec_cert",
-			Val: vpn.Config{
-				Type:          vpn.TypeL2TPIPsec,
-				IPsecAuthType: vpn.AuthTypeCert,
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeL2TPIPsec,
+				ipsecAuthType: vpn.AuthTypeCert,
 			},
 		}, {
 			Name: "l2tp_ipsec_psk",
-			Val: vpn.Config{
-				Type:          vpn.TypeL2TPIPsec,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeL2TPIPsec,
+				ipsecAuthType: vpn.AuthTypePSK,
 			},
 		}, {
 			Name: "openvpn",
-			Val: vpn.Config{
-				Type:                   vpn.TypeOpenVPN,
-				OpenVPNUseUserPassword: true,
+			Val: vpnUITestCase{
+				vpnType: vpn.TypeOpenVPN,
 			},
 		}, {
 			Name: "wireguard",
-			Val: vpn.Config{
-				Type:     vpn.TypeWireGuard,
-				WGUsePSK: true,
+			Val: vpnUITestCase{
+				vpnType: vpn.TypeWireGuard,
 			},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
@@ -87,6 +91,10 @@ func init() {
 const vpnClientCertNameInUI = "chromelab-wifi-testbed-root.mtv.google.com [chromelab-wifi-testbed-client.mtv.google.com]"
 
 func VPNUI(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
 	cr := s.FixtValue().(vpn.FixtureEnv).Cr
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -115,19 +123,33 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	}
 	defer ew.Close()
 
+	// Prepares virtualnet environment for the VPN server.
+	routingEnv := routing.NewTestEnvWithoutResetProfile()
+	if err := routingEnv.SetUp(ctx); err != nil {
+		s.Fatal("Failed to set up virtualnet environment for VPN server: ", err)
+	}
+	defer func() {
+		if err := routingEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down virtualnet environment: ", err)
+		}
+	}()
+
 	// Prepares VPN server.
-	config := s.Param().(vpn.Config)
-	vpnConn, err := vpn.NewConnection(ctx, config)
+	tc := s.Param().(vpnUITestCase)
+	config := vpn.NewConfig(
+		tc.vpnType,
+		vpn.WithIPsecAuthType(tc.ipsecAuthType),
+		vpn.WithOpenVPNUseUserPassword(),
+		vpn.WithWGUsePSK(),
+	)
+	vpnServer, err := vpn.StartServerWithConfig(ctx, routingEnv.BaseServer, config)
 	if err != nil {
 		s.Fatal("Failed to create VPN connection: ", err)
 	}
-	defer vpnConn.Cleanup(ctx)
-	if err := vpnConn.SetUpWithoutService(ctx); err != nil {
-		s.Fatal("Failed to setup VPN server: ", err)
-	}
+	defer vpnServer.Exit(cleanupCtx)
 
 	// Get property values for this VPN connection so that we can fill them in UI.
-	vpnProps, err := vpn.CreateProperties(vpnConn.Server, &config)
+	vpnProps, err := vpn.CreateProperties(vpnServer, config)
 	if err != nil {
 		s.Fatal("Failed to generate D-Bus properties: ", err)
 	}
@@ -141,10 +163,10 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	}
 
 	// Inputs VPN properties via UI.
-	svcName := "vpn-test-" + config.Type.String()
+	svcName := "vpn-test-" + tc.vpnType.String()
 
 	// Configures service on the VPN dialog page.
-	v := vpnDialogConfigger{ui, ew, config, vpnConn, vpnProps, svcName}
+	v := vpnDialogConfigger{ui, ew, tc, vpnProps, svcName}
 	if err := v.config(ctx); err != nil {
 		s.Fatal("Failed to configure on VPN dialog: ", err)
 	}
@@ -162,8 +184,8 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	// Pings server gateway to make sure VPN is connected. This is required since
 	// some VPN services (e.g., WireGuard) will show connected even if we have a
 	// wrong configuration.
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, vpnConn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-		s.Fatalf("Failed to ping %s: %v", vpnConn.Server.OverlayIPv4, err)
+	if err := routing.ExpectPingSuccessWithTimeout(ctx, vpnServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+		s.Fatalf("Failed to ping %s: %v", vpnServer.OverlayIPv4, err)
 	}
 
 	// Clicks Disconnect and checks the "Not Connected" text on the page.
@@ -188,8 +210,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 type vpnDialogConfigger struct {
 	ui      *uiauto.Context
 	ew      *input.KeyboardEventWriter
-	cfg     vpn.Config
-	conn    *vpn.Connection
+	tc      vpnUITestCase
 	props   map[string]interface{}
 	svcName string
 }
@@ -218,7 +239,7 @@ func (v *vpnDialogConfigger) config(ctx context.Context) error {
 	if err := v.inputTextField(ctx, "Service name", v.svcName); err != nil {
 		return err
 	}
-	switch v.cfg.Type {
+	switch v.tc.vpnType {
 	case vpn.TypeIKEv2:
 		return v.configIKEv2(ctx)
 	case vpn.TypeL2TPIPsec:
@@ -228,7 +249,7 @@ func (v *vpnDialogConfigger) config(ctx context.Context) error {
 	case vpn.TypeWireGuard:
 		return v.configWireGuard(ctx)
 	default:
-		return errors.Errorf("invalid VPN type %s", v.cfg.Type)
+		return errors.Errorf("invalid VPN type %s", v.tc.vpnType)
 	}
 }
 
@@ -239,7 +260,7 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 	if err := v.inputTextField(ctx, "Server hostname", v.props["Provider.Host"].(string)); err != nil {
 		return err
 	}
-	switch v.cfg.IPsecAuthType {
+	switch v.tc.ipsecAuthType {
 	case vpn.AuthTypeCert:
 		// Server CA is selected by default.
 		if err := v.selectListOption(ctx, "Authentication type", "User certificate"); err != nil {
@@ -276,7 +297,7 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 			return err
 		}
 	default:
-		return errors.Errorf("unknown auth type %s", v.cfg.IPsecAuthType)
+		return errors.Errorf("unknown auth type %s", v.tc.ipsecAuthType)
 	}
 	return nil
 }
@@ -295,7 +316,7 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 		return err
 	}
 
-	switch v.cfg.IPsecAuthType {
+	switch v.tc.ipsecAuthType {
 	case vpn.AuthTypeCert:
 		// Server CA is selected by default.
 		if err := v.selectListOption(ctx, "Authentication type", "User certificate"); err != nil {
@@ -310,7 +331,7 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 			return err
 		}
 	default:
-		return errors.Errorf("unknown auth type %s", v.cfg.IPsecAuthType)
+		return errors.Errorf("unknown auth type %s", v.tc.ipsecAuthType)
 	}
 	return nil
 }
