@@ -21,6 +21,7 @@ func init() {
 			"chromeos-gfx-video@google.com",
 			"bchoobineh@google.com",
 		},
+		SoftwareDeps: []string{"v4l2_codec"},
 		BugComponent: "b:168352",
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",
