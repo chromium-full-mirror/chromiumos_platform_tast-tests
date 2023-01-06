@@ -88,10 +88,14 @@ func DownloadRecentPhoto(ctx context.Context, s *testing.State) {
 	if err := phonehub.DownloadMostRecentPhoto(ctx, tconn); err != nil {
 		s.Fatal("Failed to download the most recent photo: ", err)
 	}
-	if err := uiauto.Combine("view downloaded photo in the holding space tray",
-		ui.LeftClick(holdingspace.FindTray()),
-		ui.Exists(holdingspace.FindDownloadChip().Name(photoName).First()),
-	)(ctx); err != nil {
+
+	// Locate and click on the holding space tray.
+	if err := ui.LeftClick(holdingspace.FindTray())(ctx); err != nil {
+		s.Fatal("Failed to click the holding space tray: ", err)
+	}
+
+	// Locate recently downloaded photo in the holding space tray.
+	if err := ui.Exists(holdingspace.FindDownloadChip().Name(photoName).First())(ctx); err != nil {
 		s.Fatal("Expected photo ", photoName, " is not displayed in the holding space tray: ", err)
 	}
 
