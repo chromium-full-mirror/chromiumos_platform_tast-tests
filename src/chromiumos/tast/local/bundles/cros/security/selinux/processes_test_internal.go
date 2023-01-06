@@ -201,6 +201,7 @@ func ProcessesTestInternal(ctx context.Context, s *testing.State, testSelector [
 				{exe, "/usr/sbin/tpm_managerd", matchRegexp, "cros_tpm_managerd", zeroProcs, ""},
 				{exe, "/usr/sbin/trunksd", matchRegexp, "cros_trunksd", zeroProcs, ""},
 				{exe, "/usr/sbin/update_engine", matchRegexp, "cros_update_engine", zeroProcs, ""},
+				{exe, "/usr/sbin/lvmd", matchRegexp, "cros_lvmd", zeroProcs, ""},
 				{exe, "/usr/sbin/usbguard-daemon", matchRegexp, "cros_usbguard", zeroProcs, ""},
 				{exe, "/usr/sbin/vtpmd", matchRegexp, "cros_vtpmd", zeroProcs, ""},
 				{exe, "/usr/sbin/wpa_supplicant", matchRegexp, "wpa_supplicant", zeroProcs, ""},
