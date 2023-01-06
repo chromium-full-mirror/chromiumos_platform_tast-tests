@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -116,7 +115,7 @@ func ShowHomeButton(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 			homeButton := nodewith.Name("Home").Role(role.Button).First()
 			if err = ui.WaitUntilExists(homeButton)(ctx); err != nil {
-				if !strings.Contains(err.Error(), nodewith.ErrNotFound) {
+				if !nodewith.IsNodeNotFoundErr(err) {
 					s.Fatal("Failed to wait for 'Home' button: ", err)
 				}
 				if param.wantButton {

@@ -153,6 +153,11 @@ const (
 	ErrTooGeneric = "multiple nodes matched, if you expect this and only want the first use First()"
 )
 
+// IsNodeNotFoundErr checks if an error is caused by node not found.
+func IsNodeNotFoundErr(err error) bool {
+	return strings.Contains(err.Error(), ErrNotFound)
+}
+
 // GenerateQuery generates the JS query to find this node.
 // It must be called in an async function because it starts by awaiting the chrome.automation Desktop node.
 // The final node will be in the variable node.

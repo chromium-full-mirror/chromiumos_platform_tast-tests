@@ -6,7 +6,6 @@ package kiosk
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -102,7 +101,7 @@ func NoSystemUI(ctx context.Context, s *testing.State) {
 			finder := nodewith.HasClass(param.className).First()
 			if err := ui.WaitUntilExists(finder)(ctx); err == nil {
 				s.Fatal(param.errorElementName, " is shown in Kiosk")
-			} else if !strings.Contains(err.Error(), nodewith.ErrNotFound) {
+			} else if !nodewith.IsNodeNotFoundErr(err) {
 				s.Fatal("Failed to wait for ", param.errorElementName, ": ", err)
 			}
 		})

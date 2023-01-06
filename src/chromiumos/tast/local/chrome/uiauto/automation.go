@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -457,7 +456,7 @@ func (ac *Context) Exists(finder *nodewith.Finder) Action {
 // It returns true if found otherwise false.
 func (ac *Context) IsNodeFound(ctx context.Context, finder *nodewith.Finder) (bool, error) {
 	if err := ac.Exists(finder)(ctx); err != nil {
-		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+		if nodewith.IsNodeNotFoundErr(err) {
 			return false, nil
 		}
 		return false, err
@@ -621,7 +620,7 @@ func (ac *Context) Gone(finder *nodewith.Finder) Action {
 		var exists bool
 		if err := ac.tconn.Eval(ctx, query, &exists); err != nil {
 			// Only consider the node gone if we get a not found error.
-			if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+			if nodewith.IsNodeNotFoundErr(err) {
 				return nil
 			}
 			return err

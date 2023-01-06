@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -131,7 +130,7 @@ func BookmarkBarEnabled(ctx context.Context, s *testing.State) {
 			// TODO(crbug.com/1236546): Replace this with a helper function to check the existence of a UI node.
 			folderButton := nodewith.Name(folderName).Role(role.PopUpButton).First()
 			if err = ui.WaitUntilExists(folderButton)(ctx); err != nil {
-				if !strings.Contains(err.Error(), nodewith.ErrNotFound) {
+				if !nodewith.IsNodeNotFoundErr(err) {
 					s.Fatal("Failed to wait for the bookmark bar: ", err)
 				}
 				if param.wantBookmarkBar {

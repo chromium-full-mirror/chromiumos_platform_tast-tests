@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"strings"
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
@@ -86,7 +85,7 @@ func ShowLogoutButtonInTray(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 			signOutButton := nodewith.Name("Sign out").Role(role.Button).First()
 			if err = ui.WaitUntilExists(signOutButton)(ctx); err != nil {
-				if !strings.Contains(err.Error(), nodewith.ErrNotFound) {
+				if !nodewith.IsNodeNotFoundErr(err) {
 					s.Fatal("Failed to wait for 'Sign out' button: ", err)
 				}
 				if param.wantButton {

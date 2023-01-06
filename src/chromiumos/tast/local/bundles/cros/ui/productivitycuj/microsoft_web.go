@@ -1178,7 +1178,7 @@ func (app *MicrosoftWebOffice) turnOnDictation(ctx context.Context) error {
 		dictationToolbar := nodewith.Name("Dictation toolbar").Role(role.Toolbar)
 		// Sometimes the "Dictation toolbar" will be displayed directly, so we don't need to click the "Dictation" button again.
 		if err := app.ui.WaitUntilExists(dictationToolbar)(ctx); err != nil {
-			if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+			if nodewith.IsNodeNotFoundErr(err) {
 				return turnOnAction(ctx)
 			}
 			return err
@@ -1191,7 +1191,7 @@ func (app *MicrosoftWebOffice) turnOnDictation(ctx context.Context) error {
 	// If the "Dictation" button is not displayed on the screen, we need to find it through "More Options".
 	// Otherwise, we can click it directly on the panel.
 	if err := app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(dictateButton)(ctx); err != nil {
-		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+		if nodewith.IsNodeNotFoundErr(err) {
 			if err := reoperate(ctx, app.turnOnDictationFromMoreOptions); err != nil {
 				return err
 			}

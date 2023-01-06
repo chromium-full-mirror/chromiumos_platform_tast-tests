@@ -498,7 +498,7 @@ func TestCleanup(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome)
 
 		// Wait for 5 seconds for the account list to appear.
 		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(moreActionsButton)(ctx); err != nil {
-			if strings.Contains(err.Error(), nodewith.ErrNotFound) && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+			if nodewith.IsNodeNotFoundErr(err) && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 				// There are no "More actions, *" buttons left. It means all secondary accounts are removed.
 				break
 			}

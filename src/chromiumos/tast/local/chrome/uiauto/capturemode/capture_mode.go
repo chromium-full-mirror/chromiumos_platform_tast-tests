@@ -9,7 +9,6 @@ import (
 	"context"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -70,7 +69,7 @@ func TakeAreaScreenshot(ctx context.Context, tconn *chrome.TestConn) error {
 	captureMode := nodewith.Name("Capture").Role(role.Button)
 	if err := ui.WithTimeout(10 * time.Second).LeftClick(captureMode)(ctx); err != nil {
 		// Return ErrCaptureModeNotFound if capture mode UI does not exist, so caller can handle this case separately.
-		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+		if nodewith.IsNodeNotFoundErr(err) {
 			return ErrCaptureModeNotFound
 		}
 		return errors.Wrap(err, "failed to find and click capture button")

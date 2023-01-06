@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -107,7 +106,7 @@ func AutoclickEnabled(ctx context.Context, s *testing.State) {
 
 			// Check if a click occurred by checking whether the Sign out button is visible or not.
 			if err := ui.WithTimeout(time.Second * 10).WaitUntilExists(nodewith.Role(role.Window).ClassName("TrayBubbleView"))(ctx); err != nil {
-				if !strings.Contains(err.Error(), nodewith.ErrNotFound) {
+				if !nodewith.IsNodeNotFoundErr(err) {
 					s.Fatal("Failed to wait for 'TrayBubbleView' window: ", err)
 				}
 				if param.wantButton {

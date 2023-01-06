@@ -6,7 +6,6 @@ package setup
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -38,7 +37,7 @@ func SetResizable(ctx context.Context, tconn *chrome.TestConn) error {
 
 	centerBtn := nodewith.Role(role.Button).ClassName("FrameCenterButton")
 	if err := ui.Exists(centerBtn)(ctx); err != nil {
-		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+		if nodewith.IsNodeNotFoundErr(err) {
 			// If there is no center button to change window size, just return.
 			// This could happen, for example, when the windown is already maximized.
 			return nil
@@ -64,7 +63,7 @@ func SetResizable(ctx context.Context, tconn *chrome.TestConn) error {
 	allowWin := nodewith.Role(role.Dialog).NameStartingWith("Allow resizing").ClassName("RootView")
 	allowBtn := nodewith.Role(role.Button).Name("Allow").Ancestor(allowWin)
 	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(allowWin)(ctx); err != nil {
-		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
+		if nodewith.IsNodeNotFoundErr(err) {
 			// If the user has clicked "Don't ask again for this app" checkbox last time,
 			// the "Allow resizing" window will not pop up.
 			return nil

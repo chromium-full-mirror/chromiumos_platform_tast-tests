@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -123,7 +122,7 @@ func BrowserLabsEnabled(ctx context.Context, s *testing.State) {
 
 			PopUpButton := nodewith.ClassName("ChromeLabsButton").Role(role.PopUpButton).First()
 			if err = ui.WaitUntilExists(PopUpButton)(ctx); err != nil {
-				if !strings.Contains(err.Error(), nodewith.ErrNotFound) {
+				if !nodewith.IsNodeNotFoundErr(err) {
 					s.Fatal("Failed to wait for the chrome labs icon: ", err)
 				}
 				if param.iconShouldExist {
