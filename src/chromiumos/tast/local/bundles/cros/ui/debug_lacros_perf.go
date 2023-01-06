@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/cpu"
+	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
@@ -47,12 +49,12 @@ func init() {
 		Timeout:      cuj.CPUStablizationTimeout + debugLacrosTestWaitDuration,
 
 		Params: []testing.Param{{
-			Name: "test_scroll_ash",
+			Name: "text_scroll_ash",
 			Val: debugLacrosTest{
 				browserType: browser.TypeAsh,
 				windowURL:   textScrollingURL,
 			},
-			Fixture: "loggedInToCUJUser",
+			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
 		}, {
 			Name:              "text_scroll_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -60,14 +62,14 @@ func init() {
 				browserType: browser.TypeLacros,
 				windowURL:   textScrollingURL,
 			},
-			Fixture: "loggedInToCUJUserLacros",
+			Fixture: "lacrosPerf",
 		}, {
 			Name: "color_change_ash",
 			Val: debugLacrosTest{
 				browserType: browser.TypeAsh,
 				windowURL:   colorChangeURL,
 			},
-			Fixture: "loggedInToCUJUser",
+			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
 		}, {
 			Name:              "color_change_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -75,12 +77,22 @@ func init() {
 				browserType: browser.TypeLacros,
 				windowURL:   colorChangeURL,
 			},
-			Fixture: "loggedInToCUJUserLacros",
+			Fixture: "lacrosPerf",
 		}},
 	})
 }
 
 func DebugLacrosPerf(ctx context.Context, s *testing.State) {
+	// Wait for CPU to stabilize before test.
+	if err := cpu.WaitUntilStabilized(ctx, cuj.CPUCoolDownConfig()); err != nil {
+		s.Log("Failed to wait for CPU to become idle: ", err)
+	}
+
+	// Ensure display on to record UI performance correctly.
+	if err := power.TurnOnDisplay(ctx); err != nil {
+		s.Fatal("Failed to turn on display: ", err)
+	}
+
 	debugLacrosTest := s.Param().(debugLacrosTest)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
