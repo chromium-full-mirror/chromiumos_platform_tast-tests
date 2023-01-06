@@ -281,7 +281,7 @@ func (c *cryptohomeBinary) authenticateAuthSession(ctx context.Context, password
 
 // authenticatePinWithAuthSession calls "cryptohome --action=authenticate_auth_session".
 func (c *cryptohomeBinary) authenticatePinWithAuthSession(ctx context.Context, pin, label, authSessionID string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_session", "--auth_session_id=" + authSessionID}
+	args := []string{"--action=authenticate_auth_session", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID}
 	args = append(args, "--key_label="+label, "--password="+pin)
 	return c.call(ctx, args...)
 }

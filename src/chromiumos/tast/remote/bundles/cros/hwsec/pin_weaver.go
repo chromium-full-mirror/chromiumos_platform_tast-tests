@@ -189,8 +189,8 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure AutheneticateAuthFactor error code relays TPM is not locked out.
-	if replyWithError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_AUTHORIZATION_KEY_FAILED {
-		s.Fatal("TPM is locked out: ", replyWithError.Error)
+	if ec := replyWithError.GetError(); ec != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_AUTHORIZATION_KEY_FAILED {
+		s.Fatal("TPM is locked out: ", ec)
 	}
 
 	// Since the pin is not locked out yet, we should be able to log back in again.
@@ -241,8 +241,8 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 	// Ensure AutheneticateAuthFactor error code relays TPM is locked out.
-	if replyWithError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
-		s.Fatal("AuthenticateAuthFactor indicates that the TPM is not locked out: ", replyWithError.Error)
+	if ec := replyWithError.GetError(); ec != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
+		s.Fatal("AuthenticateAuthFactor indicates that the TPM is not locked out: ", ec)
 	}
 
 	// Check to make sure that PIN AuthFactor does not appear in StartAuthSessionReply.
@@ -345,7 +345,7 @@ func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRu
 }
 
 // attemptWrongPIN attempts to try wrong PIN for authentication for given number of attempts.
-func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam, numberOfWrongAttempts int) (*uda.AuthenticateAuthFactorReply, error) {
+func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam, numberOfWrongAttempts int) (hwsec.UserDataAuthReplyWithError, error) {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new added PIN auth factor.
@@ -355,7 +355,8 @@ func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hws
 	}
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
-	reply := &uda.AuthenticateAuthFactorReply{}
+	var reply hwsec.UserDataAuthReplyWithError
+	reply = &uda.AuthenticateAuthFactorReply{}
 	// Supply invalid credentials five times to trigger firmware lockout of the credential.
 	for i := 0; i < numberOfWrongAttempts; i++ {
 		reply, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret)
@@ -368,7 +369,7 @@ func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hws
 }
 
 // authenticateWithCorrectPIN authenticates a given user with the correct PIN.
-func authenticateWithCorrectPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam, shouldAuthenticate bool) (*uda.AuthenticateAuthFactorReply, error) {
+func authenticateWithCorrectPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam, shouldAuthenticate bool) (hwsec.UserDataAuthReplyWithError, error) {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new added PIN auth factor.

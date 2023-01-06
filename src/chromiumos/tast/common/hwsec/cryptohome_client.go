@@ -81,6 +81,16 @@ type CryptohomeMountAPIParam struct {
 	MountAPI CryptohomeMountAPI
 }
 
+// UserDataAuthReplyWithError is an interface type that represent common UserDataAuth API protobuf reply that contains error in
+// the form of CryptohomeErrorCode and CryptohomeErrorInfo.
+type UserDataAuthReplyWithError interface {
+	// GetError returns the legacy CryptohomeErrorCode.
+	GetError() uda.CryptohomeErrorCode
+
+	// GetErrorInfo() returns the CryptohomeErrorInfo struct that contains various error related info.
+	GetErrorInfo() *uda.CryptohomeErrorInfo
+}
+
 // CryptohomeClient wraps and the functions of cryptohomeBinary and parses the outputs to
 // structured data.
 type CryptohomeClient struct {
@@ -1027,9 +1037,19 @@ func (u *CryptohomeClient) AuthenticateAuthSession(ctx context.Context, password
 
 // AuthenticatePinWithAuthSession authenticates an AuthSession with a given authSessionID using a pin.
 // password is ignored if publicMount is set to true.
-func (u *CryptohomeClient) AuthenticatePinWithAuthSession(ctx context.Context, pin, label, authSessionID string) error {
-	_, err := u.binary.authenticatePinWithAuthSession(ctx, pin, label, authSessionID)
-	return err
+func (u *CryptohomeClient) AuthenticatePinWithAuthSession(ctx context.Context, pin, label, authSessionID string) (*uda.AuthenticateAuthSessionReply, error) {
+	binaryMsg, err := u.binary.authenticatePinWithAuthSession(ctx, pin, label, authSessionID)
+
+	// Unmarshal proto first, even if there was an error.
+	reply := &uda.AuthenticateAuthSessionReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthSessionReply in AuthenticatePinWithAuthSession")
+	}
+	if err != nil {
+		return reply, errors.Wrap(err, "AuthenticatePinWithAuthSession failed")
+	}
+
+	return reply, nil
 }
 
 // AuthenticateChallengeCredentialWithAuthSession authenticates an AuthSession with a given authSessionID,
