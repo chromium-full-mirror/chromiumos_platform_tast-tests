@@ -216,14 +216,20 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if params.traceConfigPath != "" {
-		recorder.EnableTracing(params.outDir, params.traceConfigPath)
-	}
+
 	var appStartTime int64
 	switch params.appName {
 	case HelloWorldAppName:
 		testing.ContextLog(ctx, "Launch \"Hello world\" ARC app")
 		if err := recorder.Run(ctx, func(ctx context.Context) error {
+			if params.traceConfigPath != "" {
+				// Start tracing now.s
+				if err := recorder.StartTracingWithName(ctx, params.outDir, "hellpworld_trace.data.gz", params.traceConfigPath); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+				defer recorder.StopTracing(ctx)
+			}
+
 			startTime := time.Now()
 			// Use arc.WithWaitForLaunch() because we are measuring how long the launch takes.
 			if err := appHelloWorld.Start(ctx, tconn, arc.WithWaitForLaunch()); err != nil {
@@ -236,6 +242,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		}
 	case SpotifyAppName:
 		if err = recorder.Run(ctx, func(ctx context.Context) error {
+			if params.traceConfigPath != "" {
+				// Start tracing now.
+				if err := recorder.StartTracingWithName(ctx, params.outDir, "spotify_trace.data.gz", params.traceConfigPath); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+				defer recorder.StopTracing(ctx)
+			}
+
 			t, err := appSpotify.Launch(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to Launch Spotify")
@@ -265,6 +279,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 
 	testing.ContextLog(ctx, "Take photo and video")
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		if params.traceConfigPath != "" {
+			// Start tracing now.s
+			if err := recorder.StartTracingWithName(ctx, params.outDir, "camera_trace.data.gz", params.traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		return takePhotoAndVideo(ctx, cr, params.ccaScriptPaths, params.outDir)
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the camera scenario")
@@ -289,6 +311,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to report")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(params.outDir); err != nil {
 		return errors.Wrap(err, "failed to store values")
@@ -418,6 +443,13 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 	}
 
 	if err := resources.recorder.Run(ctx, func(ctx context.Context) error {
+		if params.traceConfigPath != "" {
+			// Start tracing now.
+			if err := resources.recorder.StartTracingWithName(ctx, params.outDir, "switch_tabs_trace.data.gz", params.traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer resources.recorder.StopTracing(ctx)
+		}
 		if resources.browserApp.ID == apps.LacrosID {
 			activeWindow, err := ash.GetActiveWindow(ctx, tconn)
 			if err != nil {
@@ -511,6 +543,13 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 	for _, subtest := range switchWindowTests {
 		testing.ContextLog(ctx, subtest.desc)
 		if err := resources.recorder.Run(ctx, func(ctx context.Context) error {
+			if params.traceConfigPath != "" {
+				// Start tracing now.
+				if err := resources.recorder.StartTracingWithName(ctx, params.outDir, "switch_window.data.gz", params.traceConfigPath); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+				defer resources.recorder.StopTracing(ctx)
+			}
 			if err := resources.vh.SetVolume(ctx, initialVolume); err != nil {
 				return errors.Wrapf(err, "failed to set volume to %v percents", initialVolume)
 			}

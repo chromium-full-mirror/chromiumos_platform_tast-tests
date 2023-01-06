@@ -606,16 +606,21 @@ func testFunction(
 		}
 		return err
 	}
-	if runTracing {
-		cujRecorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-		cujRecorder.SetTraceFilePrefix(name + "-")
-	}
 	if err := cujRecorder.Run(ctx, cujFunc); err != nil {
+		// Start tracing now.
+		if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return cr, l, nil, nil, errors.Wrap(err, "failed to start tracing")
+		}
+		defer cujRecorder.StopTracing(ctx)
+
 		return cr, l, nil, nil, errors.Wrap(err, "failed to run the test scenario")
 	}
 	tpsValues := perf.NewValues()
 	if err := cujRecorder.Record(ctx, tpsValues); err != nil {
 		return cr, l, nil, nil, errors.Wrap(err, "failed to collect the data from the recorder")
+	}
+	if err := cujRecorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if lacrosConnectTime != nil {
 		tpsValues.Set(perf.Metric{

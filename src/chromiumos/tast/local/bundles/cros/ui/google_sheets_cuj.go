@@ -124,8 +124,6 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	// Add an empty screenshot recorder.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
 		s.Log("Failed to add screenshot recorder: ", err)
@@ -165,6 +163,12 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		// Open Google Sheets file.
 		recorder.Annotate(ctx, "Opening_Google_Sheets_file")
 		if err := sheetConn.Navigate(ctx, sheetURL); err != nil {
@@ -270,6 +274,9 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the perf data: ", err)

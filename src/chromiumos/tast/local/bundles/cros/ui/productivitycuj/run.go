@@ -75,9 +75,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, app ProductivityApp, tier cuj.T
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 	defer browser.CloseAllTabs(ctx, tconn)
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
-	}
 	// Shorten the context to clean up the files created in the test case.
 	cleanUpResourceCtx := ctx
 	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
@@ -97,6 +94,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, app ProductivityApp, tier cuj.T
 	}
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		// Collect GPU metrics in goroutine while other tests are being executed.
 
 		errc := make(chan error, 1) // Buffered channel to make sure goroutine will not be blocked.
@@ -147,6 +152,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, app ProductivityApp, tier cuj.T
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		return errors.Wrap(err, "failed to record the data")
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 
 	pv.Set(perf.Metric{

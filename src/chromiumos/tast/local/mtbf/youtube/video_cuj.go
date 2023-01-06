@@ -207,9 +207,6 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
-	}
 
 	var videoApp VideoApp
 	switch appName {
@@ -255,6 +252,14 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 		}(ctx)
 		ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 		defer cancel()
+
+		// Record tracing in the first iteration.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
 
 		if err := videoScenario(ctx, resources, param, br, bTconn, videoApp, videoSource, tabChecker); err != nil {
 			return errors.Wrap(err, "failed to run video test")
@@ -305,6 +310,9 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	}
 	if err := recorder.SaveHistograms(outDir); err != nil {
 		return errors.Wrap(err, "failed to save histogram raw data")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	return nil
 }

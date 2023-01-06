@@ -134,8 +134,6 @@ func StadiaGameplayCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add Ash recorded metrics: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	// Browser metrics config, collected from ash-chrome or lacros-chrome
 	// depending on the browser being used.
 	browserConfigs := []cujrecorder.MetricConfig{
@@ -227,6 +225,13 @@ func StadiaGameplayCUJ(ctx context.Context, s *testing.State) {
 	}()
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		tracePath := filepath.Join(s.OutDir(), "trace.data.gz")
+		if err := recorder.StartTracing(ctx, tracePath, s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		// Hard code the game playing routine.
 		// Enter the menu.
 		if err := stadiacuj.PressKey(ctx, kb, "Enter", 10*time.Second); err != nil {
@@ -263,6 +268,9 @@ func StadiaGameplayCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(closeCtx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(closeCtx); err != nil {
+		testing.ContextLog(closeCtx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save the perf data: ", err)

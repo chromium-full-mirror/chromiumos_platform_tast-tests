@@ -430,12 +430,17 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
-	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
-		recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-	}
 
 	var timeElapsed time.Duration
 	if err = recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		// Start tracing now.
+		if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		// Open all windows and tabs.
 		if err := openAllWindowsAndTabs(ctx, br, &windows, tsAction, isRecordMode); err != nil {
 			return errors.Wrap(err, "failed to open targets for tab switch")
@@ -500,6 +505,9 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		s.Fatal("Failed to report, error: ", err)
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values, error: ", err)

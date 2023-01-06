@@ -86,14 +86,18 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	// Add an empty screenshot recorder.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
 		s.Log("Failed to add screenshot recorder: ", err)
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		// Launch the ARC YouTube app.
 		if err := act.Start(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to start ARC++ YouTube app")
@@ -231,6 +235,9 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the performance data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save the performance data: ", err)

@@ -111,7 +111,6 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 	defer recorder.Close(closeCtx)
 
 	// Take a screenshot every 2 minutes up to a maximum of 5
@@ -232,6 +231,12 @@ func Run(ctx context.Context, s *testing.State) {
 	numAppWindows++
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		// Open another Chrome tab so we can save the tab connection.
 		// We will use this tab connection to navigate away from the
 		// page to ensure collection of
@@ -363,6 +368,9 @@ func Run(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)

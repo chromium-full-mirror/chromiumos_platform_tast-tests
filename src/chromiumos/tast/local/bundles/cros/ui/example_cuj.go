@@ -101,9 +101,6 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer recorder.Close(closeCtx)
 
-	// [Optional] Enable tracing for the recorder.
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	// [Optional] Add the pre-existing list of metrics to the
 	// recorder with recorder.AddCommonMetrics.
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
@@ -165,6 +162,12 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// recorder.Run runs the provided function, and collects metrics
 	// during its execution.
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// [Optional] Start tracing.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		const (
 			chromiumURL     = "https://chromium.org/Home"
 			issueTrackerURL = "https://bugs.chromium.org/p/chromium/issues/list"
@@ -275,11 +278,14 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	// Recorder cleanup involves calling recorder.Record to get the
-	// metrics in perf.Values, and pv.Save to save the metrics to the
-	// test out directory.
+	// metrics in perf.Values, recorder.SaveTraceFiles to save trace
+	// files, and pv.Save to save the metrics to the test out directory.
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)

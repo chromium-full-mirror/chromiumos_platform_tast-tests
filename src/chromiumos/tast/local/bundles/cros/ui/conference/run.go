@@ -97,9 +97,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 	if err := recorder.AddCollectedMetrics(bTconn, bt, cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
-	}
 	isNoRoom := roomType == NoRoom
 	meetTimeout := 50 * time.Second
 	if isNoRoom {
@@ -112,6 +109,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		// Collect GPU metrics in goroutine while other tests are being executed.
 		errc := make(chan error, 1) // Buffered channel to make sure goroutine will not be blocked.
 		gpuCtx, cancel := context.WithTimeout(ctx, meetTimeout+5*time.Second)
@@ -175,6 +180,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to record the data")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 
 	pv.Set(perf.Metric{

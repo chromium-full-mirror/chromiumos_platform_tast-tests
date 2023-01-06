@@ -113,9 +113,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
-	}
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
@@ -138,6 +135,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 	var decodedFrames, droppedFrames, droppedFramesPer float64
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		// Start tracing now.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHandler, true); err != nil {
 			return err
 		}
@@ -212,6 +217,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to report")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to store values")

@@ -105,10 +105,14 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		// Open PlayStore, Chrome and Files.
 		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
 		if err != nil {
@@ -202,6 +206,9 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 
 	if err := pv.Save(s.OutDir()); err != nil {

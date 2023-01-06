@@ -38,6 +38,7 @@ func init() {
 		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Vars: []string{
 			"spera.cuj_mode",     // Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".
 			"spera.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".
@@ -215,11 +216,16 @@ func CastToClass(ctx context.Context, s *testing.State) {
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
-	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
-		recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-	}
 	pv := perf.NewValues()
 	if err = recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		if err := googledocs.NewGoogleSlides(ctx, tconn, br, uiHandler, false); err != nil {
 			return err
 		}
@@ -249,6 +255,9 @@ func CastToClass(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 
 	pv.Set(perf.Metric{

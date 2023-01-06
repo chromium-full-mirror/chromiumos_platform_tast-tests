@@ -111,12 +111,17 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 	if err := recorder.AddCollectedMetrics(bTconn, p.BrowserType, cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if p.TraceConfigPath != "" {
-		recorder.EnableTracing(p.OutDir, p.TraceConfigPath)
-	}
 
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) (recorderErr error) {
+		// Start tracing now.
+		if p.TraceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, p.OutDir, p.TraceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		docsConn, err := br.NewConn(ctx, cuj.VideoCallDocsURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open docs window")
@@ -194,6 +199,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to report")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(p.OutDir); err != nil {
 		return errors.Wrap(err, "failed to store values")

@@ -59,12 +59,14 @@ type tabSwitchVariables struct {
 	param    TabSwitchParam // Test Parameters
 	webPages []webPage      // List of sites to visit
 
-	cr           *chrome.Chrome
-	br           *browser.Browser
-	closeBrowser func(context.Context) error
-	tconn        *chrome.TestConn
-	bTconn       *chrome.TestConn
-	recorder     *cujrecorder.Recorder
+	cr                 *chrome.Chrome
+	br                 *browser.Browser
+	closeBrowser       func(context.Context) error
+	tconn              *chrome.TestConn
+	bTconn             *chrome.TestConn
+	recorder           *cujrecorder.Recorder
+	outDir             string
+	perfettoConfigPath string
 }
 
 // webPage holds the info used to visit new sites in the test.
@@ -80,9 +82,11 @@ const coreTestDuration = 10 * time.Minute
 
 func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error) {
 	vars := tabSwitchVariables{
-		param:    s.Param().(TabSwitchParam),
-		webPages: getTestWebpages(),
-		cr:       s.FixtValue().(chrome.HasChrome).Chrome(),
+		param:              s.Param().(TabSwitchParam),
+		webPages:           getTestWebpages(),
+		cr:                 s.FixtValue().(chrome.HasChrome).Chrome(),
+		outDir:             s.OutDir(),
+		perfettoConfigPath: s.DataPath(cujrecorder.SystemTraceConfigFile),
 	}
 
 	var err error
@@ -117,8 +121,6 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 	if err := vars.recorder.AddCommonMetrics(vars.tconn, vars.bTconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
-
-	vars.recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 
 	// Add an empty screenshot recorder.
 	if err := vars.recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
@@ -267,7 +269,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 
 	ac := uiauto.New(test.tconn)
 
-	for _, data := range test.webPages {
+	for index, data := range test.webPages {
 		conns := make([]*chrome.Conn, 0, numPages)
 
 		// Create the homepage of the site.
@@ -313,6 +315,14 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		}
 
 		testing.ContextLog(ctx, "Start switching tabs")
+
+		// Record tracing in the first iteration.
+		if index == 0 {
+			if err := test.recorder.StartTracing(ctx, test.outDir, test.perfettoConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer test.recorder.StopTracing(ctx)
+		}
 
 		// Switch through tabs in a skip-order fashion.
 		// Note: when skipSize = N-1, then the skip-order is 1,1,1,1 ... N times
@@ -419,6 +429,9 @@ func Run(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := setupVars.recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
+	}
+	if err := setupVars.recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)

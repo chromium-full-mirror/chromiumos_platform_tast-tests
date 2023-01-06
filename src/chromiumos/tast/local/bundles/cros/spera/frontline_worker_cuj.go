@@ -35,6 +35,7 @@ func init() {
 		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com", "cienet-development@googlegroups.com"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Vars: []string{
 			"spera.username",       // Required. It is necessary to have account to use Google Sheets.
 			"spera.password",       // Required. It is necessary to have account to use Google Sheets.
@@ -213,9 +214,6 @@ func FrontlineWorkerCUJ(ctx context.Context, s *testing.State) {
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
-	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
-		recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-	}
 	numberOfTabs := 13
 	if workload == collaborating {
 		numberOfTabs = 26
@@ -223,6 +221,14 @@ func FrontlineWorkerCUJ(ctx context.Context, s *testing.State) {
 
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		// Start tracing now.
+		if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		if err := openGoogleTabs(ctx, br, uiHdl, numberOfTabs); err != nil {
 			return errors.Wrap(err, "failed to open google tabs")
 		}
@@ -282,6 +288,9 @@ func FrontlineWorkerCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 
 	pv.Set(perf.Metric{

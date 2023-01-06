@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/ui/windowarrangementcuj"
 	"chromiumos/tast/local/chrome"
@@ -220,7 +221,6 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Log("Failed to add screenshot recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 	defer recorder.Close(closeCtx)
 
 	if err := crastestclient.Mute(ctx); err != nil {
@@ -303,12 +303,31 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	defer pc.Close()
 
 	var f func(ctx context.Context) error
+	traceRecorded := false
 	if !tabletMode {
 		f = func(ctx context.Context) error {
+			if !traceRecorded {
+				// Start tracing now.S
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+				traceRecorded = true
+				defer recorder.StopTracing(ctx)
+			}
+
 			return windowarrangementcuj.RunClamShell(ctx, closeCtx, tconn, ui, pc)
 		}
 	} else {
 		f = func(ctx context.Context) error {
+			if !traceRecorded {
+				// Start tracing now.
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+				traceRecorded = true
+				defer recorder.StopTracing(ctx)
+			}
+
 			return windowarrangementcuj.RunTablet(ctx, closeCtx, br, tconn, ui, pc)
 		}
 	}
@@ -327,6 +346,9 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save the perf data: ", err)

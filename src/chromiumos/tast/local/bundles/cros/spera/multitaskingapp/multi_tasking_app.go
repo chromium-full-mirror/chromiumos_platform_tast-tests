@@ -218,9 +218,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if params.traceConfigPath != "" {
-		recorder.EnableTracing(params.outDir, params.traceConfigPath)
-	}
 	var appStartTime int64
 	switch params.appName {
 	case HelloWorldAppName:
@@ -258,6 +255,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	resources := &runResources{kb: kb, topRow: topRow, ui: ui, vh: vh, uiHandler: uiHandler, recorder: recorder, browserApp: browserApp}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		if params.traceConfigPath != "" {
+			// Start tracing now.
+			if err := recorder.StartTracing(ctx, params.outDir, params.traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
 			return errors.Wrap(err, "failed to open and switch chrome tabs")
 		}
@@ -329,6 +334,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to report")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(params.outDir); err != nil {
 		return errors.Wrap(err, "failed to store values")

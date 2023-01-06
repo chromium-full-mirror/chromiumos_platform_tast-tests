@@ -69,8 +69,6 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 	defer recorder.Close(closeCtx)
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
@@ -161,6 +159,12 @@ func Run(ctx context.Context, s *testing.State) {
 	defer ime.DefaultInputMethod.Activate(tconn)(closeCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		const docsURL = "https://docs.new"
 		if err := conn.Navigate(ctx, docsURL); err != nil {
 			return errors.Wrapf(err, "failed to navigate to %q", docsURL)
@@ -339,6 +343,9 @@ func Run(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)

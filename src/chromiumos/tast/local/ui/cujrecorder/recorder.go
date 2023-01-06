@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -191,9 +192,15 @@ type Recorder struct {
 	// Its value is a map keyed by metric name.
 	records map[browser.Type]map[string]*record
 
-	traceDir                  string
-	perfettoCfgPath           string
-	perfettoTracingFilePrefix string
+	traceDir        string
+	perfettoCfgPath string
+	// The active or inactive tracing sessions.
+	// Key is the full path of the directory where the
+	// trace file will be saved, and value is the corresponding
+	// tracing session.
+	sessions map[string]*tracing.Session
+	// The currently active tracing session.
+	activeSession *tracing.Session
 
 	// duration is the total running time of the recorder.
 	duration time.Duration
@@ -282,7 +289,7 @@ func (r *Recorder) AddCollectedMetrics(tconn *chrome.TestConn, bt browser.Type, 
 		return errors.New("tconn must never be nil")
 	}
 	if !r.startedAtTm.IsZero() {
-		return errors.New("canont modify list of collected metrics after recodding was started")
+		return errors.New("canont modify list of collected metrics after recording was started")
 	}
 
 	// Keep the tconn so it can be used to collect metrics from the browser.
@@ -437,11 +444,12 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		tconns[browser.TypeLacros] = bTconn
 	}
 	r := &Recorder{
-		cr:      cr,
-		tconn:   tconn,
-		tconns:  tconns,
-		arc:     a,
-		options: options,
+		cr:       cr,
+		tconn:    tconn,
+		tconns:   tconns,
+		arc:      a,
+		options:  options,
+		sessions: make(map[string]*tracing.Session),
 	}
 
 	r.gpuDataSource = perfSrc.NewGPUDataSource(r.tconns)
@@ -507,17 +515,126 @@ func NewRecorder(ctx context.Context, cr *chrome.Chrome, bTconn *chrome.TestConn
 	return NewRecorderWithTestConn(ctx, tconn, cr, bTconn, a, options)
 }
 
-// EnableTracing enables system tracing when the recorder is running a test scenario.
-func (r *Recorder) EnableTracing(traceDir, perfettoCfgPath string) {
-	r.traceDir = traceDir
-	r.perfettoCfgPath = perfettoCfgPath
+// StartTracing starts a new system tracing session. Should be used with StopTracing.
+// It allows recording trace data using perfettoCfgPath for any part of
+// the test scenario and the trace.data.gz file will be saved to outDir later.
+//
+// It is the caller's responsibility to make sure:
+// (1) Only one tracing session is running at one time. Stop the former tracing session
+// first before starting another one.
+// (2) StopTracing has to be called after StartTracing to clean up, otherwise it may
+// affect other following tests.
+// (3) StartTracing should be called inside of recorder.Run when no following deferred
+// StopTracing is called. This can make sure the clean up function stops potential
+// running tracing session when recorder.Run stops.
+// (4) When start/stop multiple tracing sessions, make sure they call StartTracingWithName
+// and use different trace names, otherwise it would return errors. Be careful of this rule
+// especially when using recorder.RunFor.
+//
+// Example:
+//
+//	if err := recorder.StartTracing(ctx, s.OutDir(), perfettoCfgPath); err != nil {
+//		s.Fatal("Failed to start tracing: ", err)
+//	}
+//	defer recorder.StopTracing(ctx)
+//	...
+//	if err := recorder.SaveTraceFiles(ctx) {
+//		s.Fatal("Failed to save trace files: ", err)
+//	}
+func (r *Recorder) StartTracing(ctx context.Context, outDir, perfettoCfgPath string) error {
+	// trace.data.gz is the default trace file name.
+	return r.StartTracingWithName(ctx, outDir, "trace.data.gz", perfettoCfgPath)
 }
 
-// SetTraceFilePrefix inserts perfettoTracingFilePrefix prefix in front of the
-// perfetto trace file name. This is useful when test needs to store several
-// traces.
-func (r *Recorder) SetTraceFilePrefix(perfettoTracingFilePrefix string) {
-	r.perfettoTracingFilePrefix = perfettoTracingFilePrefix
+// StartTracingWithName starts a new system tracing session with a custom trace file name.
+//
+// Example:
+//
+//	if err := recorder.StartTracingWithName(ctx, s.OutDir(), "trace-1.data.gz", perfettoCfgPath); err != nil {
+//		s.Fatal("Failed to start tracing: ", err)
+//	}
+//	defer recorder.StopTracing(ctx)
+//	...
+//	if err := recorder.SaveTraceFiles(ctx) {
+//		s.Fatal("Failed to save trace files: ", err)
+//	}
+func (r *Recorder) StartTracingWithName(ctx context.Context, outDir, traceName, perfettoCfgPath string) error {
+	tracePath := filepath.Join(outDir, traceName)
+	if _, exists := r.sessions[tracePath]; exists {
+		return errors.New("trace session for the given tracePath already exists")
+	}
+	if r.activeSession != nil {
+		return errors.New("there is a tracing session currently running")
+	}
+	testing.ContextLog(ctx, "Starting system tracing session; Make sure to explicitly call StopTracing afterwards")
+	sess, err := tracing.StartSession(ctx, perfettoCfgPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to start tracing")
+	}
+	r.sessions[tracePath] = sess
+	r.activeSession = sess
+	return nil
+}
+
+// StopTracing stops the active system tracing session.
+func (r *Recorder) StopTracing(ctx context.Context) error {
+	if r.activeSession == nil {
+		return errors.New("can't stop tracing because there is no active session")
+	}
+	testing.ContextLog(ctx, "Stopping active system tracing session")
+	if err := r.activeSession.Stop(); err != nil {
+		return errors.Wrap(err, "failed to stop tracing")
+	}
+	r.activeSession = nil
+	return nil
+}
+
+// SaveTraceFiles read temporary trace result files, saves all the trace files to
+// output directory, and cleans up the temporary trace result files.
+// This could be resource-consuming so it should be called after Run() or RunFor()
+// to avoid metrics snapshots timing out.
+func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
+	// Save trace files from all tracing sessions.
+	for tracePath, sess := range r.sessions {
+		testing.ContextLog(ctx, "Reading trace result file")
+		// TODO(b/266868018): Avoid reading it all into memory.
+		data, err := io.ReadAll(sess.TraceResultFile)
+		if err != nil {
+			return errors.Wrap(err, "failed to read from the temp file of trace result")
+		}
+
+		file, err := os.OpenFile(tracePath, os.O_CREATE|os.O_RDWR, 0644)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open file %s", tracePath)
+		}
+		defer func() {
+			if err := file.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close file: ", err)
+			}
+		}()
+
+		writer := gzip.NewWriter(file)
+		defer func() {
+			if err := writer.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close gzip writer: ", err)
+			}
+		}()
+
+		testing.ContextLog(ctx, "Writing trace data")
+		if _, err := writer.Write(data); err != nil {
+			return errors.Wrap(err, "failed to write the data")
+		}
+		testing.ContextLog(ctx, "Trace data saved to: ", tracePath)
+
+		if err := writer.Flush(); err != nil {
+			return errors.Wrap(err, "failed to flush the gzip writer")
+		}
+
+		// The temporary file of trace data is no longer needed when returned.
+		sess.RemoveTraceResultFile()
+	}
+
+	return nil
 }
 
 // Close clears states for all trackers.
@@ -754,64 +871,6 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil, errors.Wrap(err, "failed to start powertop recorder")
 	}
 
-	if r.traceDir != "" && r.perfettoCfgPath != "" {
-		sess, err := tracing.StartSession(ctx, r.perfettoCfgPath)
-		testing.ContextLog(ctx, "Starting system tracing session")
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to start tracing")
-		}
-		stopTracing := func(ctx context.Context) error {
-			if err := sess.Stop(); err != nil {
-				return errors.Wrap(err, "failed to stop tracing")
-			}
-			testing.ContextLog(ctx, "Stopping system tracing session")
-
-			data, err := ioutil.ReadAll(sess.TraceResultFile)
-			if err != nil {
-				return errors.Wrap(err, "failed to read from the temp file of trace result")
-			}
-
-			filename := "trace.data.gz"
-			if r.perfettoTracingFilePrefix != "" {
-				filename = r.perfettoTracingFilePrefix + filename
-			}
-			file, err := os.OpenFile(filepath.Join(r.traceDir, filename), os.O_CREATE|os.O_RDWR, 0644)
-			if err != nil {
-				return errors.Wrap(err, "could not open file")
-			}
-			defer func() {
-				if err := file.Close(); err != nil {
-					testing.ContextLog(ctx, "Failed to close file: ", err)
-				}
-			}()
-
-			writer := gzip.NewWriter(file)
-			defer func() {
-				if err := writer.Close(); err != nil {
-					testing.ContextLog(ctx, "Failed to close gzip writer: ", err)
-				}
-			}()
-
-			if _, err := writer.Write(data); err != nil {
-				return errors.Wrap(err, "could not write the data")
-			}
-
-			if err := writer.Flush(); err != nil {
-				return errors.Wrap(err, "could not flush the gzip writer")
-			}
-
-			// The temporary file of trace data is no longer needed when returned.
-			sess.RemoveTraceResultFile()
-
-			return nil
-		}
-		cancel = func(ctx context.Context) error {
-			err := stopTracing(ctx)
-			cancelRunCtx()
-			return err
-		}
-	}
-
 	// Start metrics recording per browser.
 	r.mr = make(map[browser.Type]*metrics.Recorder)
 	for bt := range r.names {
@@ -841,6 +900,9 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 // Out:
 // * Error
 func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
+	// Ensure any active session stopped when recorder stopped.
+	r.StopTracing(ctx)
+
 	if r.startedAtTm.IsZero() {
 		return errors.New("Stop requested on the stopped recorder")
 	}

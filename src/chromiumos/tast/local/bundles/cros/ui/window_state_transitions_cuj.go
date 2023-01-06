@@ -188,10 +188,19 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Failed to add window animation smoothness metrics to the recorder: ", err)
 	}
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 
 	// Conduct the performance measurement.
+	traceRecorded := false
 	if err := recorder.RunFor(ctx, func(ctx context.Context) error {
+		if !traceRecorded {
+			// Start tracing now.
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			traceRecorded = true
+			defer recorder.StopTracing(ctx)
+		}
+
 		if err := dragUnmaximizeAndMaximize(ctx); err != nil {
 			return errors.Wrap(err, "failed to drag to unmaximize and maximize the window")
 		}
@@ -217,6 +226,9 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the performance data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the performance data: ", err)

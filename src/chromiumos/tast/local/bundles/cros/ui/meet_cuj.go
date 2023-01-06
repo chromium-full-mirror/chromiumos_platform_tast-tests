@@ -595,8 +595,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to ensure we capture any bots that drop during
 	// the call and any issues that come up with the collab window.
@@ -935,6 +933,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return err
 			}
 		}
+
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
 
 		if err := meetConn.WaitForExpr(ctx, "hrTelemetryApi.isInMeeting()"); err != nil {
 			return errors.Wrap(err, "failed to wait for entering meeting")
@@ -1297,6 +1301,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the perf data: ", err)

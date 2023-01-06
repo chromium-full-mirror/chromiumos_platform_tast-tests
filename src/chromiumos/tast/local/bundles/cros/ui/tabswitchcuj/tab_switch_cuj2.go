@@ -570,14 +570,19 @@ func Run2(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tie
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
-	if collect, ok := s.Var("ui.collectTrace"); ok && collect == "enable" {
-		recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-	}
 	// Shorten context a bit to allow for cleanup if Run fails.
 	shorterCtx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
 	if err = recorder.Run(shorterCtx, func(ctx context.Context) error {
+		// Start tracing now.
+		if collect, ok := s.Var("ui.collectTrace"); ok && collect == "enable" {
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		return tabSwitchAction(ctx, cr, tconn, &windows, tsAction, isRecordMode)
 	}); err != nil {
 		s.Fatal("Failed to execute tab switch action: ", err)
@@ -588,6 +593,9 @@ func Run2(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tie
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		s.Fatal("Failed to report, error: ", err)
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values, error: ", err)

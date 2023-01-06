@@ -95,9 +95,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, isTablet bool, bt browser.Type,
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
-	}
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to find keyboard")
@@ -115,6 +112,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, isTablet bool, bt browser.Type,
 	defer cancel()
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		// Start tracing now.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		account := cr.Creds().User
 		tinkerCad := tinkercad.NewTinkerCad(tconn, kb, br, rotateIconPath)
 
@@ -228,6 +233,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, isTablet bool, bt browser.Type,
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to record the data")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to save perf data")

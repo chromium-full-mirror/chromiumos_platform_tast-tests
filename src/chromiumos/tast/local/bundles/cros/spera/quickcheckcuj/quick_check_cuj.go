@@ -212,12 +212,16 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
-	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
-		recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-	}
 
 	var totalElapsed time.Duration
 	if err = recorder.Run(ctx, func(ctx context.Context) error {
+		if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
+			// Start tracing now.
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
 		startTime := time.Now()
 
 		// Execute lock function inside of recorder.
@@ -359,6 +363,9 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		s.Fatal("Failed to collect the data from the recorder: ", err)
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	// We don't do pv.Save(), but will return and let the test case handle it.
 	if err = recorder.SaveHistograms(s.OutDir()); err != nil {

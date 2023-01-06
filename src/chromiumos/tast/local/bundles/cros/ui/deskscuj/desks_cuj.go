@@ -116,8 +116,6 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
-
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to capture the state of the device during each of the
 	// desk switching workflows.
@@ -153,6 +151,12 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		defer recorder.StopTracing(ctx)
+
 		// Open a window within recorder.Run to ensure we collect
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
@@ -250,6 +254,9 @@ func Run(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to record the performance data: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save the performance data: ", err)

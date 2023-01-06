@@ -98,20 +98,27 @@ func Run(ctx context.Context, cr *chrome.Chrome, googlePhotos *GooglePhotos, bt 
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
+	f := func(ctx context.Context) error {
+		// Start tracing now.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+		return uiauto.NamedCombine("image editing on Google Photos",
+			googlePhotos.Open(),
+			googlePhotos.Upload(testImage),
+			googlePhotos.AddFilters(),
+			googlePhotos.Edit(),
+			googlePhotos.Rotate(),
+			googlePhotos.ReduceColor(),
+			googlePhotos.Crop(),
+			googlePhotos.UndoEdit(),
+		)(ctx)
 	}
 	pv := perf.NewValues()
-	if err := recorder.Run(ctx, uiauto.NamedCombine("image editing on Google Photos",
-		googlePhotos.Open(),
-		googlePhotos.Upload(testImage),
-		googlePhotos.AddFilters(),
-		googlePhotos.Edit(),
-		googlePhotos.Rotate(),
-		googlePhotos.ReduceColor(),
-		googlePhotos.Crop(),
-		googlePhotos.UndoEdit(),
-	)); err != nil {
+	if err := recorder.Run(ctx, f); err != nil {
 		return errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
@@ -127,6 +134,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, googlePhotos *GooglePhotos, bt 
 
 	if err := pv.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to save perf data")
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 
 	if err := recorder.SaveHistograms(outDir); err != nil {

@@ -200,7 +200,6 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add overlay strategy metrics to recorder: ", err)
 	}
 
-	recorder.EnableTracing(s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
 	defer recorder.Close(closeCtx)
 
 	if err := webConn.Navigate(ctx, ui.PerftestURL); err != nil {
@@ -473,7 +472,16 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Run test for ", testDuration)
+	traceRecorded := false
 	if err := recorder.RunFor(ctx, func(ctx context.Context) error {
+		if !traceRecorded {
+			// Start tracing now.
+			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			traceRecorded = true
+			defer recorder.StopTracing(ctx)
+		}
 		s.Log("Switch away from fullscreen video")
 		if tabletMode {
 			if err := tapFullscreenButton(); err != nil {
@@ -606,6 +614,9 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
+	}
+	if err := recorder.SaveTraceFiles(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
 	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
 		s.Error("Failed to save histogram raw data: ", err)

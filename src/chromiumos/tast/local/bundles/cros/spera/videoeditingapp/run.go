@@ -97,10 +97,15 @@ func Run(ctx context.Context, outDir, traceConfigPath string, cr *chrome.Chrome,
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if traceConfigPath != "" {
-		recorder.EnableTracing(outDir, traceConfigPath)
-	}
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		// Start tracing now.
+		if traceConfigPath != "" {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
 		return videoEditingScenario(ctx, tconn, cr, kb, uiHdl, tabletMode, outDir, br)
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the video editing on the WeVideo web")
@@ -118,6 +123,9 @@ func Run(ctx context.Context, outDir, traceConfigPath string, cr *chrome.Chrome,
 	defer cancel()
 	if err := recorder.Record(recordCtx, pv); err != nil {
 		return errors.Wrap(err, "failed to record")
+	}
+	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
+		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
 	if err = pv.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to store values")
