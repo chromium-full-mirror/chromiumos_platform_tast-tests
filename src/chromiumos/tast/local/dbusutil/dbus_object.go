@@ -8,6 +8,8 @@ import (
 	"context"
 
 	"github.com/godbus/dbus/v5"
+
+	"chromiumos/tast/errors"
 )
 
 // DBusObject wraps a D-Bus interface, object and connection.
@@ -69,6 +71,118 @@ func (d *DBusObject) Call(ctx context.Context, method string, args ...interface{
 	return d.obj.CallWithContext(ctx, d.IfacePath(method), 0, args...)
 }
 
+// CallForBool calls the D-Bus method with argument against the designated D-Bus
+// object and then returns the method's returned value as a bool.
+func (d *DBusObject) CallForBool(ctx context.Context, method string, args ...interface{}) (bool, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return false, c.Err
+	}
+	var result bool
+	if err := c.Store(&result); err != nil {
+		return false, errors.Wrapf(err, "failed to store response of method %q as a bool", method)
+	}
+	return result, nil
+}
+
+// CallForSuccess is the same as CallForBool, but fails of the returned bool
+// is not true. This is useful for methods that return true only if they are
+// successful and a return of false is a failure.
+func (d *DBusObject) CallForSuccess(ctx context.Context, method string, args ...interface{}) error {
+	result, err := d.CallForBool(ctx, method, args...)
+	if err != nil {
+		return err
+	}
+	if !result {
+		return errors.Errorf("call to method %q returned false", method)
+	}
+	return nil
+}
+
+// CallForInt calls the D-Bus method with argument against the designated D-Bus
+// object and then returns the method's returned value as an int.
+func (d *DBusObject) CallForInt(ctx context.Context, method string, args ...interface{}) (int, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return 0, c.Err
+	}
+	var result int
+	if err := c.Store(&result); err != nil {
+		return 0, errors.Wrapf(err, "failed to store response of method %q as an int", method)
+	}
+	return result, nil
+}
+
+// CallForUInt8 calls the D-Bus method with argument against the designated
+// D-Bus object and then returns the method's returned value as an uint8.
+func (d *DBusObject) CallForUInt8(ctx context.Context, method string, args ...interface{}) (uint8, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return 0, c.Err
+	}
+	var result uint8
+	if err := c.Store(&result); err != nil {
+		return 0, errors.Wrapf(err, "failed to store response of method %q as a uint8", method)
+	}
+	return result, nil
+}
+
+// CallForUInt16 calls the D-Bus method with argument against the designated
+// D-Bus object and then returns the method's returned value as an uint16.
+func (d *DBusObject) CallForUInt16(ctx context.Context, method string, args ...interface{}) (uint16, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return 0, c.Err
+	}
+	var result uint16
+	if err := c.Store(&result); err != nil {
+		return 0, errors.Wrapf(err, "failed to store response of method %q as a uint16", method)
+	}
+	return result, nil
+}
+
+// CallForUInt32 calls the D-Bus method with argument against the designated
+// D-Bus object and then returns the method's returned value as an uint32.
+func (d *DBusObject) CallForUInt32(ctx context.Context, method string, args ...interface{}) (uint32, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return 0, c.Err
+	}
+	var result uint32
+	if err := c.Store(&result); err != nil {
+		return 0, errors.Wrapf(err, "failed to store response of method %q as a uint32", method)
+	}
+	return result, nil
+}
+
+// CallForUInt64 calls the D-Bus method with argument against the designated
+// D-Bus object and then returns the method's returned value as an uint64.
+func (d *DBusObject) CallForUInt64(ctx context.Context, method string, args ...interface{}) (uint64, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return 0, c.Err
+	}
+	var result uint64
+	if err := c.Store(&result); err != nil {
+		return 0, errors.Wrapf(err, "failed to store response of method %q as a uint64", method)
+	}
+	return result, nil
+}
+
+// CallForString calls the D-Bus method with argument against the designated
+// D-Bus object and then returns the method's returned value as a string.
+func (d *DBusObject) CallForString(ctx context.Context, method string, args ...interface{}) (string, error) {
+	c := d.Call(ctx, method, args...)
+	if c.Err != nil {
+		return "", c.Err
+	}
+	var result string
+	if err := c.Store(&result); err != nil {
+		return "", errors.Wrapf(err, "failed to store response of method %q as a string", method)
+	}
+	return result, nil
+}
+
 // Property calls org.freedesktop.DBus.Properties.Get and stores the result into
 // val.
 func (d *DBusObject) Property(ctx context.Context, propName string, val interface{}) error {
@@ -80,6 +194,15 @@ func (d *DBusObject) PropertyBool(ctx context.Context, propName string) (bool, e
 	var value bool
 	if err := d.Property(ctx, propName, &value); err != nil {
 		return false, err
+	}
+	return value, nil
+}
+
+// PropertyInt calls Property for an int value.
+func (d *DBusObject) PropertyInt(ctx context.Context, propName string) (int, error) {
+	var value int
+	if err := d.Property(ctx, propName, &value); err != nil {
+		return 0, err
 	}
 	return value, nil
 }

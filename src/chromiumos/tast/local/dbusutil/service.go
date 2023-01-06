@@ -120,7 +120,7 @@ func Connect(ctx context.Context, name string, path dbus.ObjectPath) (*dbus.Conn
 	return ConnectNoTiming(ctx, name, path)
 }
 
-// ConnectNoTiming, like Connect() but without emitting timing information.
+// ConnectNoTiming is like Connect() but without emitting timing information.
 func ConnectNoTiming(ctx context.Context, name string, path dbus.ObjectPath) (*dbus.Conn, dbus.BusObject, error) {
 	conn, err := SystemBus()
 	if err != nil {
@@ -189,4 +189,22 @@ func ConnectPrivateWithAuth(ctx context.Context, uid uint32, name string, path d
 	}
 
 	return conn, conn.Object(name, path), nil
+}
+
+// CollectExistingServiceObjectPaths will connect to the service and return
+// the paths of all of its managed objects for the given object interface.
+func CollectExistingServiceObjectPaths(ctx context.Context, service, objIface string) ([]dbus.ObjectPath, error) {
+	_, serviceObj, err := Connect(ctx, service, "/")
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to connect to service %q", service)
+	}
+	managedObjs, err := ManagedObjects(ctx, serviceObj)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get managed objects for service %q", service)
+	}
+	paths, ok := managedObjs[objIface]
+	if !ok {
+		return []dbus.ObjectPath{}, nil
+	}
+	return paths, nil
 }
