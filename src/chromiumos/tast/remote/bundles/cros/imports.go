@@ -14,7 +14,6 @@ import (
 	_ "chromiumos/tast/remote/bundles/cros/camera"
 	_ "chromiumos/tast/remote/bundles/cros/cellular"
 	_ "chromiumos/tast/remote/bundles/cros/crash"
-	_ "chromiumos/tast/remote/bundles/cros/enterprise"
 	_ "chromiumos/tast/remote/bundles/cros/example"
 	_ "chromiumos/tast/remote/bundles/cros/factory"
 	_ "chromiumos/tast/remote/bundles/cros/feedback"
