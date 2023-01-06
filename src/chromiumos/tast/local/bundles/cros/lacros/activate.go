@@ -49,6 +49,14 @@ const (
 	appStateOtherDesk  appState = "OtherDesk"
 )
 
+type behavior string
+
+const (
+	behaviorNewTabInExistingWindow         behavior = "NewTabInExistingWindow"
+	behaviorNewWindowWithoutSessionRestore behavior = "NewWindowWithoutSessionRestore"
+	behaviorNewWindowWithSessionRestore    behavior = "NewWindowWithSessionRestore"
+)
+
 const urlForPreparedTab = "chrome://version/"
 
 func Activate(ctx context.Context, s *testing.State) {
@@ -88,124 +96,101 @@ func Activate(ctx context.Context, s *testing.State) {
 		name                string
 		browserPrecondition appState
 		activateBrowser     func(ctx context.Context, tconn *chrome.TestConn) error
-		expectPreparedTab   bool
-		expectNewTabPage    bool
+		expectation         behavior
 	}{
 		// Ctrl-t
 		{
 			name:                "closed_ctrl-t",
 			browserPrecondition: appStateClosed,
 			activateBrowser:     activateBrowserViaNewTabShortcut,
-			// Expectation: New window without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore,
 		},
 		{
 			name:                "background_ctrl-t",
 			browserPrecondition: appStateBackground,
 			activateBrowser:     activateBrowserViaNewTabShortcut,
-			// Expectation: New tab in existing window.
-			expectPreparedTab: true,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewTabInExistingWindow,
 		},
 		{
 			name:                "foreground_ctrl-t",
 			browserPrecondition: appStateForeground,
 			activateBrowser:     activateBrowserViaNewTabShortcut,
-			// Expectation: New tab in existing window.
-			expectPreparedTab: true,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewTabInExistingWindow,
 		},
 		{
 			name:                "otherdesk_ctrl-t",
 			browserPrecondition: appStateOtherDesk,
 			activateBrowser:     activateBrowserViaNewTabShortcut,
-			// Expectation: New window (on current desk) without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore,
 		},
 		// Ctrl-n
 		{
 			name:                "closed_ctrl-n",
 			browserPrecondition: appStateClosed,
 			activateBrowser:     activateBrowserViaNewWindowShortcut,
-			// Expectation: New window without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore,
 		},
 		{
 			name:                "background_ctrl-n",
 			browserPrecondition: appStateBackground,
 			activateBrowser:     activateBrowserViaNewWindowShortcut,
-			// Expectation: New window without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore,
 		},
 		{
 			name:                "foreground_ctrl-n",
 			browserPrecondition: appStateForeground,
 			activateBrowser:     activateBrowserViaNewWindowShortcut,
-			// Expectation: New window without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore,
 		},
 		{
 			name:                "otherdesk_ctrl-n",
 			browserPrecondition: appStateOtherDesk,
 			activateBrowser:     activateBrowserViaNewWindowShortcut,
-			// Expectation: New window (on current desk) without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore, // (on current desk)
 		},
 		// ShelfController
 		{
 			name:                "closed_shelf",
 			browserPrecondition: appStateClosed,
 			activateBrowser:     activateBrowserViaShelf,
-			// Expectation: New window with session restore.
-			expectPreparedTab: true,
-			expectNewTabPage:  false,
+			expectation:         behaviorNewWindowWithSessionRestore,
 		},
 		{
 			name:                "background_shelf",
 			browserPrecondition: appStateBackground,
 			activateBrowser:     activateBrowserViaShelf,
-			// Expectation: New tab in existing window.
-			expectPreparedTab: true,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewTabInExistingWindow,
 		},
 		{
 			name:                "foreground_shelf",
 			browserPrecondition: appStateForeground,
 			activateBrowser:     activateBrowserViaShelf,
-			// Expectation: New tab in existing window.
-			expectPreparedTab: true,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewTabInExistingWindow,
 		},
 		{
 			name:                "otherdesk_shelf",
 			browserPrecondition: appStateOtherDesk,
 			activateBrowser:     activateBrowserViaShelf,
-			// Expectation: New window (on current desk) without session restore.
-			expectPreparedTab: false,
-			expectNewTabPage:  true,
+			expectation:         behaviorNewWindowWithoutSessionRestore, // (on current desk)
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			if err := prepareBrowser(ctx, cr, browser.TypeLacros, param.browserPrecondition); err != nil {
+			initialWindow, err := prepareBrowser(ctx, cr, browser.TypeLacros, param.browserPrecondition)
+			if err != nil {
 				s.Fatal("Failed to prepare the browser: ", err)
 			}
 			if err := param.activateBrowser(ctx, tconn); err != nil {
 				s.Fatal("Failed to activate the browser: ", err)
 			}
 			var expectedTabs []string
-			if param.expectPreparedTab {
+			if param.expectation != behaviorNewWindowWithoutSessionRestore {
 				expectedTabs = append(expectedTabs, urlForPreparedTab)
 			}
-			if param.expectNewTabPage {
+			if param.expectation != behaviorNewWindowWithSessionRestore {
 				expectedTabs = append(expectedTabs, chrome.NewTabURL)
 			}
-			if err := verifyTabs(ctx, cr, tconn, browser.TypeLacros, expectedTabs); err != nil {
+			expectNewWindow := param.expectation != behaviorNewTabInExistingWindow
+			if err := verifyTabs(ctx, cr, tconn, browser.TypeLacros, initialWindow, expectNewWindow, expectedTabs); err != nil {
 				s.Fatal("Failed to verify browser tabs: ", err)
 			}
 		})
@@ -251,29 +236,33 @@ func activateBrowserViaNewWindowShortcut(ctx context.Context, _ *chrome.TestConn
 	return nil
 }
 
-func verifyTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, bt browser.Type, expectedURLs []string) error {
+func verifyTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, bt browser.Type, initialWindow *ash.Window, expectNewWindow bool, expectedURLs []string) error {
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return ash.BrowserTypeMatch(bt)(w) && w.IsVisible && w.IsActive && w.HasFocus && w.OnActiveDesk
+		return (initialWindow == nil || (w.ID != initialWindow.ID) == expectNewWindow) && ash.BrowserTypeMatch(bt)(w) && w.IsVisible && w.IsActive && w.HasFocus && w.OnActiveDesk
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to find browser window")
 	}
+
 	br, brClose, err := browserfixt.ConnectAndOwn(ctx, cr, bt)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to browser")
 	}
 	defer brClose(ctx)
-	tabs, err := br.CurrentTabs(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get tabs")
-	}
-	actualURLs := make([]string, len(tabs))
-	for i, tab := range tabs {
-		actualURLs[i] = tab.URL
-	}
-	if !cmp.Equal(actualURLs, expectedURLs) {
-		return errors.Errorf("got %v, want %v", actualURLs, expectedURLs)
-	}
-	return nil
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		tabs, err := br.CurrentTabs(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get tabs")
+		}
+		actualURLs := make([]string, len(tabs))
+		for i, tab := range tabs {
+			actualURLs[i] = tab.URL
+		}
+		if !cmp.Equal(actualURLs, expectedURLs) {
+			return errors.Errorf("got %v, want %v", actualURLs, expectedURLs)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
 }
 
 func prepareTab(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
@@ -286,18 +275,19 @@ func prepareTab(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
 	return nil
 }
 
-func prepareBrowser(ctx context.Context, cr *chrome.Chrome, bt browser.Type, browserPrecondition appState) error {
+func prepareBrowser(ctx context.Context, cr *chrome.Chrome, bt browser.Type, browserPrecondition appState) (*ash.Window, error) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
+		return nil, errors.Wrap(err, "failed to connect to test API")
 	}
+
 	if err := prepareTab(ctx, cr, bt); err != nil {
-		return errors.Wrap(err, "failed to prepare tabs")
+		return nil, errors.Wrap(err, "failed to prepare tabs")
 	}
-	switch browserPrecondition {
-	case appStateClosed:
+
+	if browserPrecondition == appStateClosed {
 		if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to close all windows")
+			return nil, errors.Wrap(err, "failed to close all windows")
 		}
 		// TODO(crbug.com/1385579): Get rid of this special handling.
 		if bt == browser.TypeLacros {
@@ -311,23 +301,33 @@ func prepareBrowser(ctx context.Context, cr *chrome.Chrome, bt browser.Type, bro
 				}
 				return nil
 			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-				return errors.Wrap(err, "lacros in unexpected state")
+				return nil, errors.Wrap(err, "lacros in unexpected state")
 			}
 		}
+		return nil, nil
+	}
+
+	window, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find browser window")
+	}
+
+	switch browserPrecondition {
 	case appStateBackground:
-		window, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
-		if err != nil {
-			return errors.Wrap(err, "failed to find browser window")
-		}
 		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateMinimized); err != nil {
-			return errors.Wrap(err, "failed to minimize browser window")
+			return nil, errors.Wrap(err, "failed to minimize browser window")
 		}
 	case appStateForeground:
 		// Nothing to do.
 	case appStateOtherDesk:
 		if err := ash.MoveActiveWindowToAdjacentDesk(ctx, tconn, ash.WindowMovementDirectionLeft); err != nil {
-			return errors.Wrap(err, "failed to move browser to other desk")
+			return nil, errors.Wrap(err, "failed to move browser to other desk")
 		}
+		window, err = ash.FindOnlyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to find browser window")
+		}
+
 	}
-	return nil
+	return window, nil
 }
