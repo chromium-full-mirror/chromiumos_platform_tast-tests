@@ -34,7 +34,7 @@ func init() {
 		Desc:         "A functional test of the Play Store that installs Google Calendar",
 		Contacts:     []string{"cros-arc-apps-te@google.com"},
 		// ChromeOS > Software > ARC++ > Apps Testing
-		// Bug Component:1122984
+		BugComponent: "b:1122984",
 		Attr:         []string{"group:appcompat"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
