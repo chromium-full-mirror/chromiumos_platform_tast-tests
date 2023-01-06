@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/ssh"
@@ -59,12 +60,6 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
-	}
-
-	// Ensure CCD open and testlab enabled. When CCD locked,
-	// simulated key presses may not be detected later during the test.
-	if err := h.OpenCCD(ctx, true, true); err != nil {
-		s.Fatal("Failed to open CCD: ", err)
 	}
 
 	ms, err := firmware.NewModeSwitcher(ctx, h)
@@ -177,19 +172,25 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 			s.Fatal("Failed to sleep for 2 seconds: ", err)
 		}
-
 		s.Log("Pressing ctrl_d to leave firmware screen")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
-			s.Fatalf("Failed to press %s: %v", servo.CtrlD, err)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
+				return errors.Wrapf(err, "failed to press %s", servo.CtrlD)
+			}
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+			return h.DUT.WaitConnect(ctx)
+		}, &testing.PollOptions{Timeout: testOpt.reconnectTimeout, Interval: 2 * time.Second}); err != nil {
+			s.Fatal("Failed to reconnect to dut after pressing ctrl d: ", err)
 		}
-	}
+	} else {
+		s.Log("Waiting for DUT to reconnect")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, testOpt.reconnectTimeout)
+		defer cancelWaitConnect()
 
-	s.Log("Waiting for DUT to reconnect")
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, testOpt.reconnectTimeout)
-	defer cancelWaitConnect()
-
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+		if err := h.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 	}
 	// ctrlUFailMsgs contain possible strings found in the firmware log
 	// when pressing ctrl_u to boot from usb fails. When tested manually,
@@ -200,6 +201,7 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		"No bootable kernel found on USB/SD",
 		"No external disk found",
 		"USB booting is disabled",
+		"Invalid external disk in dev mode",
 	}
 
 	firmwareLog, err := h.DUT.Conn().CommandContext(ctx, "cat", "/sys/firmware/log").Output(ssh.DumpLogOnError)
