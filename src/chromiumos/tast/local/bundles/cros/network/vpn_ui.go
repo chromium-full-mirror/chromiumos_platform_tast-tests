@@ -126,6 +126,12 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to setup VPN server: ", err)
 	}
 
+	// Get property values for this VPN connection so that we can fill them in UI.
+	vpnProps, err := vpn.CreateProperties(vpnConn.Server, &config)
+	if err != nil {
+		s.Fatal("Failed to generate D-Bus properties: ", err)
+	}
+
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Open VPN dialog",
 		ui.LeftClick(nodewith.Name("Add network connection").Role(role.Button)),
@@ -138,7 +144,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	svcName := "vpn-test-" + config.Type.String()
 
 	// Configures service on the VPN dialog page.
-	v := vpnDialogConfigger{ui, ew, config, vpnConn, svcName}
+	v := vpnDialogConfigger{ui, ew, config, vpnConn, vpnProps, svcName}
 	if err := v.config(ctx); err != nil {
 		s.Fatal("Failed to configure on VPN dialog: ", err)
 	}
@@ -184,6 +190,7 @@ type vpnDialogConfigger struct {
 	ew      *input.KeyboardEventWriter
 	cfg     vpn.Config
 	conn    *vpn.Connection
+	props   map[string]interface{}
 	svcName string
 }
 
@@ -229,7 +236,7 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 	if err := v.selectListOption(ctx, "Provider type", "IPsec (IKEv2)"); err != nil {
 		return errors.Wrap(err, "failed to select VPN type")
 	}
-	if err := v.inputTextField(ctx, "Server hostname", v.conn.Properties["Provider.Host"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Server hostname", v.props["Provider.Host"].(string)); err != nil {
 		return err
 	}
 	switch v.cfg.IPsecAuthType {
@@ -241,7 +248,7 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 		if err := v.selectListOption(ctx, "User certificate", vpnClientCertNameInUI); err != nil {
 			return errors.Wrap(err, "failed to select user certificate")
 		}
-		if err := v.inputTextField(ctx, "Remote identity (optional)", v.conn.Properties["IKEv2.RemoteIdentity"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Remote identity (optional)", v.props["IKEv2.RemoteIdentity"].(string)); err != nil {
 			return err
 		}
 	case vpn.AuthTypeEAP:
@@ -249,23 +256,23 @@ func (v *vpnDialogConfigger) configIKEv2(ctx context.Context) error {
 		if err := v.selectListOption(ctx, "Authentication type", "Username and password"); err != nil {
 			return errors.Wrap(err, "failed to select authentication type")
 		}
-		if err := v.inputTextField(ctx, "Username", v.conn.Properties["EAP.Identity"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Username", v.props["EAP.Identity"].(string)); err != nil {
 			return err
 		}
-		if err := v.inputTextField(ctx, "Password", v.conn.Properties["EAP.Password"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Password", v.props["EAP.Password"].(string)); err != nil {
 			return err
 		}
 	case vpn.AuthTypePSK:
 		if err := v.selectListOption(ctx, "Authentication type", "Pre-shared key"); err != nil {
 			return errors.Wrap(err, "failed to select authentication type")
 		}
-		if err := v.inputTextField(ctx, "Pre-shared key", v.conn.Properties["IKEv2.PSK"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Pre-shared key", v.props["IKEv2.PSK"].(string)); err != nil {
 			return err
 		}
-		if err := v.inputTextField(ctx, "Local identity (optional)", v.conn.Properties["IKEv2.LocalIdentity"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Local identity (optional)", v.props["IKEv2.LocalIdentity"].(string)); err != nil {
 			return err
 		}
-		if err := v.inputTextField(ctx, "Remote identity (optional)", v.conn.Properties["IKEv2.RemoteIdentity"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Remote identity (optional)", v.props["IKEv2.RemoteIdentity"].(string)); err != nil {
 			return err
 		}
 	default:
@@ -278,13 +285,13 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 	if err := v.selectListOption(ctx, "Provider type", "L2TP/IPsec"); err != nil {
 		return errors.Wrap(err, "failed to select VPN type")
 	}
-	if err := v.inputTextField(ctx, "Server hostname", v.conn.Properties["Provider.Host"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Server hostname", v.props["Provider.Host"].(string)); err != nil {
 		return err
 	}
-	if err := v.inputTextField(ctx, "Username", v.conn.Properties["L2TPIPsec.User"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Username", v.props["L2TPIPsec.User"].(string)); err != nil {
 		return err
 	}
-	if err := v.inputTextField(ctx, "Password", v.conn.Properties["L2TPIPsec.Password"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Password", v.props["L2TPIPsec.Password"].(string)); err != nil {
 		return err
 	}
 
@@ -299,7 +306,7 @@ func (v *vpnDialogConfigger) configL2TPIPsec(ctx context.Context) error {
 		}
 	case vpn.AuthTypePSK:
 		// Authentication type is default to "Pre-shared key".
-		if err := v.inputTextField(ctx, "Pre-shared key", v.conn.Properties["L2TPIPsec.PSK"].(string)); err != nil {
+		if err := v.inputTextField(ctx, "Pre-shared key", v.props["L2TPIPsec.PSK"].(string)); err != nil {
 			return err
 		}
 	default:
@@ -312,13 +319,13 @@ func (v *vpnDialogConfigger) configOpenVPN(ctx context.Context) error {
 	if err := v.selectListOption(ctx, "Provider type", "OpenVPN"); err != nil {
 		return errors.Wrap(err, "failed to select VPN type")
 	}
-	if err := v.inputTextField(ctx, "Server hostname", v.conn.Properties["Provider.Host"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Server hostname", v.props["Provider.Host"].(string)); err != nil {
 		return err
 	}
-	if err := v.inputTextField(ctx, "Username", v.conn.Properties["OpenVPN.User"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Username", v.props["OpenVPN.User"].(string)); err != nil {
 		return err
 	}
-	if err := v.inputTextField(ctx, "Password", v.conn.Properties["OpenVPN.Password"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Password", v.props["OpenVPN.Password"].(string)); err != nil {
 		return err
 	}
 
@@ -334,15 +341,15 @@ func (v *vpnDialogConfigger) configWireGuard(ctx context.Context) error {
 		return errors.Wrap(err, "failed to select VPN type")
 	}
 
-	staticIPConfig := v.conn.Properties["StaticIPConfig"].(map[string]interface{})
-	peer := v.conn.Properties["WireGuard.Peers"].([]map[string]string)[0]
+	staticIPConfig := v.props["StaticIPConfig"].(map[string]interface{})
+	peer := v.props["WireGuard.Peers"].([]map[string]string)[0]
 	if err := v.inputTextField(ctx, "Client IP address", staticIPConfig["Address"].(string)); err != nil {
 		return err
 	}
 	if err := v.selectListOption(ctx, "Key", "I have a keypair"); err != nil {
 		return err
 	}
-	if err := v.inputTextField(ctx, "Private key", v.conn.Properties["WireGuard.PrivateKey"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Private key", v.props["WireGuard.PrivateKey"].(string)); err != nil {
 		return err
 	}
 	if err := v.inputTextField(ctx, "Public key", peer["PublicKey"]); err != nil {

@@ -315,13 +315,8 @@ type Connection struct {
 	SecondServer *Server
 
 	config    Config
-	manager   *shill.Manager
 	certStore *netcertstore.Store
 	service   *shill.Service
-
-	// Properties is the key values of D-Bus properties used for creating this VPN
-	// service.
-	Properties map[string]interface{}
 }
 
 // NewConnection creates a new connection object. Notes:
@@ -343,14 +338,8 @@ type Connection struct {
 //
 // Also see vpn_connect.go for a typical usage for this struct.
 func NewConnection(ctx context.Context, config Config) (*Connection, error) {
-	manager, err := shill.NewManager(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed creating shill manager proxy")
-	}
-
 	return &Connection{
-		config:  config,
-		manager: manager,
+		config: config,
 	}, nil
 }
 
@@ -389,14 +378,9 @@ func (c *Connection) setUpInternal(ctx context.Context, withSvc bool) error {
 		return err
 	}
 
-	var err error
-	c.Properties, err = createProperties(c.Server, c.SecondServer, &c.config)
-	if err != nil {
-		return err
-	}
-
 	if withSvc {
-		c.service, err = configureService(ctx, c.manager, c.Properties)
+		var err error
+		c.service, err = configureService(ctx, c.Server, c.SecondServer, &c.config)
 		if err != nil {
 			return err
 		}
@@ -499,11 +483,22 @@ func (c *Connection) startServer(ctx context.Context) error {
 	return err
 }
 
-func configureService(ctx context.Context, m *shill.Manager, props map[string]interface{}) (*shill.Service, error) {
+func configureService(ctx context.Context, server, secondServer *Server, config *Config) (*shill.Service, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed creating shill manager proxy")
+	}
+
+	props, err := createPropertiesInternal(server, secondServer, config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill properties for VPN")
+	}
+
 	servicePath, err := m.ConfigureService(ctx, props)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to configure the service for the VPN properties %v", props)
 	}
+
 	return shill.NewService(ctx, servicePath)
 }
 
@@ -513,11 +508,7 @@ func configureService(ctx context.Context, m *shill.Manager, props map[string]in
 // be overwritten with the full properties after the server is created.
 func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 	var err error
-	c.Properties, err = createProperties(c.Server, c.SecondServer, &c.config)
-	if err != nil {
-		return "", err
-	}
-	c.service, err = configureService(ctx, c.manager, c.Properties)
+	c.service, err = configureService(ctx, c.Server, c.SecondServer, &c.config)
 	if err != nil {
 		return "", err
 	}
@@ -543,7 +534,13 @@ func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 	return publicKey, nil
 }
 
-func createProperties(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
+// CreateProperties returns a dict which contains the D-Bus property values of a
+// VPN service for the given config.
+func CreateProperties(server *Server, config *Config) (map[string]interface{}, error) {
+	return createPropertiesInternal(server, nil, config)
+}
+
+func createPropertiesInternal(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
 	var properties map[string]interface{}
 	var err error
 
