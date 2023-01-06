@@ -322,7 +322,7 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		tconn           = resources.Tconn
 	)
 
-	openGoogleCloud := func(ctx context.Context) error {
+	openGoogleHelp := func(ctx context.Context) error {
 		// If there's a lacros browser, bring it to active.
 		lacrosWindow, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
 			return w.WindowType == ash.WindowTypeLacros
@@ -336,13 +336,13 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 			}
 		}
 
-		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleCloudURL, true)
+		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleHelpChromeURL, true)
 		if err != nil {
-			return errors.Wrap(err, "failed to open Google Cloud documentation")
+			return errors.Wrap(err, "failed to open Google Help")
 		}
 		defer conn.Close()
 		if err := webutil.WaitForQuiescence(ctx, conn, 2*time.Minute); err != nil {
-			return errors.Wrap(err, "failed to wait for Google Cloud documentation to finish loading")
+			return errors.Wrap(err, "failed to wait for Google Help to finish loading")
 		}
 		return nil
 	}
@@ -361,9 +361,9 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		return errors.Wrap(err, "failed to verify video is playing")
 	}
 
-	testing.ContextLog(ctx, "Open Google Cloud documentation")
-	if err := openGoogleCloud(ctx); err != nil {
-		return errors.Wrap(err, "failed to open Google Cloud documentation")
+	testing.ContextLog(ctx, "Open Google Help")
+	if err := openGoogleHelp(ctx); err != nil {
+		return errors.Wrap(err, "failed to open Google Help")
 	}
 
 	// YouTube sometimes pops up a prompt to notice users how to operate YouTube

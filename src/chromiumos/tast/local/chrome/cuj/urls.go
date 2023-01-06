@@ -179,8 +179,6 @@ const (
 
 	// URLs used by VideoCUJ2.
 
-	// GoogleCloudURL specifies the URL for Google Cloud documentation.
-	GoogleCloudURL = "https://cloud.google.com/docs/"
 	// YoutubeGoogleTVVideoURL specifies the URL of the YouTube video for Google TV.
 	YoutubeGoogleTVVideoURL = "https://youtu.be/g309_g-RF_s"
 	// YoutubeDeveloperKeynoteVideoURL specifies the URL of the YouTube video for Google I/O ‘21.
