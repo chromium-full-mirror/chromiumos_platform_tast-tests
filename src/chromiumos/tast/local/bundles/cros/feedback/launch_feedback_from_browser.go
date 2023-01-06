@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -81,11 +82,19 @@ func LaunchFeedbackFromBrowser(ctx context.Context, s *testing.State) {
 	link := nodewith.Name("Report an issue").Role(role.Link)
 	feedbackHeading := nodewith.Name("Send feedback").Role(role.Heading)
 
-	// Open feedback app from browser.
-	if err := uiauto.Combine("Open feedback app from browser",
-		ui.DoDefault(link),
-		ui.WaitUntilExists(feedbackHeading),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open feedback app from browser: ", err)
+	// The feedback app is a SWA. It may not be ready when clicking the "report an
+	// issue" button. When the app does not show up, just try to launch it again
+	// until the app is launched successfully or when it times out.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Open feedback app from browser.
+		if err := uiauto.Combine("Open feedback app from browser",
+			ui.DoDefault(link),
+			ui.WithTimeout(4*time.Second).WaitUntilExists(feedbackHeading),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to open feedback app from browser")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: time.Minute}); err != nil {
+		s.Fatal("Failed to launch feedback app")
 	}
 }
