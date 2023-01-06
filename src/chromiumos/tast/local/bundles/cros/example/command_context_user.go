@@ -18,9 +18,11 @@ func init() {
 		Func: CommandContextUser,
 		Desc: "Example and test of the CommandContextUser function",
 		Contacts: []string{
-			"hesling@chromium.org",
 			"chromeos-fingerprint@google.com",
+			"hesling@chromium.org",
 		},
+		// ChromeOS > Platform > Services > Fingerprint
+		BugComponent: "b:782045",
 		Attr: []string{"group:mainline", "informational"},
 	})
 }
