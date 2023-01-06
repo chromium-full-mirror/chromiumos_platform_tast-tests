@@ -61,12 +61,11 @@ func init() {
 	// the DUT fetches it using fetch_anqp. The test obtains the data from the
 	// DUT and verifies it is consistent with the access point configuration.
 	testing.AddTest(&testing.Test{
-		Func: ANQP,
-		Desc: "Verifies that a DUT is able to perform ANQP requests and process replies",
-		Contacts: []string{
-			"damiendejean@chromium.org",       // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-		},
+		Func:     ANQP,
+		Desc:     "Verifies that a DUT is able to perform ANQP requests and process replies",
+		Contacts: []string{"cros-networking@google.com", "damiendejean@chromium.org"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
