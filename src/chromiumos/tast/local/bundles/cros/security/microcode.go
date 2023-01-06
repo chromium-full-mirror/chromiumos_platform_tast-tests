@@ -29,8 +29,10 @@ func init() {
 		Func: Microcode,
 		Desc: "Checks that compatible CPU microcode is built into the kernel",
 		Contacts: []string{
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 		},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
 		// TODO(b/254348748): move out of informational when brya issues are resolved.
 		Attr: []string{"group:mainline", "informational"},
 		// TODO(crbug.com/1092389): This test only knows how to check Intel platforms
