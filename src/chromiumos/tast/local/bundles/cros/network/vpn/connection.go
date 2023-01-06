@@ -389,12 +389,15 @@ func (c *Connection) setUpInternal(ctx context.Context, withSvc bool) error {
 		return err
 	}
 
-	if err := c.createProperties(); err != nil {
+	var err error
+	c.Properties, err = createProperties(c.Server, c.SecondServer, &c.config)
+	if err != nil {
 		return err
 	}
 
 	if withSvc {
-		if err := c.configureService(ctx); err != nil {
+		c.service, err = configureService(ctx, c.manager, c.Properties)
+		if err != nil {
 			return err
 		}
 	}
@@ -496,17 +499,12 @@ func (c *Connection) startServer(ctx context.Context) error {
 	return err
 }
 
-func (c *Connection) configureService(ctx context.Context) error {
-	servicePath, err := c.manager.ConfigureService(ctx, c.Properties)
+func configureService(ctx context.Context, m *shill.Manager, props map[string]interface{}) (*shill.Service, error) {
+	servicePath, err := m.ConfigureService(ctx, props)
 	if err != nil {
-		return errors.Wrapf(err, "unable to configure the service for the VPN properties %v", c.Properties)
+		return nil, errors.Wrapf(err, "unable to configure the service for the VPN properties %v", props)
 	}
-
-	if c.service, err = shill.NewService(ctx, servicePath); err != nil {
-		return errors.Wrap(err, "failed creating shill service proxy")
-	}
-
-	return nil
+	return shill.NewService(ctx, servicePath)
 }
 
 // generateWireGuardKey calls configureService() to create an "empty" WireGuard
@@ -514,10 +512,13 @@ func (c *Connection) configureService(ctx context.Context) error {
 // the service properties. The service created in the profile in this step will
 // be overwritten with the full properties after the server is created.
 func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
-	if err := c.createProperties(); err != nil {
+	var err error
+	c.Properties, err = createProperties(c.Server, c.SecondServer, &c.config)
+	if err != nil {
 		return "", err
 	}
-	if err := c.configureService(ctx); err != nil {
+	c.service, err = configureService(ctx, c.manager, c.Properties)
+	if err != nil {
 		return "", err
 	}
 	properties, err := c.service.GetProperties(ctx)
@@ -542,46 +543,45 @@ func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 	return publicKey, nil
 }
 
-func (c *Connection) createProperties() error {
+func createProperties(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
 	var properties map[string]interface{}
 	var err error
 
-	switch c.config.Type {
+	switch config.Type {
 	case TypeIKEv2:
-		properties, err = c.createIKEv2Properties()
+		properties, err = createIKEv2Properties(server, config)
 	case TypeL2TPIPsec:
-		properties, err = c.createL2TPIPsecProperties()
+		properties, err = createL2TPIPsecProperties(server, config)
 	case TypeOpenVPN:
-		properties, err = c.createOpenVPNProperties()
+		properties, err = createOpenVPNProperties(server, config)
 	case TypeWireGuard:
-		properties = c.createWireGuardProperties()
+		properties = createWireGuardProperties(server, secondServer, config)
 	default:
-		return errors.Errorf("unexpected server type: got %s", c.config.Type)
+		return nil, errors.Errorf("unexpected server type: got %s", config.Type)
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	properties["Metered"] = c.config.Metered
+	properties["Metered"] = config.Metered
 	staticIPConfig, ok := properties["StaticIPConfig"].(map[string]interface{})
 	if !ok {
 		staticIPConfig = make(map[string]interface{})
 		properties["StaticIPConfig"] = staticIPConfig
 	}
-	staticIPConfig["Mtu"] = c.config.MTU
-	staticIPConfig["SearchDomains"] = c.config.SearchDomains
+	staticIPConfig["Mtu"] = config.MTU
+	staticIPConfig["SearchDomains"] = config.SearchDomains
 
-	c.Properties = properties
-	return nil
+	return properties, nil
 }
 
-func (c *Connection) createL2TPIPsecProperties() (map[string]interface{}, error) {
+func createL2TPIPsecProperties(server *Server, config *Config) (map[string]interface{}, error) {
 	var serverAddress string
-	if c.config.UnderlayIPIsOverlayIP {
-		serverAddress = c.Server.OverlayIPv4
+	if config.UnderlayIPIsOverlayIP {
+		serverAddress = server.OverlayIPv4
 	} else {
-		serverAddress = c.Server.UnderlayIP
+		serverAddress = server.UnderlayIP
 	}
 
 	properties := map[string]interface{}{
@@ -593,21 +593,21 @@ func (c *Connection) createL2TPIPsecProperties() (map[string]interface{}, error)
 		"SaveCredentials":    true,
 	}
 
-	if c.config.IPsecAuthType == AuthTypePSK {
+	if config.IPsecAuthType == AuthTypePSK {
 		properties["Name"] = "test-vpn-l2tp-psk"
 		properties["L2TPIPsec.PSK"] = ipsecPresharedKey
-	} else if c.config.IPsecAuthType == AuthTypeCert {
+	} else if config.IPsecAuthType == AuthTypeCert {
 		properties["Name"] = "test-vpn-l2tp-cert"
 		properties["L2TPIPsec.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
-		properties["L2TPIPsec.ClientCertID"] = c.config.CertVals.id
-		properties["L2TPIPsec.ClientCertSlot"] = c.config.CertVals.slot
-		properties["L2TPIPsec.PIN"] = c.config.CertVals.pin
+		properties["L2TPIPsec.ClientCertID"] = config.CertVals.id
+		properties["L2TPIPsec.ClientCertSlot"] = config.CertVals.slot
+		properties["L2TPIPsec.PIN"] = config.CertVals.pin
 	} else {
-		return nil, errors.Errorf("unexpected auth type %s for L2TP/IPsec", c.config.IPsecAuthType)
+		return nil, errors.Errorf("unexpected auth type %s for L2TP/IPsec", config.IPsecAuthType)
 	}
 
-	if c.config.IPsecUseXauth && !c.config.IPsecXauthMissingUser {
-		if c.config.IPsecXauthWrongUser {
+	if config.IPsecUseXauth && !config.IPsecXauthMissingUser {
+		if config.IPsecXauthWrongUser {
 			properties["L2TPIPsec.XauthUser"] = "wrong-user"
 			properties["L2TPIPsec.XauthPassword"] = "wrong-password"
 		} else {
@@ -619,15 +619,15 @@ func (c *Connection) createL2TPIPsecProperties() (map[string]interface{}, error)
 	return properties, nil
 }
 
-func (c *Connection) createIKEv2Properties() (map[string]interface{}, error) {
+func createIKEv2Properties(server *Server, config *Config) (map[string]interface{}, error) {
 	properties := map[string]interface{}{
 		"Name":          "test-ikev2-vpn",
-		"Provider.Host": c.Server.UnderlayIP,
+		"Provider.Host": server.UnderlayIP,
 		"Provider.Type": "ikev2",
 		"Type":          "vpn",
 	}
 
-	switch c.config.IPsecAuthType {
+	switch config.IPsecAuthType {
 	case AuthTypePSK:
 		properties["IKEv2.AuthenticationType"] = "PSK"
 		properties["IKEv2.LocalIdentity"] = ikeClientIdentity
@@ -636,8 +636,8 @@ func (c *Connection) createIKEv2Properties() (map[string]interface{}, error) {
 	case AuthTypeCert:
 		properties["IKEv2.AuthenticationType"] = "Cert"
 		properties["IKEv2.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
-		properties["IKEv2.ClientCertID"] = c.config.CertVals.id
-		properties["IKEv2.ClientCertSlot"] = c.config.CertVals.slot
+		properties["IKEv2.ClientCertID"] = config.CertVals.id
+		properties["IKEv2.ClientCertSlot"] = config.CertVals.slot
 		properties["IKEv2.RemoteIdentity"] = ikeServerIdentity
 	case AuthTypeEAP:
 		properties["IKEv2.AuthenticationType"] = "EAP"
@@ -646,37 +646,37 @@ func (c *Connection) createIKEv2Properties() (map[string]interface{}, error) {
 		properties["EAP.Identity"] = xauthUser
 		properties["EAP.Password"] = xauthPassword
 	default:
-		return nil, errors.Errorf("unexpected auth type %s for IKEv2", c.config.IPsecAuthType)
+		return nil, errors.Errorf("unexpected auth type %s for IKEv2", config.IPsecAuthType)
 	}
 
 	return properties, nil
 }
 
-func (c *Connection) createOpenVPNProperties() (map[string]interface{}, error) {
+func createOpenVPNProperties(server *Server, config *Config) (map[string]interface{}, error) {
 	properties := map[string]interface{}{
 		"Name":                  "test-vpn-openvpn",
-		"Provider.Host":         c.Server.UnderlayIP,
+		"Provider.Host":         server.UnderlayIP,
 		"Provider.Type":         "openvpn",
 		"Type":                  "vpn",
 		"OpenVPN.CACertPEM":     []string{certificate.TestCert1().CACred.Cert},
-		"OpenVPN.Pkcs11.ID":     c.config.CertVals.id,
-		"OpenVPN.Pkcs11.PIN":    c.config.CertVals.pin,
+		"OpenVPN.Pkcs11.ID":     config.CertVals.id,
+		"OpenVPN.Pkcs11.PIN":    config.CertVals.pin,
 		"OpenVPN.RemoteCertEKU": "TLS Web Server Authentication",
 		"OpenVPN.Verb":          "5",
 		"SaveCredentials":       true,
 	}
 
-	if c.config.OpenVPNUseUserPassword {
+	if config.OpenVPNUseUserPassword {
 		properties["OpenVPN.User"] = openvpnUsername
 		properties["OpenVPN.Password"] = openvpnPassword
 	}
 
-	if c.config.OpenVPNTLSAuth {
+	if config.OpenVPNTLSAuth {
 		properties["OpenVPN.TLSAuthContents"] = openvpnTLSAuthKey
 	}
 
-	if c.config.OpenVPNCertVerify {
-		if c.config.OpenVPNCertVerifyWrongHash {
+	if config.OpenVPNCertVerify {
+		if config.OpenVPNCertVerifyWrongHash {
 			properties["OpenVPN.VerifyHash"] = "00" + strings.Repeat(":00", 19)
 		} else {
 			certBlock, _ := pem.Decode([]byte(certificate.TestCert1().CACred.Cert))
@@ -688,12 +688,12 @@ func (c *Connection) createOpenVPNProperties() (map[string]interface{}, error) {
 			properties["OpenVPN.VerifyHash"] = strings.ReplaceAll(fmt.Sprintf("% 02x", sha1.Sum(caCert.Raw)), " ", ":")
 		}
 
-		if c.config.OpenVPNCertVeirfyWrongSubject {
+		if config.OpenVPNCertVeirfyWrongSubject {
 			properties["OpenVPN.VerifyX509Name"] = "bogus subject name"
-		} else if c.config.OpenVPNCertVerifyWrongCN {
+		} else if config.OpenVPNCertVerifyWrongCN {
 			properties["OpenVPN.VerifyX509Name"] = "bogus cn"
 			properties["OpenVPN.VerifyX509Type"] = "name"
-		} else if c.config.OpenVPNCertVerifyCNOnly {
+		} else if config.OpenVPNCertVerifyCNOnly {
 			// This can be parsed from certificate.TestCert1().ServerCred.Cert .
 			properties["OpenVPN.VerifyX509Name"] = "chromelab-wifi-testbed-server.mtv.google.com"
 			properties["OpenVPN.VerifyX509Type"] = "name"
@@ -708,17 +708,17 @@ func (c *Connection) createOpenVPNProperties() (map[string]interface{}, error) {
 	return properties, nil
 }
 
-func (c *Connection) createWireGuardProperties() map[string]interface{} {
+func createWireGuardProperties(server, secondServer *Server, config *Config) map[string]interface{} {
 	var peers []map[string]string
-	if c.Server != nil {
+	if server != nil {
 		peer := map[string]string{
 			"PublicKey": wgServerPublicKey,
-			"Endpoint":  c.Server.UnderlayIP + ":" + wgServerListenPort,
+			"Endpoint":  server.UnderlayIP + ":" + wgServerListenPort,
 		}
-		if c.config.WGUsePSK {
+		if config.WGUsePSK {
 			peer["PresharedKey"] = wgPresharedKey
 		}
-		switch c.config.IPType {
+		switch config.IPType {
 		case IPTypeIPv4:
 			peer["AllowedIPs"] = "0.0.0.0/0"
 		case IPTypeIPv6:
@@ -726,17 +726,17 @@ func (c *Connection) createWireGuardProperties() map[string]interface{} {
 		case IPTypeIPv4AndIPv6:
 			peer["AllowedIPs"] = "0.0.0.0/0,::/0"
 		}
-		if c.config.WGTwoPeers {
+		if config.WGTwoPeers {
 			// Do not set "default route" if we have two peers.
 			peer["AllowedIPs"] = wgServerAllowedIPs
 		}
 		peers = append(peers, peer)
 	}
 
-	if c.SecondServer != nil {
+	if secondServer != nil {
 		peers = append(peers, map[string]string{
 			"PublicKey":    wgSecondServerPublicKey,
-			"Endpoint":     c.SecondServer.UnderlayIP + ":" + wgSecondServerListenPort,
+			"Endpoint":     secondServer.UnderlayIP + ":" + wgSecondServerListenPort,
 			"AllowedIPs":   wgSecondServerAllowedIPs,
 			"PresharedKey": wgPresharedKey,
 		})
@@ -754,10 +754,10 @@ func (c *Connection) createWireGuardProperties() map[string]interface{} {
 		"StaticIPConfig":  staticIPConfig,
 		"SaveCredentials": true, // Not required, just to avoid a WARNING log in shill
 	}
-	if !c.config.WGAutoGenKey {
+	if !config.WGAutoGenKey {
 		properties["WireGuard.PrivateKey"] = wgClientPrivateKey
 	}
-	switch c.config.IPType {
+	switch config.IPType {
 	case IPTypeIPv4:
 		wgClientOverlayIPv4List := []string{wgClientOverlayIPv4}
 		properties["WireGuard.IPAddress"] = wgClientOverlayIPv4List
