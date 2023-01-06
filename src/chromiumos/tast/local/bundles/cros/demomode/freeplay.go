@@ -92,8 +92,8 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Sleep for 5 seconds to give ARC a bit of extra time to boot up (b/263517131).
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	// Sleep for 15 seconds to give ARC a bit of extra time to boot up (b/263517131).
+	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
