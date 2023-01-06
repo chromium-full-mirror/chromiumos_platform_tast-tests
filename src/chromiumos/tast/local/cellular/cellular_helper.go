@@ -312,6 +312,20 @@ func (h *Helper) FindServiceForDevice(ctx context.Context) (*shill.Service, erro
 	return h.FindServiceForDeviceWithProps(ctx, make(map[string]interface{}))
 }
 
+// FindPSimService returns the first connectable PSim service.
+func (h *Helper) FindPSimService(ctx context.Context) (*shill.Service, error) {
+	props := map[string]interface{}{
+		shillconst.ServicePropertyCellularEID: "",
+		shillconst.ServicePropertyConnectable: true,
+		shillconst.ServicePropertyType:        shillconst.TypeCellular,
+	}
+	service, err := h.Manager.WaitForServiceProperties(ctx, props, defaultTimeout)
+	if err != nil {
+		return nil, errors.Wrap(err, "PSim service not found")
+	}
+	return service, nil
+}
+
 // AutoConnectCleanupTime provides enough time for a successful dbus operation.
 // If a timeout occurs during cleanup, the operation will fail anyway.
 const AutoConnectCleanupTime = 1 * time.Second
