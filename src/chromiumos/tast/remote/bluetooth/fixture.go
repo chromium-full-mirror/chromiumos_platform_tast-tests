@@ -15,7 +15,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	btc "chromiumos/tast/common/bluetooth"
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/dut"
@@ -25,6 +24,7 @@ import (
 	"chromiumos/tast/rpc"
 	bts "chromiumos/tast/services/cros/bluetooth"
 	chromeService "chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
 )
@@ -34,9 +34,9 @@ const (
 	// fixtureVarBTPeers is the name of the tast var that specifies a
 	// comma-separated list of btpeer host addresses.
 	//
-	// This is an optional override to the usual btpeer addresses which are normally
+	// This is an optional override to the usual btpeer hosts which are normally
 	// resolved based on the DUT hostname.
-	fixtureVarBTPeers = "btpeers"
+	fixtureVarBTPeers = "bluetooth.BTPeers"
 
 	fixtureVarSigninKey = "ui.signinProfileTestExtensionManifestKey"
 
@@ -352,10 +352,19 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 	}, nil
 }
 
+type bTPeerCompanion struct {
+	host                    string
+	sshConn                 *ssh.Conn
+	chameleondClient        chameleon.Chameleond
+	chameleondPortForwarder *ssh.Forwarder
+}
+
 // FixtValue is the value of the test fixture accessible within a test. All
 // variables are configured in fixture.SetUp so that tests can use them without
 // any further configuration.
 type FixtValue struct {
+	bTPeerCompanions []*bTPeerCompanion
+
 	// BTPeers is a list of chameleond clients that are connected to each btpeer
 	// available to the test fixture.
 	BTPeers []chameleon.Chameleond
@@ -616,9 +625,14 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Reset btpeers to original state.
+	// Reset btpeers to original state and shut down tunnels.
 	if err := tf.resetBTPeers(ctx); err != nil {
 		s.Error("Failed to reset all btpeers: ", err)
+	}
+	for _, btpeerCompanion := range tf.fv.bTPeerCompanions {
+		if err := btpeerCompanion.chameleondPortForwarder.Close(); err != nil {
+			s.Errorf("Failed to shut down forwarded chameleond port tunnel for btpeer %q: %v", btpeerCompanion.host, btpeerCompanion)
+		}
 	}
 
 	// Tear down each DUT.
@@ -673,26 +687,28 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 	if requiredBTPeers <= 0 {
 		return nil
 	}
-	var btpeerAddresses []string
+
+	// Resolve the btpeer hosts.
+	var btpeerHosts []string
 	if btpeersVar, isSet := s.Var(fixtureVarBTPeers); isSet && btpeersVar != "" {
-		btpeerAddresses = strings.Split(btpeersVar, ",")
-		if len(btpeerAddresses) < requiredBTPeers {
+		btpeerHosts = strings.Split(btpeersVar, ",")
+		if len(btpeerHosts) < requiredBTPeers {
 			return errors.Errorf("fixture requires at least %d btpeers, but "+
 				"only %d were provided in the %s tast var (%q)",
-				requiredBTPeers, len(btpeerAddresses),
+				requiredBTPeers, len(btpeerHosts),
 				fixtureVarBTPeers, btpeersVar)
 		}
-		btpeerAddresses = btpeerAddresses[:requiredBTPeers]
+		btpeerHosts = btpeerHosts[:requiredBTPeers]
 	} else {
 		// Imply btpeer hostnames based on DUT hostname.
-		btpeerAddresses = make([]string, requiredBTPeers)
+		btpeerHosts = make([]string, requiredBTPeers)
 		dutHostname := strings.Split(s.DUT().HostName(), ":")[0]
 		if dutHostname == "localhost" || dutHostname == "" || dutHostname == "127.0.0.1" {
 			for i := 0; i < requiredBTPeers; i++ {
-				btpeerAddresses[i] = fmt.Sprintf("localhost:%d", 2201+i)
+				btpeerHosts[i] = fmt.Sprintf("localhost:%d", 2201+i)
 			}
 			exampleTastCall := fmt.Sprintf("tast run --var=%s=%s %s <test>",
-				fixtureVarBTPeers, strings.Join(btpeerAddresses, ","),
+				fixtureVarBTPeers, strings.Join(btpeerHosts, ","),
 				s.DUT().HostName())
 			return errors.Errorf("btpeer hostname resolution not supported "+
 				"when DUT hostname is %q. If tast is being run in a local "+
@@ -702,18 +718,53 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 				dutHostname, fixtureVarBTPeers, exampleTastCall)
 		}
 		for i := 0; i < requiredBTPeers; i++ {
-			btpeerAddresses[i] = fmt.Sprintf("%s-btpeer%d", dutHostname, i+1)
+			btpeerHosts[i] = fmt.Sprintf("%s-btpeer%d", dutHostname, i+1)
 		}
 	}
+
+	// Connect to btpeers over ssh and access chameleond over through a tunnel.
 	testing.ContextLogf(ctx, "Connecting to %d btpeers: %s",
-		len(btpeerAddresses), strings.Join(btpeerAddresses, ", "))
-	btpeers, err := btc.ConnectToBTPeers(ctx, btpeerAddresses)
-	if err != nil {
-		return err
+		len(btpeerHosts), strings.Join(btpeerHosts, ", "))
+	for _, host := range btpeerHosts {
+		// Connect to btpeer over ssh using standard test credentials.
+		sshConn, err := ssh.New(ctx, &ssh.Options{
+			User:     "root",
+			Hostname: host,
+			KeyDir:   s.DUT().KeyDir(),
+			KeyFile:  s.DUT().KeyFile(),
+		})
+		if err != nil {
+			return errors.Wrapf(err, "failed to connect to btpeer host %q over ssh", host)
+		}
+
+		// Port forward chameleond port.
+		onFwdError := func(err error) {
+			testing.ContextLogf(ctx, "ssh forwarding error for btpeer host %q: %v", host, err)
+		}
+		chameleondPortForwarder, err := sshConn.ForwardLocalToRemote("tcp", "localhost:0", "localhost:9992", onFwdError)
+		if err != nil {
+			return errors.Wrapf(err, "failed to port forward chameleond port for btpeer host %q", host)
+		}
+
+		// Connect chameleond client to forwarded port.
+		testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q through forwarded chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
+		chameleondClient, err := chameleon.NewChameleond(ctx, chameleondPortForwarder.ListenAddr().String())
+		if err != nil {
+			return errors.Wrapf(err, "failed to connect to chameleond on btpeer host %q through forward chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
+		}
+
+		// Save btpeer companion for later use.
+		btpeerCompanion := &bTPeerCompanion{
+			host:                    host,
+			sshConn:                 sshConn,
+			chameleondClient:        chameleondClient,
+			chameleondPortForwarder: chameleondPortForwarder,
+		}
+		tf.fv.bTPeerCompanions = append(tf.fv.bTPeerCompanions, btpeerCompanion)
+		tf.fv.BTPeers = append(tf.fv.BTPeers, btpeerCompanion.chameleondClient)
 	}
-	tf.fv.BTPeers = btpeers
-	testing.ContextLogf(ctx, "Successfully connected to %d btpeers",
-		len(tf.fv.BTPeers))
+
+	testing.ContextLogf(ctx, "Successfully connected to %d btpeers", len(tf.fv.BTPeers))
 	return nil
 }
 
@@ -722,21 +773,21 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 // Each btpeer is reset in parallel to save time. If any reset fails, the first
 // error is returned and any pending resets are cancelled.
 func (tf *fixture) resetBTPeers(ctx context.Context) error {
-	ctx, st := timing.Start(ctx, fmt.Sprintf("resetBTPeers_%d", len(tf.fv.BTPeers)))
+	ctx, st := timing.Start(ctx, fmt.Sprintf("resetBTPeers_%d", len(tf.fv.bTPeerCompanions)))
 	defer st.End()
-	if len(tf.fv.BTPeers) == 0 {
+	if len(tf.fv.bTPeerCompanions) == 0 {
 		return nil
 	}
-	testing.ContextLogf(ctx, "Resetting %d btpeers", len(tf.fv.BTPeers))
+	testing.ContextLogf(ctx, "Resetting %d btpeers", len(tf.fv.bTPeerCompanions))
 	resetCtx, cancelResetCtx := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancelResetCtx()
 	resetGroup, resetCtx := errgroup.WithContext(resetCtx)
-	for i, btpeer := range tf.fv.BTPeers {
+	for i, btpeerCompanion := range tf.fv.bTPeerCompanions {
 		// Note: loop var values are copied to inner vars for use in func literal.
 		i := i
-		btpeer := btpeer
+		btpeerCompanion := btpeerCompanion
 		resetGroup.Go(func() error {
-			return tf.resetBTPeer(resetCtx, i, btpeer)
+			return tf.resetBTPeer(resetCtx, i, btpeerCompanion)
 		})
 	}
 	if err := resetGroup.Wait(); err != nil {
@@ -745,15 +796,15 @@ func (tf *fixture) resetBTPeers(ctx context.Context) error {
 	return nil
 }
 
-func (tf *fixture) resetBTPeer(ctx context.Context, btpeerIndex int, btpeer chameleon.Chameleond) error {
+func (tf *fixture) resetBTPeer(ctx context.Context, btpeerIndex int, btpeerCompanion *bTPeerCompanion) error {
 	// Reset the base chameleond service state.
-	if err := btpeer.Reset(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reset chameleond on btpeer[%d] at %q", btpeerIndex, btpeer.Host())
+	if err := btpeerCompanion.chameleondClient.Reset(ctx); err != nil {
+		return errors.Wrapf(err, "failed to reset chameleond on btpeer[%d] at %q", btpeerIndex, btpeerCompanion.host)
 	}
 	// Reset the bluetooth service state, through the keyboard device interface
 	// since this method is not exposed at a higher level.
-	if err := btpeer.BluetoothKeyboardDevice().ResetStack(ctx, ""); err != nil {
-		return errors.Wrapf(err, "failed to reset bluetooth stack on btpeer[%d] at %q", btpeerIndex, btpeer.Host())
+	if err := btpeerCompanion.chameleondClient.BluetoothKeyboardDevice().ResetStack(ctx, ""); err != nil {
+		return errors.Wrapf(err, "failed to reset bluetooth stack on btpeer[%d] at %q", btpeerIndex, btpeerCompanion.host)
 	}
 	return nil
 }

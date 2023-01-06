@@ -185,18 +185,18 @@ func (c *CommonBluezPeripheral) SetBtdFlags(ctx context.Context, deviceType stri
 // time for this.
 func (c *CommonBluezPeripheral) ResetStack(ctx context.Context, nextDeviceType string) error {
 	// Call ResetStack and confirm that the error is as we expect from the
-	// connection being abruptly cut.
-	var err error
-	if nextDeviceType == "" {
-		err = c.RPC("ResetStack").Call(ctx)
-	} else {
-		err = c.RPC("ResetStack").Args(nextDeviceType).Call(ctx)
+	// connection being abruptly cut. It will either immediately throw an error
+	// or time out, depending on the way the chameleond requests are routed.
+	callBuilder := c.RPC("ResetStack").Timeout(1 * time.Second)
+	if nextDeviceType != "" {
+		callBuilder.Args(nextDeviceType)
 	}
+	err := callBuilder.Call(ctx)
 	if err == nil {
 		return errors.New("RPC call to ResetStack did not return an error as expected due from a chameleond service restart")
 	}
-	if !strings.HasSuffix(err.Error(), ": EOF") {
-		return errors.Wrap(err, "failed to validate ResetStack call error as expected EOF error from a chameleond service restart")
+	if !(strings.HasSuffix(err.Error(), ": EOF") || strings.Contains(err.Error(), "context deadline exceeded")) {
+		return errors.Wrap(err, "failed to validate ResetStack call error as expected EOF or timeout error from a chameleond service restart")
 	}
 
 	// Verify chameleond is back up by making a different call until it succeeds.
@@ -204,8 +204,8 @@ func (c *CommonBluezPeripheral) ResetStack(ctx context.Context, nextDeviceType s
 		_, err := c.AdapterPowerOff(ctx)
 		return err
 	}, &testing.PollOptions{
-		Timeout:  60 * time.Second,
-		Interval: 5 * time.Second,
+		Timeout:  30 * time.Second,
+		Interval: 1 * time.Second,
 	}); err != nil {
 		// Calling AdapterPowerOff should execute successfully when chameleond is
 		// back up, but should not have any additional side effects as it is also

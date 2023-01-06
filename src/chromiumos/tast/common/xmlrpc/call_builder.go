@@ -7,6 +7,7 @@ package xmlrpc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"chromiumos/tast/errors"
 )
@@ -63,11 +64,12 @@ func (c *CommonRPCInterface) Host() string {
 // call as needed in a chain. It also provides a few convenience methods for
 // making calls that expect a return of basic types.
 type CallBuilder struct {
-	xmlrpc           *XMLRpc
-	methodNamePrefix string
-	methodName       string
-	methodArgs       []interface{}
-	methodReturns    []interface{}
+	xmlrpc              *XMLRpc
+	methodNamePrefix    string
+	methodName          string
+	methodArgs          []interface{}
+	methodReturns       []interface{}
+	callTimeoutOverride time.Duration
 }
 
 // NewCallBuilder creates a new CallBuilder instance.
@@ -97,6 +99,12 @@ func (b *CallBuilder) NamePrefix(methodNamePrefix string) *CallBuilder {
 // XMLRPC call by XMLRpc.
 func (b *CallBuilder) Args(methodArgs ...interface{}) *CallBuilder {
 	b.methodArgs = methodArgs
+	return b
+}
+
+// Timeout overrides the default call timeout.
+func (b *CallBuilder) Timeout(timeout time.Duration) *CallBuilder {
+	b.callTimeoutOverride = timeout
 	return b
 }
 
@@ -131,7 +139,13 @@ func (b *CallBuilder) Call(ctx context.Context) error {
 	if b.methodReturns == nil {
 		b.methodReturns = []interface{}{}
 	}
-	if err := b.xmlrpc.Run(ctx, NewCall(methodName, b.methodArgs...), b.methodReturns...); err != nil {
+	var call Call
+	if b.callTimeoutOverride != 0 {
+		call = NewCallTimeout(methodName, b.callTimeoutOverride, b.methodArgs...)
+	} else {
+		call = NewCall(methodName, b.methodArgs...)
+	}
+	if err := b.xmlrpc.Run(ctx, call, b.methodReturns...); err != nil {
 		return errors.Wrapf(err, "failed XMLRPC call to method %q", methodName)
 	}
 	return nil
