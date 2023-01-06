@@ -18,5 +18,6 @@ func TestMetrics() []perf.TimelineDatasource {
 		NewSysfsThermalMetrics(),
 		NewPackageCStatesMetrics(),
 		NewProcfsCPUMetrics(),
+		NewFanMetrics(),
 	}
 }
