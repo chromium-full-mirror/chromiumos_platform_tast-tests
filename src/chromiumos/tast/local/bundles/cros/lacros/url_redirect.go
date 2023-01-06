@@ -23,9 +23,8 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
+	bu "chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -397,9 +396,8 @@ func navigateSingleTabToURLInLacros(ctx context.Context, url string, l *lacros.L
 	// omnibox navigation which should be used to get re-routed. As such we have
 	// to enter the navigation into the omnibox to navigate.
 	ui := uiauto.New(tconn)
-	omniboxFinder := nodewith.Name("Address and search bar").Role(role.TextField)
 	return uiauto.Combine("open target "+url,
-		ui.LeftClick(omniboxFinder),
+		ui.LeftClick(bu.AddressBarFinder),
 		keyboard.AccelAction("ctrl+a"),
 		keyboard.TypeAction(url),
 		keyboard.AccelAction("Enter"))(ctxWithTimeout)

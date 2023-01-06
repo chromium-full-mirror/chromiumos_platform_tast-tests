@@ -19,8 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
+	bu "chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -59,7 +58,7 @@ func DefaultSearchProviderKeyword(ctx context.Context, s *testing.State) {
 		testKeyword      = "tranquillity" // testKeyword is used as keyword that triggers the search engine.
 		testSearchTerm   = "vy6ys"        // testSearchTerm is a value for test search.
 	)
-	addressBarNode := nodewith.Role(role.TextField).Name("Address and search bar")
+	addressBarNode := bu.AddressBarFinder
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()

@@ -14,10 +14,9 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	bu "chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/clipboardhistory"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -134,9 +133,7 @@ func Paste(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add %q to clipboard history: %v", text, err)
 	}
 
-	rootView := nodewith.NameStartingWith("about:blank").HasClass("BrowserRootView")
-	searchbox := nodewith.Role(role.TextField).Name("Address and search bar").Ancestor(rootView)
-	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, searchbox, false /*useContextMenu*/, text, params.pasteType)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, bu.AddressBarFinder, false /*useContextMenu*/, text, params.pasteType)(ctx); err != nil {
 		s.Fatal("Failed to paste from clipboard history: ", err)
 	}
 }

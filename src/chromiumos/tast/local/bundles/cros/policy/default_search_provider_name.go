@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	bu "chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -84,8 +85,6 @@ func DefaultSearchProviderName(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	addressBarNode := nodewith.Role(role.TextField).Name("Address and search bar")
-
 	for _, param := range []struct {
 		name                       string                            // name is the subtest name.
 		value                      *policy.DefaultSearchProviderName // value is the policy value.
@@ -139,7 +138,7 @@ func DefaultSearchProviderName(ctx context.Context, s *testing.State) {
 			defer conn.Close()
 
 			// Click the address and search bar.
-			if err := uiauto.LeftClick(addressBarNode)(ctx); err != nil {
+			if err := uiauto.LeftClick(bu.AddressBarFinder)(ctx); err != nil {
 				s.Fatal("Could not find the address bar: ", err)
 			}
 

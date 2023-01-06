@@ -21,8 +21,8 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	bu "chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -161,9 +161,7 @@ func DataLeakPreventionRulesListClipboardOmni(ctx context.Context, s *testing.St
 func rightClickOmnibox(ctx context.Context, tconn *chrome.TestConn, url string, wantAllowed bool) error {
 	ui := uiauto.New(tconn)
 
-	addressBar := nodewith.HasClass("OmniboxViewViews")
-
-	if err := ui.RightClick(addressBar)(ctx); err != nil {
+	if err := ui.RightClick(bu.AddressBarFinder)(ctx); err != nil {
 		return errors.Wrap(err, "failed to right click omni box")
 	}
 

@@ -15,8 +15,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
@@ -125,7 +124,7 @@ func verifyAndLaunchSystemWebAppFromURL(ctx context.Context, cr *chrome.Chrome, 
 	}()
 
 	ui := uiauto.New(tconn)
-	omniboxFinder := nodewith.Name("Address and search bar").Role(role.TextField)
+	omniboxFinder := browser.AddressBarFinder
 	if err := uiauto.Combine("open target "+appURL,
 		ui.LeftClick(omniboxFinder),
 		keyboard.AccelAction("ctrl+a"),

@@ -27,6 +27,9 @@ type Browser struct {
 	conn *chrome.Conn
 }
 
+// AddressBarFinder represents the address bar node finder.
+var AddressBarFinder = nodewith.HasClass("OmniboxViewViews").Role(role.TextField)
+
 // Launch launches a browser with the given url.
 // An error is returned if the browser fails to launch.
 func Launch(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string) (*Browser, error) {
@@ -51,7 +54,7 @@ func (b *Browser) Navigate(ctx context.Context, url string) error {
 
 // GetAddressBarText returns the address bar text.
 func (b *Browser) GetAddressBarText(ctx context.Context) (string, error) {
-	addressbarInfo, err := b.ui.Info(ctx, nodewith.Name("Address and search bar").ClassName("OmniboxViewViews"))
+	addressbarInfo, err := b.ui.Info(ctx, AddressBarFinder)
 	if err != nil {
 		return "", errors.Wrap(err, "could not find address bar")
 	}

@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	bu "chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -105,12 +106,11 @@ func (cvk *CheckVirtualKeyboardService) OpenChromePage(ctx context.Context, req 
 
 // TouchChromeAddressBar uses touch screen to send a tap on the address bar.
 func (cvk *CheckVirtualKeyboardService) TouchChromeAddressBar(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	addressBarNode := nodewith.Role(role.TextField).Name("Address and search bar")
 	tc, err := touch.New(ctx, cvk.tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the touch context instance")
 	}
-	if err := tc.Tap(addressBarNode)(ctx); err != nil {
+	if err := tc.Tap(bu.AddressBarFinder)(ctx); err != nil {
 		return nil, errors.Wrap(err, "unable to detect ChromeOS virtual keyboard")
 	}
 
@@ -120,10 +120,9 @@ func (cvk *CheckVirtualKeyboardService) TouchChromeAddressBar(ctx context.Contex
 // ClickChromeAddressBar sends a left click on the address bar.
 func (cvk *CheckVirtualKeyboardService) ClickChromeAddressBar(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	uiauto := uiauto.New(cvk.tconn)
-	addressBarNode := nodewith.Role(role.TextField).Name("Address and search bar")
 	if err := uiauto.LeftClickUntil(
-		addressBarNode,
-		uiauto.WaitUntilExists(addressBarNode.Focused()),
+		bu.AddressBarFinder,
+		uiauto.WaitUntilExists(bu.AddressBarFinder.Focused()),
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "could not find the address bar")
 	}

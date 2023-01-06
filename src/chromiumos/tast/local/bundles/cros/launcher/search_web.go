@@ -15,10 +15,9 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -99,10 +98,7 @@ func SearchWeb(ctx context.Context, s *testing.State) {
 	defer ash.CloseAllWindows(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "launched_result_ui_dump")
 
-	browserRootFinder := nodewith.Role(role.Window).HasClass("BrowserRootView")
-	addressBar := nodewith.Name("Address and search bar").Role(role.TextField).Ancestor(browserRootFinder)
-
-	addressBarInfo, err := ui.Info(ctx, addressBar)
+	addressBarInfo, err := ui.Info(ctx, browser.AddressBarFinder)
 	if err != nil {
 		s.Fatal("Failed to get address bar view info: ", err)
 	}

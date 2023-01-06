@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
@@ -91,11 +92,11 @@ func OnscreenKeyboard(ctx context.Context, s *testing.State) {
 	vkNode := nodewith.Name("Chrome OS Virtual Keyboard").Role(role.Keyboard)
 
 	if err := uiauto.Combine("Verify on-screen keyboard voice input and keys",
-		ui.LeftClick(nodewith.ClassName("OmniboxViewViews").Role(role.TextField)),
+		ui.LeftClick(browser.AddressBarFinder),
 		ui.WaitUntilExists(vkNode),
 		vkbCtx.SwitchToVoiceInput(),
 		vkbCtx.HideVirtualKeyboard(),
-		ui.LeftClick(nodewith.ClassName("OmniboxViewViews").Role(role.TextField)),
+		ui.LeftClick(browser.AddressBarFinder),
 		ui.WaitUntilExists(vkNode),
 		vkbCtx.TapKeys([]string{"t", "a", "s", "t"}),
 	)(ctx); err != nil {
