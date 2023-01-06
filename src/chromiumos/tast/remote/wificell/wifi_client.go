@@ -437,6 +437,13 @@ func (cli *WifiClient) TurnOffBgscan(ctx context.Context) (context.Context, func
 	}, nil
 }
 
+// TransitionFromEthernetAndRecover tests if the network is transitioned from ethernet to WiFi when ethernet is not available.
+// The function will also recover the ethernet connection to ensure remote connection is back.
+func (cli *WifiClient) TransitionFromEthernetAndRecover(ctx context.Context, ssid string) error {
+	_, err := cli.ShillServiceClient.EthernetFailoverToWifiTest(ctx, &wifi.EthernetFailoverToWifiTestRequest{Ssid: ssid})
+	return err
+}
+
 // SetWakeOnWifiOption is the type of options of SetWakeOnWifi method of TestFixture.
 type SetWakeOnWifiOption func(*wifi.WakeOnWifiConfig)
 

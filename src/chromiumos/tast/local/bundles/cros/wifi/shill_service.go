@@ -215,7 +215,7 @@ func (s *ShillService) TearDown(ctx context.Context, _ *empty.Empty) (*empty.Emp
 func (s *ShillService) discoverService(ctx context.Context, m *shill.Manager, props map[string]interface{}) (*shill.Service, error) {
 	ctx, st := timing.Start(ctx, "discoverService")
 	defer st.End()
-	testing.ContextLog(ctx, "Discovering a WiFi service with properties: ", props)
+	testing.ContextLog(ctx, "Discovering a service with properties: ", props)
 
 	visibleProps := make(map[string]interface{})
 	for k, v := range props {
@@ -1452,6 +1452,61 @@ func (s *ShillService) DisableEnableTest(ctx context.Context, request *wifi.Disa
 	defer cancel()
 	if err := pw.Expect(timeoutCtx, shillconst.ServicePropertyIsConnected, true); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for IsConnected property after enabling")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// EthernetFailoverToWifiTest disables the ethernet and test if the network is transitioned to WiFi.
+// This is the main body of the EthernetFailoverToWifi test.
+func (s *ShillService) EthernetFailoverToWifiTest(ctx context.Context, req *wifi.EthernetFailoverToWifiTestRequest) (*empty.Empty, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to create a manager object")
+	}
+
+	ethernetService, err := s.discoverService(ctx, m, map[string]interface{}{
+		shillconst.ServicePropertyType: shillconst.TypeEthernet,
+	})
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to discover ethernet service")
+	}
+
+	wifiService, err := s.discoverService(ctx, m, map[string]interface{}{
+		shillconst.ServicePropertyType: shillconst.TypeWifi,
+		shillconst.ServicePropertyName: req.Ssid,
+	})
+	if err != nil {
+		return &empty.Empty{}, errors.Wrapf(err, "failed to discover ssid %q", req.Ssid)
+	}
+
+	enableCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
+	defer cancel()
+	// Disable the ethernet to test if the network is transitioned to WiFi.
+	enable, err := m.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to disable ethernet")
+	}
+	defer enable(enableCtx)
+
+	if err := wifiService.WaitForProperty(ctx,
+		shillconst.ServicePropertyIsConnected,
+		true, /* expected */
+		shillconst.DefaultTimeout,
+	); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to ensure WiFi is connected after disabling ethernet")
+	}
+
+	// Enable the ethernet to test if the network is back to use ethernet.
+	if err := m.EnableTechnology(ctx, shill.TechnologyEthernet); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to enable ethernet")
+	}
+	if err := ethernetService.WaitForProperty(ctx,
+		shillconst.ServicePropertyIsConnected,
+		true, /* expected */
+		shillconst.DefaultTimeout,
+	); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to ensure ethernet is connected after enabling ethernet")
 	}
 
 	return &empty.Empty{}, nil

@@ -61,6 +61,10 @@ service ShillService {
   // This is the main body of the DisableEnable test.
   rpc DisableEnableTest(DisableEnableTestRequest) returns (google.protobuf.Empty) {}
 
+  // EthernetFailoverToWifiTest disables the ethernet and test if the network is transitioned to WiFi.
+  // This is the main body of the EthernetFailoverToWifi test.
+  rpc EthernetFailoverToWifiTest(EthernetFailoverToWifiTestRequest) returns (google.protobuf.Empty) {}
+
   // RequestScans requests shill to trigger active scans on WiFi devices.
   rpc RequestScans(RequestScansRequest) returns (google.protobuf.Empty) {}
 
@@ -369,6 +373,11 @@ message AssureDisconnectRequest {
 message DisableEnableTestRequest {
   string interface_name = 1;
   string service_path = 2;
+}
+
+message EthernetFailoverToWifiTestRequest {
+  // ssid is the ssid which would be used to test when the ethernet is disabled.
+  string ssid = 1;
 }
 
 message RequestScansRequest {
