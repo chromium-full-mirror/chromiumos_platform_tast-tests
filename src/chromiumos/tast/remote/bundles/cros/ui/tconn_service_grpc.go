@@ -24,8 +24,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TconnServiceGRPC,
 		Desc:         "Check basic functionalities of UI TconnService",
-		Contacts:     []string{"msta@google.com", "chromeos-engprod-syd@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"chromeos-engprod-syd@google.com", "msta@google.com"},
+		BugComponent: "b:1103568",
+		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("amd64-generic")),
 		LacrosStatus: testing.LacrosVariantUnneeded,
