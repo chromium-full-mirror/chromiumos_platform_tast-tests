@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -19,8 +18,7 @@ import (
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/remote/dbus"
-	"chromiumos/tast/remote/wificell/fileutil"
+	"chromiumos/tast/remote/log"
 	"chromiumos/tast/rpc"
 	bts "chromiumos/tast/services/cros/bluetooth"
 	chromeService "chromiumos/tast/services/cros/ui"
@@ -357,6 +355,7 @@ type bTPeerCompanion struct {
 	sshConn                 *ssh.Conn
 	chameleondClient        chameleon.Chameleond
 	chameleondPortForwarder *ssh.Forwarder
+	logCollector            log.Collector
 }
 
 // FixtValue is the value of the test fixture accessible within a test. All
@@ -417,7 +416,7 @@ func (fv *FixtValue) CompanionDUTConfig(companionNum uint) *DUTConfig {
 type fixture struct {
 	features                      *fixtureFeatures
 	fv                            *FixtValue
-	bluetoothServicesDBusMonitors []*dbus.Monitor
+	bluetoothServicesDBusMonitors []*log.DBusMonitorCollector
 	fastPairEnabled               bool
 }
 
@@ -525,7 +524,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		s.Logf("SetUp for DUT %s started", dutName)
 
 		// Start capturing incoming and outgoing bluez and floss D-Bus messages.
-		bluetoothServicesDBusMonitor, err := dbus.StartMonitor(
+		bluetoothServicesDBusMonitor, err := log.StartDBusMonitorCollector(
 			ctx,
 			dutConfig.DUT.Conn(),
 			"--system",
@@ -569,7 +568,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 
 	// Save collected bluez D-Bus messages collected thus far.
-	if err := tf.logAllDBusMonitorBluetoothMessages(ctx, "SetUp"); err != nil {
+	if err := tf.dumpAllCollectedLogs(ctx, "SetUp"); err != nil {
 		s.Fatal("Failed to collect dbus-monitor bluez logs: ", err)
 	}
 
@@ -595,7 +594,7 @@ func (tf *fixture) Reset(ctx context.Context) error {
 			return errors.Wrapf(err, "failed to enable bluetooth adapter on DUT %s", dutConfig.DUT.HostName())
 		}
 	}
-	if err := tf.logAllDBusMonitorBluetoothMessages(ctx, "Reset"); err != nil {
+	if err := tf.dumpAllCollectedLogs(ctx, "Reset"); err != nil {
 		return errors.Wrap(err, "failed to collect dbus-monitor bluetooth logs")
 	}
 	return nil
@@ -615,7 +614,7 @@ func (tf *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	// Save any new dbus logs that occurred during the test.
-	if err := tf.logAllDBusMonitorBluetoothMessages(ctx, "PostTest"); err != nil {
+	if err := tf.dumpAllCollectedLogs(ctx, "PostTest"); err != nil {
 		s.Fatal("Failed to collect dbus-monitor bluez logs: ", err)
 	}
 }
@@ -663,7 +662,7 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	// Stop dbus monitors.
-	if err := tf.logAllDBusMonitorBluetoothMessages(ctx, "TearDown"); err != nil {
+	if err := tf.dumpAllCollectedLogs(ctx, "TearDown"); err != nil {
 		s.Error("Failed to collect dbus-monitor bluez logs: ", err)
 	}
 	for _, dbusMonitor := range tf.bluetoothServicesDBusMonitors {
@@ -737,6 +736,12 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			return errors.Wrapf(err, "failed to connect to btpeer host %q over ssh", host)
 		}
 
+		// Start collecting chameleond logs on the btpeer from chameleond.
+		logCollector, err := log.StartJournalctlCollector(ctx, sshConn, "--output", "short-full")
+		if err != nil {
+			return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", host)
+		}
+
 		// Port forward chameleond port.
 		onFwdError := func(err error) {
 			testing.ContextLogf(ctx, "ssh forwarding error for btpeer host %q: %v", host, err)
@@ -759,6 +764,7 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			sshConn:                 sshConn,
 			chameleondClient:        chameleondClient,
 			chameleondPortForwarder: chameleondPortForwarder,
+			logCollector:            logCollector,
 		}
 		tf.fv.bTPeerCompanions = append(tf.fv.bTPeerCompanions, btpeerCompanion)
 		tf.fv.BTPeers = append(tf.fv.BTPeers, btpeerCompanion.chameleondClient)
@@ -809,50 +815,24 @@ func (tf *fixture) resetBTPeer(ctx context.Context, btpeerIndex int, btpeerCompa
 	return nil
 }
 
-func (tf *fixture) logAllDBusMonitorBluetoothMessages(ctx context.Context, logName string) error {
+func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) error {
+	ctx, st := timing.Start(ctx, "dumpAllCollectedLogs")
+	defer st.End()
 	for i, dbusMonitor := range tf.bluetoothServicesDBusMonitors {
-		if err := tf.logDBusMonitorBluetoothMessages(ctx, fmt.Sprintf("dut%d", i), logName, dbusMonitor); err != nil {
-			return errors.Wrap(err, "failed to collect dbus-monitor logs")
+		dutName := fmt.Sprintf("dut%d", i)
+		logDir := filepath.Join("dbus_monitor_bluetooth", dutName)
+		if err := log.DumpCollectedLogsToFile(ctx, dbusMonitor, logDir, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump collected dbus-monitor messages from %s", dutName)
+		}
+	}
+	for i, btpeer := range tf.fv.bTPeerCompanions {
+		btpeerName := fmt.Sprintf("btpeer%d", i+1)
+		logDir := filepath.Join("btpeer_system_logs", btpeerName)
+		if err := log.DumpCollectedLogsToFile(ctx, btpeer.logCollector, logDir, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump collected btpeer system logs from %s at %q", btpeerName, btpeerName)
 		}
 	}
 	return nil
-}
-
-func (tf *fixture) logDBusMonitorBluetoothMessages(ctx context.Context, dutFolderName, logName string, monitor *dbus.Monitor) error {
-	ctx, st := timing.Start(ctx, "logDBusMonitorBluetoothMessages")
-	defer st.End()
-	// Prepare output file, which looks like "dbus_monitor_bluetooth/dutFolderName/dstLogFilename"
-	dstLogFilename := tf.buildLogFilename(logName)
-	dstFilePath := filepath.Join("dbus_monitor_bluetooth", dutFolderName, dstLogFilename)
-	f, err := fileutil.PrepareOutDirFile(ctx, dstFilePath)
-	if err != nil {
-		return errors.Wrapf(err, "failed to prepare output dir file %q", dstFilePath)
-	}
-	// Dump buffer of collected logs to file, for the passed |monitor|.
-	if err := monitor.Dump(f); err != nil {
-		return errors.Wrapf(err, "failed to dump dbus-monitor logs to %q", dstFilePath)
-	}
-	return nil
-}
-
-// buildLogFilename builds a log filename with a minimal timestamp prefix, all
-// the name parts in the middle delimited by "_" with non-word characters
-// replaced with underscores, and a ".log" file extension.
-//
-// This not only communicates the time of the log to users, but keeps similar
-// files in chronological order within the same directory when displayed sorted
-// by name (alphanumerical order) by most programs.
-//
-// Example result: "20220523-122753_dbus_bluetooth_PostTest"
-func (tf *fixture) buildLogFilename(nameParts ...string) string {
-	// Build timestamp prefix.
-	timestamp := time.Now().Format("20060102-150405")
-	// Join and sanitize name parts.
-	name := strings.Join(nameParts, "_")
-	name = regexp.MustCompile("\\W").ReplaceAllString(name, "_")
-	name = regexp.MustCompile("_+").ReplaceAllString(name, "_")
-	// Combine timestamp, name, and extension.
-	return fmt.Sprintf("%s_%s.log", timestamp, name)
 }
 
 // resetDutBluetoothState resets the bluetooth state of the DUT so that it is

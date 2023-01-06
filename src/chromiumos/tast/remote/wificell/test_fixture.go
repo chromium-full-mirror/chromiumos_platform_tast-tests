@@ -592,7 +592,7 @@ func (tf *TestFixture) CollectLogs(ctx context.Context) error {
 	return firstErr
 }
 
-// ReserveForCollectLogs returns a shorter ctx and cancel function for tf.CollectLogs.
+// ReserveForCollectLogs returns a shorter ctx and cancel function for tf.CollectRouterFileLogs.
 func (tf *TestFixture) ReserveForCollectLogs(ctx context.Context) (context.Context, context.CancelFunc) {
 	return ctxutil.Shorten(ctx, time.Second)
 }

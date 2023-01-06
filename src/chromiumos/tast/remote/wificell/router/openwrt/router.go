@@ -17,13 +17,13 @@ import (
 	"chromiumos/tast/common/utils"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/log"
 	remoteIp "chromiumos/tast/remote/network/ip"
 	remoteIw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/dhcp"
 	"chromiumos/tast/remote/wificell/framesender"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/http"
-	"chromiumos/tast/remote/wificell/log"
 	"chromiumos/tast/remote/wificell/pcap"
 	"chromiumos/tast/remote/wificell/router/common"
 	"chromiumos/tast/remote/wificell/router/common/support"
@@ -37,7 +37,7 @@ type Router struct {
 	host             *ssh.Conn
 	name             string
 	routerType       support.RouterType
-	syslogdCollector *log.SyslogdCollector
+	syslogdCollector *log.LogreadCollector
 	iwr              *remoteIw.Runner
 	ipr              *remoteIp.Runner
 	phys             map[int]*iw.Phy // map from phy idx to iw.Phy.
@@ -92,12 +92,12 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 	// The daemonCtx is used for the log collector as it should live longer than
 	// the current stage when we are in precondition.
 	var err error
-	if r.syslogdCollector, err = log.StartSyslogdCollector(daemonCtx, host); err != nil {
+	if r.syslogdCollector, err = log.StartLogreadCollector(daemonCtx, host); err != nil {
 		err = errors.Wrap(err, "failed to start syslogd log collector")
 		closeBeforeErrorReturn(err)
 		return nil, err
 	}
-	if err := common.CollectSyslogdLogs(daemonCtx, r, r.syslogdCollector, "pre_setup"); err != nil {
+	if err := common.CollectRouterLogs(daemonCtx, r, r.syslogdCollector, "pre_setup"); err != nil {
 		err = errors.Wrap(err, "failed to collect syslogd logs before setup actions")
 		closeBeforeErrorReturn(err)
 		return nil, err
@@ -142,7 +142,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 	}
 
 	// Save logs collected from setup actions.
-	if err := common.CollectSyslogdLogs(daemonCtx, r, r.syslogdCollector, "post_setup"); err != nil {
+	if err := common.CollectRouterLogs(daemonCtx, r, r.syslogdCollector, "post_setup"); err != nil {
 		err = errors.Wrap(err, "failed to collect syslogd logs after setup actions")
 		closeBeforeErrorReturn(err)
 		return nil, err
@@ -165,7 +165,7 @@ func (r *Router) Close(ctx context.Context) error {
 	var firstErr error
 
 	// Collect closing log to facilitate debugging.
-	if err := common.CollectSyslogdLogs(ctx, r, r.syslogdCollector, "pre_close"); err != nil {
+	if err := common.CollectRouterLogs(ctx, r, r.syslogdCollector, "pre_close"); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect syslogd logs before close actions"))
 	}
 
@@ -201,7 +201,7 @@ func (r *Router) Close(ctx context.Context) error {
 	}
 
 	// Collect closing log to facilitate debugging.
-	if err := common.CollectSyslogdLogs(ctx, r, r.syslogdCollector, "post_close"); err != nil {
+	if err := common.CollectRouterLogs(ctx, r, r.syslogdCollector, "post_close"); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect syslogd logs after close actions"))
 	}
 	if err := r.syslogdCollector.Close(); err != nil {
@@ -268,7 +268,7 @@ func (r *Router) workDir() string {
 
 // CollectLogs dumps collected syslogd logs to a file.
 func (r *Router) CollectLogs(ctx context.Context) error {
-	return common.CollectSyslogdLogs(ctx, r, r.syslogdCollector, "")
+	return common.CollectRouterLogs(ctx, r, r.syslogdCollector, "")
 }
 
 // killHostapdDHCP forcibly kills any hostapd and dhcp processes.

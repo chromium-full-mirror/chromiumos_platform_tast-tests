@@ -18,13 +18,13 @@ import (
 	"chromiumos/tast/common/utils"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/log"
 	remote_ip "chromiumos/tast/remote/network/ip"
 	remote_iw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/dhcp"
 	"chromiumos/tast/remote/wificell/framesender"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/http"
-	"chromiumos/tast/remote/wificell/log"
 	"chromiumos/tast/remote/wificell/pcap"
 	"chromiumos/tast/remote/wificell/router/common"
 	"chromiumos/tast/remote/wificell/router/common/support"
@@ -59,7 +59,7 @@ type Router struct {
 	nextVethID    int
 	iwr           *iw.Runner
 	ipr           *ip.Runner
-	logCollectors map[string]*log.Collector // map from log path to its collector.
+	logCollectors map[string]*log.TailCollector // map from log path to its collector.
 }
 
 // NewRouter prepares initial test AP state (e.g., initializing wiphy/wdev).
@@ -73,7 +73,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 		phys:          make(map[int]*iw.Phy),
 		iwr:           remote_iw.NewRemoteRunner(host),
 		ipr:           remote_ip.NewRemoteRunner(host),
-		logCollectors: make(map[string]*log.Collector),
+		logCollectors: make(map[string]*log.TailCollector),
 	}
 	r.im = common.NewRouterIfaceManager(r, r.iwr)
 
@@ -109,7 +109,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 
 	// Start log collectors with daemonCtx as it should live longer than current
 	// stage when we are in precondition.
-	if r.logCollectors, err = common.StartLogCollectors(daemonCtx, r.host, logsToCollect, true); err != nil {
+	if r.logCollectors, err = common.StartTailLogCollectors(daemonCtx, r.host, logsToCollect, true); err != nil {
 		r.Close(shortCtx)
 		return nil, errors.Wrap(err, "failed to start loggers")
 	}
@@ -322,11 +322,11 @@ func (r *Router) Close(ctx context.Context) error {
 	}
 
 	// Collect closing log to facilitate debugging for error occurs in
-	// r.initialize() or after r.CollectLogs().
-	if err := common.CollectLogs(ctx, r, r.logCollectors, logsToCollect, ".close"); err != nil {
+	// r.initialize() or after r.CollectRouterFileLogs().
+	if err := common.CollectRouterFileLogs(ctx, r, r.logCollectors, logsToCollect, ".close"); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to collect logs"))
 	}
-	if err := common.StopLogCollectors(ctx, r.logCollectors); err != nil {
+	if err := common.StopTailLogCollectors(ctx, r.logCollectors); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop loggers"))
 	}
 	if err := r.host.CommandContext(ctx, "rm", "-rf", r.workDir()).Run(); err != nil {
@@ -851,7 +851,7 @@ func (r *Router) cloneMAC(ctx context.Context, dst, src string) error {
 
 // CollectLogs downloads log files from router to OutDir.
 func (r *Router) CollectLogs(ctx context.Context) error {
-	return common.CollectLogs(ctx, r, r.logCollectors, logsToCollect, "")
+	return common.CollectRouterFileLogs(ctx, r, r.logCollectors, logsToCollect, "")
 }
 
 // SetAPIfaceDown brings down the interface that the APIface uses.
