@@ -47,11 +47,17 @@ func requestScreenShare(ctx context.Context, tconn *chrome.TestConn) (*ScreenRec
 			streamPromise: null,
 			videoTrack: null,
 			request: function() {
-				this.streamPromise = navigator.mediaDevices.getDisplayMedia({
-					audio: false,
-					video: {
-						cursor: "always"
-					}
+				this.streamPromise = new Promise(resolve => {
+					chrome.desktopCapture.chooseDesktopMedia(["screen", "window", "tab"], (streamId) => {
+						navigator.mediaDevices.getUserMedia({
+							video: {
+								mandatory: {
+									chromeMediaSource: "desktop",
+									chromeMediaSourceId: streamId
+								}
+							}
+						}).then((stream) => resolve(stream));
+					});
 				});
 			},
 			start: function() {
