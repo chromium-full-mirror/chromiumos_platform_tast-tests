@@ -31,9 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test opens Desktop in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
-			"kamilszarek@google.com", // Test author
 			"cros-engprod-muc@google.com",
+			"kamilszarek@google.com", // Test author
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		// TODO(crbug.com/1293793): Add cleanup for kiosk and add its params.
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},

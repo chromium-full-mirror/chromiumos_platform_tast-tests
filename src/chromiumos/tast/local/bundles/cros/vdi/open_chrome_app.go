@@ -24,9 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test opens Google Chrome application in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
-			"kamilszarek@google.com", // Test author
 			"cros-engprod-muc@google.com",
+			"kamilszarek@google.com", // Test author
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
