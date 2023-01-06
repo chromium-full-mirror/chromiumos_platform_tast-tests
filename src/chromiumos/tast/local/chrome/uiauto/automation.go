@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -124,7 +125,7 @@ func Combine(name string, steps ...Action) Action {
 
 // NamedCombine is the same as Combine, which combines the list of functions from Context to error into one function.
 // If the action fails, tells you the name of the failed operation.
-// In addtion, it logs when actions starts.
+// In addition, it logs when actions starts.
 func NamedCombine(name string, steps ...Action) Action {
 	return action.Named(name, action.Combine(name, steps...))
 }
@@ -506,26 +507,47 @@ func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 	}
 }
 
-// WaitUntilAnyExists returns a function that waits until any of the input finder exists.
+// FindAnyExists returns the first found node, otherwise error if none of them are found.
 // Use it when you are waiting for different situations. E.g.
 //
-//	if err := ac.WaitUntilAnyExists(finderA, finderB); err != nil{
+//	foundNode, err := ac.FindAnyExists(finderA, finderB)
+//	if err != nil {
 //	    // None of these node found.
 //	}
 //
-//	if ac.Exists(finderA)(ctx) == nil{
+//	if foundNode == finderA {
 //	    // Do something here if finderA found.
 //	}
+func (ac *Context) FindAnyExists(ctx context.Context, finders ...*nodewith.Finder) (*nodewith.Finder, error) {
+	var foundNode **nodewith.Finder
+	var prettyFinders = []string{}
+	for _, finder := range finders {
+		prettyFinders = append(prettyFinders, finder.Pretty())
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		for _, finder := range finders {
+			if err := ac.Exists(finder)(ctx); err == nil {
+				foundNode = &finder
+				return nil
+			} else if !nodewith.IsNodeNotFoundErr(err) {
+				// Break poll if ac.Exists fails on other issues.
+				return testing.PollBreak(err)
+			}
+		}
+
+		return errors.Errorf("%s:%s", nodewith.ErrNotFound, strings.Join(prettyFinders, "; "))
+	}, &ac.pollOpts); err != nil {
+		return nil, err
+	}
+	return *foundNode, nil
+}
+
+// WaitUntilAnyExists returns a function that waits until any of the input finder exists.
 func (ac *Context) WaitUntilAnyExists(finders ...*nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			for _, finder := range finders {
-				if err := ac.Exists(finder)(ctx); err == nil {
-					return nil
-				}
-			}
-			return errors.New("none of these nodes are found")
-		}, &ac.pollOpts)
+		_, err := ac.FindAnyExists(ctx, finders...)
+		return err
 	}
 }
 
@@ -1066,5 +1088,4 @@ func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 
 		return nil
 	}
-
 }
