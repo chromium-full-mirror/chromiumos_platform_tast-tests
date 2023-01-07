@@ -21,9 +21,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that WebCodecs encoding API works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
-			"hiroh@chromium.org", // Test author.
 			"chromeos-gfx-video@google.com",
+			"hiroh@chromium.org", // Test author.
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(append(webcodecs.MP4DemuxerDataFiles(), webcodecs.EncodeDataFiles()...), webcodecs.VideoDataFiles()...),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},

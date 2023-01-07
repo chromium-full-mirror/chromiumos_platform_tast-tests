@@ -25,11 +25,12 @@ func init() {
 		Func: ImageProcessor,
 		Desc: "Runs ImageProcessor unit tests",
 		Contacts: []string{
-			"nhebert@google.com",
 			"chromeos-gfx-video@google.com",
+			"nhebert@google.com",
 		},
-		Attr:    []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-		Fixture: "graphicsNoChrome",
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Fixture:      "graphicsNoChrome",
 		Params: []testing.Param{
 			{
 				Name:    "image_processor_unit_test",

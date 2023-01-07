@@ -35,10 +35,11 @@ func init() {
 		Func: PlatformLibYUVPerftest,
 		Desc: "Runs libyuv unit tests as perf tests",
 		Contacts: []string{
-			"pmolinalopez@google.com",
 			"chromeos-gfx-video@google.com",
+			"pmolinalopez@google.com",
 		},
-		Attr: []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name: "yuy2tonv12",
 			Val: libYUVPerfTestParams{testName: "LibYUVConvertTest.YUY2ToNV12_Opt",

@@ -19,9 +19,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks HW protected DRM video playback in Chrome is working",
 		Contacts: []string{
-			"jkardatzke@google.com",
 			"chromeos-gfx-video@google.com",
+			"jkardatzke@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome", "protected_content"},
 		Params: []testing.Param{{
 			Name:              "cencv1_h264_ctr",

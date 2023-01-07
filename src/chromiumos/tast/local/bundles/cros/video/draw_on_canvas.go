@@ -34,9 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies that a video can be drawn once onto a 2D canvas",
 		Contacts: []string{
-			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"andrescj@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "h264_360p_hw",

@@ -31,9 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Simulates video chat performance by simultaneously decoding and encoding a 30fps 1080p video",
 		Contacts: []string{
-			"hiroh@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"hiroh@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Fixture:      "graphicsNoChrome",
 		SoftwareDeps: []string{"chrome", caps.HWDecodeVP8, caps.HWEncodeVP8},

@@ -26,9 +26,10 @@ func init() {
 		Func: PlatformV4L2,
 		Desc: "Runs v4l2 compliance tests",
 		Contacts: []string{
-			"stevecho@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"stevecho@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		SoftwareDeps: []string{"v4l2_codec"},
 		Timeout:      2 * time.Minute,

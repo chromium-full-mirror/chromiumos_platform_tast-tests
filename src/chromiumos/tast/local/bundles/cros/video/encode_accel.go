@@ -32,9 +32,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies hardware encode acceleration by running the video_encode_accelerator_tests binary",
 		Contacts: []string{
-			"hiroh@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"hiroh@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},

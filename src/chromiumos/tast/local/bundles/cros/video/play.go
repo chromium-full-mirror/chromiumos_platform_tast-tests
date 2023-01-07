@@ -29,9 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks simple video playback in Chrome is working",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"video.html", "playback.js"},
 		Params: []testing.Param{{

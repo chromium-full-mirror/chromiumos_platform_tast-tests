@@ -14,10 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Capability,
-		Desc:     "Compare capabilities computed by autocaps package with ones detected by avtest_label_detect",
-		Contacts: []string{"hiroh@chromium.org", "chromeos-gfx-video@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		Func: Capability,
+		Desc: "Compare capabilities computed by autocaps package with ones detected by avtest_label_detect",
+		Contacts: []string{
+			"chromeos-gfx-video@google.com",
+			"hiroh@chromium.org",
+		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 

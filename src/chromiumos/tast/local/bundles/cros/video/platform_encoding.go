@@ -76,11 +76,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies platform encoding by using the libva-utils encoder binaries",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
-		Fixture: "graphicsNoChrome",
-		Attr:    []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
+		Fixture:      "graphicsNoChrome",
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		// Guado, buddy and rikku have a companion video acceleration chip
 		// (called Kepler), skip this test in these models.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("guado", "buddy", "rikku")),

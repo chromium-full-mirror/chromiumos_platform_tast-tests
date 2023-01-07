@@ -24,9 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checks that simple video playback in Pepper (NaCl) is working",
 		Contacts: []string{
-			"pmolinalopez@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"pmolinalopez@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Data: []string{
 			"pepper/video_decode/pnacl/Release/video_decode.nmf",
 			"pepper/video_decode/pnacl/Release/video_decode.pexe",

@@ -30,10 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Measures hardware video encode performance by running the video_encode_accelerator_perf_tests binary",
 		Contacts: []string{
+			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
 			"mcasas@chromium.org",
-			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		// Default timeout (i.e. 2 minutes) is not enough.
 		Timeout: 10 * time.Minute,

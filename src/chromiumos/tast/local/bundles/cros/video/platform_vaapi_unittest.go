@@ -20,9 +20,10 @@ func init() {
 		Func: PlatformVAAPIUnittest,
 		Desc: "Runs test_va_api, a shallow libva API test",
 		Contacts: []string{
-			"stevecho@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"stevecho@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 		SoftwareDeps: []string{"vaapi"},
 		Timeout:      120 * time.Minute,

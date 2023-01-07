@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checks video playback in Chrome has no leaks",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		// Skip this test on Rockchip devices: they don't provide DRM.
 		// "gru" is the platform name for e.g. scarlet.
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.SkipOnPlatform("bob", "gru", "kevin", "fievel", "tiger")),

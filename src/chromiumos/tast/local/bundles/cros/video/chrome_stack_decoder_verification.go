@@ -472,10 +472,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies video decoding using Chrome's stack (via the video_decode_accelerator_tests binary) and either MD5 or SSIM criteria",
 		Contacts: []string{
+			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org",
 			"hiroh@chromium.org", // Underlying binary author.
-			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Fixture:      "graphicsNoChrome",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/185790070): Reenable when MTK8173 (hana, oak, elm) is migrated to the direct VD.

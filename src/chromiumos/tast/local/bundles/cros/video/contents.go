@@ -27,9 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that a screenshot of a full screen is valid",
 		Contacts: []string{
-			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"andrescj@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		// TODO(b/162437142): reenable on Zork when it does not hang forever.
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnPlatform("zork")),
 		SoftwareDeps: []string{"chrome"},

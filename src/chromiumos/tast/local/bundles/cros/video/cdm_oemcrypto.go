@@ -20,9 +20,10 @@ func init() {
 		Func: CDMOEMCrypto,
 		Desc: "Verifies that Widevine CE CDM and OEMCrypto tests run successfully",
 		Contacts: []string{
-			"jkardatzke@google.com",
 			"chromeos-gfx-video@google.com",
+			"jkardatzke@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"protected_content"},
 		Timeout:      25 * time.Minute,
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},

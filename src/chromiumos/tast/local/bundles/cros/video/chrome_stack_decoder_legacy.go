@@ -35,9 +35,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies hardware decode acceleration by running the video_decode_accelerator_tests binary with the legacy implementation",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "graphicsNoChrome",
