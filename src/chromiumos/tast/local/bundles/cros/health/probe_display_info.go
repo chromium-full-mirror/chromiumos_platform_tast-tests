@@ -182,7 +182,8 @@ func privacyScreenSupported(ctx context.Context) (bool, error) {
 
 func privacyScreenEnabled(ctx context.Context) (bool, error) {
 	// Only hw-state indicates the real state of privacy screen info.
-	cmd := "modetest -c | sed -n -e '/eDP/,/connected/ p' | grep -A 3 'privacy-screen hw-state' | grep 'value' | awk -e '{ print $2 }'"
+	// TODO(kerker): b/264809675 Use regular expression to parse the output.
+	cmd := "modetest -c | sed -n -e '/eDP/,/connected/ p' | grep -A 3 'privacy-screen hw-state' | grep 'value' | gawk -e '{ print $2 }'"
 	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to run modetest command")
@@ -194,7 +195,7 @@ func privacyScreenEnabled(ctx context.Context) (bool, error) {
 	}
 
 	// hw-state is empty, we need to fall back to legacy interface.
-	cmd = "modetest -c | sed -n -e '/eDP/,/connected/ p' | grep -A 3 'privacy-screen' | grep 'value' | awk -e '{ print $2 }'"
+	cmd = "modetest -c | sed -n -e '/eDP/,/connected/ p' | grep -A 3 'privacy-screen' | grep 'value' | gawk -e '{ print $2 }'"
 	b, err = testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to run modetest command")
@@ -245,7 +246,7 @@ func modetestConnectorInfo(ctx context.Context, column modetestConnectorColumn) 
 	// 71      70      connected       eDP-1           290x190         1       70
 	//
 	// We'll try to get the line that contains "eDP" string first, and get the value at |column| index.
-	cmd := "modetest -c | grep -E 'DSI|eDP' | awk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+	cmd := "modetest -c | grep -E 'DSI|eDP' | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
 	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", err
@@ -260,7 +261,7 @@ func modetestEncoderInfo(ctx context.Context, encoderID string, column modetestE
 	// 70      41      TMDS    0x00000007      0x00000001
 	//
 	// We'll try to get the line that starts with |encoderID| first, and get the value for crtc ID at column 2.
-	cmd := "modetest -e | grep ^" + encoderID + " | awk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+	cmd := "modetest -e | grep ^" + encoderID + " | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
 	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", err
@@ -276,7 +277,7 @@ func modetestCrtcInfo(ctx context.Context, crtcID string, column modetestModeInf
 	//   #0 1920x1280 60.00 1920 1944 1992 2080 1280 1286 1303 1320 164740 flags: nhsync, nvsync; type: preferred, driver
 	//
 	// We'll try to get the line that starts with |crtcID| first, get the following line as details info, and get the value at |column| index.
-	cmd := "modetest -p | grep ^" + crtcID + " -A 1 | sed '1d' | awk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+	cmd := "modetest -p | grep ^" + crtcID + " -A 1 | sed '1d' | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
 	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", err
@@ -296,7 +297,7 @@ func modetestModeInfo(ctx context.Context, column modetestModeInfoColumn) (strin
 		return "", err
 	} else if encoderID == "0" {
 		// It means that we can't find the crtc info. So fall back to method 2.
-		cmd := "modetest -c | grep -E 'DSI|eDP' -A 10 | grep preferred | awk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+		cmd := "modetest -c | grep -E 'DSI|eDP' -A 10 | grep preferred | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
 		b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 		if err != nil {
 			return "", err
