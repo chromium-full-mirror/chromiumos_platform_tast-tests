@@ -34,9 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests D-Bus methods related to PerfTool",
 		Contacts: []string{
-			"shantuo@google.com",
 			"cwp-team@google.com",
+			"shantuo@google.com",
 		},
+		BugComponent: "b:87200",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
