@@ -37,6 +37,10 @@ func init() {
 			Val:       apnTestParam{"callbox_round_robin_connect_ipv4_default_attach.pbf", "callbox-default-attach", "callbox-ipv4"},
 			ExtraData: []string{"callbox_round_robin_connect_ipv4_default_attach.pbf"},
 		}, {
+			Name:      "round_robin_connect_all_invalid_apn_errors",
+			Val:       apnTestParam{"callbox_round_robin_connect_all_invalid_apn_errors.pbf", "", "callbox-default-attach"},
+			ExtraData: []string{"callbox_round_robin_connect_all_invalid_apn_errors.pbf"},
+		}, {
 			Name:      "null_attach_ipv4v6",
 			Val:       apnTestParam{"callbox_null_attach_ipv4v6.pbf", "", "callbox-ipv4v6"},
 			ExtraData: []string{"callbox_null_attach_ipv4v6.pbf"},

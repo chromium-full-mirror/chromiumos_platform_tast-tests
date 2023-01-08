@@ -1,0 +1,42 @@
+mno {
+  data {
+    uuid: "d433d22c-02ac-43b5-b2b3-91f96c4b2d7a"
+    country: "us"
+    localized_name {
+      name: "Cros Cellular Network"
+    }
+    mccmnc: "00101"
+    mobile_apn {
+       # Will result in MissingOrUnknownApn or ServiceOptionNotSubscribed
+      apn: "callbox-wrong-connect-apn"
+      ip_type: IPV4
+      type: DEFAULT
+    }
+    mobile_apn {
+      # Will result in Ipv4OnlyAllowed
+      apn: "callbox-ipv4"
+      ip_type: IPV6
+      type: DEFAULT
+    }
+    mobile_apn {
+      # Will result in Ipv6OnlyAllowed
+      apn: "callbox-ipv6"
+      ip_type: IPV4
+      type: DEFAULT
+    }
+    mobile_apn {
+      # Will result in UserAuthenticationFailed
+      apn: "callbox-ipv4-chap"
+      username: "wrong-username"
+      ip_type: IPV4V6
+      type: DEFAULT
+    }
+    mobile_apn {
+      apn: "callbox-default-attach"
+      ip_type: IPV4V6
+      # Don't add IA type in case shill prioritizes the IA APN for Data
+      # connection in the future.
+      type: DEFAULT
+    }
+  }
+}
