@@ -7,11 +7,13 @@ package nearbyshare
 import (
 	"context"
 
+	"chromiumos/tast/common/cros/crossdevice"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbyfixture"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -38,7 +40,23 @@ func init() {
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 					SecurityType:    nearbycommon.SecurityTypeWpaPsk,
 				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+
+			// Subtests for unstable devices, so they can be omitted from reporting.
+			{
+				Name:    "dataonline_noone_wificredentials_unstable",
+				Fixture: "nearbyShareDataUsageOnlineNoOne",
+				Val: nearbycommon.WiFiTestData{
+					WiFiName:        "test_network",
+					WiFiPassword:    "testpassword0000",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					SecurityType:    nearbycommon.SecurityTypeWpaPsk,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 
 			// Floss-enabled duplicate

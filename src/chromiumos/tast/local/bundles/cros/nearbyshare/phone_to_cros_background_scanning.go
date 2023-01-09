@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android"
+	"chromiumos/tast/common/cros/crossdevice"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/nearbyshare"
@@ -48,7 +49,22 @@ func init() {
 				},
 				ExtraData:         []string{"small_jpg.zip"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.BGScanningStableSkipModels...)),
+			},
+
+			// Subtests for unstable devices, so they can be omitted from reporting.
+			{
+				Name:    "dataoffline_hidden_jpg11kb_unstable",
+				Fixture: "nearbyShareDataUsageOfflineNoOneBackgroundScanningEnabled",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+					MimeType:        nearbycommon.MimeTypePng,
+				},
+				ExtraData:         []string{"small_jpg.zip"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.BGScanningUnstableModels...)),
 			},
 
 			// Floss-enabled duplicate

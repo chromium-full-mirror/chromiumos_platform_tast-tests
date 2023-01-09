@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/cros/crossdevice"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/nearbyshare"
@@ -16,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/nearbyshare/nearbytestutils"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -40,8 +42,9 @@ func init() {
 					TestTimeout: nearbycommon.DetectionTimeout,
 					MimeType:    nearbycommon.MimeTypeJpeg,
 				},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout,
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout,
 			},
 			{
 				Name:    "noone",
@@ -51,8 +54,35 @@ func init() {
 					TestTimeout: nearbycommon.DetectionTimeout,
 					MimeType:    nearbycommon.MimeTypeJpeg,
 				},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout,
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout,
+			},
+
+			// Subtests for unstable devices, so they can be omitted from reporting.
+			{
+				Name:    "somecontacts_unstable",
+				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidNotSelectedContact",
+				Val: nearbycommon.TestData{
+					Filename:    "small_jpg.zip",
+					TestTimeout: nearbycommon.DetectionTimeout,
+					MimeType:    nearbycommon.MimeTypeJpeg,
+				},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout,
+			},
+			{
+				Name:    "noone_unstable",
+				Fixture: "nearbyShareDataUsageOnlineNoOne",
+				Val: nearbycommon.TestData{
+					Filename:    "small_jpg.zip",
+					TestTimeout: nearbycommon.DetectionTimeout,
+					MimeType:    nearbycommon.MimeTypeJpeg,
+				},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout,
 			},
 
 			// Floss-enabled duplicates

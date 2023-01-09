@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android"
+	"chromiumos/tast/common/cros/crossdevice"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbyfixture"
@@ -17,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -40,8 +42,9 @@ func init() {
 					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraData:         []string{"small_png.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:    "dataoffline_allcontacts_jpg11kb",
@@ -51,9 +54,10 @@ func init() {
 					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				},
-				ExtraAttr: []string{"cross-device_cq"},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device_cq"},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
 			{
 				Name:    "dataonline_allcontacts_txt30mb",
@@ -63,8 +67,48 @@ func init() {
 					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
 					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 				},
-				ExtraData: []string{"big_txt.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraData:         []string{"big_txt.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+
+			// Subtests for unstable devices, so they can be omitted from reporting.
+			{
+				Name:    "dataoffline_allcontacts_png5kb_unstable",
+				Fixture: "nearbyShareDataUsageOfflineAllContacts",
+				Val: nearbycommon.TestData{
+					Filename:        "small_png.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				},
+				ExtraData:         []string{"small_png.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataoffline_allcontacts_jpg11kb_unstable",
+				Fixture: "nearbyShareDataUsageOfflineAllContacts",
+				Val: nearbycommon.TestData{
+					Filename:        "small_jpg.zip",
+					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				},
+				ExtraAttr:         []string{"cross-device_cq"},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataonline_allcontacts_txt30mb_unstable",
+				Fixture: "nearbyShareDataUsageOnlineAllContacts",
+				Val: nearbycommon.TestData{
+					Filename:        "big_txt.zip",
+					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				},
+				ExtraData:         []string{"big_txt.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 
 			// Floss-enabled duplicates
