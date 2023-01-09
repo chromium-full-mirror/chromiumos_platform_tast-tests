@@ -120,9 +120,17 @@ func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, bl
 	}
 
 	if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
+		// When the local view is cached and app shows as installable, Play Server rejects the
+		// install request. If that happens, then the flow is validated.
+		if err := d.Object(ui.TextMatches("(?i)Can't download .*")).Exists(ctx); err == nil {
+			testing.ContextLog(ctx, "Blocked app not installable")
+			return nil
+		}
+
 		return errors.Wrap(err, "package installation failed")
 	}
 
+	// If the install goes through, we expect it to be uninstalled immediately.
 	testing.ContextLog(ctx, "Waiting for package to uninstall")
 	if err := WaitForUninstall(ctx, a, blockedPackage); err != nil {
 		return errors.Wrap(err, "package not uninstalled")
