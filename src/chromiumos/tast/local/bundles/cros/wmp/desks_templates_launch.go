@@ -134,9 +134,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
 
 	// Verify window count.
 	if err := saveddesks.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
