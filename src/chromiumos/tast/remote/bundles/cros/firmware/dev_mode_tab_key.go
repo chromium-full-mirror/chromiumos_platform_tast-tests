@@ -106,7 +106,7 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 
 	// Power cycle the DUT to clear the firmware log, so that records prior
 	// to this test are wiped.
-	if err := h.DUT.Conn().CommandContext(ctx, "poweroff").Run(); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
 		s.Fatal("Failed to run poweroff cmd: ", err)
 	}
 	s.Log(ctx, "Checking for G3 powerstate")
@@ -264,8 +264,6 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen fwScre
 
 func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScreenID fwScreenID) error {
 	var (
-		volUp    = "volumeUp"
-		volDown  = "volumeDown"
 		upKey    = "<up>"
 		downKey  = "<down>"
 		spaceKey = " "
@@ -274,33 +272,40 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 		tabKey   = "<tab>"
 	)
 
+	ecKBPress := func(key string) error {
+		row, col, err := h.Servo.GetKeyRowCol(key)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get key column and row for %s", key)
+		}
+		holdKey := fmt.Sprintf("kbpress %d %d 1", col, row)
+		releaseKey := fmt.Sprintf("kbpress %d %d 0", col, row)
+		// Press key.
+		if err := h.Servo.RunECCommand(ctx, holdKey); err != nil {
+			return errors.Wrapf(err, "failed to press and hold %s", key)
+		}
+		// Release key.
+		defer func() error {
+			if err := h.Servo.RunECCommand(ctx, releaseKey); err != nil {
+				return errors.Wrapf(err, "failed to release %s", releaseKey)
+			}
+			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+				return errors.Wrap(err, "failed to wait for keypress delay")
+			}
+			return nil
+		}()
+		return nil
+	}
+
 	nTimesTraverseSelect := func(n int, key string, selectOpt bool) error {
 		testing.ContextLogf(ctx, "Pressing %s for %d times", key, n)
 		for ; n > 0; n-- {
-			var err error
-			switch key {
-			case volUp:
-				err = h.Servo.SetInt(ctx, servo.VolumeUpHold, 100)
-			case volDown:
-				err = h.Servo.SetInt(ctx, servo.VolumeDownHold, 100)
-			default:
-				err = h.Servo.PressKey(ctx, key, servo.DurTab)
-			}
-			if err != nil {
+			if err := ecKBPress(key); err != nil {
 				return errors.Wrapf(err, "failed to press %s", key)
 			}
 		}
 		if selectOpt {
-			if mainFwScreenID == developerWarningMenu {
-				testing.ContextLog(ctx, "Pressing power button")
-				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-					return errors.Wrap(err, "failed to press power button")
-				}
-			} else {
-				testing.ContextLog(ctx, "Pressing ENTER")
-				if err := h.Servo.PressKey(ctx, enterKey, servo.DurTab); err != nil {
-					return errors.Wrap(err, "failed to press ENTER key")
-				}
+			if err := ecKBPress(enterKey); err != nil {
+				return errors.Wrap(err, "failed to press ENTER key")
 			}
 		}
 		return nil
@@ -325,15 +330,15 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 			// Pressing tab key once displays debug info on the main menu.
 			{1, tabKey, false},
 			// Send tab key on Developer Options screen to display debug info.
-			{3, volUp, true},
+			{3, upKey, true},
 			{1, tabKey, false},
 			// Send tab key on the Enable OS Verification screen to display debug info.
-			{1, volDown, true},
-			{1, volUp, true},
+			{1, downKey, true},
+			{1, upKey, true},
 			{1, tabKey, false},
 			// Send tab key on the Language screen to display debug info.
-			{1, volDown, true},
-			{1, volDown, true},
+			{1, downKey, true},
+			{1, downKey, true},
 			{1, tabKey, false},
 		}
 	case developerWarning:
