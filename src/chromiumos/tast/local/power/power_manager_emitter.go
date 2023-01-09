@@ -29,8 +29,10 @@ type PowerManagerEmitter struct{} // NOLINT
 
 // NewPowerManagerEmitter stops the real power manager.
 func NewPowerManagerEmitter(ctx context.Context) (*PowerManagerEmitter, error) {
+	// There can be race conditions where stopping powerd fails (b/262773281).
+	// We can ignore the error here since we will attempt re-stop in emitEvent().
 	if err := upstart.StopJob(ctx, powerdJob); err != nil {
-		return nil, errors.Wrapf(err, "unable to stop the %s service", powerdJob)
+		testing.ContextLogf(ctx, "unable to stop the %s service, will retry when emitting events", powerdJob)
 	}
 
 	return &PowerManagerEmitter{}, nil
