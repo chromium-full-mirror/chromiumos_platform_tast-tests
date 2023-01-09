@@ -26,9 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test chrome.login.loginScreenStorage Extension API",
 		Contacts: []string{
-			"mpetrisor@chromium.org",
 			"chromeos-commercial-identity@google.com",
+			"mpetrisor@chromium.org",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Imprivata
+		BugComponent: "b:1253162",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
