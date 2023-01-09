@@ -270,7 +270,7 @@ const MaxOwnedTestAccountTimeout = 60 * 60 * 6
 // OwnedTestAccount holds all data of an owned test account which can be used in tests.
 type OwnedTestAccount struct {
 	GenericAccount
-	GaiaID     int64  `json:"gaia_id"`
+	GaiaID     string `json:"gaia_id"`
 	CustomerID string `json:"customer_id"`
 	OrgunitID  string `json:"orgunit_id"`
 }
