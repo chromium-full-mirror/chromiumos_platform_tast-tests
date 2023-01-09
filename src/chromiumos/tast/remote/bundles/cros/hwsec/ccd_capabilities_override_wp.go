@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesOverrideWP,
 		Desc: "Test to verify OverrideWP CCD capability controls access to the `wp` console command",
-		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
+		Attr: []string{"group:firmware", "group:hwsec", "firmware_cr50"},
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
 			"mvertescher@google.com",

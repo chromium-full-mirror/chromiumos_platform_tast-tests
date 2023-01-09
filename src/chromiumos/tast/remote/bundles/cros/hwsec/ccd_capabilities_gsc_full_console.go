@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesGscFullConsole,
 		Desc: "Test to verify GscFullConsole locks out restricted console commands",
-		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
+		Attr: []string{"group:firmware", "group:hwsec", "firmware_cr50"},
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
 			"mvertescher@google.com",
