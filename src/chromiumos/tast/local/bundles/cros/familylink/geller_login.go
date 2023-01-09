@@ -20,7 +20,14 @@ func init() {
 		Func:         GellerLogin,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Geller login is working",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-oac@google.com", "tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
+			"cros-oac@google.com",
+			"zork@chromium.org",
+		},
+		// ChromeOS > Software > Family > Parental controls
+		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
