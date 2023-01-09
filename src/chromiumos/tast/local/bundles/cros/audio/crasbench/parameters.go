@@ -10,6 +10,7 @@ type Parameters struct {
 	MetricFps        bool   // If the result contains metric FPS.
 	Time4096Frame    bool   // If the result contains metric "time_per_4096_frames".
 	MaxTime4096Frame bool   // If the result contains metric "max_time_per_4096_frames".
+	DLC              string // DLC dependencies to install before running the test.
 }
 
 // For testing.Test.Params
@@ -25,6 +26,13 @@ var (
 		MetricFps:        true,
 		Time4096Frame:    false,
 		MaxTime4096Frame: false,
+	}
+	AM = Parameters{ // Audio Model.
+		BenchmarkFilter:  "BM_Am",
+		MetricFps:        false,
+		Time4096Frame:    false,
+		MaxTime4096Frame: false,
+		DLC:              "sr-bt-dlc",
 	}
 	MixerOps = Parameters{
 		BenchmarkFilter:  "BM_CrasMixerOps",

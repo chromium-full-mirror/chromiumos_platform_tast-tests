@@ -9,10 +9,13 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/dlc"
 	"chromiumos/tast/testing"
 )
 
@@ -70,6 +73,21 @@ func runCrasBench(ctx context.Context, benchmarkFilter string) (*result, error) 
 // Run the benchmark.
 func Run(ctx context.Context, s *testing.State) {
 	param := s.Param().(Parameters)
+
+	if param.DLC != "" {
+		ctxForUninstallDlc := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, time.Second*3)
+		defer cancel()
+		if err := dlc.Install(ctx, param.DLC, ""); err != nil {
+			s.Fatal("Failed to install dlc: ", err)
+		}
+		defer func() {
+			if err := dlc.Uninstall(ctxForUninstallDlc, param.DLC); err != nil {
+				s.Fatal("Failed to uninstall dlc: ", err)
+			}
+		}()
+	}
+
 	result, err := runCrasBench(ctx, param.BenchmarkFilter)
 	if err != nil {
 		s.Fatal("Failed to run cras_bench: ", err)

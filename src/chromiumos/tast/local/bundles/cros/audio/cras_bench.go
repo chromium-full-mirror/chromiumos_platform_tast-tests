@@ -33,6 +33,11 @@ func init() {
 				Val:  crasbench.DSP,
 			},
 			{
+				Name:              "dsp_am",
+				ExtraSoftwareDeps: []string{"dlc"},
+				Val:               crasbench.AM,
+			},
+			{
 				Name: "cras_mixer_ops",
 				Val:  crasbench.MixerOps,
 			},
