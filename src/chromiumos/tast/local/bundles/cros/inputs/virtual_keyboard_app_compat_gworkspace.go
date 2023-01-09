@@ -28,7 +28,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardAppCompatGworkspace,
 		Desc:         "Test inputs feature on virtual keyboard for google workspace",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com", "essential-inputs-gardener-oncall@google.com"},
+		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
 		LacrosStatus: testing.LacrosVariantNeeded, // b:260291042 implement lacros fixture for google workspace testing
 		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
