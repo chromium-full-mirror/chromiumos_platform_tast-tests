@@ -6,7 +6,6 @@ package power
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/power"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 )
@@ -106,7 +106,7 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 	}
 	pkgOpSetPre := matchSetPre[1]
 
-	if err := suspendAndResume(ctx, cr); err != nil {
+	if err := power.SuspendAndResume(ctx, cr, 15*time.Second); err != nil {
 		s.Fatal("Failed to suspend resume the DUT: ", err)
 	}
 
@@ -173,36 +173,6 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 			resumeTime,
 		)
 	}
-}
-
-// suspendAndResume calls powerd_dbus_suspend command to suspend the system
-// and lets it stay sleep for the given duration and then wake up.
-func suspendAndResume(ctx context.Context, cr *chrome.Chrome) error {
-	const timeout = 30
-
-	// Read wakeup count here to prevent suspend retries, which happens without
-	// user input.
-	wakeupCount, err := ioutil.ReadFile("/sys/power/wakeup_count")
-	if err != nil {
-		return errors.Wrap(err, "failed to read wakeup count before suspend")
-	}
-
-	cmd := testexec.CommandContext(
-		ctx,
-		"powerd_dbus_suspend",
-		"--delay=0",
-		fmt.Sprintf("--timeout=%d", timeout),
-		fmt.Sprintf("--wakeup_count=%s", strings.Trim(string(wakeupCount), "\n")),
-		"--wakeup_timeout=15",
-	)
-	testing.ContextLogf(ctx, "Suspend DUT for %d seconds: %s", timeout, cmd.Args)
-
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "powerd_dbus_suspend failed to properly suspend")
-	}
-
-	testing.ContextLog(ctx, "DUT resumes from suspend")
-	return cr.Reconnect(ctx)
 }
 
 // readSuspendResumeDuration reads and calculates the wakeup duration from
