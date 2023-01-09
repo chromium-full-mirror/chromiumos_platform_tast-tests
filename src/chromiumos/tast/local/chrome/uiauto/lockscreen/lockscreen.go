@@ -43,6 +43,7 @@ type State struct {
 	LoggedIn            bool   `json:"isLoggedIn"`
 	Owner               bool   `json:"isOwner"`
 	Locked              bool   `json:"isScreenLocked"`
+	WallpaperAnimating  bool   `json:"isLockscreenWallpaperAnimating"`
 	ReadyForPassword    bool   `json:"isReadyForPassword"` // Login screen may not be ready to receive a password, even if this is true (crbug/1109381)
 	RegularUser         bool   `json:"isRegularUser"`
 	Guest               bool   `json:"isGuest"`

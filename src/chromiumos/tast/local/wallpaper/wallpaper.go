@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -244,27 +243,4 @@ func scrollDownUntilSucceeds(ctx context.Context, action uiauto.Action, mew *inp
 		}
 	}
 	return actionErr
-}
-
-// ColorDistance returns the maximum absolute difference between each component of a and b.
-// Both a and b are assumed to be RGBA colors.
-func ColorDistance(a, b color.Color) int {
-	aR, aG, aB, aA := a.RGBA()
-	bR, bG, bB, bA := b.RGBA()
-	max := func(nums ...int) int {
-		m := 0
-		for _, n := range nums {
-			if n > m {
-				m = n
-			}
-		}
-		return m
-	}
-	// Interestingly, the RGBA method returns components in the range [0, 0xFFFF] corresponding
-	// to the 8-bit values multiplied by 0x101 (see https://blog.golang.org/image). Therefore,
-	// we must shift them to the right by 8 so that they are in the more typical [0, 255] range.
-	return max(int(math.Abs(float64(aR>>8)-float64(bR>>8))),
-		int(math.Abs(float64(aG>>8)-float64(bG>>8))),
-		int(math.Abs(float64(aB>>8)-float64(bB>>8))),
-		int(math.Abs(float64(aA>>8)-float64(bA>>8))))
 }
