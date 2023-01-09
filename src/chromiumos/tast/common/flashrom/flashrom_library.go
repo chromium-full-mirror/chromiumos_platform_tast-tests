@@ -48,6 +48,15 @@ const (
 
 	// Message in the output which means the chip has been found.
 	chipFoundMessage = `Found .* flash chip`
+
+	// Message in the output which indicates that software WP status is enabled.
+	wpStatusEnabled = `WP: write protect is enabled.`
+
+	// Message in the output which indicates that software WP status is disabled.
+	wpStatusDisabled = `WP: write protect is disabled.`
+
+	// Error message for software WP status.
+	wpStatusErrorMessage = `Failed to get WP status: (.*)\n`
 )
 
 // runCommandLineRemote creates command context from given connection and runs command line with given arguments.
@@ -269,10 +278,35 @@ func (c *Config) Probe(ctx context.Context) (*Instance, []byte, error) {
 }
 
 // SoftwareWriteProtectStatus requests software write-protect status of the chip.
-func (i *Instance) SoftwareWriteProtectStatus(ctx context.Context) (bool, error) {
-	// TODO(b:247668196) implement
+//
+// Returns:
+// boolean value of WP status, true means WP enabled, false means WP disabled
+// output from command line execution, so that the caller can handle it if needed
+// error if it happened or nil
+func (i *Instance) SoftwareWriteProtectStatus(ctx context.Context) (bool, []byte, error) {
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--wp-status"}
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
 
-	return true, nil
+	out, err := i.runCommandLine(ctx, cmdArgs)
+	if err != nil {
+		return false, out, errors.Wrapf(err, "error while checking software write-protect status with arguments %v", cmdArgs)
+	}
+
+	strOut := string(out)
+	if strings.Contains(strOut, wpStatusEnabled) {
+		return true, out, nil
+	}
+	if strings.Contains(strOut, wpStatusDisabled) {
+		return false, out, nil
+	}
+
+	re := regexp.MustCompile(wpStatusErrorMessage)
+	wpError := re.FindString(strOut)
+	if wpError == "" {
+		return false, out, errors.Errorf("Flashrom WP status is unknown, cmdArgs=%v", cmdArgs)
+	}
+
+	return false, out, errors.Errorf("%s", wpError)
 }
 
 // Read reads the chip into the file provided by filePath. Note the filePath is a path on the DUT,

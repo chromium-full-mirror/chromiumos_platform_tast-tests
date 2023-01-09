@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/shutil"
+	"chromiumos/tast/common/flashrom"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/testing"
 )
 
@@ -31,11 +31,32 @@ func init() {
 func FlashromWriteProtect(ctx context.Context, s *testing.State) {
 	// WP support is all-or-nothing, just run a simple status command
 	// to check the flash IC is supported
-	var cmd = testexec.CommandContext(ctx, "flashrom", "--wp-status")
 
-	var output, err = cmd.Output(testexec.DumpLogOnError)
+	var flashromConfig flashrom.Config
+	flashromInstance, out, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		Probe(ctx)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	defer flashromInstance.FullShutdown(cleanupCtx)
+
 	if err != nil {
-		s.Fatalf("%q failed: %s", shutil.EscapeSlice(cmd.Args), err)
+		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 	}
-	s.Logf("%q output: %s", shutil.EscapeSlice(cmd.Args), output)
+
+	wpEnabled, out, err := flashromInstance.SoftwareWriteProtectStatus(ctx)
+
+	if err != nil {
+		s.Logf("Software WP status check output: %s", string(out))
+		s.Fatalf("Software write-protect status check failed: %s", err)
+	}
+
+	wpStatusMessage := "disabled"
+	if wpEnabled {
+		wpStatusMessage = "enabled"
+	}
+	testing.ContextLog(ctx, "Software WP status check result: ", wpStatusMessage)
 }
