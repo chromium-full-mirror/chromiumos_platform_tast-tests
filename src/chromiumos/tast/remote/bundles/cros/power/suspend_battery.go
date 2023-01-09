@@ -50,12 +50,14 @@ func init() {
 			// Or they incorrectly report that they do
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(
 				// asurada
+				"hayato",
 				"spherion",
 
 				// atlas
 				"atlas",
 
 				// brya
+				"anahera",
 				"primus",
 				"redrix",
 
@@ -70,6 +72,8 @@ func init() {
 				"eve",
 
 				// dedede
+				"blipper",
+				"bookem",
 				"boten",
 				"cret",
 				"cret360",
@@ -77,15 +81,19 @@ func init() {
 				"drawman",
 				"gallop",
 				"galith",
+				"galith360",
+				"kracko",
 				"lantis",
 				"madoo",
 				"magister",
 				"maglia",
 				"maglith",
 				"magma",
+				"magneto",
 				"magolor",
 				"magpie",
 				"metaknight",
+				"pirette",
 				"pirika",
 				"sasuke",
 				"storo",
@@ -116,6 +124,7 @@ func init() {
 				"nightfury",
 
 				// jacuzzi
+				"cozmo",
 				"damu",
 				"esche",
 				"burnet",
@@ -151,6 +160,7 @@ func init() {
 
 				// trogdor
 				"lazor",
+				"pazquel",
 
 				// volteer
 				"chronicler",
