@@ -201,6 +201,36 @@ func (c *AndroidDevice) WaitForDoNotDisturb(ctx context.Context, enabled bool, t
 	return nil
 }
 
+// ChromeRunning returns true if the Chrome activity is running.
+func (c *AndroidDevice) ChromeRunning(ctx context.Context) (bool, error) {
+	out, err := c.Device.ShellCommand(ctx, "dumpsys", "activity", "activities").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return false, err
+	}
+
+	r := regexp.MustCompile("ResumedActivity.*" + chromePkg)
+	match := r.Find(out)
+	if len(match) > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// WaitForChromeRunning waits for the Chrome activity to be running.
+func (c *AndroidDevice) WaitForChromeRunning(ctx context.Context, timeout time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if running, err := c.ChromeRunning(ctx); err != nil {
+			return err
+		} else if !running {
+			return errors.New("Chrome is not running")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return errors.Wrap(err, "failed waiting for Chrome to start")
+	}
+	return nil
+}
+
 // FindMyPhoneActive returns true if the "Find my phone" alarm is ringing.
 func (c *AndroidDevice) FindMyPhoneActive(ctx context.Context) (bool, error) {
 	out, err := c.Device.ShellCommand(ctx, "dumpsys", "audio").Output(testexec.DumpLogOnError)
@@ -390,7 +420,34 @@ func (c *AndroidDevice) LaunchChrome(ctx context.Context) error {
 	if err := c.Device.ShellCommand(ctx, "am", "start", "-n", chromeIntent).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to launch Chrome browser on Android")
 	}
+
 	return nil
+}
+
+// ClearChromeAppDataAndLaunchChrome deletes any local app data associated with Chrome before launching Chrome..
+func (c *AndroidDevice) ClearChromeAppDataAndLaunchChrome(ctx context.Context) error {
+	var err error = nil
+
+	// Clear Chrome's data.
+	if err = c.Device.ShellCommand(ctx, "pm", "clear", chromePkg).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to clear Chrome app data")
+	}
+
+	// Try launching Chrome up to three times. The system kills any Chrome processes when it
+	// clears out the app data, which can cause this to fail.
+	for attempt := 1; attempt <= 3; attempt++ {
+		if err = c.LaunchChrome(ctx); err != nil {
+			return err
+		}
+		// Wait a second in case the process gets killed shortly after launch.
+		testing.Sleep(ctx, 1*time.Second)
+		if err = c.WaitForChromeRunning(ctx, 2*time.Second); err == nil {
+			return nil
+		}
+		testing.ContextLog(ctx, "Failed waiting for Chrome to launch, retrying")
+	}
+
+	return err
 }
 
 // LaunchChromeAtURL opens the specified URL in Chrome.
@@ -403,13 +460,8 @@ func (c *AndroidDevice) LaunchChromeAtURL(ctx context.Context, url string) error
 
 // EnableChromeSync turns on Chrome Sync using the UI.
 func (c *AndroidDevice) EnableChromeSync(ctx context.Context) error {
-	// Clear Chrome's data so we have a fresh start. This makes it easier to turn on Chrome Sync through the UI.
-	if err := c.Device.ShellCommand(ctx, "pm", "clear", chromePkg).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to clear Chrome app data")
-	}
-
-	// Open Chrome.
-	if err := c.LaunchChrome(ctx); err != nil {
+	// Clear Chrome's data before launching Chrome so we have a fresh start. This makes it easier to turn on Chrome Sync through the UI.
+	if err := c.ClearChromeAppDataAndLaunchChrome(ctx); err != nil {
 		return err
 	}
 
