@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1188654",
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
-		SoftwareDeps: []string{"gsc"},
+		SoftwareDeps: []string{"gsc", "reboot"},
 		Timeout:      2 * time.Minute,
 		Vars:         []string{"servo"},
 		Params: []testing.Param{{
