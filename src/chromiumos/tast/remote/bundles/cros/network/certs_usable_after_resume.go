@@ -1,0 +1,326 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package network
+
+import (
+	"context"
+	"path/filepath"
+	"time"
+
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"chromiumos/tast/common/crypto/certificate"
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/common/wifi/security/wpaeap"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/wificell"
+	"chromiumos/tast/remote/wificell/hostapd"
+	"chromiumos/tast/rpc"
+	"chromiumos/tast/services/cros/network"
+	"chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/services/cros/wifi"
+	"chromiumos/tast/ssh"
+	"chromiumos/tast/ssh/linuxssh"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CertsUsableAfterResume,
+		LacrosStatus: testing.LacrosVariantNeeded,
+		Desc:         "Verify that installed certificates are usable after suspend and resume",
+		Contacts: []string{
+			"cros-connectivity@google.com",
+			"cros-conn-test-team@google.com",
+			"cienet-development@googlegroups.com",
+			"jason.hsiao@cienet.com",
+		},
+		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
+		Attr:         []string{"group:network", "network_e2e_unstable"},
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.browser.LacrosService",
+			"tast.cros.ui.ChromeUIService",
+			"tast.cros.network.CertificateService",
+			"tast.cros.wifi.WifiService",
+			wificell.TFServiceName,
+		},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "wificellFixt",
+		Params: []testing.Param{
+			{
+				Val: false, /* isLacros */
+			},
+			// TODO(crbug/1366609): Enable lacros test once the bug is fixed.
+		},
+		Timeout: 7 * time.Minute,
+	})
+}
+
+// CertsUsableAfterResume verifies that installed certificates are usable after suspend and resume.
+func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
+	const (
+		clientOrgName = "chromelab-wifi-testbed-client.mtv.google.com"
+		caOrgName     = "chromelab-wifi-testbed-root.mtv.google.com"
+
+		clientCertPassword = "12345"
+	)
+
+	tf := s.FixtValue().(*wificell.TestFixture)
+
+	opt := []hostapd.Option{hostapd.Mode(hostapd.Mode80211g), hostapd.Channel(1)}
+	testCert := certificate.TestCert1()
+	cfg := wpaeap.NewConfigFactory(
+		testCert.CACred.Cert,
+		testCert.ServerCred,
+		wpaeap.ClientCACert(testCert.CACred.Cert),
+		wpaeap.ClientCred(testCert.ClientCred),
+	)
+
+	ap, err := tf.ConfigureAP(ctx, opt, cfg)
+	if err != nil {
+		s.Fatal("Failed to configure ap: ", err)
+	}
+	defer tf.DeconfigAP(ctx, ap)
+	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
+	defer cancel()
+
+	cleanupCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	isLacros := s.Param().(bool)
+	startChromeReq := &ui.NewRequest{}
+	if isLacros {
+		startChromeReq.Lacros = &ui.Lacros{Mode: ui.Lacros_MODE_ONLY}
+	}
+
+	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
+	if _, err := crSvc.New(ctx, startChromeReq); err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
+
+	var lacrosSvc ui.LacrosServiceClient
+	if isLacros {
+		lacrosSvc = ui.NewLacrosServiceClient(rpcClient.Conn)
+		if _, err := lacrosSvc.Launch(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to launch lacros: ", err)
+		}
+		defer lacrosSvc.Close(cleanupCtx, &emptypb.Empty{})
+	}
+
+	certSvc := network.NewCertificateServiceClient(rpcClient.Conn)
+	if _, err := certSvc.Init(ctx, &network.InitRequest{
+		IsLacros: isLacros,
+		InitType: network.InitRequest_LAUNCH,
+	}); err != nil {
+		s.Fatal("Failed to initialize the certificate service: ", err)
+	}
+	defer certSvc.Close(cleanupCtx, &emptypb.Empty{})
+
+	for _, test := range []struct {
+		name        string
+		certDetails map[network.Certificate_Type]*certificateDetail
+	}{
+		{
+			name: "password-protected certificate",
+			certDetails: map[network.Certificate_Type]*certificateDetail{
+				network.Certificate_CLIENT: {
+					Certificate: &network.Certificate{
+						Type:         network.Certificate_CLIENT,
+						Name:         clientOrgName,
+						Organization: clientOrgName,
+						Password:     clientCertPassword,
+					},
+					CertStore: testCert,
+				},
+				network.Certificate_CA: {
+					Certificate: &network.Certificate{
+						Type:         network.Certificate_CA,
+						Name:         caOrgName,
+						Organization: caOrgName,
+					},
+					CertStore: testCert,
+				},
+			},
+		}, {
+			name: "non-password-protected certificate",
+			certDetails: map[network.Certificate_Type]*certificateDetail{
+				network.Certificate_CLIENT: {
+					Certificate: &network.Certificate{
+						Type:         network.Certificate_CLIENT,
+						Name:         clientOrgName,
+						Organization: clientOrgName,
+					},
+					CertStore: testCert,
+				},
+				network.Certificate_CA: {
+					Certificate: &network.Certificate{
+						Type:         network.Certificate_CA,
+						Name:         caOrgName,
+						Organization: caOrgName,
+					},
+					CertStore: testCert,
+				},
+			},
+		},
+	} {
+		s.Run(ctx, test.name, func(ctx context.Context, s *testing.State) {
+			// certSvc.DeleteCert is a combination of UI actions, which could take a while.
+			const deleteCertTimeout = 35 * time.Second
+
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, deleteCertTimeout)
+			defer cancel()
+
+			for _, certDetail := range test.certDetails {
+				if err := importCert(ctx, tf.DUTConn(wificell.DefaultDUT), certSvc, certDetail); err != nil {
+					s.Fatal("Failed to import the certificate: ", err)
+				}
+				defer certSvc.DeleteCert(cleanupCtx, certDetail.Certificate)
+			}
+			defer dumpUITreeWithScreenshotOnError(cleanupCtx, rpcClient, s.HasError, "before_delete_certs")
+
+			wifiUIClient := wifi.NewWifiServiceClient(rpcClient.Conn)
+			if _, err := wifiUIClient.JoinWifiFromQuickSettings(ctx, &wifi.JoinWifiRequest{
+				Ssid: ap.Config().SSID,
+				Security: &wifi.JoinWifiRequest_EapTls{
+					EapTls: &wifi.JoinWifiRequest_SecurityEapTls{
+						ClientCert: test.certDetails[network.Certificate_CLIENT].Organization,
+						CaCert:     test.certDetails[network.Certificate_CA].Organization,
+					},
+				},
+			}); err != nil {
+				s.Fatalf("Failed to connect to wifi %q: %v", ap.Config().SSID, err)
+			}
+			defer tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT)
+
+			wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
+			if err := wifiClient.Suspend(ctx, 5*time.Second); err != nil {
+				s.Fatal("Failed to suspend DUT: ", err)
+			}
+
+			if err := restoreAfterResume(ctx, crSvc, lacrosSvc, certSvc); err != nil {
+				s.Fatal("Failed to reconnect to resources after resume: ", err)
+			}
+
+			// Verify the certificates are still imported.
+			for _, certDetail := range test.certDetails {
+				if response, err := certSvc.IsCertImported(ctx, certDetail.Certificate); err != nil {
+					s.Fatalf("Failed to verify the certificate %+v has imported: %v", certDetail.Certificate, err)
+				} else if !response.IsImported {
+					s.Fatalf("The certificate %+v was not imported", certDetail.Certificate)
+				}
+			}
+
+			// Verify the certificates are still valid.
+			if err := wifiClient.WaitForConnected(ctx, ap.Config().SSID, true); err != nil {
+				s.Fatalf("Failed to wait for wifi %q to connect: %v", ap.Config().SSID, err)
+			}
+		})
+	}
+}
+
+// restoreAfterResume restores the services after DUT resumed from suspend.
+// After suspend and resume, the connections built in the test would be invalid,
+// reconnect to the services to restore control to the Certificates Manager.
+func restoreAfterResume(ctx context.Context, crSvc ui.ChromeServiceClient, lacrosSvc ui.LacrosServiceClient, certSvc network.CertificateServiceClient) error {
+	if _, err := crSvc.Reconnect(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the Chrome session")
+	}
+
+	isLacros := lacrosSvc != nil
+	if isLacros {
+		if _, err := lacrosSvc.Connect(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to reconnect to lacros")
+		}
+	}
+
+	if _, err := certSvc.Init(ctx, &network.InitRequest{
+		IsLacros: isLacros,
+		InitType: network.InitRequest_CONNECT,
+	}); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the certificate service")
+	}
+
+	return nil
+}
+
+type certificateDetail struct {
+	*network.Certificate
+	certificate.CertStore
+}
+
+func importCert(ctx context.Context, dutConn *ssh.Conn, certSvc network.CertificateServiceClient, certDetail *certificateDetail) (retErr error) {
+	// These are the names of the temporary certificate files, which would be generated in runtime
+	// and imported through the Certificates Manager.
+	const (
+		clientCertFileName = "test_cert_client.p12"
+		caCertFileName     = "test_cert_root.crt"
+	)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	const tempDir = "/tmp"
+	var dest string
+	req := &network.ImportRequest{Certificate: certDetail.Certificate}
+	switch certDetail.Type {
+	case network.Certificate_CLIENT:
+		pemPath := filepath.Join(tempDir, "test_client_cert.pem")
+		if err := linuxssh.WriteFile(ctx, dutConn, pemPath, []byte(certDetail.ClientCred.Cert), 0644); err != nil {
+			return errors.Wrap(err, "failed to create pem file")
+		}
+		defer dutConn.CommandContext(cleanupCtx, "rm", pemPath).Run(testexec.DumpLogOnError)
+
+		keyPath := filepath.Join(tempDir, "test_client_cert.key")
+		if err := linuxssh.WriteFile(ctx, dutConn, keyPath, []byte(certDetail.ClientCred.PrivateKey), 0644); err != nil {
+			return errors.Wrap(err, "failed to create key file")
+		}
+		defer dutConn.CommandContext(cleanupCtx, "rm", keyPath).Run(testexec.DumpLogOnError)
+
+		dest = filepath.Join(tempDir, clientCertFileName)
+		if err := dutConn.CommandContext(ctx, "openssl", "pkcs12", "-export", "-out", dest, "-inkey", keyPath, "-in", pemPath, "-passout", "pass:"+certDetail.Password).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to create client certificate file")
+		}
+		if err := dutConn.CommandContext(ctx, "chmod", "0644", dest).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to change permission of the client certificate file")
+		}
+		defer dutConn.CommandContext(cleanupCtx, "rm", dest).Run(testexec.DumpLogOnError)
+
+		req.ImportDetail = &network.ImportRequest_Client{
+			Client: &network.ImportRequest_ClientImportDetail{
+				ImportType: network.ImportRequest_ClientImportDetail_IMPORT_AND_BIND,
+			},
+		}
+	case network.Certificate_CA:
+		dest = filepath.Join(tempDir, caCertFileName)
+		if err := linuxssh.WriteFile(ctx, dutConn, dest, []byte(certDetail.CACred.Cert), 0644); err != nil {
+			return errors.Wrap(err, "failed to create CA certificate file")
+		}
+		defer dutConn.CommandContext(cleanupCtx, "rm", dest).Run(testexec.DumpLogOnError)
+
+		req.ImportDetail = &network.ImportRequest_Ca{
+			Ca: &network.ImportRequest_CaImportDetail{},
+		}
+	}
+	req.FilePath = dest
+
+	if _, err := certSvc.ImportCert(ctx, req); err != nil {
+		return errors.Wrapf(err, "failed to import the certificate %+v", certDetail.Certificate)
+	}
+
+	return nil
+}
+
+func dumpUITreeWithScreenshotOnError(ctx context.Context, rpcClient *rpc.Client, hasError func() bool, filePrefix string) {
+	if hasError() {
+		ui.NewChromeUIServiceClient(rpcClient.Conn).DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{FilePrefix: filePrefix})
+	}
+}
