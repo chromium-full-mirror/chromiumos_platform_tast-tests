@@ -20,11 +20,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify it is possible to go through a one-time purchase flow in the DGAPI2 test app",
 		Contacts: []string{
-			"jshikaram@chromium.org",
-			"ashpakov@google.com", // until Sept 2022
 			"chromeos-apps-foundation-team@google.com",
+			"jshikaram@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation>Stores",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "playBillingDgapi2Fixture",
 		Params: []testing.Param{{

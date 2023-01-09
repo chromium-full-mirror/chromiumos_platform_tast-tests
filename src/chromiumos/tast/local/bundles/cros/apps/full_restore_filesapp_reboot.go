@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test full restore files app",
 		Contacts: []string{
-			"jinrongwu@google.com",
 			"chromeos-apps-foundation-team@google.com",
+			"nancylingwang@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Vars:         []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome"},
 	})

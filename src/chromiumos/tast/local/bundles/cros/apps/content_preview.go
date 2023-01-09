@@ -38,10 +38,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test content preview while sharing a single file",
 		Contacts: []string{
-			"jinrongwu@google.com",
 			"chromeos-apps-foundation-team@google.com",
+			"melzhang@google.com",
 		},
-		Attr:         []string{"group:mainline"},
+		BugComponent: "crbug:Platform>Apps>Foundation>Sharesheet",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Data:         []string{cpTextFileName, cpZipFileName, cpVideoFileName, cpPngFileName},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

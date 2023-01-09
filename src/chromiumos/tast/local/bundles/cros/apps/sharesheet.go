@@ -34,7 +34,8 @@ func init() {
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},
-		Attr:         []string{"group:mainline"},
+		BugComponent: "crbug:Platform>Apps>Foundation>Sharesheet",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Data:         []string{"sharesheet_manifest.json", "sharesheet_service.js", "sharesheet_index.html", "sharesheet_icon.png"},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),

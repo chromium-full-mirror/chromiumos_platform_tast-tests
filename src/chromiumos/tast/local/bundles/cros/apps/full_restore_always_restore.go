@@ -29,10 +29,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test full restore always restore setting",
 		Contacts: []string{
-			"nancylingwang@google.com",
 			"chromeos-apps-foundation-team@google.com",
+			"nancylingwang@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,

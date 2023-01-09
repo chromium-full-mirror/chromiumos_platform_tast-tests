@@ -23,10 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Web Store app info from the context menu on app list",
 		Contacts: []string{
-			"jinrongwu@google.com",
 			"chromeos-apps-foundation-team@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation>AppManagement",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})
