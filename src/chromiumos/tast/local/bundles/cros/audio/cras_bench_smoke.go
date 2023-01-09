@@ -40,6 +40,7 @@ func init() {
 				Name:              "alsa",
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 				Val:               crasbench.Alsa,
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})
