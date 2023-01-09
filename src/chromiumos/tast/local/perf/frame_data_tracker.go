@@ -15,7 +15,10 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const frameDataFetchInterval = time.Minute
+const (
+	frameDataFetchInterval = time.Minute
+	throughputInterval     = 5 * time.Second
+)
 
 // FrameDataTracker is helper to get animation frame data from Chrome.
 type FrameDataTracker struct {
@@ -56,7 +59,7 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn) er
 		return errors.Wrap(err, "failed to start frame counting per sink")
 	}
 
-	if err := t.dsTracker.Start(ctx, tconn, ""); err != nil {
+	if err := t.dsTracker.Start(ctx, tconn, "", throughputInterval); err != nil {
 		return errors.Wrap(err, "failed to start display smoothness tracking")
 	}
 

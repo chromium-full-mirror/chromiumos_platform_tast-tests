@@ -6,6 +6,7 @@ package perf
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -47,14 +48,14 @@ func (t *DisplaySmoothnessTracker) Close(ctx context.Context, tconn *chrome.Test
 
 // Start starts tracking for the given display id. Primary display is used
 // if the given display id is empty.
-func (t *DisplaySmoothnessTracker) Start(ctx context.Context, tconn *chrome.TestConn, displayID string) error {
+func (t *DisplaySmoothnessTracker) Start(ctx context.Context, tconn *chrome.TestConn, displayID string, interval time.Duration) error {
 	_, found := t.displayIDs[displayID]
 	if found {
 		return errors.Errorf("display smoothness already tracked for %q", displayIDString(displayID))
 	}
 
 	err := tconn.Call(ctx, nil,
-		`tast.promisify(chrome.autotestPrivate.startSmoothnessTracking)`, displayID)
+		`tast.promisify(chrome.autotestPrivate.startSmoothnessTracking)`, displayID, interval.Milliseconds())
 	if err != nil {
 		return err
 	}
