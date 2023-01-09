@@ -26,6 +26,13 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type serverType int
+
+const (
+	prodServer serverType = iota
+	stagingServer
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BasicDetections,
@@ -34,10 +41,19 @@ func init() {
 		Contacts:     []string{"chromeos-engprod-sydney@google.com", "alvinjia@google.com", "mattlui@google.com"},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      12 * time.Minute,
 		Data:         []string{"logo_chrome.png"},
+		VarDeps:      uidetection.UIDetectionVars,
+		Params: []testing.Param{
+			{
+				Val: prodServer,
+			},
+			{
+				Name: "staging_server",
+				Val:  stagingServer,
+			},
+		},
 	})
 }
 
@@ -69,7 +85,11 @@ func setAutoThemeMode(ui *uiauto.Context) uiauto.Action {
 }
 
 func BasicDetections(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(*chrome.Chrome)
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	server := s.Param().(serverType)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
@@ -89,7 +109,16 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enter clamshell mode: ", err)
 	}
 
-	ud := uidetection.NewDefault(tconn)
+	var ud *uidetection.Context
+	if server == prodServer {
+		ud = uidetection.NewDefault(tconn)
+	} else {
+		keyType := s.RequiredVar(uidetection.KeyType)
+		key := s.RequiredVar(uidetection.Key)
+		serverAddr := "staging-chromeosuidetection.sandbox.googleapis.com:443"
+		ud = uidetection.New(tconn, keyType, key, serverAddr)
+	}
+
 	ui := uiauto.New(tconn)
 
 	chromeIcon := uidetection.CustomIcon(s.DataPath("logo_chrome.png"))
