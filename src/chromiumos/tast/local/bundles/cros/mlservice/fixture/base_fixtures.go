@@ -7,12 +7,15 @@ package fixture
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/testing"
 )
 
@@ -90,8 +93,18 @@ func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) te
 
 // BaseSetupFixtData is the data returned by SetUp and passed to tests.
 type BaseSetupFixtData struct {
-	Chrome      *chrome.Chrome
-	BrowserType browser.Type
+	cr *chrome.Chrome
+	bt browser.Type
+}
+
+// Chrome returns Chrome. This adds support for chrome.HasChrome interface.
+func (fd BaseSetupFixtData) Chrome() *chrome.Chrome {
+	return fd.cr
+}
+
+// BrowserType returns the browser type setup in fixture.
+func (fd BaseSetupFixtData) BrowserType() browser.Type {
+	return fd.bt
 }
 
 // baseSetupFixtureImpl implements testing.FixtureImpl.
@@ -99,6 +112,8 @@ type baseSetupFixtureImpl struct {
 	cr          *chrome.Chrome         // Underlying Chrome instance
 	browserType browser.Type           // Whether Ash or Lacros is used for test
 	fOpts       chrome.OptionsCallback // Function to return chrome options.
+	tconn       *chrome.TestConn
+	recorder    *uiauto.ScreenRecorder
 }
 
 func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -117,16 +132,41 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	}
 	f.cr = cr
 
+	if cr.LoginMode() != "NoLogin" {
+		// cr.TestAPIConn does not work on login page.
+		// It can be achieved via cr.SigninProfileTestAPIConn(ctx) but not necessary.
+		f.tconn, err = f.cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get test API connection: ", err)
+		}
+	}
+
 	return BaseSetupFixtData{f.cr, f.browserType}
 }
 
 func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Do not setup recorder if f.tconn is not created.
+	if f.tconn == nil {
+		return
+	}
+
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 }
 
 func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	// Do nothing if the recorder is not initialized.
+	if f.recorder != nil {
+		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
 }
 
 func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
+	if err := f.cr.Responded(ctx); err != nil {
+		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+	if err := f.cr.ResetState(ctx); err != nil {
+		return errors.Wrap(err, "failed resetting existing Chrome session")
+	}
 	return nil
 }
 
