@@ -16,9 +16,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ScreenshotChrome,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Takes a screenshot using Chrome",
 		Contacts:     []string{"jkardatzke@chromium.org"},
+		BugComponent: "b:885255",
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeGraphics",
