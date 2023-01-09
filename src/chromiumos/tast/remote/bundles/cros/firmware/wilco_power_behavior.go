@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -155,14 +156,22 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 			s.Logf("Setting lid open to %s and checking for lid state", expState)
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				if err := h.Servo.SetStringAndCheck(ctx, servo.LidOpen, expState); err != nil {
-					s.Fatalf("Failed to set lid open to %s: %v", expState, err)
+					return errors.Wrapf(err, "failed to set lid open to %s", expState)
 				}
 				return nil
 			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-				s.Fatal("While setting and checking for the lid state: ", err)
-			}
-			if err := testing.Sleep(ctx, time.Second); err != nil {
-				s.Fatal("Failed to sleep: ", err)
+				// We suspect that if charger remained shut, opening the lid might fail.
+				// Document the value of vbus power to check if charger is connected.
+				checkCharger := func() string {
+					value, err := h.Servo.GetFloat(ctx, servo.VBusPower)
+					if err != nil {
+						s.Log("Error in reading vbus power value: ", err)
+						return "unknown"
+					}
+					return fmt.Sprintf("%v", value)
+				}
+				vbusPower := checkCharger()
+				s.Fatalf("While setting and checking for the lid state, got vbus power %s: %v", vbusPower, err)
 			}
 		}
 	}
@@ -175,24 +184,28 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 	err = d.WaitConnect(waitConnectCtx)
 	switch err.(type) {
 	case nil:
-		s.Fatal("DUT woke up unexpectedly")
+		// When tested manually, drallion duts woke up from opening lid.
+		// Use the lid_wake_from_power_off config to differentiate them from the others.
+		if (!h.Config.LidWakeFromPowerOff && tc.checkLidState) || tc.checkCharger {
+			s.Fatal("DUT woke up unexpectedly")
+		}
 	default:
 		if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 			s.Fatal("Unexpected error occurred: ", err)
 		}
 	}
-	s.Log("DUT remained offline")
+	if (!h.Config.LidWakeFromPowerOff && tc.checkLidState) || tc.checkCharger {
+		s.Logf("DUT remained offline, pressing power button for %s seconds to wake DUT", servo.Dur(h.Config.HoldPwrButtonPowerOn))
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+			s.Fatal("Failed to press power key via servo: ", err)
+		}
 
-	s.Logf("Pressing power button for %s seconds to wake DUT", servo.Dur(h.Config.HoldPwrButtonPowerOn))
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-		s.Fatal("Failed to press power key via servo: ", err)
-	}
-
-	waitConnectFromPressPowerCtx, cancelWaitConnectFromPressPower := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelWaitConnectFromPressPower()
-	s.Log("Checking that DUT wakes up from a press on power button")
-	if err := d.WaitConnect(waitConnectFromPressPowerCtx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+		waitConnectFromPressPowerCtx, cancelWaitConnectFromPressPower := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnectFromPressPower()
+		s.Log("Checking that DUT wakes up from a press on power button")
+		if err := d.WaitConnect(waitConnectFromPressPowerCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 	}
 
 	if checkTPMRSTLState {

@@ -82,6 +82,7 @@ type FloatControl string
 const (
 	BatteryTemperatureCelsius FloatControl = "battery_tempc"
 	VBusVoltage               FloatControl = "vbus_voltage"
+	VBusPower                 FloatControl = "vbus_power"
 )
 
 // A OnOffControl accepts either "on" or "off" as a value.
