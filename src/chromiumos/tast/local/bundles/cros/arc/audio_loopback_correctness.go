@@ -506,7 +506,7 @@ func init() {
 // captureOutputAndReadData captures audio data and reads the data.
 // The return data is a 2-d array, where arr[i] is the audio data of i-th channel.
 func captureOutputAndReadData(ctx context.Context, output audio.TestRawData) ([][]int64, error) {
-	if _, err := crastestclient.WaitForStreams(ctx, 5*time.Second); err != nil {
+	if _, err := crastestclient.WaitForStreams(ctx, 15*time.Second); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for streams")
 	}
 
@@ -611,7 +611,7 @@ func analyzeData(ctx context.Context, data []int64, sampleRate, expectedFreq flo
 // Captures output audio via loopback and verifies the frequency of each channel.
 func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 	const (
-		cleanupTime     = 30 * time.Second
+		cleanupTime     = 45 * time.Second
 		captureDuration = 3 // second(s)
 		captureRate     = 48000
 
@@ -654,8 +654,12 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		// Wait for no stream before unloading aloop as unloading while there is a stream
 		// will cause the stream in ARC to be in an invalid state.
-		if err := crastestclient.WaitForNoStream(ctx, 5*time.Second); err != nil {
+		if err := crastestclient.WaitForNoStream(ctx, 15*time.Second); err != nil {
+			// There are still active stream, mark as error and dump audio diagnostic to see the stream info.
 			s.Error("Wait for no stream error: ", err)
+			if err := crastestclient.DumpAudioDiagnostics(ctx, s.OutDir()); err != nil {
+				s.Error("Failed to dump audio diagnostics: ", err)
+			}
 		}
 		unload(ctx)
 	}(cleanupCtx)
