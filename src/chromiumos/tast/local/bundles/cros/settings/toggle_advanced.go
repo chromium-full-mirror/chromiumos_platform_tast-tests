@@ -21,12 +21,20 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ToggleAdvanced,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the Advanced section of Settings can be expanded and collapsed",
+		Desc:         "Checks that the Advanced section of ChromeOS Settings can be expanded and collapsed",
 		Contacts: []string{
+			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
+			"wesokuhara@google.com",
 		},
+		// ChromeOS > Software > Settings
+		BugComponent: "b:1246072",
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
-		// Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			// "group:mainline",
+			// "informational",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

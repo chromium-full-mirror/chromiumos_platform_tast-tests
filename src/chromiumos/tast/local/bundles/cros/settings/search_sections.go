@@ -46,8 +46,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Search with keywords and verify the related results from OS Settings",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-settings@google.com", "cienet-development@googlegroups.com", "tim.chang@cienet.com"},
+		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Params: []testing.Param{
 			{
