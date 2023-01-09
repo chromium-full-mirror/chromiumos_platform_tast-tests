@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
@@ -125,7 +125,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Click the address bar.
-			addressBar := bu.AddressBarFinder
+			addressBar := browserui.AddressBarFinder
 			ui := uiauto.New(tconn)
 			if err := uiauto.Combine("find and click the address bar",
 				ui.WaitUntilExists(addressBar),

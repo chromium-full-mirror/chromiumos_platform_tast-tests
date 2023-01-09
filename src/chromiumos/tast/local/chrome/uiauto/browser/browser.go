@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -26,9 +27,6 @@ type Browser struct {
 	ui   *uiauto.Context
 	conn *chrome.Conn
 }
-
-// AddressBarFinder represents the address bar node finder.
-var AddressBarFinder = nodewith.HasClass("OmniboxViewViews").Role(role.TextField)
 
 // Launch launches a browser with the given url.
 // An error is returned if the browser fails to launch.
@@ -54,7 +52,7 @@ func (b *Browser) Navigate(ctx context.Context, url string) error {
 
 // GetAddressBarText returns the address bar text.
 func (b *Browser) GetAddressBarText(ctx context.Context) (string, error) {
-	addressbarInfo, err := b.ui.Info(ctx, AddressBarFinder)
+	addressbarInfo, err := b.ui.Info(ctx, browserui.AddressBarFinder)
 	if err != nil {
 		return "", errors.Wrap(err, "could not find address bar")
 	}

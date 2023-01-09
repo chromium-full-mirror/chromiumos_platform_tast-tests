@@ -23,7 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -151,7 +151,7 @@ func DefaultSearchProviderSuggestURL(ctx context.Context, s *testing.State) {
 
 			// Click the address and search bar.
 			ui := uiauto.New(tconn)
-			addressBarNode := bu.AddressBarFinder
+			addressBarNode := browserui.AddressBarFinder
 			if err := ui.LeftClick(addressBarNode)(ctx); err != nil {
 				s.Fatal("Could not find the address bar: ", err)
 			}

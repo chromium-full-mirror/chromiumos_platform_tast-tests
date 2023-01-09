@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -343,7 +343,7 @@ func VirtualKeyboard(ctx context.Context, s *testing.State) {
 			defer conn.Close()
 
 			// Click the address bar.
-			if err := uia.LeftClick(bu.AddressBarFinder)(ctx); err != nil {
+			if err := uia.LeftClick(browserui.AddressBarFinder)(ctx); err != nil {
 				s.Fatal("Failed to click address bar: ", err)
 			}
 			vkNode := nodewith.Name("Chrome OS Virtual Keyboard").Role(role.Keyboard)

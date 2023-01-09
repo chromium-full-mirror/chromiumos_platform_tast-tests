@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/inputs/util"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/imesettings"
 	"chromiumos/tast/local/chrome/useractions"
@@ -212,7 +212,7 @@ func PhysicalKeyboardKoreanTyping(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		omniboxFinder := bu.AddressBarFinder
+		omniboxFinder := browserui.AddressBarFinder
 		validateOmniboxAction := uiauto.Combine("verify enter key on omnibox",
 			ui.LeftClick(omniboxFinder),
 			keyboard.TypeAction("gks"),

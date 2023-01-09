@@ -23,7 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -397,7 +397,7 @@ func navigateSingleTabToURLInLacros(ctx context.Context, url string, l *lacros.L
 	// to enter the navigation into the omnibox to navigate.
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("open target "+url,
-		ui.LeftClick(bu.AddressBarFinder),
+		ui.LeftClick(browserui.AddressBarFinder),
 		keyboard.AccelAction("ctrl+a"),
 		keyboard.TypeAction(url),
 		keyboard.AccelAction("Enter"))(ctxWithTimeout)

@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -55,7 +55,7 @@ func DefaultSearchProviderSearchURL(ctx context.Context, s *testing.State) {
 		fakeURL    = "fakeurl" // fakeURL is the fake search engine.
 		searchTerm = "vy6ys"   // searchTerm is a value for test search.
 	)
-	addressBarNode := bu.AddressBarFinder
+	addressBarNode := browserui.AddressBarFinder
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()

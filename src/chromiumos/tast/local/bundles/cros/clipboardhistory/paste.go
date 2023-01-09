@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/clipboardhistory"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
@@ -133,7 +133,7 @@ func Paste(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add %q to clipboard history: %v", text, err)
 	}
 
-	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, bu.AddressBarFinder, false /*useContextMenu*/, text, params.pasteType)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, browserui.AddressBarFinder, false /*useContextMenu*/, text, params.pasteType)(ctx); err != nil {
 		s.Fatal("Failed to paste from clipboard history: ", err)
 	}
 }

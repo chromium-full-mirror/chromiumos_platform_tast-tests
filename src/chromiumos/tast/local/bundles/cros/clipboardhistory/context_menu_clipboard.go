@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	bu "chromiumos/tast/local/chrome/uiauto/browser"
+	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/clipboardhistory"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
@@ -116,7 +116,7 @@ func verifyChrome(ctx context.Context, s *testing.State, res *clipboardResource)
 	defer faillog.DumpUITreeWithScreenshotOnError(
 		ctx, s.OutDir(), s.HasError, res.cr, fmt.Sprintf("%s_dump", s.TestName()))
 
-	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb, bu.AddressBarFinder, true /*useContextMenu*/, res.text, clipboardhistory.Click)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb, browserui.AddressBarFinder, true /*useContextMenu*/, res.text, clipboardhistory.Click)(ctx); err != nil {
 		s.Fatal("Failed to paste to Chrome and verify: ", err)
 	}
 }
