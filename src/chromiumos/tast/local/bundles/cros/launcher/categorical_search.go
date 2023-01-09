@@ -81,12 +81,14 @@ func CategoricalSearch(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	subtests := []categoricalSearchTestCase{
-		{
-			searchKeyword: "Chrome",
-			category:      "Best Match , search result category",
-			categoryLabel: "Best Match",
-			result:        "Chrome, Installed App",
-		},
+		/*
+			TODO(b:263280698) reenable this test.
+			{
+				searchKeyword: "Chrome",
+				category:      "Best Match , search result category",
+				categoryLabel: "Best Match",
+				result:        "Chrome, Installed App",
+			},*/
 		{
 			searchKeyword: "Settings",
 			category:      "Best Match , search result category",

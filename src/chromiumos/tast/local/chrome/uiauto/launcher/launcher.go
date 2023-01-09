@@ -141,6 +141,12 @@ func WaitForCategorizedResult(tconn *chrome.TestConn, category, result string) u
 	return ui.WaitUntilExists(SearchResultListItemFinder.Name(result).Ancestor(categoryListView))
 }
 
+// WaitForResult waits for 'result'.
+func WaitForResult(tconn *chrome.TestConn, result string) uiauto.Action {
+	ui := uiauto.New(tconn)
+	return ui.WaitUntilExists(SearchResultListItemFinder.Name(result))
+}
+
 // GetSearchBoxGhostText gets that the ghost text populated in the search box.
 func GetSearchBoxGhostText(ctx context.Context, tconn *chrome.TestConn) (string, error) {
 	var sbs SearchBoxState

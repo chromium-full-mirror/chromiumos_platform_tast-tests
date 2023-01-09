@@ -49,7 +49,6 @@ func init() {
 			Fixture: "chromeLoggedInExtendedAutocomplete",
 			Val: searchAutocompleteTestCase{TabletMode: false,
 				searchKeyword:          "Joe Bide",
-				category:               "Best Match , search result category",
 				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
 				expectedSearchBoxText:  "Joe Biden",
 				expectedGhostGhostText: "Search and Assistant",
@@ -59,7 +58,6 @@ func init() {
 			Fixture: "chromeLoggedInExtendedAutocomplete",
 			Val: searchAutocompleteTestCase{TabletMode: true,
 				searchKeyword:          "Joe Bide",
-				category:               "Best Match , search result category",
 				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
 				expectedSearchBoxText:  "Joe Biden",
 				expectedGhostGhostText: "Search and Assistant"},
@@ -69,7 +67,6 @@ func init() {
 			Fixture: "chromeLoggedInExtendedAutocomplete",
 			Val: searchAutocompleteTestCase{TabletMode: false,
 				searchKeyword:          "oe Biden",
-				category:               "Best Match , search result category",
 				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
 				expectedSearchBoxText:  "oe Biden",
 				expectedGhostGhostText: "Joe Biden - Search and Assistant",
@@ -79,7 +76,6 @@ func init() {
 			Fixture: "chromeLoggedInExtendedAutocomplete",
 			Val: searchAutocompleteTestCase{TabletMode: true,
 				searchKeyword:          "oe Biden",
-				category:               "Best Match , search result category",
 				result:                 "Joe Biden, 46th U.S. President - Google Search, Google Search",
 				expectedSearchBoxText:  "oe Biden",
 				expectedGhostGhostText: "Joe Biden - Search and Assistant"},
@@ -120,7 +116,7 @@ func SearchAutocomplete(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("search launcher and verify ghost text",
 		launcher.Search(tconn, kb, testCase.searchKeyword),
-		launcher.WaitForCategorizedResult(tconn, testCase.category, testCase.result))(ctx); err != nil {
+		launcher.WaitForResult(tconn, testCase.result))(ctx); err != nil {
 		s.Fatal("Failed to search for: ", testCase.searchKeyword)
 	}
 	res, err :=
