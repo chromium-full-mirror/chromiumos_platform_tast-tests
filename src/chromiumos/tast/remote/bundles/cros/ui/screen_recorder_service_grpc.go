@@ -23,7 +23,9 @@ func init() {
 		Func:         ScreenRecorderServiceGRPC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check basic functionalities of ScreenRecorderService",
-		Contacts:     []string{"jonfan@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
+		BugComponent: "b:1034649",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "given_path",

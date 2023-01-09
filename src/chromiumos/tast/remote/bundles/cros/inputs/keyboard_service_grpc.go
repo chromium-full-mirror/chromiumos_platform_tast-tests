@@ -29,7 +29,9 @@ func init() {
 		Func:         KeyboardServiceGRPC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check basic functionality of KeyboardService",
-		Contacts:     []string{"jonfan@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
+		BugComponent: "b:1034649",
+		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
 	})
