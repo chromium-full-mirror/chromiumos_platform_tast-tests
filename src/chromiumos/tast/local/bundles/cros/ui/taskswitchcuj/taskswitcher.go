@@ -25,6 +25,10 @@ import (
 // |run| focuses the "next" window, which is defined by the workflow type.
 // Assuming we have n windows, and we call run(ctx) n times, we should
 // loop back to the first window.
+//
+// |name| must only contain alphanumeric characters, underscores, or
+// dashes. This is so that it can be used directly in
+// cujrecorder.Recorder.Annotate.
 type taskSwitchWorkflow struct {
 	name        string
 	description string
@@ -142,7 +146,7 @@ func initializeSwitchTaskByAltTab(ctx context.Context, kw *input.KeyboardEventWr
 	// to Alt+Shift+Tab so that the device is forced to render a preview for
 	// every open window, which hopefully increases graphical load.
 	return taskSwitchWorkflow{
-		name:        "Alt+Tab",
+		name:        "Alt-Tab",
 		description: "Cycle through open applications using Alt+Tab",
 		run: action.Combine(
 			"Alt+Tab to the rightmost window",

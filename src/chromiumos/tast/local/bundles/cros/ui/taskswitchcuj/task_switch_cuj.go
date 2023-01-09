@@ -261,6 +261,7 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 
 		for _, taskSwitcher := range taskSwitchers {
+			recorder.Annotate(ctx, "Switch_windows_by_"+taskSwitcher.name)
 			s.Log(taskSwitcher.description)
 			cycles := 0
 			for endTime := time.Now().Add(taskSwitchingDuration); time.Now().Before(endTime); {

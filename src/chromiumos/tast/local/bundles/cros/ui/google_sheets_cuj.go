@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -165,6 +166,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open Google Sheets file.
+		recorder.Annotate(ctx, "Opening_Google_Sheets_file")
 		if err := sheetConn.Navigate(ctx, sheetURL); err != nil {
 			return errors.Wrapf(err, "failed to navigate to %s", sheetURL)
 		}
@@ -178,11 +180,15 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		s.Logf("Scrolling down the Google Sheets file for %s", overallScrollTimeout)
 
 		for _, scroller := range []struct {
+			// description is a string that can be used with
+			// cujrecorder.Recorder.Annotate to describe the scroll method.
 			description string
-			run         func(ctx context.Context) error
+
+			// run is a function that performs a single instance of scrolling.
+			run action.Action
 		}{
 			{
-				description: "Pressing the down arrow with the mouse",
+				description: "mouse_click",
 				run: func(ctx context.Context) error {
 					sheetBounds, err := ui.Location(ctx, nodewith.Role("genericContainer").HasClass("grid-scrollable-wrapper"))
 					if err != nil {
@@ -201,25 +207,25 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				},
 			},
 			{
-				description: "Using the scroll wheel",
+				description: "mouse_wheel",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollMouseDownFor(ctx, mw, 200*time.Millisecond, individualScrollTimeout)
 				},
 			},
 			{
-				description: "Using trackpad gestures",
+				description: "trackpad_gestures",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, individualScrollTimeout)
 				},
 			},
 			{
-				description: "Using the down arrow key",
+				description: "key_press",
 				run: func(ctx context.Context) error {
 					return inputsimulations.RepeatKeyPressFor(ctx, kw, "Down", 500*time.Millisecond, individualScrollTimeout)
 				},
 			},
 		} {
-			s.Log(scroller.description)
+			recorder.Annotate(ctx, "Scroll_with_"+scroller.description)
 			if err := scroller.run(ctx); err != nil {
 				return errors.Wrapf(err, "failed to scroll %s", scroller.description)
 			}

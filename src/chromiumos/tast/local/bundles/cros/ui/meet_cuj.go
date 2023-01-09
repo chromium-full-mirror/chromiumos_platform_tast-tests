@@ -855,6 +855,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		var collaborationRE *regexp.Regexp
 		if meet.docs {
+			recorder.Annotate(ctx, "Open_up_collaboration_window")
 			docsURL := defaultDocsURL
 			if docsURLOverride, ok := s.Var("ui.MeetCUJ.doc"); ok {
 				docsURL = docsURLOverride

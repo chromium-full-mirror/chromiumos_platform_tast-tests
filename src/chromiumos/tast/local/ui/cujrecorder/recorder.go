@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -49,6 +50,12 @@ const checkInterval = 5 * time.Second
 
 // SystemTraceConfigFile is a perfetto tracing config.
 const SystemTraceConfigFile = "perfetto/system_trace_config.pbtxt"
+
+// Annotation regex must follow the same formatting rules as perf.Metric.Name.
+// However, the length of the annotation must be less, to accommodate for the
+// Annotation.<annotation count> prefix. Additionally, periods are not allowed
+// to avoid confusion between the three sections of this metric name.
+var annotationRe = regexp.MustCompile("^[a-zA-Z0-9_-]{1,240}$")
 
 // keepWifi forces the Wifi to remain in its initial state,
 // regardless of the options passed to the Recorder. Useful for
@@ -228,6 +235,10 @@ type Recorder struct {
 	loginEventRecorder *perfSrc.LoginEventRecorder
 
 	pv *perf.Values
+
+	// annotationCount is the number of annotations that have been added
+	// to this recorder.
+	annotationCount int
 }
 
 // RecorderOptions contains options to control the recorder setup.
@@ -371,6 +382,43 @@ func (r *Recorder) CustomScreenshot(ctx context.Context) {
 	r.screenshotRecorder.TakeScreenshot(ctx)
 }
 
+// Annotate creates a metric in the following form:
+//
+// Annotation.<numbered annotation>.<annotation description>
+//
+// This annotation is used to describe what event occurred at certain
+// times during recorder.Run. The value of this metric is the number
+// of seconds from the start of the test. Annotation must be a string
+// consistening of alphanumeric characters, underscore, or dash. It must
+// also be less than 240 characters, since the length of a name for
+// perf.Metric has a limit of 256 characters.
+//
+// Soft rules for the annotation should be that each word should be
+// separated by an underscore.
+//
+// Examples:
+// 1. Open_Gmail
+// 2. Switch_windows_by_hotseat
+// 3. Start_switching_CNN_tabs
+func (r *Recorder) Annotate(ctx context.Context, annotation string) {
+	if r.startedAtTm.IsZero() {
+		testing.ContextLog(ctx, "Failed to add annotation because the recorder hasn't started yet")
+		return
+	}
+	if !annotationRe.MatchString(annotation) {
+		testing.ContextLog(ctx, "Failed to add annotation because of invalid annotation string: ", annotation)
+		return
+	}
+
+	r.annotationCount++
+	r.pv.Set(perf.Metric{
+		Name: fmt.Sprintf("Annotation.%d.%s", r.annotationCount, annotation),
+		Unit: "s",
+	}, time.Since(r.startedAtTm).Seconds())
+
+	testing.ContextLog(ctx, "Annotation: ", strings.ReplaceAll(annotation, "_", " "))
+}
+
 // NewRecorderWithTestConn creates a Recorder. It also aggregates the metrics of each
 // category (animation smoothness and input latency) and creates the aggregated
 // reports.
@@ -430,6 +478,7 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		}
 	}
 
+	r.pv = perf.NewValues()
 	return r, nil
 }
 
@@ -880,7 +929,7 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	if stopErr != nil {
 		return stopErr
 	}
-	r.pv = perf.NewValues()
+
 	r.pv.Merge(tpsData)
 	r.pv.Merge(powerData)
 
