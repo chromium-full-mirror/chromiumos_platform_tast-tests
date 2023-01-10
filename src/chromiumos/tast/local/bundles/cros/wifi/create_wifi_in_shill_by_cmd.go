@@ -38,12 +38,11 @@ func init() {
 	// from ARC. It is expected for shill to successfully create WiFi network with
 	// given arguments.
 	testing.AddTest(&testing.Test{
-		Func: CreateWifiInShillByCmd,
-		Desc: "Test if wifi network can be correctly created in shill",
-		Contacts: []string{
-			"chuweih@google.com",
-			"cros-networking@google.com",
-		},
+		Func:     CreateWifiInShillByCmd,
+		Desc:     "Test if wifi network can be correctly created in shill",
+		Contacts: []string{"cros-networking@google.com", "chuweih@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:239783278",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome", "arc"},
