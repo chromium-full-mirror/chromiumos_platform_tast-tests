@@ -67,7 +67,9 @@ func PhysicalKeyboardNumpad(ctx context.Context, s *testing.State) {
 
 	uc.SetAttribute(useractions.AttributeInputMethod, im.Name)
 
-	keyboard, err := input.Keyboard(ctx)
+	// Use the virtual physical keyboard instead of built-in to prevent bugs like
+	// b/254383812 where keycodes not on the built-in are ignored.
+	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
