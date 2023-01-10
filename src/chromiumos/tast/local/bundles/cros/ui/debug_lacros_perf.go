@@ -150,4 +150,7 @@ func DebugLacrosPerf(ctx context.Context, s *testing.State) {
 	if err = pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)
 	}
+	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
+		s.Error("Failed to save histogram raw data: ", err)
+	}
 }
