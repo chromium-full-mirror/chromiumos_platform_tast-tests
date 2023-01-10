@@ -23,10 +23,8 @@ import (
 // alwaysOnVPNReloginTestCase defines mode and config of the VPN
 // we want to set up in the test
 type alwaysOnVPNReloginTestCase struct {
-	// mode of always on VPN we want to test.
-	mode string
-	// configurarion of host VPN.
-	config vpn.Config
+	mode    string // mode of always-on VPN we want to test.
+	vpnType vpn.Type
 }
 
 func init() {
@@ -44,29 +42,29 @@ func init() {
 			{
 				Name: "strict_mode_l2tp_ipsec",
 				Val: alwaysOnVPNReloginTestCase{
-					mode:   shillconst.AlwaysOnVPNModeStrict,
-					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
+					mode:    shillconst.AlwaysOnVPNModeStrict,
+					vpnType: vpn.TypeL2TPIPsec,
 				},
 			},
 			{
 				Name: "best_effort_mode_l2tp_ipsec",
 				Val: alwaysOnVPNReloginTestCase{
-					mode:   shillconst.AlwaysOnVPNModeBestEffort,
-					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
+					mode:    shillconst.AlwaysOnVPNModeBestEffort,
+					vpnType: vpn.TypeL2TPIPsec,
 				},
 			},
 			{
 				Name: "strict_mode_openvpn",
 				Val: alwaysOnVPNReloginTestCase{
-					mode:   shillconst.AlwaysOnVPNModeStrict,
-					config: *vpn.NewConfig(vpn.TypeOpenVPN),
+					mode:    shillconst.AlwaysOnVPNModeStrict,
+					vpnType: vpn.TypeOpenVPN,
 				},
 			},
 			{
 				Name: "best_effort_mode_openvpn",
 				Val: alwaysOnVPNReloginTestCase{
-					mode:   shillconst.AlwaysOnVPNModeBestEffort,
-					config: *vpn.NewConfig(vpn.TypeOpenVPN),
+					mode:    shillconst.AlwaysOnVPNModeBestEffort,
+					vpnType: vpn.TypeOpenVPN,
 				},
 			},
 		},
@@ -118,18 +116,34 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Set up new VPN connection based on the config.
-	config := s.Param().(alwaysOnVPNReloginTestCase).config
-	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
+	// Set up VPN server and shill profile based on the config.
+	config := vpn.NewConfig(
+		s.Param().(alwaysOnVPNReloginTestCase).vpnType,
+		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
+	)
 
-	conn, err := vpn.NewConnectionWithEnvs(ctx, config, testEnv.BaseServer, nil)
+	server, err := vpn.StartServerWithConfig(ctx, testEnv.BaseServer, config)
 	if err != nil {
-		s.Fatal("Failed to create connection object: ", err)
+		s.Fatal("Failed to start VPN server: ", err)
 	}
+	defer func() {
+		if server == nil {
+			return
+		}
+		if err := server.Exit(cleanupCtx); err != nil {
+			s.Log("Failed to clean up VPN server: ", err)
+		}
+	}()
 
-	if err := conn.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup VPN server: ", err)
+	service, err := vpn.ConfigureService(ctx, server, nil, config)
+	if err != nil {
+		s.Fatal("Failed to create VPN service: ", err)
 	}
+	defer func() {
+		if err := service.Remove(cleanupCtx); err != nil {
+			s.Log("Failed to remove VPN service in shill: ", err)
+		}
+	}()
 
 	// Use set up host VPN as service and change the Always-on VPN mode.
 	profile, err := m.ActiveProfile(ctx)
@@ -137,7 +151,7 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get active profile: ", err)
 	}
 	vpnMode := s.Param().(alwaysOnVPNReloginTestCase).mode
-	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
+	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, service); err != nil {
 		s.Fatal("Failed to set Always-on VPN properties: ", err)
 	}
 	defer func() {
@@ -158,36 +172,29 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	}
 
 	// Check if VPN can be automatically connected.
-	if err := conn.Service().WaitForConnectedOrError(ctx); err != nil {
+	if err := service.WaitForConnectedOrError(ctx); err != nil {
 		s.Fatal("Failed to wait for VPN connected automatically: ", err)
 	}
 
 	// Stop the VPN server before restarting ui, otherwise cryptohome will enter a
 	// strange state on some boards (e.g., brya).
-	if err := conn.Server.Exit(ctx); err != nil {
+	if err := server.Exit(ctx); err != nil {
 		s.Fatal("Failed to stop VPN server before logout user: ", err)
 	}
+	// Reset server variable here to avoid the defer function above to be call
+	// again on the same server object.
+	server = nil
 
 	// Restart UI to logout.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to restart ui: ", err)
 	}
 
-	// Start the VPN server again. Use vpn.Connection without setting up the
-	// service to set up the server only. This code can be refactored once
-	// b/257379393 is done.
-	vpnServer, err := vpn.NewConnectionWithEnvs(ctx, config, testEnv.BaseServer, nil)
+	// Defer to cleanup is set up above.
+	server, err = vpn.StartServerWithConfig(ctx, testEnv.BaseServer, config)
 	if err != nil {
-		s.Fatal("Failed to prepare VPN server after login again: ", err)
+		s.Fatal("Failed to start VPN server after re-login: ", err)
 	}
-	if err := vpnServer.SetUpWithoutService(ctx); err != nil {
-		s.Fatal("Failed to setup VPN server after login again: ", err)
-	}
-	defer func() {
-		if err := vpnServer.Cleanup(cleanupCtx); err != nil {
-			s.Fatal("Failed to stop VPN server after the test: ", err)
-		}
-	}()
 
 	// Re-login to Chrome.
 	cr, err = chrome.New(

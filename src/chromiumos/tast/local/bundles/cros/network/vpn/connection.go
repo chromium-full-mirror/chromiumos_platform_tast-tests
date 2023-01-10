@@ -71,6 +71,8 @@ type Config struct {
 	CertVals CertVals
 
 	includedRoutesV4 []net.IPNet
+
+	autoConnect bool
 }
 
 // Type represents the VPN type.
@@ -111,6 +113,7 @@ func NewConfig(vpnType Type, opts ...Option) *Config {
 	c := &Config{
 		Type:          vpnType,
 		IPsecAuthType: AuthTypePSK,
+		autoConnect:   true,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -291,6 +294,14 @@ func WithIPv4IncludedRoute(route *net.IPNet) Option {
 	}
 }
 
+// WithoutAutoConnect disables auto connecting in StartConnection(), i.e., the
+// function will return with leaving the service disconnected.
+func WithoutAutoConnect() Option {
+	return func(c *Config) {
+		c.autoConnect = false
+	}
+}
+
 // IPType defines IP address type of overlay IP address.
 type IPType int
 
@@ -346,14 +357,16 @@ func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opt
 		return nil, errors.Wrap(err, "failed to start VPN server")
 	}
 
-	svc, err := configureService(ctx, conn.Server, nil, &conn.config)
+	svc, err := ConfigureService(ctx, conn.Server, nil, &conn.config)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure shill service")
 	}
 	conn.service = svc
 
-	if result, err := conn.Connect(ctx); result == false || err != nil {
-		return nil, errors.Wrap(err, "failed to connect the VPN service")
+	if config.autoConnect {
+		if result, err := conn.Connect(ctx); result == false || err != nil {
+			return nil, errors.Wrap(err, "failed to connect the VPN service")
+		}
 	}
 
 	success = true
@@ -421,7 +434,7 @@ func (c *Connection) setUpInternal(ctx context.Context, withSvc bool) error {
 
 	if withSvc {
 		var err error
-		c.service, err = configureService(ctx, c.Server, c.SecondServer, &c.config)
+		c.service, err = ConfigureService(ctx, c.Server, c.SecondServer, &c.config)
 		if err != nil {
 			return err
 		}
@@ -522,7 +535,10 @@ func (c *Connection) startServer(ctx context.Context) error {
 	return err
 }
 
-func configureService(ctx context.Context, server, secondServer *Server, config *Config) (*shill.Service, error) {
+// ConfigureService create a VPN service to server profile in shill based on
+// config. It's caller's responsibility to remove the service from the profile
+// after test is done.
+func ConfigureService(ctx context.Context, server, secondServer *Server, config *Config) (*shill.Service, error) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating shill manager proxy")
@@ -547,7 +563,7 @@ func configureService(ctx context.Context, server, secondServer *Server, config 
 // be overwritten with the full properties after the server is created.
 func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 	var err error
-	c.service, err = configureService(ctx, c.Server, c.SecondServer, &c.config)
+	c.service, err = ConfigureService(ctx, c.Server, c.SecondServer, &c.config)
 	if err != nil {
 		return "", err
 	}

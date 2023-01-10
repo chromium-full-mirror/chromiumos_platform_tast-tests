@@ -19,10 +19,8 @@ import (
 )
 
 type alwaysOnVPNRoutingTestCase struct {
-	// mode of Always-on VPN we want to test.
-	mode string
-	// configuration of host VPN.
-	config vpn.Config
+	mode    string // mode of always-on VPN we want to test.
+	vpnType vpn.Type
 }
 
 func init() {
@@ -32,37 +30,37 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "vpnEnvWithCerts",
+		Fixture:      "vpnEnv",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "strict_mode_ikev2",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode:   shillconst.AlwaysOnVPNModeStrict,
-					config: *vpn.NewConfig(vpn.TypeIKEv2),
+					mode:    shillconst.AlwaysOnVPNModeStrict,
+					vpnType: vpn.TypeIKEv2,
 				},
 				ExtraSoftwareDeps: []string{"ikev2"},
 			},
 			{
 				Name: "strict_mode_l2tp_ipsec_psk",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode:   shillconst.AlwaysOnVPNModeStrict,
-					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
+					mode:    shillconst.AlwaysOnVPNModeStrict,
+					vpnType: vpn.TypeL2TPIPsec,
 				},
 			},
 			{
 				Name: "best_effort_mode_ikev2",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode:   shillconst.AlwaysOnVPNModeBestEffort,
-					config: *vpn.NewConfig(vpn.TypeIKEv2),
+					mode:    shillconst.AlwaysOnVPNModeBestEffort,
+					vpnType: vpn.TypeIKEv2,
 				},
 				ExtraSoftwareDeps: []string{"ikev2"},
 			},
 			{
 				Name: "best_effort_mode_l2tp_ipsec_psk",
 				Val: alwaysOnVPNRoutingTestCase{
-					mode:   shillconst.AlwaysOnVPNModeBestEffort,
-					config: *vpn.NewConfig(vpn.TypeL2TPIPsec),
+					mode:    shillconst.AlwaysOnVPNModeBestEffort,
+					vpnType: vpn.TypeL2TPIPsec,
 				},
 			},
 		},
@@ -134,17 +132,15 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	}
 	physicalAddr := addrs.IPv4Addr.String()
 
-	// Establish a VPN on one of the servers.
-	config := s.Param().(alwaysOnVPNRoutingTestCase).config
-	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
-	conn, err := vpn.NewConnectionWithEnvs(ctx, config, vsvr, nil)
+	// Establish a VPN connection on one of the servers.
+	conn, err := vpn.StartConnection(ctx, vsvr,
+		s.Param().(alwaysOnVPNRoutingTestCase).vpnType,
+		vpn.WithoutAutoConnect(),
+	)
 	if err != nil {
-		s.Fatal("Failed to connect vpn: ", err)
+		s.Fatal("Failed to create VPN connection: ", err)
 	}
 	defer conn.Cleanup(cleanupCtx)
-	if err := conn.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup vpn: ", err)
-	}
 
 	// Use set up host VPN as service and change the Always-on VPN mode.
 	profile, err := m.ActiveProfile(ctx)
