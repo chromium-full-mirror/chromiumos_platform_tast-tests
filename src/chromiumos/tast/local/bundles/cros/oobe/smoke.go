@@ -7,7 +7,9 @@ package oobe
 import (
 	"context"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/updateengine"
 	"chromiumos/tast/testing"
 )
 
@@ -37,6 +39,15 @@ func init() {
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
+	// Restart update-engine to ensure it is idle (b/263421799).
+	if err := action.Combine("restart update-engine",
+		updateengine.StopDaemon,
+		updateengine.StartDaemon,
+		updateengine.WaitForService,
+	)(ctx); err != nil {
+		testing.ContextLogf(ctx, "Failed to restart update-engine: %s", err)
+	}
+
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(string)),
 		chrome.NoLogin())
