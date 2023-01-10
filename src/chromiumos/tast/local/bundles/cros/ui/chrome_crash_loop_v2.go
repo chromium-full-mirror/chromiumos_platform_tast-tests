@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/ui/chromecrash"
@@ -42,6 +43,7 @@ func init() {
 				handler: chromecrash.Breakpad,
 				consent: crash.RealConsent,
 			},
+			Fixture:           fixture.CleanOwnership,
 			ExtraSoftwareDeps: []string{"breakpad", "metrics_consent"},
 		}, {
 			Name: "breakpad_mock_consent",
@@ -56,6 +58,7 @@ func init() {
 				handler: chromecrash.Crashpad,
 				consent: crash.RealConsent,
 			},
+			Fixture:           fixture.CleanOwnership,
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
 		}, {
