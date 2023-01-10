@@ -106,8 +106,6 @@ var (
 	// PTZResetAllButton is the button for reset PTZ to default value.
 	PTZResetAllButton = UIComponent{"ptz reset all button", []string{"#ptz-reset-all"}}
 
-	// SquareModeButton is the button to enter square mode.
-	SquareModeButton = UIComponent{"square mode button", []string{".mode-item>input[data-mode=\"square\"]"}}
 	// ScanModeButton is the button to enter scan mode.
 	ScanModeButton = UIComponent{"scan mode button", []string{".mode-item>input[data-mode=\"scan\"]"}}
 	// ScanBarcodeOption is the option button to switch to QR code detection mode in scan mode.
@@ -116,27 +114,6 @@ var (
 	ScanDocumentModeOption = UIComponent{"document mode button", []string{"#scan-document"}}
 	// ReviewView is the review view after taking a photo under document mode.
 	ReviewView = UIComponent{"document review view", []string{"#view-review"}}
-	// ReviewImage is the image to be reviewed.
-	ReviewImage = UIComponent{"review image", []string{"#view-review .review-image"}}
-	// SaveAsPDFButton is the button to save document as PDF.
-	SaveAsPDFButton = UIComponent{"save document as pdf button", []string{"#view-review button[i18n-text=label_save_pdf_document]"}}
-	// SaveAsPhotoButton is the button to save document as photo.
-	SaveAsPhotoButton = UIComponent{"save document as photo button", []string{"#view-review button[i18n-text=label_save_photo_document]"}}
-	// RetakeButton is the button to retake the document photo.
-	RetakeButton = UIComponent{"retake document photo button", []string{
-		// TODO(b/203028477): Remove selector for old mode name after
-		// naming CL on app side fully landed.
-		"#review-retake", "#view-review button[i18n-text=label_retake]"}}
-	// FixCropButton is the button to fix document crop area.
-	FixCropButton = UIComponent{"fix document crop area button", []string{"#view-review button[i18n-text=label_fix_document]"}}
-	// CropDocumentView is the view for fix document crop area.
-	CropDocumentView = UIComponent{"crop document view", []string{"#view-crop-document"}}
-	// CropDocumentImage is the image to be cropped document from.
-	CropDocumentImage = UIComponent{"crop document image", []string{"#view-crop-document .review-image"}}
-	// CropDoneButton is the button clicked after fix document crop area.
-	CropDoneButton = UIComponent{"crop document done button", []string{"#view-crop-document button[i18n-text=label_crop_done]"}}
-	// DocumentCorner is the dragging point of document corner in crop area page.
-	DocumentCorner = UIComponent{"document corner dragging point", []string{"#view-crop-document .dot"}}
 	// DocumentCornerOverlay is the overlay that CCA used to draw document corners on.
 	DocumentCornerOverlay = UIComponent{"document corner overlay", []string{
 		"#preview-document-corner-overlay"}}
@@ -149,7 +126,7 @@ var (
 	// DocumentFixModeImage is the preview image of fix mode in multi-page document mode.
 	DocumentFixModeImage = UIComponent{"document fix mode image", []string{".document-fix-mode .image"}}
 	// DocumentFixButton is the entry button of fix mode in multi-page document mode.
-	DocumentFixButton = UIComponent{"document enter fix mode button", []string{".document-preview-mode button[i18n-aria=label_fix_document]", ".document-preview-mode button[i18n-aria=fix_page_button]"}}
+	DocumentFixButton = UIComponent{"document enter fix mode button", []string{".document-preview-mode button[i18n-aria=fix_page_button]", ".document-preview-mode button[i18n-label=fix_page_button]"}}
 	// DocumentFixModeCorner is the crop area dragging point in fix mode in multi-page document mode.
 	DocumentFixModeCorner = UIComponent{"document corner dragging point", []string{".document-fix-mode .dot"}}
 	// DocumentDoneFixButton is the exit button of fix mode in multi-page document mode.
@@ -159,7 +136,7 @@ var (
 	// DocumentBackButton is the resume button to show review UI of multi-page document mode when there're pending pages for reviewing.
 	DocumentBackButton = UIComponent{"document resume button", []string{"#back-to-review-document"}}
 	// DocumentAddPageButton is the button to close the review UI of multi-page document mode temporarily for adding new pages.
-	DocumentAddPageButton = UIComponent{"document add page button", []string{".document-preview-mode button[i18n-aria=add_new_page_button]"}}
+	DocumentAddPageButton = UIComponent{"document add page button", []string{".document-preview-mode button[i18n-aria=add_new_page_button]", ".document-preview-mode button[i18n-label=add_new_page_button]"}}
 	// DocumentSaveAsPhotoButton is the button to save as a photo in multi-page document mode.
 	DocumentSaveAsPhotoButton = UIComponent{"document save as photo button", []string{".document-preview-mode button[i18n-text=label_save_photo_document]"}}
 	// DocumentSaveAsPdfButton is the button save as a PDF file in multi-page document mode.
