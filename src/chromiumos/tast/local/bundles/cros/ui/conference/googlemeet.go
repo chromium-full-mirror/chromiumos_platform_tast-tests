@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/coords"
@@ -96,37 +97,19 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur 
 
 	// allowPerm allows camera, microphone and notification if browser asks for the permissions.
 	allowPerm := func(ctx context.Context) error {
-		video := nodewith.Role(role.Video)
-		allowButton := nodewith.Name("Allow").Role(role.Button)
-		dismissButton := nodewith.Name("Dismiss").Role(role.Button)
-		avPerm := nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).ClassName("RootView").Role(role.AlertDialog).First()
-		notiPerm := nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
 		// If there is a video, it means permissions are allowed.
+		video := nodewith.Role(role.Video)
 		if err := ui.WithTimeout(shortUITimeout).WaitUntilExists(video)(ctx); err == nil {
 			return nil
 		}
-		for _, step := range []struct {
-			name   string
-			finder *nodewith.Finder
-			button *nodewith.Finder
-		}{
-			{"dismiss permission prompt", dismissButton, dismissButton},
-			// Some DUTs show allow notifications first. Some don't.
-			{"allow notifications", notiPerm, allowButton.Ancestor(notiPerm)},
-			{"allow microphone and camera", avPerm, allowButton.Ancestor(avPerm)},
-			{"allow notifications", notiPerm, allowButton.Ancestor(notiPerm)},
-		} {
-			if err := ui.WithTimeout(shortUITimeout).WaitUntilExists(step.finder)(ctx); err == nil {
-				// Immediately clicking the allow button sometimes doesn't work. Sleep 2 seconds.
-				if err := uiauto.NamedAction(step.name,
-					ui.DoDefaultUntil(step.button, ui.WithTimeout(shortUITimeout).WaitUntilGone(step.finder)))(ctx); err != nil {
-					return err
-				}
-			} else {
-				testing.ContextLog(ctx, "No action is required to ", step.name)
-			}
-		}
-		return allowPagePermissions(tconn)(ctx)
+
+		return uiauto.NamedCombine("allow permissions",
+			prompts.ClearPotentialPrompts(
+				conf.tconn,
+				shortUITimeout,
+				prompts.ShowNotificationsPrompt,
+				prompts.AllowAVPermissionPrompt),
+			allowPagePermissions(tconn))(ctx)
 	}
 
 	switchWindow := func(ctx context.Context) error {
@@ -878,8 +861,6 @@ func (conf *GoogleMeetConference) DisplayAllParticipantsTime() time.Duration {
 }
 
 func (conf *GoogleMeetConference) closeNotifDialog() action.Action {
-	notiPerm := nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
-	allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notiPerm)
-	// Allow notifications if it popup the dialog.
-	return uiauto.IfSuccessThen(conf.ui.Exists(allowButton), conf.ui.LeftClick(allowButton))
+	return prompts.ClearPotentialPrompts(conf.tconn, time.Second, prompts.ShowNotificationsPrompt)
+
 }

@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
@@ -365,15 +366,7 @@ func (app *MicrosoftWebOffice) UpdateCells(ctx context.Context) error {
 func (app *MicrosoftWebOffice) VoiceToTextTesting(ctx context.Context, expectedText string, playAudio action.Action) error {
 
 	// allowPermission allows microphone permission if requested by the browser.
-	allowPermission := func(ctx context.Context) error {
-		alertDialog := nodewith.NameContaining("Use your microphone").ClassName("RootView").Role(role.AlertDialog).First()
-		allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(alertDialog)
-		if err := app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(allowButton)(ctx); err != nil {
-			testing.ContextLog(ctx, "No action to grant microphone permission")
-			return nil
-		}
-		return app.uiHdl.ClickUntil(allowButton, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(alertDialog))(ctx)
-	}
+	allowPermission := prompts.ClearPotentialPrompts(app.tconn, defaultUIWaitTime, prompts.AllowAVPermissionPrompt)
 
 	paragraph := nodewith.Role(role.Paragraph).HasClass("Paragraph").Ancestor(wordWebArea).First()
 	// checkDictationResult checks if the document contains the expected dictation results.

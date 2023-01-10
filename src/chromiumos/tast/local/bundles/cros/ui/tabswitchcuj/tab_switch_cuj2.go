@@ -30,6 +30,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/ui/cujrecorder"
@@ -635,7 +636,6 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		return errors.Wrap(err, "failed to find the Chrome app")
 	}
 
-	ui := uiauto.New(tconn)
 	for idx, window := range windows {
 		testing.ContextLogf(ctx, "Switching to window #%d", idx+1)
 		if err := tsAction.SwitchToAppWindowByIndex(chromeApp.Name, idx)(ctx); err != nil {
@@ -738,14 +738,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
 					return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
 				}
-				notificationsDialog := nodewith.NameContaining("Show notifications").Role(role.AlertDialog).HasClass("RootView")
-				allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
-				if err := uiauto.IfSuccessThen(
-					ui.WithTimeout(shortUITimeout).WaitUntilExists(notificationsDialog),
-					tsAction.ClickUntil(
-						allowButton,
-						ui.WithTimeout(shortUITimeout).WaitUntilGone(notificationsDialog)),
-				)(ctx); err != nil {
+				if err := prompts.ClearPotentialPrompts(tconn, 3*time.Second, prompts.ShowNotificationsPrompt)(ctx); err != nil {
 					return errors.Wrap(err, "failed to close alert dialog")
 				}
 			}

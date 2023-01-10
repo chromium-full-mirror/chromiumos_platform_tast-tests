@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
@@ -250,15 +251,7 @@ func (app *GoogleDocs) VoiceToTextTesting(ctx context.Context, expectedText stri
 	testing.ContextLog(ctx, "Using voice to text (VTT) to enter text directly to document")
 
 	// allowPermission allows microphone if browser asks for the permission.
-	allowPermission := func(ctx context.Context) error {
-		alertDialog := nodewith.NameContaining("Use your microphone").ClassName("RootView").Role(role.AlertDialog).First()
-		allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(alertDialog)
-		if err := app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(allowButton)(ctx); err != nil {
-			testing.ContextLog(ctx, "No action to grant microphone permission")
-			return nil
-		}
-		return app.ui.DoDefaultUntil(allowButton, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(alertDialog))(ctx)
-	}
+	allowPermission := prompts.ClearPotentialPrompts(app.tconn, defaultUIWaitTime, prompts.AllowAVPermissionPrompt)
 
 	checkDictationResult := func(ctx context.Context) error {
 		testing.ContextLog(ctx, "Check if the result is as expected")
