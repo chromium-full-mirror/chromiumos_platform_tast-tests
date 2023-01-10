@@ -10,7 +10,13 @@ import (
 	"github.com/abema/go-mp4"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/testing/hwdep"
 )
+
+// DeviceWithLayoutMonitored lists the devices we want to monitor the layout correctness.
+var DeviceWithLayoutMonitored = hwdep.D(hwdep.Model(
+	"eve",
+))
 
 // CheckVideoProfile checks profile of video file recorded by CCA.
 func CheckVideoProfile(path string, profile Profile) error {
