@@ -94,7 +94,7 @@ func verifyVPNWithTestCase(ctx context.Context, a *arc.ARC, tc arcVPNConfigsTest
 		return errors.Wrap(err, "failed to setup host VPN")
 	}
 	defer conn.Cleanup(cleanupCtx)
-	if _, err := conn.Connect(ctx); err != nil {
+	if err := conn.Connect(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to VPN server")
 	}
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, true); err != nil {

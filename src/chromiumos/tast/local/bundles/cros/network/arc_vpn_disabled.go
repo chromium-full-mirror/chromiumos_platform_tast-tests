@@ -43,7 +43,7 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Cleanup(cleanupCtx)
 
-	if _, err := conn.Connect(ctx); err != nil {
+	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {

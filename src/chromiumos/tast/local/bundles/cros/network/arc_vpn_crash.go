@@ -62,7 +62,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disable ARC VPN: ", err)
 		}
 	}()
-	if _, err := conn.Connect(ctx); err != nil {
+	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, true); err != nil {

@@ -87,7 +87,7 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// Connect to host VPN.
-	if _, err := conn.Connect(ctx); err != nil {
+	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/arcvpn"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
@@ -58,7 +57,7 @@ func ARCVPNConnect(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disable ARC VPN: ", err)
 		}
 	}()
-	if _, err := conn.Connect(ctx); err != nil {
+	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, true); err != nil {
@@ -100,16 +99,7 @@ func ARCVPNConnect(ctx context.Context, s *testing.State) {
 func waitForConnect(ctx context.Context, conn *vpn.Connection) error {
 	// Reconnecting right after a disconnect takes some time for the reconnection to succeed.
 	// Poll for a bit since it should be a transient issue.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		connected, err := conn.Connect(ctx)
-		if err != nil {
-			return err
-		}
-		if !connected {
-			return errors.New("unable to connect to VPN")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	if err := testing.Poll(ctx, conn.Connect, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		return err
 	}
 	return nil

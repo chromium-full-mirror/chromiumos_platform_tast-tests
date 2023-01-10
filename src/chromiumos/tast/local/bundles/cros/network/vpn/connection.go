@@ -355,7 +355,7 @@ func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opt
 	conn.service = svc
 
 	if config.autoConnect {
-		if result, err := conn.Connect(ctx); result == false || err != nil {
+		if err := conn.Connect(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to connect the VPN service")
 		}
 	}
@@ -364,15 +364,18 @@ func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opt
 	return conn, nil
 }
 
-// Connect lets shill connect to the VPN server. Returns whether the connection is
-// established successfully.
-func (c *Connection) Connect(ctx context.Context) (bool, error) {
+// Connect lets shill connect to the VPN service, waits for it connected, and
+// then verifies the routing layer setup before return.
+func (c *Connection) Connect(ctx context.Context) error {
 	testing.ContextLog(ctx, "Waiting for VPN service connected")
-	if connected, err := c.connectService(ctx); err != nil || !connected {
-		return false, err
+	if err := c.service.Connect(ctx); err != nil {
+		return errors.Wrap(err, "failed to call Connect on service")
+	}
+	if err := c.service.WaitForConnectedOrError(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for service connected")
 	}
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, c.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
-		return false, errors.Wrap(err, "failed to verify VPN routing")
+		return errors.Wrap(err, "failed to verify VPN routing")
 	}
 
 	var overlayIPArray []string
@@ -384,7 +387,7 @@ func (c *Connection) Connect(ctx context.Context) (bool, error) {
 	}
 	testing.ContextLogf(ctx, "VPN connected, underlay_ip is %s, overlay_ip list is %s", c.Server.UnderlayIP, strings.Join(overlayIPArray, ","))
 
-	return true, nil
+	return nil
 }
 
 // Disconnect will disconnect the shill service. This does not clean up the VPN server
@@ -742,37 +745,6 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) map
 		properties["WireGuard.IPAddress"] = wgClientOverlayIPv4AndIPv6List
 	}
 	return properties
-}
-
-func (c *Connection) connectService(ctx context.Context) (bool, error) {
-	// Waits for service to be connected.
-	testing.ContextLog(ctx, "Connecting to service: ", c.service)
-
-	// Spawns watcher before connect.
-	pw, err := c.service.CreateWatcher(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to create watcher")
-	}
-	defer pw.Close(ctx)
-
-	if err = c.service.Connect(ctx); err != nil {
-		return false, errors.Wrapf(err, "failed to connect the service %v", c.service)
-	}
-
-	// Waits until connection established or failed. Unfortunately, some of the
-	// failures for L2TP/IPsec VPN are detected based on timeout, which is 30
-	// seconds at maximum for all the current test cases (that value is used in
-	// vpn_manager::IpsecManager).
-	// TODO(b/188489413): Use different timeout values for success and failure
-	// cases.
-	timeoutCtx, cancel := context.WithTimeout(ctx, 35*time.Second)
-	defer cancel()
-	state, err := pw.ExpectIn(timeoutCtx, shillconst.ServicePropertyState, append(shillconst.ServiceConnectedStates, shillconst.ServiceStateFailure))
-	if err != nil {
-		return false, err
-	}
-
-	return state != shillconst.ServiceStateFailure, nil
 }
 
 // Service gets service of this connection.
