@@ -331,34 +331,6 @@ func (c *cryptohomeBinary) authenticateSmartCardAuthFactor(ctx context.Context, 
 	return c.call(ctx, args...)
 }
 
-// addCredentialsWithAuthSession calls "cryptohome --action=add_credentials".
-// password is ignored if publicMount is set to true.
-func (c *cryptohomeBinary) addCredentialsWithAuthSession(ctx context.Context, user, password, keyLabel, authSessionID string, publicMount bool) ([]byte, error) {
-	args := []string{"--action=add_credentials", "--auth_session_id=" + authSessionID}
-	if publicMount {
-		args = append(args, "--public_mount", "--key_label=public_mount")
-	} else {
-		args = append(args, "--password="+password, "--key_label="+keyLabel)
-	}
-	return c.call(ctx, args...)
-}
-
-// addPinCredentialsWithAuthSession calls "cryptohome --action=add_credentials".
-// password is ignored if publicMount is set to true.
-func (c *cryptohomeBinary) addPinCredentialsWithAuthSession(ctx context.Context, label, pin, authSessionID string) ([]byte, error) {
-	args := []string{"--action=add_credentials", "--auth_session_id=" + authSessionID}
-	args = append(args, "--key_label="+label, "--key_policy=le", "--password="+pin)
-	return c.call(ctx, args...)
-}
-
-// addChallengeCredentialsWithAuthSession calls "cryptohome --action=add_credentials".
-// with additional flags for challenge credentials.
-func (c *cryptohomeBinary) addChallengeCredentialsWithAuthSession(ctx context.Context, user, authSessionID, label string, extraFlags []string) ([]byte, error) {
-	args := []string{"--action=add_credentials", "--auth_session_id=" + authSessionID, "--key_label=" + label}
-	args = append(args, extraFlags...)
-	return c.call(ctx, args...)
-}
-
 // addAuthFactor calls "cryptohome --action=add_auth_factor".
 func (c *cryptohomeBinary) addAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--password=" + password}

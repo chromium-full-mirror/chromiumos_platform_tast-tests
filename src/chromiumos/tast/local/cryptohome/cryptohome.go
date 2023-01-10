@@ -389,50 +389,6 @@ func VerifyFileUnreadability(ctx context.Context, username string) error {
 	return nil
 }
 
-// CreateUserAuthSessionWithChallengeCredential creates a persistent user via auth session API.
-func CreateUserAuthSessionWithChallengeCredential(ctx context.Context, username, keyLabel string, isEphemeral bool, authConfig *hwsec.AuthConfig) (func(ctx context.Context) error, error) {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-
-	// Start an Auth session and get an authSessionID.
-	_, authSessionID, err := cryptohome.StartAuthSession(ctx, username /*ephemeral=*/, isEphemeral, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Auth session")
-	}
-	defer cryptohome.InvalidateAuthSession(ctx, authSessionID)
-	testing.ContextLog(ctx, "Auth session ID: ", authSessionID)
-
-	cleanup := func(ctx context.Context) error {
-		if err := cryptohome.UnmountAndRemoveVault(ctx, username); err != nil {
-			return errors.Wrap(err, "failed to remove and unmount vault")
-		}
-		return nil
-	}
-
-	if isEphemeral { // Ephemeral AuthSession
-		if err := cryptohome.PrepareEphemeralVault(ctx, authSessionID); err != nil {
-			return nil, errors.Wrap(err, "failed to prepare ephemeral vault")
-		}
-	} else { // Persistent AuthSession
-		if err := cryptohome.CreatePersistentUser(ctx, authSessionID); err != nil {
-			return nil, errors.Wrap(err, "failed to create persistent user")
-		}
-
-		if _, err := cryptohome.PreparePersistentVault(ctx, authSessionID, false); err != nil {
-			cleanup(ctx)
-			return nil, errors.Wrap(err, "failed to prepare persistent vault")
-		}
-	}
-
-	if err := cryptohome.AddChallengeCredentialsWithAuthSession(ctx, username, authSessionID, keyLabel, authConfig); err != nil {
-		cleanup(ctx)
-		return nil, errors.Wrap(err, "failed to add credentials with AuthSession")
-	}
-	testing.ContextLog(ctx, "Added credentials successfully")
-
-	return cleanup, nil
-}
-
 // TestLockScreen does lock screen password checks.
 func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, keyLabel string, client *hwsec.CryptohomeClient) error {
 	cmdRunner := hwseclocal.NewCmdRunner()

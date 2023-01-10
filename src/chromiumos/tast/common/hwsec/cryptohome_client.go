@@ -64,9 +64,6 @@ const (
 const (
 	// OldCryptohomeMountAPI makes the client use old api.
 	OldCryptohomeMountAPI = iota
-	// AuthSessionMountAPI makes the client use the
-	// {AddCredentials,Authenticate} credentials based api.
-	AuthSessionMountAPI
 	// AuthFactorMountAPI makes the client use the
 	// {AddAuthFactor/AuthenticateAuthFactor} AuthFactor based api.
 	AuthFactorMountAPI
@@ -392,78 +389,6 @@ func authConfigToExtraFlags(config *AuthConfig) []string {
 	return extraFlags
 }
 
-func (u *CryptohomeClient) createUserWithAuthSession(ctx context.Context, username, password, keyLabel string, isKioskUser bool) (string, error) {
-	// Start an Auth session and get an authSessionID.
-	_, authSessionID, err := u.StartAuthSession(ctx, username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to start Auth session")
-	}
-	testing.ContextLog(ctx, "Auth session ID: ", authSessionID)
-
-	if err := u.AddCredentialsWithAuthSession(ctx, username, password, keyLabel, authSessionID, isKioskUser); err != nil {
-		return "", errors.Wrap(err, "failed to add credentials with AuthSession")
-	}
-	testing.ContextLog(ctx, "Added credentials successfully")
-	if _, err := u.AuthenticateAuthSession(ctx, password, keyLabel, authSessionID, isKioskUser); err != nil {
-		return "", errors.Wrap(err, "failed to authenticate with AuthSession")
-	}
-	testing.ContextLog(ctx, "User authenticated successfully")
-
-	// This is a no-op for now since AddCredentials.. above will already create
-	// the user.
-	if err := u.CreatePersistentUser(ctx, authSessionID); err != nil {
-		return "", errors.Wrap(err, "failed to create persistent user")
-	}
-	return authSessionID, nil
-}
-
-func (u *CryptohomeClient) authenticateWithAuthSession(ctx context.Context, username, password, keyLabel string, isEphemeral, isKioskUser bool) (string, error) {
-	// Start an Auth session and get an authSessionID.
-	_, authSessionID, err := u.StartAuthSession(ctx, username, isEphemeral, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to start Auth session")
-	}
-	testing.ContextLog(ctx, "Auth session ID: ", authSessionID)
-
-	// Authenticate the same AuthSession using authSessionID.
-	// If we cannot authenticate, do not proceed with mount and unmount.
-	if _, err := u.AuthenticateAuthSession(ctx, password, keyLabel, authSessionID, isKioskUser); err != nil {
-		return "", errors.Wrap(err, "failed to authenticate with AuthSession")
-	}
-	testing.ContextLog(ctx, "User authenticated successfully")
-
-	return authSessionID, nil
-}
-
-func (u *CryptohomeClient) mountVaultWithAuthSession(ctx context.Context, label string, authConfig *AuthConfig, create bool, vaultConfig *VaultConfig) error {
-	var authSessionID string
-	var err error
-
-	if create {
-		authSessionID, err = u.createUserWithAuthSession(ctx, authConfig.Username, authConfig.Password, label, vaultConfig.KioskUser)
-		if err != nil {
-			return errors.Wrap(err, "failed to create user")
-		}
-	} else {
-		authSessionID, err = u.authenticateWithAuthSession(ctx, authConfig.Username, authConfig.Password, label, vaultConfig.Ephemeral, vaultConfig.KioskUser)
-		if err != nil {
-			return errors.Wrap(err, "failed to authenticate user")
-		}
-	}
-
-	if !vaultConfig.Ephemeral {
-		if _, err := u.PreparePersistentVault(ctx, authSessionID, vaultConfig.Ecryptfs); err != nil {
-			return errors.Wrap(err, "failed to prepare persistent vault")
-		}
-	} else {
-		if err := u.PrepareEphemeralVault(ctx, authSessionID); err != nil {
-			return errors.Wrap(err, "failed to prepare ephemeral vault")
-		}
-	}
-
-	return nil
-}
-
 func (u *CryptohomeClient) mountVaultWithAuthFactor(ctx context.Context, label string, authConfig *AuthConfig, create bool, vaultConfig *VaultConfig) error {
 	// Start an Auth session and get an authSessionID.
 	_, authSessionID, err := u.StartAuthSession(ctx, authConfig.Username, vaultConfig.Ephemeral, uda.AuthIntent_AUTH_INTENT_DECRYPT)
@@ -508,8 +433,6 @@ func (u *CryptohomeClient) MountVault(ctx context.Context, label string, authCon
 			return errors.Wrap(err, "failed to mount")
 		}
 		return nil
-	case AuthSessionMountAPI:
-		return u.mountVaultWithAuthSession(ctx, label, authConfig, create, vaultConfig)
 	case AuthFactorMountAPI:
 		return u.mountVaultWithAuthFactor(ctx, label, authConfig, create, vaultConfig)
 	default:
@@ -1028,39 +951,6 @@ func (u *CryptohomeClient) StartAuthSession(ctx context.Context, user string, is
 	return reply, hex.EncodeToString(authSessionID), nil
 }
 
-// AuthenticateAuthSession authenticates an AuthSession with a given authSessionID.
-// password is ignored if publicMount is set to true.
-func (u *CryptohomeClient) AuthenticateAuthSession(ctx context.Context, password, keyLabel, authSessionID string, publicMount bool) (*uda.AuthenticateAuthSessionReply, error) {
-	binaryMsg, err := u.binary.authenticateAuthSession(ctx, password, keyLabel, authSessionID, publicMount)
-
-	reply := &uda.AuthenticateAuthSessionReply{}
-	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
-		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthSessionReply in AuthenticateAuthSession")
-	}
-	if err != nil {
-		return reply, errors.Wrap(err, "AuthenticateAuthSession failed")
-	}
-
-	return reply, nil
-}
-
-// AuthenticatePinWithAuthSession authenticates an AuthSession with a given authSessionID using a pin.
-// password is ignored if publicMount is set to true.
-func (u *CryptohomeClient) AuthenticatePinWithAuthSession(ctx context.Context, pin, label, authSessionID string) (*uda.AuthenticateAuthSessionReply, error) {
-	binaryMsg, err := u.binary.authenticatePinWithAuthSession(ctx, pin, label, authSessionID)
-
-	// Unmarshal proto first, even if there was an error.
-	reply := &uda.AuthenticateAuthSessionReply{}
-	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
-		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthSessionReply in AuthenticatePinWithAuthSession")
-	}
-	if err != nil {
-		return reply, errors.Wrap(err, "AuthenticatePinWithAuthSession failed")
-	}
-
-	return reply, nil
-}
-
 // AuthenticateChallengeCredentialWithAuthSession authenticates an AuthSession with a given authSessionID,
 // using a Challenge-Credential based backend dependent on flags provided through extraFlags.
 func (u *CryptohomeClient) AuthenticateChallengeCredentialWithAuthSession(ctx context.Context, authSessionID, label string, authConfig *AuthConfig) error {
@@ -1134,27 +1024,6 @@ func (u *CryptohomeClient) AuthenticateSmartCardAuthFactor(ctx context.Context, 
 	}
 
 	return reply, nil
-}
-
-// AddCredentialsWithAuthSession creates the credentials for the user with given password.
-// password is ignored if publicMount is set to true.
-func (u *CryptohomeClient) AddCredentialsWithAuthSession(ctx context.Context, user, password, keyLabel, authSessionID string, publicMount bool) error {
-	_, err := u.binary.addCredentialsWithAuthSession(ctx, user, password, keyLabel, authSessionID, publicMount)
-	return err
-}
-
-// AddPinCredentialsWithAuthSession creates a pin credentials for the user with given pin.
-func (u *CryptohomeClient) AddPinCredentialsWithAuthSession(ctx context.Context, label, pin, authSessionID string) error {
-	_, err := u.binary.addPinCredentialsWithAuthSession(ctx, label, pin, authSessionID)
-	return err
-}
-
-// AddChallengeCredentialsWithAuthSession creates the credentials for the user,
-// using a Challenge-Credential based backend dependent on flags provided through extraFlags.
-func (u *CryptohomeClient) AddChallengeCredentialsWithAuthSession(ctx context.Context, user, authSessionID, label string, authConfig *AuthConfig) error {
-	extraFlags := authConfigToExtraFlags(authConfig)
-	_, err := u.binary.addChallengeCredentialsWithAuthSession(ctx, user, authSessionID, label, extraFlags)
-	return err
 }
 
 // AddAuthFactor creates an auth factor for the user with given password.

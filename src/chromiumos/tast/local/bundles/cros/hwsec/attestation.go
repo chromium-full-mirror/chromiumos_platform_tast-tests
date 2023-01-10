@@ -19,16 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Attestation,
-		Desc: "Verifies attestation-related functionality",
-		Attr: []string{"group:mainline", "informational"},
-		Params: []testing.Param{{
-			Name: "auth_session_api",
-			Val:  &hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthSessionMountAPI},
-		}, {
-			Name: "auth_factor_api",
-			Val:  &hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI},
-		}},
+		Func:         Attestation,
+		Desc:         "Verifies attestation-related functionality",
+		Attr:         []string{"group:mainline", "informational"},
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement"},
@@ -46,7 +39,7 @@ func Attestation(ctx context.Context, s *testing.State) {
 	}
 	attestation := helper.AttestationClient()
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(s.Param().(*hwsec.CryptohomeMountAPIParam))
+	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	mountInfo := hwsec.NewCryptohomeMountInfo(r, cryptohome)
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
 		s.Fatal("Failed to ensure tpm readiness: ", err)
