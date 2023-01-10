@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/dumputil"
@@ -15,8 +16,9 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type vpnTestParams struct {
-	config     vpn.Config
+type vpnConnectTestParams struct {
+	vpnType    vpn.Type
+	opts       []vpn.Option
 	shouldFail bool
 }
 
@@ -38,193 +40,180 @@ func init() {
 		// b/192425378#comment5.
 		Params: []testing.Param{{
 			Name: "ikev2_psk",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:          vpn.TypeIKEv2,
-					IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeIKEv2,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
 				},
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_cert",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:          vpn.TypeIKEv2,
-					IPType:        vpn.IPTypeIPv4,
-					IPsecAuthType: vpn.AuthTypeCert,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeIKEv2,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
 				},
 			},
 			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_eap_mschapv2",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:          vpn.TypeIKEv2,
-					IPType:        vpn.IPTypeIPv4,
-					IPsecAuthType: vpn.AuthTypeEAP,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeIKEv2,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeEAP),
 				},
 			},
 			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec_psk",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:          vpn.TypeL2TPIPsec,
-					IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeL2TPIPsec,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
 				},
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:          vpn.TypeL2TPIPsec,
-					IPsecAuthType: vpn.AuthTypePSK,
-					IPsecUseXauth: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeL2TPIPsec,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
+					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthCorrect),
 				},
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_missing_user",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                  vpn.TypeL2TPIPsec,
-					IPsecAuthType:         vpn.AuthTypePSK,
-					IPsecUseXauth:         true,
-					IPsecXauthMissingUser: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeL2TPIPsec,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
+					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthMissingUser),
 				},
 				shouldFail: true,
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_wrong_user",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                vpn.TypeL2TPIPsec,
-					IPsecAuthType:       vpn.AuthTypePSK,
-					IPsecUseXauth:       true,
-					IPsecXauthWrongUser: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeL2TPIPsec,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
+					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthWrongUser),
 				},
 				shouldFail: true,
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_cert",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:          vpn.TypeL2TPIPsec,
-					IPsecAuthType: vpn.AuthTypeCert,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeL2TPIPsec,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
 				},
 			},
 			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 		}, {
 			Name: "openvpn",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:           vpn.TypeOpenVPN,
-					IPsecAuthType:  vpn.AuthTypeCert,
-					OpenVPNTLSAuth: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNTLSAuth(),
 				},
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_user_pass",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                   vpn.TypeOpenVPN,
-					IPsecAuthType:          vpn.AuthTypeCert,
-					OpenVPNUseUserPassword: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNUseUserPassword(),
 				},
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:              vpn.TypeOpenVPN,
-					IPsecAuthType:     vpn.AuthTypeCert,
-					OpenVPNCertVerify: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyCorrect),
 				},
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_wrong_hash",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                       vpn.TypeOpenVPN,
-					IPsecAuthType:              vpn.AuthTypeCert,
-					OpenVPNCertVerify:          true,
-					OpenVPNCertVerifyWrongHash: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyWrongHash),
 				},
 				shouldFail: true,
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_wrong_subject",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                          vpn.TypeOpenVPN,
-					IPsecAuthType:                 vpn.AuthTypeCert,
-					OpenVPNCertVerify:             true,
-					OpenVPNCertVeirfyWrongSubject: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyWrongSubject),
 				},
 				shouldFail: true,
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_wrong_cn",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                     vpn.TypeOpenVPN,
-					IPsecAuthType:            vpn.AuthTypeCert,
-					OpenVPNCertVerify:        true,
-					OpenVPNCertVerifyWrongCN: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyWrongCN),
 				},
 				shouldFail: true,
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn_cert_verify_cn_only",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:                    vpn.TypeOpenVPN,
-					IPsecAuthType:           vpn.AuthTypeCert,
-					OpenVPNCertVerify:       true,
-					OpenVPNCertVerifyCNOnly: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeOpenVPN,
+				opts: []vpn.Option{
+					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyCNOnly),
 				},
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "wireguard",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:   vpn.TypeWireGuard,
-					IPType: vpn.IPTypeIPv4,
-				},
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeWireGuard,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_psk",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:     vpn.TypeWireGuard,
-					IPType:   vpn.IPTypeIPv4,
-					WGUsePSK: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeWireGuard,
+				opts: []vpn.Option{
+					vpn.WithWGUsePSK(),
 				},
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_generate_key",
-			Val: vpnTestParams{
-				config: vpn.Config{
-					Type:         vpn.TypeWireGuard,
-					IPType:       vpn.IPTypeIPv4,
-					WGAutoGenKey: true,
+			Val: vpnConnectTestParams{
+				vpnType: vpn.TypeWireGuard,
+				opts: []vpn.Option{
+					vpn.WithWGAutoGenKey(),
 				},
 			},
 			Fixture:           "vpnEnv",
@@ -251,37 +240,61 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	config := s.Param().(vpnTestParams).config
-	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
-	conn, err := vpn.NewConnectionWithEnvs(ctx, config, routingEnv.BaseServer, routingEnv.BaseRouter)
+	tc := s.Param().(vpnConnectTestParams)
+	opts := append([]vpn.Option{
+		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
+		vpn.WithoutAutoConnect(),
+	}, tc.opts...)
+	conn, err := vpn.StartConnection(ctx, routingEnv.BaseServer, tc.vpnType, opts...)
 	if err != nil {
-		s.Fatal("Failed to create connection object: ", err)
+		s.Fatal("Failed to create VPN connection: ", err)
 	}
-
 	defer func() {
 		if err := conn.Cleanup(cleanupCtx); err != nil {
-			s.Error("Failed to clean up connection: ", err)
+			s.Error("Failed to clean up VPN connection: ", err)
 		}
 	}()
 
-	if err := conn.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup VPN server: ", err)
+	testing.ContextLog(ctx, "Connecting to the service: ", conn.Service())
+	if err := conn.Service().Connect(ctx); err != nil {
+		s.Fatal("Failed to call Connect on the service: ", err)
 	}
-	connected, err := conn.Connect(ctx)
-	shouldFail := s.Param().(vpnTestParams).shouldFail
+
+	// Waits until connection established or failed. Some failures can only be
+	// detected on a timeout so use a large timeout value for failure cases, e.g.,
+	// some failures for IPsec-based VPN are detected based on timeout, which is
+	// 30 seconds at maximum for all the current test cases.
+	connectTimeout := 10 * time.Second
+	if tc.shouldFail {
+		connectTimeout = 35 * time.Second
+	}
+	if err := conn.Service().WaitForPropertyInSetWithOptions(ctx,
+		shillconst.ServicePropertyState,
+		append(shillconst.ServiceConnectedStates, shillconst.ServiceStateFailure),
+		&testing.PollOptions{Timeout: connectTimeout},
+	); err != nil {
+		s.Fatal("Failed to wait for VPN service state changed: ", err)
+	}
+
 	if err := dumputil.DumpNetworkInfo(ctx, "network_dump_after_vpn_connect.txt"); err != nil {
 		testing.ContextLog(ctx, "Failed to dump network info after VPN connect")
 	}
+
+	connected, err := conn.Service().IsConnected(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to VPN server: ", err)
-	} else if !connected && !shouldFail {
-		s.Fatal("Failed to connect to VPN server: the service state changed to failure")
-	} else if connected && shouldFail {
-		s.Fatal("Connect to VPN server should fail")
-	} else if !connected && shouldFail {
+		s.Fatal("Failed to get connected state of the service")
+	}
+
+	if tc.shouldFail {
+		if connected {
+			s.Fatal("VPN service is connected unexpectedly")
+		}
 		return
 	}
 
+	if !connected {
+		s.Fatal("VPN service state changed to failure")
+	}
 	// Do a simple ping check to make sure we are really connected.
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
