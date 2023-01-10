@@ -232,25 +232,10 @@ func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, https
 	}()
 
 	// Connect to VPN.
-	config := vpn.NewConfig(vpn.TypeL2TPIPsec)
-	conn, err = vpn.NewConnectionWithEnvs(ctx, *config, server, nil)
+	conn, err = vpn.StartConnection(ctx, server, vpn.TypeL2TPIPsec)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create connection object")
+		return nil, nil, errors.Wrap(err, "failed to start VPN connection")
 	}
-	defer func() {
-		if err == nil {
-			return
-		}
-		if err := conn.Cleanup(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to clean up connection: ", err)
-		}
-	}()
 
-	if err = conn.SetUp(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to setup VPN server")
-	}
-	if _, err = conn.Connect(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to VPN server")
-	}
 	return server, conn, nil
 }
