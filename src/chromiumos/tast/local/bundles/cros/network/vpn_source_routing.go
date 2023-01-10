@@ -87,17 +87,11 @@ func VPNSourceRouting(ctx context.Context, s *testing.State) {
 	saddr := addrs.IPv4Addr.String()
 
 	// Establish a VPN on one of the servers.
-	conn, err := vpn.NewConnectionWithEnvs(ctx, *vpn.NewConfig(vpn.TypeIKEv2), vsvr, nil)
+	conn, err := vpn.StartConnection(ctx, vsvr, vpn.TypeIKEv2)
 	if err != nil {
 		s.Fatal("Failed to connect vpn: ", err)
 	}
 	defer conn.Cleanup(cleanupCtx)
-	if err := conn.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup vpn: ", err)
-	}
-	if ok, err := conn.Connect(ctx); !ok || err != nil {
-		s.Fatal("Failed to create vpn connection: ", err)
-	}
 	vaddr := conn.Server.OverlayIPv4
 
 	test := func(user, goodIP, badIP string) {
