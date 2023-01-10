@@ -38,8 +38,10 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
 		SoftwareDeps: []string{"gsc", "reboot"},
-		Timeout:      2 * time.Minute,
-		Vars:         []string{"servo"},
+		// This test can take a while since the DUT can reboot multiple times and
+		// that can be slow for certain devices
+		Timeout: 8 * time.Minute,
+		Vars:    []string{"servo"},
 		Params: []testing.Param{{
 			Name: "cap_default",
 			Val: cCDCapabilitiesRebootECAP{
