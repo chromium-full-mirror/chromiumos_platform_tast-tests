@@ -73,9 +73,12 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		"--cros-regions-mode=hide",             // Ignore default values in VPD.
 		"--enable-oobe-test-api",               // Enable OOBE helper functions for authentication.
 		"--keep-login-events-for-testing",      // Keep LoginEventRecorder data for later retrieval by tests.
-		"--force-color-profile=srgb",           // Force chrome to treat the display as sRGB. See b/221643955 for details.
 		"--force-raster-color-profile=srgb",    // Force rendering to run in the sRGB color space. See b/221643955 for details.
 	}
+	if !cfg.EnableHDR() {
+		args = append(args, "--force-color-profile=srgb") // Force chrome to treat the display as sRGB. See b/221643955 for details.
+	}
+
 	if !cfg.EnableRestoreTabs() {
 		args = append(args, "--no-startup-window") // Do not start up chrome://newtab by default to avoid unexpected patterns (doodle etc.)
 	}

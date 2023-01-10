@@ -63,6 +63,14 @@ func EnableChromeFRE() Option {
 	}
 }
 
+// EnableHDR adds flags that enable the LacrosColorManagement feature and allow
+// rendering of HDR and non-srgb color spaces.
+func EnableHDR() Option {
+	return func(c *Config) {
+		c.enableHDR = true
+	}
+}
+
 // Config holds runtime vars or other variables needed to set up Lacros.
 type Config struct {
 	selection     lacros.Selection
@@ -73,6 +81,7 @@ type Config struct {
 	deployed      bool
 	deployedPath  string // dirpath to lacros executable file
 	enableFRE     bool
+	enableHDR     bool
 }
 
 // NewConfig creates a new LacrosConfig instance.
@@ -83,6 +92,7 @@ func NewConfig(ops ...Option) *Config {
 		keepAlive:     false,
 		installWebApp: false,
 		enableFRE:     false,
+		enableHDR:     false,
 	}
 
 	for _, op := range ops {
@@ -109,10 +119,21 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 	args := []string{
 		"--remote-debugging-port=0",            // Let Chrome choose its own debugging port.
 		"--enable-experimental-extension-apis", // Allow Chrome to use the Chrome Automation API.
-		"--force-color-profile=srgb",           // Force chrome to treat the display as sRGB. See b/221643955 for details.
-		"--force-raster-color-profile=srgb",    // Force rendering to run in the sRGB color space. See b/221643955 for details.
 	}
 	opts = append(opts, chrome.LacrosExtraArgs(args...))
+
+	if cfg.enableHDR {
+		// Enable the piecewise_HDR transfer function currently used for HDR rendering in chrome.
+		opts = append(opts, chrome.EnableFeatures("UseHDRTransferFunction"))
+		// LacrosColorManagement allows sending color space information between lacros and ash over wayland
+		opts = append(opts, chrome.EnableFeatures("LacrosColorManagement"))
+		opts = append(opts, chrome.LacrosEnableFeatures("LacrosColorManagement"))
+	} else {
+		// Force chrome to treat the display as sRGB. See b/221643955 for details.
+		opts = append(opts, chrome.ExtraArgs("--force-color-profile=srgb"))
+		// Force rendering to run in the sRGB color space. See b/221643955 for details.
+		opts = append(opts, chrome.ExtraArgs("--force-raster-color-profile=srgb"))
+	}
 
 	// Disable launching lacros on login.
 	opts = append(opts, chrome.ExtraArgs("--disable-login-lacros-opening"))

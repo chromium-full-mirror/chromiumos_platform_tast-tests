@@ -303,6 +303,9 @@ func (c *Config) EnableStackSampledMetrics() bool { return c.m.EnableStackSample
 // FieldTrialConfig returns [enable|disable] if finch field trial config should be specified.
 func (c *Config) FieldTrialConfig() string { return c.m.FieldTrialConfig }
 
+// EnableHDR returns true if --force-color-profile should be disabled.
+func (c *Config) EnableHDR() bool { return c.m.EnableHDR }
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -361,6 +364,7 @@ type MutableConfig struct {
 	EnableHIDScreenOnOOBE           bool       `reuse_match:"true"`
 	EnableStackSampledMetrics       bool       `reuse_match:"true"`
 	FieldTrialConfig                string     `reuse_match:"true"`
+	EnableHDR                       bool       `reuse_match:"false"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -403,6 +407,11 @@ func NewConfig(opts []Option) (*Config, error) {
 	for _, opt := range opts {
 		if err := opt(&cfg.m); err != nil {
 			return nil, err
+		}
+	}
+	for _, feature := range cfg.m.EnableFeatures {
+		if "LacrosColorManagement" == feature {
+			cfg.m.EnableHDR = true
 		}
 	}
 

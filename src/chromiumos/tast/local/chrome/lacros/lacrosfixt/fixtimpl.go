@@ -29,6 +29,25 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	// lacrosHDR is needed for playing and testing videos in HDR on lacros if the device supports it.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosHDR",
+		Desc:     "Lacros Chrome from a pre-built image, for HDR tests",
+		Contacts: []string{"mrfemi@google.com", "lacros-team@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return NewConfig(
+				EnableHDR(),
+				ChromeOptions(
+					chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
+					chrome.ExtraArgs("--suppress-message-center-popups"),           // Do not show message center notifications.
+					chrome.ExtraArgs("--arc-availability=none"),                    // Make sure ARC++ is not running.
+					chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"))).Opts()
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	// lacrosPerf is the same as lacros, but has some options specific for perf tests.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosPerf",
