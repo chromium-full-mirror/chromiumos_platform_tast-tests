@@ -66,7 +66,7 @@ func createDockerClient(ctx context.Context, dockerHost string) (*client.Client,
 	testing.ContextLogf(ctx, "Docker client connecting over TCP to %q", dockerHost)
 
 	// b/207133139, default HTTPClient inside the Docker Client object fails to
-	// connects to docker deamon. Create the transport with DialContext and use
+	// connects to docker daemon. Create the transport with DialContext and use
 	// this while initializing new docker client object.
 	timeout := time.Duration(1 * time.Second)
 	transport := &http.Transport{

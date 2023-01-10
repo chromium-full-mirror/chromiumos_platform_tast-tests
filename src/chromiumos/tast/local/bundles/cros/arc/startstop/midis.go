@@ -41,7 +41,7 @@ func (*TestMidis) PostStart(ctx context.Context, s *testing.State) {
 	}
 }
 
-// PostStop makes sure that midis deamon is stopped.
+// PostStop makes sure that midis daemon is stopped.
 func (*TestMidis) PostStop(ctx context.Context, s *testing.State) {
 	if err := waitForMidis(ctx, midisStopped); err != nil {
 		s.Error("Midis does not stop on Chrome logout: ", err)
