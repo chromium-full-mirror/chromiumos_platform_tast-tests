@@ -77,12 +77,10 @@ func IgtProcessResults(testExe string, file *os.File, isExitErr bool, exitErr *e
 	// In the case of running multiple subtests which all happen to be skipped, igt_exitcode is 0,
 	// but the final exit code will be 77.
 	if results.passed+results.failed == 0 && isExitErr && exitErr.ExitCode() == 77 {
-		outputLog = "____________________________________________________\n"
-		outputLog += fmt.Sprintf("ALL %d subtests were SKIPPED: %s\n", results.skipped, err.Error())
-		outputLog += "----------------------------------------------------"
+		outputLog = fmt.Sprintf("ALL %d subtests were SKIPPED as expected: %s\n", results.skipped, err.Error())
 		// Each test is expected to run and either pass or fail. If nothing happens, then something is off.
 	} else if results.passed+results.failed+results.skipped == 0 {
-		outputLog = "Entire test was skipped - No subtests were run\n"
+		outputLog = "Entire test was skipped and this is not expected - No subtests were run\n"
 	} else if len(failedSubtests) > 0 {
 		outputLog = fmt.Sprintf("FAIL: Test:%s - Pass:%d Fail:%d - FailedSubtests:%s - Summary:%s\n",
 			testExe, results.passed, results.failed, failedSubtests, summary)
