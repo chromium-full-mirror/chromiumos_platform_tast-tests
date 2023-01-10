@@ -237,8 +237,7 @@ func performGAIAEnrollment(ctx context.Context, cfg *config.Config, sess *driver
 	}
 	defer conn.Close()
 
-	creds := cfg.EnrollmentCreds()
-	testing.ContextLogf(ctx, "Performing enrollment with %s", creds.User)
+	testing.ContextLogf(ctx, "Performing enrollment with %s", cfg.EnrollmentCreds().User)
 
 	// Enterprise enrollment requires Internet connectivity.
 	if err := shill.WaitForOnline(ctx); err != nil {
@@ -249,7 +248,7 @@ func performGAIAEnrollment(ctx context.Context, cfg *config.Config, sess *driver
 		return err
 	}
 
-	if err := performGAIAEnrollmentSignIn(ctx, conn, creds, sess); err != nil {
+	if err := performGAIAEnrollmentSignIn(ctx, conn, cfg, sess); err != nil {
 		return err
 	}
 
@@ -294,10 +293,10 @@ func performGAIAZTEEnrollment(ctx context.Context, cfg *config.Config, sess *dri
 // credentials.
 // Uses maxGAIAEnterpriseEnrollmentRetries as the retry count.
 // Uses gaiaEnterpriseEnrollmentTimeout as the timeout limit.
-func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, creds config.Creds, sess *driver.Session) error {
+func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg *config.Config, sess *driver.Session) error {
 	retries := maxGAIAEnterpriseEnrollmentRetries
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := submitGAIAEnrollmentSignIn(ctx, oobeConn, creds, sess); err != nil {
+		if err := submitGAIAEnrollmentSignIn(ctx, oobeConn, cfg, sess); err != nil {
 			return testing.PollBreak(err)
 		}
 
@@ -378,9 +377,10 @@ func isEnrollmentWebView(t *driver.Target) bool {
 	return false
 }
 
-// submitGAIAEnrollmentSignIn submits the enrollment GAIA credentials
-// (user email + password) through the GAIA webview on the OOBE enrollment page.
-func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, creds config.Creds, sess *driver.Session) error {
+// submitGAIAEnrollmentSignIn submits the enrollment GAIA credentials (user
+// email + password or SAML authentication) through the GAIA webview on the OOBE
+// enrollment page.
+func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg *config.Config, sess *driver.Session) error {
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.signInStep.isReadyForTesting()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the OOBE enterprise enrollment signin screen to be ready")
 	}
@@ -396,6 +396,8 @@ func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cred
 	}
 	defer gaiaConn.Close()
 
+	creds := cfg.EnrollmentCreds()
+
 	if err := insertGAIAField(ctx, gaiaConn, "#identifierId", creds.User); err != nil {
 		return errors.Wrap(err, "failed to fill username field")
 	}
@@ -408,6 +410,29 @@ func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cred
 		return errors.Wrap(err, "failed to wait for the OOBE enterprise enrollment signin screen to be ready")
 	}
 
+	if cfg.EnrollMode() == config.GAIAEnroll {
+		if err := authenticateWithGAIA(ctx, oobeConn, gaiaConn, creds); err != nil {
+			return errors.Wrap(err, "failed to authenticate with GAIA")
+		}
+	} else if cfg.EnrollMode() == config.SAMLTestIdPEnroll {
+		if err := authenticateWithSAML(ctx, gaiaConn, creds); err != nil {
+			return errors.Wrap(err, "failed to authenticate with SAML")
+		}
+	} else {
+		return errors.New("unsupported enroll mode")
+	}
+
+	testing.ContextLog(ctx, "Wait for enrollment to complete")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.EnterpriseEnrollmentScreen.isEnrollmentInProgress()"); err != nil {
+		return errors.Wrap(err, "failed to wait for enrollment to complete")
+	}
+
+	return nil
+}
+
+// authenticateWithGAIA authenticates by entering the password into the
+// corresponding GAIA field.
+func authenticateWithGAIA(ctx context.Context, oobeConn, gaiaConn *driver.Conn, creds config.Creds) error {
 	if err := insertGAIAField(ctx, gaiaConn, "input[name=password]", creds.Pass); err != nil {
 		return errors.Wrap(err, "failed to fill in password field")
 	}
@@ -416,9 +441,30 @@ func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cred
 		return errors.Wrap(err, "failed to click on the primary action button")
 	}
 
-	testing.ContextLog(ctx, "Wait for enrollment to complete")
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.EnterpriseEnrollmentScreen.isEnrollmentInProgress()"); err != nil {
-		return errors.Wrap(err, "failed to wait for enrollment to complete")
+	return nil
+}
+
+// authenticateWithSAML authenticates by navigating through the test IdP, which
+// generates a SAML assertion using the passed username.
+func authenticateWithSAML(ctx context.Context, gaiaConn *driver.Conn, creds config.Creds) error {
+	if err := gaiaConn.WaitForExpr(ctx, `document.title === 'Test SAML IdP'`); err != nil {
+		return errors.Wrap(err, "failed to wait for test IdP")
+	}
+
+	if err := gaiaConn.Call(ctx, nil, `(value) => { document.querySelector("input[name=nameid]").value = value; }`, creds.User); err != nil {
+		return errors.Wrap(err, "failed to fill username field on test IdP")
+	}
+
+	if err := gaiaConn.Call(ctx, nil, `() => { document.querySelector("input[value=Change]").click(); }`); err != nil {
+		return errors.Wrap(err, "failed to change the SAML assertion")
+	}
+
+	if err := insertGAIAField(ctx, gaiaConn, "input[type=password]", creds.Pass); err != nil {
+		return errors.Wrap(err, "failed to fill in password field")
+	}
+
+	if err := gaiaConn.Call(ctx, nil, `() => { document.querySelector("input[value='=> Go! <=']").click(); }`); err != nil {
+		return errors.Wrap(err, "failed to send the SAML assertion back to GAIA")
 	}
 
 	return nil
