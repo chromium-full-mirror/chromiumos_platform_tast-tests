@@ -380,8 +380,35 @@ type Server struct {
 	logFiles     []string
 }
 
-// StartL2TPIPsecServer starts a L2TP/IPsec server.
-func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthType, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
+// StartServer starts a VPN server of type in the given env.
+// TODO(b/257379393): Create virtualnet Env if env is nil.
+func StartServer(ctx context.Context, env *env.Env, vpnType Type, opts ...Option) (*Server, error) {
+	config := NewConfig(vpnType, opts...)
+	return StartServerWithConfig(ctx, env, config)
+}
+
+// StartServerWithConfig starts a VPN server with config in the given env.
+func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+	if env == nil {
+		return nil, errors.New("env should not be nil")
+	}
+
+	switch config.Type {
+	case TypeIKEv2:
+		return startIKEv2Server(ctx, env, config.IPsecAuthType, config.IPType)
+	case TypeL2TPIPsec:
+		return startL2TPIPsecServer(ctx, env, config.IPsecAuthType, config.IPsecUseXauth, config.UnderlayIPIsOverlayIP)
+	case TypeOpenVPN:
+		return startOpenVPNServer(ctx, env, config)
+	case TypeWireGuard:
+		return startWireGuardServer(ctx, env, wgClientPublicKey, config.WGUsePSK, false /*isSecondServer*/)
+	default:
+		return nil, errors.Errorf("unexpected VPN type %s", config.Type)
+	}
+}
+
+// startL2TPIPsecServer starts a L2TP/IPsec server.
+func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthType, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,
@@ -462,8 +489,8 @@ func StartL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthT
 	return server, nil
 }
 
-// StartIKEv2Server starts an IKEv2 server.
-func StartIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType, ipType IPType) (*Server, error) {
+// startIKEv2Server starts an IKEv2 server.
+func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType, ipType IPType) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,
@@ -551,8 +578,8 @@ func StartIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType,
 	return server, nil
 }
 
-// StartOpenVPNServer starts an OpenVPN server.
-func StartOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+// startOpenVPNServer starts an OpenVPN server.
+func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,
@@ -613,8 +640,8 @@ func StartOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 	return server, nil
 }
 
-// StartWireGuardServer starts a WireGuard server.
-func StartWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
+// startWireGuardServer starts a WireGuard server.
+func startWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,

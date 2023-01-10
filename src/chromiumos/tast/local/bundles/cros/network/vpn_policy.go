@@ -59,7 +59,7 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	}
 	defer routingEnv.TearDown(cleanupCtx)
 
-	server, err := vpn.StartL2TPIPsecServer(ctx, routingEnv.BaseRouter, vpn.AuthTypePSK, false, false)
+	server, err := vpn.StartServer(ctx, routingEnv.BaseRouter, vpn.TypeL2TPIPsec)
 	if err != nil {
 		s.Fatal("Failed to start VPN server: ", err)
 	}

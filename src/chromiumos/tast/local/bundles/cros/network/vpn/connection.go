@@ -458,27 +458,21 @@ func (c *Connection) startServer(ctx context.Context) error {
 	}
 
 	var err error
-	switch c.config.Type {
-	case TypeIKEv2:
-		c.Server, err = StartIKEv2Server(ctx, c.serverEnv, c.config.IPsecAuthType, c.config.IPType)
-	case TypeL2TPIPsec:
-		c.Server, err = StartL2TPIPsecServer(ctx, c.serverEnv, c.config.IPsecAuthType, c.config.IPsecUseXauth, c.config.UnderlayIPIsOverlayIP)
-	case TypeOpenVPN:
-		c.Server, err = StartOpenVPNServer(ctx, c.serverEnv, &c.config)
-	case TypeWireGuard:
-		clientKey := wgClientPublicKey
-		if c.config.WGAutoGenKey {
-			if clientKey, err = c.generateWireGuardKey(ctx); err != nil {
-				return errors.Wrap(err, "failed to get public key")
-			}
+	if c.config.Type != TypeWireGuard {
+		c.Server, err = StartServerWithConfig(ctx, c.serverEnv, &c.config)
+		return err
+	}
+
+	clientKey := wgClientPublicKey
+	if c.config.WGAutoGenKey {
+		if clientKey, err = c.generateWireGuardKey(ctx); err != nil {
+			return errors.Wrap(err, "failed to get public key")
 		}
-		c.Server, err = StartWireGuardServer(ctx, c.serverEnv, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
-		if err == nil && c.config.WGTwoPeers {
-			// Always sets preshared key for the second peer.
-			c.SecondServer, err = StartWireGuardServer(ctx, c.secondServerEnv, clientKey, true /*usePSK*/, true /*isSecondServer*/)
-		}
-	default:
-		return errors.Errorf("unexpected VPN type %s", c.config.Type)
+	}
+	c.Server, err = startWireGuardServer(ctx, c.serverEnv, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
+	if err == nil && c.config.WGTwoPeers {
+		// Always sets preshared key for the second peer.
+		c.SecondServer, err = startWireGuardServer(ctx, c.secondServerEnv, clientKey, true /*usePSK*/, true /*isSecondServer*/)
 	}
 	return err
 }
