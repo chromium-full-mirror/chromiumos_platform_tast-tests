@@ -15,12 +15,12 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/apps/googledocs"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/googleapps"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -127,7 +127,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		if err := maximizeWindowSize(ctx, tabletMode, tconn, bTconn); err != nil {
 			testing.ContextLog(ctx, "Failed to maximize the Google Docs page")
 		}
-		if err := googleapps.DeleteDoc(tconn)(ctx); err != nil {
+		if err := googledocs.DeleteDoc(tconn)(ctx); err != nil {
 			// Only log the error.
 			testing.ContextLog(ctx, "Failed to clean up the document: ", err)
 		}
@@ -138,7 +138,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		return nil
 	}
 
-	if err := googleapps.NewGoogleDocs(ctx, tconn, br, uiHandler, true); err != nil {
+	if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHandler, true); err != nil {
 		return err
 	}
 	defer func(ctx context.Context) {
@@ -254,12 +254,12 @@ func webStreamingScenario(ctx context.Context, tconn *chrome.TestConn, kb *input
 		// Add retry to solve this problem.
 		return uiauto.Retry(retryTimes, uiauto.NamedCombine(fmt.Sprintf("repeat task, number %d", taskNumber),
 			uiauto.IfSuccessThen(ui.Exists(reloadButton), ui.LeftClick(reloadButton)),
-			googleapps.EditDoc(tconn, kb, docParagraph),
+			googledocs.EditDoc(tconn, kb, docParagraph),
 			kb.AccelAction("Ctrl+A"),
-			googleapps.ChangeDocTextColor(tconn, color),
-			googleapps.ChangeDocFontSize(tconn, fontSize),
-			googleapps.UndoDoc(tconn),
-			googleapps.RedoDoc(tconn),
+			googledocs.ChangeDocTextColor(tconn, color),
+			googledocs.ChangeDocFontSize(tconn, fontSize),
+			googledocs.UndoDoc(tconn),
+			googledocs.RedoDoc(tconn),
 			kb.AccelAction("Backspace"),
 			video.VerifyPlaying,
 		))(ctx)

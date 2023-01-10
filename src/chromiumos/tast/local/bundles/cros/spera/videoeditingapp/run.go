@@ -12,11 +12,11 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps/googledocs"
 	"chromiumos/tast/local/bundles/cros/spera/videoeditingapp/wevideo"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
-	"chromiumos/tast/local/chrome/googleapps"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
@@ -155,13 +155,13 @@ func videoEditingScenario(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		return err
 	}
 
-	if err := googleapps.NewGoogleDocs(ctx, tconn, br, uiHdl, true); err != nil {
+	if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHdl, true); err != nil {
 		return err
 	}
 	defer docCleanup(cleanupCtx, tconn, cr, uiHdl, outDir, func() bool { return hasError })
 
 	if err := uiauto.Combine("run the video editing scenario",
-		googleapps.EditDoc(tconn, kb, docParagraph),
+		googledocs.EditDoc(tconn, kb, docParagraph),
 		uiHdl.SwitchToAppWindowByName("Chrome", weVideoTitle),
 		w.AddTransition(clip2),
 		w.PlayVideo(clip1),
@@ -200,7 +200,7 @@ func docCleanup(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 	// docCleanup switches to the document page and deletes it.
 	docCleanup := uiauto.Combine("switch to the document page and delete it",
 		uiHdl.SwitchToAppWindowByName("Chrome", googleDocsTitle),
-		googleapps.DeleteDoc(tconn),
+		googledocs.DeleteDoc(tconn),
 	)
 	// If case fails, dump the last screen before deleting the document.
 	faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, hasError, cr, "ui_dump_last")

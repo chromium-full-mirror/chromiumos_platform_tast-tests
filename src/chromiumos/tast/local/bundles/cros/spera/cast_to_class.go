@@ -16,11 +16,11 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/apps/googledocs"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/googleapps"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
@@ -189,7 +189,7 @@ func CastToClass(ctx context.Context, s *testing.State) {
 
 	defer uiauto.Combine("remove the slide",
 		uiHandler.SwitchToAppWindowByName(browserApp.Name, slideTab),
-		googleapps.DeleteSlide(tconn),
+		googledocs.DeleteSlide(tconn),
 	)(cleanUpResourceCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, s.HasError, cr, "ui_dump")
@@ -220,7 +220,7 @@ func CastToClass(ctx context.Context, s *testing.State) {
 	}
 	pv := perf.NewValues()
 	if err = recorder.Run(ctx, func(ctx context.Context) error {
-		if err := googleapps.NewGoogleSlides(ctx, tconn, br, uiHandler, false); err != nil {
+		if err := googledocs.NewGoogleSlides(ctx, tconn, br, uiHandler, false); err != nil {
 			return err
 		}
 		castYoutubeVideo := uiauto.NamedCombine("cast youtube video",
@@ -230,7 +230,7 @@ func CastToClass(ctx context.Context, s *testing.State) {
 		)
 		editSlide := uiauto.NamedCombine("switch back to slide and edit",
 			uiHandler.SwitchToAppWindowByName(browserApp.Name, slideTab),
-			googleapps.EditSlideTitle(tconn, kb, title, subtitle),
+			googledocs.EditSlideTitle(tconn, kb, title, subtitle),
 		)
 		if err := uiauto.NamedCombine("cast to class",
 			castYoutubeVideo,

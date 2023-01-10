@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"time"
 
+	"chromiumos/tast/local/apps/googledocs"
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/cuj"
-	"chromiumos/tast/local/chrome/googleapps"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/testing"
@@ -139,7 +139,7 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 	// google slide has to make title field or text field editable first
 	// otherwise, user cannot typing anything
 	if f.appName == GoogleSlides {
-		if err := googleapps.ActivateTitleField(f.tconn)(ctx); err != nil {
+		if err := googledocs.ActivateTitleField(f.tconn)(ctx); err != nil {
 			s.Fatal("Failed to activate slides title field")
 		}
 	}
@@ -150,11 +150,11 @@ func (f *workSpaceFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTest
 
 	switch f.appName {
 	case GoogleDocs:
-		err = googleapps.DeleteDoc(f.tconn)(ctx)
+		err = googledocs.DeleteDoc(f.tconn)(ctx)
 	case GoogleSheets:
-		err = googleapps.DeleteSheets(f.tconn)(ctx)
+		err = googledocs.DeleteSheets(f.tconn)(ctx)
 	case GoogleSlides:
-		err = googleapps.DeleteSlide(f.tconn)(ctx)
+		err = googledocs.DeleteSlide(f.tconn)(ctx)
 	}
 
 	if err != nil {

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/apps/googledocs"
 	fixture "chromiumos/tast/local/bundles/cros/inputs/fixture/appcompat"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
-	"chromiumos/tast/local/chrome/googleapps"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -158,9 +158,9 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 			var err error
 			switch appRootWebAreaName {
 			case "Google Docs", "Google Slides":
-				err = googleapps.DeleteDocsOrSlidesContent(ctx, tconn, appRootWebAreaName)
+				err = googledocs.DeleteDocsOrSlidesContent(ctx, tconn, appRootWebAreaName)
 			case "Google Sheets":
-				err = googleapps.DeleteCellValue(ctx, tconn)
+				err = googledocs.DeleteCellValue(ctx, tconn)
 			}
 			if err != nil {
 				s.Logf("Failed to clean up for %s", appRootWebAreaName) // it won't affect test itself.

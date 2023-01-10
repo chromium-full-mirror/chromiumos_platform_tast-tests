@@ -16,11 +16,11 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/apps/googledocs"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
-	"chromiumos/tast/local/chrome/googleapps"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -99,11 +99,11 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	switch application {
 	case googleSlides:
 		presentApplication = uiauto.Combine("present slide",
-			googleapps.PresentSlide(tconn, kb, slideCount+1),
-			googleapps.EditSlide(tconn, kb, subSlideContent, slideEditContent),
+			googledocs.PresentSlide(tconn, kb, slideCount+1),
+			googledocs.EditSlide(tconn, kb, subSlideContent, slideEditContent),
 		)
 	case googleDocs:
-		presentApplication = googleapps.EditDoc(tconn, kb, docParagraph)
+		presentApplication = googledocs.EditDoc(tconn, kb, docParagraph)
 	}
 
 	var renameSlideErr error
@@ -112,7 +112,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	slideCleanup := func(ctx context.Context) error {
 		return uiauto.Combine("switch to the slide page and delete it",
 			uiauto.IfSuccessThen(func(ctx context.Context) error { return renameSlideErr }, switchToTab(string(googleSlides))),
-			googleapps.DeleteSlide(tconn),
+			googledocs.DeleteSlide(tconn),
 		)(ctx)
 	}
 
@@ -121,7 +121,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	docCleanup := func(ctx context.Context) error {
 		return uiauto.Combine("switch to the document page and delete it",
 			uiauto.IfSuccessThen(func(ctx context.Context) error { return renameDocErr }, switchToTab(string(googleDocs))),
-			googleapps.DeleteDoc(tconn),
+			googledocs.DeleteDoc(tconn),
 		)(ctx)
 	}
 	// Shorten the context to cleanup document.
@@ -129,7 +129,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := googleapps.NewGoogleSlides(ctx, tconn, br, uiHandler, extendedDisplay); err != nil {
+	if err := googledocs.NewGoogleSlides(ctx, tconn, br, uiHandler, extendedDisplay); err != nil {
 		return CheckSignedOutError(ctx, tconn, err)
 	}
 	// Delete slide after presenting.
@@ -150,11 +150,11 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 			return errors.Wrap(err, "failed to switch Google Slides to the internal display")
 		}
 	}
-	renameSlideErr = googleapps.RenameSlide(tconn, kb, testTitle)(ctx)
+	renameSlideErr = googledocs.RenameSlide(tconn, kb, testTitle)(ctx)
 	if renameSlideErr != nil {
 		return CheckSignedOutError(ctx, tconn, renameSlideErr)
 	}
-	editSlideErr = googleapps.EditSlideTitle(tconn, kb, slideTitle, slideSubTitle)(ctx)
+	editSlideErr = googledocs.EditSlideTitle(tconn, kb, slideTitle, slideSubTitle)(ctx)
 	if editSlideErr != nil {
 		return CheckSignedOutError(ctx, tconn, editSlideErr)
 	}
@@ -162,13 +162,13 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 		title := fmt.Sprintf(subSlideTitle+" page %d", i+1)
 		content := fmt.Sprintf(subSlideContent+" page %d", i+1)
 		pageNumber := strconv.Itoa(i + 2)
-		editSlideErr = googleapps.NewSlide(tconn, kb, title, content, pageNumber)(ctx)
+		editSlideErr = googledocs.NewSlide(tconn, kb, title, content, pageNumber)(ctx)
 		if editSlideErr != nil {
 			return CheckSignedOutError(ctx, tconn, editSlideErr)
 		}
 	}
 
-	if err := googleapps.NewGoogleDocs(ctx, tconn, br, uiHandler, extendedDisplay); err != nil {
+	if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHandler, extendedDisplay); err != nil {
 		return CheckSignedOutError(ctx, tconn, err)
 	}
 	// Delete document after presenting.
@@ -188,7 +188,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 		}
 	}
 
-	renameDocErr = googleapps.RenameDoc(tconn, kb, testTitle)(ctx)
+	renameDocErr = googledocs.RenameDoc(tconn, kb, testTitle)(ctx)
 	if renameDocErr != nil {
 		return CheckSignedOutError(ctx, tconn, renameDocErr)
 	}
