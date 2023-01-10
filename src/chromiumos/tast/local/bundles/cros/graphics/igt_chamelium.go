@@ -22,14 +22,37 @@ func init() {
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",
 		},
+		// ChromeOS > Platform > Graphics > Display
+		BugComponent: "b:188154",
 		SoftwareDeps: []string{"drm_atomic", "igt", "no_qemu"},
 		VarDeps:      []string{"graphics.chameleon_ip"},
 		Attr:         []string{"group:graphics", "graphics_chameleon_igt"},
 		Fixture:      "chromeGraphicsIgt",
 		Params: []testing.Param{{
-			Name: "kms_chamelium",
+			Name: "kms_chamelium_color",
 			Val: graphics.IgtTest{
-				Exe: "kms_chamelium",
+				Exe: "kms_chamelium_color",
+			},
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"graphics_nightly"},
+		}, {
+			Name: "kms_chamelium_edid",
+			Val: graphics.IgtTest{
+				Exe: "kms_chamelium_edid",
+			},
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"graphics_nightly"},
+		}, {
+			Name: "kms_chamelium_frames",
+			Val: graphics.IgtTest{
+				Exe: "kms_chamelium_frames",
+			},
+			Timeout:   15 * time.Minute,
+			ExtraAttr: []string{"graphics_nightly"},
+		}, {
+			Name: "kms_chamelium_hpd",
+			Val: graphics.IgtTest{
+				Exe: "kms_chamelium_hpd",
 			},
 			Timeout:   15 * time.Minute,
 			ExtraAttr: []string{"graphics_nightly"},
