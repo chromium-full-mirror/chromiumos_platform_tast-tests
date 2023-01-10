@@ -16,6 +16,13 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type vpnRoutingTestCase struct {
+	vpnType               vpn.Type
+	ipType                vpn.IPType // v4, v6, or dual-stack
+	underlayIPIsOverlayIP bool       // use the same IP for overlay and underlay to simulate a weird setup
+	wgTwoPeers            bool       // use two peers for WireGuard tests
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     VPNRouting,
@@ -27,85 +34,77 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_ipv4",
-			Val: vpn.Config{
-				Type:          vpn.TypeIKEv2,
-				IPType:        vpn.IPTypeIPv4,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeIKEv2,
+				ipType:  vpn.IPTypeIPv4,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv6",
-			Val: vpn.Config{
-				Type:          vpn.TypeIKEv2,
-				IPType:        vpn.IPTypeIPv6,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeIKEv2,
+				ipType:  vpn.IPTypeIPv6,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_ipv4_ipv6",
-			Val: vpn.Config{
-				Type:          vpn.TypeIKEv2,
-				IPType:        vpn.IPTypeIPv4AndIPv6,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeIKEv2,
+				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
-			Val: vpn.Config{
-				Type:          vpn.TypeL2TPIPsec,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeL2TPIPsec,
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_evil",
-			Val: vpn.Config{
-				Type:                  vpn.TypeL2TPIPsec,
-				IPsecAuthType:         vpn.AuthTypePSK,
-				UnderlayIPIsOverlayIP: true,
+			Val: vpnRoutingTestCase{
+				vpnType:               vpn.TypeL2TPIPsec,
+				underlayIPIsOverlayIP: true,
 			},
 			Fixture: "vpnEnv",
 		}, {
 			Name: "openvpn",
-			Val: vpn.Config{
-				Type:          vpn.TypeOpenVPN,
-				IPsecAuthType: vpn.AuthTypePSK,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeOpenVPN,
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "wireguard_ipv4",
-			Val: vpn.Config{
-				Type:   vpn.TypeWireGuard,
-				IPType: vpn.IPTypeIPv4,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeWireGuard,
+				ipType:  vpn.IPTypeIPv4,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv4_two_peers",
-			Val: vpn.Config{
-				Type:       vpn.TypeWireGuard,
-				IPType:     vpn.IPTypeIPv4,
-				WGTwoPeers: true,
+			Val: vpnRoutingTestCase{
+				vpnType:    vpn.TypeWireGuard,
+				ipType:     vpn.IPTypeIPv4,
+				wgTwoPeers: true,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv6",
-			Val: vpn.Config{
-				Type:       vpn.TypeWireGuard,
-				IPType:     vpn.IPTypeIPv6,
-				WGTwoPeers: true,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeWireGuard,
+				ipType:  vpn.IPTypeIPv6,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_ipv4_ipv6",
-			Val: vpn.Config{
-				Type:       vpn.TypeWireGuard,
-				IPType:     vpn.IPTypeIPv4AndIPv6,
-				WGTwoPeers: true,
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeWireGuard,
+				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
@@ -154,59 +153,89 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot reach physical env by IPv6: ", err)
 	}
 
-	config := s.Param().(vpn.Config)
-	config.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
-	conn, err := vpn.NewConnectionWithEnvs(ctx, config, routingEnv.BaseServer, routingEnv.BaseRouter)
-	if err != nil {
-		s.Fatal("Failed to create connection object: ", err)
+	tc := s.Param().(vpnRoutingTestCase)
+	opts := []vpn.Option{
+		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
+		vpn.WithIPType(tc.ipType),
 	}
+	if tc.underlayIPIsOverlayIP {
+		opts = append(opts, vpn.WithUnderlayIPIsOverlayIP())
+	}
+	config := vpn.NewConfig(tc.vpnType, opts...)
 
+	server, err := vpn.StartServerWithConfig(ctx, routingEnv.BaseServer, config)
+	if err != nil {
+		s.Fatal("Failed to create VPN server: ", err)
+	}
 	defer func() {
-		if err := conn.Cleanup(cleanupCtx); err != nil {
-			s.Error("Failed to clean up connection: ", err)
+		if err := server.Exit(cleanupCtx); err != nil {
+			s.Error("Failed to stop VPN server: ", err)
 		}
 	}()
 
-	if err := conn.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup VPN server: ", err)
+	// The second server is only for WireGuard.
+	var secondServer *vpn.Server
+	if tc.wgTwoPeers {
+		secondServer, err = vpn.StartServerWithConfig(ctx, routingEnv.BaseRouter, config)
+		if err != nil {
+			s.Fatal("Failed to create second WireGuard server: ", err)
+		}
+		defer func() {
+			if err := secondServer.Exit(cleanupCtx); err != nil {
+				s.Error("Failed to stop second WireGuard server: ", err)
+			}
+		}()
 	}
-	connected, err := conn.Connect(ctx)
+
+	service, err := vpn.ConfigureService(ctx, server, secondServer, config)
+	if err != nil {
+		s.Fatal("Failed to configure VPN service: ", err)
+	}
+	defer func() {
+		if err := service.Remove(cleanupCtx); err != nil {
+			s.Error("Failed to remove VPN service: ", err)
+		}
+	}()
+
+	if err := service.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to the VPN service: ", err)
+	}
+
+	connectErr := service.WaitForConnectedOrError(ctx)
 	if err := dumputil.DumpNetworkInfo(ctx, "network_dump_after_vpn_connect.txt"); err != nil {
 		testing.ContextLog(ctx, "Failed to dump network info after VPN connect")
 	}
-	if err != nil {
+	if connectErr != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
-	} else if !connected {
-		s.Fatal("Failed to connect to VPN server: the service state changed to failure")
 	}
 
-	if config.IPType == vpn.IPTypeIPv4 || config.IPType == vpn.IPTypeIPv4AndIPv6 {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-			s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
+	if tc.ipType == vpn.IPTypeIPv4 || tc.ipType == vpn.IPTypeIPv4AndIPv6 {
+		if err := routing.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+			s.Fatalf("Failed to ping %s: %v", server.OverlayIPv4, err)
 		}
-		if conn.SecondServer != nil {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.SecondServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-				s.Fatalf("Failed to ping %s: %v", conn.SecondServer.OverlayIPv4, err)
+		if secondServer != nil {
+			if err := routing.ExpectPingSuccessWithTimeout(ctx, secondServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+				s.Fatalf("Failed to ping %s: %v", secondServer.OverlayIPv4, err)
 			}
 		}
 	}
-	if config.IPType == vpn.IPTypeIPv6 || config.IPType == vpn.IPTypeIPv4AndIPv6 {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv6, "chronos", 10*time.Second); err != nil {
-			s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv6, err)
+	if tc.ipType == vpn.IPTypeIPv6 || tc.ipType == vpn.IPTypeIPv4AndIPv6 {
+		if err := routing.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv6, "chronos", 10*time.Second); err != nil {
+			s.Fatalf("Failed to ping %s: %v", server.OverlayIPv6, err)
 		}
-		if conn.SecondServer != nil {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.SecondServer.OverlayIPv6, "chronos", 10*time.Second); err != nil {
-				s.Fatalf("Failed to ping %s: %v", conn.SecondServer.OverlayIPv6, err)
+		if secondServer != nil {
+			if err := routing.ExpectPingSuccessWithTimeout(ctx, secondServer.OverlayIPv6, "chronos", 10*time.Second); err != nil {
+				s.Fatalf("Failed to ping %s: %v", secondServer.OverlayIPv6, err)
 			}
 		}
 	}
 
 	// In IPv4-only case, IPv6 should be blackholed.
-	if config.IPType != vpn.IPTypeIPv4 {
+	if tc.ipType != vpn.IPTypeIPv4 {
 		return
 	}
 	// TODO(b/257379393): WireGuard does not support this properly now.
-	if config.Type == vpn.TypeWireGuard {
+	if tc.vpnType == vpn.TypeWireGuard {
 		testing.ContextLog(ctx, "Skip IPv6 blocking check for WireGuard")
 		return
 	}

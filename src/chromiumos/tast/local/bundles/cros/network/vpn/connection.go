@@ -237,15 +237,6 @@ func WithWGUsePSK() Option {
 	}
 }
 
-// WithWGTwoPeers configures the WireGuard connection with two peers.
-// TODO(b/257379393): Remove this function after we the related code into
-// VPNConnect.
-func WithWGTwoPeers() Option {
-	return func(c *Config) {
-		c.WGTwoPeers = true
-	}
-}
-
 // WithWGAutoGenKey lets shill generate a key pair for WireGuard instead of
 // using a given one.
 // TODO(b/257379393): Remove this function after we the related code into
@@ -778,7 +769,7 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) map
 		case IPTypeIPv4AndIPv6:
 			peer["AllowedIPs"] = "0.0.0.0/0,::/0"
 		}
-		if config.WGTwoPeers {
+		if secondServer != nil {
 			// Do not set "default route" if we have two peers.
 			peer["AllowedIPs"] = wgServerAllowedIPs
 		}
