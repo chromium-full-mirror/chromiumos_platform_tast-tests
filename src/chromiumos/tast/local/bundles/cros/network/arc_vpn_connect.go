@@ -42,11 +42,11 @@ func ARCVPNConnect(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
-	conn, cleanup, err := arcvpn.SetUpHostVPN(ctx)
+	conn, err := arcvpn.SetUpHostVPN(ctx, vpn.TypeL2TPIPsec)
 	if err != nil {
 		s.Fatal("Failed to setup host VPN: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer conn.Cleanup(cleanupCtx)
 
 	// Verify ArcHostVpnService can connect and disconnect properly following the host VPN
 	// lifecycle events.

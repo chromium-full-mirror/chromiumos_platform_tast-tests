@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/arcvpn"
+	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/testing"
 )
@@ -36,11 +37,11 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
-	conn, cleanup, err := arcvpn.SetUpHostVPN(ctx)
+	conn, err := arcvpn.SetUpHostVPN(ctx, vpn.TypeL2TPIPsec)
 	if err != nil {
 		s.Fatal("Failed to setup host VPN: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer conn.Cleanup(cleanupCtx)
 
 	if _, err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)

@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -36,28 +35,13 @@ const (
 	TunIP         = "192.168.2.2"
 )
 
-// SetUpHostVPN creates a base VPN config, then calls SetUpHostVPNWithConfig
-func SetUpHostVPN(ctx context.Context) (*vpn.Connection, action.Action, error) {
-	// Host VPN config we'll use for connections. Arbitrary VPN type, but it can't cause the
-	// test to log out of the user during setup otherwise we won't have access to adb anymore.
-	// For example, vpn.AuthTypeCert VPNs will log the user out while trying to prep the cert
-	// store.
-	config := vpn.NewConfig(vpn.TypeL2TPIPsec)
-	return SetUpHostVPNWithConfig(ctx, *config)
-}
-
-// SetUpHostVPNWithConfig create the host VPN server, but does not initiate a connection. The
-// returned vpn.Connection is immediately ready for Connect() to be called on it. Also returns a
-// cleanup function that handles the VPN server cleanup for the caller to execute.
-func SetUpHostVPNWithConfig(ctx context.Context, config vpn.Config) (*vpn.Connection, action.Action, error) {
-	conn, err := vpn.NewConnection(ctx, config)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create connection object")
-	}
-	if err := conn.SetUp(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to setup VPN")
-	}
-	return conn, func(ctx context.Context) error { return conn.Cleanup(ctx) }, nil
+// SetUpHostVPN create the host VPN server, but does not initiate a connection.
+// The returned vpn.Connection is immediately ready for Connect() to be called
+// on it. The caller should call Cleanup() on the returned Connection after the
+// test is done.
+func SetUpHostVPN(ctx context.Context, vpnType vpn.Type, opts ...vpn.Option) (*vpn.Connection, error) {
+	opts = append(opts, vpn.WithoutAutoConnect())
+	return vpn.StartConnection(ctx, nil, vpnType, opts...)
 }
 
 // SetARCVPNEnabled flips the flag in the current running ARC instance. If running multiple tests

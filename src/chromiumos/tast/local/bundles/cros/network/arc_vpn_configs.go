@@ -32,6 +32,12 @@ func init() {
 	})
 }
 
+type arcVPNConfigsTestCase struct {
+	metered       bool
+	searchDomains []string
+	mtu           int
+}
+
 // ARCVPNConfigs tests that a few specific config fields from the host VPN are passed and set on
 // the mirrored ARC VPN correctly.
 func ARCVPNConfigs(ctx context.Context, s *testing.State) {
@@ -47,16 +53,10 @@ func ARCVPNConfigs(ctx context.Context, s *testing.State) {
 	}()
 
 	// Connect with our first config and verify values.
-	//
-	// We specifically don't use a L2TP type because shill overrides the MTU value into a
-	// hardcoded value. This eventually gets set properly again on the host-side, but Chrome
-	// passes the overridden value to ARC so it won't get reflected properly in ARC. Note that
-	// the hardcoded value is a minimum valid MTU size so it doesn't break any correctness.
-	if err := verifyVPNWithConfig(ctx, a, vpn.Config{
-		Type:          vpn.TypeWireGuard,
-		Metered:       false,
-		SearchDomains: []string{"foo1", "bar1"},
-		MTU:           576,
+	if err := verifyVPNWithTestCase(ctx, a, arcVPNConfigsTestCase{
+		metered:       false,
+		searchDomains: []string{"foo1", "bar1"},
+		mtu:           576,
 	}); err != nil {
 		s.Fatal("Failed to verify VPN connection with the first config: ", err)
 	}
@@ -64,28 +64,36 @@ func ARCVPNConfigs(ctx context.Context, s *testing.State) {
 	// Connect with a different config and verify values. Use values that are different from
 	// the first connection's config's values to ensure we didn't just get lucky with some
 	// default values.
-	if err := verifyVPNWithConfig(ctx, a, vpn.Config{
-		Type:          vpn.TypeWireGuard,
-		Metered:       true,
-		SearchDomains: []string{"foo2", "bar2"},
-		MTU:           1280,
+	if err := verifyVPNWithTestCase(ctx, a, arcVPNConfigsTestCase{
+		metered:       true,
+		searchDomains: []string{"foo2", "bar2"},
+		mtu:           1280,
 	}); err != nil {
 		s.Fatal("Failed to verify VPN connection with the second config: ", err)
 	}
 }
 
-func verifyVPNWithConfig(ctx context.Context, a *arc.ARC, config vpn.Config) error {
+func verifyVPNWithTestCase(ctx context.Context, a *arc.ARC, tc arcVPNConfigsTestCase) error {
 	// If the main body of the function times out, we still want to reserve a few
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 6*time.Second)
 	defer cancel()
 
-	conn, cleanup, err := arcvpn.SetUpHostVPNWithConfig(ctx, config)
+	// We specifically don't use a L2TP type because shill overrides the MTU value into a
+	// hardcoded value. This eventually gets set properly again on the host-side, but Chrome
+	// passes the overridden value to ARC so it won't get reflected properly in ARC. Note that
+	// the hardcoded value is a minimum valid MTU size so it doesn't break any correctness.
+	conn, err := arcvpn.SetUpHostVPN(ctx,
+		vpn.TypeWireGuard,
+		vpn.WithMetered(tc.metered),
+		vpn.WithSearchDomains(tc.searchDomains),
+		vpn.WithMTU(tc.mtu),
+	)
 	if err != nil {
 		return errors.Wrap(err, "failed to setup host VPN")
 	}
-	defer cleanup(cleanupCtx)
+	defer conn.Cleanup(cleanupCtx)
 	if _, err := conn.Connect(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to VPN server")
 	}
@@ -111,12 +119,12 @@ func verifyVPNWithConfig(ctx context.Context, a *arc.ARC, config vpn.Config) err
 		return errors.Wrap(err, "failed to get ARC SDK version")
 	}
 	if arcVersion == arc.SDKP {
-		config.Metered = true
+		tc.metered = true
 	}
-	if err := checkMatch(oStr, `capabilities=.*`, `NOT_METERED`, !config.Metered); err != nil {
+	if err := checkMatch(oStr, `capabilities=.*`, `NOT_METERED`, !tc.metered); err != nil {
 		return errors.Wrap(err, "failed to verify capabilities on ARC VPN network")
 	}
-	for _, domain := range config.SearchDomains {
+	for _, domain := range tc.searchDomains {
 		if err := checkMatch(oStr, `domains=.*`, domain, true); err != nil {
 			return errors.Wrap(err, "failed to verify search domains on ARC VPN network")
 		}
@@ -131,7 +139,7 @@ func verifyVPNWithConfig(ctx context.Context, a *arc.ARC, config vpn.Config) err
 	if err != nil {
 		return errors.Wrap(err, "failed to execute 'ifconfig tun0'")
 	}
-	if err := checkMatch(string(o), `MTU:.*`, fmt.Sprint(config.MTU), true); err != nil {
+	if err := checkMatch(string(o), `MTU:.*`, fmt.Sprint(tc.mtu), true); err != nil {
 		return errors.Wrap(err, "failed to verify MTU on ARC VPN network")
 	}
 

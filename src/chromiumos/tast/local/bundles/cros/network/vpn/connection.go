@@ -128,10 +128,10 @@ func WithMTU(val int) Option {
 	}
 }
 
-// WithMetered sets the Metered property to true on the shill service.
-func WithMetered() Option {
+// WithMetered sets the Metered property to val on the shill service. False by default.
+func WithMetered(val bool) Option {
 	return func(c *Config) {
-		c.Metered = true
+		c.Metered = val
 	}
 }
 

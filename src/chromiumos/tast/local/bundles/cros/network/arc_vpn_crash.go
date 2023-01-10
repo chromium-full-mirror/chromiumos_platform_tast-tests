@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/arcvpn"
+	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/testing"
 )
@@ -45,11 +46,11 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
-	conn, cleanup, err := arcvpn.SetUpHostVPN(ctx)
+	conn, err := arcvpn.SetUpHostVPN(ctx, vpn.TypeL2TPIPsec)
 	if err != nil {
 		s.Fatal("Failed to setup host VPN: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer conn.Cleanup(cleanupCtx)
 
 	// Check that if ArcHostVpnService is stopped unexpectedly (simulating some sort
 	// of error), the host VPN is still reachable from within ARC.
