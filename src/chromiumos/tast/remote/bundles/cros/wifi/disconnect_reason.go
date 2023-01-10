@@ -38,9 +38,10 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		BugComponent: "b:893827",
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
 		Params: []testing.Param{
 			{
 				Name: "ap_gone",
@@ -153,7 +154,7 @@ func DisconnectReason(ctx context.Context, s *testing.State) {
 	ctxForDisconnect := ctx
 	ctx, cancel = tf.ReserveForDisconnect(ctx)
 	defer cancel()
-	if _, err := tf.ConnectWifiAP(ctx, ap1); err != nil {
+	if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap1); err != nil {
 		s.Fatal("DUT: failed to connect to WiFi: ", err)
 	}
 	expectDisconnectErr := false
@@ -235,8 +236,11 @@ func DisconnectReason(ctx context.Context, s *testing.State) {
 		}()
 		ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap2)
 		defer cancel()
-		if _, err := tf.ConnectWifiAP(ctx, ap2); err != nil {
+		if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap2); err != nil {
 			s.Fatal("DUT: failed to connect to WiFi: ", err)
+		}
+		if err := tf.DUTWifiClient(wificell.DefaultDUT).WaitForConnected(ctx, ap2.Config().SSID, true); err != nil {
+			s.Fatal("DUT: failed to wait for WiFi connection: ", err)
 		}
 		expectDisconnectErr = true
 	}
