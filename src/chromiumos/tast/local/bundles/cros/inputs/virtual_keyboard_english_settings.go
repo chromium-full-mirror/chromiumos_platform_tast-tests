@@ -122,6 +122,7 @@ func VirtualKeyboardEnglishSettings(ctx context.Context, s *testing.State) {
 
 			validateAction := uiauto.Combine("verify VK input",
 				vkbCtx.WaitForDecoderEnabled(true),
+				vkbCtx.HideVirtualKeyboard(),
 				its.Clear(inputField),
 				its.ClickFieldUntilVKShown(inputField),
 				vkbCtx.TapKeys(subTest.keySeq),
