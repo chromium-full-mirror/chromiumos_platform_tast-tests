@@ -34,7 +34,7 @@ func init() {
 		// As a result, we have defined a softwaredep, no_eth_loss_on_reboot, to service as a skiplist for this test.
 		// TODO: remove this swdep when the jacuzzi issue is fixed (b:178449023)
 		SoftwareDeps: []string{"chrome", "reboot", "no_eth_loss_on_reboot"},
-		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothService"},
+		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothNetworkService"},
 		Vars:         []string{"router"},
 		VarDeps:      []string{"wifi.signinProfileTestExtensionManifestKey"},
 		// As a workaround to b:239583375, we increase the test duration as this test reinitializes a new test fixture
@@ -56,7 +56,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 		}
 		defer r.Close(ctx)
 		// Enable Bluetooth device.
-		btClient := network.NewBluetoothServiceClient(r.Conn)
+		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 		if _, err := btClient.SetBluetoothPowered(ctx, &network.SetBluetoothPoweredRequest{Powered: true, Credentials: credKey}); err != nil {
 			s.Error("Could not enable Bluetooth through bluetoothPrivate: ", err)
 		}
@@ -98,7 +98,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 		defer r.Close(ctx)
 
 		// Disable Bluetooth and assert Bluetooth is down.
-		btClient := network.NewBluetoothServiceClient(r.Conn)
+		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 		if _, err := btClient.SetBluetoothPowered(ctx, &network.SetBluetoothPoweredRequest{Powered: false, Credentials: credKey}); err != nil {
 			s.Fatal("Could not disable Bluetooth: ", err)
 		}
@@ -120,7 +120,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 
 	// Assert Bluetooth is down.
 	s.Log("Getting BT pref")
-	btClient := network.NewBluetoothServiceClient(r.Conn)
+	btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 	if err := wifiutil.PollBluetoothBootPref(ctx, btClient, wifiutil.BtOff, credKey); err != nil {
 		s.Fatal("Failed to wait for BT boot pref: ", err)
 	}

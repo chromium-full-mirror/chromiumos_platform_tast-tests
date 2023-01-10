@@ -36,7 +36,7 @@ func statusString(status bool) string {
 }
 
 // PollBluetoothBootPref polls the DUT's saved bluetooth preference until the context deadline is exceeded or until a result is returned. If an unexpected result is seen, the function emits an error.
-func PollBluetoothBootPref(ctx context.Context, btClient network.BluetoothServiceClient, expectedStatus BtStatus, credKey string) error {
+func PollBluetoothBootPref(ctx context.Context, btClient network.BluetoothNetworkServiceClient, expectedStatus BtStatus, credKey string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if response, err := btClient.GetBluetoothBootPref(ctx, &network.GetBluetoothBootPrefRequest{Credentials: credKey}); err != nil {
 			return errors.Wrap(err, "could not get Bluetooth status")
@@ -51,7 +51,7 @@ func PollBluetoothBootPref(ctx context.Context, btClient network.BluetoothServic
 }
 
 // PollBluetoothPoweredStatus polls the DUT's bluetooth adapter powered setting until the context deadline is exceeded or until the correct power setting is observed.
-func PollBluetoothPoweredStatus(ctx context.Context, btClient network.BluetoothServiceClient, expectedStatus BtStatus) error {
+func PollBluetoothPoweredStatus(ctx context.Context, btClient network.BluetoothNetworkServiceClient, expectedStatus BtStatus) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if response, err := btClient.GetBluetoothPoweredFast(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "could not get Bluetooth status")

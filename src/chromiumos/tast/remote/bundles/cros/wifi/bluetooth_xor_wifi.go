@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothService"},
+		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothNetworkService"},
 		Vars:         []string{"router"},
 		// List of requirements this test satisfies.
 		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
@@ -51,7 +51,7 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 		defer cancel()
 		// Enable Bluetooth device.
-		btClient := network.NewBluetoothServiceClient(r.Conn)
+		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 		if _, err := btClient.SetBluetoothPoweredFast(ctx, &network.SetBluetoothPoweredFastRequest{Powered: true}); err != nil {
 			s.Error("Could not enable Bluetooth: ", err)
 		}
@@ -99,7 +99,7 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 	// Validate phys can function without the other on multiple channels
 	channels := [4]int{36, 149, 1, 11}
 	wifiClient := wifi.NewShillServiceClient(r.Conn)
-	btClient := network.NewBluetoothServiceClient(r.Conn)
+	btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 	for _, ch := range channels {
 		if err := togglePhys(ctx, ch, btClient, tf, wifiClient, true); err != nil {
 			s.Fatalf("Failed to run WiFi without Bluetooth path on channel %d: %v", ch, err)
@@ -110,7 +110,7 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 	}
 }
 
-func togglePhys(ctx context.Context, channel int, btClient network.BluetoothServiceClient, tf *wificell.TestFixture, wifiClient wifi.ShillServiceClient, enableWifiFirst bool) error {
+func togglePhys(ctx context.Context, channel int, btClient network.BluetoothNetworkServiceClient, tf *wificell.TestFixture, wifiClient wifi.ShillServiceClient, enableWifiFirst bool) error {
 	// Disable and Assert Wifi is down
 	if err := setAssertWifi(ctx, tf, wifiClient, []int{}, false); err != nil {
 		return err
@@ -142,7 +142,7 @@ func togglePhys(ctx context.Context, channel int, btClient network.BluetoothServ
 	return nil
 }
 
-func setAssertBluetooth(ctx context.Context, btClient network.BluetoothServiceClient, enabled bool) error {
+func setAssertBluetooth(ctx context.Context, btClient network.BluetoothNetworkServiceClient, enabled bool) error {
 	if enabled {
 		// Enable Bluetooth and assert Bluetooth is up.
 		if _, err := btClient.SetBluetoothPoweredFast(ctx, &network.SetBluetoothPoweredFastRequest{Powered: true}); err != nil {

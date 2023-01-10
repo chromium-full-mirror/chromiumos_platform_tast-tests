@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/chameleon"
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/errors"
-	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 )
 
@@ -408,13 +407,4 @@ func (d *EmulatedBTPeerDevice) AuthenticationMode() cbt.AuthenticationMode {
 // the BLE prefix if it is a BLE device.
 func (d *EmulatedBTPeerDevice) DeviceType() cbt.DeviceType {
 	return d.deviceType
-}
-
-// BTSDevice creates a BTTestService Device from this device's cached
-// data.
-func (d *EmulatedBTPeerDevice) BTSDevice() *bts.Device {
-	return &bts.Device{
-		MacAddress:     d.cache.localBluetoothAddress,
-		AdvertisedName: d.cache.advertisedName,
-	}
 }

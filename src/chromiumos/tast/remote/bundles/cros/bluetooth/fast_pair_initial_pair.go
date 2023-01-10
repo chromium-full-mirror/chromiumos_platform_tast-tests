@@ -11,7 +11,7 @@ import (
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
-	pb "chromiumos/tast/services/cros/bluetooth"
+	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -30,10 +30,13 @@ func init() {
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
-		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
-		Timeout:      3 * time.Minute,
-		Vars:         []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
+		ServiceDeps: []string{
+			"tast.cros.bluetooth.BluetoothService",
+			"tast.cros.bluetooth.BluetoothUIService",
+		},
+		Fixture: "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
+		Timeout: 3 * time.Minute,
+		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 	})
 }
 
@@ -61,19 +64,19 @@ func FastPairInitialPair(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Pairing device with fast pair notification")
-	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
-		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
+	if _, err := fv.BluetoothUIService.PairWithFastPairNotification(ctx, &bts.PairWithFastPairNotificationRequest{
+		Protocol: bts.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
 	}); err != nil {
 		s.Fatal("Failed to pair with fast pair notification: ", err)
 	}
 
-	resp, err := fv.BTS.DeviceStatus(ctx, &pb.DeviceStatusRequest{
-		Device: fastPairDevice.BTSDevice(),
+	resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
+		DeviceAddress: fastPairDevice.LocalBluetoothAddress(),
 	})
 	if err != nil {
 		s.Fatal("Failed to check if target device is paired: ", err)
 	}
-	if !resp.IsPaired {
+	if !resp.DeviceIsPaired {
 		s.Fatal("Fast pair device not paired as expected")
 	}
 }

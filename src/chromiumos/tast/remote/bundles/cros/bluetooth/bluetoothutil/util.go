@@ -7,8 +7,11 @@ package bluetoothutil
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/servo"
+	"chromiumos/tast/errors"
+	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 )
 
@@ -23,4 +26,25 @@ func TurnOffServoKeyboardIfOn(ctx context.Context, s *testing.State) {
 	if err := pxy.Servo().SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
 		s.Fatal("Failed to turn of servo: ", err)
 	}
+}
+
+// DiscoverAndPairDevice will use the provided bluetooth service to turn on
+// discovery, wait until the device is discovered, turn discovery back off,
+// then pair the device. A nil return means that the device has been
+// successfully discovered, paired, and connected to the service (connection
+// occurs during pairing process).
+func DiscoverAndPairDevice(ctx context.Context, bluetoothService bts.BluetoothServiceClient, deviceAddress, devicePin string, discoveryTimeout time.Duration) error {
+	if _, err := bluetoothService.DiscoverDevice(ctx, &bts.DiscoverDeviceRequest{
+		DeviceAddress:    deviceAddress,
+		DiscoveryTimeout: int64(discoveryTimeout),
+	}); err != nil {
+		return errors.Wrapf(err, "failed to discover device with address %q", deviceAddress)
+	}
+	if _, err := bluetoothService.PairDevice(ctx, &bts.PairDeviceRequest{
+		DeviceAddress: deviceAddress,
+		Pin:           devicePin,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to pair device with address %q after successful discovery", deviceAddress)
+	}
+	return nil
 }

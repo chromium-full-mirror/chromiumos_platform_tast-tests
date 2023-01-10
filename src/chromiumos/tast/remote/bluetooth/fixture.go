@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,11 @@ import (
 
 // Fixture variable keys.
 const (
+	// fixtureVarUseFloss is the name of the tast var that allows for switching
+	// the bluetooth stack on the DUT to use floss or bluez. To use floss, set
+	// this to "true", otherwise bluez will be used.
+	fixtureVarUseFloss = "bluetooth.UseFloss"
+
 	// fixtureVarBTPeers is the name of the tast var that specifies a
 	// comma-separated list of btpeer host addresses.
 	//
@@ -63,7 +69,7 @@ var (
 		"--log=level=1"}
 )
 
-// Public test variable keys that are used in multiple tests
+// Public test variable keys that are used in multiple tests.
 const (
 	// TestVarFastPairAntispoofingKeyPem is used for setting the antispoofing key, which is
 	// required for Initial Pairing Fast Pair V2 devices. The variable can be overridden by
@@ -86,14 +92,18 @@ const (
 	defaultChromePassword = "testpass"
 )
 
+// Tast services.
 const (
-	serviceDepBTTestService = "tast.cros.bluetooth.BTTestService"
-	serviceDepChromeService = "tast.cros.browser.ChromeService"
+	serviceDepBluetoothService   = "tast.cros.bluetooth.BluetoothService"
+	serviceDepBluetoothUIService = "tast.cros.bluetooth.BluetoothUIService"
+	serviceDepChromeService      = "tast.cros.browser.ChromeService"
 )
 
+// DUT D-Bus services.
 const (
-	dbusServiceBluetoothBluez = "org.bluez"
-	dbusServiceBluetoothFloss = "org.chromium.bluetooth"
+	dbusServiceBluetoothBluez        = "org.bluez"
+	dbusServiceBluetoothFloss        = "org.chromium.bluetooth"
+	dbusServiceBluetoothFlossManager = "org.chromium.bluetooth.Manager"
 )
 
 // Chrome features.
@@ -101,8 +111,13 @@ const (
 	chromeFeatureOobeHidDetectionRevamp = "OobeHidDetectionRevamp"
 	chromeFeatureFastPair               = "FastPair"
 	chromeFeatureFastPairSavedDevices   = "FastPairSavedDevices"
+
+	// chromeFeatureFloss is enabled when fixtureVarUseFloss is true, and disabled
+	// when it is false.
+	chromeFeatureFloss = "Floss"
 )
 
+// Fixture timeouts.
 const (
 	setUpTimeout    = 80 * time.Second
 	resetTimeout    = 65 * time.Second
@@ -135,7 +150,11 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWith1BTPeer",
@@ -150,12 +169,19 @@ func init() {
 			DisableFeatures: []string{},
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
-		Vars:            []string{fixtureVarBTPeers},
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarUseFloss,
+		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWith2BTPeers",
@@ -170,12 +196,19 @@ func init() {
 			DisableFeatures: []string{},
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
-		Vars:            []string{fixtureVarBTPeers},
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarUseFloss,
+		},
 		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
 		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWith3BTPeers",
@@ -190,12 +223,19 @@ func init() {
 			DisableFeatures: []string{},
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
-		Vars:            []string{fixtureVarBTPeers},
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarUseFloss,
+		},
 		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
 		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWith4BTPeers",
@@ -210,12 +250,19 @@ func init() {
 			DisableFeatures: []string{},
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
-		Vars:            []string{fixtureVarBTPeers},
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarUseFloss,
+		},
 		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
 		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeOobeWith1BTPeer",
@@ -231,12 +278,20 @@ func init() {
 			LoginMode:             chromeService.LoginMode_LOGIN_MODE_NO_LOGIN,
 			EnableHidScreenOnOobe: true,
 		}),
-		Vars:            []string{fixtureVarBTPeers, fixtureVarSigninKey},
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarUseFloss,
+			fixtureVarSigninKey,
+		},
 		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
@@ -257,6 +312,7 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarUseFloss,
 			fixtureVarFastPairChromeUsername,
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
@@ -265,7 +321,11 @@ func init() {
 		ResetTimeout:    resetTimeout + btpeerResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
@@ -288,6 +348,7 @@ func init() {
 		}),
 		Vars: []string{
 			fixtureVarBTPeers,
+			fixtureVarUseFloss,
 			fixtureVarFastPairChromeUsername,
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
@@ -296,7 +357,11 @@ func init() {
 		ResetTimeout:    2*resetTimeout + btpeerResetBuffer,
 		TearDownTimeout: 2*tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: 2 * postTestTimeout,
-		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
 	})
 }
 
@@ -343,9 +408,13 @@ type DUTConfig struct {
 	// additional local tast services.
 	DUTRPCClient *rpc.Client
 
-	// BTS is a client of the BTTestService that is used to interact with and
-	// manage bluetooth on the DUT.
-	BTS bts.BTTestServiceClient
+	// BluetoothService is a client of the BluetoothService that is used to
+	// interact and manage the bluetooth stack on the DUT.
+	BluetoothService bts.BluetoothServiceClient
+
+	// BluetoothUIService is a client of the BluetoothUIService that uses the
+	// DUTRPCClient connection.
+	BluetoothUIService bts.BluetoothUIServiceClient
 
 	// ChromeService is a client of the ChromeService that is used to start Chrome.
 	ChromeService chromeService.ChromeServiceClient
@@ -357,10 +426,11 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		return nil, errors.Wrapf(err, "failed to connect to the local gRPC service on DUT %s", dut.HostName())
 	}
 	return &DUTConfig{
-		DUT:           dut,
-		DUTRPCClient:  rpcClient,
-		BTS:           bts.NewBTTestServiceClient(rpcClient.Conn),
-		ChromeService: chromeService.NewChromeServiceClient(rpcClient.Conn),
+		DUT:                dut,
+		DUTRPCClient:       rpcClient,
+		BluetoothService:   bts.NewBluetoothServiceClient(rpcClient.Conn),
+		BluetoothUIService: bts.NewBluetoothUIServiceClient(rpcClient.Conn),
+		ChromeService:      chromeService.NewChromeServiceClient(rpcClient.Conn),
 	}, nil
 }
 
@@ -396,9 +466,13 @@ type FixtValue struct {
 	// additional local tast services.
 	DUTRPCClient *rpc.Client
 
-	// BTS is a client of the BTTestService that is used to interact with and
-	// manage bluetooth on the primary DUT.
-	BTS bts.BTTestServiceClient
+	// BluetoothService is a client of the BluetoothService that is used to
+	// interact and manage the bluetooth stack on the DUT.
+	BluetoothService bts.BluetoothServiceClient
+
+	// BluetoothUIService is a client of the BluetoothUIService that uses the
+	// DUTRPCClient connection.
+	BluetoothUIService bts.BluetoothUIServiceClient
 
 	// ChromeService is a client of the ChromeService that is used to start Chrome.
 	ChromeService chromeService.ChromeServiceClient
@@ -445,6 +519,19 @@ func newFixture(features *fixtureFeatures) *fixture {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Determine desired bluetooth stack for DUTs.
+	btStack := bts.BluetoothStackType_BLUEZ
+	useFlossVar, ok := s.Var(fixtureVarUseFloss)
+	if ok {
+		useFloss, err := strconv.ParseBool(useFlossVar)
+		if err != nil {
+			s.Fatalf("Failed to parse bool from fixture var %q value %q: %v", fixtureVarUseFloss, useFlossVar, err)
+		}
+		if useFloss {
+			btStack = bts.BluetoothStackType_FLOSS
+		}
+	}
+
 	// Parse OOBE fixture var.
 	var signinProfileTestExtensionID string
 	if tf.features.EnableHidScreenOnOobe {
@@ -516,7 +603,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 
 	// Save shortcuts for primary DUT configs for ease of use in most tests.
 	tf.fv.DUTRPCClient = primaryDUTConfig.DUTRPCClient
-	tf.fv.BTS = primaryDUTConfig.BTS
+	tf.fv.BluetoothUIService = primaryDUTConfig.BluetoothUIService
+	tf.fv.BluetoothService = primaryDUTConfig.BluetoothService
 	tf.fv.ChromeService = primaryDUTConfig.ChromeService
 
 	// Configure companion DUT.
@@ -544,13 +632,22 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			"--system",
 			fmt.Sprintf("sender='%s'", dbusServiceBluetoothBluez),
 			fmt.Sprintf("sender='%s'", dbusServiceBluetoothFloss),
+			fmt.Sprintf("sender='%s'", dbusServiceBluetoothFlossManager),
 			fmt.Sprintf("destination='%s'", dbusServiceBluetoothBluez),
 			fmt.Sprintf("destination='%s'", dbusServiceBluetoothFloss),
+			fmt.Sprintf("destination='%s'", dbusServiceBluetoothFlossManager),
 		)
 		if err != nil {
 			s.Fatal("Failed to start dbus-monitor listening to bluez and floss service messages: ", err)
 		}
 		tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
+
+		// Enable/Disable floss feature based on desired bluetooth stack.
+		if btStack == bts.BluetoothStackType_FLOSS {
+			tf.features.EnableFeatures = append(tf.features.EnableFeatures, chromeFeatureFloss)
+		} else {
+			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
+		}
 
 		// Start Chrome with the features and login mode provided by the test fixture.
 		var extraArgs []string
@@ -572,14 +669,18 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
 		}
 
-		// Reset and enable bluetooth.
-		if _, err := dutConfig.BTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatalf("Failed to disable bluetooth adapter on DUT %s: %v", dutName, err)
+		// Configure and enable desired DUT bluetooth stack.
+		s.Logf("Configuring DUT %s bluetooth stack to use %s", dutName, btStack.String())
+		if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
+			StackType: btStack,
+		}); err != nil {
+			s.Fatalf("Failed to configure DUT %s bluetooth stack as %s: %v", dutName, btStack.String(), err)
 		}
-		if _, err := dutConfig.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatalf("Failed to enable bluetooth adapter on DUT %s: %v", dutName, err)
+		s.Logf("Enabling bluetooth on DUT %s", dutName)
+		if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatalf("Failed to enable %s bluetooth stack on DUT %s: %v", btStack.String(), dutName, err)
 		}
-		if err := tf.resetDutBluetoothState(ctx, dutConfig); err != nil {
+		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
 			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
 		}
 
@@ -603,14 +704,8 @@ func (tf *fixture) Reset(ctx context.Context) error {
 		return errors.Wrap(err, "failed to reset all btpeers")
 	}
 	for _, dutConfig := range tf.fv.DUTConfigs {
-		if err := tf.resetDutBluetoothState(ctx, dutConfig); err != nil {
+		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
 			return errors.Wrapf(err, "failed to reset state of DUT %s", dutConfig.DUT.HostName())
-		}
-		if _, err := dutConfig.BTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrapf(err, "failed to disable bluetooth adapter on DUT %s", dutConfig.DUT.HostName())
-		}
-		if _, err := dutConfig.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrapf(err, "failed to enable bluetooth adapter on DUT %s", dutConfig.DUT.HostName())
 		}
 	}
 	if err := tf.dumpAllCollectedLogs(ctx, "Reset"); err != nil {
@@ -659,12 +754,12 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Logf("TearDown for DUT %s started", dutName)
 
 		// Clean up bluetooth state and disable adapter.
-		if err := tf.resetDutBluetoothState(ctx, dutConfig); err != nil {
+		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
 			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
 		}
 		s.Logf("Disabling bluetooth on DUT %s", dutName)
-		if _, err := dutConfig.BTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
-			s.Errorf("Failed to disable bluetooth adapter on DUT %s: %v", dutName, err)
+		if _, err := dutConfig.BluetoothService.Disable(ctx, &emptypb.Empty{}); err != nil {
+			s.Errorf("Failed to disable bluetooth stack on DUT %s: %v", dutName, err)
 		}
 
 		// Clean up chrome login state.
@@ -913,26 +1008,26 @@ func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) err
 
 // resetDutBluetoothState resets the bluetooth state of the DUT so that it is
 // ready for tests.
-func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTConfig) error {
+func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTConfig, enableBluetooth bool) error {
 	dutName := dutConfig.DUT.HostName()
 	// Handle Fast Pair UI reset needs.
 	if tf.fastPairEnabled {
 		testing.ContextLogf(ctx, "Removing all saved bluetooth devices via UI on DUT %s", dutName)
-		if _, err := dutConfig.BTS.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
+		if _, err := dutConfig.BluetoothUIService.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
 			return errors.Wrapf(err, "failed to remove all saved bluetooth devices via UI on DUT %s", dutName)
 		}
 		testing.ContextLogf(ctx, "Closing all UI notifications on DUT %s", dutName)
-		if _, err := dutConfig.BTS.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
+		if _, err := dutConfig.BluetoothUIService.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
 			return errors.Wrapf(err, "failed to close all UI notifications on DUT %s", dutName)
 		}
 	}
 
 	// Reset the state of the bluetooth adapter.
-	if _, err := dutConfig.BTS.DisconnectAllDevices(ctx, &emptypb.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to disconnected all bluetooth devices")
-	}
-	if _, err := dutConfig.BTS.RemoveAllDevices(ctx, &emptypb.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to remove all bluetooth devices")
+	testing.ContextLogf(ctx, "Resetting and setting bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
+	if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
+		PowerOn: enableBluetooth,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to reset and set bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
 	}
 	return nil
 }

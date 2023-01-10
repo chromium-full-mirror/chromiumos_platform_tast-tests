@@ -38,7 +38,7 @@ func init() {
 		// TODO: remove this swdep when the jacuzzi issue is fixed (b:178449023)
 		SoftwareDeps: []string{"chrome", "reboot", "no_eth_loss_on_reboot"},
 
-		ServiceDeps: []string{wificell.TFServiceName, "tast.cros.network.BluetoothService"},
+		ServiceDeps: []string{wificell.TFServiceName, "tast.cros.network.BluetoothNetworkService"},
 		Vars:        []string{"router"},
 		VarDeps:     []string{"wifi.signinProfileTestExtensionManifestKey"},
 		// List of requirements this test satisfies.
@@ -96,7 +96,7 @@ func PersistenceBluetoothSansWifi(ctx context.Context, s *testing.State) {
 
 		// Assert Bluetooth is up. We need to poll a little bit here as it might
 		// not yet get initialized after reboot.
-		btClient := network.NewBluetoothServiceClient(r.Conn)
+		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 		s.Log("Getting BT pref")
 		if err := wifiutil.PollBluetoothBootPref(ctx, btClient, wifiutil.BtOn, credKey); err != nil {
 			s.Fatal("Failed to wait for BT boot pref: ", err)
@@ -146,7 +146,7 @@ func PersistenceBluetoothSansWifi(ctx context.Context, s *testing.State) {
 
 	// Assert Bluetooth is up. We need to poll a little bit here as it might
 	// not yet get initialized after reboot.
-	btClient := network.NewBluetoothServiceClient(r.Conn)
+	btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
 	s.Log("Getting BT pref")
 	if err := wifiutil.PollBluetoothBootPref(ctx, btClient, wifiutil.BtOn, credKey); err != nil {
 		s.Fatal("Failed to wait for BT boot pref: ", err)

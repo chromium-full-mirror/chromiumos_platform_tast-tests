@@ -30,7 +30,7 @@ func init() {
 			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothUIService"},
 		Fixture:      "chromeLoggedInWith1BTPeer",
 		Timeout:      90 * time.Second,
 		Params: []testing.Param{{
@@ -40,7 +40,8 @@ func init() {
 	})
 }
 
-// PairBluetoothDeviceWithUI tests that Bluetooth devices are able to be paired with using the Quick Settings UI.
+// PairBluetoothDeviceWithUI tests that Bluetooth devices are able to pair with
+// the Quick Settings UI.
 func PairBluetoothDeviceWithUI(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
@@ -50,9 +51,9 @@ func PairBluetoothDeviceWithUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to emulate the device type: ", err)
 	}
 
-	if _, err := fv.BTS.PairDeviceWithQuickSettings(
+	if _, err := fv.BluetoothUIService.PairDeviceWithQuickSettings(
 		ctx, &bts.PairDeviceWithQuickSettingsRequest{
-			AdvertisedName: emulatedDevice.BTSDevice().AdvertisedName,
+			AdvertisedName: emulatedDevice.LocalBluetoothAddress(),
 		}); err != nil {
 		s.Fatal("Failed to pair device through the Quick Settings: ", err)
 	}

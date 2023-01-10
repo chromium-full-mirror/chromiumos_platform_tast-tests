@@ -13,7 +13,7 @@ import (
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
-	pb "chromiumos/tast/services/cros/bluetooth"
+	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -33,10 +33,14 @@ func init() {
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService", "tast.cros.ui.ChromeUIService"},
-		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
-		Timeout:      3 * time.Minute,
-		Vars:         []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
+		ServiceDeps: []string{
+			"tast.cros.bluetooth.BluetoothService",
+			"tast.cros.bluetooth.BluetoothUIService",
+			"tast.cros.ui.ChromeUIService",
+		},
+		Fixture: "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
+		Timeout: 3 * time.Minute,
+		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 	})
 }
 
@@ -62,7 +66,7 @@ func FastPairForgetDevice(ctx context.Context, s *testing.State) {
 	}()
 
 	// Open the Saved Devices subpage and confirm that its empty.
-	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, &pb.ConfirmSavedDevicesStateRequest{
+	if _, err := fv.BluetoothUIService.ConfirmSavedDevicesState(ctx, &bts.ConfirmSavedDevicesStateRequest{
 		DeviceNames: []string{},
 	}); err != nil {
 		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)
@@ -81,23 +85,24 @@ func FastPairForgetDevice(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Pairing device with fast pair notification")
-	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
-		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
+	if _, err := fv.BluetoothUIService.PairWithFastPairNotification(ctx, &bts.PairWithFastPairNotificationRequest{
+		Protocol: bts.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
 	}); err != nil {
 		s.Fatal("Failed to pair with fast pair notification: ", err)
 	}
-
-	if resp, err := fv.BTS.DeviceStatus(ctx, &pb.DeviceStatusRequest{
-		Device: fastPairDevice.BTSDevice(),
-	}); err != nil {
+	resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
+		DeviceAddress: fastPairDevice.LocalBluetoothAddress(),
+	})
+	if err != nil {
 		s.Fatal("Failed to check if target device is paired: ", err)
-	} else if !resp.IsPaired {
+	}
+	if !resp.DeviceIsPaired {
 		s.Fatal("Fast pair device not paired as expected")
 	}
 
 	// Re-open the Saved Devices subpage to refresh the results and confirm the device was added.
 	deviceName := fastPairDevice.AdvertisedName()
-	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, &pb.ConfirmSavedDevicesStateRequest{
+	if _, err := fv.BluetoothUIService.ConfirmSavedDevicesState(ctx, &bts.ConfirmSavedDevicesStateRequest{
 		DeviceNames: []string{
 			deviceName,
 		},
@@ -106,14 +111,14 @@ func FastPairForgetDevice(ctx context.Context, s *testing.State) {
 	}
 
 	// Open the Bluetooth Settings page and forget the device.
-	if _, err := fv.BTS.ForgetBluetoothDevice(ctx, &pb.ForgetBluetoothDeviceRequest{
+	if _, err := fv.BluetoothUIService.ForgetBluetoothDevice(ctx, &bts.ForgetBluetoothDeviceRequest{
 		DeviceName: deviceName,
 	}); err != nil {
 		s.Fatalf("Failed to forget the device with name %s: %v", deviceName, err)
 	}
 
 	// Open the Saved Devices subpage and confirm that its empty.
-	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, &pb.ConfirmSavedDevicesStateRequest{
+	if _, err := fv.BluetoothUIService.ConfirmSavedDevicesState(ctx, &bts.ConfirmSavedDevicesStateRequest{
 		DeviceNames: []string{},
 	}); err != nil {
 		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)

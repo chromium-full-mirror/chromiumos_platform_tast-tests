@@ -41,7 +41,6 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
-			"tast.cros.bluetooth.BTTestService",
 		},
 		Fixture:      "chromeOobeWith1BTPeer",
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),

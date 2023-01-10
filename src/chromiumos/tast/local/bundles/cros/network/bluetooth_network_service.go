@@ -25,18 +25,18 @@ import (
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			network.RegisterBluetoothServiceServer(srv, &BluetoothService{s: s})
+			network.RegisterBluetoothNetworkServiceServer(srv, &BluetoothNetworkService{s: s})
 		},
 	})
 }
 
-// BluetoothService implements tast.cros.network.BluetoothService gRPC service.
-type BluetoothService struct {
+// BluetoothNetworkService implements tast.cros.network.BluetoothNetworkService gRPC service.
+type BluetoothNetworkService struct {
 	s *testing.ServiceState
 }
 
 // SetBluetoothPowered sets the Bluetooth adapter power status via settingsPrivate. This setting persists across reboots.
-func (s *BluetoothService) SetBluetoothPowered(ctx context.Context, req *network.SetBluetoothPoweredRequest) (*empty.Empty, error) {
+func (s *BluetoothNetworkService) SetBluetoothPowered(ctx context.Context, req *network.SetBluetoothPoweredRequest) (*empty.Empty, error) {
 	cr, err := chrome.New(
 		ctx,
 		chrome.KeepState(),
@@ -114,7 +114,7 @@ func (s *BluetoothService) SetBluetoothPowered(ctx context.Context, req *network
 }
 
 // GetBluetoothBootPref gets the Bluetooth boot preference.
-func (s *BluetoothService) GetBluetoothBootPref(ctx context.Context, req *network.GetBluetoothBootPrefRequest) (*network.GetBluetoothBootPrefResponse, error) {
+func (s *BluetoothNetworkService) GetBluetoothBootPref(ctx context.Context, req *network.GetBluetoothBootPrefRequest) (*network.GetBluetoothBootPrefResponse, error) {
 	ctx, st := timing.Start(ctx, "GetBluetoothBootPref")
 	defer st.End()
 	cr, err := chrome.New(
@@ -143,7 +143,7 @@ func (s *BluetoothService) GetBluetoothBootPref(ctx context.Context, req *networ
 }
 
 // SetBluetoothPoweredFast sets the Bluetooth adapter power status via D-Bus. This setting does not persist across boots.
-func (s *BluetoothService) SetBluetoothPoweredFast(ctx context.Context, req *network.SetBluetoothPoweredFastRequest) (*empty.Empty, error) {
+func (s *BluetoothNetworkService) SetBluetoothPoweredFast(ctx context.Context, req *network.SetBluetoothPoweredFastRequest) (*empty.Empty, error) {
 	adapters, err := bluez.Adapters(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get Bluetooth adapters")
@@ -174,7 +174,7 @@ func (s *BluetoothService) SetBluetoothPoweredFast(ctx context.Context, req *net
 }
 
 // GetBluetoothPoweredFast checks whether the Bluetooth adapter is enabled.
-func (s *BluetoothService) GetBluetoothPoweredFast(ctx context.Context, _ *empty.Empty) (*network.GetBluetoothPoweredFastResponse, error) {
+func (s *BluetoothNetworkService) GetBluetoothPoweredFast(ctx context.Context, _ *empty.Empty) (*network.GetBluetoothPoweredFastResponse, error) {
 	ctx, st := timing.Start(ctx, "GetBluetoothPoweredFast")
 	defer st.End()
 	adapters, err := bluez.Adapters(ctx)
@@ -193,7 +193,7 @@ func (s *BluetoothService) GetBluetoothPoweredFast(ctx context.Context, _ *empty
 }
 
 // ValidateBluetoothFunctional checks to see whether the Bluetooth device is usable.
-func (s *BluetoothService) ValidateBluetoothFunctional(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+func (s *BluetoothNetworkService) ValidateBluetoothFunctional(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
 	adapters, err := bluez.Adapters(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get Bluetooth adapters")

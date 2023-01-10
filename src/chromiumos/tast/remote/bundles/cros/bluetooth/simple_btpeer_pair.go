@@ -10,6 +10,7 @@ import (
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
+	"chromiumos/tast/remote/bundles/cros/bluetooth/bluetoothutil"
 	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 )
@@ -35,9 +36,9 @@ func init() {
 			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService"},
 		Fixture:      "chromeLoggedInWith1BTPeer",
-		Timeout:      90 * time.Second,
+		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "le_keyboard",
@@ -91,13 +92,27 @@ func SimpleBTPeerPair(ctx context.Context, s *testing.State) {
 	testing.ContextLogf(ctx, "Device %s ready to pair", device.String())
 
 	// Attempt pairing device with DUT.
-	testing.ContextLogf(ctx, "Paring %s", device.String())
-	if _, err = fv.BTS.PairAndConnectDevice(ctx, &bts.PairAndConnectDeviceRequest{
-		Device:          device.BTSDevice(),
-		ForceNewPair:    true,
-		ForceNewConnect: true,
-	}); err != nil {
-		s.Fatalf("Failed to pair and connect %s: %v", device.String(), err)
+	testing.ContextLogf(ctx, "Paring device %s", device.String())
+	if err := bluetoothutil.DiscoverAndPairDevice(ctx, fv.BluetoothService, device.LocalBluetoothAddress(), device.PinCode(), 45*time.Second); err != nil {
+		s.Fatalf("Failed to discover and pair device %s: %v", device.String(), err)
 	}
-	testing.ContextLogf(ctx, "Successfully paired %s", device.String())
+	testing.ContextLogf(ctx, "Successfully paired device %s", device.String())
+
+	// Validate device properties from DUT end.
+	testing.ContextLog(ctx, "Validating paired device properties")
+	resp, err := fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
+		DeviceAddress: device.LocalBluetoothAddress(),
+	})
+	if resp.DeviceProperties.Address != device.LocalBluetoothAddress() {
+		s.Fatalf("Failed to verify device address; got: %q, want: %q", resp.DeviceProperties.Address, device.LocalBluetoothAddress())
+	}
+	if resp.DeviceProperties.Name != device.AdvertisedName() {
+		s.Fatalf("Failed to verify device name; got: %q, want: %q", resp.DeviceProperties.Name, device.AdvertisedName())
+	}
+	if !resp.DeviceProperties.Paired {
+		s.Fatalf("Expected device %s to be paired", device.String())
+	}
+	if !resp.DeviceProperties.Connected {
+		s.Fatalf("Expected device %s to be connected", device.String())
+	}
 }

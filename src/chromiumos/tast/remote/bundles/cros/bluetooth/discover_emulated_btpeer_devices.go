@@ -10,7 +10,7 @@ import (
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
-	bts "chromiumos/tast/services/cros/bluetooth"
+	pb "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 )
 
@@ -30,9 +30,9 @@ func init() {
 			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService"},
 		Fixture:      "chromeLoggedInWith2BTPeers",
-		Timeout:      1 * time.Minute,
+		Timeout:      3 * time.Minute,
 	})
 }
 
@@ -41,36 +41,43 @@ func init() {
 func DiscoverEmulatedBTPeerDevices(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
+	const discoveryTimeout = int64(45 * time.Second)
+
 	// Discover btpeer1 as a keyboard.
+	testing.ContextLog(ctx, "Configuring btpeer1 as a keyboard device")
 	keyboardDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
 		DeviceType: cbt.DeviceTypeKeyboard,
 	})
 	if err != nil {
 		s.Fatal("Failed to configure btpeer1 as a keyboard device: ", err)
 	}
-	if _, err := fv.BTS.DiscoverDevice(ctx, &bts.DiscoverDeviceRequest{
-		Device: keyboardDevice.BTSDevice(),
+	if _, err := fv.BluetoothService.DiscoverDevice(ctx, &pb.DiscoverDeviceRequest{
+		DeviceAddress:    keyboardDevice.LocalBluetoothAddress(),
+		DiscoveryTimeout: discoveryTimeout,
 	}); err != nil {
 		s.Fatalf("DUT failed to discover btpeer1 as %s: %v", keyboardDevice.String(), err)
 	}
 
 	// Discover btpeer2 as a mouse.
+	testing.ContextLog(ctx, "Configuring btpeer2 as a mouse device")
 	mouseDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[1], &bluetooth.EmulatedBTPeerDeviceConfig{
 		DeviceType: cbt.DeviceTypeMouse,
 	})
 	if err != nil {
 		s.Fatal("Failed to configure btpeer2 as a mouse device: ", err)
 	}
-	if _, err := fv.BTS.DiscoverDevice(ctx, &bts.DiscoverDeviceRequest{
-		Device: mouseDevice.BTSDevice(),
+	if _, err := fv.BluetoothService.DiscoverDevice(ctx, &pb.DiscoverDeviceRequest{
+		DeviceAddress:    mouseDevice.LocalBluetoothAddress(),
+		DiscoveryTimeout: discoveryTimeout,
 	}); err != nil {
-		s.Fatalf("DUT failed to discover btpeer1 as %s: %v", mouseDevice.String(), err)
+		s.Fatalf("DUT failed to discover btpeer2 as %s: %v", mouseDevice.String(), err)
 	}
 
 	// Confirm that btpeer1 is also still discoverable as a keyboard, since both
 	// peers should be usable at the same time.
-	if _, err := fv.BTS.DiscoverDevice(ctx, &bts.DiscoverDeviceRequest{
-		Device: keyboardDevice.BTSDevice(),
+	if _, err := fv.BluetoothService.DiscoverDevice(ctx, &pb.DiscoverDeviceRequest{
+		DeviceAddress:    keyboardDevice.LocalBluetoothAddress(),
+		DiscoveryTimeout: discoveryTimeout,
 	}); err != nil {
 		s.Fatalf("DUT failed to still discover btpeer1 as %s: %v", keyboardDevice.String(), err)
 	}

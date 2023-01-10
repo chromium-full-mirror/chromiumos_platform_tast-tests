@@ -10,7 +10,7 @@ import "google/protobuf/empty.proto";
 
 option go_package = "chromiumos/tast/services/cros/network";
 
-service BluetoothService {
+service BluetoothNetworkService {
 
   // SetBluetoothPowered sets the Bluetooth adapter power status via settingsPrivate. This setting persists across reboots.
   rpc SetBluetoothPowered(SetBluetoothPoweredRequest) returns (google.protobuf.Empty) {}

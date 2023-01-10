@@ -14,7 +14,7 @@ import (
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bluetooth"
-	pb "chromiumos/tast/services/cros/bluetooth"
+	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -31,19 +31,27 @@ func init() {
 			"dclasson@google.com",
 		},
 		BugComponent: "b:1133283",
-		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair_multidut"},
+		Attr: []string{
+			"group:bluetooth",
+			"bluetooth_cross_device_fastpair_multidut",
+		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService", "tast.cros.ui.ChromeUIService"},
-		Fixture:      "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
-		Timeout:      3 * time.Minute,
-		VarDeps:      []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
+		ServiceDeps: []string{
+			"tast.cros.bluetooth.BluetoothService",
+			"tast.cros.bluetooth.BluetoothUIService",
+			"tast.cros.ui.ChromeUIService",
+		},
+		Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
+		Timeout: 3 * time.Minute,
+		VarDeps: []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 	})
 }
 
-// FastPairSavedDevicesAddAndRemoveInitialPair tests that devices are saved to the Saved
-// Devices page during Initial Pair, and this propagates to companion devices. It also tests
-// that "removing" from the Saved Devices page is propagated to companion devices.
+// FastPairSavedDevicesAddAndRemoveInitialPair tests that devices are saved to
+// the "Saved Devices" page during Initial Pair, and this propagates to
+// companion devices. It also tests that "removing" from the "Saved Devices"
+// page is propagated to companion devices.
 func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
@@ -83,17 +91,18 @@ func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing
 
 	// Pair with the device on the primary DUT only.
 	s.Log(ctx, "Pairing device with fast pair notification on primary DUT")
-	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
-		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
+	if _, err := fv.BluetoothUIService.PairWithFastPairNotification(ctx, &bts.PairWithFastPairNotificationRequest{
+		Protocol: bts.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
 	}); err != nil {
 		s.Fatal("Failed to pair with fast pair notification: ", err)
 	}
-
-	if resp, err := fv.BTS.DeviceStatus(ctx, &pb.DeviceStatusRequest{
-		Device: fastPairDevice.BTSDevice(),
-	}); err != nil {
+	resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
+		DeviceAddress: fastPairDevice.LocalBluetoothAddress(),
+	})
+	if err != nil {
 		s.Fatal("Failed to check if target device is paired: ", err)
-	} else if !resp.IsPaired {
+	}
+	if !resp.DeviceIsPaired {
 		s.Fatal("Fast pair device not paired as expected")
 	}
 
@@ -104,7 +113,7 @@ func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing
 
 	// Remove the saved device from the companion DUT only.
 	s.Log(ctx, "Removing device from the Saved Devices page on companion DUT")
-	if _, err := fv.CompanionDUTConfig(1).BTS.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := fv.CompanionDUTConfig(1).BluetoothUIService.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
 		s.Fatal("Failed to remove the saved device from the companion DUT: ", err)
 	}
 
@@ -115,17 +124,17 @@ func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing
 }
 
 func confirmSavedDevicesStateBothDUTs(ctx context.Context, fv *bluetooth.FixtValue, deviceNames []string) error {
-	var request = &pb.ConfirmSavedDevicesStateRequest{
+	var request = &bts.ConfirmSavedDevicesStateRequest{
 		DeviceNames: deviceNames,
 	}
 
 	// Open the Saved Devices subpage on the primary DUT and confirm the state.
-	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, request); err != nil {
+	if _, err := fv.BluetoothUIService.ConfirmSavedDevicesState(ctx, request); err != nil {
 		return errors.Wrap(err, "failed to confirm the state of the Saved Devices subpage on primary DUT")
 	}
 
 	// Open the Saved Devices subpage on the companion DUT and confirm the state.
-	if _, err := fv.CompanionDUTConfig(1).BTS.ConfirmSavedDevicesState(ctx, request); err != nil {
+	if _, err := fv.CompanionDUTConfig(1).BluetoothUIService.ConfirmSavedDevicesState(ctx, request); err != nil {
 		return errors.Wrap(err, "failed to confirm the state of the Saved Devices subpage on companion DUT")
 	}
 
