@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
 )
 
 // simpleWebsites are websites to be opened in individual browsers
@@ -41,11 +42,6 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 		return 0, errors.Wrap(err, "failed to get window list")
 	}
 	initialNumWindows := len(ws)
-
-	// Install Meet PWA.
-	if err := apps.InstallPWAForURL(ctx, tconn, br, "https://meet.google.com", 30*time.Second); err != nil {
-		return 0, errors.Wrap(err, "failed to install Meet PWA")
-	}
 
 	// Open up a single window with a couple of tabs, to increase RAM pressure.
 	tabs, err := cuj.NewTabs(ctx, br, false, numExtraWebsites)
@@ -87,15 +83,44 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 
 	// Expected number of browser windows should include the number of
 	// websites in |simpleWebsites| and the window with multiple tabs.
-	// This count purposefully does not include the PWA, since the PWA is
-	// technically treated as its own app, since it has its own icon in
-	// the shelf.
 	expectedNumBrowserWindows := len(simpleWebsites) + 1
 	if ws, err := ash.GetAllWindows(ctx, tconn); err != nil {
 		return 0, errors.Wrap(err, "failed to get window list after opening Chrome tabs")
-	} else if expectedNumWindows := expectedNumBrowserWindows + initialNumWindows + 1; len(ws) != expectedNumWindows {
+	} else if expectedNumWindows := expectedNumBrowserWindows + initialNumWindows; len(ws) != expectedNumWindows {
 		return 0, errors.Wrapf(err, "unexpected number of windows open after launching Chrome tabs, got: %d, expected: %d", len(ws), expectedNumWindows)
 	}
 
 	return expectedNumBrowserWindows, nil
+}
+
+func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, br *browser.Browser) (func(ctx context.Context) error, error) {
+	const (
+		// This value is used to properly uninstall the app during test
+		// cleanup. This name is different than apps.Meet.Name, which
+		// is why it is set separately.
+		nameInSettingsApp = "Google Meet"
+
+		// pwaURL is the url used to install the PWA.
+		pwaURL = "https://meet.google.com"
+	)
+
+	appID := apps.Meet.ID
+
+	alreadyInstalled, err := ash.ChromeAppInstalled(ctx, tconn, appID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to check whether %s PWA has already been installed", nameInSettingsApp)
+	}
+
+	if alreadyInstalled {
+		if err := apps.Launch(ctx, tconn, appID); err != nil {
+			return nil, errors.Wrapf(err, "failed to launch %s PWA", nameInSettingsApp)
+		}
+	} else {
+		if err := apps.InstallPWAForURL(ctx, tconn, br, pwaURL, 30*time.Second); err != nil {
+			return nil, errors.Wrapf(err, "failed to install and launch %s PWA", nameInSettingsApp)
+		}
+	}
+	return func(ctx context.Context) error {
+		return ossettings.UninstallApp(ctx, tconn, cr, nameInSettingsApp, appID)
+	}, nil
 }

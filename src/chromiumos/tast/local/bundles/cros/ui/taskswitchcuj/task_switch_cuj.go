@@ -45,7 +45,7 @@ func Run(ctx context.Context, s *testing.State) {
 
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	testParam := s.Param().(TaskSwitchTest)
@@ -204,27 +204,34 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install packages: ", err)
 	}
 
+	// Launch packages before launching Chrome tabs, to mitigate
+	// flakiness when opening applications. When a lot of tabs are
+	// open, sometimes the launcher does not stabilize within the
+	// required timeout.
+	s.Log("Launching packages")
+	numAppWindows, err := launchPackages(ctx, tconn, kw, ac, packages)
+	if err != nil {
+		s.Fatal("Failed to launch apps: ", err)
+	}
+
+	s.Log("Opening Chrome Tabs")
+	numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, br, testParam.BrowserType, testParam.Tablet)
+	if err != nil {
+		s.Fatal("Failed to open Chrome tabs: ", err)
+	}
+
+	s.Log("Opening PWA")
+	cleanupPWA, err := openPWA(ctx, cr, tconn, br)
+	if err != nil {
+		s.Fatal("Failed to open PWA: ", err)
+	}
+	defer cleanupPWA(closeCtx)
+
+	// Increase the count of app windows, to include the PWA that
+	// was opened in openPWA.
+	numAppWindows++
+
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Launch packages before launching Chrome tabs, to mitigate
-		// flakiness when opening applications. When a lot of tabs are
-		// open, sometimes the launcher does not stabilize within the
-		// required timeout.
-		s.Log("Launching packages")
-		numAppWindows, err := launchPackages(ctx, tconn, kw, ac, packages)
-		if err != nil {
-			return errors.Wrap(err, "failed to launch apps")
-		}
-
-		s.Log("Opening Chrome Tabs")
-		numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, br, testParam.BrowserType, testParam.Tablet)
-		if err != nil {
-			return errors.Wrap(err, "failed to launch apps")
-		}
-
-		// Increase the count of app windows, to include the PWA that
-		// was opened in openChromeTabs.
-		numAppWindows++
-
 		// Open another Chrome tab so we can save the tab connection.
 		// We will use this tab connection to navigate away from the
 		// page to ensure collection of
