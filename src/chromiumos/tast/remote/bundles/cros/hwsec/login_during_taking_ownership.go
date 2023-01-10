@@ -21,13 +21,6 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm"},
 		Attr:         []string{"group:hwsec_destructive_func"},
-		Params: []testing.Param{{
-			Name: "auth_session_api",
-			Val:  &hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthSessionMountAPI},
-		}, {
-			Name: "auth_factor_api",
-			Val:  &hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI},
-		}},
 	})
 }
 
@@ -40,18 +33,15 @@ func LoginDuringTakingOwnership(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(s.Param().(*hwsec.CryptohomeMountAPIParam))
+	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
-	s.Log("Start resetting TPM if needed")
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)
 	}
-	s.Log("TPM is confirmed to be reset")
 
 	loginErr := make(chan error)
 	loginRoutine := func(username, passwd string) {
 		loginErr <- func() error {
-			s.Log("Start creating vault")
 			if err := utility.MountVault(ctx, "dontcare", hwsec.NewPassAuthConfig(username, passwd), true, hwsec.NewVaultConfig()); err != nil {
 				return errors.Wrap(err, "error during create vault")
 			}
@@ -62,11 +52,9 @@ func LoginDuringTakingOwnership(ctx context.Context, s *testing.State) {
 	ownershipErr := make(chan error)
 	takeOwnershipRoutine := func() {
 		ownershipErr <- func() error {
-			s.Log("Start taking ownership")
 			if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
 				return errors.Wrap(err, "failed to ensure ownership")
 			}
-			s.Log("Ownership is taken")
 			return nil
 		}()
 	}
