@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Verifies that AllowRoaming is respected by Shill",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_roaming"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_roaming"},
 		Fixture:      "cellular",
 		Timeout:      240 * time.Second,
 	})
