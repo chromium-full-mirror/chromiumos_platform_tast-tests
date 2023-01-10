@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/bundles/cros/login/userutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -36,6 +37,7 @@ func init() {
 			"ui.gaiaPoolDefault",
 		},
 		Timeout: 2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
+		Fixture: fixture.CleanOwnership,
 	})
 }
 
