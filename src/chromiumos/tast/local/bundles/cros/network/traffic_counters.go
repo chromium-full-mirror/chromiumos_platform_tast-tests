@@ -27,7 +27,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/crostini"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
-	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/httpserver"
@@ -259,7 +258,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	if param.vpn {
 		// Connect the VPN.
 		svr := svrs[0]
-		conn, err := connectVPN(ctx, svr)
+		conn, err := vpn.StartConnection(ctx, svr.rt, vpn.TypeWireGuard)
 		if err != nil {
 			s.Fatal("Failed to connect vpn: ", err)
 		}
@@ -400,41 +399,6 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 	}
 	rt = nil
 	return svr, nil
-}
-
-func connectVPN(ctx context.Context, s *server) (*vpn.Connection, error) {
-	config := vpn.Config{
-		Type:                  vpn.TypeWireGuard,
-		WGAutoGenKey:          true,
-		UnderlayIPIsOverlayIP: true,
-	}
-	conn, err := vpn.NewConnectionWithEnvs(ctx, config, s.rt, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create vpn connection")
-	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer func() {
-		if err == nil {
-			return
-		}
-		if err := conn.Cleanup(cleanupCtx); err != nil {
-			testing.ContextLog(cleanupCtx, "Failed to clean up vpn connection: ", err)
-		}
-		cancel()
-	}()
-	if err = conn.SetUp(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to setup vpn connection")
-	}
-	if _, err := conn.Connect(ctx); err != nil {
-		return nil, err
-	}
-	// Make sure routing is ready for VPN.
-	testing.ContextLog(ctx, "Waiting for routing for VPN ready")
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
-		return nil, errors.Wrap(err, "failed to verify VPN routing")
-	}
-	return conn, nil
 }
 
 func unusedOrRandomPort(ctx context.Context, fam l4server.Family) int {
