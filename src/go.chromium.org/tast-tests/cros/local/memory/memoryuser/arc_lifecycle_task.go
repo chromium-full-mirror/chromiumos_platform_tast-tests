@@ -136,8 +136,7 @@ func (t *ArcLifecycleUnit) doneAllocating(ctx context.Context, arc *arc.ARC) (bo
 	return done, nil
 }
 
-// StillAlive checks to see if the AndroidLifecycleTest app is alive and
-// responding to intents.
+// StillAlive checks to see if the AndroidLifecycleTest app is alive.
 func (t *ArcLifecycleUnit) StillAlive(ctx context.Context, a *arc.ARC) bool {
 	_, err := t.doneAllocating(ctx, a)
 	return err == nil

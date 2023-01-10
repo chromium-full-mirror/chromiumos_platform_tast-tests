@@ -29,6 +29,15 @@ var DefaultChromeOptionsVMMMS = ChromeOptions{
 	BrowserType:    browser.TypeAsh,
 }
 
+// TabManagerDelegateChromeOptionsVMMMS defines the default options for creating
+// Chrome with VMMMS enabled and using TabManagerDelegate to discard tabs.
+var TabManagerDelegateChromeOptionsVMMMS = ChromeOptions{
+	EnableFeatures: []string{"CrOSLateBootVmMemoryManagementService"},
+	ExtraArgs:      []string{"--disable-features=AshUrgentDiscardingFromPerformanceManager"},
+	Timeout:        chrome.LoginTimeout,
+	BrowserType:    browser.TypeAsh,
+}
+
 // LacrosChromeOptions creates Lacros Chrome.
 var LacrosChromeOptions = ChromeOptions{
 	Timeout:     chrome.LoginTimeout,
@@ -125,6 +134,20 @@ var arcStartedVMMMSPre = NewMultiVMPrecondition(
 // ArcStartedVMMMS returns a Precondition that logs into Chrome with VMMMS
 // enabled and starts ARCVM.
 func ArcStartedVMMMS() testing.Precondition {
+	return arcStartedVMMMSPre
+}
+
+var arcStartedVMMMSTabManagerDelegatePre = NewMultiVMPrecondition(
+	"multivm_arc_vmmms_tmd",
+	NewStateManager(
+		TabManagerDelegateChromeOptionsVMMMS,
+		DefaultARCOptions,
+	).SetForceActivate(true))
+
+// ArcStartedVMMMSTabManagerDelegate returns a Precondition that logs into
+// Chrome with VMMMS enabled and using TabManagerDelegate to discard tabs and
+// starts ARCVM.
+func ArcStartedVMMMSTabManagerDelegate() testing.Precondition {
 	return arcStartedVMMMSPre
 }
 

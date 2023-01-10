@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -199,4 +200,37 @@ func (d *Device) LogcatDeviceTime(ctx context.Context) (LogcatTimestampLong, err
 		return "", errors.Wrap(err, "failed to retrieve the device time")
 	}
 	return LogcatTimestampLong(out), nil
+}
+
+const logcatTimestampLayout = "01-02 15:04:05.000"
+const logcatTimestampLongLayout = "2006-01-02 15:04:05.000"
+
+// ParseLogcatTimestamp searches str for LogcatTimestampLongPattern and
+// converts it to a time.Time. If not found, then search str for
+// LogcatTimestampPattern, and if found, converts it to a time.Time with the
+// current year.
+func ParseLogcatTimestamp(str string) (time.Time, error) {
+	if match := LogcatTimestampLongPattern.FindString(str); match != "" {
+		t, err := time.ParseInLocation(logcatTimestampLongLayout, match, time.Local)
+		if err != nil {
+			return time.Time{}, errors.Wrap(err, "failed to parse long logcat timestamp")
+		}
+		return t, nil
+	} else if match := LogcatTimestampPattern.FindString(str); match != "" {
+		t, err := time.ParseInLocation(logcatTimestampLayout, match, time.Local)
+		if err != nil {
+			return time.Time{}, errors.Wrap(err, "failed to parse logcat timestamp")
+		}
+		// Add in the current year, since there's no year in the timestamp.
+		now := time.Now()
+		if now.Month() == time.January && t.Month() == time.December {
+			// Just in case it's midnight on New Year's.
+			t = t.AddDate(now.Year()-1, 0, 0)
+		} else {
+			t = t.AddDate(now.Year(), 0, 0)
+		}
+		return t, nil
+	} else {
+		return time.Time{}, errors.Errorf("no logcat timestamp time found in %q", str)
+	}
 }
