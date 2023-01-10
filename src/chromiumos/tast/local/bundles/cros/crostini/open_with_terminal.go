@@ -6,8 +6,12 @@ package crostini
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/terminalapp"
@@ -58,6 +62,14 @@ func init() {
 
 func OpenWithTerminal(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, pre.Chrome, "ui_tree")
+
 	// Launch Files app and open Downloads with terminal.
 	filesApp, err := filesapp.Launch(ctx, pre.Tconn)
 	if err != nil {

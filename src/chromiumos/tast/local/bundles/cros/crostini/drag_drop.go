@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/coords"
@@ -96,6 +97,9 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	tconn := pre.Tconn
 	cont := pre.Cont
 
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+
 	// Ensures landscape orientation.
 	restore, err := display.RotateToLandscape(ctx, tconn)
 	if err != nil {
@@ -152,6 +156,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set Files App left-snapped: ", err)
 	}
 	defer setWindowState(cleanupCtx, tconn, "Files - My files", ash.WindowStateNormal)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, pre.Chrome, "ui_tree")
 
 	// Drag and drop file and dir from FilesApp to app.
 	if err = dragFromFilesApp(ctx, pre, files, dirDragFromFilesapp, "['file:///mnt/chromeos/MyFiles/filesappdir']"); err != nil {
