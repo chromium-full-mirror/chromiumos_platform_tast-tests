@@ -107,6 +107,18 @@ func CCDCapabilitiesBatteryBypassPP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open CCD: ", err)
 	}
 
+	// Make sure that CCD capabilities are in their default states
+	if err := h.Servo.RunCR50Command(ctx, "ccd reset"); err != nil {
+		s.Fatal("Failed to reset CCD: ", err)
+	}
+
+	// Open CCD and reset to factory when finished
+	defer func() {
+		if err := h.OpenCCD(ctx, true, true); err != nil {
+			s.Fatal("Failed to open CCD: ", err)
+		}
+	}()
+
 	// In addition to setting `BatteryBypassPP` based on the test being run,
 	// always make sure that `OpenNoTPMWipe` and `UnlockNoReboot` are set.
 	ccdSettings := map[servo.CCDCap]servo.CCDCapState{
@@ -132,13 +144,6 @@ func CCDCapabilitiesBatteryBypassPP(ctx context.Context, s *testing.State) {
 	if err := h.Servo.LockCCD(ctx); err != nil {
 		s.Fatal("Failed to lock CCD: ", err)
 	}
-
-	// Open CCD when finished
-	defer func() {
-		if err := h.OpenCCD(ctx, true, false); err != nil {
-			s.Fatal("Failed to open CCD: ", err)
-		}
-	}()
 
 	testIfPhysicalPresenceIsRequired(ctx, s, userParams.expectPhysicalPresenceRequired)
 }
