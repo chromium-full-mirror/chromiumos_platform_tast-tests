@@ -38,7 +38,7 @@ func init() {
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
-			"tast.cros.bluetooth.BluetoothService",
+			wificell.BluetoothServiceName,
 		},
 		Vars:    []string{"router"},
 		VarDeps: []string{"wifi.signinProfileTestExtensionManifestKey"},

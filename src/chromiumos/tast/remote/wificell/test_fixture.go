@@ -53,6 +53,7 @@ import (
 	"chromiumos/tast/remote/wificell/router/openwrt"
 	"chromiumos/tast/remote/wificell/tethering"
 	"chromiumos/tast/rpc"
+	"chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
@@ -196,6 +197,10 @@ const (
 	// uses the shill service directly.
 	ShillServiceName = "tast.cros.wifi.ShillService"
 
+	// BluetoothServiceName is the name of the bluetooth service needed by
+	// TestFixture.
+	BluetoothServiceName = "tast.cros.bluetooth.BluetoothService"
+
 	// DefaultDUT is the default DUT index (0).
 	DefaultDUT = 0
 	// PeerDUT is the peer DUT index (1).
@@ -215,6 +220,7 @@ type dutData struct {
 	rpcHint          *testing.RPCHint
 	rpc              *rpc.Client
 	wifiClient       *WifiClient
+	bluetoothClient  bluetooth.BluetoothServiceClient
 	originalLogLevel int
 	originalLogTags  []string
 
@@ -398,6 +404,17 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 		}
 		d.wifiClient = &WifiClient{
 			ShillServiceClient: wifi.NewShillServiceClient(d.rpc.Conn),
+		}
+		d.bluetoothClient = bluetooth.NewBluetoothServiceClient(d.rpc.Conn)
+
+		// Set DUT to use bluez bluetooth stack and enable bluetooth.
+		if _, err := d.bluetoothClient.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
+			StackType: bluetooth.BluetoothStackType_BLUEZ,
+		}); err != nil {
+			return nil, errors.Wrap(err, "failed to set DUT bluetooth stack to bluez")
+		}
+		if _, err := d.bluetoothClient.Enable(ctx, &empty.Empty{}); err != nil {
+			return nil, errors.Wrap(err, "failed to enable bluetooth on DUT")
 		}
 
 		// TODO(crbug.com/728769): Make sure if we need to turn off powersave.
