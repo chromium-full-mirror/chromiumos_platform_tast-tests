@@ -13,7 +13,7 @@ import (
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
-	pb "chromiumos/tast/services/cros/bluetooth"
+	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
 )
 
@@ -42,6 +42,7 @@ func init() {
 // FastPairSubsequentPair tests the Fast Pair subsequent pairing scenario.
 func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
+	companionDUTConfig := fv.CompanionDUTConfig(1)
 
 	// Parse antispoofing key pem from test var.
 	antispoofingKeyPemBase64 := s.RequiredVar(bluetooth.TestVarFastPairAntispoofingKeyPem)
@@ -57,7 +58,7 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 	// this we prevent the Companion from receiving an advertisement until after the primary
 	// DUT has finished pairing successfully.
 	testing.ContextLog(ctx, "Disabling Bluetooth on the Companion DUT")
-	if _, err := fv.CompanionBTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := companionDUTConfig.BTS.DisableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
 		s.Fatal("Failed to disable bluetooth adapter on the companion DUT: ", err)
 	}
 
@@ -75,13 +76,13 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 
 	// Perform Initial pairing on DUT.
 	testing.ContextLog(ctx, "Pairing device with Initial fast pair notification on DUT")
-	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
-		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
+	if _, err := fv.BTS.PairWithFastPairNotification(ctx, &bts.PairWithFastPairNotificationRequest{
+		Protocol: bts.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL,
 	}); err != nil {
 		s.Fatal("Failed to pair with initial fast pair notification: ", err)
 	}
 
-	resp, err := fv.BTS.DeviceStatus(ctx, &pb.DeviceStatusRequest{
+	resp, err := fv.BTS.DeviceStatus(ctx, &bts.DeviceStatusRequest{
 		Device: fastPairDevice.BTSDevice(),
 	})
 	if err != nil {
@@ -99,19 +100,19 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 
 	// Enable Bluetooth on the Companion DUT.
 	testing.ContextLog(ctx, "Enabling Bluetooth on the Companion DUT")
-	if _, err := fv.CompanionBTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := companionDUTConfig.BTS.EnableBluetoothAdapter(ctx, &emptypb.Empty{}); err != nil {
 		s.Fatal("Failed to enable bluetooth adapter on the companion DUT: ", err)
 	}
 
 	// Perform Subsequent pairing on Companion DUT.
 	testing.ContextLog(ctx, "Pairing device with Subsequent fast pair notification on DUT")
-	if _, err := fv.CompanionBTS.PairWithFastPairNotification(ctx, &pb.PairWithFastPairNotificationRequest{
-		Protocol: pb.FastPairProtocol_FAST_PAIR_PROTOCOL_SUBSEQUENT,
+	if _, err := companionDUTConfig.BTS.PairWithFastPairNotification(ctx, &bts.PairWithFastPairNotificationRequest{
+		Protocol: bts.FastPairProtocol_FAST_PAIR_PROTOCOL_SUBSEQUENT,
 	}); err != nil {
 		s.Fatal("Failed to pair with subsequent fast pair notification: ", err)
 	}
 
-	resp, err = fv.CompanionBTS.DeviceStatus(ctx, &pb.DeviceStatusRequest{
+	resp, err = companionDUTConfig.BTS.DeviceStatus(ctx, &bts.DeviceStatusRequest{
 		Device: fastPairDevice.BTSDevice(),
 	})
 	if err != nil {

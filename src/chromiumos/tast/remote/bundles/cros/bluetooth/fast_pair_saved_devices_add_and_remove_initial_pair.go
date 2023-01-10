@@ -102,7 +102,7 @@ func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing
 
 	// Remove the saved device from the companion DUT only.
 	s.Log(ctx, "Removing device from the Saved Devices page on companion DUT")
-	if _, err := fv.CompanionBTS.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := fv.CompanionDUTConfig(1).BTS.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
 		s.Fatal("Failed to remove the saved device from the companion DUT: ", err)
 	}
 
@@ -123,7 +123,7 @@ func confirmSavedDevicesStateBothDUTs(ctx context.Context, fv *bluetooth.FixtVal
 	}
 
 	// Open the Saved Devices subpage on the companion DUT and confirm the state.
-	if _, err := fv.CompanionBTS.ConfirmSavedDevicesState(ctx, request); err != nil {
+	if _, err := fv.CompanionDUTConfig(1).BTS.ConfirmSavedDevicesState(ctx, request); err != nil {
 		return errors.Wrap(err, "failed to confirm the state of the Saved Devices subpage on companion DUT")
 	}
 
