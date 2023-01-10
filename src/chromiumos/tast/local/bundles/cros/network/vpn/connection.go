@@ -15,10 +15,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/pkcs11/netcertstore"
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/routing"
+	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
@@ -314,9 +315,49 @@ type Connection struct {
 	Server       *Server
 	SecondServer *Server
 
-	config    Config
-	certStore *netcertstore.Store
-	service   *shill.Service
+	config  Config
+	service *shill.Service
+}
+
+// StartConnection creates a VPN connection on DUT, including the following steps:
+//   - If env is nil, create a virtualnet env on DUT;
+//   - Set up the VPN server in env;
+//   - Create and configure a VPN service profile in shill;
+//   - Connect the VPN service and wait for the service connected.
+//
+// On success, the caller should call Cleanup() on the returned Connection to
+// release the resources after the test is done.
+func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opts ...Option) (*Connection, error) {
+	config := NewConfig(vpnType, opts...)
+	if config.WGTwoPeers {
+		return nil, errors.New("this function only supports one server")
+	}
+
+	conn := &Connection{serverEnv: env, config: *config}
+	cleanupCtx, _ := ctxutil.Shorten(ctx, 5*time.Second)
+	success := false
+	defer func() {
+		if !success {
+			conn.Cleanup(cleanupCtx)
+		}
+	}()
+
+	if err := conn.startServer(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start VPN server")
+	}
+
+	svc, err := configureService(ctx, conn.Server, nil, &conn.config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to configure shill service")
+	}
+	conn.service = svc
+
+	if result, err := conn.Connect(ctx); result == false || err != nil {
+		return nil, errors.Wrap(err, "failed to connect the VPN service")
+	}
+
+	success = true
+	return conn, nil
 }
 
 // NewConnection creates a new connection object. Notes:
@@ -392,8 +433,12 @@ func (c *Connection) setUpInternal(ctx context.Context, withSvc bool) error {
 // Connect lets shill connect to the VPN server. Returns whether the connection is
 // established successfully.
 func (c *Connection) Connect(ctx context.Context) (bool, error) {
+	testing.ContextLog(ctx, "Waiting for VPN service connected")
 	if connected, err := c.connectService(ctx); err != nil || !connected {
 		return false, err
+	}
+	if err := routing.ExpectPingSuccessWithTimeout(ctx, c.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
+		return false, errors.Wrap(err, "failed to verify VPN routing")
 	}
 
 	var overlayIPArray []string
