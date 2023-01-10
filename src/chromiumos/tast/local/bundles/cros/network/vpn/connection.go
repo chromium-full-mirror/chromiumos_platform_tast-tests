@@ -20,7 +20,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/network/virtualnet"
-	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
 )
@@ -54,12 +53,6 @@ type Config struct {
 	// Parameters for a WireGuard connection.
 	// WGUsePSK indicates whether the connection uses PSK in authentication.
 	WGUsePSK bool
-	// WGTwoPeers indicates whether the connection will use one peer or two
-	// peers. If true, two peers will be created in two separate network
-	// namespace, and the service will use a split routing (for the subnet
-	// ranges, see createWireGuardProperties()); if false, the default route
-	// ("0.0.0.0/0") to this unique peer will be used.
-	WGTwoPeers bool
 	// WGAutoGenKey indicates whether letting shill generate the private key for
 	// the client side.
 	WGAutoGenKey bool
@@ -307,12 +300,9 @@ const (
 
 // Connection represents a VPN connection can be used in the test.
 type Connection struct {
+	// routingEnv will only be set and used when StartConnection() is called with
+	// a nil env.
 	routingEnv *routing.TestEnv
-
-	// serverEnv and secondServerEnv holds the currently used environment.
-	// If these fields are empty, a new TestEnv will be created instead.
-	serverEnv       *env.Env
-	secondServerEnv *env.Env
 
 	Server       *Server
 	SecondServer *Server
@@ -331,11 +321,7 @@ type Connection struct {
 // release the resources after the test is done.
 func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opts ...Option) (*Connection, error) {
 	config := NewConfig(vpnType, opts...)
-	if config.WGTwoPeers {
-		return nil, errors.New("this function only supports one server")
-	}
-
-	conn := &Connection{serverEnv: env, config: *config}
+	conn := &Connection{config: *config}
 	cleanupCtx, _ := ctxutil.Shorten(ctx, 5*time.Second)
 	success := false
 	defer func() {
@@ -344,7 +330,7 @@ func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opt
 		}
 	}()
 
-	if err := conn.startServer(ctx); err != nil {
+	if err := conn.startServer(ctx, env); err != nil {
 		return nil, errors.Wrap(err, "failed to start VPN server")
 	}
 
@@ -429,19 +415,18 @@ func (c *Connection) Cleanup(ctx context.Context) error {
 	return lastErr
 }
 
-func (c *Connection) startServer(ctx context.Context) error {
-	if c.serverEnv == nil || (c.config.WGTwoPeers && c.secondServerEnv == nil) {
+func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error {
+	if env == nil {
 		c.routingEnv = routing.NewTestEnvWithoutResetProfile()
 		if err := c.routingEnv.SetUp(ctx); err != nil {
 			return errors.Wrap(err, "failed to setup routing env")
 		}
-		c.serverEnv = c.routingEnv.BaseServer
-		c.secondServerEnv = c.routingEnv.BaseRouter
+		env = c.routingEnv.BaseServer
 	}
 
 	var err error
 	if c.config.Type != TypeWireGuard {
-		c.Server, err = StartServerWithConfig(ctx, c.serverEnv, &c.config)
+		c.Server, err = StartServerWithConfig(ctx, env, &c.config)
 		return err
 	}
 
@@ -451,11 +436,7 @@ func (c *Connection) startServer(ctx context.Context) error {
 			return errors.Wrap(err, "failed to get public key")
 		}
 	}
-	c.Server, err = startWireGuardServer(ctx, c.serverEnv, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
-	if err == nil && c.config.WGTwoPeers {
-		// Always sets preshared key for the second peer.
-		c.SecondServer, err = startWireGuardServer(ctx, c.secondServerEnv, clientKey, true /*usePSK*/, true /*isSecondServer*/)
-	}
+	c.Server, err = startWireGuardServer(ctx, env, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
 	return err
 }
 
