@@ -1060,13 +1060,6 @@ func (u *CryptohomeClient) AuthenticateChallengeCredentialWithAuthSession(ctx co
 	return err
 }
 
-// UpdateCredentialWithAuthSession updated a credential using an AuthSession with a given authSessionID.
-// password is ignored if publicMount is set to true.
-func (u *CryptohomeClient) UpdateCredentialWithAuthSession(ctx context.Context, password, keyLabel, authSessionID string, publicMount bool) error {
-	_, err := u.binary.updateCredentialWithAuthSession(ctx, password, keyLabel, authSessionID, publicMount)
-	return err
-}
-
 // AuthenticateAuthFactor authenticates an AuthSession with a given authSessionID via an auth factor.
 func (u *CryptohomeClient) AuthenticateAuthFactor(ctx context.Context, authSessionID, label, password string) (*uda.AuthenticateAuthFactorReply, error) {
 	binaryMsg, err := u.binary.authenticateAuthFactor(ctx, authSessionID, label, password)
