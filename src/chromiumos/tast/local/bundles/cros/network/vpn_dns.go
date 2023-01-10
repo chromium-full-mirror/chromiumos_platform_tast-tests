@@ -37,24 +37,14 @@ func init() {
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
 			Name: "openvpn",
-			Val: vpn.Config{
-				Type:           vpn.TypeOpenVPN,
-				OpenVPNTLSAuth: true,
-				PushDNS:        true,
-			},
+			Val:  vpn.TypeOpenVPN,
 		}, {
-			Name: "ikev2",
-			Val: vpn.Config{
-				Type:    vpn.TypeIKEv2,
-				PushDNS: true,
-			},
+			Name:              "ikev2",
+			Val:               vpn.TypeIKEv2,
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec",
-			Val: vpn.Config{
-				Type:    vpn.TypeL2TPIPsec,
-				PushDNS: true,
-			},
+			Val:  vpn.TypeL2TPIPsec,
 		},
 		},
 	})
@@ -103,33 +93,24 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start dnsmasq on vpn server: ", err)
 	}
 
-	vpnConfig := s.Param().(vpn.Config)
-	vpnConfig.CertVals = s.FixtValue().(vpn.FixtureEnv).CertVals
-	conn, err := vpn.NewConnectionWithEnvs(ctx, vpnConfig, vpnServer, nil)
+	// Wait for veth to be online then start connecting to VPN
+	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
+		s.Error("Failed to wait for service online: ", err)
+	}
+
+	conn, err := vpn.StartConnection(ctx, vpnServer,
+		s.Param().(vpn.Type),
+		vpn.WithPushDNS(),
+		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
+	)
 	if err != nil {
-		s.Fatal("Failed to create vpn connection object: ", err)
+		s.Fatal("Failed to start VPN connection: ", err)
 	}
 	defer func() {
 		if err := conn.Cleanup(cleanupCtx); err != nil {
 			s.Error("Failed to clean up vpn connection: ", err)
 		}
 	}()
-
-	if err := conn.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup VPN server: ", err)
-	}
-
-	// Wait for veth to be online then start connecting to VPN
-	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		s.Error("Failed to wait for service online: ", err)
-	}
-
-	connected, err := conn.Connect(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to VPN server: ", err)
-	} else if !connected {
-		s.Fatal("Failed to connect to VPN server: the service state changed to failure")
-	}
 
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping server overlay %s: %v", conn.Server.OverlayIPv4, err)
