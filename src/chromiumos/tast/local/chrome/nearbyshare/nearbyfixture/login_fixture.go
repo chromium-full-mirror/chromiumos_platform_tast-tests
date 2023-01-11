@@ -564,6 +564,13 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	s.Logf("Nearby Static ID for this device is: %s", nearbystaticIDStr)
 	f.opts = append(f.opts, chrome.ExtraArgs(fmt.Sprintf("--nearby-share-device-id=%s", nearbystaticIDStr)))
 
+	runtimeEnableFeatures := nearbycommon.EnableFeatures.Value()
+	if runtimeEnableFeatures != "" {
+		s.Log("Features specified to be enabled by nearbyshare.EnableFeatures runtime var: ", runtimeEnableFeatures)
+		features := strings.Split(runtimeEnableFeatures, ",")
+		f.opts = append(f.opts, chrome.EnableFeatures(features...))
+	}
+
 	cr, err := chrome.New(
 		ctx,
 		f.opts...,
