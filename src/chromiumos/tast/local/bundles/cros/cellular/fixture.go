@@ -137,12 +137,11 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Logf("%q not running", modemfwd.JobName)
 		}
 	}
-	if !upstart.JobExists(ctx, hermes.JobName) {
-		return &FixtData{fdms}
-	}
-	// Hermes is usually idle 2 minutes after boot, so go on with the test even if we cannot be sure.
-	if err := hermes.WaitForHermesIdle(ctx, 30*time.Second); err != nil {
-		s.Logf("Could not confirm if Hermes is idle: %s", err)
+	if upstart.JobExists(ctx, hermes.JobName) {
+		// Hermes is usually idle 2 minutes after boot, so go on with the test even if we cannot be sure.
+		if err := hermes.WaitForHermesIdle(ctx, 30*time.Second); err != nil {
+			s.Logf("Could not confirm if Hermes is idle: %s", err)
+		}
 	}
 
 	if f.disableCellularTechnology {
