@@ -21,7 +21,6 @@ const (
 	AddressName            = "Address"
 	AdvancedConfigName     = "Advanced printer configuration"
 	AppSocketName          = "AppSocket"
-	CreditsName            = "Credits"
 	EditName               = "Edit"
 	EditPrinterName        = "Edit printer"
 	EulaName               = "End User License Agreement"
@@ -45,7 +44,6 @@ var (
 	AddressFinder            *nodewith.Finder = nodewith.Role(role.TextField).Name(AddressName)
 	AdvancedConfigFinder     *nodewith.Finder = nodewith.Role(role.Dialog).Name(AdvancedConfigName)
 	AppSocketFinder          *nodewith.Finder = nodewith.Role(role.ListBoxOption).NameContaining(AppSocketName)
-	CreditsFinder            *nodewith.Finder = nodewith.Role(role.RootWebArea).Name(CreditsName)
 	EditFinder               *nodewith.Finder = nodewith.Role(role.StaticText).Name(EditName)
 	EditPrinterFinder        *nodewith.Finder = nodewith.Role(role.Dialog).Name(EditPrinterName)
 	EulaFinder               *nodewith.Finder = nodewith.Role(role.Link).Name(EulaName)

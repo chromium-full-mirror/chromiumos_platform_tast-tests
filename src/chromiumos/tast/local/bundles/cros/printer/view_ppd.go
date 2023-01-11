@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/printer/uitools"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -63,10 +64,9 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 	addPrinterButton := uitools.AddPrinterFinder.Ancestor(ossettings.WindowFinder)
 	if err := uiauto.Combine("click add printer button",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(entryFinder),
-		ui.MakeVisible(entryFinder),
-		ui.LeftClick(entryFinder),
+		ui.DoDefault(entryFinder),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(addPrinterButton),
-		ui.LeftClick(addPrinterButton),
+		ui.DoDefault(addPrinterButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click add printer button: ", err)
 	}
@@ -80,13 +80,13 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 	addButton := uitools.AddFinder.Ancestor(editDialog)
 	if err := uiauto.Combine("input basic printer parameters",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(nameField),
-		ui.LeftClick(nameField),
+		ui.EnsureFocused(nameField),
 		kb.TypeAction(printerName),
-		ui.LeftClick(addressField),
+		ui.EnsureFocused(addressField),
 		kb.TypeAction("localhost"),
-		ui.LeftClick(protocolField),
-		ui.LeftClick(appSocketItem),
-		ui.LeftClick(addButton),
+		ui.DoDefault(protocolField),
+		ui.DoDefault(appSocketItem),
+		ui.DoDefault(addButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to input basic printer parameters: ", err)
 	}
@@ -101,13 +101,17 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 	printerButton := nodewith.Role(role.Button).Name(printerName).Ancestor(ossettings.WindowFinder)
 	if err := uiauto.Combine("input advanced printer parameters",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(manufacturerButton),
-		ui.LeftClick(manufacturerButton),
+		ui.EnsureFocused(manufacturerButton),
 		kb.TypeAction(printerManufacturer),
-		ui.LeftClick(manufacturerSelection),
-		ui.LeftClick(modelButton),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(manufacturerSelection),
+		ui.DoDefault(manufacturerSelection),
+		ui.WithTimeout(10*time.Second).WaitUntilGone(manufacturerSelection),
+		ui.EnsureFocused(modelButton),
 		kb.TypeAction(printerModel),
-		ui.LeftClick(modelSelection),
-		ui.LeftClick(advancedConfigAddButton),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(modelSelection),
+		ui.DoDefault(modelSelection),
+		ui.WithTimeout(10*time.Second).WaitUntilGone(modelSelection),
+		ui.DoDefault(advancedConfigAddButton),
 		ui.WithTimeout(time.Minute).WaitUntilExists(printerButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to input advanced printer parameters: ", err)
@@ -119,7 +123,7 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 // opens. If containsEula is true, this will additionally check to make sure the
 // EULA link is present and works.
 func checkPpd(ctx context.Context, s *testing.State, ui *uiauto.Context,
-	printerName string, containsEula bool) {
+	printerName string, containsEula bool, cr *chrome.Chrome) {
 	// Edit the printer and select the View PPD button.
 	printerButton := nodewith.Role(role.Button).Name(printerName).Ancestor(ossettings.WindowFinder)
 	editText := uitools.EditFinder.Ancestor(ossettings.WindowFinder)
@@ -127,11 +131,10 @@ func checkPpd(ctx context.Context, s *testing.State, ui *uiauto.Context,
 	viewPpdButton := uitools.ViewPpdFinder.Ancestor(editPrinterDialog)
 	if err := uiauto.Combine("click Edit Printer, view PPD button",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(printerButton),
-		ui.LeftClick(printerButton),
-		ui.LeftClick(editText),
+		ui.DoDefault(printerButton),
+		ui.DoDefault(editText),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(viewPpdButton),
-		ui.MakeVisible(viewPpdButton),
-		ui.LeftClick(viewPpdButton),
+		ui.DoDefault(viewPpdButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to view PPD: ", err)
 	}
@@ -153,12 +156,24 @@ func checkPpd(ctx context.Context, s *testing.State, ui *uiauto.Context,
 	}
 	if containsEula {
 		eulaLink := uitools.EulaFinder.Ancestor(webView)
-		licensePage := uitools.CreditsFinder
-		if err := uiauto.Combine("check for EULA",
-			ui.LeftClick(eulaLink),
-			ui.WithTimeout(time.Minute).WaitUntilExists(licensePage),
-		)(ctx); err != nil {
-			s.Fatal("Failed to check for EULA: ", err)
+		if err := ui.DoDefault(eulaLink)(ctx); err != nil {
+			s.Fatal("Failed to click EULA link: ", err)
+		}
+
+		// The EULA page takes a while to load, sometimes loads incorrectly, and is
+		// very large, all of which make searching through the UI tree flaky.
+		// Instead of looking for an element in the EULA page, just make sure the
+		// EULA tab exists.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			matcher := chrome.MatchTargetURL("chrome://os-credits/#xerox-printing-license")
+			if avail, err := cr.IsTargetAvailable(ctx, matcher); err != nil {
+				return err
+			} else if avail != true {
+				return errors.New("failed to find license page")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			s.Fatal("Failed polling for license page: ", err)
 		}
 	}
 }
@@ -190,10 +205,10 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	// Test a printer that does not have the EULA
 	printerName := "test-printer"
 	createPrinter(ctx, s, cr, tconn, ui, printerName, "Brother", "Brother DCP-1200")
-	checkPpd(ctx, s, ui, printerName, false)
+	checkPpd(ctx, s, ui, printerName, false, cr)
 
 	// Test with a printer that has an EULA
 	printerName = "test-printer-with-eula"
 	createPrinter(ctx, s, cr, tconn, ui, printerName, "Xerox", "Xerox B230")
-	checkPpd(ctx, s, ui, printerName, true)
+	checkPpd(ctx, s, ui, printerName, true, cr)
 }
