@@ -18,12 +18,13 @@ func init() {
 		Func: StorkProfile,
 		Desc: "Verifies that the Stork API can be invoked by a device",
 		Contacts: []string{
+			"chromeos-cellular-team@google.com",
 			"khorimoto@google.com",
 			"pholla@google.com",
-			"chromeos-cellular-team@google.com",
 		},
-		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
-		Timeout: 5 * time.Minute,
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
+		Timeout:      5 * time.Minute,
 	})
 }
 
