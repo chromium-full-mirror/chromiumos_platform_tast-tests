@@ -26,7 +26,7 @@ func init() {
 			"dclasson@google.com",
 		},
 		BugComponent: "b:1133283",
-		Attr:         []string{},
+		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
 		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",

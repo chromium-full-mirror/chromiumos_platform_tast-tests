@@ -30,7 +30,7 @@ func init() {
 			"dclasson@google.com",
 		},
 		BugComponent: "b:1133283",
-		Attr:         []string{},
+		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair_multidut"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService", "tast.cros.ui.ChromeUIService"},
 		Fixture:      "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
