@@ -94,12 +94,11 @@ func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
 	sess, err := tracing.StartSession(ctx, traceConfigPath)
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
-
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
+	// The temporary file of trace data is no longer needed when returned.
+	defer sess.RemoveTraceResultFile()
 
 	// Developers can run other tests to trigger more trace data.
 	const pauseDuration = time.Second * 10

@@ -166,6 +166,10 @@ func StartSession(ctx context.Context, configFile string) (*Session, error) {
 	//   -o traceOutputPath      : save the trace data (binary proto) to |traceOutputPath|
 	cmd := testexec.CommandContext(ctx, "perfetto", "-c", configFile, "--txt", "-o", tempFile.Name())
 	if err := cmd.Start(); err != nil {
+		if e := os.Remove(tempFile.Name()); e != nil {
+			// Cleanup the temp file is non-fatal. Just log the error.
+			log.Printf("failed to remove the temporary trace result file: %v", e)
+		}
 		return nil, errors.Wrap(err, "failed to start the tracing session")
 	}
 
@@ -183,6 +187,8 @@ func StartSessionAndWaitUntilDone(ctx context.Context, configFile string) (*Sess
 	}
 
 	if err := sess.Wait(); err != nil {
+		// Session is already started. We need to remove the temp file.
+		sess.RemoveTraceResultFile()
 		return nil, errors.Wrap(err, "failed to stop the tracing session")
 	}
 

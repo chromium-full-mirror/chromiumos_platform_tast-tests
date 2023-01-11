@@ -44,12 +44,11 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(batteryTraceConfigFile)
 	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, traceConfigPath)
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
-
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
+	// The temporary file of trace data is no longer needed when returned.
+	defer sess.RemoveTraceResultFile()
 
 	// Process the trace data with the SQL query and get [][]string as the result.
 	// See the content of batteryTraceQueryFile for details.

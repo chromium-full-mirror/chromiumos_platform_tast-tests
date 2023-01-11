@@ -42,12 +42,11 @@ func PerfettoTraceProcessing(ctx context.Context, s *testing.State) {
 	// We don't need to run any test action during the tracing session.
 	// Just use the blocking version of StartSession() for simplicity.
 	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, s.DataPath(traceConfig))
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
-
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
+	// The temporary file of trace data is no longer needed when returned.
+	defer sess.RemoveTraceResultFile()
 
 	// Process the trace data using inline string query for simple queries.
 	res1, err := sess.RunQueryString(ctx, s.DataPath(tracing.TraceProcessor()),

@@ -38,12 +38,11 @@ func collectTraceData(ctx context.Context, s *testing.State) error {
 	traceConfigPath := s.DataPath(tracing.TraceConfigFile)
 
 	sess, err := tracing.StartSessionAndWaitUntilDone(wctx, traceConfigPath)
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
-
 	if err != nil {
 		return err
 	}
+	// The temporary file of trace data is no longer needed when returned.
+	defer sess.RemoveTraceResultFile()
 
 	// Validate the trace data.
 	stat, err := sess.TraceResultFile.Stat()
