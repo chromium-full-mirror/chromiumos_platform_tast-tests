@@ -19,9 +19,12 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/holdingspace"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/testing"
 )
+
+const statusAreaOverflowButtonTrayClassName = "StatusAreaOverflowButtonTray"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -87,7 +90,15 @@ func DownloadRecentPhoto(ctx context.Context, s *testing.State) {
 
 	// Locate and click on the holding space tray.
 	if err := ui.LeftClick(holdingspace.FindTray())(ctx); err != nil {
-		s.Fatal("Failed to click the holding space tray: ", err)
+		// In tablet mode, the holding space may not be visible until the status tray is expanded.
+		if err := ui.LeftClick(nodewith.ClassName(statusAreaOverflowButtonTrayClassName))(ctx); err != nil {
+			s.Fatal("Failed to locate and click the holding space and status overflow tray: ", err)
+		}
+
+		// Look for the holding space tray again.
+		if err := ui.LeftClick(holdingspace.FindTray())(ctx); err != nil {
+			s.Fatal("Failed to locate and click the holding space tray after expanding the status tray: ", err)
+		}
 	}
 
 	// Locate recently downloaded photo in the holding space tray.
