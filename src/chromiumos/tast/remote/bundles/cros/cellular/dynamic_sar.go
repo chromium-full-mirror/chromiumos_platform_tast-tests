@@ -32,10 +32,8 @@ func init() {
 		Func:         DynamicSar,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Tx power received at the callbox is within acceptable limits for a given SAR level/band combination",
-		Contacts: []string{
-			"jstanko@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
@@ -123,20 +121,20 @@ type sarConfig struct {
 }
 
 var powers = map[string][]sarConfig{
-	"trogdor": []sarConfig{
-		sarConfig{
+	"trogdor": {
+		{
 			name:          "HIGH",
 			level:         1,
 			expectedPower: 21.5,
 			threshold:     1.2,
 		},
-		sarConfig{
+		{
 			name:          "MEDIUM",
 			level:         2,
 			expectedPower: 18.8,
 			threshold:     1.2,
 		},
-		sarConfig{
+		{
 			name:          "LOW",
 			level:         3,
 			expectedPower: 13.3,

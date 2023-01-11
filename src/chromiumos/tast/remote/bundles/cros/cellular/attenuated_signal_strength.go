@@ -42,10 +42,8 @@ func init() {
 		Func:         AttenuatedSignalStrength,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Progressively lowers the downlink power on the callbox and verifies that the signal strength calculated by shill decreases by a proportional amount",
-		Contacts: []string{
-			"jstanko@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},

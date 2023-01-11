@@ -17,10 +17,8 @@ func init() {
 		Func:         AssertCellularData,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Asserts that cellular data works. The test establishes a connection to the appropriate CMW500 callbox. Then it asserts that the cellular data connection provided to it matches the data connection provided by ethernet. Any differences are considered an error. If the cellular data connection is not provided, the second curl will throw an exception",
-		Contacts: []string{
-			"latware@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "latware@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},

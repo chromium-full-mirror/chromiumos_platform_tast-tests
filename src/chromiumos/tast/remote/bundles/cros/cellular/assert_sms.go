@@ -20,10 +20,8 @@ func init() {
 		Func:         AssertSMS,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that an SMS message sent from the callbox is received",
-		Contacts: []string{
-			"jstanko@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_callbox"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},

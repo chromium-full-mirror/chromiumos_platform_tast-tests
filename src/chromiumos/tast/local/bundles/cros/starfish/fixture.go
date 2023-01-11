@@ -16,12 +16,9 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "starfish",
-		Desc: "Allows preconfiguration of the Starfish module before running a test suite",
-		Contacts: []string{
-			"nmarupaka@google.com",
-			"chromeos-cellular-team@google.com",
-		},
+		Name:            "starfish",
+		Desc:            "Allows preconfiguration of the Starfish module before running a test suite",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "nmarupaka@google.com"},
 		SetUpTimeout:    1 * time.Minute,
 		ResetTimeout:    1 * time.Second,
 		PreTestTimeout:  1 * time.Second,
