@@ -20,9 +20,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModeHotplug,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks USB Type C mode switch behaviour when a Thunderbolt dock is unplugged/replugged",
 		Contacts:     []string{"pmalani@chromium.org", "chromeos-power@google.com"},
+		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -54,9 +55,8 @@ func init() {
 //
 // This test requires the following H/W topology to run.
 //
-//
-//        DUT ------> Thunderbolt3 (>= Titan Ridge) dock -----> DP monitor.
-//      (USB4)
+//	  DUT ------> Thunderbolt3 (>= Titan Ridge) dock -----> DP monitor.
+//	(USB4)
 //
 // The Thunderbolt dock is assumed connected on port index 1.
 func ModeHotplug(ctx context.Context, s *testing.State) {
