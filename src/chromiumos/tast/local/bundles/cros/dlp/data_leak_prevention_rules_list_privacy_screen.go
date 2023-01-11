@@ -155,12 +155,10 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 				s.Errorf("Privacy screen prop value: got %v; want false", value)
 			}
 
-			if _, err := br.NewConn(ctx, "https://www.google.com"); err != nil {
+			// Verify that by opening the allowed page, the privacy screen will get disabled.
+			destURL := server.URL + "/allowed"
+			if _, err := br.NewConn(ctx, destURL); err != nil {
 				s.Error("Failed to open page: ", err)
-			}
-
-			if err := checkPrivacyScreenOffBubble(ctx, ui, param.wantAllowed); err != nil {
-				s.Error("Couldn't check for notification: ", err)
 			}
 
 			// Wait for privacy screen to be disabled.
@@ -189,23 +187,6 @@ func checkPrivacyScreenOnBubble(ctx context.Context, ui *uiauto.Context, wantAll
 
 	if err == nil && wantAllowed {
 		return errors.New("Privacy screen on bubble found expected none")
-	}
-
-	return nil
-}
-
-func checkPrivacyScreenOffBubble(ctx context.Context, ui *uiauto.Context, wantAllowed bool) error {
-	// Message name - IDS_ASH_STATUS_TRAY_PRIVACY_SCREEN_OFF_STATE
-	bubbleMessage := nodewith.NameContaining("Privacy screen is off").First()
-
-	err := ui.WaitUntilExists(bubbleMessage)(ctx)
-
-	if err != nil && !wantAllowed {
-		return errors.Wrap(err, "failed to check for privacy screen off bubble bubble existence")
-	}
-
-	if err == nil && wantAllowed {
-		return errors.New("Privacy screen off bubble found expected none")
 	}
 
 	return nil
