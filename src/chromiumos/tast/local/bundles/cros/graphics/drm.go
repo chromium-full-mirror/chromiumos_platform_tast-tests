@@ -22,11 +22,12 @@ var drmErrorRegex = regexp.MustCompile(`ERROR:`)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DRM,
-		Desc: "Verifies DRM-related test binaries run successfully",
+		Func:         DRM,
+		Desc:         "Verifies DRM-related test binaries run successfully",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
 		Contacts: []string{
-			"andrescj@chromium.org",
 			"chromeos-gfx@google.com",
+			"andrescj@chromium.org",
 			"hidehiko@chromium.org", // Tast port.
 		},
 		Params: []testing.Param{{

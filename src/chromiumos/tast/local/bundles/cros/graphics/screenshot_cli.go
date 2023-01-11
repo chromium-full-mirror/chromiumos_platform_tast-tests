@@ -19,7 +19,10 @@ func init() {
 		Func:         ScreenshotCLI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Takes a screenshot using the CLI",
-		Contacts:     []string{"nya@chromium.org"},
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		Contacts: []string{
+			"chromeos-gfx@google.com",
+		},
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome", "screenshot"},

@@ -20,11 +20,12 @@ type vkConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: VKBench,
-		Desc: "Run vkbench (a benchmark that times graphics intensive activities for vulkan), check results and report its performance",
+		Func:         VKBench,
+		Desc:         "Run vkbench (a benchmark that times graphics intensive activities for vulkan), check results and report its performance",
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
-			"pwang@chromium.org",
 			"chromeos-gfx@google.com",
+			"pwang@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu", "vulkan"},
 		Attr:         []string{"group:graphics", "graphics_nightly"},

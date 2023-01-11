@@ -20,7 +20,12 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DEQP,
 		Desc:         "Runs a pre-CQ-suitable subset of the drawElements Quality Program test suite shipped with test images",
-		Contacts:     []string{"andrescj@chromium.org", "ihf@chromium.org", "chromeos-gfx@google.com"},
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		Contacts: []string{
+			"chromeos-gfx@google.com",
+			"andrescj@chromium.org",
+			"ihf@chromium.org",
+		},
 		SoftwareDeps: []string{"no_qemu"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "gpuWatchHangs",
@@ -117,14 +122,14 @@ func canRunTest(test string, apis []graphics.APIType) (bool, error) {
 //
 // This function is based on multiple places:
 //
-//  - Initialization of graphics_dEQP in
-//    autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
+//   - Initialization of graphics_dEQP in
+//     autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
 //
-//  - The _run_tests_individually() method of graphics_dEQP in
-//    autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
+//   - The _run_tests_individually() method of graphics_dEQP in
+//     autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
 //
-//  - The _get_executable() method of graphics_dEQP in
-//    autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
+//   - The _get_executable() method of graphics_dEQP in
+//     autotest/files/client/site_tests/graphics_dEQP/graphics_dEQP.py.
 func runSingleTest(ctx context.Context, s *testing.State, test string, env []string, logDir string) string {
 	// Get the path to the DEQP binary to run for the test.
 	api, err := testNameToAPI(test)

@@ -26,7 +26,8 @@ func init() {
 		Func:         FPS,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure frames per second and check it is close to expected fps",
-		Contacts:     []string{"chromeos-gfx@google.com"},
+		BugComponent: "b:1021073", // ChromeOS > Platform > Graphics > Compositor
+		Contacts:     []string{"chromeos-gfx-compositor@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

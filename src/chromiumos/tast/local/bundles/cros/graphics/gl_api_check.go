@@ -22,9 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the OpenGL API requirements",
 		// TODO(syedfaaiz): Add to CQ once it is green and stable.
-		Attr: []string{"group:graphics", "graphics_nightly"},
-		Contacts: []string{"syedfaaiz@google.com",
+		Attr:         []string{"group:graphics", "graphics_nightly"},
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		Contacts: []string{
 			"chromeos-gfx@google.com",
+			"syedfaaiz@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeGraphics",

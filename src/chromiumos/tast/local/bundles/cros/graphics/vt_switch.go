@@ -29,7 +29,13 @@ func init() {
 		Func:         VTSwitch,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Switch between VT-2 shell and GUI multiple times",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		Contacts: []string{
+			"chromeos-gfx@google.com",
+			"intel-chrome-system-automation-team@intel.com",
+			"ambalavanan.m.m@intel.com",
+			"syedfaaiz@google.com",
+		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeGraphics",

@@ -23,7 +23,11 @@ func init() {
 		Func:         WebRTCVideoPlaybackDelay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a webrtc playback-only connection to get performance numbers",
-		Contacts:     []string{"mcasas@chromium.org", "chromeos-gfx@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
+		Contacts: []string{
+			"chromeos-gfx@google.com",
+			"mcasas@chromium.org",
+		},
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Params: []testing.Param{{

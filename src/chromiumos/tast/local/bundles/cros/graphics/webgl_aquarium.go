@@ -35,8 +35,8 @@ var (
 		"std_interframe_time": "g_crosFpsCounter.getStdInterFrameTime()",
 	}
 	fishSettings = map[int][]string{
-		50:   []string{"'setSetting2'", "2"},
-		1000: []string{"'setSetting6'", "6"},
+		50:   {"'setSetting2'", "2"},
+		1000: {"'setSetting6'", "6"},
 	}
 )
 

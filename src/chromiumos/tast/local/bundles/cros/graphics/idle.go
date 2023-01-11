@@ -28,10 +28,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Log into Chrome, request nothing to be on the desktop, wait, verify there are moments where the GPU has nothing to do. If the GPU stays continuously busy system power usage will be unacceptably high",
 		// TODO(pwang): Add to CQ once it is green and stable.
-		Attr: []string{"group:graphics", "graphics_nightly"},
+		Attr:         []string{"group:graphics", "graphics_nightly"},
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
-			"pwang@chromium.org",
 			"chromeos-gfx@google.com",
+			"pwang@chromium.org",
 		},
 		Timeout:      chrome.LoginTimeout + 3*time.Minute,
 		SoftwareDeps: []string{"chrome"},

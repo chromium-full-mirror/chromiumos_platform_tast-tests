@@ -32,8 +32,13 @@ type displayCompositionTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtendedDisplayCompositionCheck,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies graphics composition on extended display",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts: []string{
+			"intel-chrome-system-automation-team@intel.com",
+			"pathan.jilani@intel.com",
+		},
 		SoftwareDeps: []string{"chrome"},
 		// To skip on duffy(Chromebox) with no internal display.
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

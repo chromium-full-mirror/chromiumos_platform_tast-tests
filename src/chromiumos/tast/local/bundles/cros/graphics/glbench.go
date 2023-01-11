@@ -24,10 +24,11 @@ func init() {
 		Func:         GLBench,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run glbench (a benchmark that times graphics intensive activities), check results and report its performance",
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
+			"chromeos-gfx@google.com",
 			"andrescj@chromium.org",
 			"pwang@chromium.org",
-			"chromeos-gfx@google.com",
 			"oka@chromium.org", // Tast port
 		},
 		SoftwareDeps: []string{"no_qemu"},

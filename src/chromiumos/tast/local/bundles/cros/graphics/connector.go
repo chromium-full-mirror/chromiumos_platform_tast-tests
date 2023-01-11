@@ -58,11 +58,12 @@ var dpPlusModels = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Connector,
-		Desc: "Checks the validity of display connector configurations",
+		Func:         Connector,
+		Desc:         "Checks the validity of display connector configurations",
+		BugComponent: "b:188154", // ChromeOS > Platform > Graphics > Display
 		Contacts: []string{
-			"pwang@chromium.org",
 			"chromeos-gfx@google.com",
+			"pwang@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu"},
 		Params: []testing.Param{

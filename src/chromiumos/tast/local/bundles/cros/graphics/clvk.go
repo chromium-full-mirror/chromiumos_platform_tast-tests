@@ -23,11 +23,12 @@ type clvkTest struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Clvk,
-		Desc: "Run OpenCL implementation on top of Vulkan using clvk",
+		Func:         Clvk,
+		Desc:         "Run OpenCL implementation on top of Vulkan using clvk",
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
-			"rjodin@chromium.org",
 			"chromeos-gfx@google.com",
+			"rjodin@chromium.org",
 		},
 		Attr:         []string{},
 		SoftwareDeps: []string{"vulkan"},

@@ -19,11 +19,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: NullPlatformFormat,
-		Desc: "Checks that the null_platform_test passes for at least one format with a given color depth",
+		Func:         NullPlatformFormat,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks that the null_platform_test passes for at least one format with a given color depth",
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
-			"clarissagarvey@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		SoftwareDeps: []string{"no_qemu"},

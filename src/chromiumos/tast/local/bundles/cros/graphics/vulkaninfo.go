@@ -20,11 +20,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Vulkaninfo,
-		Desc: "This Vulkaninfo test records the state of Vulkan in logs and reports to crosbolt",
+		Func:         Vulkaninfo,
+		Desc:         "This Vulkaninfo test records the state of Vulkan in logs and reports to crosbolt",
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
-			"pwang@chromium.org",
 			"chromeos-gfx@chromium.org",
+			"pwang@chromium.org",
 		},
 		Attr: []string{"group:mainline", "group:graphics", "graphics_perbuild"},
 		Params: []testing.Param{{

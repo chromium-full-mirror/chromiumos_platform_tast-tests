@@ -41,9 +41,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a kernel is correctly configured for graphics usage",
 		// TODO(syedfaaiz): Add to CQ once it is green and stable.
-		Attr: []string{"group:graphics", "graphics_nightly"},
-		Contacts: []string{"syedfaaiz@google.com",
+		Attr:         []string{"group:graphics", "graphics_nightly"},
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		Contacts: []string{
 			"chromeos-gfx@google.com",
+			"syedfaaiz@google.com",
 		},
 		Fixture: "gpuWatchDog",
 		Timeout: 2 * time.Minute,

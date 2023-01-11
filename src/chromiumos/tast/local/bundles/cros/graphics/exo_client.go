@@ -21,9 +21,10 @@ func init() {
 		Func:         ExoClient,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Attaches a client to exo and exercises the wayland APIs",
+		BugComponent: "b:1021073", // ChromeOS > Platform > Graphics > Compositor
 		Contacts: []string{
-			"jshargo@chromium.org",
 			"chromeos-gfx-compositor@google.com",
+			"jshargo@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		Fixture:      "chromeGraphics",

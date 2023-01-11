@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package graphics
+package intel
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/graphics/brightness"
+	"chromiumos/tast/local/bundles/cros/intel/brightness"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -20,8 +20,13 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         InputbrightnessKeyboard,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies system Brightness increase and decrease through onboard keyboard",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts: []string{
+			"intel-chrome-system-automation-team@intel.com",
+			"pathan.jilani@intel.com",
+		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Attr:         []string{"group:mainline", "informational"},

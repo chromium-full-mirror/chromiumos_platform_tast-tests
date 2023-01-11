@@ -32,9 +32,10 @@ func init() {
 		Func:         Smoke,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Quick smoke check for GL/GLES2",
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
+			"chromeos-gfx@google.com",
 			"vsuley@chromium.org",
-			"hidehiko@chromium.org", // Tast port author
 		},
 		Attr:         []string{"group:cq-minimal", "group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

@@ -23,13 +23,13 @@ func init() {
 		// TODO(syedfaaiz): Add to CQ once it is green and stable.
 		Attr:         []string{"group:graphics", "graphics_nightly"},
 		HardwareDeps: hwdep.D(hwdep.IntelSOC()),
-		Contacts: []string{"chromeos-gfx@google.com",
+		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		Contacts: []string{
+			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",
 		},
-		// ChromeOS > Platform > Graphics > GPU
-		BugComponent: "b:995569",
-		Fixture:      "chromeGraphics",
-		Timeout:      2 * time.Minute,
+		Fixture: "chromeGraphics",
+		Timeout: 2 * time.Minute,
 	})
 }
 func KernelMemory(ctx context.Context, s *testing.State) {

@@ -34,9 +34,10 @@ func init() {
 		Func:         PlatformOverlays,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that certain configurations of primary and overlay planes are indeed supported",
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-compositor@google.com",
+			"mcasas@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		SoftwareDeps: []string{"video_overlays", "no_qemu"},

@@ -18,8 +18,11 @@ func init() {
 		Func:         ScreenshotChrome,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Takes a screenshot using Chrome",
-		Contacts:     []string{"jkardatzke@chromium.org"},
-		BugComponent: "b:885255",
+		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
+		Contacts: []string{
+			"chromeos-gfx@google.com",
+			"jkardatzke@chromium.org",
+		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeGraphics",

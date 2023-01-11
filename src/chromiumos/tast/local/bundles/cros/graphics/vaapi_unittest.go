@@ -27,10 +27,11 @@ func init() {
 		Func:         VAAPIUnittest,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies VA-API utility and image decode acceleration functionality",
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
+			"chromeos-gfx@google.com",
 			"andrescj@chromium.org", // JPEG decoder test maintainer
 			"gildekel@chromium.org", // WebP decoder test author
-			"chromeos-gfx@google.com",
 		},
 		Attr: []string{"group:mainline",
 			// TODO(b/232538630): Mark as not informational after test is fixed.
