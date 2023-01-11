@@ -35,7 +35,7 @@ func init() {
 			"sseckler@google.com",
 			"webprotect-eng@google.com",
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1240978",
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",

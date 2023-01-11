@@ -44,7 +44,7 @@ func init() {
 			"sseckler@google.com",
 			"webprotect-eng@google.com",
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1240978",
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
@@ -327,13 +327,6 @@ func testFileAttachedForBrowserAndFile(
 		s.Fatal("Failed to get window of picker: ", err)
 	}
 
-	// The scan allowed label quickly disappears after it is shown (after 1 second), so we asynchronously check for its existence.
-	scanAllowedShownChan := make(chan error, 1)
-	if !testParams.AllowsImmediateDelivery && testParams.ScansEnabled && !shouldBlockUpload {
-		// This dialog is shown only after scanning is complete, so we add ScanningTimeOut.
-		go checkWaitUntilExists(ctx, ui, helpers.ScanningTimeOut, scanAllowedShownChan, scanAllowedLabelFinder())
-	}
-
 	// Open file in test_dir.
 	// Note: Use 20s timeout to let the picker retry opening the file.
 	if err := uiauto.Combine("open file",
@@ -351,7 +344,28 @@ func testFileAttachedForBrowserAndFile(
 		s.Fatal("Failed to wait for File picker to close: ", err)
 	}
 
-	verifyUIForFileAttached(ctx, scanAllowedShownChan, shouldBlockUpload, params, testParams, br, s, server, testDirPath, ui)
+	// In report-only mode (AllowsImmediateDelivery) or if scanning is disabled, no dialog should be shown.
+	if testParams.AllowsImmediateDelivery || !testParams.ScansEnabled {
+		// Check that no dialog will be opened.
+		if err := ui.EnsureGoneFor(scanningDialogFinder(), 2*time.Second)(ctx); err != nil {
+			s.Fatal("Scanning dialog detected, but none was expected: ", err)
+		}
+	}
+
+	// First test the deep-scanning verdict.
+	if testParams.ScansEnabled {
+		// If scans are enabled and the content isn't unscannable, we check the deep scanning verdict.
+		if err := helpers.WaitForDeepScanningVerdict(ctx, dconnSafebrowsing, helpers.ScanningTimeOut); err != nil {
+			s.Fatal("Failed to wait for deep scanning verdict: ", err)
+		}
+		if !params.IsUnscannable {
+			if err := helpers.VerifyDeepScanningVerdict(ctx, dconnSafebrowsing, params.IsBad); err != nil {
+				s.Fatal("Failed to verify deep scanning verdict: ", err)
+			}
+		}
+	}
+
+	verifyUIForFileAttached(ctx, shouldBlockUpload, params, testParams, br, s, server, testDirPath, ui)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Ensure file was or was not attached, by checking javascript output.
@@ -374,46 +388,14 @@ func testFileAttachedForBrowserAndFile(
 	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to verify whether file was correctly attached or blocked: ", err)
 	}
-
-	if testParams.ScansEnabled {
-		// If scans are enabled and the content isn't unscannable, we check the deep scanning verdict.
-		if err := helpers.WaitForDeepScanningVerdict(ctx, dconnSafebrowsing, helpers.ScanningTimeOut); err != nil {
-			s.Fatal("Failed to wait for deep scanning verdict: ", err)
-		}
-		if !params.IsUnscannable {
-			if err := helpers.VerifyDeepScanningVerdict(ctx, dconnSafebrowsing, params.IsBad); err != nil {
-				s.Fatal("Failed to verify deep scanning verdict: ", err)
-			}
-		}
-	}
-
-}
-
-func checkWaitUntilExists(ctx context.Context, ui *uiauto.Context, timeout time.Duration, channel chan<- error, finder *nodewith.Finder) {
-	channel <- ui.WithTimeout(timeout).WithInterval(200 * time.Millisecond).WaitUntilExists(finder)(ctx)
 }
 
 func scanningDialogFinder() *nodewith.Finder {
 	return nodewith.HasClass("DialogClientView").First()
 }
 
-func scanAllowedLabelFinder() *nodewith.Finder {
-	return nodewith.Role(role.StaticText).HasClass("Label").Ancestor(scanningDialogFinder()).NameContaining("file will be uploaded")
-}
-
-// getErrorFromChannel provides a way to get an error from a channel and take context deadlines into account.
-func getErrorFromChannel(ctx context.Context, channel <-chan error) error {
-	select {
-	case err := <-channel:
-		return err
-	case <-ctx.Done():
-		return errors.Wrap(ctx.Err(), "context deadline exceeded while waiting for error from channel")
-	}
-}
-
 func verifyUIForFileAttached(
 	ctx context.Context,
-	scanAllowedShownChan <-chan error,
 	shouldBlockUpload bool,
 	params helpers.TestFileParams,
 	testParams helpers.TestParams,
@@ -427,37 +409,25 @@ func verifyUIForFileAttached(
 		if shouldBlockUpload {
 			// Check that a blocked verdict is shown.
 			blockedLabelTextFinder := nodewith.Role(role.StaticText).HasClass("Label").Ancestor(scanningDialogFinder()).NameContaining(params.UlBlockLabel)
-			if err := ui.WithTimeout(helpers.ScanningTimeOut).WaitUntilExists(blockedLabelTextFinder)(ctx); err != nil {
+			if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(blockedLabelTextFinder)(ctx); err != nil {
 				s.Fatal("Did not show scan blocked message: ", err)
 			}
 
-			// Close dialog.
+			// Explicitly close the dialog.
 			closeButtonFinder := nodewith.Name("Close").Role(role.Button).Ancestor(scanningDialogFinder()).State(state.Focusable, true)
 			if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(closeButtonFinder)(ctx); err != nil {
 				s.Fatal("Did not show close button for blocked dialog: ", err)
 			}
 			// Repeatedly do left click to circumvent problems of missed clicks.
+			// This check also waits for the dialog to close.
 			if err := ui.LeftClickUntil(closeButtonFinder, ui.WithTimeout(time.Second).WaitUntilGone(scanningDialogFinder()))(ctx); err != nil {
 				s.Fatal("Failed to close dialog: ", err)
 			}
 		} else {
-			// Check that an allowed verdict is shown.
-			if err := getErrorFromChannel(ctx, scanAllowedShownChan); err != nil {
-				s.Fatal("Did not show scan success message: ", err)
+			// Check that the dialog will be closed.
+			if err := ui.WithTimeout(5 * time.Second).WaitUntilGone(scanningDialogFinder())(ctx); err != nil {
+				s.Fatal("Did not close scanning dialog: ", err)
 			}
-			// For allowed, the dialog should be closed automatically.
-			if err := ui.WithTimeout(3 * time.Second).WithInterval(200 * time.Millisecond).WaitUntilGone(scanAllowedLabelFinder())(ctx); err != nil {
-				s.Fatal("Scan allowed dialog did not close automatically: ", err)
-			}
-		}
-		// Check that the dialog is closed.
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilGone(scanningDialogFinder())(ctx); err != nil {
-			s.Fatal("Did not close scanning dialog: ", err)
-		}
-	} else {
-		// Check that no dialog will be opened.
-		if err := ui.EnsureGoneFor(scanningDialogFinder(), 2*time.Second)(ctx); err != nil {
-			s.Fatal("Scanning dialog detected, but none was expected: ", err)
 		}
 	}
 }
