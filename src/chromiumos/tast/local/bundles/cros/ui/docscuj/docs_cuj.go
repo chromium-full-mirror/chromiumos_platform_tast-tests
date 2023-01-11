@@ -123,8 +123,8 @@ func Run(ctx context.Context, s *testing.State) {
 
 	// Install the Google Docs offline extension to ensure that the
 	// test continues to run despite any network difficulties.
-	if err := cuj.EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
-		s.Fatal("Failed to install Docs offline extension: ", err)
+	if err := cuj.EnsureDocsOfflineEnabled(ctx, br, tconn); err != nil {
+		s.Fatal("Failed to enable Docs offline support: ", err)
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "failure")
