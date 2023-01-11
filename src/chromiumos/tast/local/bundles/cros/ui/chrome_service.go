@@ -260,6 +260,7 @@ func toLacrosConfig(req *pb.NewRequest) (lcfg *lacrosfixt.Config, err error) {
 	default:
 		return nil, errors.Errorf("unsupported selection: %v", req.GetLacros().GetSelection())
 	}
-	lcfg = lacrosfixt.NewConfig(lacrosfixt.Mode(mode), lacrosfixt.Selection(selection))
+
+	lcfg = lacrosfixt.NewConfig(lacrosfixt.Mode(mode), lacrosfixt.Selection(selection), lacrosfixt.KeepAlive(req.LacrosKeepAlive))
 	return lcfg, nil
 }

@@ -105,6 +105,10 @@ message NewRequest {
 
   // Pass directories of unpacked extensions to be loaded by Lacros Chrome.
   repeated string lacros_unpacked_extensions = 16;
+
+  // If true, Lacros will be launched with KeepAlive enabled. This means Lacros
+  // will keep running even after all windows are closed.
+  bool lacros_keep_alive = 17;
 }
 
 // LoginMode describes the user mode for the login.
