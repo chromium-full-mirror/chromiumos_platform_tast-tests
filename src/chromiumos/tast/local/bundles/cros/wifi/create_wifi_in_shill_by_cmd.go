@@ -89,7 +89,7 @@ func init() {
 					ssid: "GoogleGuest",
 					props: map[string]interface{}{
 						shillconst.ServicePropertyAutoConnect: false,
-						shillconst.ServicePropertyProxyConfig: `{"mode":"pac_script"}`,
+						shillconst.ServicePropertyProxyConfig: `{"mode":"direct"}`,
 					},
 				},
 			},
@@ -157,7 +157,24 @@ func CreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 		// Check if properties of newly added network match expectations.
 		for prop := range tc.props {
 			switch prop {
-			case shillconst.ServicePropertyAutoConnect, shillconst.ServicePropertyProxyConfig:
+			case shillconst.ServicePropertyAutoConnect:
+				version, err := arc.SDKVersion()
+				if err != nil {
+					s.Fatal("Failed to get SDK version: ", err)
+				}
+				// Setting of AutoConnect is only supported from ARC R
+				if version >= arc.SDKR {
+					val, err := p.Get(prop)
+					if err != nil {
+						s.Fatal("Failed to get proxy config property from service: ", err)
+					}
+
+					expected := tc.props[prop]
+					if val != expected {
+						s.Errorf("%v is %v, want: %v", prop, val, expected)
+					}
+				}
+			case shillconst.ServicePropertyProxyConfig:
 				val, err := p.Get(prop)
 				if err != nil {
 					s.Fatal("Failed to get proxy config property from service: ", err)
