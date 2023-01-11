@@ -1472,11 +1472,6 @@ func (a *App) RunThroughCameras(ctx context.Context, f func(Facing) error) error
 	return nil
 }
 
-// CheckMojoConnection checks if mojo connection works.
-func (a *App) CheckMojoConnection(ctx context.Context) error {
-	return a.conn.Call(ctx, nil, "Tast.checkMojoConnection", upstart.JobExists(ctx, "cros-camera"))
-}
-
 // OutputCodeCoverage stops the profiling and output the code coverage information to the output
 // directory.
 func (a *App) OutputCodeCoverage(ctx context.Context) error {
