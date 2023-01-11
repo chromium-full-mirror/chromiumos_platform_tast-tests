@@ -58,6 +58,15 @@ var keepWifi = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to force skipping disabling Wifi for the Recorder",
 )
 
+// skipPowerTest skips the power test, which allows for the device to
+// charge and keeps Wifi in its initial state, regardless of the
+// options passed to the Recorder.
+var skipPowerTest = testing.RegisterVarString(
+	"cujrecorder.skipPowerTest",
+	"",
+	"A boolean string (true/false) signifying whether to skip the power test for the Recorder",
+)
+
 // screenRecord enables the screen recorder for the Recorder.
 var screenRecord = testing.RegisterVarString(
 	"cujrecorder.record",
@@ -427,33 +436,38 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		powerTestOptions.Wifi = setup.DisableWifiInterfaces
 	}
 
-	// Create batteryDischarge with both discharge and ignoreErr set to true.
-	batteryDischarge := setup.NewBatteryDischarge(true, true, dischargeThreshold)
-
-	var err error
-	r.powerSetupCleanup, err = setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
-	batteryDischargeErr := batteryDischarge.Err()
-	if batteryDischargeErr != nil {
-		testing.ContextLog(ctx, "Failed to induce battery discharge: ", batteryDischargeErr)
-	} else {
-		r.batteryDischarge = true
-	}
-	if err != nil {
-		return nil, errors.Wrap(err, "power setup failed")
-	}
 	success := false
-	defer func(ctx context.Context) {
-		if success {
-			return
+	var err error
+	if strings.ToLower(skipPowerTest.Value()) == "true" {
+		testing.ContextLog(ctx, "Skipping power test because cujrecorder.skipPowerTest is set")
+	} else {
+		// Create batteryDischarge with both discharge and ignoreErr set to true.
+		batteryDischarge := setup.NewBatteryDischarge(true, true, dischargeThreshold)
+
+		r.powerSetupCleanup, err = setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
+		batteryDischargeErr := batteryDischarge.Err()
+		if batteryDischargeErr != nil {
+			testing.ContextLog(ctx, "Failed to induce battery discharge: ", batteryDischargeErr)
+		} else {
+			r.batteryDischarge = true
 		}
-		if err := r.powerSetupCleanup(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
+		if err != nil {
+			return nil, errors.Wrap(err, "power setup failed")
 		}
-	}(ctx)
-	// Check options.FailOnDischargeErr after the deferred function is set.
-	if batteryDischargeErr != nil && options.FailOnDischargeErr &&
-		!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
-		return nil, errors.Wrap(batteryDischargeErr, "battery discharge failed")
+
+		defer func(ctx context.Context) {
+			if success {
+				return
+			}
+			if err := r.powerSetupCleanup(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
+			}
+		}(ctx)
+		// Check options.FailOnDischargeErr after the deferred function is set.
+		if batteryDischargeErr != nil && options.FailOnDischargeErr &&
+			!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
+			return nil, errors.Wrap(batteryDischargeErr, "battery discharge failed")
+		}
 	}
 
 	r.gpuDataSource = perfSrc.NewGPUDataSource(r.tconns)
@@ -579,8 +593,10 @@ func (r *Recorder) SetTraceFilePrefix(perfettoTracingFilePrefix string) {
 // Close clears states for all trackers.
 func (r *Recorder) Close(ctx context.Context) error {
 	var firstErr error
-	if err := r.powerSetupCleanup(ctx); err != nil {
-		firstErr = errors.Wrap(err, "failed to clean up power setup")
+	if r.powerSetupCleanup != nil {
+		if err := r.powerSetupCleanup(ctx); err != nil {
+			firstErr = errors.Wrap(err, "failed to clean up power setup")
+		}
 	}
 	r.gpuDataSource.Close()
 	if err := r.frameDataTracker.Close(ctx, r.tconn); firstErr == nil && err != nil {
