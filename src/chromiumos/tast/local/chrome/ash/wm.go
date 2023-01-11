@@ -615,9 +615,17 @@ func FindOnlyWindow(ctx context.Context, tconn *chrome.TestConn, predicate func(
 
 // GetActiveWindow returns the active window.
 func GetActiveWindow(ctx context.Context, tconn *chrome.TestConn) (*Window, error) {
-	return FindOnlyWindow(ctx, tconn, func(w *Window) bool {
-		return w.IsActive
-	})
+	var activeWindow *Window = nil
+	var err error = nil
+	// GetActiveWindow() might be called before there is an active window available,
+	// so retry for a bit.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		activeWindow, err = FindOnlyWindow(ctx, tconn, func(w *Window) bool { return w.IsActive })
+		return err
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to get active window")
+	}
+	return activeWindow, nil
 }
 
 // FindAllWindows returns the Chrome windows with which the given predicate returns true.
