@@ -989,28 +989,36 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	// According to Stainless, some DUTs were stuck at G3 while
 	// booting to recovery mode. Their ec logs reported that they
 	// were experiencing thermal shutdown. Match for the relevant
-	// texts and report in the returned error.
-	testing.ContextLog(ctx, "Capturing EC log")
-	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
-		return errors.Wrap(err, "failed to set ec_uart_capture on")
-	}
-	defer func() {
-		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
-			testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
+	// texts and report in the returned error. If thermal shutdown
+	// is caught, attempt a few more retries to boot dut to recovery.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Capturing EC log")
+		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
+			return errors.Wrap(err, "failed to set ec_uart_capture on")
 		}
-	}()
+		defer func() {
+			if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
+				testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
+			}
+		}()
 
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-		return errors.Wrapf(err, "setting power state to %s", servo.PowerStateRec)
-	}
-	ecStream, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
-	if err != nil {
-		return errors.Wrap(err, "failed to read ec stream")
-	}
-	var regexpThermalShutdown = `(?i)thermal shutdown`
-	thermalShutdown := regexp.MustCompile(regexpThermalShutdown).FindStringSubmatch(ecStream)
-	if len(thermalShutdown) != 0 {
-		return errors.Errorf("captured %s after rebooting dut to recovery", thermalShutdown)
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
+			return errors.Wrapf(err, "setting power state to %s", servo.PowerStateRec)
+		}
+		ecStream, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+		if err != nil {
+			return errors.Wrap(err, "failed to read ec stream")
+		}
+
+		var regexpThermalShutdown = `(?i)thermal shutdown`
+		thermalShutdown := regexp.MustCompile(regexpThermalShutdown).FindStringSubmatch(ecStream)
+		if len(thermalShutdown) != 0 {
+			testing.ContextLog(ctx, "Warning!!! Captured thermal shutdown")
+			return errors.Errorf("captured %s after rebooting dut to recovery", thermalShutdown)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
+		return err
 	}
 
 	if usbMux == servo.USBMuxDUT {
