@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+	"chromiumos/tast/local/crostini/faillog"
 	"chromiumos/tast/testing"
 )
 
@@ -77,7 +78,7 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatch
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer cleanup(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, urlParams map[string]string) (*GoogleMeet, action.Action, error) {
+func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, urlParams map[string]string) (gm *GoogleMeet, cleanup action.Action, retErr error) {
 	newMeetingURL := newMeetingURL
 	if urlParams != nil && len(urlParams) > 0 {
 		values := url.Values{}
@@ -92,19 +93,28 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser
 		return nil, nil, err
 	}
 
-	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
-		return nil, closeBrowser, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
-	}
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return nil, closeBrowser, err
+		return nil, nil, err
 	}
 
-	gm := New(conn, tconn)
+	gm = New(conn, tconn)
+
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			faillog.DumpUITreeAndScreenshot(ctx, tconn, "start_meeting", err)
+			if err := closeBrowser(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close browser in cleanup")
+			}
+		}
+	}(ctx)
+
+	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+		return nil, nil, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
+	}
 
 	if err := gm.ClearPromptsForNewMeeting(ctx); err != nil {
-		return nil, closeBrowser, err
+		return nil, nil, err
 	}
 
 	return gm, closeBrowser, nil
