@@ -249,28 +249,25 @@ func TestPlaybackPerfParams(t *testing.T) {
 	}
 
 	// multi-playback
-	// Get threads and fixture for them. Sort the threads as the order of Golang map iteration is not deterministic.
-	threadsCands := []int{1, 2, 4, 9, 16}
-	fixtureMap := map[int]string{}
-	for _, numThreads := range threadsCands {
-		fixtureMap[numThreads] = fmt.Sprintf("chromeVideoWith%dDecoderThreadsAndGlobalVaapiLockDisabled", numThreads)
-	}
-
+	type taskRunnerType int
+	const (
+		dedicatedThread taskRunnerType = iota // Default
+	)
 	for _, codec := range []string{"h264", "vp9"} {
 		// 1080p x 2 ~= 2K, 480p x 9  ~= 2K, 360p x 16 ~= 2K, 180p x 49 ~= 1260p
 		// TODO(b/237600904): Add {180, 7, 7} once the issue is resolved.
 		for _, resGrid := range [][3]int{{1080, 2, 1}, {480, 3, 3}, {360, 4, 4}} {
 			resolution, gridW, gridH := resGrid[0], resGrid[1], resGrid[2]
-			for _, numThreads := range threadsCands {
-				numVideos := gridW * gridH
-				// The used decoder threads is smaller of |numThreads| and |numVideos|.
-				// So skip the redundant case that |numVideos| is less than |numThreads|.
-				if numVideos < numThreads {
-					continue
-				}
+			numVideos := gridW * gridH
+			for _, decoderTaskRunnerType := range []taskRunnerType{dedicatedThread} {
 				fps, dec := 30, "hw"
-				testNameSuffix := fmt.Sprintf("x%d_%dthreads", numVideos, numThreads)
-				fixtureName := fixtureMap[numThreads]
+				testNameSuffix := fmt.Sprintf("x%d", numVideos)
+				var fixtureName string
+				switch decoderTaskRunnerType {
+				case dedicatedThread:
+					testNameSuffix += "_dedicatedthread"
+					fixtureName = "chromeVideoWithGlobalVaapiLockDisabled"
+				}
 				param := genPlaybackParam(codec,
 					genPlaybackPerfDataPath(codec, resolution, fps),
 					resolution, fps, dec, testNameSuffix, fixtureName, []string{"thread_safe_libva_backend"})

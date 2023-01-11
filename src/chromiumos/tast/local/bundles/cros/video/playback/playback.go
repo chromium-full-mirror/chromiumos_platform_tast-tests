@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -163,7 +162,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}
 
 	var roughness float64
-	var gpuCSStat, gpuDecCSStat contextSwitchStat
+	var gpuCSStat, gpuMainCSStat contextSwitchStat
 	var gpuErr, cStateErr, cpuErr, fdErr, dramErr, batErr, roughnessErr, traceErr error
 	var wg sync.WaitGroup
 	wg.Add(6)
@@ -205,7 +204,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			gpuCSStat, gpuDecCSStat, traceErr = measureContextSwitch(ctx, s)
+			gpuCSStat, gpuMainCSStat, traceErr = measureContextSwitch(ctx, s)
 		}()
 	}
 
@@ -265,17 +264,16 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 			Unit:      "ms",
 			Direction: perf.SmallerIsBetter,
 		}, float64(gpuCSStat.avgDuration.Milliseconds()))
-
 		p.Set(perf.Metric{
-			Name:      "context_switches_in_gpu_process_per_decoder_thread_cnt",
+			Name:      "context_switches_in_gpu_process_for_gpu_main_thread_cnt",
 			Unit:      "count",
 			Direction: perf.SmallerIsBetter,
-		}, float64(gpuDecCSStat.count))
+		}, float64(gpuMainCSStat.count))
 		p.Set(perf.Metric{
-			Name:      "context_switches_in_gpu_process_per_decoder_thread_avg_duration",
+			Name:      "context_switches_in_gpu_process_for_gpu_main_thread_avg_duration",
 			Unit:      "ms",
 			Direction: perf.SmallerIsBetter,
-		}, float64(gpuDecCSStat.avgDuration.Milliseconds()))
+		}, float64(gpuMainCSStat.avgDuration.Milliseconds()))
 	}
 	if err := conn.Eval(ctx, videoElement+".pause()", nil); err != nil {
 		return errors.Wrap(err, "failed to stop video")
@@ -321,17 +319,17 @@ func sampleDroppedFrames(ctx context.Context, conn *chrome.Conn, p *perf.Values)
 
 // measureContextSwitch measure the number of context switches in GPU process and its average waiting duration.
 // gpu represents the values of all the threads in GPU process.
-// gpuDec represents the values of hardware decoder threads.
-func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuDec contextSwitchStat, err error) {
+// gpuMain represents the values of the GPU main thread.
+func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain contextSwitchStat, err error) {
 	if err := testing.Sleep(ctx, stabilizationDuration); err != nil {
-		return gpu, gpuDec, err
+		return gpu, gpuMain, err
 	}
 
 	testing.ContextLog(ctx, "Tracing scheduler events")
 	// Record system events for |measurementDuration|.
 	sess, err := tracing.StartSession(ctx, s.DataPath(TraceConfigFile))
 	if err != nil {
-		return gpu, gpuDec, errors.Wrap(err, "failed to start tracing")
+		return gpu, gpuMain, errors.Wrap(err, "failed to start tracing")
 	}
 	// Stop tracing even if context deadline exceeds during sleep.
 	stopped := false
@@ -342,43 +340,45 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuDec co
 	}()
 
 	if err := testing.Sleep(ctx, measurementDuration); err != nil {
-		return gpu, gpuDec, errors.Wrap(err, "failed to sleep to wait for the tracing session")
+		return gpu, gpuMain, errors.Wrap(err, "failed to sleep to wait for the tracing session")
 	}
 	stopped = true
 	if err := sess.Stop(); err != nil {
-		return gpu, gpuDec, errors.Wrap(err, "failed to stop tracing")
+		return gpu, gpuMain, errors.Wrap(err, "failed to stop tracing")
 	}
 	defer sess.RemoveTraceResultFile()
 	testing.ContextLog(ctx, "Completed tracing events")
 
 	results, err := sess.RunQuery(ctx, s.DataPath(tracing.TraceProcessor()), s.DataPath(GPUThreadSchedSQLFile))
 	if err != nil {
-		return gpu, gpuDec, errors.Wrap(err, "failed in querying")
+		return gpu, gpuMain, errors.Wrap(err, "failed in querying")
 	}
-
+	var mainSwitches, mainRunnableCnt, mainSumRunnableDur uint64 = 0, 0, 0
 	var switches, runnableCnt, sumRunnableDur uint64 = 0, 0, 0
-	var decThreadsSwitches, decThreadsRunnableCnt, decThreadsSumRunnableDur uint64 = 0, 0, 0
-	for _, res := range results[1:] { // Skip, the first line, "ts","dur","state","tid","name".
+	for _, res := range results[1:] { // Skip, the first line, "ts","dur","state","tid","name", "is_main_thread".
 		const (
 			tsIdx = iota
 			durIdx
 			stateIdx
 			tidIdx
 			nameIdx
+			mainThreadIdx
 		)
 
-		thName := res[nameIdx]
-		isDecoderThread := strings.Contains(thName, "VDecThread")
+		isMainThread := false
+		if res[mainThreadIdx] == "1" {
+			isMainThread = true
+		}
 		switch res[stateIdx] {
 		case "Running":
 			switches++
-			if isDecoderThread {
-				decThreadsSwitches++
+			if isMainThread {
+				mainSwitches++
 			}
 		case "R": // Runnable
 			dur, err := strconv.Atoi(res[durIdx])
 			if err != nil {
-				return gpu, gpuDec, errors.Wrapf(err, "failed to convert to integer, %s", res[durIdx])
+				return gpu, gpuMain, errors.Wrapf(err, "failed to convert to integer, %s", res[durIdx])
 			}
 			if dur == -1 {
 				// dur is -1 if tracing terminates while a thread is in the Runnable state.
@@ -386,16 +386,20 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuDec co
 			}
 			runnableCnt++
 			sumRunnableDur += uint64(dur)
-			if isDecoderThread {
-				decThreadsRunnableCnt++
-				decThreadsSumRunnableDur += uint64(dur)
+			if isMainThread {
+				mainRunnableCnt++
+				mainSumRunnableDur += uint64(dur)
 			}
 		}
 	}
 
 	gpu.count = switches
-	gpu.avgDuration = time.Duration(sumRunnableDur/runnableCnt) * time.Microsecond
-	gpuDec.count = decThreadsSwitches
-	gpuDec.avgDuration = time.Duration(decThreadsSumRunnableDur/decThreadsRunnableCnt) * time.Microsecond
-	return gpu, gpuDec, nil
+	if runnableCnt > 0 {
+		gpu.avgDuration = time.Duration(sumRunnableDur/runnableCnt) * time.Microsecond
+	}
+	gpuMain.count = mainSwitches
+	if mainRunnableCnt > 0 {
+		gpuMain.avgDuration = time.Duration(mainSumRunnableDur/mainRunnableCnt) * time.Microsecond
+	}
+	return gpu, gpuMain, nil
 }

@@ -1,4 +1,4 @@
-select ts, dur, state, thread.tid, thread.name --, thread.is_main_thread
+select ts, dur, state, thread.tid, thread.name, thread.is_main_thread
 from thread_state left join thread using(utid)
 where utid IN (select utid
       from thread
