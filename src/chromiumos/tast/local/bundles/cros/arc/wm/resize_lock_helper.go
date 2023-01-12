@@ -773,7 +773,7 @@ func SetSolidWhiteWallpaper(ctx context.Context, ui *uiauto.Context) error {
 	}
 
 	// Move the cursor to the active photo container before scrolling.
-	if err := ui.MouseMoveTo(nodewith.Role(role.ListBoxOption).HasClass("photo-inner-container").First(), time.Second)(ctx); err != nil {
+	if err := ui.MouseMoveTo(nodewith.Role(role.ListBoxOption).Ancestor(nodewith.Name("Wallpaper Collections")).First(), time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to move mouse to the photo container")
 	}
 
