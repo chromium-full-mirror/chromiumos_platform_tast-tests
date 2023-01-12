@@ -230,13 +230,13 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create envs for holding servers.
-	routingEnv := routing.NewTestEnvWithoutResetProfile()
-	if err := routingEnv.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup routing env: ", err)
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
+	if err != nil {
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
 	defer func() {
-		if err := routingEnv.TearDown(cleanupCtx); err != nil {
-			testing.ContextLog(ctx, "Failed to tear down routing env: ", err)
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
 		}
 	}()
 
@@ -245,7 +245,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 		vpn.WithoutAutoConnect(),
 	}, tc.opts...)
-	conn, err := vpn.StartConnection(ctx, routingEnv.BaseServer, tc.vpnType, opts...)
+	conn, err := vpn.StartConnection(ctx, networkEnv.Server1, tc.vpnType, opts...)
 	if err != nil {
 		s.Fatal("Failed to create VPN connection: ", err)
 	}

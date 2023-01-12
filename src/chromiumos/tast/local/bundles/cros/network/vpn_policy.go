@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
@@ -53,13 +52,17 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	routingEnv := routing.NewTestEnvWithoutResetProfile()
-	if err := routingEnv.SetUp(ctx); err != nil {
-		s.Fatal("Failed to set up routing env: ", err)
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
+	if err != nil {
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
-	defer routingEnv.TearDown(cleanupCtx)
+	defer func() {
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
+		}
+	}()
 
-	server, err := vpn.StartServer(ctx, routingEnv.BaseRouter, vpn.TypeL2TPIPsec)
+	server, err := vpn.StartServer(ctx, networkEnv.Server1, vpn.TypeL2TPIPsec)
 	if err != nil {
 		s.Fatal("Failed to start VPN server: ", err)
 	}

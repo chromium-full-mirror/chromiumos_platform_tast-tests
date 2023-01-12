@@ -9,11 +9,9 @@ import (
 	"net"
 	"time"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/testing"
 )
 
@@ -44,39 +42,22 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	// Set up test topology:
-	// DUT---router---server
-	//            |---vpnServer
-	// Both server and vpnServer underlay address are out of VPN included route.
-	testEnv := routing.NewSimpleNetworkEnv(true, true, true, true)
-	if err := testEnv.SetUp(ctx); err != nil {
-		s.Fatal("Failed to set up simple_net env: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := testEnv.TearDown(ctx); err != nil {
-			s.Error("Failed to tear down simple_net env: ", err)
-		}
-	}(cleanupCtx)
-
-	vpnServer, err := virtualnet.CreateEnv(ctx, "vpn")
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
-		s.Fatal("Failed to setup vpn server env: ", err)
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := vpnServer.Cleanup(ctx); err != nil {
-			s.Error("Failed to tear down vpn server env: ", err)
+	defer func() {
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
 		}
-	}(cleanupCtx)
-	if err := vpnServer.ConnectToRouterWithPool(ctx, testEnv.Router, testEnv.Pool); err != nil {
-		s.Fatal("Failed to connect vpn server to router: ", err)
-	}
+	}()
 
-	// Wait for veth to be online then start connecting to VPN.
-	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		s.Error("Failed to wait for service online: ", err)
-	}
+	// Use Server1 for setting up VPN server, and Server2 for verify physical
+	// traffic.
+	vpnEnv := networkEnv.Server1
+	physicalEnv := networkEnv.Server2
 
-	conn, err := vpn.StartConnection(ctx, vpnServer,
+	conn, err := vpn.StartConnection(ctx, vpnEnv,
 		s.Param().(vpn.Type),
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 		vpn.WithIPv4IncludedRoute(&net.IPNet{
@@ -98,7 +79,7 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 	}
 
 	// Verifies physical network (out of VPN included route) reachability.
-	addrs, err := testEnv.Server.WaitForVethInAddrs(ctx, true, false)
+	addrs, err := physicalEnv.WaitForVethInAddrs(ctx, true, false)
 	if err != nil {
 		s.Fatal("Failed to get server addrs: ", err)
 	}
@@ -106,5 +87,4 @@ func VPNSplitRouting(ctx context.Context, s *testing.State) {
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, phyAddr, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping physical network host %s: %v", phyAddr, err)
 	}
-
 }

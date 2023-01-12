@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -86,15 +85,15 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create shill manager proxy: ", err)
 	}
 	// Set up virtualnet environment.
-	testEnv := routing.NewTestEnvWithoutResetProfile()
-	if err := testEnv.SetUp(ctx); err != nil {
-		s.Fatal("Failed to set up routing test env: ", err)
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
+	if err != nil {
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := testEnv.TearDown(ctx); err != nil {
-			s.Error("Failed to tear down routing test env: ", err)
+	defer func() {
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
 		}
-	}(cleanupCtx)
+	}()
 
 	cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
 	cr, err := chrome.New(
@@ -122,7 +121,7 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 	)
 
-	server, err := vpn.StartServerWithConfig(ctx, testEnv.BaseServer, config)
+	server, err := vpn.StartServerWithConfig(ctx, networkEnv.Server1, config)
 	if err != nil {
 		s.Fatal("Failed to start VPN server: ", err)
 	}
@@ -191,7 +190,7 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	}
 
 	// Defer to cleanup is set up above.
-	server, err = vpn.StartServerWithConfig(ctx, testEnv.BaseServer, config)
+	server, err = vpn.StartServerWithConfig(ctx, networkEnv.Server1, config)
 	if err != nil {
 		s.Fatal("Failed to start VPN server after re-login: ", err)
 	}

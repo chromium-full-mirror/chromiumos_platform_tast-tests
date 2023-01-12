@@ -12,8 +12,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet"
-	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
 )
@@ -71,7 +69,7 @@ func init() {
 // as always-on VPN, connects automatically and routing is correct when VPN service
 // is not available.
 //
-// In this test, we set up the network as follows:
+// In this test, we set up the network as follows (by vpn.CreateNetworkTopology):
 //
 //	veth0 --+-- test router --+-- physical server (used to test if system/user traffic is blocked)
 //	            DHCP server   |
@@ -88,15 +86,6 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create shill manager proxy: ", err)
 	}
 
-	if err := m.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
-		s.Fatal("Failed to disable portal detection on ethernet: ", err)
-	}
-	defer func() {
-		if err := m.SetProperty(cleanupCtx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular"); err != nil {
-			s.Fatal("Failed to restore portal detection on ethernet: ", err)
-		}
-	}()
-
 	// Set up an test profile and pop it out on stack after test is finished.
 	popFunc, err := m.PushTestProfile(ctx)
 	if err != nil {
@@ -104,36 +93,29 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	}
 	defer popFunc()
 
-	pool := subnet.NewPool()
-
-	// Setup a router and connect 2 servers.
-	svc, rt, svr, err := virtualnet.CreateRouterServerEnv(ctx, m, pool, virtualnet.EnvOptions{
-		Priority:   10,
-		EnableDHCP: true,
-	})
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
-		s.Fatal("Failed to create router env: ", err)
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
-	defer rt.Cleanup(cleanupCtx)
+	defer func() {
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
+		}
+	}()
 
-	vsvr, err := virtualnet.CreateEnv(ctx, "vserver")
-	if err != nil {
-		s.Fatal("Failed to setup server: ", err)
-	}
-	if err := vsvr.ConnectToRouterWithPool(ctx, rt, pool); err != nil {
-		s.Fatal("Failed to connect server to router: ", err)
-	}
-	if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		s.Fatal("Failed to wait for service online: ", err)
-	}
-	addrs, err := svr.WaitForVethInAddrs(ctx, true, false)
+	// Use Server1 for setting up VPN server, and Server2 for verify physical
+	// traffic.
+	vpnEnv := networkEnv.Server1
+	physicalEnv := networkEnv.Server2
+
+	addrs, err := physicalEnv.WaitForVethInAddrs(ctx, true, false)
 	if err != nil {
 		s.Fatal("Failed to get server addrs: ", err)
 	}
 	physicalAddr := addrs.IPv4Addr.String()
 
 	// Establish a VPN connection on one of the servers.
-	conn, err := vpn.StartConnection(ctx, vsvr,
+	conn, err := vpn.StartConnection(ctx, vpnEnv,
 		s.Param().(alwaysOnVPNRoutingTestCase).vpnType,
 		vpn.WithoutAutoConnect(),
 	)
@@ -175,11 +157,11 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	}
 
 	cmd := []string{"iptables", "-w", "-I", "INPUT", "-j", "DROP"}
-	if err := vsvr.RunWithoutChroot(ctx, cmd...); err != nil {
+	if err := vpnEnv.RunWithoutChroot(ctx, cmd...); err != nil {
 		s.Fatal("Failed to block all traffic for VPN: ", err)
 	}
 
-	// Test system traffic is not blocked if the VPN is not connectble for both modes.
+	// Test system traffic is not blocked if the VPN is not connectable for both modes.
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddr, "root", 10*time.Second); err != nil {
 		s.Errorf("User %s failed to ping %v: %v", "root", physicalAddr, err)
 	}

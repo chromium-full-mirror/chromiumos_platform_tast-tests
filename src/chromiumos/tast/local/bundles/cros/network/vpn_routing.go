@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/dumputil"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/testing"
 )
 
@@ -119,30 +118,20 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	// Create envs for holding servers.
-	routingEnv := routing.NewTestEnvWithoutResetProfile()
-	if err := routingEnv.SetUp(ctx); err != nil {
-		s.Fatal("Failed to setup routing env: ", err)
-	}
-	defer func() {
-		if err := routingEnv.TearDown(cleanupCtx); err != nil {
-			testing.ContextLog(ctx, "Failed to tear down routing env: ", err)
-		}
-	}()
-	// Create another env and connect it to the router. This can be used to verify
-	// if physical network is reachable.
-	physicalEnv, err := virtualnet.CreateEnv(ctx, "phy")
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
-		s.Fatal("Failed to setup env for verifying physical connection: ", err)
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
 	defer func() {
-		if err := physicalEnv.Cleanup(cleanupCtx); err != nil {
-			testing.ContextLog(ctx, "Failed to tear down physical env: ", err)
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
 		}
 	}()
-	if err := physicalEnv.ConnectToRouterWithPool(ctx, routingEnv.BaseRouter, routingEnv.Pool); err != nil {
-		s.Fatal("Failed to connect physical env to router: ", err)
-	}
+
+	// Use Server1 for setting up VPN server, and Server2 for verify physical
+	// traffic.
+	vpnEnv := networkEnv.Server1
+	physicalEnv := networkEnv.Server2
 
 	// Verify physicalEnv can be reached by IPv6 before connecting VPN.
 	physicalAddrs, err := physicalEnv.GetVethInAddrs(ctx)
@@ -163,7 +152,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	}
 	config := vpn.NewConfig(tc.vpnType, opts...)
 
-	server, err := vpn.StartServerWithConfig(ctx, routingEnv.BaseServer, config)
+	server, err := vpn.StartServerWithConfig(ctx, vpnEnv, config)
 	if err != nil {
 		s.Fatal("Failed to create VPN server: ", err)
 	}
@@ -176,7 +165,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	// The second server is only for WireGuard.
 	var secondServer *vpn.Server
 	if tc.wgTwoPeers {
-		secondServer, err = vpn.StartServerWithConfig(ctx, routingEnv.BaseRouter, config)
+		secondServer, err = vpn.StartServerWithConfig(ctx, networkEnv.Router, config)
 		if err != nil {
 			s.Fatal("Failed to create second WireGuard server: ", err)
 		}

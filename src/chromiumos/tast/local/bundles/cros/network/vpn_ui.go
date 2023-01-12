@@ -124,13 +124,13 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	defer ew.Close()
 
 	// Prepares virtualnet environment for the VPN server.
-	routingEnv := routing.NewTestEnvWithoutResetProfile()
-	if err := routingEnv.SetUp(ctx); err != nil {
-		s.Fatal("Failed to set up virtualnet environment for VPN server: ", err)
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
+	if err != nil {
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
 	defer func() {
-		if err := routingEnv.TearDown(cleanupCtx); err != nil {
-			s.Error("Failed to tear down virtualnet environment: ", err)
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
 		}
 	}()
 
@@ -142,7 +142,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		vpn.WithOpenVPNUseUserPassword(),
 		vpn.WithWGUsePSK(),
 	)
-	vpnServer, err := vpn.StartServerWithConfig(ctx, routingEnv.BaseServer, config)
+	vpnServer, err := vpn.StartServerWithConfig(ctx, networkEnv.Server1, config)
 	if err != nil {
 		s.Fatal("Failed to create VPN connection: ", err)
 	}

@@ -8,13 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
-	"chromiumos/tast/local/network/virtualnet"
-	"chromiumos/tast/local/network/virtualnet/subnet"
-	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
 )
 
@@ -38,56 +34,29 @@ func VPNSourceRouting(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	mgr, err := shill.NewManager(ctx)
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
-		s.Fatal("Failed to create manager proxy: ", err)
-	}
-	if err := mgr.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
-		s.Fatal("Failed to disable portal detection on ethernet: ", err)
+		s.Fatal("Failed to create network topology for VPN tests: ", err)
 	}
 	defer func() {
-		if err := mgr.SetProperty(cleanupCtx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular"); err != nil {
-			s.Fatal("Failed to restore portal detection on ethernet: ", err)
+		if err := networkEnv.TearDown(cleanupCtx); err != nil {
+			s.Error("Failed to tear down network topology for VPN tests: ", err)
 		}
 	}()
-	pool := subnet.NewPool()
 
-	// Setup a router and connect 2 servers.
-	svc, rt, svr, err := virtualnet.CreateRouterServerEnv(ctx, mgr, pool, virtualnet.EnvOptions{
-		Priority:   10,
-		EnableDHCP: true,
-	})
-	if err != nil {
-		s.Fatal("Failed to create router env: ", err)
-	}
-	defer rt.Cleanup(cleanupCtx)
+	// Use Server1 for setting up VPN server, and Server2 for verify physical
+	// traffic.
+	vpnEnv := networkEnv.Server1
+	physicalEnv := networkEnv.Server2
 
-	vsvr, err := virtualnet.CreateEnv(ctx, "vserver")
-	if err != nil {
-		s.Fatal("Failed to setup server: ", err)
-	}
-	s4, err := pool.AllocNextIPv4Subnet()
-	if err != nil {
-		s.Fatal("Failed to allocate v4 subnet: ", err)
-	}
-	s6, err := pool.AllocNextIPv6Subnet()
-	if err != nil {
-		s.Fatal("Failed to allocate v6 subnet: ", err)
-	}
-	if err := vsvr.ConnectToRouter(ctx, rt, s4, s6); err != nil {
-		s.Fatal("Failed to connect server to router: ", err)
-	}
-	if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		s.Fatal("Failed to wait for service: ", err)
-	}
-	addrs, err := svr.WaitForVethInAddrs(ctx, true, false)
+	addrs, err := physicalEnv.WaitForVethInAddrs(ctx, true, false)
 	if err != nil {
 		s.Fatal("Failed to get server addrs: ", err)
 	}
 	saddr := addrs.IPv4Addr.String()
 
 	// Establish a VPN on one of the servers.
-	conn, err := vpn.StartConnection(ctx, vsvr, vpn.TypeIKEv2)
+	conn, err := vpn.StartConnection(ctx, vpnEnv, vpn.TypeIKEv2)
 	if err != nil {
 		s.Fatal("Failed to connect vpn: ", err)
 	}
