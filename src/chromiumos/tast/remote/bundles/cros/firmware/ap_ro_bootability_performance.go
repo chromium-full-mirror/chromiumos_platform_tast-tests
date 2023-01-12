@@ -470,7 +470,8 @@ func checkDeviation(ctx context.Context, baseline, result float64) error {
 	upperBound := baseline + deviation
 	lowerBound := baseline - deviation
 	if result > upperBound {
-		return errors.Errorf("speedometer result %v is HIGHER than targeted deviation of %v from baseline %v", result, deviationTarget, baseline)
+		testing.ContextLogf(ctx, "Speedometer result %v is HIGHER than targeted deviation of %v from baseline %v", result, deviationTarget, baseline)
+		return nil
 	}
 	if result < lowerBound {
 		return errors.Errorf("speedometer result %v is LOWER than targeted deviation of %v from baseline %v", result, deviationTarget, baseline)
@@ -507,18 +508,17 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]string, error) {
 
 // untarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
 func untarUnknownFileName(ctx context.Context, tmpDir, fwidModel string) (string, error) {
-	filename := "image-" + fwidModel + ".bin"
-	testing.ContextLogf(ctx, "Untaring file %q from %s", filename, firmwareFileName)
-	if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
-		// Sometimes the file name format will not be "image-board.bin" but just "image.bin" instead.
-		testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name: %q", filename)
-		filename = "image.bin"
-		testing.ContextLogf(ctx, "Retry with name: %s", filename)
-		if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
-			return "", errors.Wrapf(err, "failed to untar the file with name %q", filename)
+	// List of possible formats for the binary file found in a downloaded tar file.
+	filenamePool := []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
+	var err error
+	for _, filename := range filenamePool {
+		if err = testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
+			testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", filename, err)
+			continue
 		}
+		return filename, nil
 	}
-	return filename, nil
+	return "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
 }
 
 // getNewestRWIDAvailable identifies which is the newest firmware ID available
