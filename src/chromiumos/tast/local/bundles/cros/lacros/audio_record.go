@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Tests basic audio recording on lacros",
 		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosAudio",
 		Timeout:      7 * time.Minute, // A lenient limit for launching Lacros Chrome.

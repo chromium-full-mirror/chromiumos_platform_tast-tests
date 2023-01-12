@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests pinned stream on lacros",
 		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:audio"},
 		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosAudio",
