@@ -75,7 +75,7 @@ func (s *Service) initializeRuntimeResources(ctx context.Context) (*runtimeResou
 	}, nil
 }
 
-func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinWifiFromQuickSettingsRequest) (_ *emptypb.Empty, retErr error) {
+func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinWifiRequest) (_ *emptypb.Empty, retErr error) {
 	res, err := s.initializeRuntimeResources(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, err
@@ -108,40 +108,37 @@ func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinW
 	}
 
 	ssidTextField := nodewith.NameContaining("SSID").Role(role.TextField).Ancestor(joinWiFiNetworkDialog)
-	if err := setTextField(ctx, res.ui, kb, ssidTextField, req.Ssid); err != nil {
+	if err := setTextField(res.ui, kb, ssidTextField, req.GetSsid())(ctx); err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to fill the SSID")
 	}
 
-	securityComboBoxSelect := nodewith.Name("Security").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialog)
-	if err := res.ui.LeftClick(securityComboBoxSelect)(ctx); err != nil {
-		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the security combo-box")
-	}
-
-	var optionName string
-	switch req.SecurityOption {
-	case wifi.JoinWifiFromQuickSettingsRequest_None:
-		optionName = "None"
-	case wifi.JoinWifiFromQuickSettingsRequest_PSK:
-		optionName = "PSK (WPA or RSN)"
-	}
-	securityOption := nodewith.Name(optionName).Role(role.ListBoxOption).Ancestor(joinWiFiNetworkDialog)
-	if err := res.ui.LeftClick(securityOption)(ctx); err != nil {
-		return &emptypb.Empty{}, errors.Wrap(err, "failed to click list option")
-	}
-
-	if req.SecurityOption != wifi.JoinWifiFromQuickSettingsRequest_None {
-		passwordTextField := nodewith.Name("Password").Role(role.TextField).Ancestor(joinWiFiNetworkDialog)
-		if err := setTextField(ctx, res.ui, kb, passwordTextField, req.Password); err != nil {
-			return &emptypb.Empty{}, errors.Wrap(err, "failed to fill the password")
-		}
-	}
-
-	connectButton := nodewith.NameContaining("Connect").Role(role.Button).Ancestor(joinWiFiNetworkDialog)
-	if err := res.ui.LeftClick(connectButton)(ctx); err != nil {
-		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the connect button")
+	if err := joinWifiSetSecurity(res.ui, kb, req, joinWiFiNetworkDialog)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to set security")
 	}
 
 	return &emptypb.Empty{}, verifyConnectedStatus(ctx, req.Ssid, true)
+}
+
+func joinWifiSetSecurity(ui *uiauto.Context, kb *input.KeyboardEventWriter, req *wifi.JoinWifiRequest, joinWiFiNetworkDialogRoot *nodewith.Finder) uiauto.Action {
+	var securityOptionName string
+	var authenticateAction uiauto.Action
+	switch req.Security.(type) {
+	case *wifi.JoinWifiRequest_None:
+		securityOptionName = "None"
+		authenticateAction = func(ctx context.Context) error { return nil }
+	case *wifi.JoinWifiRequest_Psk:
+		securityOptionName = "PSK (WPA or RSN)"
+		passwordTextField := nodewith.Name("Password").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
+		authenticateAction = setTextField(ui, kb, passwordTextField, req.GetPsk())
+	}
+
+	securityComboBox := nodewith.Name("Security").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+	connectButton := nodewith.NameContaining("Connect").Role(role.Button).Ancestor(joinWiFiNetworkDialogRoot)
+	return uiauto.Combine("set security and connect to wifi "+req.Ssid,
+		selectComboBoxOption(ui, securityComboBox, securityOptionName),
+		authenticateAction,
+		ui.LeftClick(connectButton),
+	)
 }
 
 func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetworksControlsRequest) (_ *emptypb.Empty, retErr error) {
@@ -257,14 +254,22 @@ func verifyConnectedStatus(ctx context.Context, ssid string, expectedStatus bool
 	return nil
 }
 
-func setTextField(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, textField *nodewith.Finder, text string) error {
-	if err := ui.EnsureFocused(textField)(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure the text field is focused")
-	}
-
+func setTextField(ui *uiauto.Context, kb *input.KeyboardEventWriter, textField *nodewith.Finder, text string) uiauto.Action {
 	return uiauto.Combine(fmt.Sprintf("set text field with text: %q", text),
+		ui.EnsureFocused(textField),
 		kb.AccelAction("ctrl+A"),
 		kb.AccelAction("backspace"),
 		kb.TypeAction(text),
-	)(ctx)
+	)
+}
+
+func selectComboBoxOption(ui *uiauto.Context, comboBox *nodewith.Finder, optionName string) uiauto.Action {
+	option := nodewith.NameContaining(optionName).Role(role.ListBoxOption).Ancestor(comboBox)
+	return uiauto.Combine(fmt.Sprintf("select combo box option %q", optionName),
+		ui.WaitUntilExists(comboBox),
+		ui.MakeVisible(comboBox),
+		ui.LeftClickUntil(comboBox, ui.WithTimeout(3*time.Second).WaitUntilExists(option)),
+		ui.LeftClick(option),
+		ui.WaitUntilGone(option),
+	)
 }

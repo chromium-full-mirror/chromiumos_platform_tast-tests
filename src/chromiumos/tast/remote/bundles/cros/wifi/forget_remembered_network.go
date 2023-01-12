@@ -131,10 +131,9 @@ func ForgetRememberedNetwork(ctx context.Context, s *testing.State) {
 func connectAndForgetNetwork(ctx context.Context, rpcClient *rpc.Client, ssid, password string) (retErr error) {
 	wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
 
-	if _, err := wifiSvc.JoinWifiFromQuickSettings(ctx, &wifi.JoinWifiFromQuickSettingsRequest{
-		Ssid:           ssid,
-		Password:       password,
-		SecurityOption: wifi.JoinWifiFromQuickSettingsRequest_PSK,
+	if _, err := wifiSvc.JoinWifiFromQuickSettings(ctx, &wifi.JoinWifiRequest{
+		Ssid:     ssid,
+		Security: &wifi.JoinWifiRequest_Psk{Psk: password},
 	}); err != nil {
 		return errors.Wrapf(err, "failed to connect to WiFi %q", ssid)
 	}

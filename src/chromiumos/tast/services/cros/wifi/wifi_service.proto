@@ -7,6 +7,7 @@ syntax = "proto3";
 package tast.cros.wifi;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "chromiumos/tast/services/cros/wifi";
 
@@ -15,22 +16,19 @@ option go_package = "chromiumos/tast/services/cros/wifi";
 service WifiService {
   // JoinWifiFromQuickSettings joins to the specified wifi network from
   // Quick Settings.
-  rpc JoinWifiFromQuickSettings(JoinWifiFromQuickSettingsRequest) returns (google.protobuf.Empty) {}
+  rpc JoinWifiFromQuickSettings(JoinWifiRequest) returns (google.protobuf.Empty) {}
 
   // KnownNetworksControls opens the OS-Settings at "Known Networks" page and
   // interacts/controls the known networks.
   rpc KnownNetworksControls(KnownNetworksControlsRequest) returns (google.protobuf.Empty) {}
 }
 
-message JoinWifiFromQuickSettingsRequest {
-  enum SecurityOption {
-    None = 0;
-    PSK = 1;
-  }
-
+message JoinWifiRequest {
   string ssid = 1;
-  string password = 2;
-  SecurityOption security_option = 3;
+  oneof security {
+    google.protobuf.Any none = 2;
+    string psk = 3;
+  }
 }
 
 message KnownNetworksControlsRequest {
