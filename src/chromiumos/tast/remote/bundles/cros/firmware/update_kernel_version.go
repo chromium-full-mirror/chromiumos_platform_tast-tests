@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: UpdateKernelVersion, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Update kernel version bits in CGPT and verify its consistency",
+		Func: UpdateKernelVersion, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Update kernel version bits in CGPT and verify its consistency",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"js@semihalf.com",

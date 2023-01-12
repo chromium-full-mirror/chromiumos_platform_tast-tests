@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ECCharging, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Servo based EC charging control test",
+		Func: ECCharging, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Servo based EC charging control test",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"js@semihalf.com",
@@ -31,10 +31,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 	})
 }
-
-const (
-	TrickleChargingThreshold = 100
-)
 
 // getChargingState returns map[string]string of parsed chgstate output
 // from EC, in ideal situation this would be just predefined struct with
@@ -55,7 +51,7 @@ func getChargingState(ctx context.Context, s *testing.State, h *firmware.Helper)
 		value    string
 	)
 
-	cstate_map := make(map[string]string)
+	cstateMap := make(map[string]string)
 
 	// For reference, the current output of "chgstate" EC command is provided below
 	// in shortened form, actual field names and values might be different per board
@@ -94,11 +90,11 @@ func getChargingState(ctx context.Context, s *testing.State, h *firmware.Helper)
 			key = strings.Split(line, " = ")[0]
 			value = strings.Split(line, " = ")[1]
 
-			cstate_map[category+"."+key] = value
+			cstateMap[category+"."+key] = value
 		}
 	}
 
-	return cstate_map
+	return cstateMap
 }
 
 func chargingInt(raw, suffix string) (value int) {
@@ -111,6 +107,11 @@ func chargingInt(raw, suffix string) (value int) {
 // and current to determine its charging circuitry and EC
 // reporting is working as intended
 func ECCharging(ctx context.Context, s *testing.State) {
+	const (
+		// TrickleChargingThreshold is the current in mA below which is classified as a trickle charge.
+		TrickleChargingThreshold = 100
+	)
+
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -145,11 +146,11 @@ func ECCharging(ctx context.Context, s *testing.State) {
 			TrickleChargingThreshold)
 	}
 
-	orig_pd_role, err := h.Servo.GetPDRole(ctx)
+	origPdRole, err := h.Servo.GetPDRole(ctx)
 	if err != nil {
 		s.Fatal("Failed to retrieve original USB PD role for Servo: ", err)
 	}
-	if orig_pd_role == servo.PDRoleNA {
+	if origPdRole == servo.PDRoleNA {
 		s.Fatal("Test requires Servo V4 or never to for operating DUT power delivery role through servo_pd_role")
 	}
 
@@ -195,7 +196,7 @@ func ECCharging(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Getting back to original USB PD role")
-	if err := h.Servo.SetPDRole(ctx, orig_pd_role); err != nil {
+	if err := h.Servo.SetPDRole(ctx, origPdRole); err != nil {
 		s.Fatal("Failed to get back to original USB PD role: ", err)
 	}
 }

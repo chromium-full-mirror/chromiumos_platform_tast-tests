@@ -31,7 +31,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShutdownMode, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Verifies that system comes back after power button press and poweroff",
+		Func: ShutdownMode, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies that system comes back after power button press and poweroff",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com",

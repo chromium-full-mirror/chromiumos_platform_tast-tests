@@ -17,7 +17,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: FWConsecutiveLidSwitch, LacrosStatus: testing.LacrosVariantUnknown, Desc: "Trigger lid switch on and off many times consecutively",
+		Func: FWConsecutiveLidSwitch, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Trigger lid switch on and off many times consecutively",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"js@semihalf.com",
