@@ -93,6 +93,13 @@ func VerifyCategoryTag(ctx context.Context, s *testing.State) {
 	cameraWebArea := nodewith.NameContaining("Camera").Role(role.RootWebArea)
 	settingsButton := nodewith.Name("Settings").Ancestor(cameraWebArea)
 	sendFeedbackButton := nodewith.Name("Send feedback").Role(role.Button)
+
+	// On some devices, there is delay for the camera app displaying the settings
+	// button. Add the WaitUntilExists before clicking the button.
+	if err := ui.WaitUntilExists(settingsButton)(ctx); err != nil {
+		s.Fatal("Could not find the settings button: ", err)
+	}
+
 	if err := ui.DoDefault(settingsButton)(ctx); err != nil {
 		s.Fatal("Failed to click Settings button: ", err)
 	}
@@ -110,7 +117,17 @@ func VerifyCategoryTag(ctx context.Context, s *testing.State) {
 	}
 
 	// Find the issue description text input.
-	issueDescriptionInput := nodewith.Role(role.TextField)
+	const inputName = "Description Suggestions are based on your description"
+	issueDescriptionInput := nodewith.NameStartingWith(inputName)
+
+	// On some devices, there is some timing difference after waitForApp and the
+	// time UI tree is updated with the "Description Suggestions are based on your
+	// description" textfield. So adding the waitUntilExists before ensuring
+	// focus.
+	if err := ui.WaitUntilExists(issueDescriptionInput)(ctx); err != nil {
+		s.Fatal("Could not find the description field: ", err)
+	}
+
 	if err := ui.EnsureFocused(issueDescriptionInput)(ctx); err != nil {
 		s.Fatal("Failed to find the issue description text input: ", err)
 	}
