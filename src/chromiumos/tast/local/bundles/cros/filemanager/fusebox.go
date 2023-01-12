@@ -6,6 +6,7 @@ package filemanager
 
 import (
 	"context"
+	"crypto/md5"
 	"io"
 	"os"
 	"path/filepath"
@@ -33,11 +34,18 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name: "basic",
-			Val:  false,
-		}, {
 			Name: "advanced",
-			Val:  true,
+			Val:  "advancedVal",
+		}, {
+			Name: "basic",
+			Val:  "basicVal",
+		}, {
+			Name: "fsp", // FSP = the fileSystemProvider API.
+			Val:  "fspVal",
+			ExtraData: []string{
+				"fusebox_fsp_extension/manifest.json",
+				"fusebox_fsp_extension/service-worker.js",
+			},
 		}},
 	})
 }
@@ -48,7 +56,15 @@ func Fusebox(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Logging into Chrome should launch Fusebox (via cros-disks).
-	cr, err := chrome.New(ctx)
+	chromeOpts := []chrome.Option(nil)
+	switch s.Param().(string) {
+	case "fspVal":
+		chromeOpts = []chrome.Option{
+			chrome.UnpackedExtension(filepath.Dir(s.DataPath(
+				"fusebox_fsp_extension/manifest.json"))),
+		}
+	}
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}
@@ -67,6 +83,18 @@ func Fusebox(ctx context.Context, s *testing.State) {
 		s.Fatal("ReadFile(fuse_status) failed: ", err)
 	}
 
+	switch s.Param().(string) {
+	case "basicVal":
+		exerciseFuseboxBasic(ctx, cleanupCtx, cr, s)
+	case "advancedVal":
+		tdd := exerciseFuseboxBasic(ctx, cleanupCtx, cr, s)
+		exerciseFuseboxAdvanced(ctx, s, tdd)
+	case "fspVal":
+		exerciseFuseboxFSP(ctx, s)
+	}
+}
+
+func exerciseFuseboxBasic(ctx, cleanupCtx context.Context, cr *chrome.Chrome, s *testing.State) tempDirData {
 	// Make a temporary directory.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -88,12 +116,7 @@ func Fusebox(ctx context.Context, s *testing.State) {
 		"wfru.txt", "write fusebox; read underlying")
 	checkFuseboxRoundTrip(s, tdd.UnderlyingFilePath, tdd.FuseboxFilePath,
 		"wurf.txt", "write underlying; read fusebox")
-
-	// The checkFuseboxRoundTrip calls above exercised basic read-a-file and
-	// write-a-file functionality. Now exercise something more advanced.
-	if advanced := s.Param().(bool); advanced {
-		exerciseAdvancedFuseboxIO(s, tdd.FuseboxFilePath, "wfru.txt", "wurf.txt")
-	}
+	return tdd
 }
 
 func checkFuseboxRoundTrip(s *testing.State, writeFilePath, readFilePath, baseName, data string) {
@@ -113,17 +136,17 @@ type tempDirData struct {
 	UnderlyingFilePath string `json:"underlyingFilePath"`
 }
 
-func exerciseAdvancedFuseboxIO(s *testing.State, fuseboxFilePath, filename0, filename1 string) {
+func exerciseFuseboxAdvanced(ctx context.Context, s *testing.State, tdd tempDirData) {
 	// Run a bunch of commands that are roughly analogous to classic Unix
 	// tools: ls, cat, mkdir, etc.
 	//
-	// Each "FFP" will be replaced by the fuseboxFilePath.
+	// Each "FFP" will be replaced by the tdd.FuseboxFilePath.
 	commands := [][]string{
 		{"ls", "FFP"},
 		{"touch", "FFP/file"},
-		{"cp", "FFP/" + filename0, "FFP/copy"},
+		{"cp", "FFP/wfru.txt", "FFP/copy"},
 		{"cat", "FFP/copy"},
-		{"cp", "FFP/" + filename1, "FFP/copy"},
+		{"cp", "FFP/wurf.txt", "FFP/copy"},
 		{"ls", "FFP"},
 		{"mkdir", "FFP/d0"},
 		{"mkdir", "FFP/d0/d1"},
@@ -137,11 +160,11 @@ func exerciseAdvancedFuseboxIO(s *testing.State, fuseboxFilePath, filename0, fil
 
 	for _, command := range commands {
 		// arg returns command[i], replacing a leading "FFP" with the
-		// fuseboxFilePath.
+		// tdd.FuseboxFilePath.
 		arg := func(i int) string {
 			rawArg := command[i]
 			if strings.HasPrefix(rawArg, "FFP") {
-				return fuseboxFilePath + rawArg[3:]
+				return tdd.FuseboxFilePath + rawArg[3:]
 			}
 			return rawArg
 		}
@@ -242,4 +265,149 @@ func renameFile(srcName, dstName string) error {
 		return err
 	}
 	return os.Remove(srcName)
+}
+
+// readFileInChunks is like os.ReadFile but uses multiple "read" syscalls (each
+// with a 32 KiB buffer). The os.ReadFile standard library routine is too
+// helpful, issuing a "stat" syscall before its first "read" syscall, to then
+// issue one (large) perfectly sized "read". Here, we would like to check that
+// Fusebox (and the fileSystemProvider extension) correctly handles a non-zero
+// "read" offset. We want multiple small "read"s instead of one large "read".
+func readFileInChunks(filename string, finalSizeHint int) ([]byte, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]byte, 0, finalSizeHint)
+	buf := [32 * 1024]byte{}
+	for {
+		n, err := f.Read(buf[:])
+		ret = append(ret, buf[:n]...)
+		if err == nil {
+			continue
+		} else if err == io.EOF {
+			err = f.Close()
+		} else {
+			f.Close()
+		}
+		return ret, err
+	}
+}
+
+// readFileAt combines os.Open and os.File.ReadAt in a single function.
+func readFileAt(filename string, offset, size int64) ([]byte, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]byte, size)
+	n, err := f.ReadAt(ret, offset)
+	f.Close()
+	return ret[:n], err
+}
+
+func exerciseFuseboxFSP(ctx context.Context, s *testing.State) {
+	const fuseboxDirName = "/media/fuse/fusebox"
+
+	// Find the "/media/fuse/fusebox/fsp.1234etc" directory for the FSP-using
+	// Chrome extension.
+	fspDirName := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		dirEntries, err := os.ReadDir(fuseboxDirName)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read fusebox dir"))
+		}
+		for _, dirEntry := range dirEntries {
+			if !dirEntry.IsDir() {
+				continue
+			}
+			name := dirEntry.Name()
+			if !strings.HasPrefix(name, "fsp.") {
+				continue
+			}
+			filename := filepath.Join(fuseboxDirName, name, "this-is-the-fusebox-fsp-extension.txt")
+			if _, err := os.Stat(filename); err == nil {
+				fspDirName = filepath.Join(fuseboxDirName, name)
+				return nil
+			}
+		}
+		return errors.New(`could not find "this-is-the-fusebox-fsp-extension.txt"`)
+	}, nil); err != nil {
+		s.Fatal("Could not find fspDirName: ", err)
+	}
+
+	// Check file contents.
+	testCases := [...]struct {
+		filename string
+		want     string
+	}{
+		{"empty.txt", ""},
+		{"roses.txt", "Roses are red.\n"},
+		{"slow-2s.txt", "Two seconds delay.\n"},
+	}
+	for _, tc := range testCases {
+		if got, err := os.ReadFile(filepath.Join(fspDirName, tc.filename)); err != nil {
+			s.Fatalf(`ReadFile(%q): %v`, tc.filename, err)
+		} else if string(got) != tc.want {
+			s.Fatalf(`ReadFile(%q): got %q, want %q`, tc.filename, got, tc.want)
+		}
+	}
+
+	// Check the directory with 123 files.
+	if dirEntries, err := os.ReadDir(filepath.Join(fspDirName, "123files")); err != nil {
+		s.Fatalf(`ReadDir(%q): %v`, "123files", err)
+	} else {
+		got := 0
+		for _, dirEntry := range dirEntries {
+			if name := dirEntry.Name(); strings.HasPrefix(name, "foo") {
+				got++
+			}
+		}
+		if want := 123; got != want {
+			s.Fatalf(`ReadDir(%q): got %d, want %d`, "123files", got, want)
+		}
+	}
+
+	// Check a FizzBuzz file.
+	fizzBuzz0Filename := filepath.Join(fspDirName, "big-fizz-buzz-0.txt")
+	if info, err := os.Stat(fizzBuzz0Filename); err != nil {
+		s.Fatal("Stat(FizzBuzz0): ", err)
+	} else if gotSize, wantSize := info.Size(), int64(1234567); gotSize != wantSize {
+		s.Fatalf("Stat(FizzBuzz0): got %d, want %d", gotSize, wantSize)
+	} else if contents, err := readFileInChunks(fizzBuzz0Filename, 1234567); err != nil {
+		s.Fatal("ReadFile(FizzBuzz0): ", err)
+	} else if len(contents) != 1234567 {
+		s.Fatalf("ReadFile(FizzBuzz0): got %d, want %d", len(contents), 1234567)
+	} else {
+		gotMD5 := md5.Sum(contents)
+		wantMD5 := [md5.Size]byte{ // https://go.dev/play/p/j2II3eUY_VV
+			0x25, 0x77, 0x3b, 0xda, 0x73, 0x97, 0xea, 0x68, 0xd2, 0xea, 0xa5, 0x59, 0x17, 0x17, 0xcc, 0x2a,
+		}
+		if gotMD5 != wantMD5 {
+			s.Errorf("md5(FizzBuzz0): got %02x, want %02x", gotMD5, wantMD5)
+		}
+	}
+
+	// Check another FizzBuzz file. This time we read only a sub-slice of the
+	// file, instead of reading the whole file from start to finish. Open a
+	// different filename (with a "-1.txt" instead of "-0.txt" suffix) to avoid
+	// any kernel caching.
+	fizzBuzz1Filename := filepath.Join(fspDirName, "big-fizz-buzz-1.txt")
+	if _, err := os.Stat(fizzBuzz1Filename); err != nil {
+		s.Fatal("Stat(FizzBuzz1): ", err)
+	} else if contents, err := readFileAt(fizzBuzz0Filename, 1200000, 98765); err != io.EOF {
+		s.Fatalf(`ReadAt(FizzBuzz1): got %v, want %v`, err, io.EOF)
+	} else if len(contents) != 34567 {
+		s.Fatalf("ReadFile(FizzBuzz1): got %d, want %d", len(contents), 34567)
+	} else {
+		gotMD5 := md5.Sum(contents)
+		wantMD5 := [md5.Size]byte{ // https://go.dev/play/p/j2II3eUY_VV
+			0xef, 0x72, 0xd7, 0x35, 0xe1, 0x77, 0x99, 0xc2, 0x8b, 0xe9, 0xf2, 0x57, 0x6f, 0x8f, 0x2d, 0xee,
+		}
+		if gotMD5 != wantMD5 {
+			s.Errorf("md5(FizzBuzz1): got %02x, want %02x", gotMD5, wantMD5)
+		}
+	}
 }
