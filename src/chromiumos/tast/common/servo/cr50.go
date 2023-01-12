@@ -112,15 +112,17 @@ func (s *Servo) RunCR50CommandGetOutput(ctx context.Context, cmd string, pattern
 }
 
 // CheckGSCBootMode verifies that the boot mode as reported by GSC's ec_comm command is as expected.
-func (s *Servo) CheckGSCBootMode(ctx context.Context, expectedMode string) error {
+func (s *Servo) CheckGSCBootMode(ctx context.Context, expectedModes []string) error {
 	output, err := s.RunCR50CommandGetOutput(ctx, "ec_comm", []string{`boot_mode\s*:\s*(\S+)\s`})
 	if err != nil {
 		return errors.Wrap(err, "failed to get boot mode")
 	}
-	if output[0][1] != expectedMode {
-		return errors.Wrapf(err, "incorrect boot mode, got %q want %q", output[0][1], expectedMode)
+	for _, expected := range expectedModes {
+		if output[0][1] == expected {
+			return nil
+		}
 	}
-	return nil
+	return errors.Wrapf(err, "incorrect boot mode, got %q want one of %q", output[0][1], expectedModes)
 }
 
 // SetTestlab will perform the required power button presses to disable or enable CCD testlab mode.

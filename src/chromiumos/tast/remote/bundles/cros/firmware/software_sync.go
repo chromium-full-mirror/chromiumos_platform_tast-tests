@@ -194,7 +194,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get features: ", err)
 	} else if bytes.Contains(features, []byte("\n38 ")) {
 		s.Log("Checking for NORMAL boot mode")
-		if err := h.Servo.CheckGSCBootMode(ctx, "NORMAL"); err != nil {
+		if err := h.Servo.CheckGSCBootMode(ctx, []string{"NORMAL", "Verified"}); err != nil {
 			s.Fatal("Incorrect boot mode: ", err)
 		}
 
@@ -209,7 +209,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		h.CloseRPCConnection(ctx)
 
 		s.Log("Checking for NORMAL boot mode")
-		if err := h.Servo.CheckGSCBootMode(ctx, "NORMAL"); err != nil {
+		if err := h.Servo.CheckGSCBootMode(ctx, []string{"NORMAL", "Verified"}); err != nil {
 			s.Fatal("Incorrect boot mode: ", err)
 		}
 		s.Log("Expect EC in RW and RW is restored")

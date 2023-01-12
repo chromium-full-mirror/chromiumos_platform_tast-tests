@@ -882,10 +882,14 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 
 	// By request, reset capabilities to factory mode.
 	if resetCCD {
-		re := `Opening factory(?i)[^\n\r]*|> $`
-		_, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset factory", []string{re})
+		out, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset factory", []string{`[^>]*> `})
 		if err != nil {
 			return errors.Wrap(err, "failed resetting capabilities to factory mode")
+		}
+		// CR50 prints: Opening factory  settings.
+		// Ti50 prints nothing
+		if strings.Contains(out[0][0], "Access Denied") {
+			return errors.Errorf("unexpected ccd reset factory output: %s", out[0][0])
 		}
 	}
 

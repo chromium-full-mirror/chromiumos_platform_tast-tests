@@ -516,7 +516,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 			return errors.Wrap(err, "failed to sleep")
 		}
 		if msOptsContain(opts, VerifyGSCNoBoot) {
-			if err := h.Servo.CheckGSCBootMode(ctx, "NO_BOOT"); err != nil {
+			if err := h.Servo.CheckGSCBootMode(ctx, []string{"NO_BOOT", "NoBoot"}); err != nil {
 				return errors.Wrap(err, "gsc boot mode")
 			}
 		}
