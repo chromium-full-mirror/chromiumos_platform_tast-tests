@@ -4,7 +4,7 @@
 write_into_file: true
 
 # Max duration: 1 min.
-duration_ms: 60000
+duration_ms: 30000
 
 # Writes the userspace buffer into the file every 2 seconds.
 # The data rate of a typical trace is ~1-4 MB/s. So a 8MB in-memory buffer can hold for up
