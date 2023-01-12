@@ -65,8 +65,8 @@ func init() {
 			{
 				Name:      "normal",
 				ExtraAttr: []string{"firmware_ec"},
-				// Disable on leona (b/184778308) and coral (b/250684696)
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "astronaut", "babymega", "babytiger", "blacktiplte", "nasher", "robo360")),
+				// Disable on rammus (b/184778308) and coral (b/250684696)
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana", "astronaut", "babymega", "babytiger", "blacktiplte", "nasher", "robo360")),
 				Fixture:           fixture.NormalMode,
 				Val: eventLogParams{
 					resetType:         firmware.WarmReset,
@@ -75,10 +75,10 @@ func init() {
 				},
 			},
 			{
-				// Allow some normally disallowed events on leona. b/184778308
-				Name:              "leona_normal",
+				// Allow some normally disallowed events on rammus. b/184778308
+				Name:              "rammus_normal",
 				ExtraAttr:         []string{"firmware_ec"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona")),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.NormalMode,
 				Val: eventLogParams{
 					resetType:         firmware.WarmReset,
@@ -91,7 +91,7 @@ func init() {
 			{
 				Name:              "dev",
 				ExtraAttr:         []string{"firmware_ec"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana")),
 				Fixture:           fixture.DevModeGBB,
 				Val: eventLogParams{
 					resetType:         firmware.WarmReset,
@@ -99,11 +99,11 @@ func init() {
 					prohibitedEvents:  `Recovery Mode|Sleep| Wake`,
 				},
 			},
-			// Allow some normally disallowed events on leona. b/184778308
+			// Allow some normally disallowed events on rammus. b/184778308
 			{
-				Name:              "leona_dev",
+				Name:              "rammus_dev",
 				ExtraAttr:         []string{"firmware_ec"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona")),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.DevModeGBB,
 				Val: eventLogParams{
 					resetType:         firmware.WarmReset,
