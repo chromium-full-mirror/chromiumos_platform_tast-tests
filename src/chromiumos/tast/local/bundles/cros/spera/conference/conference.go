@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -31,7 +32,7 @@ type Conference interface {
 	Join(ctx context.Context, room string) error
 	SetLayoutMax(ctx context.Context) error
 	SetLayoutMin(ctx context.Context) error
-	SwitchTabs(ctx context.Context) error
+	SwitchTabs(url string) action.Action
 	VideoAudioControl(ctx context.Context) error
 	TypingInChat(ctx context.Context) error
 	BackgroundChange(ctx context.Context) error

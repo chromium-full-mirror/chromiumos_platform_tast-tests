@@ -7,6 +7,7 @@ package spera
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -76,6 +77,9 @@ func init() {
 			// Zoom meet bot server address.
 			"spera.zoom_bot_server",
 			"spera.zoom_bot_token",
+
+			// Optional. Expecting "google", "external", default is "external".
+			"spera.Conference.web_source",
 		},
 	})
 }
@@ -134,6 +138,9 @@ func preTest(ctx context.Context) {
 
 const tmpDir = "/tmp"
 
+// The default web source is the external websites.
+var webSource = cuj.ExternalWebSource
+
 func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.MeetScenarioRequest) (*empty.Empty, error) {
 	roomType := conference.RoomType(req.RoomType)
 	isNoRoom := roomType == conference.NoRoom
@@ -149,7 +156,9 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 	if collect, ok := s.s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = tmpDir + "/" + cujrecorder.SystemTraceConfigFile
 	}
-
+	if v, ok := s.s.Var("spera.Conference.web_source"); ok {
+		webSource = cuj.WebSourceType(strings.ToLower(v))
+	}
 	run := func(ctx context.Context, roomURL string) error {
 		accountPool, ok := s.s.Var("ui.cujAccountPool")
 		if !ok {
@@ -175,6 +184,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 		cleanupCtx := ctx
 		ctx, cancelTablet := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancelTablet()
+
 		tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.s.Var, "spera.cuj_mode")
 		if err != nil {
 			return errors.Wrap(err, "failed to enable tablet mode")
@@ -237,6 +247,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 			TraceConfigPath:        traceConfigPath,
 			TabletMode:             tabletMode,
 			CollectWebRTCInternals: meet.CollectWebRTCInternals,
+			WebSource:              webSource,
 		}
 		if err := conference.Run(ctx, testParams); err != nil {
 			return errors.Wrap(err, "failed to run Google Meet conference")
@@ -339,6 +350,10 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 		traceConfigPath = tmpDir + "/" + cujrecorder.SystemTraceConfigFile
 	}
 
+	if v, ok := s.s.Var("spera.Conference.web_source"); ok {
+		webSource = cuj.WebSourceType(strings.ToLower(v))
+	}
+
 	testing.ContextLog(ctx, "Start zoom meet scenario")
 	bt := browser.TypeAsh
 	if req.IsLacros {
@@ -404,6 +419,7 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 		OutDir:          outDir,
 		TraceConfigPath: traceConfigPath,
 		TabletMode:      tabletMode,
+		WebSource:       webSource,
 	}
 	if err := conference.Run(ctx, testParams); err != nil {
 		return nil, errors.Wrap(err, "failed to run Zoom conference")

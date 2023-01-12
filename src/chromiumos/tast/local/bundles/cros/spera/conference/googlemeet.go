@@ -449,23 +449,25 @@ func (conf *GoogleMeetConference) VideoAudioControl(ctx context.Context) error {
 }
 
 // SwitchTabs switches the chrome tabs.
-func (conf *GoogleMeetConference) SwitchTabs(ctx context.Context) error {
-	testing.ContextLog(ctx, "Open wiki page")
-	// Set newWindow to false to make the tab in the same Chrome window.
-	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.br, cuj.WikipediaURL, false)
-	if err != nil {
-		return errors.Wrap(err, "failed to open the wiki url")
+func (conf *GoogleMeetConference) SwitchTabs(url string) action.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Open URL: ", url)
+		// Set newWindow to false to make the tab in the same Chrome window.
+		conn, err := conf.uiHandler.NewChromeTab(ctx, conf.br, url, false)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open the url %s", url)
+		}
+		defer conn.Close()
+		defer conn.CloseTarget(ctx)
+		if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for the page to finish loading")
+		}
+		return uiauto.Combine("switch tab",
+			uiauto.NamedAction("stay page for 3 seconds", uiauto.Sleep(3*time.Second)),
+			uiauto.NamedAction("switch to meet tab", conf.uiHandler.SwitchToChromeTabByName(meetTitle)),
+			conf.checkLostNetwork,
+		)(ctx)
 	}
-	defer wikiConn.Close()
-	defer wikiConn.CloseTarget(ctx)
-	if err := webutil.WaitForQuiescence(ctx, wikiConn, longUITimeout); err != nil {
-		return errors.Wrap(err, "failed to wait for wiki page to finish loading")
-	}
-	return uiauto.Combine("switch tab",
-		uiauto.NamedAction("stay wiki page for 3 seconds", uiauto.Sleep(3*time.Second)),
-		uiauto.NamedAction("switch to meet tab", conf.uiHandler.SwitchToChromeTabByName(meetTitle)),
-		conf.checkLostNetwork,
-	)(ctx)
 }
 
 // TypingInChat opens chat window and type.

@@ -37,6 +37,7 @@ type TestParams struct {
 	Tier                   cuj.Tier
 	Bt                     browser.Type
 	RoomType               RoomType
+	WebSource              cuj.WebSourceType
 	OutDir                 string
 	TraceConfigPath        string
 	TabletMode             bool
@@ -57,6 +58,10 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 		tabletMode             = p.TabletMode
 		collectWebRTCInternals = p.CollectWebRTCInternals
 	)
+	url := cuj.WikipediaURL
+	if p.WebSource == cuj.GoogleWebSource {
+		url = cuj.GoogleHelpChromeURL
+	}
 	// Shorten context a bit to allow for cleanup.
 	cleanUpCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -167,7 +172,7 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			// 5. Set the layout to a minimal tiled grid. (Google meet: "Spotlight", Zoom: "Speacker View")
 			if err := uiauto.Combine("basic actions",
 				conf.SetLayoutMax,
-				conf.SwitchTabs,
+				conf.SwitchTabs(url),
 				conf.VideoAudioControl,
 				conf.TypingInChat,
 				conf.SetLayoutMin,

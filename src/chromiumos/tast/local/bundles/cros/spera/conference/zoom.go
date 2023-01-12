@@ -343,22 +343,24 @@ func (conf *ZoomConference) VideoAudioControl(ctx context.Context) error {
 }
 
 // SwitchTabs switches the chrome tabs.
-func (conf *ZoomConference) SwitchTabs(ctx context.Context) error {
-	testing.ContextLog(ctx, "Open wiki page")
-	// Set newWindow to false to make the tab in the same Chrome window.
-	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.br, cuj.WikipediaURL, false)
-	if err != nil {
-		return errors.Wrap(err, "failed to open the wiki url")
-	}
-	defer wikiConn.Close()
+func (conf *ZoomConference) SwitchTabs(url string) action.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Open URL: ", url)
+		// Set newWindow to false to make the tab in the same Chrome window.
+		conn, err := conf.uiHandler.NewChromeTab(ctx, conf.br, url, false)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open the URL %s", url)
+		}
+		defer conn.Close()
 
-	if err := webutil.WaitForQuiescence(ctx, wikiConn, longUITimeout); err != nil {
-		return errors.Wrap(err, "failed to wait for wiki page to finish loading")
+		if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for the page to finish loading")
+		}
+		return uiauto.Combine("switch tab",
+			uiauto.NamedAction("stay page for 3 seconds", uiauto.Sleep(3*time.Second)),
+			uiauto.NamedAction("switch to zoom tab", conf.uiHandler.SwitchToChromeTabByName(zoomTitle)),
+		)(ctx)
 	}
-	return uiauto.Combine("switch tab",
-		uiauto.NamedAction("stay wiki page for 3 seconds", uiauto.Sleep(3*time.Second)),
-		uiauto.NamedAction("switch to zoom tab", conf.uiHandler.SwitchToChromeTabByName(zoomTitle)),
-	)(ctx)
 }
 
 // TypingInChat opens chat window and type.
