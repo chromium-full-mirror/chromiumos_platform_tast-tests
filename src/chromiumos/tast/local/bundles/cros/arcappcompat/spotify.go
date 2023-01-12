@@ -207,6 +207,58 @@ func init() {
 			// Skip on clamshell only models.
 			ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.SkipOnModel(testutil.ClamshellOnlyModels...)),
 			Pre:               pre.AppCompatBootedInTabletModeUsingTestAccountPool,
+		}, {
+			Name: "clamshell_mode_smoke",
+			Val: testutil.TestParams{
+				LaunchTests:      clamshellLaunchForSpotify,
+				TopAppTests:      testutil.ClamshellTopAppTests,
+				AppSpecificTests: clamshellAppSpecificTestsForSpotify,
+			},
+			ExtraAttr:         []string{"appcompat_smoke"},
+			ExtraSoftwareDeps: []string{"android_p"},
+			// TODO(b/189704585): Remove hwdep.SkipOnModel once the solution is found.
+			// Skip on tablet only models.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(testutil.TabletOnlyModels...)),
+			Pre:               pre.AppCompatBootedUsingTestAccountPool,
+		}, {
+			Name: "tablet_mode_smoke",
+			Val: testutil.TestParams{
+				LaunchTests:      touchviewLaunchForSpotify,
+				TopAppTests:      testutil.TouchviewTopAppTests,
+				AppSpecificTests: touchviewAppSpecificTestsForSpotify,
+			},
+			ExtraAttr:         []string{"appcompat_smoke"},
+			ExtraSoftwareDeps: []string{"android_p"},
+			// TODO(b/189704585): Remove hwdep.SkipOnModel once the solution is found.
+			// Skip on clamshell only models.
+			ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.SkipOnModel(testutil.ClamshellOnlyModels...)),
+			Pre:               pre.AppCompatBootedInTabletModeUsingTestAccountPool,
+		}, {
+			Name: "vm_clamshell_mode_smoke",
+			Val: testutil.TestParams{
+				LaunchTests:      clamshellLaunchForSpotify,
+				TopAppTests:      testutil.ClamshellTopAppTests,
+				AppSpecificTests: clamshellAppSpecificTestsForSpotify,
+			},
+			ExtraAttr:         []string{"appcompat_smoke"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/189704585): Remove hwdep.SkipOnModel once the solution is found.
+			// Skip on tablet only models.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(testutil.TabletOnlyModels...)),
+			Pre:               pre.AppCompatBootedUsingTestAccountPool,
+		}, {
+			Name: "vm_tablet_mode_smoke",
+			Val: testutil.TestParams{
+				LaunchTests:      touchviewLaunchForSpotify,
+				TopAppTests:      testutil.TouchviewTopAppTests,
+				AppSpecificTests: touchviewAppSpecificTestsForSpotify,
+			},
+			ExtraAttr:         []string{"appcompat_smoke"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			// TODO(b/189704585): Remove hwdep.SkipOnModel once the solution is found.
+			// Skip on clamshell only models.
+			ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.SkipOnModel(testutil.ClamshellOnlyModels...)),
+			Pre:               pre.AppCompatBootedInTabletModeUsingTestAccountPool,
 		}},
 		Timeout: 30 * time.Minute,
 		Vars:    []string{"arcappcompat.gaiaPoolDefault"},
