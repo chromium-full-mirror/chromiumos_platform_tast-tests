@@ -25,7 +25,9 @@ func init() {
 		Func:         NewScreencastButtonCondition,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks conditions where the new screencast button is disabled or enabled",
-		Contacts:     []string{"tobyhuang@chromium.org", "cros-projector+tast@google.com"},
+		Contacts:     []string{"cros-projector+tast@google.com", "yilkal@chromium.org"},
+		// ChromeOS > Software > Family > Projector
+		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},
 		// The soda software dep excludes VMs because we want
 		// to verify that SODA is installed on non-VM devices.

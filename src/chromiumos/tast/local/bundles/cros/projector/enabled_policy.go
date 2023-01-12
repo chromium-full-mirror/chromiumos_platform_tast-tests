@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -32,11 +33,16 @@ func init() {
 		Func:         EnabledPolicy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Projector app gets enabled/disabled when the policy changes",
-		Contacts:     []string{"xiqiruan@chromium.org", "cros-projector+tast@google.com"},
+		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		// ChromeOS > Software > Family > Projector
+		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.FakeDMS,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ProjectorEnabled{}, pci.VerifiedFunctionalityUI),
+		},
 	})
 }
 

@@ -27,7 +27,9 @@ func init() {
 		Func:         TranscriptTranslation,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests transcript translation for various user types",
-		Contacts:     []string{"tobyhuang@chromium.org", "cros-projector+tast@google.com"},
+		Contacts:     []string{"cros-projector+tast@google.com", "llin@chromium.org"},
+		// ChromeOS > Software > Family > Projector
+		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

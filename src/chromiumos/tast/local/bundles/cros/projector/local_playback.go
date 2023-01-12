@@ -25,7 +25,9 @@ func init() {
 		Func:         LocalPlayback,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests local playback feature from DriveFS while screencast is transcoding",
-		Contacts:     []string{"tobyhuang@chromium.org", "cros-projector+tast@google.com"},
+		Contacts:     []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
+		// ChromeOS > Software > Family > Projector
+		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
