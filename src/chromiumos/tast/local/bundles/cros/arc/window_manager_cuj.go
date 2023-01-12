@@ -69,7 +69,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Data:         []string{"ArcPipSimpleTastTest.apk"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Val:               append(cujTests, cujTestsP...),
@@ -97,7 +96,7 @@ func WindowManagerCUJ(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed installing app: ", err)
 		}
 	}
-	if err := a.Install(ctx, s.DataPath("ArcPipSimpleTastTest.apk")); err != nil {
+	if err := a.Install(ctx, arc.APKPath("ArcPipTest.apk")); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
 
@@ -729,7 +728,7 @@ func wmPIP(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device
 	// 1) Launch a PIP-ready activity in non-PIP mode.
 	testing.ContextLog(ctx, "Launching PIP activity")
 	const pkgName = "org.chromium.arc.testapp.pictureinpicture"
-	actPIP, err := arc.NewActivity(a, pkgName, ".MainActivity")
+	actPIP, err := arc.NewActivity(a, pkgName, ".PipActivity")
 	if err != nil {
 		return err
 	}
