@@ -286,7 +286,7 @@ type chromeWindow struct {
 }
 
 // generateTabSwitchTargets sets all web targets according to the input tier.
-func generateTabSwitchTargets(tier cuj.Tier, webSource webSourceType) ([]*chromeWindow, error) {
+func generateTabSwitchTargets(tier cuj.Tier, webSource cuj.WebSourceType) ([]*chromeWindow, error) {
 	winNum, ok1 := windowNumberMap[tier]
 	tabNum, ok2 := tabNumberMap[tier]
 	if !ok1 || !ok2 {
@@ -356,16 +356,16 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 	defer cleanupSetting(cleanupSettingsCtx)
 
 	// The default web source is the external websites.
-	webSource := externalWebSource
+	webSource := cuj.ExternalWebSource
 	if ws, ok := s.Var("spera.web_source"); ok {
-		ws := webSourceType(strings.ToLower(ws))
+		ws := cuj.WebSourceType(strings.ToLower(ws))
 		if _, ok := tabTargetsMap[ws]; ok {
 			webSource = ws
 		} else {
 			s.Fatal("Unknown web source: ", ws)
 		}
 	}
-	if webSource == localWebSource {
+	if webSource == cuj.LocalWebSource {
 		tabSwitchDirPath := path.Join(os.TempDir(), "spera.tabswitch")
 		if err := os.MkdirAll(tabSwitchDirPath, 0755); err != nil {
 			s.Fatal("Failed to create tab switch directory: ", err)

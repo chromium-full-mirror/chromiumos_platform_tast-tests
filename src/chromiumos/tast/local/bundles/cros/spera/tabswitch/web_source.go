@@ -15,17 +15,6 @@ import (
 	"chromiumos/tast/local/chrome/cuj"
 )
 
-type webSourceType string
-
-// These are the supported options for the variable "spera.web_source".
-// externalWebSource is the default option if the variable is not set.
-// localWebSource will generate local web pages when testing.
-const (
-	externalWebSource webSourceType = "external"
-	googleWebSource   webSourceType = "google"
-	localWebSource    webSourceType = "local"
-)
-
 // website defines all web site involved in this test case.
 type website string
 
@@ -120,11 +109,11 @@ type tabTarget struct {
 }
 
 // tabTargetsMap maps the web source type to the tab targets.
-var tabTargetsMap = map[webSourceType][]tabTarget{
-	googleWebSource:   googleWebsitesTargets,
-	externalWebSource: externalWebsitesTargets,
+var tabTargetsMap = map[cuj.WebSourceType][]tabTarget{
+	cuj.GoogleWebSource:   googleWebsitesTargets,
+	cuj.ExternalWebSource: externalWebsitesTargets,
 	// Keep the key "localWebSource" in the map to help verify if the given web source is supported.
-	localWebSource: {},
+	cuj.LocalWebSource: {},
 }
 
 // googleWebsitesTargets defines Google related websites as browse tab targets.
@@ -419,7 +408,7 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 			return errors.Wrapf(err, "failed to write HTML file %s", htmlFileName)
 		}
 	}
-	tabTargetsMap[localWebSource] = localWebsitesTargets
+	tabTargetsMap[cuj.LocalWebSource] = localWebsitesTargets
 	return nil
 }
 
