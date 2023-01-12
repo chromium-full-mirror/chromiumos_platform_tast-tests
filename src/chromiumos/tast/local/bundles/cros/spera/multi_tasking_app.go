@@ -45,6 +45,7 @@ func init() {
 			"spera.collectTrace",                  // Optional. Expecting "enable" or "disable", default is "disable".
 			"spera.bt_devicename",                 // Required for Bluetooth subtests.
 			"spera.MultiTaskingApp.operateCamera", // Optional. Expecting "true" or "false", default is "true".
+			"spera.MultiTaskingApp.web_source",    // Optional. Expecting "google" or "external", default is "external".
 		},
 		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
@@ -200,7 +201,12 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		ccaScriptPaths = []string{s.DataPath("cca_ui.js")}
 	}
 
-	testRunParams := multitaskingapp.NewRunParams(tier, ccaScriptPaths, s.OutDir(), app, account, traceConfigPath, tabletMode, enableBT)
+	webSource := cuj.ExternalWebSource
+	if ws, ok := s.Var("spera.MultiTaskingApp.web_source"); ok {
+		webSource = cuj.WebSourceType(strings.ToLower(ws))
+	}
+
+	testRunParams := multitaskingapp.NewRunParams(tier, ccaScriptPaths, s.OutDir(), app, account, traceConfigPath, tabletMode, enableBT, webSource)
 	if err := multitaskingapp.Run(ctx, cr, param.browserType, a, testRunParams); err != nil {
 		s.Fatal("Failed to run multi-tasking app test: ", err)
 	}

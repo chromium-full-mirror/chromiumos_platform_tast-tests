@@ -61,11 +61,22 @@ type RunParams struct {
 	tabletMode      bool
 	enableBT        bool
 	traceConfigPath string
+	webSource       cuj.WebSourceType
 }
+
+var (
+	googleURLList   = []string{cuj.GoogleFinanceURL, cuj.GoogleNonprofitsURL, cuj.GooglePolicyURL, cuj.GoogleHelpChromeURL}
+	externalURLList = []string{cuj.HuluURL, cuj.CnnURL, cuj.WikipediaURL, cuj.RedditURL}
+
+	urlListMap = map[cuj.WebSourceType][]string{
+		cuj.ExternalWebSource: externalURLList,
+		cuj.GoogleWebSource:   googleURLList,
+	}
+)
 
 // NewRunParams constructs a RunParams struct and returns the pointer to it.
 func NewRunParams(tier cuj.Tier, ccaScriptPaths []string, outDir, appName, account, traceConfigPath string,
-	tabletMode, enableBT bool) *RunParams {
+	tabletMode, enableBT bool, webSource cuj.WebSourceType) *RunParams {
 	return &RunParams{tier: tier,
 		ccaScriptPaths:  ccaScriptPaths,
 		outDir:          outDir,
@@ -74,6 +85,7 @@ func NewRunParams(tier cuj.Tier, ccaScriptPaths []string, outDir, appName, accou
 		traceConfigPath: traceConfigPath,
 		tabletMode:      tabletMode,
 		enableBT:        enableBT,
+		webSource:       webSource,
 	}
 }
 
@@ -323,22 +335,22 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 }
 
 func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, params *RunParams, resources *runResources) error {
-	// Basic / Essential tier test scenario: Have 2 browser windows open with 5 tabs each.
-	// 1. The first window URL list including Gmail, Calendar, YouTube Music, Hulu and Google News.
-	// 2. The second window URL list including Google News, CCN news, Wiki.
-	// Plus / Advanced tier test scenario: Same as basic but click through 20 tabs (4 windows x 5 tabs).
-	// 1. The first and second window URL list are same as basic.
-	// 2. The third window URL list including Google News, CNN news, Wikipedia, Reddit.
-	// 3. The fourth window URL list is same as the third one.
-	firstWindowURLList := []string{cuj.GmailURL, cuj.GoogleCalendarURL, cuj.YoutubeMusicURL, cuj.HuluURL, cuj.GoogleNewsURL}
-	secondWindowURLList := []string{cuj.GoogleNewsURL, cuj.CnnURL, cuj.WikipediaURL, cuj.GoogleNewsURL, cuj.CnnURL}
-	thirdWindowURLList := []string{cuj.GoogleNewsURL, cuj.CnnURL, cuj.WikipediaURL, cuj.RedditURL, cuj.CnnURL}
+	if _, ok := urlListMap[params.webSource]; !ok {
+		return errors.Errorf("unknown web source: %v", params.webSource)
+	}
+
+	urlList := urlListMap[params.webSource]
+	// Essential tier test scenario: 2 browser windows open with 5 tabs each.
+	// Advanced tier test scenario: Same as essential but click through 20 tabs (4 windows x 5 tabs):
+	// 1. The first and second window URL lists are the same as essential.
+	// 2. The fourth window URL list is the same as the third one.
+	firstWindowURLList := []string{cuj.GmailURL, cuj.GoogleCalendarURL, cuj.YoutubeMusicURL, urlList[0], cuj.GoogleNewsURL}
+	secondWindowURLList := []string{cuj.GoogleNewsURL, urlList[1], urlList[2], cuj.GoogleNewsURL, urlList[1]}
+	thirdWindowURLList := []string{cuj.GoogleNewsURL, urlList[1], urlList[2], urlList[3], urlList[1]}
 	fourthWindowURLList := thirdWindowURLList
 
-	// Basic / Essential tier URL list that will be opened in two browser windows.
 	pageList := [][]string{firstWindowURLList, secondWindowURLList}
-	// Plus / Advanced tier URL list that will be opened in four browser windows.
-	if params.tier == cuj.Plus || params.tier == cuj.Advanced {
+	if params.tier == cuj.Advanced {
 		pageList = append(pageList, thirdWindowURLList, fourthWindowURLList)
 	}
 
