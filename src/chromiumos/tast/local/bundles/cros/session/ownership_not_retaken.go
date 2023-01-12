@@ -29,8 +29,7 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		BugComponent: "b:1207311",
 		SoftwareDeps: []string{"chrome", "tpm"},
-		// b:238260020 - disable aged (>1y) unpromoted informational tests
-		// Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		// This test performs 2 logins.
 		Timeout: 2*chrome.LoginTimeout + time.Minute,
 		Fixture: fixture.CleanOwnership,
