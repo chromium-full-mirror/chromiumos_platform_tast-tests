@@ -9,6 +9,7 @@ package a11y
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/dlc"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -616,20 +616,15 @@ func ToggleDictation(ctx context.Context) error {
 
 // VerifySodaInstalled checks if dlc libsoda and libsoda-model-en-us are installed.
 func VerifySodaInstalled(ctx context.Context) error {
-	dlcMap, err := dlc.List(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to list installed DLC(s)")
-	}
-	testing.ContextLog(ctx, "Currently installed DLC(s) are: ", dlcMap)
+	const templateMnt = "/run/imageloader/%s/package/root"
 
-	_, ok := dlcMap["libsoda"]
-	if !ok {
-		return errors.Wrap(err, "dlc libsoda is not installed")
-	}
-
-	_, ok = dlcMap["libsoda-model-en-us"]
-	if !ok {
-		return errors.Wrap(err, "dlc libsoda-model-en-us is not installed")
+	// TODO(b/261775478): Figure out why "--list" flakes.
+	for _, id := range []string{"libsoda", "libsoda-model-en-us"} {
+		mnt := fmt.Sprintf(templateMnt, id)
+		if _, err := os.Stat(mnt); err != nil {
+			errStr := fmt.Sprintf("dlc %s is not installed", id)
+			return errors.Wrap(err, errStr)
+		}
 	}
 
 	return nil
