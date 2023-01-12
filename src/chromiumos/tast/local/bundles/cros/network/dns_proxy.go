@@ -35,7 +35,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host", "arc", "dlc", "no_kernel_upstream"},
 		Data:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
-		Pre:          multivm.ArcCrostiniStartedWithDNSProxy(),
+		Pre:          multivm.ArcCrostiniStarted(),
 		HardwareDeps: crostini.CrostiniStable,
 		Timeout:      7 * time.Minute,
 		Params: []testing.Param{{

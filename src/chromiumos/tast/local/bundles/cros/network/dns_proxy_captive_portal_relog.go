@@ -39,9 +39,8 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	// Start Chrome with the dns-proxy feature flags enabled.
-	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
-		chrome.EnableFeatures("EnableDnsProxy", "DnsProxyEnableDOH"))
+	// Start Chrome.
+	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
