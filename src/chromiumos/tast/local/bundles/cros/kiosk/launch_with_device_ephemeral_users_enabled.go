@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
@@ -21,12 +22,20 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Kiosk configuration starts correctly with DeviceEphemeralUsersEnabled policy set to true",
 		Contacts: []string{
-			"kamilszarek@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"kamilszarek@google.com", // Test author
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),
+		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Params: []testing.Param{
 			{
 				Name: "ash",
