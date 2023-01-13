@@ -1607,36 +1607,6 @@ func (a *App) Focus(ctx context.Context) error {
 	return a.conn.Eval(ctx, "Tast.focusWindow()", nil)
 }
 
-// InnerResolutionSetting returns setting menu for toggle |rt| resolution of |facing| camera.
-func (a *App) InnerResolutionSetting(ctx context.Context, facing Facing, rt ResolutionType) (*SettingMenu, error) {
-	view := fmt.Sprintf("view-%s-resolution-settings", rt)
-
-	fname, ok := (map[Facing]string{
-		FacingBack:     "back",
-		FacingFront:    "front",
-		FacingExternal: "external",
-	})[facing]
-	if !ok {
-		return nil, errors.Errorf("cannot get resolution of unsuppport facing %v", facing)
-	}
-	ariaPrefix := fname
-	if facing == FacingExternal {
-		// Assumes already switched to target external camera.
-		id, err := a.GetDeviceID(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get device id of external camera")
-		}
-		ariaPrefix = string(id)
-	}
-	selector := fmt.Sprintf("button[aria-describedby='%s-%sres-desc']", ariaPrefix, rt)
-	openUI := &UIComponent{
-		Name:      fmt.Sprintf("%v camera %v resolution settings button", fname, rt),
-		Selectors: []string{selector},
-	}
-
-	return &SettingMenu{view, openUI}, nil
-}
-
 // Refresh refreshes CCA.
 func (a *App) Refresh(ctx context.Context, tb *testutil.TestBridge) error {
 	newAppWindow, err := testutil.RefreshApp(ctx, a.conn, tb)

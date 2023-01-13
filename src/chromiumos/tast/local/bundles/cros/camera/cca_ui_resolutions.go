@@ -45,10 +45,10 @@ func CCAUIResolutions(ctx context.Context, s *testing.State) {
 		testFunc func(context.Context, *cca.App) error
 	}{{
 		"testPhotoResolution",
-		testPhotoResolution,
+		testPhotoResolutionAndAspectRatio,
 	}, {
 		"testVideoResolution",
-		testVideoResolution,
+		testVideoResolutionAndFPS,
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
@@ -116,53 +116,6 @@ func imageResolution(path string, handleOrientation bool) (*cca.Resolution, erro
 		}
 	}
 	return &cca.Resolution{Width: c.Width, Height: c.Height}, nil
-}
-
-func testPhotoResolution(ctx context.Context, app *cca.App) error {
-	// TODO(b/215484798): Remove the logic for old UI once the new UI applied.
-	useNewUI, err := app.Exist(ctx, cca.PhotoResolutionSettingButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to check existence of the photo resolution settings button")
-	}
-	if useNewUI {
-		return testPhotoResolutionAndAspectRatio(ctx, app)
-	}
-
-	// The test logic for legacy photo resolutions UI.
-	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
-		if err := app.SwitchMode(ctx, cca.Photo); err != nil {
-			return errors.Wrap(err, "failed to switch to photo mode")
-		}
-		return iterateResolutions(ctx, app, cca.PhotoResolution, facing, func(r cca.Resolution) error {
-			or, err := getOrientedResolution(ctx, app, r)
-			if err != nil {
-				return err
-			}
-
-			pr, err := app.GetPreviewResolution(ctx)
-			if err != nil {
-				return err
-			}
-
-			// aspectRatioTolerance is the small aspect ratio
-			// comparison tolerance for judging the treeya's
-			// special resolution 848:480(1.766...) which should be
-			// counted as 16:9(1.77...).
-			const aspectRatioTolerance = 0.02
-			if math.Abs(pr.AspectRatio()-or.AspectRatio()) > aspectRatioTolerance {
-				return errors.Wrapf(err, "inconsistent preview aspect ratio get %d:%d; want %d:%d", pr.Width, pr.Height, or.Width, or.Height)
-			}
-
-			ir, err := takePhotoAndGetResolution(ctx, app, true)
-			if err != nil {
-				return err
-			}
-			if ir.Width != or.Width || ir.Height != or.Height {
-				return errors.Wrapf(err, "incorrect captured resolution get %dx%d; want %dx%d", ir.Width, ir.Height, or.Width, or.Height)
-			}
-			return nil
-		})
-	})
 }
 
 // takePhotoAndGetResolution takes a photo and extract the resolution of the taken photo
@@ -238,124 +191,6 @@ func videoTrackResolution(path string) (*cca.Resolution, error) {
 		}
 	}
 	return nil, errors.Errorf("no video track found in the file %v", path)
-}
-
-func testVideoResolution(ctx context.Context, app *cca.App) error {
-	// TODO(b/215484798): Remove the logic for old UI once the new UI applied.
-	useNewUI, err := app.Exist(ctx, cca.VideoResolutionSettingButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to check existence of the video resolution settings button")
-	}
-	if useNewUI {
-		return testVideoResolutionAndFPS(ctx, app)
-	}
-
-	// The test logic for legacy video resolutions UI.
-	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
-		if err := app.SwitchMode(ctx, cca.Video); err != nil {
-			return errors.Wrap(err, "failed to switch to video mode")
-		}
-		return iterateResolutions(ctx, app, cca.VideoResolution, facing, func(r cca.Resolution) error {
-			or, err := getOrientedResolution(ctx, app, r)
-			if err != nil {
-				return err
-			}
-
-			pr, err := app.GetPreviewResolution(ctx)
-			if err != nil {
-				return err
-			}
-			if pr.Width*or.Height != pr.Height*or.Width {
-				return errors.Wrapf(err, "inconsistent preview aspect ratio get %d:%d; want %d:%d", pr.Width, pr.Height, or.Width, or.Height)
-			}
-
-			vr, err := recordVideoAndGetResolution(ctx, app)
-			if err != nil {
-				return err
-			}
-			if vr.Width != or.Width || vr.Height != or.Height {
-				return errors.Wrapf(err, "incorrect captured resolution get %dx%d; want %dx%d", vr.Width, vr.Height, or.Width, or.Height)
-			}
-			return nil
-		})
-	})
-}
-
-// withInnerResolutionSetting opens inner |rt| type resolution menu for |facing| camera, calls |onOpened()| and closes the menu.
-func withInnerResolutionSetting(ctx context.Context, app *cca.App, rt cca.ResolutionType, facing cca.Facing, onOpened func() error) error {
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer cca.MainMenu.Close(ctx, app)
-
-	if err := cca.ResolutionMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer cca.ResolutionMenu.Close(ctx, app)
-
-	innerMenu, err := app.InnerResolutionSetting(ctx, facing, rt)
-	if err != nil {
-		return err
-	}
-	if err := innerMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer innerMenu.Close(ctx, app)
-
-	return onOpened()
-}
-
-// iterateResolutions toggles through all |rt| resolutions in camera |facing| setting menu and calls |onSwitched| with the toggled resolution.
-func iterateResolutions(ctx context.Context, app *cca.App, rt cca.ResolutionType, facing cca.Facing, onSwitched func(r cca.Resolution) error) error {
-	optionUI := cca.PhotoResolutionOption
-	if rt == cca.VideoResolution {
-		optionUI = cca.VideoResolutionOption
-	}
-
-	var numOptions int
-	if err := withInnerResolutionSetting(ctx, app, rt, facing, func() error {
-		count, err := app.CountUI(ctx, optionUI)
-		if err != nil {
-			return err
-		}
-		numOptions = count
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	toggleOption := func(index int) (cca.Resolution, error) {
-		var r cca.Resolution
-		err := withInnerResolutionSetting(ctx, app, rt, facing, func() error {
-			width, err := attributeValueOfOption(ctx, app, optionUI, index, "data-width")
-			if err != nil {
-				return err
-			}
-			height, err := attributeValueOfOption(ctx, app, optionUI, index, "data-height")
-			if err != nil {
-				return err
-			}
-			if err := clickOptionAndWaitConfiguration(ctx, app, optionUI, index); err != nil {
-				return errors.Wrap(err, "failed to click option and wait configration done")
-			}
-			r.Width = width
-			r.Height = height
-			return nil
-		})
-		return r, err
-	}
-
-	for index := 0; index < numOptions; index++ {
-		r, err := toggleOption(index)
-		if err != nil {
-			return err
-		}
-		if err := onSwitched(r); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func clickOptionAndWaitConfiguration(ctx context.Context, app *cca.App, optionUI cca.UIComponent, index int) error {

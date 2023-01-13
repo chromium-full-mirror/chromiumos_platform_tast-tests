@@ -25,8 +25,6 @@ var (
 	GridTypeMenu = &SettingMenu{"view-grid-settings", &GridTypeSettingsButton}
 	// TimerMenu is the timer settings menu.
 	TimerMenu = &SettingMenu{"view-timer-settings", &TimerSettingsButton}
-	// ResolutionMenu is the resolution settings menu.
-	ResolutionMenu = &SettingMenu{"view-resolution-settings", &ResolutionSettingButton}
 	// PhotoResolutionMenu is the photo resolution settings menu.
 	PhotoResolutionMenu = &SettingMenu{"view-photo-resolution-settings", &PhotoResolutionSettingButton}
 	// PhotoAspectRatioMenu is the photo aspect ratio settings menu.

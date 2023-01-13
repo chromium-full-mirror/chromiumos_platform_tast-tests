@@ -50,16 +50,8 @@ var (
 	// VideoResolutionSettingButton is button for opening video resolution setting menu.
 	VideoResolutionSettingButton = UIComponent{"video resolution setting button", []string{"#settings-video-resolution"}}
 
-	// ResolutionSettingButton is button for opening resolution setting menu.
-	ResolutionSettingButton = UIComponent{"resolution setting button", []string{"#settings-resolution"}}
 	// ExpertModeButton is button used for opening expert mode setting menu.
 	ExpertModeButton = UIComponent{"expert mode button", []string{"#settings-expert"}}
-	// PhotoResolutionOption is option for each available photo capture resolution.
-	PhotoResolutionOption = UIComponent{"photo resolution option", []string{
-		"#view-photo-resolution-settings input"}}
-	// VideoResolutionOption is option for each available video capture resolution.
-	VideoResolutionOption = UIComponent{"video resolution option", []string{
-		"#view-video-resolution-settings input"}}
 	// FeedbackButton is the feedback button showing in the settings menu.
 	FeedbackButton = UIComponent{"feedback button", []string{"#settings-feedback"}}
 	// HelpButton is the help button showing in the settings menu.
