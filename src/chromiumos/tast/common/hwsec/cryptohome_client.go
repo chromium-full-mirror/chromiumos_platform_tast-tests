@@ -404,7 +404,7 @@ func (u *CryptohomeClient) createUserWithAuthSession(ctx context.Context, userna
 		return "", errors.Wrap(err, "failed to add credentials with AuthSession")
 	}
 	testing.ContextLog(ctx, "Added credentials successfully")
-	if err := u.AuthenticateAuthSession(ctx, password, keyLabel, authSessionID, isKioskUser); err != nil {
+	if _, err := u.AuthenticateAuthSession(ctx, password, keyLabel, authSessionID, isKioskUser); err != nil {
 		return "", errors.Wrap(err, "failed to authenticate with AuthSession")
 	}
 	testing.ContextLog(ctx, "User authenticated successfully")
@@ -427,7 +427,7 @@ func (u *CryptohomeClient) authenticateWithAuthSession(ctx context.Context, user
 
 	// Authenticate the same AuthSession using authSessionID.
 	// If we cannot authenticate, do not proceed with mount and unmount.
-	if err := u.AuthenticateAuthSession(ctx, password, keyLabel, authSessionID, isKioskUser); err != nil {
+	if _, err := u.AuthenticateAuthSession(ctx, password, keyLabel, authSessionID, isKioskUser); err != nil {
 		return "", errors.Wrap(err, "failed to authenticate with AuthSession")
 	}
 	testing.ContextLog(ctx, "User authenticated successfully")
@@ -1030,9 +1030,18 @@ func (u *CryptohomeClient) StartAuthSession(ctx context.Context, user string, is
 
 // AuthenticateAuthSession authenticates an AuthSession with a given authSessionID.
 // password is ignored if publicMount is set to true.
-func (u *CryptohomeClient) AuthenticateAuthSession(ctx context.Context, password, keyLabel, authSessionID string, publicMount bool) error {
-	_, err := u.binary.authenticateAuthSession(ctx, password, keyLabel, authSessionID, publicMount)
-	return err
+func (u *CryptohomeClient) AuthenticateAuthSession(ctx context.Context, password, keyLabel, authSessionID string, publicMount bool) (*uda.AuthenticateAuthSessionReply, error) {
+	binaryMsg, err := u.binary.authenticateAuthSession(ctx, password, keyLabel, authSessionID, publicMount)
+
+	reply := &uda.AuthenticateAuthSessionReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthSessionReply in AuthenticateAuthSession")
+	}
+	if err != nil {
+		return reply, errors.Wrap(err, "AuthenticateAuthSession failed")
+	}
+
+	return reply, nil
 }
 
 // AuthenticatePinWithAuthSession authenticates an AuthSession with a given authSessionID using a pin.
