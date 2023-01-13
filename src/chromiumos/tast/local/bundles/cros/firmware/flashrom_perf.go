@@ -8,16 +8,17 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/shutil"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/testing"
 )
 
 type params struct {
-	region   string
+	regions  []string
 	deadline float64
 }
 
@@ -35,37 +36,37 @@ func init() {
 		SoftwareDeps: []string{"flashrom"},
 		Params: []testing.Param{{
 			Val: params{
-				region:   "", // empty str implies a full read.
+				regions:  nil, // nil implies a full read.
 				deadline: 21000,
 			},
 		}, {
 			Name: "fmap",
 			Val: params{
-				region:   "FMAP",
+				regions:  []string{"FMAP"},
 				deadline: 2000,
 			},
 		}, {
 			Name: "gbb",
 			Val: params{
-				region:   "GBB",
+				regions:  []string{"GBB"},
 				deadline: 2700,
 			},
 		}, {
 			Name: "rw_vpd",
 			Val: params{
-				region:   "RW_VPD",
+				regions:  []string{"RW_VPD"},
 				deadline: 2300,
 			},
 		}, {
 			Name: "rw_elog",
 			Val: params{
-				region:   "RW_ELOG",
+				regions:  []string{"RW_ELOG"},
 				deadline: 2300,
 			},
 		}, {
 			Name: "coreboot",
 			Val: params{
-				region:   "COREBOOT",
+				regions:  []string{"COREBOOT"},
 				deadline: 6000,
 			},
 		}},
@@ -84,7 +85,7 @@ func FlashromPerf(ctx context.Context, s *testing.State) {
 	p := s.Param().(params)
 
 	perf := perf.NewValues()
-	duration := testFlashromReadTime(ctx, s, p.region)
+	duration := testFlashromReadTime(ctx, s, p.regions)
 	perf.Set(readTime, duration)
 
 	const lowerBound = 100 // sub-process execution should take some time.
@@ -93,28 +94,44 @@ func FlashromPerf(ctx context.Context, s *testing.State) {
 		s.Error("Failed saving perf data: ", err)
 	}
 	if duration <= lowerBound || duration >= p.deadline {
-		s.Errorf("Flashrom read time for region %q was outside time-bounds, %v < expected < %v ms, got = %v ms", p.region, lowerBound, p.deadline, duration)
+		s.Errorf("Flashrom read time for regions %q was outside time-bounds, %v < expected < %v ms, got = %v ms",
+			strings.Join(p.regions, ", "), lowerBound, p.deadline, duration)
 	}
 }
 
-func testFlashromReadTime(ctx context.Context, s *testing.State, region string) float64 {
+func testFlashromReadTime(ctx context.Context, s *testing.State, regions []string) float64 {
 	flashromStart := time.Now()
 
-	opTempFile, err := ioutil.TempFile("", "dump_"+region+"_*.bin")
+	opTempFile, err := ioutil.TempFile("", "dump_"+strings.Join(regions, "")+"_*.bin")
 	if err != nil {
 		s.Fatal("Failed creating temp file: ", err)
 	}
 	defer os.Remove(opTempFile.Name())
 
-	var cmd *testexec.Cmd
-	if len(region) > 0 {
-		cmd = testexec.CommandContext(ctx, "flashrom", "-i", region, "-r", opTempFile.Name())
-	} else { // full read is then assumed.
-		cmd = testexec.CommandContext(ctx, "flashrom", "-r", opTempFile.Name())
+	var flashromConfig flashrom.Config
+	flashromInstance, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		Probe(ctx)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	// FullShutdown is a symmetric function to FlashromInit and needs to be called
+	// regardless of whether err is nil (to do a cleanup).
+	defer flashromInstance.FullShutdown(cleanupCtx)
+
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 	}
-	if _, err := cmd.Output(testexec.DumpLogOnError); err != nil {
-		s.Fatalf("%q failed: %v", shutil.EscapeSlice(cmd.Args), err)
+
+	out, err := flashromInstance.Read(ctx, opTempFile.Name(), regions)
+
+	if err != nil {
+		s.Logf("Flashrom read output: %s", string(out))
+		s.Fatal("Flashrom read failed: ", err)
 	}
+
 	flashromElapsed := time.Since(flashromStart)
 
 	return float64(flashromElapsed.Milliseconds())

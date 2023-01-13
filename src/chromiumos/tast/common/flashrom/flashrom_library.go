@@ -183,6 +183,15 @@ func (i *Instance) appendVerbosityArg(cmdArgs []string) []string {
 	return cmdArgs
 }
 
+// appendRegionNamesArgs appends command line arguments for region names to the array of given command line
+// arguments.
+func appendRegionNamesArgs(cmdArgs, regionNames []string) []string {
+	for _, regionName := range regionNames {
+		cmdArgs = append(cmdArgs, "-i", regionName)
+	}
+	return cmdArgs
+}
+
 // runCommandLine detects whether flashrom instance is set up for a local or remote test
 // and runs command line with given command line arguments accordingly.
 // It returns the output from command line execution.
@@ -322,12 +331,8 @@ func (i *Instance) Read(ctx context.Context, filePath string, regionNames []stri
 		return nil, errors.New("Flashrom cannot do read: empty filePath argument")
 	}
 
-	// TODO(b:247668196) handle regionNames.
-	if regionNames != nil {
-		return nil, errors.New("Region names are not implemented yet")
-	}
-
 	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-r", filePath}
+	cmdArgs = appendRegionNamesArgs(cmdArgs, regionNames)
 	cmdArgs = i.appendVerbosityArg(cmdArgs)
 
 	out, err := i.runCommandLine(ctx, cmdArgs)
@@ -381,11 +386,6 @@ func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, nove
 		return nil, errors.New("Flashrom cannot do write: empty filePath argument")
 	}
 
-	// TODO(b:247668196) handle regionNames
-	if regionNames != nil {
-		return nil, errors.New("Region names are not implemented yet")
-	}
-
 	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-w", filePath}
 	if flashcontentsImage != "" {
 		cmdArgs = append(cmdArgs, "--flash-contents", flashcontentsImage)
@@ -396,6 +396,7 @@ func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, nove
 	if noverify {
 		cmdArgs = append(cmdArgs, "--noverify")
 	}
+	cmdArgs = appendRegionNamesArgs(cmdArgs, regionNames)
 	cmdArgs = i.appendVerbosityArg(cmdArgs)
 
 	out, err := i.runCommandLine(ctx, cmdArgs)
