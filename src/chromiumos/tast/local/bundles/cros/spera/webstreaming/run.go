@@ -42,7 +42,7 @@ const (
 )
 
 // Run runs the WebStreaming test.
-func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string, tabletMode bool, bt browser.Type, videoOption VideoOption) (retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string, tabletMode bool, bt browser.Type, videoOption VideoOption) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
@@ -121,7 +121,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		return errors.Wrap(err, "could not find the Chrome app")
 	}
 
-	googleDocClosed := false
 	cleanupGoogleDoc := func(ctx context.Context) error {
 		// Maximize the Google Docs window to delete Docs.
 		if err := maximizeWindowSize(ctx, tabletMode, tconn, bTconn); err != nil {
@@ -134,68 +133,54 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		if err := cuj.CloseAllWindows(ctx, tconn); err != nil {
 			return err
 		}
-		googleDocClosed = true
 		return nil
-	}
-
-	if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHandler, true); err != nil {
-		return err
-	}
-	defer func(ctx context.Context) {
-		faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-		if !googleDocClosed {
-			if err := cleanupGoogleDoc(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to cleanup Google Docs")
-			}
-		}
-	}(cleanupCtx)
-
-	video, err := NewCrosVideo(ctx, tconn, uiHandler, br)
-	if err != nil {
-		return errors.Wrap(err, "failed to open cros video")
-	}
-	defer video.Close(cleanupCtx)
-
-	// Maximize all windows to ensure a consistent state.
-	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
-	}); err != nil {
-		return errors.Wrap(err, "failed to maximize windows")
-	}
-
-	if err := uiauto.NamedCombine("initial scenario",
-		video.Play(videoOption),
-		uiHandler.SwitchToAppWindowByName(chromeApp.Name, googleDocsTitle),
-		putDocsWindowSideBySide(tabletMode, tconn, bTconn),
-	)(ctx); err != nil {
-		return err
 	}
 	var decodedFrames, droppedFrames, droppedFramesPer float64
 
-	setFramesData := func(ctx context.Context) error {
-		decodedFrames, droppedFrames, droppedFramesPer, err = video.FramesData(ctx)
-		return err
-	}
-	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		if err := webStreamingScenario(ctx, tconn, kb, video); err != nil {
+	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHandler, true); err != nil {
 			return err
 		}
-		if err := uiauto.NamedCombine("collect frames data",
+		defer func(ctx context.Context) {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump_docs")
+			// Close browser to generate LCP2 metrics.
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, cleanupGoogleDoc); err != nil {
+				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+			}
+		}(cleanupCtx)
+
+		video, err := NewCrosVideo(ctx, tconn, uiHandler, br)
+		if err != nil {
+			return errors.Wrap(err, "failed to open cros video")
+		}
+		defer func(ctx context.Context) {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
+			// Close browser to generate LCP2 metrics.
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, video.Close); err != nil {
+				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+			}
+		}(cleanupCtx)
+
+		setFramesData := func(ctx context.Context) error {
+			decodedFrames, droppedFrames, droppedFramesPer, err = video.FramesData(ctx)
+			return err
+		}
+		// Maximize all windows to ensure a consistent state.
+		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
+		}); err != nil {
+			return errors.Wrap(err, "failed to maximize windows")
+		}
+
+		return uiauto.NamedCombine("run and collect data",
+			video.Play(videoOption),
+			uiHandler.SwitchToAppWindowByName(chromeApp.Name, googleDocsTitle),
+			putDocsWindowSideBySide(tabletMode, tconn, bTconn),
+			webStreamingScenario(tconn, kb, video),
 			uiHandler.SwitchToAppWindowByName(chromeApp.Name, crosVideoTitle),
 			video.Pause(),
 			setFramesData,
-		)(ctx); err != nil {
-			return err
-		}
-
-		// Close browsers to generate LCP2 metrics.
-		if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, video.Close); err != nil {
-			testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
-		}
-		if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, cleanupGoogleDoc); err != nil {
-			testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
-		}
-		return nil
+		)(ctx)
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the web streaming scenario")
 	}
@@ -238,55 +223,57 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 	return nil
 }
 
-func webStreamingScenario(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, video *CrosVideo) error {
-	const (
-		docParagraph  = "The Little Prince's story follows a young prince who visits various planets in space."
-		repeatTimeout = 15 * time.Minute
-		retryTimes    = 3
-	)
-	taskNumber := 0
-	repeatTask := func(ctx context.Context) error {
-		var color, fontSize string
-		if taskNumber%2 == 0 {
-			color = "red"
-			fontSize = "10"
-		} else {
-			color = "blue"
-			fontSize = "8"
-		}
-		ui := uiauto.New(tconn)
-		reloadDialog := nodewith.Name("Unable to load file").Role(role.Dialog)
-		reloadButton := nodewith.Name("Reload").Role(role.Button).Ancestor(reloadDialog)
+func webStreamingScenario(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, video *CrosVideo) action.Action {
+	return func(ctx context.Context) error {
+		const (
+			docParagraph  = "The Little Prince's story follows a young prince who visits various planets in space."
+			repeatTimeout = 15 * time.Minute
+			retryTimes    = 3
+		)
+		taskNumber := 0
+		repeatTask := func(ctx context.Context) error {
+			var color, fontSize string
+			if taskNumber%2 == 0 {
+				color = "red"
+				fontSize = "10"
+			} else {
+				color = "blue"
+				fontSize = "8"
+			}
+			ui := uiauto.New(tconn)
+			reloadDialog := nodewith.Name("Unable to load file").Role(role.Dialog)
+			reloadButton := nodewith.Name("Reload").Role(role.Button).Ancestor(reloadDialog)
 
-		// Some low-end DUTs sometimes click on the node and don't respond, or nodes can't be found.
-		// Add retry to solve this problem.
-		return uiauto.Retry(retryTimes, uiauto.NamedCombine(fmt.Sprintf("repeat task, number %d", taskNumber),
-			uiauto.IfSuccessThen(ui.Exists(reloadButton), ui.LeftClick(reloadButton)),
-			googledocs.EditDoc(tconn, kb, docParagraph),
-			kb.AccelAction("Ctrl+A"),
-			googledocs.ChangeDocTextColor(tconn, color),
-			googledocs.ChangeDocFontSize(tconn, fontSize),
-			googledocs.UndoDoc(tconn),
-			googledocs.RedoDoc(tconn),
-			kb.AccelAction("Backspace"),
-			video.VerifyPlaying,
-		))(ctx)
-	}
-	// Repeat the task for 15 minutes.
-	now := time.Now()
-	after := now.Add(repeatTimeout)
-	for {
-		taskNumber++
-		if err := repeatTask(ctx); err != nil {
-			return err
+			// Some low-end DUTs sometimes click on the node and don't respond, or nodes can't be found.
+			// Add retry to solve this problem.
+			return uiauto.Retry(retryTimes, uiauto.NamedCombine(fmt.Sprintf("repeat task, number %d", taskNumber),
+				uiauto.IfSuccessThen(ui.Exists(reloadButton), ui.LeftClick(reloadButton)),
+				googledocs.EditDoc(tconn, kb, docParagraph),
+				kb.AccelAction("Ctrl+A"),
+				googledocs.ChangeDocTextColor(tconn, color),
+				googledocs.ChangeDocFontSize(tconn, fontSize),
+				googledocs.UndoDoc(tconn),
+				googledocs.RedoDoc(tconn),
+				kb.AccelAction("Backspace"),
+				video.VerifyPlaying,
+			))(ctx)
 		}
-		now = time.Now()
-		if now.After(after) {
-			break
+		// Repeat the task for 15 minutes.
+		now := time.Now()
+		after := now.Add(repeatTimeout)
+		for {
+			taskNumber++
+			if err := repeatTask(ctx); err != nil {
+				return err
+			}
+			now = time.Now()
+			if now.After(after) {
+				break
+			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
 func putDocsWindowSideBySide(tabletMode bool, tconn, bTconn *chrome.TestConn) action.Action {
