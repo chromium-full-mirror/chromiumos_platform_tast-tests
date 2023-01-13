@@ -20,6 +20,8 @@ type DisplaySmoothnessTracker struct {
 
 // DisplayFrameData holds the collected display frame data.
 type DisplayFrameData struct {
+	StartOffsetMs  int   `json:"startOffsetMs"`
+	StopOffsetMs   int   `json:"stopOffsetMs"`
 	FramesExpected int   `json:"framesExpected"`
 	FramesProduced int   `json:"framesProduced"`
 	JankCount      int   `json:"jankCount"`

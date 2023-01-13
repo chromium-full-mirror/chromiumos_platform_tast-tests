@@ -139,6 +139,16 @@ func (t *FrameDataTracker) Stop(ctx context.Context, tconn *chrome.TestConn) err
 
 // Record stores the collected data into pv for further processing.
 func (t *FrameDataTracker) Record(pv *perf.Values) {
+	startTimeMetric := perf.Metric{
+		Name:     t.prefix + "Animation.StartTimeOffsetMs",
+		Unit:     "ms",
+		Multiple: true,
+	}
+	stopTimeMetric := perf.Metric{
+		Name:     t.prefix + "Animation.StopTimeOffsetMs",
+		Unit:     "ms",
+		Multiple: true,
+	}
 	feMetric := perf.Metric{
 		Name:      t.prefix + "Animation.FramesExpected",
 		Unit:      "count",
@@ -159,6 +169,8 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 	}
 
 	for _, data := range t.animationData {
+		pv.Append(startTimeMetric, float64(data.StartOffsetMs))
+		pv.Append(stopTimeMetric, float64(data.StopOffsetMs))
 		pv.Append(feMetric, float64(data.FramesExpected))
 		pv.Append(fpMetric, float64(data.FramesProduced))
 		pv.Append(jcMetric, float64(data.JankCount))
