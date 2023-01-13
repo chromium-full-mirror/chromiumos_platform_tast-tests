@@ -31,7 +31,7 @@ func init() {
 func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 	gpuDevices, err := selinux.GpuDevices()
 	if err != nil {
-		// Error instead of Fatal to continue test other testcases .
+		// Error instead of Fatal to continue testing other testcases.
 		// We don't want to "hide" other failures since SELinuxFiles tests are mostly independent test cases.
 		s.Error("Failed to enumerate gpu devices: ", err)
 	}
@@ -229,10 +229,15 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/var/lib/update_engine", Context: "cros_var_lib_update_engine", Recursive: true},
 		{Path: "/var/lib/devicesettings", Context: "cros_var_lib_devicesettings", Recursive: true},
 		{Path: "/var/log", Context: "cros_var_log", Log: true},
+		{Path: "/var/log/arc.log", Context: "cros_arc_log", Log: true},
 		{Path: "/var/log/asan", Context: "cros_var_log_asan", Recursive: true, Log: true},
 		{Path: "/var/log/authpolicy.log", Context: "cros_authpolicy_log", Log: true},
+		{Path: "/var/log/boot.log", Context: "cros_boot_log", Log: true},
 		{Path: "/var/log/eventlog.txt", Context: "cros_var_log_eventlog", Log: true},
+		{Path: "/var/log/messages", Context: "cros_syslog", Log: true},
 		{Path: "/var/log/mount-encrypted.log", Context: "cros_var_log", IgnoreErrors: true, Log: true},
+		{Path: "/var/log/net.log", Context: "cros_net_log", Log: true},
+		{Path: "/var/log/secure", Context: "cros_secure_log", Log: true},
 		{Path: "/var/log/tlsdate.log", Context: "cros_tlsdate_log", Log: true},
 		{Path: "/var/spool", Context: "cros_var_spool", Log: true},
 		{Path: "/var/spool/crash", Context: "cros_crash_spool", Recursive: true, IgnoreErrors: true, Log: true},
