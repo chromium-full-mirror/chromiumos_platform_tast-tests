@@ -327,26 +327,15 @@ func CheckExpectedCCDState(ctx context.Context, h *firmware.Helper, expectCCDSta
 // Cr50Cleanup ensures that the test leaves CCD opened and with no password set.
 func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Cleanup after test")
-	passwordIsSet := false
 
-	ccdState, ccdPasswd, err := GetCCDStatePasswd(ctx, h)
+	ccdState, _, err := GetCCDStatePasswd(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "GetCCDStatePasswd() failed")
 	}
-	if ccdPasswd != CCDPasswordNone {
-		passwordIsSet = true
-	}
 	if ccdState != CCDOpened {
-		if passwordIsSet {
-			testing.ContextLog(ctx, "Open CCD with password")
-			if err := VerifyCr50Command(ctx, h, "ccd open "+CCDPassword, CCDOpened, CCDPasswordSet, false); err != nil {
-				return errors.Wrap(err, "VerifyCr50Command failed")
-			}
-		} else {
-			testing.ContextLog(ctx, "Open CCD")
-			if err := VerifyCr50Command(ctx, h, "ccd open", CCDOpened, CCDPasswordNone, false); err != nil {
-				return errors.Wrap(err, "VerifyCr50Command failed")
-			}
+		testing.ContextLog(ctx, "Running ccd testlab open from Cr50 console")
+		if err := h.Servo.RunCR50Command(ctx, "ccd testlab open"); err != nil {
+			return errors.Wrap(err, `failed to execute "ccd testlab open"`)
 		}
 		testing.Sleep(ctx, WaitAfterCCDSettingChange)
 	}
