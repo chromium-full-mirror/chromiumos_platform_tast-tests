@@ -170,8 +170,10 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 		uiauto.IfFailThen(
 			uda.WaitUntilExists(uidetection.Word("File")),
 			uda.WaitUntilExists(uidetection.Word("Terminal"))),
-		// Left click the app window to focus.
-		ui.LeftClick(appWindow),
+		// Left click the app window header to focus.
+		// Do not click the center of the app window, which may unexpectedly
+		// set the theme, see http://b/264336806.
+		ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(appWindow)),
 		// Press ctrl+Q to exit window.
 		keyboard.AccelAction("ctrl+Q"),
 		ui.WaitUntilGone(appWindow))(ctx); err != nil {
