@@ -37,6 +37,7 @@ func init() {
 			Name:    "keep_alive",
 			Fixture: "lacrosKeepAlive",
 		}},
+		Timeout: 5 * time.Minute,
 	})
 }
 
