@@ -67,13 +67,24 @@ const (
 
 var (
 	noCyclesRegexp = regexp.MustCompile(`(?s)\s+\<not counted\>\s+cycles`)
-	cyclesRegexp   = regexp.MustCompile(`(?s)\s+(\d+)\s+cycles`)
-	secondsRegexp  = regexp.MustCompile(`(?s)\s+(\d+\.?[\d+]*)\s+seconds time elapsed`)
+	// Regexp for CPU cycles.
+	// Sample input:
+	//   17090534      cycles                    #    0.002 GHz
+	// Sample input for X64 CPUs with P-Core and E-Core
+	//   19307305      cpu_core/cycles/          #    2.002 M/sec
+	//   17364020      cpu_atom/cycles/          #    1.800 M/sec
+	cyclesRegexp  = regexp.MustCompile(`(?s)\s+(\d+)\s+([_\w]+)?/?cycles`)
+	secondsRegexp = regexp.MustCompile(`(?s)\s+(\d+\.?[\d+]*)\s+seconds time elapsed`)
 )
+
+type cyclesPerSecond struct {
+	CoreType string
+	Value    float64
+}
 
 // PerfStatOutput holds output of perf stat.
 type PerfStatOutput struct {
-	CyclesPerSecond float64
+	CyclesPerSecond []cyclesPerSecond // Can have multiple values for CPUs with P- and E-Cores
 }
 
 // PerfSchedOutput holds output metrics of perf sched.
@@ -313,39 +324,47 @@ func getMaxLatencyMs(ctx context.Context, perfSchedFile, procName string) (float
 // parseStatFile parses the output file of perf stat command to get CPU cycles per second
 // spent in a process. The file should contain cycles and seconds elapsed.
 // The return value is a float64 for cycles per second.
-func parseStatFile(path string) (float64, error) {
+func parseStatFile(path string) ([]cyclesPerSecond, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to read %q", path)
+		return nil, errors.Wrapf(err, "failed to read %q", path)
 	}
 
 	s := string(b)
 
 	if noCyclesRegexp.FindString(s) != "" {
-		return 0, errors.New("got 0 cycle")
+		return nil, errors.New("got 0 cycle")
 	}
 
-	m := cyclesRegexp.FindStringSubmatch(s)
+	m := secondsRegexp.FindStringSubmatch(s)
 	if m == nil {
-		return 0, errors.New("no cycles in perf stat output")
-	}
-	cycles, err := strconv.ParseInt(m[1], 0, 64)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to parse cycles")
-	}
-
-	m = secondsRegexp.FindStringSubmatch(s)
-	if m == nil {
-		return 0, errors.New("no seconds in perf stat output")
+		return nil, errors.New("no seconds in perf stat output")
 	}
 	seconds, err := strconv.ParseFloat(m[1], 64)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to parse seconds")
+		return nil, errors.Wrap(err, "failed to parse seconds")
 	}
 
-	cyclesPerSecond := float64(cycles) / seconds
+	var cps []cyclesPerSecond
+	for _, l := range strings.Split(string(b), "\n") {
+		m := cyclesRegexp.FindStringSubmatch(l)
+		if m == nil {
+			continue
+		}
+		coreType := ""
+		if len(m) > 2 {
+			coreType = m[2]
+		}
 
-	return cyclesPerSecond, nil
+		cycles, err := strconv.ParseInt(m[1], 0, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse cycles")
+		}
+
+		cps = append(cps, cyclesPerSecond{coreType, float64(cycles) / seconds})
+	}
+
+	return cps, nil
 }
 
 func (p *perf) handleStat() error {

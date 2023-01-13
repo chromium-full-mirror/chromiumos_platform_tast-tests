@@ -142,7 +142,17 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 				Unit:      "cycles",
 				Direction: perfpkg.SmallerIsBetter,
 				Multiple:  true,
-			}, out.CyclesPerSecond)
+			}, out.CyclesPerSecond[0].Value)
+
+			// The 2nd element holds the value for E-Cores.
+			if len(out.CyclesPerSecond) > 1 {
+				pv.Append(perfpkg.Metric{
+					Name:      "cras_cycles_per_second_ecore",
+					Unit:      "cycles",
+					Direction: perfpkg.SmallerIsBetter,
+					Multiple:  true,
+				}, out.CyclesPerSecond[1].Value)
+			}
 
 			// Append one measurement to PerfValue.
 			pv.Append(perfpkg.Metric{
