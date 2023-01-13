@@ -15,11 +15,12 @@ import (
 )
 
 type bootPerformanceInfo struct {
-	BootUpSeconds     float64 `json:"boot_up_seconds"`
-	BootUpTimestamp   float64 `json:"boot_up_timestamp"`
-	ShutdownSeconds   float64 `json:"shutdown_seconds"`
-	ShutdownTimestamp float64 `json:"shutdown_timestamp"`
-	ShutdownReason    string  `json:"shutdown_reason"`
+	BootUpSeconds            float64 `json:"boot_up_seconds"`
+	BootUpTimestamp          float64 `json:"boot_up_timestamp"`
+	ShutdownSeconds          float64 `json:"shutdown_seconds"`
+	ShutdownTimestamp        float64 `json:"shutdown_timestamp"`
+	ShutdownReason           string  `json:"shutdown_reason"`
+	TpmInitializationSeconds float64 `json:"tpm_initialization_seconds"`
 }
 
 func init() {
@@ -54,6 +55,9 @@ func validateBootPerformanceData(bootPerf *bootPerformanceInfo) error {
 	}
 	if len(bootPerf.ShutdownReason) == 0 {
 		return errors.New("Failed. shutdown_reason should not be empty string")
+	}
+	if bootPerf.TpmInitializationSeconds < 0.000001 {
+		return errors.New("Failed. It is impossible that tpm_initialization_seconds is less than 0.000001")
 	}
 
 	return nil
