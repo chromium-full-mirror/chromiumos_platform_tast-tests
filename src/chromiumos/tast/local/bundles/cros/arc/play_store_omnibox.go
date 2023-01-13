@@ -6,17 +6,13 @@ package arc
 
 import (
 	"context"
-	"path/filepath"
-	"strings"
 	"time"
 
 	androidui "chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
-	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -29,7 +25,8 @@ func init() {
 		Func:         PlayStoreOmnibox,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Installs a TWA and WebAPK app via Omnibox in Play Store",
-		Contacts:     []string{"jshikaram@chromium.org"},
+		Contacts:     []string{"chromeos-apps-foundation-core@google.com", "jshikaram@chromium.org"},
+		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "chrome"},
@@ -38,7 +35,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
 		}},
 		Timeout: 10 * time.Minute,
-		VarDeps: []string{"arc.PlayStoreOmnibox.username", "arc.PlayStoreOmnibox.password"},
+		Fixture: "arcBootedWithPlayStore",
 	})
 }
 
@@ -46,57 +43,24 @@ func init() {
 const uiTimeout = 30 * time.Second
 
 func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
-	username := s.RequiredVar("arc.PlayStoreOmnibox.username")
-	password := s.RequiredVar("arc.PlayStoreOmnibox.password")
-
-	// Setup Chrome.
-	cr, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	// Setup Chrome Test API Connection
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-	// Optin to Play Store.
-	s.Log("Opting into Play Store")
-	maxAttempts := 2
-	if err := optin.PerformWithRetry(ctx, cr, maxAttempts); err != nil {
-		s.Fatal("Failed to optin to Play Store: ", err)
-	}
-	if err := optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
-		s.Fatal("Failed to wait for Play Store: ", err)
-	}
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Setup ARC.
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
-	defer func() {
-		if s.HasError() {
-			if err := a.Command(ctx, "uiautomator", "dump").Run(testexec.DumpLogOnError); err != nil {
-				s.Error("Failed to dump UIAutomator: ", err)
-			} else if err := a.PullFile(ctx, "/sdcard/window_dump.xml", filepath.Join(s.OutDir(), "uiautomator_dump.xml")); err != nil {
-				s.Error("Failed to pull UIAutomator dump: ", err)
-			}
-		}
-	}()
-
-	d, err := a.NewUIDevice(ctx)
+	d, err := s.FixtValue().(*arc.PreData).ARC.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
-	defer d.Close(ctx)
+	defer d.Close(cleanupCtx)
 
 	// Navigate to URL
 	conn, err := cr.NewConn(ctx, "")
@@ -104,7 +68,7 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create renderer: ", err)
 	}
 	defer conn.Close()
-	defer conn.CloseTarget(ctx)
+	defer conn.CloseTarget(cleanupCtx)
 
 	for _, tc := range []struct {
 		title     string
@@ -120,26 +84,20 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to navigate to the url: ", err)
 		}
 
-		// Minimize the Play Store window to allow access to Install.
-		window, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			return strings.Contains(w.Title, "Play Store")
-		})
-		if err != nil {
-			s.Fatal("Failed to find the Play Store window: ", err)
-		}
-		if _, err := ash.SetWindowState(ctx, tconn, window.ID, ash.WMEventMinimize, true /* waitForStateChange */); err != nil {
-			s.Fatal("Failed to minimize Play Store window: ", err)
-		}
-
 		// Locate and click on the omnibox install button.
 		ui := uiauto.New(tconn)
 		installButton := nodewith.ClassName("PwaInstallView").Role(role.Button)
-		if err := ui.LeftClick(installButton)(ctx); err != nil {
+		if err := ui.WithTimeout(uiTimeout).LeftClick(installButton)(ctx); err != nil {
 			s.Fatal("Failed to left click omnibox install button: ", err)
 		}
 
 		if err := checkPlayStoreLaunched(ctx, d, tc.title, tc.publisher); err != nil {
 			s.Fatal("Failed checking if play store launched: ", err)
+		}
+
+		// Close Play Store.
+		if err := optin.ClosePlayStore(ctx, tconn); err != nil {
+			s.Fatal("Failed close Play Store: ", err)
 		}
 	}
 }
