@@ -232,6 +232,6 @@ func performSuggestionRemovalDialogAction(tconn *chrome.TestConn, dialogButtonNa
 func clearSearch(tconn *chrome.TestConn) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("clear search",
-		ui.LeftClick(nodewith.Role(role.Button).Name("Clear searchbox text")),
+		ui.DoDefault(nodewith.Role(role.Button).Name("Clear searchbox text")),
 		ui.WaitUntilGone(launcher.SearchResultListItemFinder.First()))
 }

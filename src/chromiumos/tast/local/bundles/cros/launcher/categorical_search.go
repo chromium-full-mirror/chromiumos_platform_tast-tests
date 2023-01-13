@@ -111,7 +111,7 @@ func CategoricalSearch(ctx context.Context, s *testing.State) {
 		s.Run(ctx, subtest.searchKeyword, func(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 			clearSearchButton := nodewith.Role(role.Button).Name("Clear searchbox text")
-			defer ui.LeftClick(clearSearchButton)(cleanupCtx)
+			defer ui.DoDefault(clearSearchButton)(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(subtest.searchKeyword))
 
