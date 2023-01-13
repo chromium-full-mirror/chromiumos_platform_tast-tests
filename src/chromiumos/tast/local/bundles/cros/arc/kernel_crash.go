@@ -10,6 +10,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -34,6 +35,7 @@ func init() {
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"metrics_consent"},
 			Val:               crash.RealConsent,
+			Fixture:           fixture.CleanOwnership,
 		}, {
 			Name: "mock_consent",
 			Val:  crash.MockConsent,

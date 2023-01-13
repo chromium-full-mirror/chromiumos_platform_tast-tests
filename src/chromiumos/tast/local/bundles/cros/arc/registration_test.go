@@ -31,7 +31,10 @@ func TestTimeout(t *gotesting.T) {
 		}
 		// If the test has an ARC precondition or an ARC fixture, like arc.Booted(), it is not
 		// necessary to extend the timeout, so skip them.
-		if t.Pre == arc.Booted() || t.Fixture == "arcBooted" || t.Fixture == "arcBootedInTabletMode" {
+		if t.Pre == arc.Booted() ||
+			t.Fixture == "arcBooted" ||
+			t.Fixture == "cleanOwnershipArcBooted" ||
+			t.Fixture == "arcBootedInTabletMode" {
 			return false
 		}
 		return true
