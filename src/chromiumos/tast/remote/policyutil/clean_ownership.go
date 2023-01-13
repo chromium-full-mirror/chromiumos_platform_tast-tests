@@ -23,7 +23,7 @@ func init() {
 			"cylai@google.com",
 			"yich@google.com"},
 		Impl:            &cleanOwner{},
-		SetUpTimeout:    3 * time.Minute,
+		SetUpTimeout:    3*time.Minute + /* b/239013478 */ 2*time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		ResetTimeout:    3 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.hwsec.OwnershipService"},
@@ -37,6 +37,20 @@ type cleanOwner struct {
 }
 
 func (co *cleanOwner) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Make sure the DUT is connected at the beginning.
+	// TODO(b/239013478): Clean up the connection checks when the issue is resolved.
+	if err := s.DUT().Health(ctx); err != nil {
+		s.Log("Failed DUT connection check at the beginning: ", err)
+
+		// Try to reconnect to the DUT.
+		waitConnectCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+
+		if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to the DUT at the beginning: ", err)
+		}
+	}
+
 	if err := EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 		s.Fatal("Failed to reset TPM: ", err)
 	}
