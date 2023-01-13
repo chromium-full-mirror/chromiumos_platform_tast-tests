@@ -1106,11 +1106,11 @@ func (tf *TestFixture) PingFromSpecificDUT(ctx context.Context, dutIdx DutIdx, t
 	return res, nil
 }
 
-// VerifyPingResults checks if ping results are within acceptable range.
+// VerifyPingResults checks if ping results are within acceptable range (loss not exceeding the lossThreshold, in %).
 func VerifyPingResults(res *ping.Result, lossThreshold float64) error {
 
 	if res.Loss > lossThreshold {
-		return errors.Errorf("unexpected packet loss percentage: got %g%%, want <= %g%%", res.Loss, pingLossThreshold)
+		return errors.Errorf("unexpected packet loss percentage: got %g%%, want <= %g%%", res.Loss, lossThreshold)
 	}
 
 	return nil

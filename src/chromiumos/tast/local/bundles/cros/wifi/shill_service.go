@@ -71,6 +71,7 @@ const apIfName = shillconst.ApInterfaceName
 
 // dhcpFirewallParams is a set of parameters needed for unblocking DHCP traffic.
 var dhcpFirewallParams = []firewall.RuleOption{
+	firewall.OptionWait(5),
 	firewall.OptionProto(firewall.L4ProtoUDP),
 	firewall.OptionDPort(dhcpPort),
 	firewall.OptionJumpTarget(firewall.TargetAccept),

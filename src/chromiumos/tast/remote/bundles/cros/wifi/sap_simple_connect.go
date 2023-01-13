@@ -55,7 +55,7 @@ func init() {
 			},
 			{
 				// Verifies that Soft AP DUT can accept connection from a station with WPA2 PSK encryption in low band and high band.
-				Name: "wpa2_psk",
+				Name: "wpa2",
 				Val: []sapSimpleConnectTestcase{{
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -72,7 +72,7 @@ func init() {
 			},
 			{
 				// Verifies that Soft AP DUT can accept connection from a station with WPA3 PSK encryption in low band and high band.
-				Name:              "wpa3_psk",
+				Name:              "wpa3",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []sapSimpleConnectTestcase{{
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
@@ -90,7 +90,7 @@ func init() {
 			},
 			{
 				// Verifies that Soft AP DUT can accept connection from a station with WPA3 transitional PSK encryption in low band and high band.
-				Name:              "wpa3mixed_psk",
+				Name:              "wpa3mixed",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []sapSimpleConnectTestcase{{
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
