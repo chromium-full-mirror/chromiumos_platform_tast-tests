@@ -142,7 +142,7 @@ func (c *Citrix) AppStartTime() int64 {
 
 // Login logs in to Citrix Workspace app.
 func (c *Citrix) Login(serverURL, userName, password string) action.Action {
-	searchWorkspace := nodewith.Name("Search Workspace").HasClass("citrix-ui__button").Role(role.Button)
+	searchWorkspace := nodewith.Name("Search Workspace").Role(role.Button)
 	logOnAreaFinder := nodewith.HasClass("logon-area").Role(role.LayoutTable)
 	editField := nodewith.State(state.Editable, true).Role(role.GenericContainer).Ancestor(logOnAreaFinder)
 	serverURLField := nodewith.Name("Store URL or Email address").Role(role.TextField).Ancestor(logOnAreaFinder)
@@ -182,7 +182,7 @@ func (c *Citrix) Logout() action.Action {
 // ConnectRemoteDesktop connects to the remote desktop by given desktop name.
 func (c *Citrix) ConnectRemoteDesktop(desktop string) action.Action {
 	uiCtx := uiContext("ConnectRemoteDesktop")
-	searchWorkspace := nodewith.Name("Search Workspace").HasClass("citrix-ui__button").Role(role.Button)
+	searchWorkspace := nodewith.Name("Search Workspace").Role(role.Button)
 	listBoxFinder := nodewith.Ancestor(nodewith.HasClass("ul_vabzqc").Role(role.ListBox))
 	listApp := listBoxFinder.Name(desktop).Role(role.ListBoxOption)
 	cancelButton := c.customIcon(IconTrackerCancel)
@@ -414,7 +414,7 @@ func (c *Citrix) DeletePhoto() action.Action {
 }
 
 // OpenZoom opens the zoom website, log in and enter the room.
-func (c *Citrix) OpenZoom(room, account string) action.Action {
+func (c *Citrix) OpenZoom(room, account, password string) action.Action {
 	uiCtx := uiContext("OpenZoom")
 	clickJoinFromBrowser := func(ctx context.Context) error {
 		// uidetection.TextBlockFromSentence get the center point of the whole text line.
@@ -427,6 +427,20 @@ func (c *Citrix) OpenZoom(room, account string) action.Action {
 		}
 		expectedlocation := coords.Point{X: l.Right() - 5, Y: l.CenterY()}
 		return c.ui.MouseClickAtLocation(0, expectedlocation)(ctx)
+	}
+	login := func(ctx context.Context) error {
+		scheduleWord := uidetection.Word("Schedule").First()
+		accountFinder := uidetection.TextBlockFromSentence(account).First()
+		waitForScheduleWord := c.ud.WithTimeout(10 * time.Second).WaitUntilExists(scheduleWord)
+		enterPassword := uiauto.NamedCombine("enter password",
+			c.kb.TypeAction(password),
+			c.kb.AccelAction("Enter"),
+			c.waitText(uiCtx, "Schedule"),
+		)
+		return uiauto.NamedCombine("login zoom",
+			c.clickFinder(uiCtx+"Account", accountFinder),
+			uiauto.IfFailThen(waitForScheduleWord, enterPassword),
+		)(ctx)
 	}
 	clickCancelButton := func(ctx context.Context) error {
 		yourBroswerText := uidetection.TextBlockFromSentence("your browser").First()
@@ -455,8 +469,7 @@ func (c *Citrix) OpenZoom(room, account string) action.Action {
 		c.udi.LeftClick(joinButton))
 	return uiauto.NamedCombine("open zoom web",
 		c.NewTab(cuj.ZoomSignInURL, true),
-		c.clickText(uiCtx, account),
-		c.waitText(uiCtx, "Schedule"),
+		login,
 		c.Navigate(room),
 		joinMeeting,
 	)

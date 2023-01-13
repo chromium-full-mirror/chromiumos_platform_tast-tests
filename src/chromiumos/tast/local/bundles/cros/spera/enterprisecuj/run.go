@@ -79,6 +79,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, scenario CitrixScenario, p *Tes
 		return errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return retErr != nil }, cr, "ui_dump")
 	if err := cuj.AddPerformanceCUJMetrics(browser.TypeAsh, tconn, nil, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
@@ -91,7 +92,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, scenario CitrixScenario, p *Tes
 		return errors.Wrap(err, "failed to login Citrix")
 	}
 	defer citrix.Close(ctx)
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		return scenario.Run(ctx, tconn, kb, citrix, p)

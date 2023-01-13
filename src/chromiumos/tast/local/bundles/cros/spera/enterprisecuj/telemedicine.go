@@ -81,7 +81,7 @@ func (t *TelemedicineScenario) Run(ctx context.Context, tconn *chrome.TestConn, 
 		// 2. In Citrix client, open 3 browser windows x 2 tabs (substitute for Cerner health app).
 		openWindows,
 		// 3. Open Zoom website inside Citrix and start a 2p video call.
-		citrix.OpenZoom(t.zoomInviteLink, t.zoomAccount),
+		citrix.OpenZoom(t.zoomInviteLink, t.zoomAccount, t.zoomPassword),
 		// 4. Concurrently type notes at 70 wpm in Google keep
 		citrix.CreateGoogleKeepNote(noteContent),
 		citrix.DeleteGoogleKeepNote(noteContent),
@@ -95,14 +95,16 @@ func (t *TelemedicineScenario) Run(ctx context.Context, tconn *chrome.TestConn, 
 type TelemedicineScenario struct {
 	zoomInviteLink string
 	zoomAccount    string
+	zoomPassword   string
 }
 
 var _ CitrixScenario = (*TelemedicineScenario)(nil)
 
 // NewTelemedicineScenario creates telemedicine instance which implements CitrixScenario interface.
-func NewTelemedicineScenario(zoomInviteLink, zoomAccount string) *TelemedicineScenario {
+func NewTelemedicineScenario(zoomInviteLink, zoomAccount, zoomPassword string) *TelemedicineScenario {
 	return &TelemedicineScenario{
 		zoomInviteLink: zoomInviteLink,
 		zoomAccount:    zoomAccount,
+		zoomPassword:   zoomPassword,
 	}
 }

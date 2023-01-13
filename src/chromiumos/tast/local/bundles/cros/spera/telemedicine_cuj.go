@@ -25,7 +25,8 @@ func init() {
 		Func:         TelemedicineCUJ,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure the performance of simulated telemedicine operations on the Citrix Workspace client app",
-		Contacts:     []string{"xliu@cienet.com", "jane.yang@cienet.com"},
+		Contacts:     []string{"cienet-development@googlegroups.com", "jane.yang@cienet.com", "xibin@google.com"},
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Vars: []string{
 			// Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".
 			"spera.cuj_mode",
@@ -41,8 +42,9 @@ func init() {
 			// Required. Zoom meet bot server address.
 			"spera.zoom_bot_server",
 			"spera.zoom_bot_token",
-			// Required. The account used by Citrix to log in to zoom.
+			// Required. Credentials used by Citrix to log in to zoom.
 			"spera.citrix_zoom_account",
+			"spera.citrix_zoom_password",
 		},
 		Params: []testing.Param{
 			{
@@ -122,6 +124,7 @@ func TelemedicineCUJ(ctx context.Context, s *testing.State) {
 	host := s.RequiredVar("spera.zoom_bot_server")
 	sessionToken := s.RequiredVar("spera.zoom_bot_token")
 	citrixZoomAccount := s.RequiredVar("spera.citrix_zoom_account")
+	citrixZoomPassword := s.RequiredVar("spera.citrix_zoom_password")
 
 	cleanUpRoomCtx := ctx
 	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
@@ -134,7 +137,7 @@ func TelemedicineCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer prepare(cleanUpRoomCtx)
 
-	scenario := enterprisecuj.NewTelemedicineScenario(room, citrixZoomAccount)
+	scenario := enterprisecuj.NewTelemedicineScenario(room, citrixZoomAccount, citrixZoomPassword)
 	params := &enterprisecuj.TestParams{
 		OutDir:          s.OutDir(),
 		CitrixServerURL: s.RequiredVar("spera.citrix_url"),
