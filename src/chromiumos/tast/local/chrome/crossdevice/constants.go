@@ -27,8 +27,7 @@ const SignInProfileTestExtensionManifestKey = "ui.signinProfileTestExtensionMani
 
 // Feature defines the Cross Device feature we are testing.
 type Feature struct {
-	Name       FeatureName
-	SubFeature SubFeature
+	Name FeatureName
 }
 
 // FeatureName is the name of the Cross Device feature to test.
@@ -45,16 +44,6 @@ const (
 	Exo
 	// QuickStart defines Quickstart
 	QuickStart
-)
-
-// SubFeature is the specific part of a feature we are testing.
-type SubFeature int
-
-const (
-	// SmartLockUnlock defines unlocking with Smart Lock
-	SmartLockUnlock SubFeature = iota
-	// SmartLockLogin defines logging in with Smart Lock
-	SmartLockLogin
 )
 
 // BugReportDuration is the duration to reserve for saving a bug report on an Android device.

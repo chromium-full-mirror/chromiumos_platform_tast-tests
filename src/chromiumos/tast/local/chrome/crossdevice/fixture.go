@@ -164,7 +164,7 @@ func init() {
 			"kyleshima@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		Parent: "crossdeviceAndroidSetupSmartLockLogin",
+		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}),
@@ -280,7 +280,7 @@ func init() {
 			"kyleshima@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		Parent: "crossdeviceAndroidSetupSmartLockLogin",
+		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
 		}),

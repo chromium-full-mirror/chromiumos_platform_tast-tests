@@ -38,11 +38,6 @@ const (
 	smartLockUsername = "crossdevice.smartLockUsername"
 	smartLockPassword = "crossdevice.smartLockPassword"
 
-	// These are alternative Smart Lock credentials used to test logging in.
-	// We use two accounts so both features can be tested independently without worrying about colissions with other tests run in parallel.
-	smartLockLoginUsername = "crossdevice.smartLockLoginUsername"
-	smartLockLoginPassword = "crossdevice.smartLockLoginPassword"
-
 	// Specify -var=skipAndroidLogin=true if the Android device is logged in to a personal account.
 	// Otherwise we will attempt removing all Google accounts and adding a test account to the phone.
 	// Adding/removing accounts requires ADB root access, so this will automatically be set to true if root is not available.
@@ -149,7 +144,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceAndroidSetupSmartLock",
 		Desc: "Set up Android device for CrOS crossdevice testing of Smart Lock",
-		Impl: NewCrossDeviceAndroid(Feature{Name: SmartLock, SubFeature: SmartLockUnlock}),
+		Impl: NewCrossDeviceAndroid(Feature{Name: SmartLock}),
 		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
 		Contacts: []string{
 			"kyleshima@chromium.org",
@@ -158,43 +153,6 @@ func init() {
 		Vars: []string{
 			smartLockUsername,
 			smartLockPassword,
-			skipAndroidLogin,
-			crossDevicePerBoxUsername1,
-			crossDevicePerBoxUsername2,
-			crossDevicePerBoxUsername3,
-			crossDevicePerBoxUsername4,
-			crossDevicePerBoxUsername5,
-			crossDevicePerBoxUsername6,
-			crossDevicePerBoxUsername7,
-			crossDevicePerBoxUsername8,
-			crossDevicePerBoxUsername9,
-			crossDevicePerBoxUsername10,
-			crossDevicePerBoxUsername11,
-			crossDevicePerBoxUsername12,
-			crossDevicePerBoxUsername13,
-			crossDevicePerBoxUsername14,
-			crossDevicePerBoxUsername15,
-			crossDevicePerBoxUsername16,
-			crossDevicePerBoxUsername17,
-			crossDevicePerBoxPassword,
-		},
-		SetUpTimeout:    4 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "crossdeviceAndroidSetupSmartLockLogin",
-		Desc: "Set up Android device for CrOS crossdevice testing of Smart Lock login",
-		Impl: NewCrossDeviceAndroid(Feature{Name: SmartLock, SubFeature: SmartLockLogin}),
-		Data: []string{AccountUtilZip, MultideviceSnippetZipName},
-		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-		},
-		Vars: []string{
-			smartLockLoginUsername,
-			smartLockLoginPassword,
 			skipAndroidLogin,
 			crossDevicePerBoxUsername1,
 			crossDevicePerBoxUsername2,
@@ -384,16 +342,8 @@ func GetLoginCredentials(ctx context.Context, s *testing.FixtState, feature Feat
 	default:
 		switch feature.Name {
 		case SmartLock:
-			switch feature.SubFeature {
-			case SmartLockUnlock:
-				username = smartLockUsername
-				password = smartLockPassword
-			case SmartLockLogin:
-				username = smartLockLoginUsername
-				password = smartLockLoginPassword
-			default:
-				return "", "", errors.New("unknown subfeature specified for Smart Lock")
-			}
+			username = smartLockUsername
+			password = smartLockPassword
 		case PhoneHub:
 			username = defaultCrossDeviceUsername
 			password = defaultCrossDevicePassword
