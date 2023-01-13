@@ -8,6 +8,7 @@ package terminalapp
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -53,7 +54,7 @@ var (
 type TerminalApp struct {
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
-	kb    *input.KeyboardEventWriter
+	Kb    *input.KeyboardEventWriter
 }
 
 // Launch launches the Terminal App connected to default penguin container and returns it.
@@ -105,7 +106,7 @@ func Find(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
 
-	terminalApp := &TerminalApp{tconn: tconn, ui: ui, kb: kb}
+	terminalApp := &TerminalApp{tconn: tconn, ui: ui, Kb: kb}
 	if err := terminalApp.WaitForPrompt()(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for terminal prompt")
 	}
@@ -127,7 +128,7 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 	}
 
 	ui := uiauto.New(tconn)
-	var ta = &TerminalApp{tconn: tconn, ui: ui, kb: kb}
+	var ta = &TerminalApp{tconn: tconn, ui: ui, Kb: kb}
 
 	if err := uiauto.Combine("launch ssh",
 		ime.EnglishUS.InstallAndActivate(tconn),
@@ -164,8 +165,8 @@ func (ta *TerminalApp) DeleteSSHConnection(name string) uiauto.Action {
 // RunSSHCommand runs command in Terminal SSH tab.
 func (ta *TerminalApp) RunSSHCommand(cmd string) uiauto.Action {
 	return uiauto.Combine("run command "+cmd,
-		ta.kb.TypeAction(cmd),
-		ta.kb.AccelAction("Enter"),
+		ta.Kb.TypeAction(cmd),
+		ta.Kb.AccelAction("Enter"),
 	)
 }
 
@@ -174,8 +175,8 @@ func (ta *TerminalApp) ExitSSH() uiauto.Action {
 	return uiauto.Combine("exit ssh",
 		ta.RunSSHCommand("exit"),
 		ta.ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`Connection to \S+ closed.`)).Role(role.StaticText).First()),
-		ta.kb.AccelAction("Esc"),
-		ta.kb.AccelAction("Ctrl+Shift+W"),
+		ta.Kb.AccelAction("Esc"),
+		ta.Kb.AccelAction("Ctrl+Shift+W"),
 	)
 }
 
@@ -300,7 +301,7 @@ func (ta *TerminalApp) Exit(keyboard *input.KeyboardEventWriter) uiauto.Action {
 	return uiauto.Combine("exit Terminal window",
 		ta.RunCommand(keyboard, "exit"),
 		ta.ui.WithTimeout(time.Minute).WaitUntilGone(linuxTab),
-		ta.kb.AccelAction("Ctrl+Shift+W"))
+		ta.Kb.AccelAction("Ctrl+Shift+W"))
 }
 
 // Close closes the Terminal App through clicking Close on shelf context menu.
@@ -315,4 +316,45 @@ func (ta *TerminalApp) Close() uiauto.Action {
 			),
 		),
 		ta.ui.WithTimeout(time.Minute).WaitUntilGone(rootWindow))
+}
+
+// CheckTabsCount returns an action to check the tabs count.
+func (ta *TerminalApp) CheckTabsCount(normalTabs, tmuxTabs int) uiauto.Action {
+	return func(ctx context.Context) error {
+		// We use class name "WebContentsViewAura" instead of "Tab" because it has
+		// the up-to-date title readily available.
+		nodesInfo, err := ta.ui.NodesInfo(ctx, nodewith.ClassName("WebContentsViewAura"))
+		if err != nil {
+			return err
+		}
+
+		actualTmuxTabs := 0
+		for _, n := range nodesInfo {
+			if strings.HasPrefix(n.Name, "[tmux]") {
+				actualTmuxTabs++
+			}
+		}
+
+		if len(nodesInfo)-actualTmuxTabs != normalTabs {
+			return errors.Errorf("number of normal tabs (%d) does not match expectation (%d)", len(nodesInfo)-actualTmuxTabs, normalTabs)
+		}
+
+		if actualTmuxTabs != tmuxTabs {
+			return errors.Errorf("number of tmux tabs (%d) does not match expectation (%d)", actualTmuxTabs, tmuxTabs)
+		}
+
+		return nil
+	}
+}
+
+// WaitForTabsCount returns an action to wait for the tabs count to match expectation.
+func (ta *TerminalApp) WaitForTabsCount(normalTabs, tmuxTabs int) uiauto.Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, ta.CheckTabsCount(normalTabs, tmuxTabs), &testing.PollOptions{Timeout: 2 * time.Second})
+	}
+}
+
+// ClickNthTab clicks the nth tab.
+func (ta *TerminalApp) ClickNthTab(n int) uiauto.Action {
+	return ta.ui.LeftClick(nodewith.Role(role.Tab).ClassName("Tab").Nth(n))
 }

@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Terminal app can create an SSH outgoing client connection",
 		Contacts: []string{
-			"chrome-hterm@google.com",
+			"guestos-ui@google.com",
 			"joelhockey@chromium.org",
 		},
 		BugComponent: "b:1122570",
