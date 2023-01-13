@@ -217,9 +217,27 @@ func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 				return errors.Wrap(err, "failed to find 'searchTextfield'")
 			}
 
-			if err := uiauto.Combine("type video url",
+			inputURL := uiauto.Combine("input video url",
+				y.kb.AccelAction("Ctrl+A"),
 				y.kb.TypeAction(video.URL),
-				y.kb.AccelAction("enter"),
+			)
+
+			verifyURL := func(ctx context.Context) error {
+				url, err := searchEditText.GetText(ctx)
+				if err != nil {
+					return errors.Wrap(err, "failed to get search text")
+				}
+				if url != video.URL {
+					testing.ContextLog(ctx, "Search text: ", url)
+					return errors.Wrap(err, "failed to input correct video url")
+				}
+				return nil
+			}
+
+			ui := uiauto.New(y.tconn)
+			if err := uiauto.NamedCombine("search video",
+				ui.RetryUntil(inputURL, verifyURL),
+				y.kb.AccelAction("Enter"),
 			)(ctx); err != nil {
 				return err
 			}

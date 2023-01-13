@@ -321,21 +321,23 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		uiHandler       = resources.UIHandler
 		tconn           = resources.Tconn
 		kb              = resources.Kb
+		bt              = resources.Bt
 	)
 
 	ui := uiauto.New(tconn)
 	openGoogleHelp := func(ctx context.Context) error {
-		// If there's a lacros browser, bring it to active.
-		lacrosWindow, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			return w.WindowType == ash.WindowTypeLacros
-		})
-		if err != nil && err != ash.ErrWindowNotFound {
-			return errors.Wrap(err, "failed to find lacros window")
-		}
-		if err == nil {
+		if bt == browser.TypeLacros {
+			// If there's a lacros browser, bring it to active.
+			lacrosWindow, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+				return w.WindowType == ash.WindowTypeLacros
+			})
+			if err != nil {
+				return err
+			}
 			if err := lacrosWindow.ActivateWindow(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to activate lacros window")
 			}
+			return nil
 		}
 
 		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleHelpChromeURL, true)
