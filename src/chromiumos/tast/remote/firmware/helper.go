@@ -882,7 +882,7 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 
 	// By request, reset capabilities to factory mode.
 	if resetCCD {
-		re := `Opening factory(?i)[^\n\r]*`
+		re := `Opening factory(?i)[^\n\r]*|> $`
 		_, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset factory", []string{re})
 		if err != nil {
 			return errors.Wrap(err, "failed resetting capabilities to factory mode")
