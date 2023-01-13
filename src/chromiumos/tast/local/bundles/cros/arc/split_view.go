@@ -307,15 +307,27 @@ func testResize(ctx context.Context, tconn *chrome.TestConn, d *ui.Device, ui *u
 		}
 	} else {
 		// In clamshell mode, we need to use "multi-window resizer" to resize two windows simultaneously.
-		if err := uiauto.Combine(
-			"hover mouse where windows meet",
-			mouse.Move(tconn, center.Sub(coords.NewPoint(10, 10)), 0),
-			mouse.Move(tconn, center, time.Second),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to move mouse to summon multi-window resizer")
-		}
+		// TODO(b/265371483): Consolidate this logic with multiresize test in windowarrangementcuj.
+		multiresizer := nodewith.Role("window").ClassName("MultiWindowResizeController")
+		for hoverOffset := -5; ; hoverOffset++ {
+			if err := mouse.Move(tconn, center.Add(coords.NewPoint(hoverOffset, hoverOffset)), 100*time.Millisecond)(ctx); err != nil {
+				return errors.Wrap(err, "failed to move mouse")
+			}
 
-		resizerBounds, err := ui.Location(ctx, nodewith.Role("window").ClassName("MultiWindowResizeController"))
+			multiresizerExists, err := ui.IsNodeFound(ctx, multiresizer)
+			if err != nil {
+				return errors.Wrap(err, "failed to check for multiresizer")
+			}
+			if multiresizerExists {
+				break
+			}
+
+			if hoverOffset == 5 {
+				return errors.New("never found multiresize widget")
+			}
+		}
+		resizerBounds, err := ui.ImmediateLocation(ctx, multiresizer)
+
 		if err != nil {
 			return errors.Wrap(err, "failed to get the multi-window resizer location")
 		}
