@@ -28,7 +28,7 @@ const (
 
 const (
 	workspaceSetUpTestTimeout = 5 * time.Second
-	workspacePreTestTimeout   = 20 * time.Second
+	workspacePreTestTimeout   = 40 * time.Second
 	workspacePostTestTimeout  = 20 * time.Second
 )
 
@@ -129,7 +129,7 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 	}
 	f.conn = conn
 
-	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+	if err := webutil.WaitForQuiescence(ctx, conn, workspacePreTestTimeout); err != nil {
 		s.Fatal("Failed to wait for page to finish loading: ", err)
 	}
 	if err := cuj.MaximizeBrowserWindow(ctx, f.tconn, true, f.appName); err != nil {
