@@ -55,16 +55,18 @@ const (
 
 // meetTest specifies the setting of a Hangouts Meet journey. More info at go/cros-meet-tests.
 type meetTest struct {
-	num         int                  // Number of bots in the meeting.
-	layout      meetLayoutType       // Type of the layout in the meeting.
-	present     bool                 // Whether it is presenting the Google Docs/Jamboard window.
-	docs        bool                 // Whether it is running with a Google Docs window.
-	jamboard    bool                 // Whether it is running with a Jamboard window.
-	split       bool                 // Whether it is in split screen mode. It can not be true if docs is false.
-	cam         bool                 // Whether the camera is on or not.
-	duration    time.Duration        // Duration of the meet call. Must be less than test timeout.
-	browserType browser.Type         // Ash Chrome browser or Lacros.
-	botsOptions []bond.AddBotsOption // Customizes the meeting participant bots.
+	num           int                  // Number of bots in the meeting.
+	layout        meetLayoutType       // Type of the layout in the meeting.
+	present       bool                 // Whether it is presenting the Google Docs/Jamboard window.
+	docs          bool                 // Whether it is running with a Google Docs window.
+	jamboard      bool                 // Whether it is running with a Jamboard window.
+	split         bool                 // Whether it is in split screen mode. It can not be true if docs is false.
+	cam           bool                 // Whether the camera is on or not.
+	effects       bool                 // Whether to turn on visual effects.
+	tabSwitchDocs bool                 // Whether to switch between Docs and Meet. It cannot be true if docs is false.
+	duration      time.Duration        // Duration of the meet call. Must be less than test timeout.
+	browserType   browser.Type         // Ash Chrome browser or Lacros.
+	botsOptions   []bond.AddBotsOption // Customizes the meeting participant bots.
 }
 
 // videoCodecReport is used to report a video codec to a performance metric so that it is easy to find in places like TPS Dashboard.
@@ -358,6 +360,24 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 			Fixture: "loggedInToCUJUserWithOneGroupPerRenderer",
+		}, {
+			// TODO(246324780): Remove when GPU hanging issue is fixed.
+			// This test is primarily to try to reproduce this issue in
+			// the lab.
+			Name:      "lacros_4p_notes_effects",
+			Timeout:   defaultTestTimeout,
+			ExtraAttr: []string{"group:cuj"},
+			Val: meetTest{
+				num:           4,
+				layout:        meetLayoutTiled,
+				docs:          true,
+				cam:           true,
+				effects:       true,
+				tabSwitchDocs: true,
+				browserType:   browser.TypeLacros,
+			},
+			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
@@ -395,6 +415,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	meet := s.Param().(meetTest)
 	if meet.docs && meet.jamboard {
 		s.Fatal("Tried to open both Google Docs and Jamboard at the same time")
+	}
+	if meet.tabSwitchDocs && !meet.docs {
+		s.Fatal("Cannot tab switch docs without opening a Google Doc")
 	}
 
 	// Determines the meet call duration. Use the meet duration specified in
@@ -756,6 +779,34 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
+	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
+	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
+	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
+	turnOffBlur := nodewith.Name("Turn off visual effects").Role(role.ToggleButton).Focusable()
+	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
+		return uiauto.Combine(
+			fmt.Sprintf("set effect with node %v", effect),
+			pc.Click(moreOptions),
+			ui.WaitUntilExists(applyEffects),
+			pc.Click(applyEffects),
+			pc.Click(effect),
+			// Use the keyboard to exit from the effects page, since there
+			// are many possible "Close" buttons visible within the UI tree.
+			ui.WaitUntilExists(effect.Focused()),
+			kw.AccelAction("Esc"),
+		)(ctx)
+	}
+	if meet.effects {
+		s.Log("Turn on visual effects")
+		if err := setEffect(ctx, blur); err != nil {
+			s.Fatal("Failed to turn on visual effects: ", err)
+		}
+	} else {
+		if err := setEffect(ctx, turnOffBlur); err != nil {
+			s.Fatal("Failed to turn off visual effects: ", err)
+		}
+	}
+
 	s.Log("Resetting browser zoom to 100%")
 	zoomNode := nodewith.HasClass("ZoomView")
 	if err := uiauto.Combine(
@@ -827,15 +878,17 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		var collaborationWindow *ash.Window
-		if meet.split {
-			if collaborationRE == nil {
-				return errors.New("need a collaboration window for split view")
-			}
+		if meet.docs || meet.jamboard {
 			collaborationWindow, err = ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return collaborationRE.MatchString(w.Title) })
 			if err != nil {
 				return errors.Wrap(err, "failed to find the collaboration window")
 			}
+		}
 
+		if meet.split {
+			if collaborationRE == nil {
+				return errors.New("need a collaboration window for split view")
+			}
 			if err := ash.SetWindowStateAndWait(ctx, tconn, collaborationWindow.ID, ash.WindowStateLeftSnapped); err != nil {
 				return errors.Wrap(err, "failed to snap the collaboration window to the left")
 			}
@@ -975,13 +1028,25 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			end := time.Now().Add(meetTimeout)
 			// Wait for 5 seconds, type notes for 12.4 seconds then until the time is
 			// elapsed (3 times by default). Wait before the first typing to reduce
-			// the overlap between typing and joining the meeting.
+			// the overlap between typing and joining the meeting. If tabSwitchDocs is
+			// true, Alt+Tab twice to switch to another window and come back to the
+			// current window.
+			cycleDescription := "sleep and type"
+			cycleActions := []action.Action{
+				action.Sleep(5 * time.Second),
+				kw.TypeAction(notes),
+			}
+			if meet.tabSwitchDocs {
+				cycleDescription = "sleep, type, and task switch"
+				taskSwitch := kw.AccelAction("Alt+Tab")
+				cycleActions = append(cycleActions,
+					taskSwitch,
+					action.Sleep(10*time.Second),
+					taskSwitch,
+				)
+			}
 			for time.Until(end) > 36*time.Second {
-				if err := uiauto.Combine(
-					"sleep and type",
-					action.Sleep(5*time.Second),
-					kw.TypeAction(notes),
-				)(ctx); err != nil {
+				if err := action.Combine(cycleDescription, cycleActions...)(ctx); err != nil {
 					return err
 				}
 			}
@@ -1145,6 +1210,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// across test variants.
 	if err := kw.Accel(ctx, "Ctrl+0"); err != nil {
 		s.Log("Failed to reset browser zoom to 100%")
+	}
+
+	if meet.effects {
+		if err := setEffect(ctx, turnOffBlur); err != nil {
+			s.Log("Failed to turn off blur: ", err)
+		}
 	}
 
 	// Report WebRTC metrics for video streams. Start by closing the Meet window and
