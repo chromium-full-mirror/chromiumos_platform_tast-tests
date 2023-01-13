@@ -403,7 +403,7 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 	case TypeOpenVPN:
 		return startOpenVPNServer(ctx, env, config)
 	case TypeWireGuard:
-		return startWireGuardServer(ctx, env, wgClientPublicKey, config.WGUsePSK, false /*isSecondServer*/)
+		return StartWireGuardServer(ctx, env, wgClientPublicKey, config.WGUsePSK, false /*isSecondServer*/)
 	default:
 		return nil, errors.Errorf("unexpected VPN type %s", config.Type)
 	}
@@ -642,8 +642,8 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 	return server, nil
 }
 
-// startWireGuardServer starts a WireGuard server.
-func startWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
+// StartWireGuardServer starts a WireGuard server.
+func StartWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		serverRunner: runner,

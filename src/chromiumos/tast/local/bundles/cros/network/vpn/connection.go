@@ -436,7 +436,7 @@ func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error
 			return errors.Wrap(err, "failed to get public key")
 		}
 	}
-	c.Server, err = startWireGuardServer(ctx, env, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
+	c.Server, err = StartWireGuardServer(ctx, env, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
 	return err
 }
 
@@ -512,7 +512,7 @@ func createPropertiesInternal(server, secondServer *Server, config *Config) (map
 	case TypeOpenVPN:
 		properties, err = createOpenVPNProperties(server, config)
 	case TypeWireGuard:
-		properties = createWireGuardProperties(server, secondServer, config)
+		properties = CreateWireGuardProperties(server, secondServer, config)
 	default:
 		return nil, errors.Errorf("unexpected server type: got %s", config.Type)
 	}
@@ -665,7 +665,9 @@ func createOpenVPNProperties(server *Server, config *Config) (map[string]interfa
 	return properties, nil
 }
 
-func createWireGuardProperties(server, secondServer *Server, config *Config) map[string]interface{} {
+// CreateWireGuardProperties returns a dict which contains the D-Bus property
+// values of a WireGuard VPN service for the given config.
+func CreateWireGuardProperties(server, secondServer *Server, config *Config) map[string]interface{} {
 	var peers []map[string]string
 
 	// Helper function to generate AllowedIPs string according to IPType.
