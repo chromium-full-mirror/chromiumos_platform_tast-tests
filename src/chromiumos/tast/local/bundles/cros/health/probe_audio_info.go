@@ -15,13 +15,13 @@ import (
 
 type audioInfo struct {
 	InputDeviceName  string           `json:"input_device_name"`
-	InputGain        int              `json:"input_gain"`
+	InputGain        jsontypes.Uint32 `json:"input_gain"`
 	InputMute        bool             `json:"input_mute"`
 	OutputDeviceName string           `json:"output_device_name"`
 	OutputMute       bool             `json:"output_mute"`
-	OutputVolume     int              `json:"output_volume"`
-	SevereUnderruns  int              `json:"severe_underruns"`
-	Underruns        int              `json:"underruns"`
+	OutputVolume     jsontypes.Uint64 `json:"output_volume"`
+	SevereUnderruns  jsontypes.Uint32 `json:"severe_underruns"`
+	Underruns        jsontypes.Uint32 `json:"underruns"`
 	OutputNodes      *[]audioNodeInfo `json:"output_nodes"`
 	InputNodes       *[]audioNodeInfo `json:"input_nodes"`
 }
@@ -55,7 +55,7 @@ func validateAudioData(audio *audioInfo) error {
 	}
 
 	// Check "input_gain" is integer and between [0, 100].
-	if audio.InputGain < 0 || audio.InputGain > 100 {
+	if audio.InputGain > 100 {
 		return errors.Errorf("Failed. input_gain is not in a legal range [0, 100]: %d", audio.InputGain)
 	}
 
@@ -65,18 +65,8 @@ func validateAudioData(audio *audioInfo) error {
 	}
 
 	// Check "output_volume" is integer and between [0, 100].
-	if audio.OutputVolume < 0 || audio.OutputVolume > 100 {
+	if audio.OutputVolume > 100 {
 		return errors.Errorf("Failed. output_volume is not in a legal range [0, 100]: %d", audio.OutputVolume)
-	}
-
-	// Check "severe_underruns" is positive integer or zero.
-	if audio.SevereUnderruns < 0 {
-		return errors.Errorf("Failed. severe_underruns is smaller than zero: %d", audio.SevereUnderruns)
-	}
-
-	// Check "underruns" is positive integer or zero.
-	if audio.Underruns < 0 {
-		return errors.Errorf("Failed. underruns is smaller than zero: %d", audio.Underruns)
 	}
 
 	return nil
