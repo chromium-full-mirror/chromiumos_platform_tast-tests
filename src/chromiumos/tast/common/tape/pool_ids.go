@@ -22,6 +22,7 @@ const (
 	EnrollmentKiosk                       = "enrollment_kiosk"
 	ImprivataSharedKiosk                  = "imprivata_shared_kiosk"
 	ImprivataSingleUser                   = "imprivata_single_user"
+	Reporting                             = "reporting"
 	ZTETestAutomation                     = "zte-test-automation"
 )
 
