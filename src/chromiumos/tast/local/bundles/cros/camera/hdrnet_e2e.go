@@ -78,9 +78,10 @@ func testPhotoTaking(ctx context.Context, app *cca.App, tconn *chrome.TestConn) 
 	const multipleYUVOfDifferentAspectRatioWithBLOB = 5.0
 
 	histogramTests := histogramutil.HistogramTests{
-		"ChromeOS.Camera.HDRnet.AverageLatency.Preprocessing":  histogramutil.AssertHistogramMeanGt(minProcessingLatency),
-		"ChromeOS.Camera.HDRnet.AverageLatency.RgbPipeline":    histogramutil.AssertHistogramMeanGt(minProcessingLatency),
-		"ChromeOS.Camera.HDRnet.AverageLatency.Postprocessing": histogramutil.AssertHistogramMeanGt(minProcessingLatency),
+		"ChromeOS.Camera.HDRnet.AverageLatency.Preprocessing": histogramutil.AssertHistogramMeanGt(minProcessingLatency),
+		"ChromeOS.Camera.HDRnet.AverageLatency.RgbPipeline":   histogramutil.AssertHistogramMeanGt(minProcessingLatency),
+		// Postprocessing is skipped if there's only one stream.
+		"ChromeOS.Camera.HDRnet.AverageLatency.Postprocessing": histogramutil.AssertHistogramMeanGe(0.0),
 		"ChromeOS.Camera.HDRnet.Error":                         histogramutil.AssertHistogramEq(hdrnetNoError),
 		"ChromeOS.Camera.HDRnet.NumStillShotsTaken":            histogramutil.AssertHistogramEq(expectedStillShotsTaken),
 		"ChromeOS.Camera.HDRnet.StreamConfiguration":           histogramutil.AssertHistogramIn(singleYUVWithBLOB, multipleYUVWithBLOB, multipleYUVOfDifferentAspectRatioWithBLOB),
@@ -120,9 +121,10 @@ func testVideoRecording(ctx context.Context, app *cca.App, tconn *chrome.TestCon
 	const multipleYUVOfDifferentAspectRatioWithBLOB = 5.0
 
 	histogramTests := histogramutil.HistogramTests{
-		"ChromeOS.Camera.HDRnet.AverageLatency.Preprocessing":  histogramutil.AssertHistogramMeanGt(minProcessingLatency),
-		"ChromeOS.Camera.HDRnet.AverageLatency.RgbPipeline":    histogramutil.AssertHistogramMeanGt(minProcessingLatency),
-		"ChromeOS.Camera.HDRnet.AverageLatency.Postprocessing": histogramutil.AssertHistogramMeanGt(minProcessingLatency),
+		"ChromeOS.Camera.HDRnet.AverageLatency.Preprocessing": histogramutil.AssertHistogramMeanGt(minProcessingLatency),
+		"ChromeOS.Camera.HDRnet.AverageLatency.RgbPipeline":   histogramutil.AssertHistogramMeanGt(minProcessingLatency),
+		// Postprocessing is skipped if there's only one stream.
+		"ChromeOS.Camera.HDRnet.AverageLatency.Postprocessing": histogramutil.AssertHistogramMeanGe(0.0),
 		"ChromeOS.Camera.HDRnet.Error":                         histogramutil.AssertHistogramEq(hdrnetNoError),
 		"ChromeOS.Camera.HDRnet.NumStillShotsTaken":            histogramutil.AssertHistogramEq(expectedStillShotsTaken),
 		"ChromeOS.Camera.HDRnet.StreamConfiguration":           histogramutil.AssertHistogramIn(singleYUVWithBLOB, multipleYUVWithBLOB, multipleYUVOfDifferentAspectRatioWithBLOB),

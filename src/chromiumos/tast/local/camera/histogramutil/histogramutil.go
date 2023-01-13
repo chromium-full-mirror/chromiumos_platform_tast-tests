@@ -124,6 +124,22 @@ func AssertHistogramMeanGt(value float64) HistogramVerifier {
 	}
 }
 
+// AssertHistogramMeanGe returns a HistogramVerifier that can be used to check
+// if a histogram's mean value is greater than or equal to |value|.
+func AssertHistogramMeanGe(value float64) HistogramVerifier {
+	return func(m *metrics.Histogram) error {
+		if len(m.Buckets) == 0 {
+			return errors.Errorf("invalid %s: %v", m.Name, m.Buckets)
+		}
+		if mean, err := m.Mean(); err != nil {
+			return errors.Wrap(err, "failed to get histogram mean")
+		} else if mean < value {
+			return errors.Errorf("unexpected mean of %s: %v is not greater than or equal to %v", m.Name, mean, value)
+		}
+		return nil
+	}
+}
+
 // AssertHistogramInRange returns a HistogramVerifier that can be used to check
 // if a histogram's mean value is in the range [minValue, maxValue].
 func AssertHistogramInRange(minValue, maxValue float64) HistogramVerifier {
