@@ -6,7 +6,6 @@ package perf
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +32,7 @@ type BatteryInfoTracker struct {
 	batteryCapacityEnd        float64
 	energy                    float64   // Total energy consumed.
 	power                     []float64 // Power reading every |batteryCheckInterval|.
+	powerTime                 []float64
 	energyFullDesign          float64
 	collecting                chan bool
 	collectingErr             chan error
@@ -79,7 +79,7 @@ func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryIn
 }
 
 // Start indicates that the battery tracking should start. It sets the batteryChargeStart value.
-func (t *BatteryInfoTracker) Start(ctx context.Context) error {
+func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) error {
 	if t == nil {
 		return nil
 	}
@@ -124,6 +124,7 @@ func (t *BatteryInfoTracker) Start(ctx context.Context) error {
 				tOld = tNew
 
 				t.power = append(t.power, watt)
+				t.powerTime = append(t.powerTime, time.Since(timeZero).Seconds())
 			case <-ctx.Done():
 				t.collectingErr <- ctx.Err()
 				return
@@ -228,11 +229,18 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 		Direction: perf.SmallerIsBetter,
 	}, t.batteryCapacityStart-t.batteryCapacityEnd)
 
+	powerTimesName := t.prefix + "PowerTimeline.t"
+	pv.Set(perf.Metric{
+		Name:     powerTimesName,
+		Unit:     "s",
+		Multiple: true,
+	}, t.powerTime...)
+
 	pv.Set(perf.Metric{
 		Name:      t.prefix + "PowerTimeline",
 		Unit:      "watt",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
-		Interval:  fmt.Sprintf("%v%s", batteryCheckInterval.Seconds(), "s"),
+		Interval:  powerTimesName,
 	}, t.power...)
 }

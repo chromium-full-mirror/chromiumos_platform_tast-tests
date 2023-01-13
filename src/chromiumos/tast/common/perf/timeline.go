@@ -35,9 +35,10 @@ type TimelineDatasource interface {
 // timestampSource is the only default TimelineDatasource. Snapshot records the
 // number of seconds from the beginning of the test.
 type timestampSource struct {
-	begin   time.Time
-	started bool
-	metric  Metric
+	begin           time.Time
+	started         bool
+	metric          Metric
+	customStartTime *time.Time
 }
 
 // Setup created the metric used for recording the timestamps with the correct
@@ -56,7 +57,11 @@ func (t *timestampSource) Setup(_ context.Context, prefix, _ string) error {
 // Start records the start time of the test.
 func (t *timestampSource) Start(_ context.Context) error {
 	t.started = true
-	t.begin = time.Now()
+	if t.customStartTime == nil {
+		t.begin = time.Now()
+	} else {
+		t.begin = *t.customStartTime
+	}
 	return nil
 }
 
@@ -115,6 +120,9 @@ type NewTimelineOptions struct {
 	Clock Clock
 	// Whether or not we allow for a grace period when taking snapshots.
 	EnableGracePeriod bool
+	// CustomStartTime overrides the initial time for the timeline. All
+	// time points will be relative to this.
+	CustomStartTime *time.Time
 }
 
 // NewTimelineOption sets an optional parameter of NewTimeline.
@@ -141,6 +149,14 @@ func WithClock(clock Clock) NewTimelineOption {
 	}
 }
 
+// WithCustomStartTime sets an initial time that will be used to calculate
+// the timing of data point collection.
+func WithCustomStartTime(t time.Time) NewTimelineOption {
+	return func(args *NewTimelineOptions) {
+		args.CustomStartTime = &t
+	}
+}
+
 // EnableGracePeriod sets the timeline to allow for a 1-interval grace
 // period to take a snapshot.
 func EnableGracePeriod() NewTimelineOption {
@@ -156,7 +172,7 @@ func NewTimeline(ctx context.Context, sources []TimelineDatasource, setters ...N
 		setter(&args)
 	}
 
-	ss := append(sources, &timestampSource{})
+	ss := append(sources, &timestampSource{customStartTime: args.CustomStartTime})
 	for _, s := range ss {
 		if err := s.Setup(ctx, args.Prefix, args.Prefix+"t"); err != nil {
 			return nil, errors.Wrap(err, "failed to setup TimelineDatasource")
