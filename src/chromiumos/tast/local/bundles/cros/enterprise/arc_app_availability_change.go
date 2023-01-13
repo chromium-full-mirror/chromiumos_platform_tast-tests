@@ -157,8 +157,10 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			return rl.Exit("update policies", err)
 		}
 
+		playEmptyCtx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
 		// Since the only app in the policy is now blocked, the Play Store catalog should be empty.
-		if err := arcent.EnsurePlayStoreEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err == nil {
+		if err := arcent.EnsurePlayStoreEmpty(playEmptyCtx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err == nil {
 			s.Log("Blocked app no longer visible")
 			return
 		}
