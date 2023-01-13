@@ -13,7 +13,6 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -32,16 +31,9 @@ func init() {
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
+	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to cellular service: ", err)
+		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
 	}
 
 	verifyNetworkConnectivity := func(ctx context.Context) error {
