@@ -667,25 +667,32 @@ func createOpenVPNProperties(server *Server, config *Config) (map[string]interfa
 
 func createWireGuardProperties(server, secondServer *Server, config *Config) map[string]interface{} {
 	var peers []map[string]string
+
+	// Helper function to generate AllowedIPs string according to IPType.
+	genAllowedIPs := func(v4, v6 string) string {
+		switch config.IPType {
+		case IPTypeIPv4:
+			return v4
+		case IPTypeIPv6:
+			return v6
+		case IPTypeIPv4AndIPv6:
+			return v4 + "," + v6
+		}
+		return ""
+	}
+
 	if server != nil {
 		peer := map[string]string{
-			"PublicKey": wgServerPublicKey,
-			"Endpoint":  server.UnderlayIP + ":" + wgServerListenPort,
+			"PublicKey":  wgServerPublicKey,
+			"Endpoint":   server.UnderlayIP + ":" + wgServerListenPort,
+			"AllowedIPs": genAllowedIPs("0.0.0.0/0", "::/0"),
 		}
 		if config.WGUsePSK {
 			peer["PresharedKey"] = wgPresharedKey
 		}
-		switch config.IPType {
-		case IPTypeIPv4:
-			peer["AllowedIPs"] = "0.0.0.0/0"
-		case IPTypeIPv6:
-			peer["AllowedIPs"] = "::/0"
-		case IPTypeIPv4AndIPv6:
-			peer["AllowedIPs"] = "0.0.0.0/0,::/0"
-		}
 		if secondServer != nil {
 			// Do not set "default route" if we have two peers.
-			peer["AllowedIPs"] = wgServerAllowedIPs
+			peer["AllowedIPs"] = genAllowedIPs(wgServerAllowedIPsIPv4, wgServerAllowedIPsIPv6)
 		}
 		peers = append(peers, peer)
 	}
@@ -694,7 +701,7 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) map
 		peers = append(peers, map[string]string{
 			"PublicKey":    wgSecondServerPublicKey,
 			"Endpoint":     secondServer.UnderlayIP + ":" + wgSecondServerListenPort,
-			"AllowedIPs":   wgSecondServerAllowedIPs,
+			"AllowedIPs":   genAllowedIPs(wgSecondServerAllowedIPsIPv4, wgSecondServerAllowedIPsIPv6),
 			"PresharedKey": wgPresharedKey,
 		})
 	}
