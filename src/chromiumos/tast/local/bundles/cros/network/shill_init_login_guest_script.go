@@ -23,7 +23,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "hugobenichi@google.com"},
 		BugComponent: "b:156085",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:network"},
+		Attr:         []string{"group:network", "network_e2e"},
 	})
 }
 
