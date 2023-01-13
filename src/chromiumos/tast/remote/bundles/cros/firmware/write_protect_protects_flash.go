@@ -21,6 +21,11 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
+const (
+	// A region of flash that wont be disturbed.
+	region = "RW_SECTION_B"
+)
+
 // This is also tested as part of other tests: FAFT 'WriteProtect' and
 // FlashromTester. None of those tests are suitable for CQ, this test is faster
 // and simpler, and will be stabilised and promoted to CQ.
@@ -112,8 +117,13 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to write random data to temp file: ", err)
 	}
 
+	// Only the RW_SECTION_B section is written to. This reduces the risk of a
+	// repair being required if this test crashes. This also avoids any regions
+	// that may be concurrently written to by co-processors. A failure to find
+	// the region will sneak through as an error here, but will be caught by the
+	// verify step at the end of this test.
 	s.Log("Attempting to flash AP, this should fail")
-	cmd := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "host", "-w", randomDataFile)
+	cmd := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "host", "--include", region, "-w", randomDataFile)
 	err = cmd.Run()
 	if err == nil {
 		cmd.DumpLog(ctx)
@@ -129,7 +139,7 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 	}
 
 	// Flashrom claimed to fail, but we check that it did not write anything at all.
-	err = utils.APFirmwareVerify(ctx, h.DUT.Conn(), *originalFirmware)
+	err = utils.APFirmwareVerify(ctx, h.DUT.Conn(), *originalFirmware, region)
 	if err != nil {
 		s.Fatal("Failed: firmware verify failed: ", err)
 	}

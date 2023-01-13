@@ -446,8 +446,13 @@ func APFirmwareSize(ctx context.Context, conn *ssh.Conn) (int64, error) {
 }
 
 // APFirmwareVerify verifies the file at path against the AP firmware flash.
+// If regions are supplied, only the regions are verified.
 // An error will be returned if the file contents do not match the AP firmware flash.
-func APFirmwareVerify(ctx context.Context, conn *ssh.Conn, path string) error {
-	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--verify", path).Output(ssh.DumpLogOnError)
+func APFirmwareVerify(ctx context.Context, conn *ssh.Conn, path string, regions ...string) error {
+	args := []string{"-p", "host", "--verify", path}
+	for _, region := range regions {
+		args = append(args, "--include", region)
+	}
+	_, err := conn.CommandContext(ctx, "flashrom", args...).Output(ssh.DumpLogOnError)
 	return err
 }
