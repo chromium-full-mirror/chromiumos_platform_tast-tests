@@ -76,11 +76,11 @@ func GBBFlagsChanged(a, b *pb.GBBFlagsState, flags []pb.GBBFlag) bool {
 
 // getGBBFlagsInt gets the flags that are set as an integer.
 func getGBBFlagsInt(ctx context.Context, dut *dut.DUT) (uint32, error) {
-	out, err := dut.Conn().CommandContext(ctx, "/usr/share/vboot/bin/get_gbb_flags.sh").Output(exec.DumpLogOnError)
+	out, err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--get", "--flags", "--flash").Output(exec.DumpLogOnError)
 	if err != nil {
-		return 0, errors.Wrap(err, "get_gbb_flags.sh")
+		return 0, errors.Wrap(err, "futility gbb --get")
 	}
-	re, err := regexp.Compile(`Chrome ?OS GBB set flags: (0x[0-9a-fA-F]+)`)
+	re, err := regexp.Compile(`flags: (0x[0-9a-fA-F]+)`)
 	if err != nil {
 		return 0, errors.Wrap(err, "parse gbb regex")
 	}
@@ -121,8 +121,8 @@ func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsSt
 	newGBB := (currentGBB & ^clearMask) | setMask
 	if newGBB != currentGBB {
 		testing.ContextLogf(ctx, "Setting GBB flags = %#x", newGBB)
-		if err := dut.Conn().CommandContext(ctx, "/usr/share/vboot/bin/set_gbb_flags.sh", fmt.Sprintf("%#x", newGBB)).Run(exec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "set_gbb_flags.sh")
+		if err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", newGBB)).Run(exec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "futility gbb --set")
 		}
 	} else {
 		testing.ContextLog(ctx, "No GBB change required")
@@ -134,8 +134,8 @@ func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsSt
 func SetGBBFlags(ctx context.Context, dut *dut.DUT, flags []pb.GBBFlag) error {
 	setMask := calcGBBMask(flags)
 	testing.ContextLogf(ctx, "Setting GBB flags = %#x", setMask)
-	if err := dut.Conn().CommandContext(ctx, "/usr/share/vboot/bin/set_gbb_flags.sh", fmt.Sprintf("%#x", setMask)).Run(exec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "set_gbb_flags.sh")
+	if err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", setMask)).Run(exec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "futility gbb --set")
 	}
 	return nil
 }
