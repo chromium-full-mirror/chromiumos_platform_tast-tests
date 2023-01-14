@@ -475,14 +475,29 @@ func initializeLoginPerfTest(ctx context.Context,
 
 	// Wait for ARC++ aps to download and initialize.
 	if arc.Supported() {
-		testing.ContextLog(ctx, "Initialize: let session fully initialize. Sleeping for 400 seconds... ")
-		if err := testing.Sleep(ctx, 400*time.Second); err != nil {
-			return chrome.Creds{}, errors.Wrap(err, "failed to wait for arc to initialize")
+		testing.ContextLog(ctx, "Initialize: Waiting for arc to install initial apps")
+		histogram, err := metrics.WaitForHistogram(
+			ctx,
+			tconn,
+			"Ash.ArcAppInitialAppsInstallDuration",
+			10*time.Minute,
+		)
+		if err != nil {
+			return chrome.Creds{}, errors.Wrap(err, "failed to wait until ARC initial "+
+				"apps installed")
+		}
+		testing.ContextLog(ctx, "Initialize: "+
+			"Ash.ArcAppInitialAppsInstallDuration histogram=",
+			histogram)
+
+		testing.ContextLog(ctx, "Initialize: Waiting 30 seconds to allow time for session to fully initialize")
+		if err := testing.Sleep(ctx, 30*time.Second); err != nil {
+			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	} else {
-		testing.ContextLog(ctx, "Initialiize: let session fully initialize. Sleeping for 100 seconds... ")
-		if err := testing.Sleep(ctx, 100*time.Second); err != nil {
-			return chrome.Creds{}, errors.Wrap(err, "failed to wait for session to initialize")
+		testing.ContextLog(ctx, "Initialize: Waiting 1 minute to allow time for session to fully initialize")
+		if err := testing.Sleep(ctx, time.Minute); err != nil {
+			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	}
 	if err := setAlwaysRestoreSettings(ctx, tconn); err != nil {
