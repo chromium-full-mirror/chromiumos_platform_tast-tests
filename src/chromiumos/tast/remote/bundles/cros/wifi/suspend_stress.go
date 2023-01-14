@@ -111,6 +111,7 @@ func init() {
 						apOps:        []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211nPure), hostapd.HTCaps(hostapd.HTCapHT40)},
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassStress, tdreq.WiFiProcPassStressBeforeUpdates},
 			},
 			{
 				Name:      "stress_wpa2",
@@ -123,6 +124,7 @@ func init() {
 						secConfFac:   wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassStress, tdreq.WiFiProcPassStressBeforeUpdates},
 			},
 		},
 	})
