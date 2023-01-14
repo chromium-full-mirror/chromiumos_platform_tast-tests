@@ -29,6 +29,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"michelefan@chromium.org",
 		},
+		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},

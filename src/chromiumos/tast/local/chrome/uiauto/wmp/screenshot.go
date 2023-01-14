@@ -33,19 +33,17 @@ import (
 // CaptureModeSource refers to the three capture mode sources in screen
 // capture mode.
 type CaptureModeSource int
-type screenshotType int
-type screenRecordingType int
-
-const (
-	screenshotPattern      = "Screenshot*.png"
-	screenRecordingPattern = "Screen recording*.webm"
-)
 
 // List out three capture mode sources.
 const (
 	FullScreen CaptureModeSource = iota
 	PartialScreen
 	Window
+)
+
+const (
+	screenshotPattern      = "Screenshot*.png"
+	screenRecordingPattern = "Screen recording*.webm"
 )
 
 // LaunchScreenCapture launches "Screen capture" from Quick Settings.
