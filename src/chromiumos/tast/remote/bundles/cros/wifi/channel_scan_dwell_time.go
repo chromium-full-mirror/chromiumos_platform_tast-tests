@@ -17,6 +17,7 @@ import (
 
 	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/perf"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
@@ -48,6 +49,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_perf"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtWithCapture",
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
 	})
 }
 

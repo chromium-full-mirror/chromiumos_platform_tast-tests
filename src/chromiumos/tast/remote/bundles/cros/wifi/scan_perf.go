@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/perf"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/errors"
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
@@ -55,6 +56,8 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_perf"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Vars:         []string{"router"},
+		Fixture:      "wificellFixt",
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
 		Params: []testing.Param{
 			{
 				// Default case, DTIM = 2
