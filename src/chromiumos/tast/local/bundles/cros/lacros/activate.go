@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -176,6 +177,8 @@ func Activate(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			defer faillog.SaveScreenshotToFileOnError(ctx, cr, s.OutDir(), s.HasError, param.name+".png")
+
 			initialWindow, err := prepareBrowser(ctx, cr, browser.TypeLacros, param.browserPrecondition)
 			if err != nil {
 				s.Fatal("Failed to prepare the browser: ", err)
