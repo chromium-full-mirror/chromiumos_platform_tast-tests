@@ -861,6 +861,6 @@ func (conf *GoogleMeetConference) DisplayAllParticipantsTime() time.Duration {
 }
 
 func (conf *GoogleMeetConference) closeNotifDialog() action.Action {
-	return prompts.ClearPotentialPrompts(conf.tconn, time.Second, prompts.ShowNotificationsPrompt)
-
+	return uiauto.Retry(retryTimes,
+		prompts.ClearPotentialPrompts(conf.tconn, shortUITimeout, prompts.ShowNotificationsPrompt))
 }
