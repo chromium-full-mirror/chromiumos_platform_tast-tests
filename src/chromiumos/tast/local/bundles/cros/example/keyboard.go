@@ -8,8 +8,10 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -56,15 +58,25 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	// Setup a browser before opening a tab.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// The ui matching further down depends on clamshell mode.
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to disable tablet mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
+		s.Fatal("Failed to set up the browser: ", err)
 	}
-	defer closeBrowser(ctx)
+	defer closeBrowser(cleanupCtx)
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	c, err := a11y.NewTabWithHTML(ctx, br, html)
 	if err != nil {
@@ -76,6 +88,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	s.Log("Waiting for focus")
 	textbox := nodewith.NameContaining("label='example.Keyboard.TextBox'").Role(role.StaticText).Onscreen()
 
+	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 	if err := uiauto.Combine("Focus text box",
 		ui.WaitUntilExists(textbox),
 		// TODO(crbug.com/1291585): ui.FocusAndWait doesn't seem to work on Lacros. Timed out waiting for event.Focus to occur.
