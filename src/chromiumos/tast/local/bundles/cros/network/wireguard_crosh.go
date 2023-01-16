@@ -143,7 +143,8 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Verifying service configuration via `wireguard set`")
 	func() {
-		properties := vpn.CreateWireGuardProperties(peer1, peer2, vpn.NewConfig(vpn.TypeWireGuard))
+		config := vpn.NewConfig(vpn.TypeWireGuard, vpn.WithIPType(vpn.IPTypeIPv4AndIPv6))
+		properties := vpn.CreateWireGuardProperties(peer1, peer2, config)
 		clientIPs := strings.Join(properties["WireGuard.IPAddress"].([]string), ",")
 		execWGCmd("set", wgSvcName, "local-ip", clientIPs, "dns", dnsServer)
 
@@ -173,7 +174,7 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 		}
 		// Since wg is stateless, connected state does not mean VPN tunnel is setup.
 		// Check routing here to make sure service is configured properly.
-		for _, addr := range []string{peer1.OverlayIPv4, peer2.OverlayIPv4} {
+		for _, addr := range []string{peer1.OverlayIPv4, peer1.OverlayIPv6, peer2.OverlayIPv4, peer2.OverlayIPv6} {
 			if err := routing.ExpectPingSuccessWithTimeout(ctx, addr, "chronos", 10*time.Second); err != nil {
 				s.Fatal("Failed to verify ping after connect: ", err)
 			}
