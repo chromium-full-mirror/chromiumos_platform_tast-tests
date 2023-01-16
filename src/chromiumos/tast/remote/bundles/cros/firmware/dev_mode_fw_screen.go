@@ -197,17 +197,17 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to set crossystem dev_boot_usb to %s", steps.devBootUSB)
 		}
 
-		s.Log("Power-cycling DUT with a warm reset")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-			s.Fatal("Failed to warm reset DUT: ", err)
+		s.Log("Power-cycling DUT with a cold reset")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			s.Fatal("Failed to cold reset DUT: ", err)
 		}
 
-		// Verify that dut becomes unreachable after triggering a warm reset.
+		// Verify that dut becomes unreachable after triggering a cold reset.
 		waitDisconnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 10*time.Second)
 		defer cancelWaitConnect()
 
 		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
-			s.Fatal("Dut is still connected after warm reset: ", err)
+			s.Fatal("Dut is still connected after cold reset: ", err)
 		}
 
 		s.Logf("Waiting %s for DUT to get into firmware screen", h.Config.FirmwareScreen)
@@ -266,6 +266,18 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 									return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
 								}
 								index++
+							} else {
+								// To avoid DUT stuck at the firmware screen, after all shortcuts were
+								// tested, press ctrl_d till DUT connected.
+								s.Logf("Pressing key %q", servo.CtrlD)
+								if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
+									return errors.Wrapf(err, "failed to press %s", servo.CtrlD)
+								}
+
+								s.Logf("Sleeping for %s seconds", devModeKeypressDelay)
+								if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
+									return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
+								}
 							}
 						}
 						return nil
