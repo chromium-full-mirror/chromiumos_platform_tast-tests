@@ -12,8 +12,8 @@ import (
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/bundles/cros/arc/notification"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/testing"
 )
 
@@ -95,29 +95,19 @@ func Notification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to install %s: %v", apk, err)
 	}
 
-	// Launch the app from launcher, so that the Notification Permission window
-	// can show up and the permission can be granted. Otherwise, Notification
-	// will not be updated without granting notification permission.
-	if err := launcher.LaunchApp(tconn, "ARC Notification Test")(ctx); err != nil {
-		s.Fatal("Failed to launch app: ", err)
+	s.Logf("Ensuring the permission for %s", pkg)
+	if err := notification.EnsureNotificationPermission(ctx, a, pkg); err != nil {
+		s.Fatal("Failed to ensure the permission: ", err)
 	}
 
-	// Starts from T, android asks for notification permission, so log if the
-	// permission dialog is not found, but do not fail the test, so that P and R
-	// will not fail here.
-	sdkVer, err := arc.SDKVersion()
+	s.Log("Launching app")
+	act, err := arc.NewActivity(a, pkg, cls)
 	if err != nil {
-		s.Fatal("Failed to get SDKVersion: ", err)
+		s.Fatal("Failed to create a new activity: ", err)
 	}
 
-	if sdkVer >= arc.SDKT {
-		permissionAllowBtn := d.Object(ui.ID(permissionAllowBtnID))
-		if err := permissionAllowBtn.WaitForExists(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to find permission dialog: ", err)
-		}
-		if err := permissionAllowBtn.Click(ctx); err != nil {
-			s.Fatal("Failed to find allow button of notification permission dialog to grand notification permission for testing: ", err)
-		}
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		s.Fatal("Failed to start the activity: ", err)
 	}
 
 	s.Log("Setup is done, and running the test scenario")

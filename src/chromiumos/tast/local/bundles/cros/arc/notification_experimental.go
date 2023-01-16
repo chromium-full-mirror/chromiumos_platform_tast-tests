@@ -9,15 +9,14 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/bundles/cros/arc/notification"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
@@ -255,25 +254,17 @@ func NotificationExperimental(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install app: ", err)
 	}
 
-	// TODO(yhanada): Consider consolidating this code with the similar code in arc.Notification.
-	// Launch the test app from launcher, so that the Notification
-	// Permission window can show up and the permission can be granted.
-	if err := launcher.LaunchApp(tconn, "Notification Showcase")(ctx); err != nil {
-		s.Fatal("Failed to launch app: ", err)
+	if err := notification.EnsureNotificationPermission(ctx, a, arcNotificationTest2PackageName); err != nil {
+		s.Fatal("Failed to ensure the permission: ", err)
 	}
 
-	sdkVer, err := arc.SDKVersion()
+	act, err := arc.NewActivity(a, arcNotificationTest2PackageName, arcNotificationTest2ActivityName)
 	if err != nil {
-		s.Fatal("Failed to get SDKVersion: ", err)
+		s.Fatal("Failed to create a new activity: ", err)
 	}
-	if sdkVer >= arc.SDKT {
-		permissionAllowButton := d.Object(ui.ID(arcNotificationTest2PermissionAllowID))
-		if err := permissionAllowButton.WaitForExists(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to find the permission dialog: ", err)
-		}
-		if err := permissionAllowButton.Click(ctx); err != nil {
-			s.Fatal("Failed to find the allow button of the permission dialog to grant notificaton permission: ", err)
-		}
+
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		s.Fatal("Failed to start the activity: ", err)
 	}
 
 	if err := d.WaitForIdle(ctx, 10*time.Second); err != nil {
