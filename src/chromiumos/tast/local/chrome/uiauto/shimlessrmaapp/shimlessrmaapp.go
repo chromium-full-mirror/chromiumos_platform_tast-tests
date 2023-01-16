@@ -275,3 +275,16 @@ func (r *RMAApp) waitForFileDeleted(fileName string) uiauto.Action {
 		return nil
 	}
 }
+
+// SetDropdown selects a dropdown menu and changes its selected option to the
+// desired value.
+func (r *RMAApp) SetDropdown(name, value string) uiauto.Action {
+	dropdown := nodewith.Name(name).Role(role.ComboBoxSelect)
+	option := nodewith.Name(value).Role(role.ListBoxOption)
+
+	return uiauto.Combine("expand dropdown and select option",
+		r.ui.DoDefaultUntil(dropdown, r.ui.WithTimeout(10*time.Second).WaitUntilExists(option)),
+		r.ui.DoDefault(option),
+		r.ui.DoDefaultUntil(dropdown, r.ui.WithTimeout(10*time.Second).WaitUntilGone(option)),
+	)
+}

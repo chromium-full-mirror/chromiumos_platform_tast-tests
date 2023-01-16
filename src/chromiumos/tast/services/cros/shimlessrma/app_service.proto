@@ -48,6 +48,9 @@ service AppService {
   // Enter the content into input box.
   rpc EnterIntoTextInput(EnterIntoTextInputRequest) returns (google.protobuf.Empty) {}
 
+  // Select a dropdown menu and changes its selected option to the desired value
+  rpc SetDropdown(SetDropdownRequest) returns (google.protobuf.Empty) {}
+
   // Bypass firmware installation.
   rpc BypassFirmwareInstallation(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
@@ -115,6 +118,13 @@ message EnterIntoTextInputRequest {
   string textInputName = 1;
   // Content is the text which will be entered into input.
   string content = 2;
+}
+
+message SetDropdownRequest {
+  // Name is the name of the combobox to be set.
+  string name = 1;
+  // Option is the desired option to set.
+  string option = 2;
 }
 
 message TestWelcomeAndNetworkConnectionRequest {

@@ -273,6 +273,16 @@ func (shimlessRMA *AppService) EnterIntoTextInput(ctx context.Context,
 	return &empty.Empty{}, nil
 }
 
+// SetDropdown Select a dropdown menu and changes its selected option to the desired value.
+func (shimlessRMA *AppService) SetDropdown(ctx context.Context,
+	req *pb.SetDropdownRequest) (*empty.Empty, error) {
+	if err := shimlessRMA.app.SetDropdown(req.Name, req.Option)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed to set dropdown menu %q to: %q", req.Name, req.Option)
+	}
+
+	return &empty.Empty{}, nil
+}
+
 // BypassFirmwareInstallation add "firmware_updated":true to state file to bypass firmware installation.
 func (shimlessRMA *AppService) BypassFirmwareInstallation(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	const stateFilePath string = "/mnt/stateful_partition/unencrypted/rma-data/state"

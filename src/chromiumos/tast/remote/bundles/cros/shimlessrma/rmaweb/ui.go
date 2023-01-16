@@ -210,6 +210,13 @@ func (uiHelper *UIHelper) FirmwareInstallationPageOperation(ctx context.Context)
 func (uiHelper *UIHelper) DeviceInformationPageOperation(ctx context.Context) error {
 	return action.Combine("device Information page operation",
 		uiHelper.waitForPageToLoad("Please confirm device information", timeInSecondToLoadPage),
+		func(ctx context.Context) error {
+			_, err := uiHelper.Client.SetDropdown(ctx, &pb.SetDropdownRequest{
+				Name:   "Region",
+				Option: "us",
+			})
+			return err
+		},
 		uiHelper.clickButton("Next"),
 	)(ctx)
 }
