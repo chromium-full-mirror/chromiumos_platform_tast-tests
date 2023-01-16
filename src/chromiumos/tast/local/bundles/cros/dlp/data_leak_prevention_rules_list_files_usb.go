@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
@@ -214,6 +215,8 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	// Setup test HTTP server.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	appliedRestriction := s.Param().(fileUSBCopyTestParams).restriction
 
