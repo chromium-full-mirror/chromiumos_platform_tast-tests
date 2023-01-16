@@ -137,6 +137,21 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable AP software write protection: ", err)
 	}
 
+	// Get the model name from 'crossystem fwid'.
+	rwfwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+	if err != nil {
+		s.Fatal("Failed to get crossystem fwid: ", err)
+	}
+	splitout := strings.Split(rwfwid, ".")
+	splitout = strings.Split(splitout[0], "_")
+	fwidModel := strings.ToLower(splitout[1])
+
+	// Verify h.Model is defined.
+	if h.Model == "" {
+		testing.ContextLogf(ctx, "WARNING! No h.Model defined for this DUT, setting it as %s", fwidModel)
+		h.Model = fwidModel
+	}
+
 	// The 'SHIPPED' firmware IDs can be generated and exported to a json file
 	// by running the following bq command:
 	/*
@@ -166,15 +181,6 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	if err := downloadFirmwareFile(ctx, s, board, shippedFwVersions[len(shippedFwVersions)-1], tmpDir); err != nil {
 		s.Fatal("Failed while downloading file: ", err)
 	}
-
-	// Get the model name from 'crossystem fwid'
-	rwfwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
-	if err != nil {
-		s.Fatal("Failed to get crossystem fwid: ", err)
-	}
-	splitout := strings.Split(rwfwid, ".")
-	splitout = strings.Split(splitout[0], "_")
-	fwidModel := strings.ToLower(splitout[1])
 
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
 	filename, err := untarUnknownFileName(ctx, tmpDir, fwidModel)
@@ -319,27 +325,64 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 // downloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
 // based on the shipped firmware version passed in for test.
 func downloadFirmwareFile(ctx context.Context, s *testing.State, board, fwid, tmpDir string) error {
-	// Regular expression for the path to the image archive.
-	re := regexp.MustCompile(`gs:\/\/chromeos-image-archive\/` + board + `-firmware\/[R].*-` + fwid)
-
-	// Get the complete path to the file.
-	var path string
-	dir := "gs://chromeos-image-archive/" + board + "-firmware/"
-	out, err := testexec.CommandContext(ctx, "gsutil", "ls", dir).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to run 'gsutil ls' to find the complete path")
+	// Split fwid into separate components.
+	splitout := strings.Split(fwid, ".")
+	if len(splitout) != 3 {
+		return errors.Errorf("unexpected fw id format: %s", fwid)
 	}
-	path = re.FindString(string(out))
-	if path == "" {
-		return errors.Errorf("no image archive found for firmware id: %s board: %s", fwid, board)
+
+	// List of possible paths that contain the firmware_from_source.tar.bz2 file.
+	pathsPool := []string{
+		/*
+			This format is one of the most commonly found:
+			gs://chromeos-image-archive/zork-firmware/R87-13434.635.0/
+		*/
+		"gs://chromeos-image-archive/" + board + "-firmware",
+
+		/*
+			We've also seen the following on some models:
+			gs://chromeos-image-archive/firmware-zork-13434.B-branch-firmware/R87-13434.636.0/
+		*/
+		"gs://chromeos-image-archive/firmware-" + board + "-" + splitout[0] + ".B-branch-firmware",
+	}
+
+	// Regular expression to match the required firmware id.
+	re := regexp.MustCompile(`\/[R].*-` + fwid)
+
+	var releasedFWid, dir string
+	for _, dir = range pathsPool {
+		out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", dir).SeparatedOutput(testexec.DumpLogOnError)
+		if err != nil {
+			if !strings.Contains(string(stderr), "One or more URLs matched no objects.") {
+				return errors.Wrapf(err, "failed to run 'gsutil ls' to find the complete path: %v", stderr)
+			}
+			testing.ContextLogf(ctx, "WARNING! Model %q doesn't have the following path: %s", board, dir)
+		} else {
+			releasedFWid = re.FindString(string(out))
+			if releasedFWid != "" {
+				break
+			}
+		}
+	}
+	if releasedFWid == "" {
+		return errors.Errorf("no matches found for firmware id: %s board: %s in known paths", fwid, board)
 	}
 
 	// Stage the complete path.
 	cs := s.CloudStorage()
-	url := path + "/" + firmwareFileName
+	url := dir + releasedFWid + "/" + firmwareFileName
 	r, err := cs.Stage(ctx, url)
 	if err != nil {
-		return errors.Wrap(err, "failed to stage file")
+		// Some firmware files were found under a sub-directory defined by the board name.
+		if !strings.Contains(err.Error(), "file does not exist") {
+			return errors.Wrapf(err, "failed to stage file for board %q", board)
+		}
+		testing.ContextLogf(ctx, "WARNING! file does not exist, re-attempting on sub-directory: %s", board)
+		url = dir + releasedFWid + "/" + board + "/" + firmwareFileName
+		r, err = cs.Stage(ctx, url)
+		if err != nil {
+			return errors.Wrapf(err, "failed to stage file after adding sub-directory %s", board)
+		}
 	}
 
 	// Download the file.
@@ -495,6 +538,8 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]string, error) {
 	var shippedFws []string
 	for _, values := range data {
 		if values.Model == h.Model {
+			shippedFws = append(shippedFws, values.FwID)
+		} else if values.Board == h.Model && values.Model == "" {
 			shippedFws = append(shippedFws, values.FwID)
 		}
 	}
