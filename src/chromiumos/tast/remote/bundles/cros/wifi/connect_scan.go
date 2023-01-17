@@ -24,11 +24,12 @@ func init() {
 		Func: ConnectScan,
 		Desc: "Verifies that the 802.11 probe frames with expected SSIDs are seen over-the-air when connecting to WiFi",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
 		Params: []testing.Param{
 			{
 				Name: "hidden",

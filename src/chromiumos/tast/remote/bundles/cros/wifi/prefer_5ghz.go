@@ -25,11 +25,12 @@ func init() {
 		Func: Prefer5Ghz,
 		Desc: "Verifies that DUT can see two APs in the same network and prefer 5Ghz one",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
 	})
 }
 

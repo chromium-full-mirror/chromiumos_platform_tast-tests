@@ -36,9 +36,9 @@ func init() {
 		Func: DisconnectReason,
 		Desc: "Verify the DUT disconnects from an AP and verify the supplicant DisconnectReason for various scenarios",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",

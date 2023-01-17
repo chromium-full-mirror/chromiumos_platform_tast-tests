@@ -22,9 +22,9 @@ func init() {
 		Func: WakeOnDisconnect,
 		Desc: "Verifies that the DUT can wake up when disconnected from AP",
 		Contacts: []string{
-			"yenlinlai@google.com",            // Test author.
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// TODO(b/187362093): Add a SoftwareDep for wake_on_wifi.
 		Attr:         []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},

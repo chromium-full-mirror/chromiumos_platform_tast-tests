@@ -26,10 +26,9 @@ func init() {
 		Func: HostapHwsim,
 		Desc: "Run selected hostap tests using a set of simulated WiFi clients/APs",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-			"briannorris@chromium.org",        // Test author
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		SoftwareDeps: []string{"hostap_hwsim"},
 		// For running manually, with specific 'run-all.sh' arguments (e.g., specific tests or
 		// modules).

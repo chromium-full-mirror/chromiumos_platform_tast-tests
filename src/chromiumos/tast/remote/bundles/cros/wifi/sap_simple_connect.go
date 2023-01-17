@@ -30,12 +30,12 @@ func init() {
 		Func: SAPSimpleConnect,
 		Desc: "Verifies that DUT can start a Soft AP interface and STAs with different WiFi configurations can connect to the DUT",
 		Contacts: []string{
-			"jintaolin@google.com",            // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtCompanionDut",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtCompanionDut",
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
 			// Skip test on devices that don't support AP/STA concurrency.
 			// TODO(b/223075313) We don't do this globally, because AVL hasn't changed (yet) and we don't want to impact SAPCaps test.

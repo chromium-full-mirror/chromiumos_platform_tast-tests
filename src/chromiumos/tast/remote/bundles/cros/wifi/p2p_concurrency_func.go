@@ -17,10 +17,9 @@ func init() {
 		Func: P2PConcurrencyFunc,
 		Desc: "Tests the concurrent functionality of both WiDi and Infra WiFi",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
-			"arowa@google.com",                // Test author
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:258565132",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtCompanionDut",

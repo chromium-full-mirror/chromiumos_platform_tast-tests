@@ -32,14 +32,14 @@ func init() {
 		Func: RoamContPing,
 		Desc: "Send ping every 10ms and check how many packets are lost on average during roaming",
 		Contacts: []string{
-			"jck@semihalf.com",                // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_perf", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
-		Timeout:     time.Minute * 5, // The average test time doubled.
-		Vars:        []string{"wifi.RoamContPing.rounds"},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_perf", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
+		Timeout:      time.Minute * 5, // The average test time doubled.
+		Vars:         []string{"wifi.RoamContPing.rounds"},
 		Params: []testing.Param{{
 			Name: "none",
 			Val: wifiutil.ContParam{

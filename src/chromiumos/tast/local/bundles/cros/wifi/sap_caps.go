@@ -22,8 +22,9 @@ func init() {
 		Func: SAPCaps,
 		Desc: "Verifies DUT supports SoftAP and a minimum set of required protocols",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi"},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),

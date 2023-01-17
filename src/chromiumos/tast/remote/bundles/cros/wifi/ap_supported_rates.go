@@ -29,11 +29,12 @@ func init() {
 		Func: APSupportedRates,
 		Desc: "Verifies that we avoid legacy bitrates on APs that disable them",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
 		// See b/138406224. ath10k only supports this on CrOS kernels >=4.14
 		SoftwareDeps: []string{"no_ath10k_4_4"},
 		// Low flake rate for Marvell devices that are trending towards AUE. Skip on those platforms.
@@ -183,11 +184,11 @@ func APSupportedRates(ctx context.Context, s *testing.State) {
 			// This looks to be generally sent at the lowest data rate (6mbps on 5ghz band)
 			// Because these are management frames, we allow these to be sent at not the requested
 			// data rate.
-                  	// The 80211 spec doesn't dictate what rates these action frames must be sent
-                  	// at and many vendors will send these management frames at the lowest rate.
-                  	// The iwl7000 driver will explicitly send management frames at the lowest rate
-                  	// (6Mbps).
-                  	// See b/261235103#comment3 and b/261235103#comment4 for more details.
+			// The 80211 spec doesn't dictate what rates these action frames must be sent
+			// at and many vendors will send these management frames at the lowest rate.
+			// The iwl7000 driver will explicitly send management frames at the lowest rate
+			// (6Mbps).
+			// See b/261235103#comment3 and b/261235103#comment4 for more details.
 
 			if l := p.Layer(layers.LayerTypeDot11MgmtAction); l != nil {
 				return false

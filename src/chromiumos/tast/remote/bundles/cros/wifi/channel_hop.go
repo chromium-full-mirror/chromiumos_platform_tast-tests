@@ -23,12 +23,13 @@ func init() {
 		Func: ChannelHop,
 		Desc: "Verifies that the DUT, connected to a BSS on one channel will successfully re-connect when the AP changes channels",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
-		Timeout:     10 * time.Minute,
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
+		Timeout:      10 * time.Minute,
 	})
 }
 

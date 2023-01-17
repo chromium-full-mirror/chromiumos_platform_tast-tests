@@ -22,9 +22,9 @@ func init() {
 		Func: P2PPerf,
 		Desc: "Tests P2P performance between two chromebooks",
 		Contacts: []string{
-			"arowa@google.com",                // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtCompanionDut",

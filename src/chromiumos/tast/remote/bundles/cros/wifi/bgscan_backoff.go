@@ -33,12 +33,13 @@ func init() {
 		Func: BgscanBackoff,
 		Desc: "Verifies that bgscan aborts and/or backs off when there is consistent outgoing traffic",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
-		Timeout:     6 * time.Minute, // This test has long ping time, assign a longer timeout.
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
+		Timeout:      6 * time.Minute, // This test has long ping time, assign a longer timeout.
 		// Skip on Marvell on 8997 platforms because of test failure post security fixes b/187853331
 		// Test failure is due to increased RTT time during Background scan backoff transition.
 		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell8997()),

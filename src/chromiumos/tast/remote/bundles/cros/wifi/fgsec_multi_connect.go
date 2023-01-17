@@ -34,12 +34,12 @@ func init() {
 		Func: FgsecMultiConnect,
 		Desc: "Verifies connectivity with more detailed security settings than just broad PSK class",
 		Contacts: []string{
-			"amo@semihalf.com",                // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtRouters",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtRouters",
 		Params: []testing.Param{
 			{
 				// WpaWpa2 mixed mode for network with two APs configured with Wpa and Wpa2.
@@ -316,9 +316,11 @@ func getServicePath(ctx context.Context, tf *wificell.TestFixture, ssid string, 
 // expectations.
 // Step-by-step procedure:
 // 1. Configure APs with security specified by the test case (all APs form a single network).
-//    For each AP configured:
-//    - make sure that this endpoint have been noticed and
-//    - check that the corresponding service Security matches expected value.
+//
+//	For each AP configured:
+//	- make sure that this endpoint have been noticed and
+//	- check that the corresponding service Security matches expected value.
+//
 // 2. Connect to the network.
 // 3. Query service Security and check if it agrees with expectation.
 // 4. Disconnect and deconfigure AP(s)

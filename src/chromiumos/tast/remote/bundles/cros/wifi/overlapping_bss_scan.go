@@ -29,12 +29,13 @@ func init() {
 		Func: OverlappingBSSScan,
 		Desc: "Verifies that OBSS scan aborts and/or backs off when there is consistent outgoing traffic",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_func"},
-		Timeout:     5 * time.Minute,
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtWithCapture",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		Timeout:      5 * time.Minute,
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtWithCapture",
 		// Skip on Marvell on 8997 platforms because of test failure post security fixes b/187853331
 		// Test failure is due to increased RTT time
 		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell8997()),

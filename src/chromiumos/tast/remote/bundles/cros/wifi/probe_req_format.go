@@ -22,9 +22,9 @@ func init() {
 		Func: ProbeReqFormat,
 		Desc: "Verifies that the DUT does not send out malformed probe requests",
 		Contacts: []string{
-			"yenlinlai@google.com",            // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// This test is not in any group because it is for manual debugging
 		// a pcap problem that frame checksum might not be trust-worthy.
 		// See previous investigation in b/185378075.

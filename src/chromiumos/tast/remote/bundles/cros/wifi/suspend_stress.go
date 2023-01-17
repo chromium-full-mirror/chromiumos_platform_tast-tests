@@ -31,11 +31,12 @@ func init() {
 		Func: SuspendStress,
 		Desc: "Asserts WiFi connectivity after suspend-resume cycle using powerd_dbus_suspend command",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
 		Params: []testing.Param{
 			{
 				Name:      "80211g",
@@ -180,7 +181,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			} else {
 				connectTimes = append(connectTimes, connectTime.Seconds())
 				// Publish test progress on every 10 iterations.
-				if (i % 10 == 0) {
+				if i%10 == 0 {
 					s.Logf("Suspend stress iteration count: %d", i+1)
 				}
 			}

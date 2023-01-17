@@ -27,8 +27,9 @@ func init() {
 		// reject them. Note that some WiFi drivers "self manage" their domain detection and so this test can't apply everywhere.
 		Desc: "Ensure the regulatory database is coherent and that we can switch domains using the 'iw' utility",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// This test doesn't technically require the wificell fixture, but it's best if non-default regulatory settings are used
 		// only in RF chambers.
 		Attr:         []string{"group:wificell", "wificell_func"},

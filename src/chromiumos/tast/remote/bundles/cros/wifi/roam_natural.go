@@ -78,13 +78,16 @@ var roamNaturalAP36Opts = []hostapd.Option{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        RoamNatural,
-		Desc:        "This test is used to validity check that 'normal' roaming behavior is not broken by any roaming algorithm changes",
-		Contacts:    []string{"jakobczyk@google.com"},
-		Attr:        []string{"group:wificell_roam", "wificell_roam_perf"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixtRoaming",
-		Timeout:     time.Minute * 60,
+		Func: RoamNatural,
+		Desc: "This test is used to validity check that 'normal' roaming behavior is not broken by any roaming algorithm changes",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixtRoaming",
+		Timeout:      time.Minute * 60,
 		Params: []testing.Param{
 			{
 				Val: []roamNaturalTestcase{

@@ -19,9 +19,9 @@ func init() {
 		Func: ConcurrencyCaps,
 		Desc: "Records DUT's concurrency capabilities",
 		Contacts: []string{
-			"kglund@google.com",               // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_unstable", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 	})

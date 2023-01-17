@@ -19,11 +19,12 @@ func init() {
 		Func: Reset,
 		Desc: "Test that the WiFi interface can be reset successfully, and that WiFi comes back up properly",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_suspend"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_suspend"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
 		// For some Marvell DUT, this test may take more than 25 minutes.
 		// For WCN3990 device, this test may take more than 39 minutes.
 		Timeout: time.Minute * 45,

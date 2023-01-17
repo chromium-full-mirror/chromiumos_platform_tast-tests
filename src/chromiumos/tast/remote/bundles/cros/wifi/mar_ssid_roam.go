@@ -28,9 +28,9 @@ func init() {
 		Func: MARSSIDRoam,
 		Desc: "Tests MAC Address randomization during roam between APs of different SSIDs",
 		Contacts: []string{
-			"jck@semihalf.com",                // Author.
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",

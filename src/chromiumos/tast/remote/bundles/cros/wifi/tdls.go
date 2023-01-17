@@ -46,9 +46,9 @@ func init() {
 		Func: TDLS,
 		Desc: "Tests of support for basic TDLS operation in the driver",
 		Contacts: []string{
-			"jck@semihalf.com",
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_tdls", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixtCompanionDut",

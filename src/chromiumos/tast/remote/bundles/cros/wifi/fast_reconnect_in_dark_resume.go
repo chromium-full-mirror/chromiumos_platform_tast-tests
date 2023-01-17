@@ -25,12 +25,12 @@ func init() {
 		Func: FastReconnectInDarkResume,
 		Desc: "Verifies that the DUT can reconnect in one dark resume when got deauthenticated by AP",
 		Contacts: []string{
-			"yenlinlai@google.com",            // Test author.
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		Attr:        []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
-		VarDeps:     []string{"servo"},
-		ServiceDeps: []string{wificell.TFServiceName},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
+		VarDeps:      []string{"servo"},
+		ServiceDeps:  []string{wificell.TFServiceName},
 		// TODO(b/187362093): Extend the platforms when WoWLAN is known to be good on them.
 		HardwareDeps: hwdep.D(hwdep.Platform("volteer"), hwdep.ChromeEC()),
 		Fixture:      "wificellFixt",

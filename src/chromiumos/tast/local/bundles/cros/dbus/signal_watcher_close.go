@@ -16,9 +16,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     SignalWatcherClose,
-		Desc:     "Verifies dbusutil.SignalWatcher can be closed properly without deadlock when the number of signals exceeds channel buffer",
-		Contacts: []string{"yenlinlai@google.com", "chromeos-kernel-wifi@google.com"},
+		Func: SignalWatcherClose,
+		Desc: "Verifies dbusutil.SignalWatcher can be closed properly without deadlock when the number of signals exceeds channel buffer",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:     []string{"group:mainline", "informational"},
 	})

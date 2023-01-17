@@ -18,12 +18,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:        CaptivePortalHTTP,
-		Desc:        "Ensures that the service state transitions to the expected portal state based on the configured HTTP[S] probe response",
-		Contacts:    []string{"matthewmwang@google.com", "chromeos-wifi-champs@google.com"},
-		Attr:        []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		ServiceDeps: []string{wificell.TFServiceName},
-		Fixture:     "wificellFixt",
+		Func: CaptivePortalHTTP,
+		Desc: "Ensures that the service state transitions to the expected portal state based on the configured HTTP[S] probe response",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		ServiceDeps:  []string{wificell.TFServiceName},
+		Fixture:      "wificellFixt",
 	})
 }
 

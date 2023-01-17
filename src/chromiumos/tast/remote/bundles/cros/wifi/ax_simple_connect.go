@@ -28,8 +28,7 @@ func init() {
 		Func: AxSimpleConnect,
 		Desc: "Verifies that DUT can connect to an AX host via AP in different WiFi configuration",
 		Contacts: []string{
-			"billyzhao@google.com",
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Removed wificell_func_ax Attr due to router stability issues (b/235887204)

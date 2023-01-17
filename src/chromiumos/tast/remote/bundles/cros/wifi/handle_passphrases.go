@@ -38,9 +38,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify ChromeOS handles passphrases gracefully and displays error messages or UI prompts correctly",
 		Contacts: []string{
+			"cros-connectivity@google.com",
 			"cj.tsai@cienet.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-wifi-champs@google.com",
 		},
 		BugComponent: "b:1131912",
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},

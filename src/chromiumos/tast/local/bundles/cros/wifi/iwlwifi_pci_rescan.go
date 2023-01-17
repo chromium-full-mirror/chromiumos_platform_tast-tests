@@ -16,9 +16,9 @@ func init() {
 		Func: IwlwifiPCIRescan,
 		Desc: "Verifies that the WiFi interface will recover if removed when the device has iwlwifi_rescan",
 		Contacts: []string{
-			"yenlinlai@google.com",            // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		SoftwareDeps: []string{"iwlwifi_rescan"},
 		// For now, we prefer the remote version. Disable and keep the test to reproduce issue locally.
 	})
