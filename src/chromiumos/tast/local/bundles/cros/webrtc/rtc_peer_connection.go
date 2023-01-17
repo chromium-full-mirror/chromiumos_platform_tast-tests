@@ -26,10 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that WebRTC RTCPeerConnection works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
+			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org", // Test author.
 			"hiroh@chromium.org",
-			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(peerconnection.DataFiles(), peerconnection.LoopbackFile),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},

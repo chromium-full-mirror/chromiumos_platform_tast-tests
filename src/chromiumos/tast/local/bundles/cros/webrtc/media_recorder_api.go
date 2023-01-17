@@ -21,9 +21,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies the MediaRecorder API",
 		Contacts: []string{
-			"mcasas@chromium.org",
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		SoftwareDeps: []string{"chrome", "proprietary_codecs"},
 		Data:         []string{"media_recorder.html", "media_recorder.js"},

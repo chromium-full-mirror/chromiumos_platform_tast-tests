@@ -19,10 +19,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Collects performance values for WebRTC captureStream() (canvas, video)",
 		Contacts: []string{
+			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org", // Test author.
 			"hiroh@chromium.org",
-			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         capturefromelement.DataFiles(),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},

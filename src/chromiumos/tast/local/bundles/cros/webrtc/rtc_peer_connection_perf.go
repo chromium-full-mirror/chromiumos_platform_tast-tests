@@ -22,10 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures WebRTC decode performance in terms of CPU usage and decode time with and without hardware acceleration",
 		Contacts: []string{
+			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
 			"mcasas@chromium.org",
-			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(peerconnection.DataFiles(), peerconnection.LoopbackFile),

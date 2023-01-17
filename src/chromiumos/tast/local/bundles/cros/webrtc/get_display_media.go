@@ -19,9 +19,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies that WebRTC getDisplayMedia() (screen, window, tab capture) works",
 		Contacts: []string{
-			"mcasas@chromium.org", // Test author.
 			"chromeos-gfx-video@google.com",
+			"mcasas@chromium.org", // Test author.
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         getdisplaymedia.DataFiles(),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
