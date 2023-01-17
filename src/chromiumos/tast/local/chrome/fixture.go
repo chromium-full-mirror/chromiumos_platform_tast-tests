@@ -8,6 +8,7 @@ import (
 	"context"
 	"path/filepath"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/testing"
@@ -15,7 +16,7 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedIn",
+		Name:     fixture.ChromeLoggedIn,
 		Desc:     "Logged into a user session",
 		Contacts: []string{"nya@chromium.org", "oka@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -27,7 +28,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInDisableSync",
+		Name:     fixture.ChromeLoggedInDisableSync,
 		Desc:     "Logged into a user session with --disable-sync flag",
 		Contacts: []string{"dhaddock@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -39,7 +40,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInDisableSyncNoFwUpdate",
+		Name:     fixture.ChromeLoggedInDisableSyncNoFwUpdate,
 		Desc:     "Logged into a user session with --disable-sync flag and firmware updates disabled",
 		Contacts: []string{"cwd@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -51,7 +52,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInGuest",
+		Name:     fixture.ChromeLoggedInGuest,
 		Desc:     "Logged into a guest user session",
 		Contacts: []string{"benreich@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -63,7 +64,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWith100FakeApps",
+		Name:     fixture.ChromeLoggedInWith100FakeApps,
 		Desc:     "Logged into a user session with 100 fake apps",
 		Contacts: []string{"mukai@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -77,7 +78,7 @@ func init() {
 
 	// TOOD(b/233238923): Remove when passthrough is enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder",
+		Name:     fixture.ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder,
 		Desc:     "Logged into a user session with 100 fake apps and the passthrough command decoder enabled",
 		Contacts: []string{"hob@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -93,7 +94,7 @@ func init() {
 	// This fixture used to force-enable productivity launcher. Several tests seem to use it for
 	// that reason and likely don't depend on app sorting behavior.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWith100FakeAppsNoAppSort",
+		Name:     fixture.ChromeLoggedInWith100FakeAppsNoAppSort,
 		Desc:     "Logged into a user session with 100 fake apps and app sorting disabled",
 		Contacts: []string{"jamescook@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -106,7 +107,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWith100FakeAppsAppSort",
+		Name:     fixture.ChromeLoggedInWith100FakeAppsAppSort,
 		Desc:     "Logged into a user session with 100 fake apps and app sorting enabled",
 		Contacts: []string{"andrewxu@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -119,7 +120,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithCalendarView",
+		Name:     fixture.ChromeLoggedInWithCalendarView,
 		Desc:     "Logged into a session with Gaia user where CalendarView is enabled",
 		Contacts: []string{"jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -132,7 +133,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithCalendarEvents",
+		Name:     fixture.ChromeLoggedInWithCalendarEvents,
 		Desc:     "Logged into a session with Gaia user where there are events set up to join Hangout meetings",
 		Contacts: []string{"leandre@google.com", "jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -145,7 +146,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithGaia",
+		Name:     fixture.ChromeLoggedInWithGaia,
 		Desc:     "Logged into a session with Gaia user",
 		Contacts: []string{"jinrongwu@google.com"},
 		Vars:     []string{"ui.gaiaPoolDefault"},
@@ -158,7 +159,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInThunderbolt",
+		Name:     fixture.ChromeLoggedInThunderbolt,
 		Desc:     "Logged into a user session to support thunderbolt devices",
 		Contacts: []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		Vars:     []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -171,7 +172,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInDisableFirmwareUpdaterApp",
+		Name:     fixture.ChromeLoggedInDisableFirmwareUpdaterApp,
 		Desc:     "Logged into a user session with FirmwareUpdaterApp disabled",
 		Contacts: []string{"ramsaroop@google.com", "chromeos-perfmetrics-eng@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -183,7 +184,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithOsFeedback",
+		Name:     fixture.ChromeLoggedInWithOsFeedback,
 		Desc:     "Logged into a user session with OS Feedback enabled",
 		Contacts: []string{"michaelcheco@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -195,7 +196,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithLauncherContinueSection",
+		Name:     fixture.ChromeLoggedInWithLauncherContinueSection,
 		Desc:     "Logged into a user session that has continue section in the launcher enabled",
 		Contacts: []string{"tbarzic@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -207,7 +208,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithOobe",
+		Name:     fixture.ChromeLoggedInWithOobe,
 		Desc:     "Log in and proceed with the post-login OOBE flow",
 		Contacts: []string{"cros-oobe@google.com", "bohdanty@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -219,7 +220,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting",
+		Name:     fixture.ChromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting,
 		Desc:     "Logged into a user session with OS Feedback and OsFeedbackSaveReportToLocalForE2ETesting enabled",
 		Contacts: []string{"wangdanny@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -231,7 +232,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithOobeAndAccessibilityButtonEnabled",
+		Name:     fixture.ChromeLoggedInWithOobeAndAccessibilityButtonEnabled,
 		Desc:     "Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen",
 		Contacts: []string{"bohdanty@google.com", "cros-oobe@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -246,7 +247,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithStackSampledMetrics",
+		Name:     fixture.ChromeLoggedInWithStackSampledMetrics,
 		Desc:     "Logged into a user session; stack-sampled metrics on turned on",
 		Contacts: []string{"iby@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -258,7 +259,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInExtendedAutocomplete",
+		Name:     fixture.ChromeLoggedInExtendedAutocomplete,
 		Desc:     "Logged into a user session with FirmwareUpdaterApp disabled",
 		Contacts: []string{"yulunwu@chromium.org", "tbarzic@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -270,7 +271,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInWithOsSettingsSearchFeedback",
+		Name:     fixture.ChromeLoggedInWithOsSettingsSearchFeedback,
 		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
@@ -282,7 +283,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInGuestWithOsSettingsSearchFeedback",
+		Name:     fixture.ChromeLoggedInGuestWithOsSettingsSearchFeedback,
 		Desc:     "Logged into a guest user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {

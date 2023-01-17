@@ -1,0 +1,53 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package fixture
+
+// Fixtures defined in chromiumos/tast/local/chrome/fixture.go
+const (
+	// Logged into a user session.
+	ChromeLoggedIn = "chromeLoggedIn"
+	// Logged into a user session with --disable-sync flag.
+	ChromeLoggedInDisableSync = "chromeLoggedInDisableSync"
+	// Logged into a user session with --disable-sync flag and firmware updates disabled.
+	ChromeLoggedInDisableSyncNoFwUpdate = "chromeLoggedInDisableSyncNoFwUpdate"
+	// Logged into a guest user session
+	ChromeLoggedInGuest = "chromeLoggedInGuest"
+	// Logged into a user session with 100 fake apps.
+	ChromeLoggedInWith100FakeApps = "chromeLoggedInWith100FakeApps"
+	// Logged into a user session with 100 fake apps and the passthrough command decoder enabled.
+	ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder = "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder"
+	// Logged into a user session with 100 fake apps and app sorting disabled.
+	ChromeLoggedInWith100FakeAppsNoAppSort = "chromeLoggedInWith100FakeAppsNoAppSort"
+	// Logged into a user session with 100 fake apps and app sorting enabled.
+	ChromeLoggedInWith100FakeAppsAppSort = "chromeLoggedInWith100FakeAppsAppSort"
+	// Logged into a session with Gaia user where CalendarView is enabled.
+	ChromeLoggedInWithCalendarView = "chromeLoggedInWithCalendarView"
+	// Logged into a session with Gaia user where there are events set up to join Hangout meetings.
+	ChromeLoggedInWithCalendarEvents = "chromeLoggedInWithCalendarEvents"
+	// Logged into a session with Gaia user.
+	ChromeLoggedInWithGaia = "chromeLoggedInWithGaia"
+	// Logged into a user session to support thunderbolt devices.
+	ChromeLoggedInThunderbolt = "chromeLoggedInThunderbolt"
+	// Logged into a user session with FirmwareUpdaterApp disabled.
+	ChromeLoggedInDisableFirmwareUpdaterApp = "chromeLoggedInDisableFirmwareUpdaterApp"
+	// Logged into a user session with OS Feedback enabled.
+	ChromeLoggedInWithOsFeedback = "chromeLoggedInWithOsFeedback"
+	// Logged into a user session that has continue section in the launcher enabled.
+	ChromeLoggedInWithLauncherContinueSection = "chromeLoggedInWithLauncherContinueSection"
+	// Log in and proceed with the post-login OOBE flow.
+	ChromeLoggedInWithOobe = "chromeLoggedInWithOobe"
+	// Logged into a user session with OS Feedback and OsFeedbackSaveReportToLocalForE2ETesting enabled.
+	ChromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting = "chromeLoggedInWithOsFeedbackSaveReportToLocalForE2ETesting"
+	// Log in and proceed with the post-login OOBE flow with the accessibility button enabled on the marketing opt-in screen.
+	ChromeLoggedInWithOobeAndAccessibilityButtonEnabled = "chromeLoggedInWithOobeAndAccessibilityButtonEnabled"
+	// Logged into a user session; stack-sampled metrics on turned on.
+	ChromeLoggedInWithStackSampledMetrics = "chromeLoggedInWithStackSampledMetrics"
+	// Logged into a user session with FirmwareUpdaterApp disabled.
+	ChromeLoggedInExtendedAutocomplete = "chromeLoggedInExtendedAutocomplete"
+	// Logged into a user session with searchFeedbackEnabled flag enabled.
+	ChromeLoggedInWithOsSettingsSearchFeedback = "chromeLoggedInWithOsSettingsSearchFeedback"
+	// Logged into a guest user session with searchFeedbackEnabled flag enabled.
+	ChromeLoggedInGuestWithOsSettingsSearchFeedback = "chromeLoggedInGuestWithOsSettingsSearchFeedback"
+)
