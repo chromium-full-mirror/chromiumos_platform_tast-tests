@@ -25,9 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "How much memory can we allocate before each ChromeOS memory pressure level",
 		Contacts: []string{
-			"cwd@chromium.org",
 			"arcvm-eng@google.com",
+			"cwd@chromium.org",
 		},
+		BugComponent: "b:885256", // ChromeOS > Platform > System
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
@@ -119,15 +120,19 @@ func MemoryChromeOSPerf(ctx context.Context, s *testing.State) {
 
 	// Moderate memory pressure.
 	s.Log("Allocating to moderate memory pressure")
-	allocatedModerate, err := c.AllocateUntil(
+	if allocatedModerate, err := c.AllocateUntil(
 		ctx,
 		rm,
 		time.Second,
 		phaseSeconds,
 		margins.ModerateKB*memory.KiB-epsilon,
-	)
-	if err != nil {
-		s.Fatal("Failed to allocate to moderate margin: ", err)
+	); err != nil {
+		// NB: on some devices we are at moderate memory pressure when idle, so
+		// continue the test, but skip logging the allocated metric. If it's a real
+		// failure, we will error again when allocating to the critical margin.
+		s.Log("Warning: failed to allocate to moderate margin: ", err)
+	} else {
+		setAllocatedMetrics(p, allocatedModerate, "_moderate")
 	}
 	s.Log("Logging moderate metrics")
 	if err := metrics.LogMemoryStats(ctx, basemem, arc, p, s.OutDir(), "_moderate"); err != nil {
@@ -136,7 +141,6 @@ func MemoryChromeOSPerf(ctx context.Context, s *testing.State) {
 	if err := basemem.Reset(); err != nil {
 		s.Error("Failed to reset memory metrics post moderate: ", err)
 	}
-	setAllocatedMetrics(p, allocatedModerate, "_moderate")
 
 	// Critical memory pressure.
 	s.Log("Allocating to critical memory pressure")
