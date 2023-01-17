@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -40,8 +41,8 @@ func init() {
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
-			Pre:               crash.ChromePreWithVerboseConsent(),
 			Val:               crash.RealConsent,
+			Fixture:           fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
 		}, {
 			Name: "mock_consent",
 			Val:  crash.MockConsent,
@@ -51,7 +52,8 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			// No Pre because we must manually log in and out to chrome
 			// on two accounts.
-			Val: crash.RealConsentPerUserOn,
+			Val:     crash.RealConsentPerUserOn,
+			Fixture: fixture.CleanOwnership,
 			// This test performs 2 logins.
 			Timeout: 2*chrome.LoginTimeout + time.Minute,
 		}, {
@@ -60,7 +62,8 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			// No Pre because we must manually log in and out to chrome
 			// on two accounts.
-			Val: crash.RealConsentPerUserOff,
+			Val:     crash.RealConsentPerUserOff,
+			Fixture: fixture.CleanOwnership,
 			// This test performs 2 logins.
 			Timeout: 2*chrome.LoginTimeout + time.Minute,
 		}},
@@ -93,7 +96,7 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 	} else {
 		opt := crash.WithMockConsent()
 		if consentType == crash.RealConsent {
-			opt = crash.WithConsent(s.PreValue().(*chrome.Chrome))
+			opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
 		}
 		if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes("kernel_warning"), opt); err != nil {
 			s.Fatal("SetUpCrashTest failed: ", err)

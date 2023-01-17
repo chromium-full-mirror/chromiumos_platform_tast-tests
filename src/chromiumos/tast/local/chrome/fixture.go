@@ -293,6 +293,19 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
+		Desc:     "Logged into a user session with flags to enable verbose logging about consent",
+		Contacts: []string{"cwd@chromium.org"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+		Parent:          fixture.CleanOwnership,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.
