@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/testing"
@@ -37,8 +38,8 @@ func init() {
 			Name:              "real_consent",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
-			Pre:               crash.ChromePreWithVerboseConsent(),
 			Val:               crash.RealConsent,
+			Fixture:           fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
 		}, {
 			Name:    "mock_consent",
 			Fixture: "chromeLoggedIn",
@@ -51,7 +52,7 @@ func Sender(ctx context.Context, s *testing.State) {
 	opt := crash.WithMockConsent()
 	useConsent := s.Param().(crash.ConsentType)
 	if useConsent == crash.RealConsent {
-		opt = crash.WithConsent(s.PreValue().(*chrome.Chrome))
+		opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
 	}
 	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes), opt); err != nil {
 		s.Fatal("Setup failed: ", err)

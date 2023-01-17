@@ -15,6 +15,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	commoncrash "chromiumos/tast/common/crash"
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -35,8 +36,8 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
-			Pre:               crash.ChromePreWithVerboseConsent(),
 			Val:               crash.RealConsent,
+			Fixture:           fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
 			ExtraAttr:         []string{"informational"},
 		}, {
 			Name: "mock_consent",
@@ -75,7 +76,7 @@ func ReporterCrash(ctx context.Context, s *testing.State) {
 	opt := crash.WithMockConsent()
 	useConsent := s.Param().(crash.ConsentType)
 	if useConsent == crash.RealConsent {
-		opt = crash.WithConsent(s.PreValue().(*chrome.Chrome))
+		opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
 	}
 	if err := crash.SetUpCrashTest(ctx, opt); err != nil {
 		s.Fatal("SetUpCrashTest failed: ", err)

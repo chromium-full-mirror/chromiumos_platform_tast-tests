@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/upstart"
@@ -74,8 +75,8 @@ func init() {
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
-			Pre:               crash.ChromePreWithVerboseConsent(),
 			Val:               crash.RealConsent,
+			Fixture:           fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
 		}, {
 			Name: "mock_consent",
 			Val:  crash.MockConsent,
@@ -87,7 +88,7 @@ func ServiceFailure(ctx context.Context, s *testing.State) {
 	opt := crash.WithMockConsent()
 	useConsent := s.Param().(crash.ConsentType)
 	if useConsent == crash.RealConsent {
-		opt = crash.WithConsent(s.PreValue().(*chrome.Chrome))
+		opt = crash.WithConsent(s.FixtValue().(*chrome.Chrome))
 	}
 	// Allow --arc_service_failure and --service_failure, but nothing else.
 	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes("service_failure="), opt); err != nil {
