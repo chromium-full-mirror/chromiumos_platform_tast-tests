@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
@@ -48,6 +49,7 @@ const (
 type dataMigrationTestParams struct {
 	poolID       string
 	dataFileName string
+	managed      bool
 }
 
 func init() {
@@ -70,6 +72,7 @@ func init() {
 			Val: dataMigrationTestParams{
 				poolID:       arcDataMigrationUnmanagedPool,
 				dataFileName: homeDataNameNycX86,
+				managed:      false,
 			},
 			ExtraData:         []string{homeDataNameNycX86},
 			ExtraSoftwareDeps: []string{"android_p", "amd64"},
@@ -79,6 +82,7 @@ func init() {
 			Val: dataMigrationTestParams{
 				poolID:       arcDataMigrationUnmanagedPool,
 				dataFileName: homeDataNamePiX86,
+				managed:      false,
 			},
 			ExtraData: []string{homeDataNamePiX86},
 			ExtraSoftwareDeps: []string{
@@ -93,6 +97,7 @@ func init() {
 			Val: dataMigrationTestParams{
 				poolID:       arcDataMigrationUnmanagedPool,
 				dataFileName: homeDataNamePiArm,
+				managed:      false,
 			},
 			ExtraData: []string{homeDataNamePiArm},
 			ExtraSoftwareDeps: []string{
@@ -107,6 +112,7 @@ func init() {
 			Val: dataMigrationTestParams{
 				poolID:       arcDataMigrationManagedPool,
 				dataFileName: homeDataNameManagedPiX86,
+				managed:      true,
 			},
 			ExtraData: []string{homeDataNameManagedPiX86},
 			ExtraSoftwareDeps: []string{
@@ -130,7 +136,8 @@ func init() {
 func DataMigration(ctx context.Context, s *testing.State) {
 	const (
 		// One of the apps reported by b/173835269.
-		appToInstall = "com.roblox.client"
+		appToInstall        = "com.roblox.client"
+		provisioningTimeout = 5 * time.Minute
 	)
 
 	params := s.Param().(dataMigrationTestParams)
@@ -163,9 +170,26 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	}()
 
 	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
-	cr, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: acc.Username, Pass: acc.Password}),
-		chrome.ARCSupported(), chrome.KeepState(), chrome.ExtraArgs(args...))
+
+	creds := chrome.Creds{User: acc.Username, Pass: acc.Password}
+	opts := []chrome.Option{
+		chrome.GAIALogin(creds),
+		chrome.ARCSupported(),
+		chrome.KeepState(),
+		chrome.ExtraArgs(args...),
+	}
+
+	if params.managed {
+		packages := []string{appToInstall}
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable)
+		if err != nil {
+			s.Fatal("Failed to setup fake policy server: ", err)
+		}
+		defer fdms.Stop(cleanupCtx)
+		opts = append(opts, chrome.DMSPolicy(fdms.URL))
+	}
+
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -180,6 +204,10 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	systemSdkVersion, err := checkSdkVersionsInPackagesXML(ctx, a, acc.Username)
 	if err != nil {
 		s.Fatal("Failed to check SDK version in packages.xml: ", err)
+	}
+
+	if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
+		s.Fatal("Failed to wait for ARC provisioning: ", err)
 	}
 
 	d, err := a.NewUIDevice(ctx)
