@@ -14,10 +14,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/ssh"
@@ -313,16 +311,13 @@ func prepareJunkImage(ctx context.Context, conn *ssh.Conn,
 func FwFlashErasers(ctx context.Context, s *testing.State) {
 	// Configure flashrom instance
 	var flashromConfig flashrom.Config
-	instance, _, err := flashromConfig.
+	instance, ctx, cleanup, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(s.DUT()).
 		Probe(ctx)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	defer instance.FullShutdown(cleanupCtx)
+	defer cleanup()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

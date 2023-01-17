@@ -8,10 +8,8 @@ import (
 	"context"
 	"io/ioutil"
 	"path/filepath"
-	"time"
 
 	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/testing"
 )
 
@@ -37,15 +35,12 @@ func Flashrom(ctx context.Context, s *testing.State) {
 	// This test intentionally avoids SPI ROM read and write operations, so as not
 	// to stress devices-under-test.
 	var flashromConfig flashrom.Config
-	flashromInstance, out, err := flashromConfig.
+	_, ctx, cleanup, out, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	defer flashromInstance.FullShutdown(cleanupCtx)
+	defer cleanup()
 
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "flashrom.txt")

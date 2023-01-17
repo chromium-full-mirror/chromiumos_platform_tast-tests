@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/testing"
 )
 
@@ -33,15 +32,12 @@ func FlashromWriteProtect(ctx context.Context, s *testing.State) {
 	// to check the flash IC is supported
 
 	var flashromConfig flashrom.Config
-	flashromInstance, out, err := flashromConfig.
+	flashromInstance, ctx, cleanup, out, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	defer flashromInstance.FullShutdown(cleanupCtx)
+	defer cleanup()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

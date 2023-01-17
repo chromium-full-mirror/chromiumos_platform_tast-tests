@@ -13,7 +13,6 @@ import (
 
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/testing"
 )
 
@@ -109,17 +108,14 @@ func testFlashromReadTime(ctx context.Context, s *testing.State, regions []strin
 	defer os.Remove(opTempFile.Name())
 
 	var flashromConfig flashrom.Config
-	flashromInstance, _, err := flashromConfig.
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	// FullShutdown is a symmetric function to FlashromInit and needs to be called
+	// Full shutdown is a symmetric operation to FlashromInit and needs to be called
 	// regardless of whether err is nil (to do a cleanup).
-	defer flashromInstance.FullShutdown(cleanupCtx)
+	defer cleanup()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

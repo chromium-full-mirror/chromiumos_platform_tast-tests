@@ -15,14 +15,14 @@ and probe the chip. Probe() method returns Instance which is ready to use.
 Sample usage:
 
 var flashromConfig flashrom.Config
-flashromInstance, out, err := flashromConfig.
+flashromInstance, ctx, fullShutdown, out, err := flashromConfig.
 
 	FlashromInit(flashrom.VerbosityDebug).
 	ProgrammerInit(flashrom.ProgrammerHost, "").
 	SetDut(s.DUT).
 	Probe(ctx)
 
-defer instance.FullShutdown(ctx)
+defer fullShutdown()
 
 retCode, err := instance.Read(ctx, "tmp/dump.bin")
 */
@@ -34,8 +34,10 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/ssh"
@@ -252,11 +254,23 @@ func (c *Config) isReady() error {
 // Probe gets a flashrom instance that will probe the chip.
 //
 // Returns flashrom instance which is ready to use, or nil instance and error.
+// Returns a context derived from ctx with time reserved for cleanup.
+// Returns a closure to perform full cleanup of flashrom instance.
 // Returns the output from command line execution, so that the caller can handle it if needed,
 // for example store in log file.
-func (c *Config) Probe(ctx context.Context) (*Instance, []byte, error) {
+//
+// ctx, func and []byte are always returned, even in the case of error, and func must always be called.
+// Instance is only returned when error = nil.
+func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func(), []byte, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	shutdown := func() {
+		c.fullShutdown(cleanupCtx)
+		cancel()
+	}
+
 	if err := c.isReady(); err != nil {
-		return nil, nil, errors.Wrap(err, "config missing required data")
+		return nil, ctx, shutdown, nil, errors.Wrap(err, "config missing required data")
 	}
 
 	var instance Instance
@@ -268,22 +282,31 @@ func (c *Config) Probe(ctx context.Context) (*Instance, []byte, error) {
 	out, err := instance.runCommandLine(ctx, cmdArgs)
 
 	if err != nil {
-		return nil, out, errors.Wrapf(err, "error while probing flashrom with arguments %v", cmdArgs)
+		return nil, ctx, shutdown, out, errors.Wrapf(err, "error while probing flashrom with arguments %v", cmdArgs)
 	}
 
 	re := regexp.MustCompile(chipFoundMessage)
 	chipsFound := re.FindAllString(string(out), -1)
 	if chipsFound == nil || len(chipsFound) == 0 {
-		return nil, out, errors.Errorf("Flashrom probe fails to find a chip, cmdArgs=%v", cmdArgs)
+		return nil, ctx, shutdown, out, errors.Errorf("Flashrom probe fails to find a chip, cmdArgs=%v", cmdArgs)
 	}
 	if len(chipsFound) > 1 && chipsFound[0] != chipsFound[1] {
-		return nil, out, errors.Errorf("Flashrom probe with cmdArgs=%v found multiple chips (%v), %s VS %s",
+		return nil, ctx, shutdown, out, errors.Errorf("Flashrom probe with cmdArgs=%v found multiple chips (%v), %s VS %s",
 			cmdArgs, len(chipsFound), chipsFound[0], chipsFound[1])
 	}
 
 	testing.ContextLog(ctx, "Flashrom probe successful: ", chipsFound[0])
 
-	return &instance, out, nil
+	return &instance, ctx, shutdown, out, nil
+}
+
+// fullShutdown shuts down flashrom programmer, cleans up all resources and shuts down flashrom.
+// Returns error if error happened during shutdown, or nil otherwise.
+func (c *Config) fullShutdown(ctx context.Context) error {
+	// TODO Implement when switching the library to use libflashrom.
+	// Shutdown is called implicitly for command line invocations.
+
+	return nil
 }
 
 // SoftwareWriteProtectStatus requests software write-protect status of the chip.
@@ -408,12 +431,4 @@ func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, nove
 	testing.ContextLog(ctx, "Flashrom write successful: ", cmdArgs)
 
 	return out, nil
-}
-
-// FullShutdown shuts down flashrom programmer, cleans up all resources and shuts down flashrom.
-func (i *Instance) FullShutdown(ctx context.Context) (int, error) {
-	// TODO Implement when switching the library to use libflashrom.
-	// Shutdown is called implicitly for command line invocations.
-
-	return 0, nil
 }
