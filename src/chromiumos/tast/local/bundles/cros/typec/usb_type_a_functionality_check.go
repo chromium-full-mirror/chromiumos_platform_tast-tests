@@ -60,7 +60,8 @@ func init() {
 		Func:         USBTypeAFunctionalityCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB type-A device functionality check with consecutive hotplug-unplug using c-switch",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"c.txt", "h.txt", "r.txt", "o.txt", "m.txt", "e.txt"},
@@ -263,14 +264,19 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disable c-switch port: ", err)
 		}
 
-		if testParms.deviceType == "storage" {
-			if err := verifyUSBStorageDevice(ctx, testParms.usbSpeed); err == nil {
-				s.Fatal("USB storage device is still detecting after unplug: ", err)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if testParms.deviceType == "storage" {
+				if err := verifyUSBStorageDevice(ctx, testParms.usbSpeed); err == nil {
+					return errors.Wrap(err, "USB storage device is still detecting after unplug")
+				}
+			} else if testParms.deviceType == "Keyboard" {
+				if err := verifyUSBHIDDevice(ctx, testParms.usbSpeed); err == nil {
+					return errors.Wrap(err, "USB HID device is still detecting after unplug")
+				}
 			}
-		} else if testParms.deviceType == "Keyboard" {
-			if err := verifyUSBHIDDevice(ctx, testParms.usbSpeed); err == nil {
-				s.Fatal("USB HID device is still detecting after unplug: ", err)
-			}
+			return nil
+		}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 5 * time.Second}); err != nil {
+			s.Fatal("Failed to unplug USB devices: ", err)
 		}
 	}
 
