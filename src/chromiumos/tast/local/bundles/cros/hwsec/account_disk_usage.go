@@ -165,7 +165,6 @@ func AccountDiskUsage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// Cleanup before we start.
 	if err := utility.UnmountAll(ctx); err != nil {

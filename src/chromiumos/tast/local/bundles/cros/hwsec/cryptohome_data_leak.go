@@ -50,7 +50,6 @@ func CryptohomeDataLeak(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
 
 	var user string

@@ -39,7 +39,6 @@ func Attestation(ctx context.Context, s *testing.State) {
 	}
 	attestation := helper.AttestationClient()
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	mountInfo := hwsec.NewCryptohomeMountInfo(r, cryptohome)
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
 		s.Fatal("Failed to ensure tpm readiness: ", err)

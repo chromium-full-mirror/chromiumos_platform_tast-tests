@@ -69,7 +69,6 @@ func ChapsPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	pkcs11Util, err := pkcs11.NewChaps(ctx, r, utility)
 	if err != nil {

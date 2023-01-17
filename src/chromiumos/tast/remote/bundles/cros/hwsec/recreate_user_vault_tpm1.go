@@ -64,7 +64,6 @@ func RecreateUserVaultTPM1(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	if userParam.useUserSecretStash {
 		// Enable UserSecretStash.
 		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)

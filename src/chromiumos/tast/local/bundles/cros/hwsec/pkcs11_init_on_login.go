@@ -63,7 +63,6 @@ func Pkcs11InitOnLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	if userParam.useUserSecretStash {
 		// Enable the UserSecretStash experiment for the duration of the test by

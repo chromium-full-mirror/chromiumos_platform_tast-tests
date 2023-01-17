@@ -117,7 +117,6 @@ func KeysetTiedToTPM2(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// First we test the case without reboot, that is:
 	// Reset TPM -> Login+Logout -> TakeOwnership -> Login -> Check TPM Bound.

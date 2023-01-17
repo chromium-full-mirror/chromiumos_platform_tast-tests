@@ -33,7 +33,6 @@ func LoginDuringTakingOwnership(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)

@@ -47,7 +47,6 @@ func CryptohomeKeyEviction(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	chaps, err := pkcs11.NewChaps(ctx, cmdRunner, cryptohome)
 	if err != nil {

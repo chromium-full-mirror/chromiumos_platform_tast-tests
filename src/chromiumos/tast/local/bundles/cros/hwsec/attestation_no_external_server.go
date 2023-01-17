@@ -64,7 +64,6 @@ func AttestationNoExternalServer(ctx context.Context, s *testing.State) {
 
 	attestation := helper.AttestationClient()
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	mountInfo := hwsec.NewCryptohomeMountInfo(r, cryptohome)
 
 	const username = "test@crashwsec.bigr.name"

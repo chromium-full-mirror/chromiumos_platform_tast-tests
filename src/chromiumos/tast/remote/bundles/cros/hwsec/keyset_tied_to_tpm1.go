@@ -109,7 +109,6 @@ func KeysetTiedToTPM1(ctx context.Context, s *testing.State) {
 		s.Fatal("Helper creation error: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	if userParam.useUserSecretStash {
 		// Enable UserSecretStash.
 		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)

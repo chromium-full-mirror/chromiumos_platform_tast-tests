@@ -83,7 +83,6 @@ func UnmountAll(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// Take TPM Ownership before the test.
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {

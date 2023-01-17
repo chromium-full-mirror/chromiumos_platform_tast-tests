@@ -61,23 +61,6 @@ const (
 	Rolledback
 )
 
-const (
-	// OldCryptohomeMountAPI makes the client use old api.
-	OldCryptohomeMountAPI = iota
-	// AuthFactorMountAPI makes the client use the
-	// {AddAuthFactor/AuthenticateAuthFactor} AuthFactor based api.
-	AuthFactorMountAPI
-)
-
-// CryptohomeMountAPI denotes Mount API type to use.
-type CryptohomeMountAPI int64
-
-// CryptohomeMountAPIParam is a helper struct to parametrize tests for old and
-// new mount APIs.
-type CryptohomeMountAPIParam struct {
-	MountAPI CryptohomeMountAPI
-}
-
 // UserDataAuthReplyWithError is an interface type that represent common UserDataAuth API protobuf reply that contains error in
 // the form of CryptohomeErrorCode and CryptohomeErrorInfo.
 type UserDataAuthReplyWithError interface {
@@ -95,7 +78,6 @@ type CryptohomeClient struct {
 	binary               *cryptohomeBinary
 	cryptohomePathBinary *cryptohomePathBinary
 	daemonController     *DaemonController
-	mountAPI             CryptohomeMountAPI
 }
 
 // NewCryptohomeClient creates a new CryptohomeClient.
@@ -105,13 +87,7 @@ func NewCryptohomeClient(r CmdRunner) *CryptohomeClient {
 		binary:               newCryptohomeBinary(r),
 		cryptohomePathBinary: newCryptohomePathBinary(r),
 		daemonController:     NewDaemonController(r),
-		mountAPI:             OldCryptohomeMountAPI,
 	}
-}
-
-// SetMountAPIParam sets Mount API type.
-func (u *CryptohomeClient) SetMountAPIParam(param *CryptohomeMountAPIParam) {
-	u.mountAPI = param.MountAPI
 }
 
 // InstallAttributesStatus retrieves the a status string from cryptohome. The status string is in JSON format and holds the various cryptohome related status.
@@ -277,40 +253,6 @@ func NewVaultConfig() *VaultConfig {
 	return &VaultConfig{}
 }
 
-// vaultConfigToExtraFlags converts VaultConfig to flags accepted by the cryptohome command line.
-func vaultConfigToExtraFlags(config *VaultConfig) []string {
-	const (
-		// mountFlagEphemeral is the flag passed to cryptohome command line
-		// when you want the vault to be ephemeral.
-		mountFlagEphemeral = "--ensure_ephemeral"
-		// mountFlagEcryptfs is the flag passed to cryptohome command line
-		// when you want the vault to use ecryptfs.
-		mountFlagEcryptfs = "--ecryptfs"
-		// mountFlagCreateEmptyLabel is the flag passed to cryptohome command
-		// line when you want the legacy behavior of using an empty label in
-		// authorization request.
-		mountFlagCreateEmptyLabel = "--create_empty_label"
-		// kioskUser is the flag passed to cryptohome command line when you
-		// want the to mount kiosk user.
-		kioskUser = "--public_mount"
-	)
-
-	var extraFlags []string
-	if config.Ephemeral {
-		extraFlags = append(extraFlags, mountFlagEphemeral)
-	}
-	if config.Ecryptfs {
-		extraFlags = append(extraFlags, mountFlagEcryptfs)
-	}
-	if config.CreateEmptyLabel {
-		extraFlags = append(extraFlags, mountFlagCreateEmptyLabel)
-	}
-	if config.KioskUser {
-		extraFlags = append(extraFlags, kioskUser)
-	}
-	return extraFlags
-}
-
 const (
 	// PassAuth is the constant for AuthConfig.AuthType, representing password authentication.
 	PassAuth = iota
@@ -425,19 +367,7 @@ func (u *CryptohomeClient) mountVaultWithAuthFactor(ctx context.Context, label s
 
 // MountVault mounts the vault for username; creates a new vault if no vault yet if create is true. error is nil if the operation completed successfully.
 func (u *CryptohomeClient) MountVault(ctx context.Context, label string, authConfig *AuthConfig, create bool, vaultConfig *VaultConfig) error {
-	switch u.mountAPI {
-	case OldCryptohomeMountAPI:
-		extraFlags := vaultConfigToExtraFlags(vaultConfig)
-		extraFlags = append(extraFlags, authConfigToExtraFlags(authConfig)...)
-		if _, err := u.binary.mountEx(ctx, authConfig.Username, create, label, extraFlags); err != nil {
-			return errors.Wrap(err, "failed to mount")
-		}
-		return nil
-	case AuthFactorMountAPI:
-		return u.mountVaultWithAuthFactor(ctx, label, authConfig, create, vaultConfig)
-	default:
-		return errors.New("unrecognized mountAPI parameter in tast test")
-	}
+	return u.mountVaultWithAuthFactor(ctx, label, authConfig, create, vaultConfig)
 }
 
 // MountGuest creates a mount point for a guest user; error is nil if the operation completed successfully.
@@ -1104,12 +1034,6 @@ func (u *CryptohomeClient) CreatePersistentUser(ctx context.Context, authSession
 // MigrateToDircrypto migrates vault to dircrypto. Must be mounted for migration first.
 func (u *CryptohomeClient) MigrateToDircrypto(ctx context.Context, userName string) error {
 	_, err := u.binary.migrateToDircrypto(ctx, userName)
-	return err
-}
-
-// MountWithAuthSession mounts a user with AuthSessionID.
-func (u *CryptohomeClient) MountWithAuthSession(ctx context.Context, authSessionID string, publicMount bool) error {
-	_, err := u.binary.mountWithAuthSession(ctx, authSessionID, publicMount)
 	return err
 }
 

@@ -60,8 +60,6 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Helper creation error: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
-
 	// Reset TPM
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)

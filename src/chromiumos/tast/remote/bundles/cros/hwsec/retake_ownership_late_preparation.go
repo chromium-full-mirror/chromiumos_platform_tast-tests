@@ -54,8 +54,6 @@ func RetakeOwnershipLatePreparation(ctx context.Context, s *testing.State) {
 	}
 
 	tpmManager := helper.TPMManagerClient()
-	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	if userParam.useUserSecretStash {
 		// Enable the UserSecretStash experiment for the duration of the test by
 		// creating a flag file that's checked by cryptohomed.

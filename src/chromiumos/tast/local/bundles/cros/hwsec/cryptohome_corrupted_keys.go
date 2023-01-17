@@ -75,7 +75,6 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	daemonController := helper.DaemonController()
 	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)

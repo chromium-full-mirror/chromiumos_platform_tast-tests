@@ -69,7 +69,6 @@ func CryptohomeMountPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Helper creation error: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	if userParam.useUserSecretStash {
 		// Enable UserSecretStash.
 		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)

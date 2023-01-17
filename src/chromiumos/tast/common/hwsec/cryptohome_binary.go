@@ -123,16 +123,6 @@ func (c *cryptohomeBinary) isMounted(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "--action=is_mounted")
 }
 
-// mountEx calls "cryptohome --action=mount_ex" .
-func (c *cryptohomeBinary) mountEx(ctx context.Context, username string, doesCreate bool, label string, extraFlags []string) ([]byte, error) {
-	args := []string{"--action=mount_ex", "--user=" + username, "--key_label=" + label}
-	if doesCreate {
-		args = append(args, "--create")
-	}
-	args = append(args, extraFlags...)
-	return c.call(ctx, args...)
-}
-
 // mountGuestEx calls "cryptohome --action=mount_guest_ex".
 func (c *cryptohomeBinary) mountGuestEx(ctx context.Context) ([]byte, error) {
 	args := []string{"--action=mount_guest_ex"}
@@ -399,16 +389,6 @@ func (c *cryptohomeBinary) createPersistentUser(ctx context.Context, authSession
 // migrateToDircrypto calls "cryptohome --action=migrate_to_dircrypto" with "--user"
 func (c *cryptohomeBinary) migrateToDircrypto(ctx context.Context, userName string) ([]byte, error) {
 	return c.call(ctx, "--action=migrate_to_dircrypto", "--user="+userName)
-}
-
-// mountWithAuthSession calls "cryptohome --action=mount_ex" with "--auth_session_id".
-// password is ignored if publicMount is set to true.
-func (c *cryptohomeBinary) mountWithAuthSession(ctx context.Context, authSessionID string, publicMount bool) ([]byte, error) {
-	args := []string{"--action=mount_ex", "--auth_session_id=" + authSessionID}
-	if publicMount {
-		args = append(args, "--public_mount")
-	}
-	return c.call(ctx, args...)
 }
 
 // invalidateAuthSession calls "cryptohome --action=invalidate_auth_session".

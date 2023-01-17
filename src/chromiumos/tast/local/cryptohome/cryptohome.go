@@ -159,8 +159,6 @@ func CreateVault(ctx context.Context, user, password string) error {
 	testing.ContextLogf(ctx, "Creating vault mount for user %q", user)
 	cmdRunner := hwseclocal.NewLoglessCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
-
 	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
 
 	if err := cryptohome.MountVault(ctx, defaultGaiaPasswordLabel, hwsec.NewPassAuthConfig(user, password), true, hwsec.NewVaultConfig()); err != nil {

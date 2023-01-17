@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/pkcs11/pkcs11test"
 	"chromiumos/tast/ctxutil"
@@ -60,7 +59,6 @@ func ChapsRSAPSS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 	pkcs11Util, err := pkcs11.NewChaps(ctx, r, utility)
 	if err != nil {
 		s.Fatal("Failed to create PKCS#11 Utility: ", err)

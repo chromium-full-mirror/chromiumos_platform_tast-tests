@@ -46,7 +46,6 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
-	utility.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	// Disable UserSecretStash to use VaultKeyset.
 	cleanupFunction, err := helper.DisableUserSecretStash(ctx)

@@ -41,7 +41,6 @@ func init() {
 func CryptohomeNonDirs(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	cryptohome.SetMountAPIParam(&hwsec.CryptohomeMountAPIParam{MountAPI: hwsec.AuthFactorMountAPI})
 
 	const (
 		user     = "foo@example.com"
