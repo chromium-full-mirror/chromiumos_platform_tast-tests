@@ -10,4 +10,6 @@ const (
 
 	// Configure the ALSA loopback device for CRAS.
 	AloopLoaded = "aloopLoaded"
+	// Configure the ALSA loopback device for CRAS and stop UI.
+	AloopLoadedWithoutUI = "aloopLoadedWithoutUI"
 )

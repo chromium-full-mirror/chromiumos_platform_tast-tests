@@ -27,6 +27,14 @@ func init() {
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.AloopLoadedWithoutUI,
+		Desc:            "Configure the ALSA loopback device for CRAS and stop UI",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Impl:            uiStoppedFixture{},
+		SetUpTimeout:    20 * time.Second,
+		TearDownTimeout: 20 * time.Second,
+	})
 }
 
 const aloopModuleName = "snd-aloop"
@@ -129,3 +137,26 @@ func (aloopLoadedFixture) Reset(ctx context.Context) error {
 func (aloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (aloopLoadedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+
+type uiStoppedFixture struct{}
+
+func (uiStoppedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if err := upstart.StopJob(ctx, "ui"); err != nil {
+		s.Fatal("Cannot stop ui: ", err)
+	}
+	return nil
+}
+
+func (uiStoppedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := upstart.EnsureJobRunning(ctx, "ui"); err != nil {
+		s.Fatal("Cannot start ui: ", err)
+	}
+}
+
+func (uiStoppedFixture) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+
+func (uiStoppedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
