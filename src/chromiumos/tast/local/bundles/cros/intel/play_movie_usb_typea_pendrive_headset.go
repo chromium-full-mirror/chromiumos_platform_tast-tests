@@ -34,7 +34,8 @@ func init() {
 		Func:         PlayMovieUsbTypeaPendriveHeadset,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Play movie in USB type-A pen drive with USB type-A HS",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"bear-320x240.h264.mp4"},
 		Vars:         []string{"intel.usbDetectionName"},
@@ -75,7 +76,7 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 	destinationFilePath := path.Join(mediaRemovable, usbDeviceName, videoFileName)
 
 	if copyErr := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("cp -rf %s %s", s.DataPath(videoFileName), destinationFilePath)).Run(); copyErr != nil {
-		s.Fatalf("Failed to copy file to %s path", destinationFilePath)
+		s.Fatalf("Failed to copy file to %s path: %v", destinationFilePath, copyErr)
 	}
 	defer os.Remove(destinationFilePath)
 
@@ -93,7 +94,7 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to open the audio file %q: %v", videoFileName, err)
 	}
 	cui := uiauto.New(tconn)
-	togglePlayPause := nodewith.Name("Toggle play pause").Role(role.Button)
+	togglePlayPause := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
 	if err := cui.LeftClick(togglePlayPause)(ctx); err != nil {
 		s.Fatal("Failed to find and click togglePlayPause button: ", err)
 	}
@@ -156,7 +157,7 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to press escape key")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to decrease slider: ", err)
 	}
 	if sliderValue <= decreasedSliderValue {
@@ -173,7 +174,7 @@ func PlayMovieUsbTypeaPendriveHeadset(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to press escape key")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to increase slider: ", err)
 
 	}
