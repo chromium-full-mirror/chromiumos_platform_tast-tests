@@ -113,7 +113,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{StopMetricsBeforeTracing: true})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}

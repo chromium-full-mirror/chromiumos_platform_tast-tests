@@ -183,10 +183,6 @@ type Recorder struct {
 	perfettoCfgPath           string
 	perfettoTracingFilePrefix string
 
-	// stopMetricsBeforeTracing corresponds to
-	// RecorderOptions.StopMetricsBeforeTracing.
-	stopMetricsBeforeTracing bool
-
 	// duration is the total running time of the recorder.
 	duration time.Duration
 
@@ -245,11 +241,6 @@ type RecorderOptions struct {
 	DoNotChangeDPTF      bool
 	DoNotChangeAudio     bool
 	DoNotChangeBluetooth bool
-	// StopMetricsBeforeTracing causes the recorder to stop the performance metrics
-	// timelines before stopping tracing. The motivation is that it takes about two
-	// minutes to clean up the tracing session, and those two minutes are evidently
-	// problematic for the performance metrics timelines. See b/263167309.
-	StopMetricsBeforeTracing bool
 }
 
 var performanceCUJDischargeThreshold = 55.0
@@ -391,10 +382,9 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		tconns[browser.TypeLacros] = bTconn
 	}
 	r := &Recorder{
-		cr:                       cr,
-		tconn:                    tconn,
-		tconns:                   tconns,
-		stopMetricsBeforeTracing: options.StopMetricsBeforeTracing,
+		cr:     cr,
+		tconn:  tconn,
+		tconns: tconns,
 	}
 
 	powerTestOptions := setup.PowerTestOptions{
@@ -653,9 +643,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil
 	}
 	defer func(ctx context.Context) {
-		// If this function finishes without errors, cleanup will happen in stopRecording
-		// if r.stopMetricsBeforeTracing is false, and in Run if r.stopMetricsBeforeTracing
-		// is true.
+		// If this function finishes without errors, cleanup will happen in Run.
 		if e == nil {
 			return
 		}
@@ -776,20 +764,6 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		return errors.New("Stop requested but recorder was not fully started: " + fmt.Sprintf(" mr=%v, r.cleanup=%p", r.mr, r.cleanup))
 	}
 
-	// r.cleanup stops tracing. Do that here in stopRecording
-	// only if r.stopMetricsBeforeTracing is false.
-	if !r.stopMetricsBeforeTracing {
-		defer func(ctx context.Context) {
-			err := r.cleanup(ctx)
-			if err != nil {
-				testing.ContextLogf(ctx, "Failed to clean up after stopRecording: %s", err)
-			}
-			if e == nil && err != nil {
-				e = errors.Wrap(err, "failed to clean up after stopRecording")
-			}
-			r.cleanup = nil
-		}(ctx)
-	}
 	r.duration += time.Now().Sub(r.startedAtTm)
 	r.startedAtTm = time.Time{} // Reset to zero.
 
@@ -1000,19 +974,16 @@ func (r *Recorder) Run(ctx context.Context, f func(ctx context.Context) error) (
 		return err
 	}
 
-	// If r.stopMetricsBeforeTracing is false, cleanup will happen in stopRecording.
-	if r.stopMetricsBeforeTracing {
-		defer func(ctx context.Context) {
-			if err := r.cleanup(ctx); err != nil {
-				if e == nil {
-					e = errors.Wrap(err, "failed to clean up after stopRecording")
-				} else {
-					testing.ContextLog(ctx, "Failed to clean up after stopRecording: ", err)
-				}
+	defer func(ctx context.Context) {
+		if err := r.cleanup(ctx); err != nil {
+			if e == nil {
+				e = errors.Wrap(err, "failed to clean up after stopRecording")
+			} else {
+				testing.ContextLog(ctx, "Failed to clean up after stopRecording: ", err)
 			}
-			r.cleanup = nil
-		}(ctx)
-	}
+		}
+		r.cleanup = nil
+	}(ctx)
 
 	if errF := f(runCtx); errF != nil {
 		if errStopRecording := r.stopRecording(ctx, runCtx); errStopRecording != nil {
@@ -1025,16 +996,11 @@ func (r *Recorder) Run(ctx context.Context, f func(ctx context.Context) error) (
 		return errors.Wrap(errStopRecording, "failed to stop recording")
 	}
 
-	if r.stopMetricsBeforeTracing {
-		// Use a short timeout value so it can return fast in case of failure.
-		// Some tests do this by passing a shortened context to Record (see
-		// QuickCheckCUJ for example), but when r.stopMetricsBeforeTracing is
-		// true, that's not going to work, so do it here instead.
-		ctxStopMetrics, cancel := context.WithTimeout(ctx, time.Minute)
-		defer cancel()
-		if err := r.stopMetrics(ctxStopMetrics); err != nil {
-			return errors.Wrap(err, "failed to stop metrics")
-		}
+	// Use a short timeout value so it can return fast in case of failure.
+	ctxStopMetrics, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	if err := r.stopMetrics(ctxStopMetrics); err != nil {
+		return errors.Wrap(err, "failed to stop metrics")
 	}
 
 	return nil
@@ -1060,13 +1026,10 @@ func (r *Recorder) RunFor(ctx context.Context, f func(ctx context.Context) error
 }
 
 // Record sets the performance metrics timeline values into pv.
+// TODO(b/263167309): Remove the unused ctx and unused return value.
 func (r *Recorder) Record(ctx context.Context, pv *perf.Values) error {
-	var err error
-	if !r.stopMetricsBeforeTracing {
-		err = r.stopMetrics(ctx)
-	}
 	pv.Merge(r.pv)
-	return err
+	return nil
 }
 
 // SaveHistograms saves histogram raw data to a given directory in a

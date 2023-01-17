@@ -104,7 +104,7 @@ func Run(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{StopMetricsBeforeTracing: true})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
