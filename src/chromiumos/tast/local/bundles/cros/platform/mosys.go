@@ -28,11 +28,6 @@ func init() {
 		// to critical and leave the rest as informational.
 		Params: []testing.Param{
 			{
-				Val: [][]string{
-					{"platform", "name"},
-				},
-			},
-			{
 				Name: "ec",
 				Val: [][]string{
 					{"ec", "info"},
