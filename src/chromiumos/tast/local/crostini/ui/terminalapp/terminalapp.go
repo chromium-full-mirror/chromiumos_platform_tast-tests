@@ -7,6 +7,7 @@ package terminalapp
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -131,24 +132,38 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 	var ta = &TerminalApp{tconn: tconn, ui: ui, Kb: kb}
 
 	if err := uiauto.Combine("launch ssh",
-		ime.EnglishUS.InstallAndActivate(tconn),
-		ta.DeleteSSHConnection("chronos@localhost"),
-		ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
-		ui.LeftClick(nodewith.Name("Command").Role(role.TextField)),
-		kb.TypeAction("chronos@localhost -o StrictHostKeyChecking=no "+sshArgs),
-		ui.LeftClick(nodewith.Name("SSH relay server options").Role(role.TextField)),
-		kb.TypeAction("--ssh-client-version=pnacl"),
-		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
-		ui.LeftClick(nodewith.Name("chronos@localhost").Role(role.Link)),
-		ui.LeftClick(nodewith.Name("(chronos@localhost) Password:").Role(role.TextField)),
-		kb.TypeAction("test0000"),
-		kb.AccelAction("Enter"),
-		ui.WaitUntilExists(nodewith.Name("chronos@localhost ~ $").Role(role.StaticText).First()),
+		ta.SetUpSSHConnection(sshArgs),
+		ta.OpenSSHConnection(),
 	)(ctx); err != nil {
 		return nil, err
 	}
 
 	return ta, nil
+}
+
+// SetUpSSHConnection sets up a ssh connection to chronos@localhost.
+func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
+	return uiauto.Combine("set up ssh connection",
+		ime.EnglishUS.InstallAndActivate(ta.tconn),
+		ta.DeleteSSHConnection("chronos@localhost"),
+		ta.ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
+		ta.ui.LeftClick(nodewith.Name("Command").Role(role.TextField)),
+		ta.Kb.TypeAction("chronos@localhost -o StrictHostKeyChecking=no "+sshArgs),
+		ta.ui.LeftClick(nodewith.Name("SSH relay server options").Role(role.TextField)),
+		ta.Kb.TypeAction("--ssh-client-version=pnacl"),
+		ta.ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
+	)
+}
+
+// OpenSSHConnection opens the ssh connection set up by SetUpSSHConnection().
+func (ta *TerminalApp) OpenSSHConnection() uiauto.Action {
+	return uiauto.Combine("open the ssh connection",
+		ta.ui.LeftClick(nodewith.Name("chronos@localhost").Role(role.Link)),
+		ta.ui.LeftClick(nodewith.Name("(chronos@localhost) Password:").Role(role.TextField)),
+		ta.Kb.TypeAction("test0000"),
+		ta.Kb.AccelAction("Enter"),
+		ta.ui.WaitUntilExists(nodewith.Name("chronos@localhost ~ $").Role(role.StaticText).First()),
+	)
 }
 
 // DeleteSSHConnection deletes the specified connection link if it exists.
@@ -320,7 +335,7 @@ func (ta *TerminalApp) Close() uiauto.Action {
 }
 
 // CheckTabsCount returns an action to check the tabs count.
-func (ta *TerminalApp) CheckTabsCount(normalTabs, tmuxTabs int) uiauto.Action {
+func (ta *TerminalApp) CheckTabsCount(nonTmuxTabs, tmuxTabs int) uiauto.Action {
 	return func(ctx context.Context) error {
 		// We use class name "WebContentsViewAura" instead of "Tab" because it has
 		// the up-to-date title readily available.
@@ -336,8 +351,8 @@ func (ta *TerminalApp) CheckTabsCount(normalTabs, tmuxTabs int) uiauto.Action {
 			}
 		}
 
-		if len(nodesInfo)-actualTmuxTabs != normalTabs {
-			return errors.Errorf("number of normal tabs (%d) does not match expectation (%d)", len(nodesInfo)-actualTmuxTabs, normalTabs)
+		if len(nodesInfo)-actualTmuxTabs != nonTmuxTabs {
+			return errors.Errorf("number of normal tabs (%d) does not match expectation (%d)", len(nodesInfo)-actualTmuxTabs, nonTmuxTabs)
 		}
 
 		if actualTmuxTabs != tmuxTabs {
@@ -349,13 +364,30 @@ func (ta *TerminalApp) CheckTabsCount(normalTabs, tmuxTabs int) uiauto.Action {
 }
 
 // WaitForTabsCount returns an action to wait for the tabs count to match expectation.
-func (ta *TerminalApp) WaitForTabsCount(normalTabs, tmuxTabs int) uiauto.Action {
+func (ta *TerminalApp) WaitForTabsCount(nonTmuxTabs, tmuxTabs int) uiauto.Action {
 	return func(ctx context.Context) error {
-		return testing.Poll(ctx, ta.CheckTabsCount(normalTabs, tmuxTabs), &testing.PollOptions{Timeout: 2 * time.Second})
+		return testing.Poll(ctx, ta.CheckTabsCount(nonTmuxTabs, tmuxTabs), &testing.PollOptions{Timeout: 2 * time.Second})
 	}
 }
 
-// ClickNthTab clicks the nth tab.
+// ClickNthTab clicks the nth (0-index) tab.
 func (ta *TerminalApp) ClickNthTab(n int) uiauto.Action {
 	return ta.ui.LeftClick(nodewith.Role(role.Tab).ClassName("Tab").Nth(n))
+}
+
+// ClickNthTabCloseButton clicks the nth (0-index) tab close button. Note that
+// the home tab does not have this button, so you might need to adjust n
+// accordingly.
+func (ta *TerminalApp) ClickNthTabCloseButton(n int) uiauto.Action {
+	return uiauto.Combine(fmt.Sprintf("clicking the tab close button (n=%d)", n),
+		ta.ui.LeftClick(nodewith.ClassName("TabCloseButton").Nth(n)),
+		uiauto.IfSuccessThen(
+			ta.ui.WithTimeout(time.Second).WaitUntilExists(terminalLeaveButton),
+			// It looks like we need to click it a few times.
+			ta.ui.LeftClickUntil(
+				terminalLeaveButton,
+				ta.ui.WithTimeout(time.Second).WaitUntilGone(terminalLeaveButton),
+			),
+		),
+	)
 }
