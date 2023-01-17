@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Test two users can install crostini separately",
 		Contacts:     []string{"alvinjia@google.com", "clumptini@google.com"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:crostini_slow", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
