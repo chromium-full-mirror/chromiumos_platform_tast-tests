@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test resizing during installation",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:crostini_slow"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		Pre:          chrome.LoggedIn(),
 		BugComponent: "b:1122570",
