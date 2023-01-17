@@ -36,10 +36,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a user can connect to WiFi from the Quick Settings",
 		Contacts: []string{
-			"chadduffin@google.com",
 			"cros-connectivity@google.com",
+			"chadduffin@google.com",
 		},
-		Attr: []string{"group:wificell", "wificell_e2e_unstable"},
+		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
