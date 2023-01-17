@@ -21,9 +21,11 @@ import (
 
 // List of fixture names for ML service testing.
 const (
-	LoggedIn     = "mlLoggedIn"
-	GAIALoggedIn = "mlGaiaLoggedIn"
-	NoLoggedIn   = "mlNoLoggedIn"
+	LoggedIn              = "mlLoggedIn"
+	GAIALoggedIn          = "mlGaiaLoggedIn"
+	GAIALoggedInClamshell = "mlGAIALoggedInClamshell"
+	GAIALoggedInTablet    = "mlGAIALoggedInTablet"
+	NoLoggedIn            = "mlNoLoggedIn"
 )
 
 const (
@@ -58,6 +60,48 @@ func init() {
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInClamshell,
+		Desc: "A fixture with GAIA user logged in",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.ExtraArgs("--force-tablet-mode=clamshell"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInTablet,
+		Desc: "A fixture with GAIA user logged in",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
+			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
