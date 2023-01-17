@@ -16,7 +16,7 @@ import (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CrasStopped,
-		Desc:            "Ensure CRAS is stopped and audio devices are available",
+		Desc:            "Ensure CRAS is stopped and audio devices are available for direct access",
 		Contacts:        []string{"aaronyu@google.com"},
 		Impl:            crasStoppedFixture{},
 		SetUpTimeout:    20 * time.Second,

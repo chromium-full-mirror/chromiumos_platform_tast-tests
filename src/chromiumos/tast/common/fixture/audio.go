@@ -4,7 +4,10 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/local/audio/fixture.go
+// Fixtures defined in chromiumos/tast/local/audio/
 const (
 	CrasStopped = "crasStopped"
+
+	// Configure the ALSA loopback device for CRAS.
+	AloopLoaded = "aloopLoaded"
 )
