@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	pb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -47,45 +46,19 @@ func ECHash(ctx context.Context, s *testing.State) {
 		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
 
-	s.Log("Backing up current EC_RW region for safety")
-	ecPath, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Programmer: pb.Programmer_ECProgrammer,
-		Section:    pb.ImageSection_ECRWImageSection,
-	})
-	if err != nil {
-		s.Fatal("Failed to backup current EC_RW region: ", err)
-	}
-	s.Log("EC_RW region backup is stored at: ", ecPath.Path)
-
 	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
-	defer func(ctx context.Context) {
-		h.DisconnectDUT(ctx)
-		s.Log("Wait for DUT to reconnect")
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted")
+	restore, err := utils.EnableSoftwareSync(ctx, h, false)
+	if err != nil {
+		if restore != nil {
+			s.Log("Failed to clear disable software sync flag: ", err)
+			restore(cleanupContext, s)
+		} else {
+			s.Fatal("Failed to clear disable software sync flag: ", err)
 		}
-
-		s.Log("Reconnecting to BiosService on DUT")
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
-		}
-
-		s.Log("Restoring EC image")
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, ecPath); err != nil {
-			s.Error("Failed to restore EC image: ", err)
-		}
-		s.Log("Removing EC image backup from DUT")
-		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", ecPath.Path).Output(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete EC image from DUT: ", err)
-		}
-	}(cleanupContext)
-
-	flg := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if _, err := h.BiosServiceClient.ClearAndSetGBBFlags(ctx, &flg); err != nil {
-		s.Fatal("Failed clearing DISABLE_EC_SOFTWARE_SYNC GBB flag")
 	}
+	defer restore(cleanupContext, s)
 
 	ectool := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
 
@@ -118,7 +91,6 @@ func ECHash(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Warm rebooting DUT to recalculate EC hash with AP")
-	h.DisconnectDUT(ctx)
 	if err := h.DUT.Reboot(ctx); err != nil {
 		s.Fatal("Failed rebooting DUT: ", err)
 	}

@@ -10,10 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
-	common "chromiumos/tast/common/firmware"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
@@ -60,41 +58,19 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
-	bs := h.BiosServiceClient
-
-	old, err := bs.GetGBBFlags(ctx, &empty.Empty{})
-	if err != nil {
-		s.Fatal("initial GetGBBFlags failed: ", err)
-	}
-
-	if common.GBBFlagsContains(old, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
-		s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
-		req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-
-		if _, err := bs.ClearAndSetGBBFlags(ctx, &req); err != nil {
-			s.Fatal("Failed to clear gbb flag: ", err)
-		}
-	}
-
-	backup, err := bs.BackupImageSection(ctx, &pb.FWSectionInfo{Section: pb.ImageSection_ECRWImageSection, Programmer: pb.Programmer_ECProgrammer})
-	if err != nil {
-		s.Fatal("Could not backup EC firmware: ", err)
-	}
 	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
-	defer func(ctx context.Context) {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Can't delete temp file, DUT is off: ", err)
+	restore, err := utils.EnableSoftwareSync(ctx, h, false)
+	if err != nil {
+		if restore != nil {
+			s.Log("Failed to clear disable software sync flag: ", err)
+			restore(cleanupContext, s)
+		} else {
+			s.Fatal("Failed to clear disable software sync flag: ", err)
 		}
-		s.Log("Deleting temp file")
-		if err := h.DUT.Conn().CommandContext(ctx, "rm", "-f", backup.Path).Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete firmware backup: ", err)
-		}
-	}(cleanupContext)
+	}
+	defer restore(cleanupContext, s)
 
 	s.Log("Checking preconditions")
 	// TODO(b/194910957): Old test checks that fw-a section does not have preamble flag PREAMBLE_USE_RO_NORMAL. this really needed?
@@ -109,7 +85,6 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
-	bs = h.BiosServiceClient
 
 	activeCopy, err := h.Servo.GetString(ctx, "ec_active_copy")
 	if err != nil {
@@ -128,29 +103,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		ecSection = pb.ImageSection_ECRWBImageSection
 	}
 	s.Log("Corrupt the EC section: ", ecSection)
-	defer func(ctx context.Context) {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Can't restore firmware, DUT is off: ", err)
-		}
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Requiring BiosServiceClient: ", err)
-		}
-		s.Log("Restoring EC firmware backup")
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, backup); err != nil {
-			s.Fatal("Failed to restore EC firmware: ", err)
-		}
-		// Reboot and check active copy after restore.
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
-			s.Fatal("Failed to reboot: ", err)
-		}
-		activeCopy, err = h.Servo.GetString(ctx, "ec_active_copy")
-		if err != nil {
-			s.Fatal("EC active copy failed: ", err)
-		}
-		if !strings.HasPrefix(activeCopy, "RW") {
-			s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
-		}
-	}(cleanupContext)
+	bs := h.BiosServiceClient
 	if _, err = bs.CorruptFWSection(ctx, &pb.FWSectionInfo{Section: ecSection, Programmer: pb.Programmer_ECProgrammer}); err != nil {
 		s.Fatal("Failed to corrupt EC: ", err)
 	}

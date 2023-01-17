@@ -109,9 +109,9 @@ const (
 	// CheckToNormConfirmed causes DUT to stay at the to_norm_confirmed screen.
 	CheckToNormConfirmed ModeSwitchOption = iota
 
-	// UseFwScreenToDevMode uses fwScreenToDevMode instead of
+	// UseFwScreenToDevMode uses FwScreenToDevMode instead of
 	// devModeFWScreenBypass. When cold resetting the DUT in dev mode with
-	// ModeAwareReboot(), fwScreenToDevMode is less likely to leave the DUT
+	// ModeAwareReboot(), FwScreenToDevMode is less likely to leave the DUT
 	// stuck at a firmware screen. This would happen if dev mode is disabled,
 	// for example, by the FWMP.
 	UseFwScreenToDevMode ModeSwitchOption = iota
@@ -274,7 +274,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			}
 			// Depending on how we got to to dev mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
-			if err := ms.fwScreenToDevMode(ctx); err == nil {
+			if err := ms.FwScreenToDevMode(ctx, reconnectTimeout); err == nil {
 				newMode, err := h.Reporter.CurrentBootMode(ctx)
 				if err != nil {
 					return errors.Wrap(err, "determining boot mode after simple reboot")
@@ -290,7 +290,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
 				return err
 			}
-			if err := ms.fwScreenToDevMode(ctx, opts...); err != nil {
+			if err := ms.FwScreenToDevMode(ctx, reconnectTimeout, opts...); err != nil {
 				return errors.Wrap(err, "moving from firmware screen to dev mode")
 			}
 		} else {
@@ -317,7 +317,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			}
 			// Depending on how we got to to rec mode, we might end up in normal mode or the recovery
 			// menu, so navigate to dev mode, but it that fails, fall through to the next attempt below.
-			if err := ms.fwScreenToDevMode(ctx); err == nil {
+			if err := ms.FwScreenToDevMode(ctx, reconnectTimeout); err == nil {
 				newMode, err := h.Reporter.CurrentBootMode(ctx)
 				if err != nil {
 					return errors.Wrap(err, "determining boot mode after simple reboot")
@@ -340,7 +340,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
 				return err
 			}
-			if err := ms.fwScreenToDevMode(ctx); err != nil {
+			if err := ms.FwScreenToDevMode(ctx, reconnectTimeout); err != nil {
 				return errors.Wrap(err, "moving from firmware screen to dev mode")
 			}
 			newMode, err := h.Reporter.CurrentBootMode(ctx)
@@ -567,7 +567,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 	// If in dev mode, bypass the TO_DEV screen.
 	if fromMode == fwCommon.BootModeDev {
 		if msOptsContain(opts, UseFwScreenToDevMode) {
-			if err := ms.fwScreenToDevMode(ctx); err != nil {
+			if err := ms.FwScreenToDevMode(ctx, reconnectTimeout); err != nil {
 				return errors.Wrap(err, "fw screen to developer mode")
 			}
 		} else {
@@ -770,10 +770,10 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 	return nil
 }
 
-// fwScreenToDevMode moves the DUT from the firmware bootup screen to Dev mode.
+// FwScreenToDevMode moves the DUT from the firmware bootup screen to Dev mode.
 // This should be called immediately after powering on.
 // The actual behavior depends on the ModeSwitcherType.
-func (ms *ModeSwitcher) fwScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
+func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, reconnTimeout time.Duration, opts ...ModeSwitchOption) error {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -851,7 +851,7 @@ func (ms *ModeSwitcher) fwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 			defer cancel()
 			connectTimeout += time.Second
 			return h.DUT.WaitConnect(ctx)
-		}, &testing.PollOptions{Timeout: reconnectTimeout}); err != nil {
+		}, &testing.PollOptions{Timeout: reconnTimeout}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	case TabletDetachableSwitcher:
@@ -879,7 +879,7 @@ func (ms *ModeSwitcher) fwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 			return errors.Wrap(err, "selecting menu item 'Confirm enabling developer mode' on TO_DEV screen")
 		}
 		// Reconnect to the DUT.
-		connectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
+		connectCtx, cancel := context.WithTimeout(ctx, reconnTimeout)
 		defer cancel()
 		if err := h.WaitConnect(connectCtx); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")

@@ -429,3 +429,56 @@ func (s *Servo) CheckUSBPdStatus(ctx context.Context, portID int, expectedStatus
 	}
 	return nil
 }
+
+// ECHostevent holds int codes for EC hostevents
+type ECHostevent int64
+
+// Hostevent codes, copied from ec/include/ec_commands.h.
+const (
+	// HosteventLidClosed is the event code for lid closed.
+	HosteventLidClosed ECHostevent = 0x00000001
+	// HosteventLidOpen is the event code for lid open.
+	HosteventLidOpen ECHostevent = 0x00000002
+	// HosteventPowerButton is the event code for power button.
+	HosteventPowerButton ECHostevent = 0x00000004
+	// HosteventAcConnected is the event code for ac connected.
+	HosteventAcConnected ECHostevent = 0x00000008
+	// HosteventAcDisconnected is the event code for ac disconnected.
+	HosteventAcDisconnected ECHostevent = 0x00000010
+	// HosteventBatteryLow is the event code for low battery.
+	HosteventBatteryLow ECHostevent = 0x00000020
+	// HosteventBatteryCritical is the event code for critical battery.
+	HosteventBatteryCritical ECHostevent = 0x00000040
+	// HosteventBattery is the event code for battery.
+	HosteventBattery ECHostevent = 0x00000080
+	// HosteventThermalThreshold is the event code for thermal threshold.
+	HosteventThermalThreshold ECHostevent = 0x00000100
+	// HosteventThermalOverload is the event code for thermal overload.
+	HosteventThermalOverload ECHostevent = 0x00000200
+	// HosteventThermal is the event code for thermal.
+	HosteventThermal ECHostevent = 0x00000400
+	// HosteventUsbCharger is the event code for usb charger.
+	HosteventUsbCharger ECHostevent = 0x00000800
+	// HosteventKeyPressed is the event code for key press.
+	HosteventKeyPressed ECHostevent = 0x00001000
+	// HosteventInterfaceReady is the event code for interface ready.
+	HosteventInterfaceReady ECHostevent = 0x00002000
+	// HosteventKeyboardRecovery is the event code for keyboard recovery combo has been pressed
+	HosteventKeyboardRecovery ECHostevent = 0x00004000
+	// HosteventThermalShutdown is the event code for shutdown due to thermal overload.
+	HosteventThermalShutdown ECHostevent = 0x00008000
+	// HosteventBatteryShutdown is the event code for shutdown due to battery level too low.
+	HosteventBatteryShutdown ECHostevent = 0x00010000
+	// HosteventInvalid is the event code for invalid host event.
+	HosteventInvalid ECHostevent = 0x80000000
+)
+
+// SetHostevent sets host event in ec console using `hostevet set` cmd.
+func (s *Servo) SetHostevent(ctx context.Context, event ECHostevent) error {
+	hosteventCmd := fmt.Sprintf("hostevent set 0x%08x", event)
+	testing.ContextLogf(ctx, "Setting hostevent: %q", hosteventCmd)
+	if err := s.RunECCommand(ctx, hosteventCmd); err != nil {
+		return errors.Wrap(err, "failed to set hostevent")
+	}
+	return nil
+}
