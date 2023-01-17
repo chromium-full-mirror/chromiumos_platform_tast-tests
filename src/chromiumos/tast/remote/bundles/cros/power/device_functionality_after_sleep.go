@@ -42,11 +42,11 @@ func init() {
 		Func:         DeviceFunctionalityAfterSleep,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Device functionality after sleep (Keep system idle)/(Close lid)",
-		BugComponent: "b:167191",
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
 			Name:    "lid_close_open_with_usb2",
@@ -275,28 +275,28 @@ func setPowerPolicy(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to disable idle suspend and restart powerd")
 	}
 
-	// set_power_policy will fail right after restarting powerd.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep after restarting powerd")
-	}
-
 	idleDelay := 6
-	if err := h.DUT.Conn().CommandContext(ctx, "set_power_policy",
-		fmt.Sprintf("--battery_idle_delay=%d", idleDelay), fmt.Sprintf("--ac_idle_delay=%d", idleDelay),
-	).Run(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to set power policy")
-	}
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if brightness, err := systemBrightness(ctx, h); err != nil {
-			return errors.Wrap(err, "failed to get system current brightness in idle state")
-		} else if brightness != 0 {
-			return errors.Wrap(err, "failed to go to idle state")
+		if err := h.DUT.Conn().CommandContext(ctx, "set_power_policy",
+			fmt.Sprintf("--battery_idle_delay=%d", idleDelay), fmt.Sprintf("--ac_idle_delay=%d", idleDelay),
+		).Start(); err != nil {
+			return errors.Wrap(err, "failed to execute set power policy")
+		}
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if brightness, err := systemBrightness(ctx, h); err != nil {
+				return errors.Wrap(err, "failed to get system current brightness in idle state")
+			} else if brightness != 0 {
+				return errors.Wrap(err, "failed to go to idle state")
+			}
+			return nil
+		}, &testing.PollOptions{Interval: time.Second,
+			Timeout: 8 * time.Second} /*display goes off after 6 second*/); err != nil {
+			return errors.Wrap(err, "failed to wait for DUT to go to idle state")
 		}
 		return nil
-	}, &testing.PollOptions{Interval: time.Second,
-		Timeout: 5 * time.Minute} /*display goes off around 5 minutes*/); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT to go to idle state")
+	}, &testing.PollOptions{Interval: 10 * time.Second, Timeout: 20 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to set power policy")
 	}
 	return nil
 }
