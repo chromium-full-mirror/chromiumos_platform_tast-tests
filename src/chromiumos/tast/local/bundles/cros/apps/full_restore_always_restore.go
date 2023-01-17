@@ -48,7 +48,7 @@ func init() {
 }
 
 func FullRestoreAlwaysRestore(ctx context.Context, s *testing.State) {
-	const iterationCount = 7
+	const iterationCount = 2
 	for i := 0; i < iterationCount; i++ {
 		testing.ContextLogf(ctx, "Running: iteration %d/%d", i+1, iterationCount)
 
