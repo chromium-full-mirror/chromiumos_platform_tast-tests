@@ -342,7 +342,8 @@ func (c *Concierge) stopVM(ctx context.Context, vm *VM) error {
 	return nil
 }
 
-func (c *Concierge) getVMInfo(ctx context.Context, vm *VM) error {
+// GetVMInfo populates the info of the VM corresponding to |vm.name| inside |vm|.
+func (c *Concierge) GetVMInfo(ctx context.Context, vm *VM) error {
 	resp := &vmpb.GetVmInfoResponse{}
 	if err := dbusutil.CallProtoMethod(ctx, vm.Concierge.conciergeObj, conciergeInterface+".GetVmInfo",
 		&vmpb.GetVmInfoRequest{

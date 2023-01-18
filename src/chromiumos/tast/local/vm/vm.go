@@ -75,7 +75,7 @@ func GetRunningTerminaVM(ctx context.Context, user string) (*VM, error) {
 		return nil, err
 	}
 	vm := NewTerminaVM(c, false, 0)
-	if err := c.getVMInfo(ctx, vm); err != nil {
+	if err := c.GetVMInfo(ctx, vm); err != nil {
 		return nil, errors.Wrapf(err, "failed to get info for %q VM", vm.name)
 	}
 	return vm, nil

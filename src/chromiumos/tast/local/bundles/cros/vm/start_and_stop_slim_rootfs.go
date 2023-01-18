@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,9 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StartSlimRootfs,
+		Func:         StartAndStopSlimRootfs,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Starts a Linux VM with a slim rootfs",
+		Desc:         "Starts and stops a Linux VM",
 		Contacts:     []string{"crosvm-core@google.com", "abhishekbh@google.com"},
 		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests
 		SoftwareDeps: []string{"chrome", "vm_host"},
@@ -27,10 +27,10 @@ func init() {
 	})
 }
 
-func StartSlimRootfs(ctx context.Context, s *testing.State) {
+func StartAndStopSlimRootfs(ctx context.Context, s *testing.State) {
 	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(*chrome.Chrome).NormalizedUser())
 	if err != nil {
-		s.Fatal("Failed to get concierge instance: ", err)
+		s.Error("Failed to get concierge instance: ", err)
 	}
 
 	kernelAndRootfsFiles := slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch())
@@ -43,5 +43,20 @@ func StartSlimRootfs(ctx context.Context, s *testing.State) {
 	err = v.Start(ctx)
 	if err != nil {
 		s.Fatal("Failed to start a VM: ", err)
+	}
+
+	err = concierge.GetVMInfo(ctx, v)
+	if err != nil {
+		s.Fatal("Failed to get info about started VM")
+	}
+
+	err = v.Stop(ctx)
+	if err != nil {
+		s.Fatal("Failed to start a VM: ", err)
+	}
+
+	err = concierge.GetVMInfo(ctx, v)
+	if err == nil {
+		s.Fatal("Shouldn't get info about a stopped VM")
 	}
 }
