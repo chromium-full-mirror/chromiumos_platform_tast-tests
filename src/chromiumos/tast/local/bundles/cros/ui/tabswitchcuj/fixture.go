@@ -6,9 +6,11 @@ package tabswitchcuj
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/wpr"
 	"chromiumos/tast/testing"
@@ -57,6 +59,9 @@ func init() {
 			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
 			if err != nil {
 				return nil, err
+			}
+			if strings.ToLower(cuj.EnableWaylandLoggingVar.Value()) == "true" {
+				opts = append(opts, chrome.ExtraArgs("--lacros-chrome-additional-env=WAYLAND_DEBUG=1"))
 			}
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),

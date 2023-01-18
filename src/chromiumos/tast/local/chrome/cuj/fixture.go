@@ -68,6 +68,14 @@ var isLocalVar = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether or not to skip certain startup procedures for local testing",
 )
 
+// EnableWaylandLoggingVar is a runtime variable that specifies
+// whether to enable Wayland logging into Lacros logs.
+var EnableWaylandLoggingVar = testing.RegisterVarString(
+	"cuj.enableWaylandLogging",
+	"",
+	"A boolean string (true/false) signifying whether to enable Wayland logging into Lacros logs",
+)
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "prepareForCUJ",
@@ -479,6 +487,10 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 		var err error
 		if f.bt == browser.TypeLacros {
+			if strings.ToLower(EnableWaylandLoggingVar.Value()) == "true" {
+				opts = append(opts, chrome.ExtraArgs("--lacros-chrome-additional-env=WAYLAND_DEBUG=1"))
+			}
+
 			opts, err = lacrosfixt.NewConfig(lacrosfixt.Mode(lacros.LacrosOnly),
 				lacrosfixt.ChromeOptions(opts...)).Opts()
 			if err != nil {
