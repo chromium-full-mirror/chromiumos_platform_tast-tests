@@ -10,10 +10,12 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/coords"
+	"chromiumos/tast/testing"
 )
 
 // BreakSWAAttractLoop waits until the Demo Session has started, and then exits
@@ -49,6 +51,60 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 		demoAppLocation.CenterPoint(),
 		pc.DragTo(coords.NewPoint(0, 0), 1*time.Second))(ctx); err != nil {
 		return errors.Wrap(err, "failed to drag mouse across screen")
+	}
+	return nil
+}
+
+// VerifySWAFunctionality tests core SWA functionality (e.g. entering and exiting fullscreen,
+// asserting that basic content has rendered). Many different customized versions of the SWA
+// can be running on different devices, so highlightsNode is a node representing a UI element
+// unique to the version of the Highlights App being tested, to verify that the proper version
+// of the app is running.
+func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlightsNode *nodewith.Finder) error {
+	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
+
+	// Verify that splash screen has disappeared before moving mouse.
+	splashScreen := nodewith.ClassName("WallpaperView").Ancestor(nodewith.ClassName("AlwaysOnTopWallpaperContainer"))
+	if err := ui.WaitUntilGone(splashScreen)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait until splash screen is gone")
+	}
+
+	testing.ContextLog(ctx, "Waiting for Demo Mode App to launch")
+	demoApp := nodewith.Name("Demo Mode App").First()
+	if err := ui.WaitUntilExists(demoApp)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait until Demo App exists")
+	}
+
+	testing.ContextLog(ctx, "Confirming that app is in fullscreen Attract Loop mode")
+	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "Demo Mode App", true, 10*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
+	}
+
+	// Confirm that Highlights content is not yet shown
+	if err := ui.WaitUntilGone(highlightsNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to confirm that no highlights content is present")
+	}
+
+	pc := pointer.NewMouse(tconn)
+	defer pc.Close()
+
+	demoAppLocation, _ := ui.Location(ctx, demoApp)
+
+	// Move mouse (arbitrarily) from center of demo app to screen corner to
+	// trigger interaction, breaking fullscreen Attract Loop.
+	if err := pc.Drag(
+		demoAppLocation.CenterPoint(),
+		pc.DragTo(coords.NewPoint(0, 0), 1*time.Second))(ctx); err != nil {
+		return errors.Wrap(err, "failed to drag mouse across screen")
+	}
+
+	testing.ContextLog(ctx, "Confirming that app is in windowed Highlights mode")
+	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "Demo Mode App", false, 10*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
+	}
+	// Confirm that basic Highlights content is shown by presence of highlightsNode
+	if err := ui.WaitUntilExists(highlightsNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for Highlights content node to be present")
 	}
 	return nil
 }

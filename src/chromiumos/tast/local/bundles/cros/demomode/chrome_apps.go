@@ -23,6 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify state about the core demo mode Chrome Apps",
 		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
+		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},

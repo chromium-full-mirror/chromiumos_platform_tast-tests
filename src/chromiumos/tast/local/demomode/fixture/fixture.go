@@ -24,6 +24,9 @@ import (
 const (
 	// PostDemoModeOOBE is the name for the fixture that clicks through Demo Mode OOBE setup
 	PostDemoModeOOBE = "postDemoModeOOBE"
+	// PostDemoModeOOBECloudGaming is similar to PostDemoModeOOBE, except Cloud Gaming
+	// customizations are enabled (i.e. the CloudGamingDevice feature is enabled).
+	PostDemoModeOOBECloudGaming = "postDemoModeOOBECloudGaming"
 
 	setUpTimeout    = 350 * time.Second
 	tearDownTimeout = 25 * time.Second
@@ -45,6 +48,22 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: PostDemoModeOOBECloudGaming,
+		Desc: "Has proceeded through Demo Mode setup flow from OOBE with Cloud Gaming customizations configured",
+		Contacts: []string{
+			"jacksontadie@google.com",
+			"cros-demo-mode-eng@google.com",
+		},
+		Impl: &fixtureImpl{
+			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
+			enrollmentUser:  "admin-tast",
+			enabledFeatures: []string{"CloudGamingDevice"},
+		},
+		SetUpTimeout:    setUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+	})
 }
 
 // fixtureImpl implements testing.FixtureImpl.
@@ -52,6 +71,8 @@ type fixtureImpl struct {
 	// The user that the device enrolls into Demo Mode with. This allows us to
 	// control which Organizational Unit the device enrolls into, thus the policies.
 	enrollmentUser string
+	// Additional features that should be enabled during Demo Mode setup
+	enabledFeatures []string
 }
 
 var _ testing.FixtureImpl = &fixtureImpl{}
@@ -63,12 +84,15 @@ var _ testing.FixtureImpl = &fixtureImpl{}
 func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	resetTPMAndSystemState(ctx, s)
 
+	// Along with the fixture-specific features, we enable the DemoModeSWA feature so that
+	// SWA component is downloaded during setup. Chrome Apps behavior can still be tested
+	// by explicitly disabling the feature in tests that use this fixture.
+	enabledFeatures := append(f.enabledFeatures, "DemoModeSWA")
+
 	cr, err := chrome.New(ctx,
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
-		// Enable DemoModeSWA feature so that component is downloaded during setup. Chrome Apps behavior
-		// can still be tested by explicitly disabling the feature in tests that use this fixture.
-		chrome.EnableFeatures("DemoModeSWA"),
+		chrome.EnableFeatures(enabledFeatures...),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ExtraArgs("--demo-mode-enrolling-username="+f.enrollmentUser),
 		chrome.ExtraArgs("--arc-start-mode=always-start"),

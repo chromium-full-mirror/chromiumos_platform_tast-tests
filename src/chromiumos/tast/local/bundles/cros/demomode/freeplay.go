@@ -26,6 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify that all preinstalled sample apps are present in Demo Mode freeplay",
 		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
+		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},
