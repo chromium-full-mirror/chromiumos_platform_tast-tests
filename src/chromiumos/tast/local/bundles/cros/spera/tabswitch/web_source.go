@@ -261,11 +261,46 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 		if err := forceSymlink(ctx, videoPath, targetVideoFilePath); err != nil {
 			return errors.Wrapf(err, "failed to create symbolic link %s", targetVideoFileName)
 		}
-		video := fmt.Sprintf(`
-			<video id="v1" width="200" height="150" autoplay muted >
+
+		var video, externalScript, inlineScript, smallImageDiv, gifImageDiv string
+		// Add video once per two pages to reduce the overall complexity of the local websites.
+		if i%2 == 1 {
+			var canvas string
+			// Render the video in canvas with the drawImage API per four pages to simulate the behavior of the Google properties.
+			if i%4 == 1 {
+				canvas = `
+				<div class="d1">
+					<canvas id="canvas"></canvas>
+					<script>
+						const video = document.getElementById("video");
+						const canvas = document.getElementById("canvas");
+						const ctx = canvas.getContext("2d");
+
+						document.addEventListener("visibilitychange", function() {
+							if (!document.hidden){
+								video.play();
+							}
+						});
+
+						video.addEventListener("play", () => {
+							function drawVideo() {
+								ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+								requestAnimationFrame(drawVideo);
+							}
+							requestAnimationFrame(drawVideo);
+						});
+						video.style.visibility = "hidden";
+					</script>
+				</div>
+			`
+			}
+			video = fmt.Sprintf(`
+			<video id="video" width="200" height="150" autoplay muted loop>
 				<source src="./%s" type="video/mp4">
 			</video>
-			`, targetVideoFileName)
+			%s
+			`, targetVideoFileName, canvas)
+		}
 
 		duplicateElements := minDuplicateElements
 		if i%3 == 1 {
@@ -273,7 +308,7 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 		} else if i%3 == 2 {
 			duplicateElements = maxDuplicateElements
 		}
-		var externalScript, inlineScript, smallImageDiv, gifImageDiv string
+
 		for j := 0; j < duplicateElements; j++ {
 			targetScriptFileName := fmt.Sprintf("%s%d.%d.js", localScript, i, j)
 			targetScriptFilePath := path.Join(dirPath, targetScriptFileName)
@@ -352,32 +387,6 @@ func generateLocalWebsitesTargets(ctx context.Context, dirPath, localURL string,
 			<div class="float-child" >
 				%s
 				%s
-				<div class="d1">
-					<canvas></canvas>
-					<script>
-					const video = document.getElementById("v1");
-					const canvasList = document.getElementsByTagName("canvas");
-
-					document.addEventListener("visibilitychange", function() {
-						if (!document.hidden){
-							video.play()
-						}
-					});
-
-					video.addEventListener("play", () => {
-					function step() {
-						for (c of canvasList) {
-							const ctx = c.getContext("2d");
-							for (let i = 1; i < 6666666; i++) {
-								var j = Math.sqrt(i)}
-							ctx.drawImage(video, 0, 0, c.width, c.height);
-						}
-						requestAnimationFrame(step);
-					}
-					requestAnimationFrame(step);
-					});
-					</script>
-				</div>
 			</div>
 			<div class="float-child">
 				%s
