@@ -366,6 +366,25 @@ func (c *UreadaheadPackService) CheckMinMemory(ctx context.Context, req *empty.E
 	return &response, nil
 }
 
+// verifyTracedServicesStopped will confirm traced services are not running.
+func verifyTracedServicesStopped(ctx context.Context, a *arc.ARC) error {
+	expected := "0"
+	if value, err := a.GetProp(ctx, "persist.traced.enable"); err != nil || value != expected {
+		return errors.Wrapf(err, "failed to verify traced is disabled (%v), got %v instead", expected, value)
+	}
+	expected = "stopped"
+	if value, err := a.GetProp(ctx, "init.svc.traced_probes"); err != nil || value != expected {
+		return errors.Wrapf(err, "failed to verify traced_probes is %v, got %v instead", expected, value)
+	}
+	if value, err := a.GetProp(ctx, "init.svc.traced_perf"); err != nil || value != expected {
+		return errors.Wrapf(err, "failed to verify traced_perf is %v, got %v instead", expected, value)
+	}
+	if value, err := a.GetProp(ctx, "init.svc.traced"); err != nil || value != expected {
+		return errors.Wrapf(err, "failed to verify traced is %v, got %v instead", expected, value)
+	}
+	return nil
+}
+
 // getGuestPack pulls ureadahead initial pack for requested Chrome login mode from guest OS.
 func getGuestPack(ctx context.Context, logPath string) (string, error) {
 	const (
@@ -396,6 +415,11 @@ func getGuestPack(ctx context.Context, logPath string) (string, error) {
 		return "", errors.Wrap(err, "failed to connect ARCVM")
 	}
 	defer a.Close(ctx)
+
+	// Verify traced services are stopped as they can interfere with pack generation.
+	if err := verifyTracedServicesStopped(ctx, a); err != nil {
+		return "", errors.Wrap(err, "failed to verify traced services are stopped")
+	}
 
 	// Confirm ureadahead_generate service has stopped.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
