@@ -24,10 +24,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const (
-	timeout = 10 * time.Second
-)
-
 // ScreenRecorder is a utility to record the screen during a test scenario.
 type ScreenRecorder struct {
 	isRecording   bool
@@ -434,6 +430,7 @@ func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 		return errors.Wrap(err, "failed to read files from Downloads")
 	}
 	expectNumber := len(files) + 1
+	const timeout = 10 * time.Second
 	checkRecordFile := func(ctx context.Context) error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
 			files, err = ioutil.ReadDir(downloadsPath)
@@ -444,7 +441,7 @@ func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 				return nil
 			}
 			return errors.Wrapf(err, "failed to check number of files, got %d, want %d", len(files), expectNumber)
-		}, &testing.PollOptions{Timeout: 5 * time.Second})
+		}, &testing.PollOptions{Timeout: timeout})
 	}
 	return Combine("start screen record",
 		kb.AccelAction("Ctrl+Shift+F5"),
