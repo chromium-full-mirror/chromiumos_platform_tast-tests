@@ -28,6 +28,7 @@ type FrameDataTracker struct {
 	dsData         *DisplayFrameData
 	frameCountData []FrameCountingPerSinkData
 	dsTracker      *DisplaySmoothnessTracker
+	timeOffset     time.Duration
 	collecting     chan bool
 	collectingErr  chan error
 }
@@ -45,7 +46,7 @@ func (t *FrameDataTracker) Close(ctx context.Context, tconn *chrome.TestConn) er
 }
 
 // Start starts the animation data collection.
-func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn) error {
+func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, timeZero time.Time) error {
 	if t.collecting != nil {
 		return errors.New("already started")
 	}
@@ -55,7 +56,9 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn) er
 	}
 
 	// Start frame counting with a bucket size of 1, to capture frames
-	// per second.
+	// per second. Assume the start time of the timeline is right before
+	// autotestPrivate.startFrameCounting is called.
+	t.timeOffset = time.Since(timeZero)
 	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.startFrameCounting)`, frameSinkBucketSize); err != nil {
 		return errors.Wrap(err, "failed to start frame counting per sink")
 	}
@@ -179,6 +182,7 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 	// Keep track of how many of each sink types have been seen to
 	// properly label the metric name.
 	sinkTypeCounts := make(map[string]int)
+	var numBuckets int
 	for _, sink := range t.frameCountData {
 		sinkName := "." + sink.SinkType
 		if sink.IsRoot {
@@ -186,12 +190,12 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 		}
 
 		// Metrics are named according to the following:
-		// "<prefix>FrameSink<optional .root>.<sink type>.<current number of that sink type"
+		// "<prefix>FrameSink<optional .root>.<sink type>.<current number of that sink type>"
 		//
 		// i.e:
 		// TPS.FrameSink.root.layer-tree.0
 		// TPS.FrameSink.unspecified.0
-		metric := perf.Metric{
+		frameSinkMetric := perf.Metric{
 			Name:      fmt.Sprintf("%sFrameSink%s.%d", t.prefix, sinkName, sinkTypeCounts[sinkName]),
 			Unit:      "count",
 			Direction: perf.BiggerIsBetter,
@@ -200,9 +204,23 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 		}
 
 		for _, count := range sink.PresentedFrames {
-			pv.Append(metric, float64(count))
+			pv.Append(frameSinkMetric, float64(count))
 		}
 		sinkTypeCounts[sinkName]++
+
+		if sinkBuckets := len(sink.PresentedFrames); sinkBuckets > numBuckets {
+			numBuckets = sinkBuckets
+		}
+	}
+
+	frameSinkTime := perf.Metric{
+		Name:     "FrameSink.t",
+		Unit:     "s",
+		Multiple: true,
+	}
+	secondsOffset := t.timeOffset.Seconds()
+	for i := 0; i < numBuckets; i++ {
+		pv.Append(frameSinkTime, float64(i*frameSinkBucketSize)+secondsOffset)
 	}
 
 	// FrameData collecting on the DUTs may fail (b/210185705) or return no data.

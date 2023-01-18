@@ -663,9 +663,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		}
 	}
 
-	// TODO(265475357): Align FrameDataTracker values with r.startedAtTm once the tracker
-	// returns proper collection timing information.
-	if err := r.frameDataTracker.Start(ctx, r.tconn); err != nil {
+	if err := r.frameDataTracker.Start(ctx, r.tconn, r.startedAtTm); err != nil {
 		return nil, errors.Wrap(err, "failed to start FrameDataTracker")
 	}
 
