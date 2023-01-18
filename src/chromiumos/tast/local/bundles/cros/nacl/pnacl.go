@@ -30,9 +30,10 @@ func init() {
 		Func:         Pnacl,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests running a PNaCl module",
-		Contacts:     []string{"emaxx@chromium.org", "nacl-eng@google.com"},
+		Contacts:     []string{"nacl-eng@google.com", "emaxx@chromium.org"},
 		Data:         extensionFiles,
 		SoftwareDeps: []string{"chrome", "nacl"},
+		BugComponent: "b:1258585", // ChromeOS Public Tracker > Enterprise & Edu > NaCl
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
