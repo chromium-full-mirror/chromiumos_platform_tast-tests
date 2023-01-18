@@ -35,6 +35,8 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 			"cros-networking@google.com",
 		},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wired_8021x"},
 		Fixture:      "ensureNoUI",
@@ -84,14 +86,14 @@ type testContext struct {
 // the EAP server built into hostapd.
 //
 // Test outline:
-//  * Start up hostapd on one end of the link
-//  * Ensure client link (managed by Shill) transitions to "EAP detected"
-//  * Configure client EAP parameters in Shill
-//  * Ensure client transitions to "EAP connected", hostapd transitions to "authorized"
-//  * Perform client logout
-//  * Ensure client transitions to "EAP not connected", hostapd transitions to "logoff"
-//  * Re-login client
-//  * Ensure client transitions back to "EAP connected", hostapd transitions to "authorized"
+//   - Start up hostapd on one end of the link
+//   - Ensure client link (managed by Shill) transitions to "EAP detected"
+//   - Configure client EAP parameters in Shill
+//   - Ensure client transitions to "EAP connected", hostapd transitions to "authorized"
+//   - Perform client logout
+//   - Ensure client transitions to "EAP not connected", hostapd transitions to "logoff"
+//   - Re-login client
+//   - Ensure client transitions back to "EAP connected", hostapd transitions to "authorized"
 //
 // Note that we only test that authentication completes successfully; we don't, e.g., start up a DHCP server,
 // so the client never actually gets an IP address. Real 802.1X-enabled switches would typically have

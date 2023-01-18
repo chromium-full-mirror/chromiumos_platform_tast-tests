@@ -24,12 +24,14 @@ func init() {
 		Func: Firewall,
 		Desc: "Ensure the firewall service is working correctly",
 		Contacts: []string{
-			"jorgelo@chromium.org", // Security team
 			"chromeos-security@google.com",
-			"jasongustaman@google.com",
+			"jorgelo@chromium.org", // Security team
 			"cros-networking@google.com",
+			"jasongustaman@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

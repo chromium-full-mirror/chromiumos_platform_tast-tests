@@ -24,7 +24,9 @@ func init() {
 			"hugobenichi@google.com",
 			"chromeos-kernel-test@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
+		Attr:         []string{"group:mainline"},
 	})
 }
 

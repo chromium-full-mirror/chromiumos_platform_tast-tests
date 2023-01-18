@@ -24,11 +24,12 @@ func init() {
 		Func: EthernetStaticIP,
 		Desc: "Test whether static IP configurations behave as they should between profile changes",
 		Contacts: []string{
-			"matthewmwang@chromium.org",
 			"cros-networking@google.com",
+			"matthewmwang@chromium.org",
 		},
-		// b:238260020 - disable aged (>1y) unpromoted informational tests
-		// Attr: []string{"group:mainline", "informational"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
+		Attr:         []string{"group:network"},
 	})
 }
 
