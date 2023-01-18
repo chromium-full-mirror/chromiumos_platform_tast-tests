@@ -20,6 +20,8 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const heartbeatReportingTimeout = 7 * time.Minute
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HeartbeatReporting,
@@ -35,10 +37,8 @@ func init() {
 		Attr:         []string{"group:dmserver-enrollment-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
-		Timeout:      7 * time.Minute,
+		Timeout:      heartbeatReportingTimeout,
 		VarDeps: []string{
-			"policy.HeartbeatReporting.user_name",
-			"policy.HeartbeatReporting.password",
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
@@ -47,9 +47,7 @@ func init() {
 }
 
 func HeartbeatReporting(ctx context.Context, s *testing.State) {
-	user := s.RequiredVar("policy.HeartbeatReporting.user_name")
-	pass := s.RequiredVar("policy.HeartbeatReporting.password")
-	cID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
+	customerId := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
@@ -68,7 +66,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, cID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerId)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -82,10 +80,23 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 
 	policyClient := ps.NewPolicyServiceClient(cl.Conn)
 
+	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	if err != nil {
+		s.Fatal("Failed to create tape client: ", err)
+	}
+
+	timeout := int32(heartbeatReportingTimeout.Seconds())
+	// Create an account manager and lease a test account for the duration of the test.
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.Reporting))
+	if err != nil {
+		s.Fatal("Failed to create an account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(ctx)
+
 	testStartTime := time.Now()
 	if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
-		Username:           user,
-		Password:           pass,
+		Username:           acc.Username,
+		Password:           acc.Password,
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, EncryptedReportingManualTestHeartbeatEvent",
@@ -101,7 +112,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, cID, c.ClientId, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "HEARTBEAT_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up events")
 		}
