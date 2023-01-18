@@ -66,9 +66,6 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)
 	}
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true /* createVault */, hwsec.NewVaultConfig()); err != nil {
-		s.Fatal("Failed to create user: ", err)
-	}
 
 	if userParam.useUserSecretStash {
 		// Enable UserSecretStash.
@@ -86,6 +83,9 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 		defer cleanupUSSDisable(ctx)
 	}
 
+	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true /* createVault */, hwsec.NewVaultConfig()); err != nil {
+		s.Fatal("Failed to create user: ", err)
+	}
 	// Cleanup upon finishing
 	defer func() {
 		if _, err := utility.Unmount(ctx, util.FirstUsername); err != nil {
@@ -112,8 +112,8 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 	for i := int64(0); i < iterations; i++ {
 		startTs := time.Now()
 		// Perform unlock for user during the session.
-		err = utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
-			if _, err = utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
+		err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
+			if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
 				return errors.Wrap(err, "failed to authenticate user")
 			}
 			return nil
@@ -136,8 +136,8 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 	for i := int64(0); i < iterations; i++ {
 		startTs := time.Now()
 		// Perform webAuthn for user during the session.
-		err = utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_WEBAUTHN, func(authSessionID string) error {
-			if _, err = utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
+		err := utility.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_WEBAUTHN, func(authSessionID string) error {
+			if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
 				return errors.Wrap(err, "failed to authenticate user")
 			}
 			return nil
