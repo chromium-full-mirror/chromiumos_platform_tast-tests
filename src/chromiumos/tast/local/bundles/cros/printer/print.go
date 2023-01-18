@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/printmanagementapp"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
@@ -100,8 +99,6 @@ func Print(ctx context.Context, s *testing.State) {
 	}
 
 	const printerName = "DavieV Virtual USB Printer (USB)"
-	savePrinterButton := nodewith.ClassName("save-printer-button").NameContaining(printerName).Ancestor(ossettings.WindowFinder)
-	editPrinterButton := nodewith.ClassName("icon-more-vert").NameContaining(printerName).Ancestor(ossettings.WindowFinder)
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
@@ -111,14 +108,6 @@ func Print(ctx context.Context, s *testing.State) {
 	// Hide all notifications to prevent them from covering the printer entry.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all notifications: ", err)
-	}
-
-	if err := uiauto.Combine("click Settings Printer entry, save printer",
-		ui.LeftClick(entryFinder),
-		ui.LeftClick(savePrinterButton),
-		ui.WithTimeout(time.Minute).WaitUntilExists(editPrinterButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to save virtual USB printer and open Print Preview: ", err)
 	}
 
 	// Launch Print Management app.
