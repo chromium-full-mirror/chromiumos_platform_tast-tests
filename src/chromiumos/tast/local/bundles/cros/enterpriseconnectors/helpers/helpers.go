@@ -40,7 +40,8 @@ type TestFileParams struct {
 }
 
 // ScanningTimeOut describes the typical time out for a scan.
-const ScanningTimeOut = 5 * time.Minute
+// The scanning timeout of chrome is 5 minutes, so we wait a bit more to get a proper TIMEOUT notification.
+const ScanningTimeOut = 6 * time.Minute
 
 // DmTokenTimeOut describes how long we wait for a valid dm token.
 const DmTokenTimeOut = 10 * time.Minute
