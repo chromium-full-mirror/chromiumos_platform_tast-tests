@@ -24,7 +24,7 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
-	xdr "chromiumos/xdr/reporting"
+	xdr "chromiumos/xdr/secagentd"
 )
 
 const cmdLineRetryTimes = 5

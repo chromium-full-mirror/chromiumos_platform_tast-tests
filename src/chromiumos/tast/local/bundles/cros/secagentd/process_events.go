@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
-	xdr "chromiumos/xdr/reporting"
+	xdr "chromiumos/xdr/secagentd"
 )
 
 func init() {
