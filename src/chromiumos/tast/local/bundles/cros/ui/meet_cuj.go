@@ -368,7 +368,7 @@ func init() {
 			Timeout:   defaultTestTimeout,
 			ExtraAttr: []string{"group:cuj"},
 			Val: meetTest{
-				num:           4,
+				num:           3,
 				layout:        meetLayoutTiled,
 				docs:          true,
 				cam:           true,
