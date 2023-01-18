@@ -101,23 +101,6 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 	var pc pointer.Context
 	if inTabletMode {
-		// If it is in tablet mode, ensure it it in landscape orientation.
-		orientation, err := display.GetOrientation(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to get display orientation: ", err)
-		}
-		if orientation.Type == display.OrientationPortraitPrimary {
-			info, err := display.GetPrimaryInfo(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to get the primary display info: ", err)
-			}
-			s.Log("Rotating display 90 degrees")
-			if err := display.SetDisplayRotationSync(ctx, tconn, info.ID, display.Rotate90); err != nil {
-				s.Fatal("Failed to rotate display: ", err)
-			}
-			defer display.SetDisplayRotationSync(closeCtx, tconn, info.ID, display.Rotate0)
-		}
-
 		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to create a touch controller: ", err)
