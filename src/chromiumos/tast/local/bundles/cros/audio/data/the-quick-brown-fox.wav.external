@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/audio/the-quick-brown-fox_20230131.wav",
+  "size": 163662,
+  "sha256sum": "6fee476253d128f37d734bab6c4d25cd6fb5bcedd22871b6fceca14dfe0f7632"
+}

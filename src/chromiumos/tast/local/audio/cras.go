@@ -353,3 +353,13 @@ func (c *Cras) GetNumberOfNonChromeOutputStreams(ctx context.Context) (int, erro
 	err := c.call(ctx, "GetNumberOfNonChromeOutputStreams").Store(&numNonChromeOutputStreams)
 	return numNonChromeOutputStreams, err
 }
+
+// SetInputMute sets the input mute state
+func (c *Cras) SetInputMute(ctx context.Context, mute bool) error {
+	return c.call(ctx, "SetInputMute", mute).Err
+}
+
+// SetSpeakOnMuteDetection enables or disables speak-on-mute detection.
+func (c *Cras) SetSpeakOnMuteDetection(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetSpeakOnMuteDetection", enabled).Err
+}
