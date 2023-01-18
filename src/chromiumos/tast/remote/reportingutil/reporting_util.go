@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	grpc "google.golang.org/grpc"
@@ -187,9 +188,8 @@ func PruneEvents(ctx context.Context, events []InputEvent, correctEventType Veri
 
 // LookupEvents Call the Reporting API Server's ChromeReportingDebugService.LookupEvents
 // endpoint to get a list of events received by the server from this user.
-func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, clientID string, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
-	testStartTimeSecs := testStartTime.Unix()
-	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&deviceId=%v&destination=%v&readDataAfterSec=%v", reportingServerURL, apiKey, obfuscatedCustomerID, clientID, destination, testStartTimeSecs)
+func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
+	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&deviceId=%v&destination=%v", reportingServerURL, apiKey, obfuscatedCustomerID, clientID, destination)
 	req, err := http.NewRequestWithContext(ctx, "GET", reqPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to craft event query request to the Reporting Server")
@@ -211,7 +211,17 @@ func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID,
 	if err := json.Unmarshal(resBody, &resData); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal response")
 	}
-	return resData.Event, nil
+	var filteredEvents []InputEvent
+	for _, event := range resData.Event {
+		us, err := strconv.ParseInt(event.APIEvent.ReportingRecordEvent.Time, 10, 64)
+		if err != nil {
+			return filteredEvents, errors.Wrap(err, "failed to parse int64 Spanner timestamp from event")
+		}
+		if time.UnixMicro(us).After(testStartTime) {
+			filteredEvents = append(filteredEvents, event)
+		}
+	}
+	return filteredEvents, nil
 }
 
 // Deprovision deprovisions the DUT. This should be used after the test is over.
