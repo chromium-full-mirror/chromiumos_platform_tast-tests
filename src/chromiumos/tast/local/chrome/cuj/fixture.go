@@ -550,24 +550,17 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				s.Fatal("Failed to optin to Play Store: ", err)
 			}
 
-			s.Log("Waiting for Playstore shown")
+			s.Log("Waiting for Play Store shown")
 			if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 				return w.ARCPackageName == playStorePackageName
 			}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 				// Playstore app window might not be shown, but optin should be successful
 				// at this time. Log the error message but continue.
-				s.Log("Failed to wait for the playstore window to be visible: ", err)
+				s.Log("Failed to wait for the Play Store window to be visible: ", err)
 			} else if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
 				s.Fatal("Failed to close Play Store: ", err)
-			} else if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if _, err := ash.GetARCAppWindowInfo(ctx, tconn, playStorePackageName); err == ash.ErrWindowNotFound {
-					return nil
-				} else if err != nil {
-					return testing.PollBreak(err)
-				}
-				return errors.New("still seeing playstore window")
-			}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-				s.Fatal("Failed to wait for the playstore window to be closed: ", err)
+			} else if err := ash.WaitForAppClosed(ctx, tconn, apps.PlayStore.ID); err != nil {
+				s.Fatal("Failed to wait for Play Store to be closed: ", err)
 			}
 			histogram, err := metrics.WaitForHistogram(
 				ctx,
