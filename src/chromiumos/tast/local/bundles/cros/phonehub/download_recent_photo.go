@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
+	cdcommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/phonehub"
@@ -22,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 const statusAreaOverflowButtonTrayClassName = "StatusAreaOverflowButtonTray"
@@ -41,7 +43,13 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
+				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
+			},
+			{
+				Name:              "unstable",
+				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
 			},
 			{
 				Name:      "floss",

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	cdcommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/phonehub"
@@ -16,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -34,7 +36,13 @@ func init() {
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
+				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
+			},
+			{
+				Name:              "unstable",
+				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
 			},
 			{
 				Name:      "floss",

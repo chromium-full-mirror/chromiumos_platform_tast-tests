@@ -9,11 +9,13 @@ import (
 	"context"
 	"time"
 
+	cdcommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/smartlock"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -33,7 +35,13 @@ func init() {
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedNoLock",
+				Fixture:           "crossdeviceOnboarded",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
+			},
+			{
+				Name:              "unstable",
+				Fixture:           "crossdeviceOnboarded",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
 			},
 			{
 				Name:      "floss",

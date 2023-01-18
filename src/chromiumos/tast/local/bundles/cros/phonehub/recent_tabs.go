@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	cdcommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -18,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -35,8 +37,15 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Fixture: "crossdeviceOnboardedAllFeaturesRerun",
-				Val:     browser.TypeAsh,
+				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
+				Val:               browser.TypeAsh,
+			},
+			{
+				Name:              "unstable",
+				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
+				Val:               browser.TypeAsh,
 			},
 			{
 				Name:      "floss",
