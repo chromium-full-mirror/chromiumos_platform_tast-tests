@@ -63,6 +63,7 @@ type meetTest struct {
 	split         bool                 // Whether it is in split screen mode. It can not be true if docs is false.
 	cam           bool                 // Whether the camera is on or not.
 	effects       bool                 // Whether to turn on visual effects.
+	zoomOut       bool                 // Whether to zoom out on both the browser and display.
 	tabSwitchDocs bool                 // Whether to switch between Docs and Meet. It cannot be true if docs is false.
 	duration      time.Duration        // Duration of the meet call. Must be less than test timeout.
 	browserType   browser.Type         // Ash Chrome browser or Lacros.
@@ -221,6 +222,7 @@ func init() {
 				num:         48,
 				layout:      meetLayoutTiled,
 				cam:         true,
+				zoomOut:     true,
 				browserType: browser.TypeAsh,
 			},
 			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
@@ -233,6 +235,7 @@ func init() {
 				num:         48,
 				layout:      meetLayoutTiled,
 				cam:         true,
+				zoomOut:     true,
 				browserType: browser.TypeLacros,
 			},
 			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
@@ -284,6 +287,7 @@ func init() {
 				num:         48,
 				layout:      meetLayoutTiled,
 				cam:         true,
+				zoomOut:     true,
 				browserType: browser.TypeAsh,
 				botsOptions: []bond.AddBotsOption{bond.WithVP9(false, false)},
 			},
@@ -441,18 +445,20 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the test API connection: ", err)
 	}
 
-	// Sets the display zoom factor to minimum, to ensure that all
-	// meeting participants' video can be shown simultaneously.
-	// The display zoom should be done before the Meet window is
-	// opened, to prevent visual oddities on some devices. We also
-	// zoom out on the browser after the Meet window is opened,
-	// because on some boards the display zoom is not enough to
-	// show all of the participants.
-	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
+	if meet.zoomOut {
+		// Sets the display zoom factor to minimum, to ensure that all
+		// meeting participants' video can be shown simultaneously.
+		// The display zoom should be done before the Meet window is
+		// opened, to prevent visual oddities on some devices. We also
+		// zoom out on the browser after the Meet window is opened,
+		// because on some boards the display zoom is not enough to
+		// show all of the participants.
+		revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
+		}
+		defer revertZoom(closeCtx, tconn)
 	}
-	defer revertZoom(closeCtx, tconn)
 
 	var cs ash.ConnSource
 	var br *browser.Browser
@@ -817,32 +823,29 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to press Ctrl+0 to reset the zoom: ", err)
 	}
 
-	// Zoom out on the browser to maximize the number of visible video
-	// feeds. This needs to be done before the final layout mode has been set,
-	// so that Meet can properly recalculate how many inbound videos should
-	// be visible. Pressing Ctrl+Minus 3 times results in the zoom going from
-	// 100% -> 90% -> 80% -> 75%.
-	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 3); err != nil {
-		s.Fatal("Failed to repeatedly press Ctrl+Minus to zoom out: ", err)
+	if meet.zoomOut {
+		// Zoom out on the browser to maximize the number of visible video
+		// feeds. This needs to be done before the final layout mode has been set,
+		// so that Meet can properly recalculate how many inbound videos should
+		// be visible. Pressing Ctrl+Minus 3 times results in the zoom going from
+		// 100% -> 90% -> 80% -> 75%.
+		if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 3); err != nil {
+			s.Fatal("Failed to repeatedly press Ctrl+Minus to zoom out: ", err)
+		}
+
+		// Verify that we zoomed correctly.
+		zoomInfo, err := ui.Info(ctx, zoomNode)
+		if err != nil {
+			s.Fatal("Failed to find the current browser zoom: ", err)
+		}
+		if zoomInfo.Name != "Zoom: 75%" {
+			s.Fatalf(`Unexpected zoom value: got %s; want "Zoom: 75%%"`, zoomInfo.Name)
+		}
+		s.Log("Zoomed browser window to 75%")
 	}
 
-	// Sometimes on some devices, after granting camera permissions,
-	// the Meet tab will crash (b/258029099). This crash is caught by
-	// calling ui.Info(zoomNode), as we are checking for a node that
-	// doesn't exist, since the page already crashed. Instead of
-	// failing the test for failing to find the zoom node, check that
-	// the tab is active, and properly log a crash if it occurred.
+	// Make sure the Meet call window hasn't crashed before starting the recorder.
 	assertTabActive(ctx)
-
-	// Verify that we zoomed correctly.
-	zoomInfo, err := ui.Info(ctx, zoomNode)
-	if err != nil {
-		s.Fatal("Failed to find the current browser zoom: ", err)
-	}
-	if zoomInfo.Name != "Zoom: 75%" {
-		s.Fatalf(`Unexpected zoom value: got %s; want "Zoom: 75%%"`, zoomInfo.Name)
-	}
-	s.Log("Zoomed browser window to 75%")
 
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
