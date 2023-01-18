@@ -51,12 +51,6 @@ func Enable(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) erro
 	}
 	defer settingsConn.Close()
 
-	// Turn on Phone Hub in the "Connected devices" subpage. The easiest way to get there is to reopen OS Settings on that specific page.
-	_, err = ossettings.LaunchAtPageURL(ctx, tconn, cr, crossdevicesettings.ConnectedDevicesSettingsURL, func(context.Context) error { return nil })
-	if err != nil {
-		return errors.Wrap(err, "failed to re-launch OS Settings to the multidevice feature page")
-	}
-
 	// Toggle Phone Hub on with JS.
 	if err := settingsConn.WaitForExpr(ctx, phoneHubToggleJS); err != nil {
 		return errors.Wrap(err, "failed to find the Phone Hub toggle")
