@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -114,11 +114,11 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 	}
 	// Check if the call was successful.
 	if response.StatusCode != 200 {
-		responseBytes, err := ioutil.ReadAll(response.Body)
+		responseBytes, err := io.ReadAll(response.Body)
 		if err != nil {
-			return nil, errors.Errorf("%s at %s returned %s failed to read response body", method, endpoint, response.Status)
+			return nil, errors.Wrapf(err, "%s at %s/%s returned %s failed to read response body", method, tapeURL, endpoint, response.Status)
 		}
-		return nil, errors.Errorf("%s at %s returned %s %s", method, endpoint, response.Status, string(responseBytes))
+		return nil, errors.Errorf("%s at %s/%s returned %s %s", method, tapeURL, endpoint, response.Status, string(responseBytes))
 	}
 	return response, nil
 }
@@ -150,7 +150,7 @@ func (c *client) requestAccount(ctx context.Context, endpoint string, params int
 	defer response.Body.Close()
 
 	// Read the response.
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read response")
 	}
@@ -329,19 +329,25 @@ func (c *client) ReleaseOwnedTestAccount(ctx context.Context, account *OwnedTest
 // setPolicyRequest is a struct containing the necessary data to set a policy schema in DPanel.
 type setPolicyRequest struct {
 	PolicySchema string `json:"policy_schema"`
-	CustomerID   string `json:"customer_id"`
+	RequestID    string `json:"request_id"`
 }
 
-// SetPolicy calls TAPE to set a policySchema in DPanel.
-func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, orgunitID, customerID string) error {
-	schemaJSONString, err := policySchema.Schema2JSON(orgunitID)
+// SetPolicy calls TAPE to set a policySchema in DPanel. The updateMask
+// indicates which fields of the policySchema are actually going to be used to
+// update the policy. This prevents the parameters of a policy that were no
+// explicitly set in the policySchema to be overwritten by default values. When
+// an empty slice is passed all fields will be used.
+// The strings for the updateMask are equal to the field names of the
+// policySchema struct starting with a lowercase letter.
+func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updateMask []string, requestID string) error {
+	schemaJSONString, err := policySchema.Schema2JSON(updateMask)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal policy schema")
 	}
 
 	request := &setPolicyRequest{
 		PolicySchema: string(schemaJSONString),
-		CustomerID:   customerID,
+		RequestID:    requestID,
 	}
 
 	payloadBytes, err := json.Marshal(request)

@@ -31,7 +31,7 @@ INPUT_FILEPATH = os.path.join(os.path.dirname(__file__), '..',
   INPUT_FILENAME)
 
 # Header for the GO code.
-HEADER = """// Copyright 2021 The ChromiumOS Authors
+HEADER = """// Copyright 2022 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -50,8 +50,11 @@ POLICY_SCHEMA_TEMPLATE = """
 ///////////////////////////////////////////////////////////////////////////////
 
 {additional_structs_string}
-func (p *{self.name}) Schema2JSON(orgunit string) ([]byte, error) {{
-\treturn marshalJSON(orgunit, "{self.uri}", p, []string{{{path_str}}})
+func (p *{self.name}) Schema2JSON(updateMask []string) ([]byte, error) {{
+\tif len(updateMask) == 0 {{
+\t\tupdateMask = []string{{{path_str}}}
+\t}}
+\treturn marshalJSON("{self.uri}", p, updateMask)
 }}
 """
 
@@ -177,7 +180,7 @@ def parse_values(definition, messages, suffix, duplication_set):
         type_name = field['typeName']
         if field['typeName'] not in duplication_set:
           enum_strs.append(parse_enum(field, definition['enumType']))
-        duplication_set.add(field['typeName'])
+          duplication_set.add(field['typeName'])
       elif field['type'] == 'TYPE_MESSAGE':
         type_name = field['typeName']
       else:
@@ -186,7 +189,7 @@ def parse_values(definition, messages, suffix, duplication_set):
     first_message = False
     struct_str += '}\n\n'
     additional_structs.append(struct_str)
-    additional_structs.extend(enum_strs)
+  additional_structs.extend(enum_strs)
 
   return types, additional_structs
 
@@ -205,12 +208,12 @@ def parse_schema(policy_schema, duplication_set):
   if 'name' not in messages[0]:
     raise_schema_error('name', messages[0])
 
-  # Special handling of managed guest and kiosk policies with the same names.
-  suffix = ""
-  if ".managedguest." in uri:
-    suffix = "MGS"
-  if ".kiosk." in uri:
-    suffix = "Kiosk"
+  # Generate a suffix for the PolicySchema from the middle parts of its uri to avoid
+  # duplicated names (the first part is always chrome and the last part is the name).
+  suffix = ''
+  uri_middle_parts = uri.split('.')[1:-1]
+  for uri_middle_part in uri_middle_parts:
+    suffix = suffix + uri_middle_part.capitalize()
 
   name = messages[0]['name'] + suffix  # The fist message struct holds the policy itself.
   types, additional_structs = parse_values(definition, messages, suffix, duplication_set)
