@@ -45,7 +45,7 @@ func getDataBasedOnBoards(board string) []string {
 func StartSlimRootfs(ctx context.Context, s *testing.State) {
 	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(*chrome.Chrome).NormalizedUser())
 	if err != nil {
-		s.Error("Failed to get concierge instance: ", err)
+		s.Fatal("Failed to get concierge instance: ", err)
 	}
 
 	kernelAndRootfsFiles := getDataBasedOnBoards(vm.TargetArch())
@@ -57,6 +57,6 @@ func StartSlimRootfs(ctx context.Context, s *testing.State) {
 	v := vm.NewGenericVM(concierge, false, statefulDiskSizeBytes, kernel, rootfs, vmName)
 	err = v.Start(ctx)
 	if err != nil {
-		s.Error("Failed to start a VM: ", err)
+		s.Fatal("Failed to start a VM: ", err)
 	}
 }
