@@ -88,6 +88,12 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 	dut := s.DUT()
 	testParam := s.Param().(usbDeviceTestParam)
 
+	// power.usbDeviceName variable is required for USB storage related tests.
+	var usbStorageName string
+	if testParam.usbDeviceClassName == "Mass Storage" {
+		usbStorageName = s.RequiredVar("power.usbDeviceName")
+	}
+
 	servoSpec := s.RequiredVar("servo")
 	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
 	if err != nil {
@@ -123,9 +129,6 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to login Chrome: ", err)
 	}
-
-	// power.usbDeviceName variable is required for USB storage related tests.
-	usbStorageName, _ := s.Var("power.usbDeviceName")
 
 	iter := testParam.iter
 	for i := 1; i <= iter; i++ {
