@@ -80,6 +80,14 @@ func (m *PowerManager) SetScreenBrightness(ctx context.Context, percentage float
 	return nil
 }
 
+// SetPolicy sets the policy by calling PowerManager.SetPolicy D-Bus method.
+func (m *PowerManager) SetPolicy(ctx context.Context, policy *pmpb.PowerManagementPolicy) error {
+	if err := dbusutil.CallProtoMethod(ctx, m.obj, dbusInterface+".SetPolicy", policy, nil); err != nil {
+		return errors.Wrap(err, "failed to call SetPolicy D-Bus method")
+	}
+	return nil
+}
+
 // TurnOnDisplay turns on a display by sending a HandleWakeNotification to PowerManager
 // to light up the display.
 func TurnOnDisplay(ctx context.Context) error {
