@@ -95,8 +95,9 @@ const (
 // - verify all expected install events are logged.
 func ARCInstallLogging(ctx context.Context, s *testing.State) {
 	const (
-		testPackage = "com.google.android.calculator"
-		poolID      = "arc_logging_test"
+		testPackage         = "com.google.android.calculator"
+		poolID              = "arc_logging_test"
+		provisioningTimeout = 4 * time.Minute
 	)
 
 	rl := &retry.Loop{Attempts: 1,
@@ -141,9 +142,8 @@ func ARCInstallLogging(ctx context.Context, s *testing.State) {
 		}
 		defer a.Close(ctx)
 
-		_, err = cr.TestAPIConn(ctx)
-		if err != nil {
-			return rl.Retry("create test API connection", err)
+		if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
+			return rl.Retry("wait for ARC provisioning", err)
 		}
 
 		// Ensure that test app is force-installed by ARC policy.
