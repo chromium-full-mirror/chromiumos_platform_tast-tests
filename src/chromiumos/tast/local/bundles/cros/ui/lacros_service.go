@@ -47,7 +47,16 @@ func (svc *LacrosService) Connect(ctx context.Context, req *empty.Empty) (*empty
 // LaunchWithURL instantiates svc.lacros by calling lacros.LaunchWithURL.
 func (svc *LacrosService) LaunchWithURL(ctx context.Context, req *pb.LaunchWithURLRequest) (*empty.Empty, error) {
 	return svc.instantiateLacrosWithFn(ctx, func(ctx context.Context, tconn *chrome.TestConn) (*lacros.Lacros, error) {
-		return lacros.LaunchWithURL(ctx, tconn, req.Url)
+		l, conn, err := lacros.LaunchWithURL(ctx, tconn, req.Url)
+		// conn is returned but not used.
+		// As suggested by the function, it needs to be closed explicitly by caller.
+		if err == nil {
+			if err := conn.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close conn: ", err)
+			}
+		}
+
+		return l, err
 	})
 }
 

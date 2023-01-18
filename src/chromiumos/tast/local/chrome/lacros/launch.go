@@ -136,29 +136,29 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (l *Lacros, retErr erro
 // LaunchWithURL launches lacros-chrome and ensures there is one page open
 // with the given URL. Note that this function expects lacros to be closed
 // as a precondition.
-func LaunchWithURL(ctx context.Context, tconn *chrome.TestConn, url string) (*Lacros, error) {
+func LaunchWithURL(ctx context.Context, tconn *chrome.TestConn, url string) (*Lacros, *chrome.Conn, error) {
 	l, err := Launch(ctx, tconn)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to launch Lacros")
+		return nil, nil, errors.Wrap(err, "failed to launch Lacros")
 	}
 
 	// Get all pages.
 	ts, err := l.FindTargets(ctx, chrome.MatchAllPages())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find pages")
+		return nil, nil, errors.Wrap(err, "failed to find pages")
 	}
 
 	if len(ts) != 1 {
-		return nil, errors.Wrapf(err, "expected only one page target, got %v", ts)
+		return nil, nil, errors.Wrapf(err, "expected only one page target, got %v", ts)
 	}
 
 	conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetID(ts[0].TargetID))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to target")
+		return nil, nil, errors.Wrap(err, "failed to connect to target")
 	}
 	if err := conn.Navigate(ctx, url); err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to url")
+		return nil, nil, errors.Wrap(err, "failed to navigate to url")
 	}
 
-	return l, nil
+	return l, conn, nil
 }

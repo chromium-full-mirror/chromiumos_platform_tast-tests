@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	cupstart "chromiumos/tast/common/upstart"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -174,6 +175,11 @@ func newIdleTimeline(ctx context.Context) (*perf.Timeline, error) {
 }
 
 func Idle(ctx context.Context, s *testing.State) {
+	// Reserve some time to cleanup, even if it fails due to ctx timeout.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	bt := s.Param().(browser.Type)
 
 	// Set up the testing environment.
@@ -223,20 +229,13 @@ func Idle(ctx context.Context, s *testing.State) {
 	}
 
 	// Open a window with about:blank tab on the target browser.
-	switch bt {
-	case browser.TypeAsh:
-		conn, err := cr.Browser().NewConn(ctx, "about:blank")
-		if err != nil {
-			s.Fatal("Failed to open a blank new tab: ", err)
-		}
-		defer conn.Close()
-	case browser.TypeLacros:
-		l, err := lacros.LaunchWithURL(ctx, tconn, "about:blank")
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(ctx)
+
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	if err != nil {
+		s.Fatal("Failed to open a blank new tab: ", err)
 	}
+	defer cleanup(cleanupCtx)
+	defer conn.Close()
 
 	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
 	if err != nil {

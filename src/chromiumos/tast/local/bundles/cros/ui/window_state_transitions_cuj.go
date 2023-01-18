@@ -17,8 +17,8 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/ui/cujrecorder"
@@ -100,26 +100,16 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	defer srv.Close()
 	animationURL := srv.URL + "/animation.html"
 
-	var bTconn *chrome.TestConn
-	switch s.Param().(browser.Type) {
-	case browser.TypeAsh:
-		conn, err := cr.NewConn(ctx, animationURL)
-		if err != nil {
-			s.Fatal("Failed to launch ash chrome: ", err)
-		}
-		defer conn.Close()
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), animationURL)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+	defer cleanup(cleanupCtx)
+	defer conn.Close()
 
-		bTconn = tconn
-	case browser.TypeLacros:
-		l, err := lacros.LaunchWithURL(ctx, tconn, animationURL)
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(cleanupCtx)
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
-		}
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get browser TestAPIConn: ", err)
 	}
 
 	// Verify that there is only one window, and get its ID.

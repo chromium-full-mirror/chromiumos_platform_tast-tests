@@ -137,11 +137,13 @@ func SetupLacrosTestWithPage(ctx context.Context, cr *chrome.Chrome, url string,
 		return nil, nil, nil, nil, errors.Wrap(err, "failed to connect to test API")
 	}
 
-	l, err := lacros.LaunchWithURL(ctx, tconn, chrome.BlankURL)
+	l, conn, err := lacros.LaunchWithURL(ctx, tconn, chrome.BlankURL)
 	if err != nil {
 		return nil, nil, nil, nil, errors.Wrap(err, "failed to launch lacros-chrome")
 	}
 	cleanup := func(ctx context.Context) error {
+		conn.CloseTarget(ctx)
+		conn.Close()
 		l.Close(ctx)
 		return nil
 	}
@@ -163,18 +165,6 @@ func SetupLacrosTestWithPage(ctx context.Context, cr *chrome.Chrome, url string,
 			return nil, nil, nil, nil, err
 		}
 	}
-
-	// If we are opening about:blank, then we re-use the existing page that opened when we launched lacros.
-	// If not, we navigate to the specified page.
-	conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetURL(chrome.BlankURL))
-	if err != nil {
-		return nil, nil, nil, nil, errors.Wrap(err, "failed to open new tab")
-	}
-	cleanup = CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
-		conn.CloseTarget(ctx)
-		conn.Close()
-		return nil
-	}, "")
 
 	// If we want about:blank, don't close the initial about:blank we opened.
 	// Otherwise, close the initial "about:blank" tab present at startup.

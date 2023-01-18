@@ -8,16 +8,13 @@ package browserfixt
 
 import (
 	"context"
-	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfaillog"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
-	"chromiumos/tast/testing"
 )
 
 // SetUp returns a Browser instance for a given browser type and a given existing ash-chrome instance.
@@ -46,13 +43,6 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Br
 // avoids the extra default new tab page in the case of Lacros. The caller is
 // responsible for closing the returned connection via its Close() method prior
 // to calling the returned closure.
-// NOTE: Since SetUpWithURL is implemented with the help of NewConnForTarget,
-// the given url must match exactly the URL that Chrome ends up associating
-// with the tab. For example, you must use "chrome://version/" instead of
-// "chrome://version" and "https://www.google.com" instead of
-// "http://google.com". Since it's not always clear what the exact required URL
-// is, SetUpWithURL prints the URLs of the current tabs if it can't find the
-// requested one.
 func SetUpWithURL(ctx context.Context, cr *chrome.Chrome, bt browser.Type, url string) (*chrome.Conn, *browser.Browser, func(ctx context.Context) error, error) {
 	switch bt {
 	case browser.TypeAsh:
@@ -68,28 +58,10 @@ func SetUpWithURL(ctx context.Context, cr *chrome.Chrome, bt browser.Type, url s
 			return nil, nil, nil, errors.Wrap(err, "failed to connect to test API")
 		}
 
-		l, err := lacros.LaunchWithURL(ctx, tconn, url)
+		l, conn, err := lacros.LaunchWithURL(ctx, tconn, url)
 		if err != nil {
 			return nil, nil, nil, errors.Wrap(err, "failed to launch lacros-chrome")
 		}
-
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-		defer cancel()
-
-		conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetURL(url))
-		if err != nil {
-			tabs, tabsErr := l.Browser().CurrentTabs(cleanupCtx)
-			if tabsErr != nil {
-				testing.ContextLog(cleanupCtx, "Failed to retrieve tabs: ", tabsErr)
-				tabs = nil
-			}
-			if err := l.Close(cleanupCtx); err != nil {
-				testing.ContextLog(cleanupCtx, "Failed to close lacros-chrome: ", err)
-			}
-			return nil, nil, nil, errors.Wrapf(err, "failed to connect to lacros-chrome tab with URL %s (found tabs: %v)", url, tabs)
-		}
-
 		return conn, l.Browser(), l.Close, nil
 
 	default:
