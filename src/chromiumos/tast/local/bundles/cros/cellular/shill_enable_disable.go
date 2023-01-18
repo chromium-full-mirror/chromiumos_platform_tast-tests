@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -29,13 +28,9 @@ func init() {
 }
 
 func ShillEnableDisable(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
+	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	perfValues := perf.NewValues()

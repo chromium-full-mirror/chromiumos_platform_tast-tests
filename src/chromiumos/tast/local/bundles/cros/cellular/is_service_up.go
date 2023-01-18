@@ -29,7 +29,7 @@ func IsServiceUp(ctx context.Context, s *testing.State) {
 	// Gather ModemManager properties
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Modem: ", err)
+		s.Fatal("Failed to create Modem (precondition): ", err)
 	}
 	modemProps, err := modem.GetProperties(ctx)
 	if err != nil {

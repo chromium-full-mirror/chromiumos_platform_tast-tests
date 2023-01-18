@@ -27,7 +27,7 @@ func init() {
 func ModemmanagerSlots(ctx context.Context, s *testing.State) {
 	modem, err := modemmanager.NewModem(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Modem: ", err)
+		s.Fatal("Failed to create Modem (precondition): ", err)
 	}
 	props, err := modem.GetProperties(ctx)
 	if err != nil {

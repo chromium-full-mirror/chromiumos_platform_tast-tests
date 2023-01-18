@@ -30,18 +30,9 @@ func init() {
 }
 
 func ModemmanagerInhibitDevice(ctx context.Context, s *testing.State) {
-	modem, err := modemmanager.NewModemWithSim(ctx)
+	modem, err := modemmanager.NewModem(ctx)
 	if err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
-	}
-
-	_, err = cellular.NewHelperWithLabels(ctx, labels)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Could not find MM dbus object (precondition): ", err)
 	}
 
 	cleanupCtx := ctx
@@ -75,7 +66,7 @@ func ModemmanagerInhibitDevice(ctx context.Context, s *testing.State) {
 			s.Fatal("InhibitDevice(false) failed: ", err)
 		}
 
-		modem2, err := modemmanager.NewModemWithSim(ctx)
+		modem2, err := modemmanager.NewModem(ctx)
 		if err != nil {
 			s.Fatal("Failed to create Modem after Un-Inhibit: ", err)
 		}

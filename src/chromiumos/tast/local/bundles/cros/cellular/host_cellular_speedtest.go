@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -31,17 +30,9 @@ func init() {
 }
 
 func HostCellularSpeedtest(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
+	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
-
-	if _, err := helper.Enable(ctx); err != nil {
-		s.Fatal("Failed to enable modem")
+		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
 	}
 
 	verifyHostIPSpeedTest := func(ctx context.Context) error {

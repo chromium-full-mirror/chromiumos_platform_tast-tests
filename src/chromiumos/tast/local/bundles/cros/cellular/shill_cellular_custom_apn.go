@@ -46,7 +46,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 	modbOverrideProto := "test_no_apns.pbf"
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
 	operatorID, err := modem.GetOperatorIdentifierWithBestEffort(ctx)
 	if err != nil {
@@ -55,7 +55,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 
 	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	modem3gpp, err := modem.GetModem3gpp(ctx)

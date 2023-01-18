@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -48,13 +47,9 @@ func init() {
 func ShillCellularSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
 	params := s.Param().(persistEnabledTestParams)
 
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
+	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	// Apply required enabled state
@@ -70,7 +65,7 @@ func ShillCellularSuspendResumePersistEnabled(ctx context.Context, s *testing.St
 
 	// Request suspend for 10 seconds
 	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
-		s.Fatal("Failed to perform system suspend: ", err)
+		s.Fatal("Failed to perform system suspend (precondition): ", err)
 	}
 
 	// Verify enabled setting persisted

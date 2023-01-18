@@ -30,7 +30,7 @@ func init() {
 func CheckSignalQuality(ctx context.Context, s *testing.State) {
 	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
-		s.Fatal("Failed to create connected cellular.Helper: ", err)
+		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
 	}
 
 	if err := helper.ConnectAndCheckSignalQuality(ctx); err != nil {

@@ -13,7 +13,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -58,13 +57,9 @@ func ShillCellularSuspendResumeAutoconnect(ctx context.Context, s *testing.State
 	expectedStates := map[bool]string{true: shillconst.ServiceStateOnline,
 		false: shillconst.ServiceStateIdle}
 
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
+	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	// Disable Ethernet and/or WiFi if present and defer re-enabling.
@@ -72,7 +67,7 @@ func ShillCellularSuspendResumeAutoconnect(ctx context.Context, s *testing.State
 	// is no other service available, so it is necessary to only have
 	// cellular available.
 	if enableFunc, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
-		s.Fatal("Unable to disable Ethernet: ", err)
+		s.Fatal("Unable to disable Ethernet (precondition): ", err)
 	} else if enableFunc != nil {
 		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
 		defer cancel()
@@ -80,7 +75,7 @@ func ShillCellularSuspendResumeAutoconnect(ctx context.Context, s *testing.State
 		ctx = newCtx
 	}
 	if enableFunc, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyWifi); err != nil {
-		s.Fatal("Unable to disable Wifi: ", err)
+		s.Fatal("Unable to disable Wifi (precondition): ", err)
 	} else if enableFunc != nil {
 		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
 		defer cancel()
@@ -99,13 +94,13 @@ func ShillCellularSuspendResumeAutoconnect(ctx context.Context, s *testing.State
 
 	// Request suspend for 10 seconds.
 	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
-		s.Fatal("Failed to perform system suspend: ", err)
+		s.Fatal("Failed to perform system suspend (precondition): ", err)
 	}
 
 	// The reconnection will not occur from the login screen, so we log in.
 	cr, err := chrome.New(ctx, chrome.GuestLogin())
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		s.Fatal("Failed to start Chrome (precondition): ", err)
 	}
 	defer cr.Close(cleanupCtx)
 	// chrome.Chrome.Close() will not log the user out.

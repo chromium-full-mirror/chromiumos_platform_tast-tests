@@ -35,7 +35,7 @@ func init() {
 func Autoconnect(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
 
 	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
@@ -68,7 +68,7 @@ func Autoconnect(ctx context.Context, s *testing.State) {
 	// The connection will not occur from the login screen, so we log in.
 	cr, err := chrome.New(ctx)
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		s.Fatal("Failed to start Chrome (precondition): ", err)
 	}
 	defer cr.Close(cleanupCtx)
 	// chrome.Chrome.Close() will not log the user out.

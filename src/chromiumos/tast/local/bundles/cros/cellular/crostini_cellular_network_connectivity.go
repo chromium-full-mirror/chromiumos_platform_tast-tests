@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -45,18 +44,11 @@ func CrostiniCellularNetworkConnectivity(ctx context.Context, s *testing.State) 
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
+	if err != nil {
+		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
 	}
 
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
-	// Enable and get service to set autoconnect based on test parameters.
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to cellular service")
-	}
 	ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
 	if err != nil {
 		s.Fatal("Failed to read network provisioned IP types: ", err)

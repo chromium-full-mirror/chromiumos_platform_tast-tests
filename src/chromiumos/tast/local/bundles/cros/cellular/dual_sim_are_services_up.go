@@ -53,7 +53,7 @@ func DualSimAreServicesUp(ctx context.Context, s *testing.State) {
 	// Ensure that MM reports 2 slots.
 	modem, err := modemmanager.NewModem(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Modem: ", err)
+		s.Fatal("Failed to create Modem (precondition): ", err)
 	}
 	simProperties, _, err := modem.GetSimSlots(ctx)
 	if err != nil {

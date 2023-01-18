@@ -32,7 +32,7 @@ func init() {
 func ModemmanagerSARInterfaceVerification(ctx context.Context, s *testing.State) {
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
 
 	if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {

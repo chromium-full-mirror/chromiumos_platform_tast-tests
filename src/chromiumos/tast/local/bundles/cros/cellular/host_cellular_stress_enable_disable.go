@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -29,13 +28,9 @@ func init() {
 }
 
 func HostCellularStressEnableDisable(ctx context.Context, s *testing.State) {
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
+	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	stressTestHostIPConnectivity := func(ctx context.Context) error {

@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -29,14 +28,9 @@ func init() {
 }
 
 func ShillCellularRoaming(ctx context.Context, s *testing.State) {
-	modem, err := modemmanager.NewModemWithSim(ctx)
+	helper, modem, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	ctxForCleanUp := ctx

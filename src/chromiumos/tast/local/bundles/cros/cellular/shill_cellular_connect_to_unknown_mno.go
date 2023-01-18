@@ -49,18 +49,10 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	expectedLastAttachAPN := params.ExpectedLastAttachAPN
 	setInitialAttachAPNValue := params.SetInitialAttachAPNValue
 	apnToConnect := params.ApnToConnect
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
 
-	modem, err := modemmanager.NewModemWithSim(ctx)
+	helper, modem, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
 	modem3gpp, err := modem.GetModem3gpp(ctx)

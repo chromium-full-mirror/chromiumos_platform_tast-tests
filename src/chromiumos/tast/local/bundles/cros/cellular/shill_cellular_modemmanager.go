@@ -26,14 +26,9 @@ func init() {
 }
 
 func ShillCellularModemmanager(ctx context.Context, s *testing.State) {
-	modem1, err := modemmanager.NewModem(ctx)
+	helper, modem1, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Modem: ", err)
-	}
-
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 	if _, err := helper.FindService(ctx); err != nil {
 		s.Fatal("Unable to find Cellular Service before modemmanager restart: ", err)
