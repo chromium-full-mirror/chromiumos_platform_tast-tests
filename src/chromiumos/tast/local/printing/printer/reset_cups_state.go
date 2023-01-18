@@ -18,5 +18,8 @@ func ResetCups(ctx context.Context) error {
 	if err := upstart.StopJob(ctx, "cupsd"); err != nil {
 		return err
 	}
-	return testexec.CommandContext(ctx, "systemd-tmpfiles", "--remove", "/usr/lib/tmpfiles.d/chromeos.conf").Run(testexec.DumpLogOnError)
+	if err := testexec.CommandContext(ctx, "systemd-tmpfiles", "--remove", "/usr/lib/tmpfiles.d/chromeos.conf").Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+	return upstart.StartJob(ctx, "cupsd")
 }
