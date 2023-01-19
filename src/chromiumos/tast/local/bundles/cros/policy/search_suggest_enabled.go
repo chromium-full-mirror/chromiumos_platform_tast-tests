@@ -146,7 +146,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Wait for the omnibox popup node.
-			if err := ui.WaitUntilExists(nodewith.ClassName("OmniboxPopupContentsView"))(ctx); err != nil {
+			if err := ui.WaitUntilExists(nodewith.ClassName("OmniboxPopupViewViews"))(ctx); err != nil {
 				s.Fatal("Failed to find omnibox popup: ", err)
 			}
 
