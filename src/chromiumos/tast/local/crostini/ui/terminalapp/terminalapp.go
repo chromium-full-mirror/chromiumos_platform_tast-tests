@@ -391,3 +391,13 @@ func (ta *TerminalApp) ClickNthTabCloseButton(n int) uiauto.Action {
 		),
 	)
 }
+
+// Row returns a finder to match a row in the terminal screen.
+func Row(content string) *nodewith.Finder {
+	return AsRow(nodewith.Name(content))
+}
+
+// AsRow augments a finder to match a row in the terminal screen.
+func AsRow(finder *nodewith.Finder) *nodewith.Finder {
+	return finder.Role(role.StaticText).Ancestor(nodewith.ClassName("xterm-accessibility-tree"))
+}
