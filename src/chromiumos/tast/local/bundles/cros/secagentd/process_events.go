@@ -44,7 +44,7 @@ func makeProcessForPid(ctx context.Context, pid uint64, p *xdr.Process, ns *xdr.
 		return err
 	}
 	var err error
-	if *ppid, err = secagentdprocfsscraper.FillProcStatus(pid, p); err != nil {
+	if *ppid, err = secagentdprocfsscraper.FillProc(pid, p); err != nil {
 		return err
 	}
 	cmdline, err := secagentdprocfsscraper.GetCmdLine(ctx, pid)

@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/tklauser/go-sysconf"
 	"google.golang.org/protobuf/proto"
 
 	"chromiumos/tast/common/action"
@@ -160,9 +161,9 @@ func FillImage(pid, mntNs uint64, i *xdr.FileImage) error {
 	return nil
 }
 
-// FillProcStatus popuates the given XDR proto with process status information
-// for the given pid.
-func FillProcStatus(pid uint64, p *xdr.Process) (uint64, error) {
+// FillProc populates the given XDR proto using information from /proc/x/status
+// and /proc/x/stat for the given pid.
+func FillProc(pid uint64, p *xdr.Process) (uint64, error) {
 	statusFilename := fmt.Sprintf("/proc/%d/status", pid)
 	buff, err := ioutil.ReadFile(statusFilename)
 	if err != nil {
@@ -183,5 +184,25 @@ func FillProcStatus(pid uint64, p *xdr.Process) (uint64, error) {
 	}
 	p.CanonicalUid = proto.Uint64(uid)
 	p.CanonicalPid = proto.Uint64(pid)
+
+	ticksPerSecond, err := sysconf.Sysconf(sysconf.SC_CLK_TCK)
+	if err != nil {
+		return 0, err
+	}
+	// Start time relative to boot time is found in the stat file.
+	statFilename := fmt.Sprintf("/proc/%d/stat", pid)
+	buff, err = ioutil.ReadFile(statFilename)
+	if err != nil {
+		return 0, err
+	}
+	statParts := strings.Split(string(buff), " ")
+	// 22nd entry in stat corresponds to start time which is the time the process
+	// is started after system boot. It is expressed in clock ticks.
+	startTimeTicks, err := strconv.ParseInt(statParts[21], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	startTimeSeconds := startTimeTicks / ticksPerSecond
+	p.RelStartTimeS = proto.Int64(startTimeSeconds)
 	return ppid, nil
 }
