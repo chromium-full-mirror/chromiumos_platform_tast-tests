@@ -14,11 +14,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -279,13 +281,39 @@ func launchPrinter(ctx context.Context, op config) (cmd *testexec.Cmd, err error
 	return launch, nil
 }
 
+// checkDebugd makes sure debugd is running and responding to printer setup requests.  It does this
+// by requesting a printer setup with an invalid PPD and making sure the returned error indicates a
+// PPD problem rather than a debugd or d-bus problem.
+func checkDebugd(ctx context.Context) error {
+	// debugd should be very quick when things are working, so use a much shorter timeout.
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if err := upstart.EnsureJobRunning(ctx, "debugd"); err != nil {
+		testing.ContextLogf(ctx, "debugd not running: %q", err)
+		return err
+	}
+	d, err := debugd.New(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to debugd")
+	}
+	result, err := d.CupsAddManuallyConfiguredPrinter(ctx, "DebugdPrinterProbe", "", []byte(""))
+	if err != nil {
+		return errors.Wrap(err, "failed to call debugd.CupsAddManuallyConfiguredPrinter")
+	} else if result != debugd.CUPSInvalidPPD {
+		return errors.Wrapf(err, "unexpected response from debugd: got %s; want %s",
+			result, debugd.CUPSInvalidPPD)
+	}
+
+	return nil
+}
+
 // Start creates a new Printer and starts the underlying
 // virtual-usb-printer process.
 func Start(ctx context.Context, opts ...Option) (pr *Printer, err error) {
 	// Debugd needs to be running before the USB device shows up so Chrome can add the printer.
-	if err := upstart.EnsureJobRunning(ctx, "debugd"); err != nil {
-		testing.ContextLogf(ctx, "debugd not running: %q", err)
-		return nil, err
+	if err := checkDebugd(ctx); err != nil {
+		return nil, errors.Wrap(err, "debugd probe failed")
 	}
 
 	op := config{
