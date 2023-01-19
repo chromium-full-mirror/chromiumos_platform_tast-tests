@@ -25,12 +25,9 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-const memoryReportingEnabledUser = "policy.MemoryReporting.enabled_username"
-const memoryReportingEnabledPassword = "policy.MemoryReporting.password"
+const memoryReportingTimeout = 7 * time.Minute
 
 type memoryReportingParameters struct {
-	usernamePath     string // username for Chrome enrollment
-	passwordPath     string // password for Chrome enrollment
 	reportingEnabled bool   // test should expect reporting enabled
 	vProSpecific     bool   // test should prepare vPro specific logic
 }
@@ -50,14 +47,12 @@ func init() {
 		Attr:         []string{"group:dmserver-enrollment-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
-		Timeout:      7 * time.Minute,
+		Timeout:      memoryReportingTimeout,
 		Params: []testing.Param{
 			{
 				Name:              "vpro_memory_reporting_enabled",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("brya", "redrix")),
 				Val: memoryReportingParameters{
-					usernamePath:     memoryReportingEnabledUser,
-					passwordPath:     memoryReportingEnabledPassword,
 					reportingEnabled: true,
 					vProSpecific:     true,
 				},
@@ -65,26 +60,18 @@ func init() {
 				Name:              "nonvpro_memory_reporting_enabled",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("brya", "redrix")),
 				Val: memoryReportingParameters{
-					usernamePath:     memoryReportingEnabledUser,
-					passwordPath:     memoryReportingEnabledPassword,
 					reportingEnabled: true,
 					vProSpecific:     false,
 				},
 			}, {
 				Name: "memory_reporting_disabled",
 				Val: memoryReportingParameters{
-					usernamePath:     reportingutil.ReportingPoliciesDisabledUser,
-					passwordPath:     reportingutil.ReportingPoliciesDisabledPassword,
 					reportingEnabled: false,
 					vProSpecific:     false,
 				},
 			},
 		},
 		VarDeps: []string{
-			memoryReportingEnabledUser,
-			memoryReportingEnabledPassword,
-			reportingutil.ReportingPoliciesDisabledUser,
-			reportingutil.ReportingPoliciesDisabledPassword,
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
@@ -160,9 +147,7 @@ func validateTMEInfo(ctx context.Context, tmeInfo reportingutil.TMEInfo, vProSpe
 
 func MemoryReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(memoryReportingParameters)
-	user := s.RequiredVar(param.usernamePath)
-	pass := s.RequiredVar(param.passwordPath)
-	cID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
+	customerId := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
@@ -180,7 +165,7 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, cID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerId)
 
 	if param.vProSpecific {
 		if su, err := vProSupported(ctx, cl.Conn); err != nil {
@@ -204,10 +189,23 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 
 	pc := ps.NewPolicyServiceClient(cl.Conn)
 
+	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	if err != nil {
+		s.Fatal("Failed to create tape client: ", err)
+	}
+
+	timeout := int32(memoryReportingTimeout.Seconds())
+	// Create an account manager and lease a test account for the duration of the test.
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.Reporting))
+	if err != nil {
+		s.Fatal("Failed to create an account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(ctx)
+
 	testStartTime := time.Now()
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
-		Username:           user,
-		Password:           pass,
+		Username:           acc.Username,
+		Password:           acc.Password,
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline",
@@ -228,7 +226,7 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, cID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to look up events"))
 		}
