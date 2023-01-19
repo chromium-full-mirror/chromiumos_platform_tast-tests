@@ -54,8 +54,6 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
 	d, err := s.FixtValue().(*arc.PreData).ARC.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
@@ -69,30 +67,31 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	for _, tc := range []struct {
 		title     string
 		publisher string
 		url       string
 	}{
-		{"peanut types", "jeevan shikaram", "https://jeevan-shikaram.github.io"}, // TWA type
-		{"twitter", "twitter, inc.", "https://mobile.twitter.com"},               // WebAPK type
+		{"peanut types", "jeevan shikaram", "https://jeevan-shikaram.github.io"},   // TWA type
+		{"google news - daily headlines", "google llc", "https://news.google.com"}, // WebAPK type
 	} {
 		s.Logf("Launching %s from %s via omnibox", tc.title, tc.url)
 
 		if err := conn.Navigate(ctx, tc.url); err != nil {
-			s.Fatal("Failed to navigate to the url: ", err)
+			s.Fatalf("Failed to navigate to the url %s: %s", tc.url, err)
 		}
 
 		// Locate and click on the omnibox install button.
 		ui := uiauto.New(tconn)
 		installButton := nodewith.ClassName("PwaInstallView").Role(role.Button)
 		if err := ui.WithTimeout(uiTimeout).LeftClick(installButton)(ctx); err != nil {
-			s.Fatal("Failed to left click omnibox install button: ", err)
+			s.Fatalf("Failed to left click omnibox install button on %s. Error: %s", tc.url, err)
 		}
 
 		if err := checkPlayStoreLaunched(ctx, d, tc.title, tc.publisher); err != nil {
-			s.Fatal("Failed checking if play store launched: ", err)
+			s.Fatalf("Failed checking if play store launched for %s: %s", tc.title, err)
 		}
 
 		// Close Play Store.
