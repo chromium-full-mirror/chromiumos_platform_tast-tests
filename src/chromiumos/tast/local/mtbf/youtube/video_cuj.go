@@ -223,13 +223,28 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	}
 
 	run := func(ctx context.Context, videoSource VideoSrc) (retErr error) {
-		// Give time to cleanup videoApp resources.
-		cleanupResourceCtx := ctx
-		ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		// Close the currently playing video and restart the new one.
 		defer func(ctx context.Context) {
+			// Make sure to close the arc UI device before calling the function. Otherwise uiautomator might have errors.
+			if appName == YoutubeApp && retErr != nil {
+				if err := d.Close(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to close ARC UI device: ", err)
+				}
+				a.DumpUIHierarchyOnError(ctx, filepath.Join(outDir, "arc"), func() bool { return retErr != nil })
+			}
+			if appName == YoutubeApp {
+				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
+				videoApp.Close(ctx)
+			}
+			closeFunc := func(ctx context.Context) error {
+				if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
+				}
+				return nil
+			}
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
+				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+			}
+			// Close the currently playing video and restart the new one.
 			if appName == YoutubeWeb {
 				// Before closing the youtube site outside the recorder, dump the UI tree to capture a screenshot.
 				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
@@ -237,51 +252,28 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 			}
-		}(cleanupResourceCtx)
+		}(ctx)
+		ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+		defer cancel()
 
-		return recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-			// Give time to dump arc UI tree.
-			cleanupCtx := ctx
-			ctx, cancel = ctxutil.Shorten(ctx, 15*time.Second)
-			defer cancel()
-
-			defer func(ctx context.Context) {
-				// Make sure to close the arc UI device before calling the function. Otherwise uiautomator might have errors.
-				if appName == YoutubeApp && retErr != nil {
-					if err := d.Close(ctx); err != nil {
-						testing.ContextLog(ctx, "Failed to close ARC UI device: ", err)
-					}
-					a.DumpUIHierarchyOnError(ctx, filepath.Join(outDir, "arc"), func() bool { return retErr != nil })
-				}
-				if appName == YoutubeApp {
-					faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-					videoApp.Close(ctx)
-				}
-				closeFunc := func(ctx context.Context) error {
-					if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
-						testing.ContextLog(ctx, "Failed to close all tabs: ", err)
-					}
-					return nil
-				}
-				if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
-					testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
-				}
-			}(cleanupCtx)
-
-			if err := videoScenario(ctx, resources, param, br, bTconn, videoApp, videoSource, tabChecker); err != nil {
-				return errors.Wrap(err, "failed to run video test")
-			}
-			if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
-				return errors.Wrap(err, "failed to generate ADF")
-			}
-			return nil
-		})
+		if err := videoScenario(ctx, resources, param, br, bTconn, videoApp, videoSource, tabChecker); err != nil {
+			return errors.Wrap(err, "failed to run video test")
+		}
+		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
+			return errors.Wrap(err, "failed to generate ADF")
+		}
+		return nil
 	}
 
-	for _, videoSource := range videoSources {
-		if err := run(ctx, videoSource); err != nil {
-			return errors.Wrapf(err, "failed to run %q video playback", appName)
+	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		for _, videoSource := range videoSources {
+			if err := run(ctx, videoSource); err != nil {
+				return errors.Wrapf(err, "failed to run %q video playback", appName)
+			}
 		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "failed to run the recorder task")
 	}
 
 	pv := perf.NewValues()
