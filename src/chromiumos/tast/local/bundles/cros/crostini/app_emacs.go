@@ -143,7 +143,7 @@ func createFileWithEmacs(ctx context.Context, keyboard *input.KeyboardEventWrite
 	if err := uiauto.Combine("Click, input, save and exit Emacs",
 		// Sometimes the first character got lost if input immediately.
 		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(window)),
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(window).First()),
 		// Type string.
 		keyboard.TypeAction(testString),
 		// Press ctrl+x and ctrl+s to save.
