@@ -90,9 +90,14 @@ func GuestAuthSession(ctx context.Context, s *testing.State) {
 	}
 
 	// Phase 2: Check that guest vaults are not mounted when another session is active.
+	if err := client.UnmountAndRemoveVault(ctx, userName); err != nil {
+		s.Fatal("Failed to remove vault: ", err)
+	}
+
 	if err := client.MountVault(ctx, passwordLabel, hwsec.NewPassAuthConfig(userName, userPassword), true, hwsec.NewVaultConfig()); err != nil {
 		s.Fatal("Failed to create user: ", err)
 	}
+	defer client.UnmountAndRemoveVault(ctxForCleanUp, userName)
 
 	reply, err := client.PrepareGuestVault(ctx)
 	if err == nil {
