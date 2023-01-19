@@ -52,9 +52,7 @@ func init() {
 			"iby@chromium.org",
 		},
 		BugComponent: "b:1087262",
-		// Test temporarily disabled because the feature it's testing is temporarily
-		// deactivated due to b/257675336.
-		// TODO(b/214117401): Reenable when the feature is relaunched.
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},
 		Params: []testing.Param{{
 			Name:    "ash",
