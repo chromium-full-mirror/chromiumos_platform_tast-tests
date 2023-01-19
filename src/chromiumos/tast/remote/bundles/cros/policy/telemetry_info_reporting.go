@@ -21,17 +21,17 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const telemetryInfoReportingTimeout = 15 * time.Minute
+
 type telemetryInfoReportingParameters struct {
-	usernamePath     string // username for Chrome enrollment
-	passwordPath     string // password for Chrome enrollment
-	reportingEnabled bool   // test should expect reporting enabled
+	reportingEnabled bool // test should expect reporting enabled
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TelemetryInfoReporting,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device and verify memory reporting functionality",
+		Desc:         "GAIA Enroll a device and verify telemetry and info data on reporting servers",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
 			"albertojuarez@google.com", // Test owner
@@ -40,29 +40,21 @@ func init() {
 		Attr:         []string{"group:dmserver-enrollment-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
-		Timeout:      15 * time.Minute,
+		Timeout:      telemetryInfoReportingTimeout,
 		Params: []testing.Param{
 			{
 				Name: "enabled",
 				Val: telemetryInfoReportingParameters{
-					usernamePath:     reportingutil.ReportingPoliciesEnabledUser,
-					passwordPath:     reportingutil.ReportingPoliciesEnabledPassword,
 					reportingEnabled: true,
 				},
 			}, {
 				Name: "disabled",
 				Val: telemetryInfoReportingParameters{
-					usernamePath:     reportingutil.ReportingPoliciesDisabledUser,
-					passwordPath:     reportingutil.ReportingPoliciesDisabledPassword,
 					reportingEnabled: false,
 				},
 			},
 		},
 		VarDeps: []string{
-			reportingutil.ReportingPoliciesEnabledUser,
-			reportingutil.ReportingPoliciesEnabledPassword,
-			reportingutil.ReportingPoliciesDisabledUser,
-			reportingutil.ReportingPoliciesDisabledPassword,
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
@@ -77,11 +69,11 @@ const (
 	Telemetry
 )
 
-func audioTelemetryValidator(event reportingutil.InputEvent) bool {
+func verifyTelemetry(event reportingutil.InputEvent, validator func(telemetry *reportingutil.TelemetryData) bool) bool {
 	if w := event.WrappedEncryptedData; w != nil {
 		if m := w.MetricData; m != nil {
 			if i := m.TelemetryData; i != nil {
-				if m := i.AudioTelemetry; m != nil {
+				if validator(i) {
 					return true
 				}
 			}
@@ -90,50 +82,11 @@ func audioTelemetryValidator(event reportingutil.InputEvent) bool {
 	return false
 }
 
-func networkTelemetryValidator(event reportingutil.InputEvent) bool {
-	if w := event.WrappedEncryptedData; w != nil {
-		if m := w.MetricData; m != nil {
-			if i := m.TelemetryData; i != nil {
-				if m := i.NetworkTelemetry; m != nil {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-func cpuInfoValidator(event reportingutil.InputEvent) bool {
+func verifyInfo(event reportingutil.InputEvent, validator func(info *reportingutil.InfoData) bool) bool {
 	if w := event.WrappedEncryptedData; w != nil {
 		if m := w.MetricData; m != nil {
 			if i := m.InfoData; i != nil {
-				if m := i.CpuInfo; m != nil {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-func networkInfoValidator(event reportingutil.InputEvent) bool {
-	if w := event.WrappedEncryptedData; w != nil {
-		if m := w.MetricData; m != nil {
-			if i := m.InfoData; i != nil {
-				if m := i.NetworkInfo; m != nil {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-func memoryInfoValidator(event reportingutil.InputEvent) bool {
-	if w := event.WrappedEncryptedData; w != nil {
-		if m := w.MetricData; m != nil {
-			if i := m.InfoData; i != nil {
-				if m := i.MemoryInfo; m != nil {
+				if validator(i) {
 					return true
 				}
 			}
@@ -144,9 +97,7 @@ func memoryInfoValidator(event reportingutil.InputEvent) bool {
 
 func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(telemetryInfoReportingParameters)
-	user := s.RequiredVar(param.usernamePath)
-	pass := s.RequiredVar(param.passwordPath)
-	cID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
+	customerId := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
@@ -155,6 +106,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			s.Error("Failed to reset TPM after test: ", err)
 		}
 	}(ctx)
+
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
 
@@ -167,7 +119,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, cID)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerId)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -181,10 +133,23 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 
 	pc := pspb.NewPolicyServiceClient(cl.Conn)
 
+	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	if err != nil {
+		s.Fatal("Failed to create tape client: ", err)
+	}
+
+	timeout := int32(telemetryInfoReportingTimeout.Seconds())
+	// Create an account manager and lease a test account for the duration of the test.
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.Reporting))
+	if err != nil {
+		s.Fatal("Failed to create an account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(ctx)
+
 	testStartTime := time.Now()
 	if _, err := pc.GAIAEnrollForReporting(ctx, &pspb.GAIAEnrollForReportingRequest{
-		Username:           user,
-		Password:           pass,
+		Username:           acc.Username,
+		Password:           acc.Password,
 		DmserverUrl:        reportingutil.DmServerURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, EnableTelemetryTestingRates",
@@ -209,12 +174,12 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		telemetryEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, cID, c.ClientId, APIKey, "TELEMETRY_METRIC", testStartTime)
+		telemetryEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "TELEMETRY_METRIC", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up telemetry events")
 		}
 
-		infoEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, cID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
+		infoEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up info events")
 		}
@@ -227,29 +192,49 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			validator reportingutil.VerifyEventTypeCallback
 		}{
 			{
-				name:      "audioTelemetry",
-				testType:  Telemetry,
-				validator: audioTelemetryValidator,
+				name:     "audioTelemetry",
+				testType: Telemetry,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
+						return telemetry.AudioTelemetry != nil
+					})
+				},
 			},
 			{
-				name:      "networkTelemetry",
-				testType:  Telemetry,
-				validator: networkTelemetryValidator,
+				name:     "networkTelemetry",
+				testType: Telemetry,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
+						return telemetry.NetworkTelemetry != nil
+					})
+				},
 			},
 			{
-				name:      "networkInfo",
-				testType:  Info,
-				validator: networkInfoValidator,
+				name:     "networkInfo",
+				testType: Info,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
+						return info.NetworkInfo != nil
+					})
+				},
 			},
 			{
-				name:      "memoryInfo",
-				testType:  Info,
-				validator: memoryInfoValidator,
+				name:     "memoryInfo",
+				testType: Info,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
+						return info.MemoryInfo != nil
+					})
+				},
 			},
 			{
-				name:      "cpuInfo",
-				testType:  Info,
-				validator: cpuInfoValidator,
+				name:     "cpuInfo",
+				testType: Info,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
+						return info.CpuInfo != nil
+					})
+				},
 			},
 		} {
 			events := telemetryEvents
