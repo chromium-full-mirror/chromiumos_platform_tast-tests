@@ -267,33 +267,6 @@ func (c *cryptohomeBinary) startAuthSession(ctx context.Context, username string
 	return c.call(ctx, args...)
 }
 
-// authenticateAuthSession calls "cryptohome --action=authenticate_auth_session".
-// password is ignored if publicMount is set to true.
-func (c *cryptohomeBinary) authenticateAuthSession(ctx context.Context, password, keyLabel, authSessionID string, publicMount bool) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_session", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID}
-	if publicMount {
-		args = append(args, "--public_mount", "--key_label=public_mount")
-	} else {
-		args = append(args, "--password="+password, "--key_label="+keyLabel)
-	}
-	return c.call(ctx, args...)
-}
-
-// authenticatePinWithAuthSession calls "cryptohome --action=authenticate_auth_session".
-func (c *cryptohomeBinary) authenticatePinWithAuthSession(ctx context.Context, pin, label, authSessionID string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_session", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID}
-	args = append(args, "--key_label="+label, "--password="+pin)
-	return c.call(ctx, args...)
-}
-
-// authenticateChallengeCredentialWithAuthSession calls "cryptohome --action=authenticate_auth_session".
-// with additional flags for challenge credentials.
-func (c *cryptohomeBinary) authenticateChallengeCredentialWithAuthSession(ctx context.Context, authSessionID, label string, extraFlags []string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_session", "--auth_session_id=" + authSessionID, "--key_label=" + label}
-	args = append(args, extraFlags...)
-	return c.call(ctx, args...)
-}
-
 // authenticateAuthFactor calls "cryptohome --action=authenticate_auth_factor".
 func (c *cryptohomeBinary) authenticateAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
 	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--password=" + password}

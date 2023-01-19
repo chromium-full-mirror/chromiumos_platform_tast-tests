@@ -951,14 +951,6 @@ func (u *CryptohomeClient) StartAuthSession(ctx context.Context, user string, is
 	return reply, hex.EncodeToString(authSessionID), nil
 }
 
-// AuthenticateChallengeCredentialWithAuthSession authenticates an AuthSession with a given authSessionID,
-// using a Challenge-Credential based backend dependent on flags provided through extraFlags.
-func (u *CryptohomeClient) AuthenticateChallengeCredentialWithAuthSession(ctx context.Context, authSessionID, label string, authConfig *AuthConfig) error {
-	extraFlags := authConfigToExtraFlags(authConfig)
-	_, err := u.binary.authenticateChallengeCredentialWithAuthSession(ctx, authSessionID, label, extraFlags)
-	return err
-}
-
 // AuthenticateAuthFactor authenticates an AuthSession with a given authSessionID via an auth factor.
 func (u *CryptohomeClient) AuthenticateAuthFactor(ctx context.Context, authSessionID, label, password string) (*uda.AuthenticateAuthFactorReply, error) {
 	binaryMsg, err := u.binary.authenticateAuthFactor(ctx, authSessionID, label, password)
