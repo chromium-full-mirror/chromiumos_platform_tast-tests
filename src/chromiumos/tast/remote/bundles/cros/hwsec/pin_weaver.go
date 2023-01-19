@@ -409,9 +409,6 @@ func authenticateWithCorrectPassword(ctx, ctxForCleanUp context.Context, testUse
 	if err != nil {
 		return errors.Wrap(err, "failed to authenticate auth factor")
 	}
-	if !reply.Authenticated {
-		return errors.New("AuthSession not authenticated despite successful reply")
-	}
 	if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{
 		uda.AuthIntent_AUTH_INTENT_DECRYPT,
 		uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
@@ -436,9 +433,6 @@ func removeLeCredential(ctx, ctxForCleanUp context.Context, testUser, label stri
 	reply, err := cryptohomeHelper.AuthenticateAuthFactor(ctx, authSessionID, passwordAuthFactorLabel, passwordAuthFactorSecret)
 	if err != nil {
 		return errors.Wrap(err, "failed to authenticate auth factor")
-	}
-	if !reply.Authenticated {
-		return errors.New("AuthSession not authenticated despite successful reply")
 	}
 	if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{
 		uda.AuthIntent_AUTH_INTENT_DECRYPT,
