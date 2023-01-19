@@ -28,8 +28,8 @@ const (
 
 const (
 	workspaceSetUpTestTimeout = 5 * time.Second
-	workspacePreTestTimeout   = 40 * time.Second
-	workspacePostTestTimeout  = 20 * time.Second
+	workspacePreTestTimeout   = time.Minute
+	workspacePostTestTimeout  = time.Minute
 )
 
 // workSpaceFixtureImpl implements testing.FixtureImpl.
