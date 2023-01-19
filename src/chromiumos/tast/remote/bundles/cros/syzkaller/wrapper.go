@@ -139,7 +139,7 @@ func init() {
 		// stopping. The overall test duration is 40 minutes.
 		Timeout: syzkallerRunDuration + 10*time.Minute,
 		Attr:    []string{"group:syzkaller"},
-		Data:    []string{"testing_rsa", "periodic.json"},
+		Data:    []string{"periodic.json"},
 		VarDeps: []string{"syzkaller.Wrapper.botoCredSection"},
 		Params: []testing.Param{
 			{
@@ -232,7 +232,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 
 	// Chmod the keyfile so that ssh connections do not fail due to
 	// open permissions.
-	cmd := exec.Command("cp", s.DataPath("testing_rsa"), syzkallerTastDir)
+	cmd := exec.Command("cp", d.KeyFile(), filepath.Join(syzkallerTastDir, "testing_rsa"))
 	if err := cmd.Run(); err != nil {
 		s.Fatal("Failed to copy testing_rsa to tast temp dir: ", err)
 	}
