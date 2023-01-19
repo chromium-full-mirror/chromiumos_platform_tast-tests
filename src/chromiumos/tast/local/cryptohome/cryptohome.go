@@ -183,6 +183,18 @@ func CreateVault(ctx context.Context, user, password string) error {
 	return nil
 }
 
+// MountVault mounts the vault for the user with given password.
+func MountVault(ctx context.Context, user, password string) error {
+	testing.ContextLogf(ctx, "Creating vault mount for user %q", user)
+	cmdRunner := hwseclocal.NewLoglessCmdRunner()
+	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+
+	if err := cryptohome.MountVault(ctx, defaultGaiaPasswordLabel, hwsec.NewPassAuthConfig(user, password), false, hwsec.NewVaultConfig()); err != nil {
+		return errors.Wrap(err, "failed to create user vault")
+	}
+	return nil
+}
+
 // RemoveVault removes the vault for the user.
 func RemoveVault(ctx context.Context, user string) error {
 	testing.ContextLogf(ctx, "Removing vault for user %q", user)

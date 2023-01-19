@@ -33,6 +33,8 @@ func init() {
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
+		BugComponent: "b:1207311",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"testcert.p12"},
 		Attr:         []string{"group:mainline"},
@@ -198,7 +200,7 @@ func UserPolicyKeys(ctx context.Context, s *testing.State) {
 	// Starting a new session will restore the key that was previously
 	// stored. Reconnect to the session_manager, because the restart
 	// killed it.
-	if err := cryptohome.CreateVault(ctx, testUser, testPass); err != nil {
+	if err := cryptohome.MountVault(ctx, testUser, testPass); err != nil {
 		s.Fatal("Failed to mount vault: ", err)
 	}
 	if err := sm.StartSession(ctx, testUser, ""); err != nil {
