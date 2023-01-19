@@ -41,11 +41,14 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			// TODO(b/259450728): Currently we are failing some ARM devices due to
-			// missing up-to-date board for pack generation. This dep can be removed
-			// once the bug is fixed.
+			Name:              "vm_r",
+			ExtraSoftwareDeps: []string{"android_vm_r"},
+			// TODO(b/265969396): This dep can be removed once the bug is fixed.
+			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
+		}, {
+			Name:              "vm_t",
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			// TODO(b/265969396): This dep can be removed once the bug is fixed.
 			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 		}},
 		// Minimum acceptable.
