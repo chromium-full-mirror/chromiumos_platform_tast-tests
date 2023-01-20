@@ -12,8 +12,10 @@ import (
 
 	golangSSH "golang.org/x/crypto/ssh"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/ssh"
@@ -63,21 +65,33 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove main watchdog: ", err)
 	}
 
+	var flashromConfig flashrom.Config
+	flash, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
+	}
+
 	ctx, restore, originalFirmware, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo)
 	if err != nil {
 		s.Fatal("Firmware backup failed: ", err)
 	}
 	defer restore(s)
 
-	// Hardware WP needs to be disabled so that APSoftwareWriteProtectEnable can
-	// control the write protect range.
+	// Hardware write protect needs to be disabled so that software write protect range can be modified
 	s.Log("Disabling hardware write protect")
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 		s.Fatal("Failed to enable hardware write protect: ", err)
 	}
 
 	s.Log("Enabling software and hardware write protect and rebooting")
-	if err := utils.APSoftwareWriteProtectEnable(ctx, h.DUT.Conn()); err != nil {
+	if out, err := flash.SoftwareWriteProtectEnable(ctx); err != nil {
+		s.Log(out)
 		s.Fatal("Failed to enable software write protect: ", err)
 	}
 
@@ -94,8 +108,9 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Hardware write protect is not enabled: ", err)
 	}
 
-	flashsize, err := utils.APFirmwareSize(ctx, h.DUT.Conn())
+	flashsize, out, err := flash.Size(ctx)
 	if err != nil {
+		s.Log(out)
 		s.Fatal("Failed to read flash size: ", err)
 	}
 
@@ -123,24 +138,25 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 	// the region will sneak through as an error here, but will be caught by the
 	// verify step at the end of this test.
 	s.Log("Attempting to flash AP, this should fail")
-	cmd := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "host", "--include", region, "-w", randomDataFile)
-	err = cmd.Run()
+	out, err = flash.Write(ctx, randomDataFile, true, true, "", []string{region})
 	if err == nil {
-		cmd.DumpLog(ctx)
+		s.Log(string(out))
 		s.Fatal("Failed: flash was not protected by write protect")
 	}
-	flashromExitError, ok := err.(*golangSSH.ExitError)
-	if !ok {
-		cmd.DumpLog(ctx)
+	var flashromExitError *golangSSH.ExitError
+	if !errors.As(err, &flashromExitError) {
+		s.Log(string(out))
 		s.Fatal("Failed: expected ExitError but got something else: ", err)
 	}
 	if flashromExitError.Waitmsg.ExitStatus() != 2 {
+		s.Log(string(out))
 		s.Fatal("Failed: expected flashrom to exit(2): ", err)
 	}
 
 	// Flashrom claimed to fail, but we check that it did not write anything at all.
-	err = utils.APFirmwareVerify(ctx, h.DUT.Conn(), *originalFirmware, region)
+	out, err = flash.Verify(ctx, *originalFirmware, region)
 	if err != nil {
+		s.Log(string(out))
 		s.Fatal("Failed: firmware verify failed: ", err)
 	}
 }

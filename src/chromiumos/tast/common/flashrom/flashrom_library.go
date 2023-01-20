@@ -33,6 +33,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -381,17 +382,31 @@ func (i *Instance) Read(ctx context.Context, fullSizeFilePath string, regionName
 	return out, nil
 }
 
-// SoftwareWriteProtectRegion enables software write protect for the specified region.
-func (i *Instance) SoftwareWriteProtectRegion(ctx context.Context, wpRegionName string) (int, error) {
-	// TODO(b:247668196) implement
-
-	return 0, nil
+// Size returns the flash size.
+//
+// If an error happened, a non-nil error is returned.
+// Returns the output from command line execution, so that the caller can handle it if needed,
+// for example store in log file.
+func (i *Instance) Size(ctx context.Context) (int, []byte, error) {
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--flash-size"}
+	// Verbosity cannot be used with --flash-size, as there is no way to
+	// distinguish which line of output is the size if verbosity is used.
+	out, err := i.runCommandLine(ctx, cmdArgs)
+	if err != nil {
+		return -1, out, err
+	}
+	// The size is printed as the last line, for example `8388608\n`.
+	lastLineStart := bytes.LastIndexByte(out[:len(out)-1], '\n') + 1
+	lastLine := string(out[lastLineStart : len(out)-1])
+	size, err := strconv.ParseInt(lastLine, 10, 0)
+	if err != nil {
+		return -1, out, errors.Wrapf(err, "could not parse flash size to int: %q", lastLine)
+	}
+	return int(size), out, nil
 }
 
-// SoftwareWriteProtectSet sets the value of software write-protect on the chip.
-// Enables write-protect if enable parameter is true, disables otherwise.
-// Sets the range to 0,0 on disable, and set the range to 0,chip_length on enable.
-func (i *Instance) SoftwareWriteProtectSet(ctx context.Context, enable bool) (int, error) {
+// SoftwareWriteProtectRegion enables software write protect for the specified region.
+func (i *Instance) SoftwareWriteProtectRegion(ctx context.Context, wpRegionName string) (int, error) {
 	// TODO(b:247668196) implement
 
 	return 0, nil
@@ -404,11 +419,30 @@ func (i *Instance) SoftwareWriteProtectEnableWithRange(ctx context.Context, wpRa
 	return 0, nil
 }
 
+// SoftwareWriteProtectEnable enables software write-protect for the entire chip.
+// Warning: this may cause the DUT to crash, or fail to boot. Use with caution.
+// Returns output from command line execution, so that the caller can handle it if needed.
+// Returns error if it happened or nil.
+func (i *Instance) SoftwareWriteProtectEnable(ctx context.Context) ([]byte, error) {
+	flashSize, out, err := i.Size(ctx)
+	if err != nil {
+		return out, err
+	}
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg()}
+	cmdArgs = append(cmdArgs, "--wp-enable", fmt.Sprintf("--wp-range=0,%d", flashSize))
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
+
+	out, err = i.runCommandLine(ctx, cmdArgs)
+	if err != nil {
+		return out, errors.Wrapf(err, "error while enabling software write-protect with arguments %v", cmdArgs)
+	}
+	return out, nil
+}
+
 // SoftwareWriteProtectDisable disables software write-protect and sets the range to 0,0.
 //
-// Returns
-// output from command line execution, so that the caller can handle it if needed
-// error if it happened or nil
+// Returns output from command line execution, so that the caller can handle it if needed.
+// Returns error if it happened or nil.
 func (i *Instance) SoftwareWriteProtectDisable(ctx context.Context) ([]byte, error) {
 	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--wp-disable", "--wp-range=0,0"}
 	cmdArgs = i.appendVerbosityArg(cmdArgs)
@@ -461,6 +495,32 @@ func (i *Instance) Write(ctx context.Context, fullSizeFilePath string, noverifyA
 	}
 
 	testing.ContextLog(ctx, "Flashrom write successful: ", cmdArgs)
+
+	return out, nil
+}
+
+// Verify compares data on chip from the file provided by filePath. Note filePath is a path on the DUT,
+// which will not be local in case of remote test.
+// If optional parameter regionNames is provided, only given regions are verified.
+// nil as regionNames indicates entire chip.
+// If an error happened during verify operation, a non-nil error is returned.
+// Returns the output from command line execution, so that the caller can handle it if needed,
+// for example store in log file.
+func (i *Instance) Verify(ctx context.Context, filePath string, regionNames ...string) ([]byte, error) {
+	if filePath == "" {
+		return nil, errors.New("Flashrom cannot do verify: empty filePath argument")
+	}
+
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--verify", filePath}
+	cmdArgs = appendFileAndRegionNamesArgs(cmdArgs, "", regionNames)
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
+
+	out, err := i.runCommandLine(ctx, cmdArgs)
+	if err != nil {
+		return out, errors.Wrapf(err, "error while verifying flashrom with arguments %v", cmdArgs)
+	}
+
+	testing.ContextLog(ctx, "Flashrom verify successful: ", cmdArgs)
 
 	return out, nil
 }

@@ -7,9 +7,7 @@
 package utils
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"reflect"
 	"strconv"
@@ -396,16 +394,6 @@ func APSoftwareWriteProtectDisable(ctx context.Context, conn *ssh.Conn) error {
 	return err
 }
 
-// APSoftwareWriteProtectEnable enables software write protect and sets the range to 0,size.
-func APSoftwareWriteProtectEnable(ctx context.Context, conn *ssh.Conn) error {
-	flashSize, err := APFirmwareSize(ctx, conn)
-	if err != nil {
-		return err
-	}
-	_, err = conn.CommandContext(ctx, "flashrom", "-p", "host", "--wp-enable", fmt.Sprintf("--wp-range=0,%d", flashSize)).Output(ssh.DumpLogOnError)
-	return err
-}
-
 // APFirmwareRead reads the AP firmware flash to the file at path.
 // path is a file on the same remote DUT as conn.
 func APFirmwareRead(ctx context.Context, conn *ssh.Conn, path string) error {
@@ -417,33 +405,6 @@ func APFirmwareRead(ctx context.Context, conn *ssh.Conn, path string) error {
 // path is a file on the same remote DUT as conn.
 func APFirmwareWrite(ctx context.Context, conn *ssh.Conn, path string) error {
 	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--noverify", "-w", path).Output(ssh.DumpLogOnError)
-	return err
-}
-
-// APFirmwareSize returns the size in bytes of the AP firmware flash.
-func APFirmwareSize(ctx context.Context, conn *ssh.Conn) (int64, error) {
-	stdout, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--flash-size").Output(ssh.DumpLogOnError)
-	if err != nil {
-		return -1, err
-	}
-	// The size is printed as the last line.
-	lastLineStart := bytes.LastIndexByte(stdout[:len(stdout)-1], '\n') + 1
-	size, err := strconv.ParseInt(string(stdout[lastLineStart:len(stdout)-1]), 10, 0)
-	if err != nil {
-		return -1, err
-	}
-	return size, nil
-}
-
-// APFirmwareVerify verifies the file at path against the AP firmware flash.
-// If regions are supplied, only the regions are verified.
-// An error will be returned if the file contents do not match the AP firmware flash.
-func APFirmwareVerify(ctx context.Context, conn *ssh.Conn, path string, regions ...string) error {
-	args := []string{"-p", "host", "--verify", path}
-	for _, region := range regions {
-		args = append(args, "--include", region)
-	}
-	_, err := conn.CommandContext(ctx, "flashrom", args...).Output(ssh.DumpLogOnError)
 	return err
 }
 
