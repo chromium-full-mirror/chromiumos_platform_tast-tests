@@ -672,6 +672,15 @@ func wmRC17(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 // wmRC22 covers resizable/clamshell: snap to half screen
 // Expected behavior is defined in: go/arc-wm-r RC22: resizable/clamshell: split screen
 func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (retErr error) {
+	dInfo, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get primary display info")
+	}
+	if dInfo == nil {
+		return errors.New("failed to find primary display info")
+	}
+	pc := pointer.NewMouse(tconn)
+
 	leftAct, err := arc.NewActivity(a, wm.Pkg24, wm.ResizableUnspecifiedActivity)
 	if err != nil {
 		return errors.Wrap(err, "failed to create left activity")
@@ -704,8 +713,8 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	}
 
 	// Snap the activity to the left.
-	if err := leftClickDragCaptionButton(ctx, tconn, "Maximize", true); err != nil {
-		return errors.New("failed to left click and drag Maximize caption button")
+	if err := wm.DragCaptionToSnap(ctx, tconn, pc, dInfo, leftAct, true /*isLeft*/); err != nil {
+		return errors.Wrap(err, "failed to drag caption bar to snap left")
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -744,9 +753,21 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 		}
 	}(ctx)
 
-	// The second activity will be automatically snapped to the right.
 	if err := wm.WaitUntilActivityIsReady(ctx, tconn, rightAct, d); err != nil {
 		return errors.Wrap(err, "failed to wait until right activity is ready")
+	}
+	if _, err := d.WaitForWindowUpdate(ctx, wm.Pkg24InMaximizedList, time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for activity window updated")
+	}
+
+	// On small displays, the app gets launched in a maximized state although the test assumes the app is in a freeform mode.
+	if err := wm.RestoreARCWindowIfMaximized(ctx, tconn, wm.Pkg24InMaximizedList); err != nil {
+		return errors.Wrap(err, "failed to restore window if maximized")
+	}
+
+	// Snap the activity to the right.
+	if err := wm.DragCaptionToSnap(ctx, tconn, pc, dInfo, rightAct, false /*isLeft*/); err != nil {
+		return errors.Wrap(err, "failed to drag caption bar to snap right")
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
