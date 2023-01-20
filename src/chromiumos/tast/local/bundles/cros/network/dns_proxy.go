@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/dns"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/multivm"
@@ -93,6 +94,17 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install dig in container: ", err)
 	}
 
+	// Hide unused ethernet to avoid ARC's limitation.
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create shill client: ", err)
+	}
+	restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+	if err != nil {
+		s.Fatal("Failed to hide unused ethernet: ", err)
+	}
+	defer restoreEthernet(cleanupCtx)
+
 	// Set up virtualnet environment.
 	pool := subnet.NewPool()
 	env, err := dns.NewEnv(ctx, pool)
@@ -138,10 +150,6 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		// We need to override the DoH provider <-> nameserver mapping that Chrome gave to shill.
 		// This is necessary because we want to test the behavior of the automatic upgrade.
 		// Without overriding, devices with an arbitrary nameserver without known DoH provider will only do Do53.
-		m, err := shill.NewManager(ctx)
-		if err != nil {
-			s.Fatal("Failed to obtain shill manager: ", err)
-		}
 		svc, err := m.FindMatchingService(ctx, map[string]interface{}{
 			shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
 		})

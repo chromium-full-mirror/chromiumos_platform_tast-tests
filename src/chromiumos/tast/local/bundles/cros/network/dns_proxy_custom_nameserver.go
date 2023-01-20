@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/dns"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/multivm"
 	"chromiumos/tast/local/network/virtualnet/subnet"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
 )
 
@@ -42,6 +44,17 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
+
+	// Hide unused ethernet to avoid ARC's limitation.
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create shill client: ", err)
+	}
+	restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+	if err != nil {
+		s.Fatal("Failed to hide unused ethernet: ", err)
+	}
+	defer restoreEthernet(cleanupCtx)
 
 	// Set up virtualnet environment.
 	pool := subnet.NewPool()

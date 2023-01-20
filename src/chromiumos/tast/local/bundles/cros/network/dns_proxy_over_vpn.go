@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/dns"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/crostini"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/network/virtualnet/certs"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/subnet"
+	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
 )
 
@@ -96,6 +98,17 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	if err := dns.InstallDigInContainer(ctx, cont); err != nil {
 		s.Fatal("Failed to install dig in container: ", err)
 	}
+
+	// Hide unused ethernet to avoid ARC's limitation.
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create shill client: ", err)
+	}
+	restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+	if err != nil {
+		s.Fatal("Failed to hide unused ethernet: ", err)
+	}
+	defer restoreEthernet(cleanupCtx)
 
 	// Set up virtualnet environment.
 	pool := subnet.NewPool()
