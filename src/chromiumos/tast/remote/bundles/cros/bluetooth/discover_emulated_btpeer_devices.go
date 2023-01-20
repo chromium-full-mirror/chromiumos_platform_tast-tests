@@ -20,9 +20,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that btpeers can be set to emulate a type device and that the DUT can discover them as those devices",
 		Contacts: []string{
-			"jaredbennett@google.com",
 			"cros-connectivity@google.com",
+			"jaredbennett@google.com",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr: []string{
 			"group:bluetooth",
 			"bluetooth_btpeers_2",

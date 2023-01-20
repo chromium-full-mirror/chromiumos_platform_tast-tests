@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that clicking the Settings button on the detailed Bluetooth page within the Quick Settings navigates to the Bluetooth Settings",
 		Contacts: []string{
-			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
+			"chadduffin@chromium.org",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

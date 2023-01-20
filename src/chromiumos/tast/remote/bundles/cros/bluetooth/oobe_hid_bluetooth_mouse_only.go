@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that a bluetooth mouse is connected to in OOBE",
 		Contacts: []string{
-			"tjohnsonkanu@google.com",
 			"cros-connectivity@google.com",
+			"tjohnsonkanu@google.com",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr: []string{
 			"group:bluetooth",
 			"bluetooth_btpeers_1",

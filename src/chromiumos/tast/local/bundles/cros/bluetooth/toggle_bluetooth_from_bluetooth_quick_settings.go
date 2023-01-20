@@ -19,11 +19,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Bluetooth can be enabled and disabled from within the Bluetooth Quick Settings",
 		Contacts: []string{
-			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
+			"chadduffin@chromium.org",
 			"alfredyu@cienet.com",
 			"cienet-development@googlegroups.com",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

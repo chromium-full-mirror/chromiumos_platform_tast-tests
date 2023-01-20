@@ -27,7 +27,7 @@ func init() {
 			"cros-connectivity@google.com",
 			"tjohnsonkanu@google.com",
 		},
-		BugComponent: "b:1131776",
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{

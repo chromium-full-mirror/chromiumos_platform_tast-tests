@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the pairing dialog can be opened from the Bluetooth Settings sub-page",
 		Contacts: []string{
-			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
+			"chadduffin@chromium.org",
 		},
+		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
