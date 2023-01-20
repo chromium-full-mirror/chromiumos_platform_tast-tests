@@ -11,8 +11,10 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/lacros/migrate"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/testing"
@@ -23,9 +25,11 @@ func init() {
 		Func:         BackwardMigratePolicy,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test policy triggering of Lacros-to-Ash profile migration",
+		BugComponent: "b:1088267",
 		Contacts: []string{
-			"vsavu@google.com", // Test author
 			"lacros-team@google.com",
+			"vsavu@google.com", // Test author
+			"artyomchen@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
@@ -44,85 +48,100 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run Chrome to clear migration state: ", err)
 	}
 
-	forwardMigratePolicy(ctx, fdms, s)
-	backwardMigratePolicy(ctx, fdms, s)
-}
-
-func forwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, s *testing.State) {
-	blob := policy.NewBlob()
-	blob.AddPolicies([]policy.Policy{
-		&policy.LacrosDataBackwardMigrationMode{Val: "keep_all"},
-		&policy.LacrosAvailability{Val: "lacros_only"},
-	})
-
-	if err := fdms.WritePolicyBlob(blob); err != nil {
-		s.Fatal("Failed to write policy blob: ", err)
+	cr, err := forwardMigratePolicy(ctx, fdms, s)
+	if err != nil {
+		if cr != nil {
+			cr.Close(ctx)
+		}
+		s.Fatal("Failed to perform forward migration: ", err)
 	}
 
+	err = backwardMigratePolicy(ctx, fdms, cr)
+	if err != nil {
+		s.Fatal("Failed to perform backward migration: ", err)
+	}
+}
+
+func forwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, s *testing.State) (*chrome.Chrome, error) {
+	// Start forward migration with policies.
 	cr, err := chrome.New(ctx,
 		chrome.DMSPolicy(fdms.URL),
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.KeepState(),
 	)
 	if err != nil {
-		s.Fatal("Failed to start ash: ", err)
+		return nil, errors.Wrap(err, "failed to start ash")
 	}
-
-	// Make sure to always close Chrome.
 	defer func() {
 		if cr != nil {
-			if err := cr.Close(ctx); err != nil {
-				s.Error("Failed to close Chrome: ", err)
-			}
+			cr.Close(ctx)
 		}
 	}()
 
-	if err := policyutil.RefreshChromePolicies(ctx, cr); err != nil {
-		s.Fatal("Failed to update policies: ", err)
+	blob := policy.NewBlob()
+	blob.AddPolicies([]policy.Policy{
+		&policy.LacrosDataBackwardMigrationMode{Val: "keep_all"},
+		&policy.LacrosAvailability{Val: "lacros_only"},
+	})
+
+	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, blob); err != nil {
+		return nil, errors.Wrap(err, "failed to update policies")
 	}
 
-	if err := cr.Close(ctx); err != nil {
-		s.Fatal("Failed to close Chrome: ", err)
-	}
+	cr.Close(ctx)
+	cr = nil
 
-	cr, err = chrome.New(ctx,
+	// Wait for forward migration to finish.
+	crForward, err := migrate.Run(ctx, []chrome.Option{
 		chrome.DMSPolicy(fdms.URL),
+		// By default migrate.Run runs forward migration for chrome.DefaultUser.
+		// Passing credentials from fixtures to set up the forward migration more explicitly.
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
-		chrome.KeepState(),
-	)
+	}, []lacrosfixt.Option{})
 	if err != nil {
-		s.Fatal("Failed to start ash: ", err)
+		return nil, errors.Wrap(err, "failed to migrate profile")
 	}
 
-	blob = policy.NewBlob()
+	// Verify that Lacros launches properly.
+	if err := migrate.VerifyLacrosLaunch(ctx, s, crForward); err != nil {
+		return crForward, errors.Wrap(err, "failed to launch lacros")
+	}
+
+	return crForward, nil
+}
+
+func backwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome) error {
+	defer func() {
+		if cr != nil {
+			cr.Close(ctx)
+		}
+	}()
+
+	// Start backward migration with policies.
+	blob := policy.NewBlob()
 	blob.AddPolicies([]policy.Policy{
 		&policy.LacrosDataBackwardMigrationMode{Val: "keep_all"},
 		&policy.LacrosAvailability{Val: "lacros_disallowed"},
 	})
 
-	if err := fdms.WritePolicyBlob(blob); err != nil {
-		s.Fatal("Failed to write policy blob: ", err)
+	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, blob); err != nil {
+		return errors.Wrap(err, "failed to update policies")
 	}
 
-	if err := policyutil.RefreshChromePolicies(ctx, cr); err != nil {
-		s.Fatal("Failed to update policies: ", err)
-	}
-
-	if err := cr.Close(ctx); err != nil {
-		s.Fatal("Failed to close Chrome: ", err)
-	}
+	cr.Close(ctx)
 	cr = nil
-}
 
-func backwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, s *testing.State) {
-	cr, err := migrate.BackwardRun(ctx, []chrome.Option{
+	// Wait for backward migration to finish.
+	crBackward, err := migrate.BackwardRun(ctx, []chrome.Option{
 		chrome.DMSPolicy(fdms.URL),
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.ExtraArgs("--vmodule=*=1"),
 	})
 	if err != nil {
-		s.Fatal("Failed to backward migrate profile: ", err)
+		return errors.Wrap(err, "failed to backward migrate profile")
 	}
 
-	defer cr.Close(ctx)
+	crBackward.Close(ctx)
+
+	return nil
 }

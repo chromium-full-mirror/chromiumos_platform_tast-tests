@@ -25,7 +25,8 @@ const LacrosFirstRunPath = "/home/chronos/user/lacros/First Run"
 
 // Run migrates user profile from Ash to Lacros and wait until migration is marked as completed by Ash.
 // Once the migration is completed, it will relaunch Ash Chrome and returns the new `chrome.Chrome` instance.
-func Run(ctx context.Context, opts []lacrosfixt.Option) (*chrome.Chrome, error) {
+// Callers are expected to add the Chrome options and set up the environment to trigger forward migration.
+func Run(ctx context.Context, chromeOpts []chrome.Option, opts []lacrosfixt.Option) (*chrome.Chrome, error) {
 	// TODO(chromium:1290297): This is a hack.
 	// chrome.New doesn't really support profile migration because it
 	// doesn't anticipate the additional Chrome restart that profile
@@ -36,11 +37,10 @@ func Run(ctx context.Context, opts []lacrosfixt.Option) (*chrome.Chrome, error) 
 	// In order to obtain a valid *Chrome value for the test to continue
 	// with, we restart Chrome once more after profile migration.
 	testing.ContextLog(ctx, "Restarting for profile migration")
-	chromeOpts := []chrome.Option{
+	chromeOpts = append(chromeOpts,
 		chrome.KeepState(),
 		chrome.RemoveNotification(false),
-		chrome.EnableFeatures("LacrosProfileMigrationForAnyUser"),
-	}
+	)
 	opts = append(opts, lacrosfixt.ChromeOptions(chromeOpts...))
 	chromeOpts, err := lacrosfixt.NewConfig(opts...).Opts()
 	if err != nil {
@@ -58,7 +58,7 @@ func Run(ctx context.Context, opts []lacrosfixt.Option) (*chrome.Chrome, error) 
 	}()
 
 	testing.ContextLog(ctx, "Waiting for profile migration to complete")
-	userHash, err := cryptohome.UserHash(ctx, chrome.DefaultUser)
+	userHash, err := cryptohome.UserHash(ctx, crDoNotUse.Creds().User)
 	if err != nil {
 		return nil, err
 	}
@@ -105,19 +105,22 @@ func ClearMigrationState(ctx context.Context) error {
 }
 
 // VerifyLacrosLaunch checks if Lacros is launchable after profile migration.
-func VerifyLacrosLaunch(ctx context.Context, s *testing.State, cr *chrome.Chrome) {
+func VerifyLacrosLaunch(ctx context.Context, s *testing.State, cr *chrome.Chrome) error {
 	if _, err := os.Stat(LacrosFirstRunPath); err != nil {
-		s.Fatal("Error reading 'First Run' file: ", err)
+		return errors.Wrap(err, "error reading 'First Run' file")
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+		return errors.Wrap(err, "failed to create Test API connection")
 	}
 
 	l, err := lacros.Launch(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to launch lacros: ", err)
+		return errors.Wrap(err, "failed to launch lacros")
 	}
+
 	l.Close(ctx)
+
+	return nil
 }

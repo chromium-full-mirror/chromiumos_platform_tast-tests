@@ -47,13 +47,15 @@ func BackwardMigrateBasic(ctx context.Context, s *testing.State) {
 }
 
 func forwardMigrate(ctx context.Context, s *testing.State) {
-	cr, err := migrate.Run(ctx, s.Param().([]lacrosfixt.Option))
+	cr, err := migrate.Run(ctx, []chrome.Option{}, s.Param().([]lacrosfixt.Option))
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}
 	defer cr.Close(ctx)
 
-	migrate.VerifyLacrosLaunch(ctx, s, cr)
+	if err := migrate.VerifyLacrosLaunch(ctx, s, cr); err != nil {
+		s.Error("Failed to launch lacros: ", err)
+	}
 }
 
 func backwardMigrate(ctx context.Context, s *testing.State) {

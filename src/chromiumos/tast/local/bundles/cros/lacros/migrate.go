@@ -55,7 +55,7 @@ func Migrate(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	prepareAshProfile(ctx, s, kb)
-	cr, err := migrate.Run(ctx, s.Param().([]lacrosfixt.Option))
+	cr, err := migrate.Run(ctx, []chrome.Option{}, s.Param().([]lacrosfixt.Option))
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}

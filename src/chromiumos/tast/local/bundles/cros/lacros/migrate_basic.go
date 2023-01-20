@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/bundles/cros/lacros/migrate"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/testing"
@@ -43,11 +44,13 @@ func MigrateBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run Chrome to clear migration state: ", err)
 	}
 
-	cr, err := migrate.Run(ctx, s.Param().([]lacrosfixt.Option))
+	cr, err := migrate.Run(ctx, []chrome.Option{}, s.Param().([]lacrosfixt.Option))
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}
 	defer cr.Close(ctx)
 
-	migrate.VerifyLacrosLaunch(ctx, s, cr)
+	if err := migrate.VerifyLacrosLaunch(ctx, s, cr); err != nil {
+		s.Fatal("Failed to launch lacros: ", err)
+	}
 }
