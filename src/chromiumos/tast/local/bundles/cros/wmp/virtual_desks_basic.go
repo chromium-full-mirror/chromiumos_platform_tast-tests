@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
+	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -54,6 +55,14 @@ func init() {
 		Timeout: chrome.GAIALoginTimeout + 120*time.Second,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
+}
+
+// almostTopLeft returns a point in the window that is offset from the topleft
+// position. This is a (temporary?) hack to account for uiauto.Location not
+// returning proper recs for transformed windows. TODO(b/266148813) - revert
+// to using CenterPoint if this gets resolved.
+func almostTopLeft(rect *coords.Rect, offset int) coords.Point {
+	return coords.Point{X: rect.Left + offset, Y: rect.Top + offset}
 }
 
 func VirtualDesksBasic(ctx context.Context, s *testing.State) {
@@ -175,7 +184,7 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the location of the Files app: ", err)
 	}
 	if err := pc.Drag(
-		filesAppWindowViewLoc.CenterPoint(),
+		almostTopLeft(filesAppWindowViewLoc, 50),
 		pc.DragTo(firstDeskMiniViewLoc.CenterPoint(), 3*time.Second))(ctx); err != nil {
 		s.Fatal("Failed to drag Files app into the new desk: ", err)
 	}
