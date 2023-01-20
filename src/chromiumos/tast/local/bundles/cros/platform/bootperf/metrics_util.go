@@ -380,7 +380,7 @@ func getFirmwareTimestampBootTime(ctx context.Context) (float64, error) {
 
 // getFirmwareLogBootTime gets firmware startup time by parsing the output of `cbmem -t`.
 func getFirmwareLogBootTime(ctx context.Context) (float64, error) {
-	stdout, err := readFirmwareTimestamps(ctx)
+	stdout, err := readFirmwareTimestamps(ctx, false)
 	if err != nil {
 		return 0.0, err
 	}
@@ -401,6 +401,77 @@ func getFirmwareLogBootTime(ctx context.Context) (float64, error) {
 	}
 	fw := float64(fwUsec) / 1000000
 	return fw, nil
+}
+
+// These are go-ified constants that match the ones with underscores and all caps in coreboot sources.
+const (
+	TsVbReadKernelDone    = 1050
+	TsVbVbootDone         = 1100
+	TsStartKernel         = 1101
+	TsKernelDecompression = 1102
+)
+
+// GatherFirmwareStageTimings gets timings for various stages of firmware like kernel verification time.
+func GatherFirmwareStageTimings(ctx context.Context, results *platform.GetBootPerfMetricsResponse) error {
+	timings, err := getFirmwareLogDiffTimings(ctx)
+	if err != nil {
+		return err
+	}
+
+	// x86 doesn't decompress the kernel in the firmware, so we don't
+	// report that case. Furthermore, the event is recorded when firmware
+	// starts decompressing the kernel, and the next event is assumed to be
+	// when the kernel is started. There's not much code between
+	// decompressing and starting the kernel, so we simply record the diff
+	// time between these two events and assume that is decompression time
+	// to keep things simple. If this changes in the future, we'll have to
+	// update this test. Hopefully, such an event will be named
+	// "decompression done" so we can simply use the diff time of that
+	// event.
+	if timings[TsStartKernel] > 0 && timings[TsKernelDecompression] > 0 {
+		results.Metrics["seconds_kernel_decompression_relocation"] = timings[TsStartKernel]
+	}
+	if timings[TsVbVbootDone] > 0 {
+		results.Metrics["seconds_vboot_kernel_verification"] = timings[TsVbVbootDone]
+	}
+	if timings[TsVbReadKernelDone] > 0 {
+		results.Metrics["seconds_vboot_read_kernel"] = timings[TsVbReadKernelDone]
+	}
+	return nil
+}
+
+// getFirmwareLogDiffTimings gets the diff timing from each stage of `cbmem -T` and
+// returns it in a map of timing ID -> seconds.
+func getFirmwareLogDiffTimings(ctx context.Context) (map[uint64]float64, error) {
+	stdout, err := readFirmwareTimestamps(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	v := make(map[uint64]float64)
+	// Parse timings from the output. `cbmem -T` reports how long various stages take with the format of 'ID Start_Time Diff_Time "Human readable ID description"'.
+	// Example: 99   2745224 38592 selfboot jump
+	re := regexp.MustCompile(`^([0-9]+)\s+([0-9]+)\s+([0-9]+)`)
+	stdoutStr := string(stdout)
+	for _, line := range strings.Split(strings.TrimSuffix(stdoutStr, "\n"), "\n") {
+		m := re.FindStringSubmatch(line)
+		if m == nil {
+			return nil, errors.Wrapf(err, "failed to match regex to %q", line)
+		}
+
+		id, err := strconv.ParseUint(m[1], 10, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse ID from %q", line)
+		}
+		usecs, err := strconv.ParseUint(m[3], 10, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse time from %q", line)
+		}
+
+		v[id] = float64(usecs) / 1000000
+	}
+
+	return v, nil
 }
 
 // calculateTimeOffset calculates the time offset between 2 different clock
@@ -482,9 +553,14 @@ func findMostRecentBootstatArchivePath() (string, error) {
 	return "", errors.New("failed to find the bootstat archive for the latest shutdown")
 }
 
-// readFirmwareTimestamps reads firmware timestamp data from `cbmem -t`.
-func readFirmwareTimestamps(ctx context.Context) ([]byte, error) {
-	stdout, err := testexec.CommandContext(ctx, "/usr/bin/cbmem", "-t").Output()
+// readFirmwareTimestamps reads firmware timestamp data from `cbmem -t/-T`.
+func readFirmwareTimestamps(ctx context.Context, machine bool) ([]byte, error) {
+	arg := "-t"
+	if machine {
+		arg = "-T"
+	}
+
+	stdout, err := testexec.CommandContext(ctx, "/usr/bin/cbmem", arg).Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute read firmware timestamps from `cbmem -t`")
 	}
@@ -679,7 +755,7 @@ func GatherConsoleRamoops(raw map[string][]byte) error {
 
 // StoreFirmwareTimestamps stores the raw firmware timestamps from `cbmem -t`.
 func StoreFirmwareTimestamps(ctx context.Context, raw map[string][]byte) {
-	stdout, err := readFirmwareTimestamps(ctx)
+	stdout, err := readFirmwareTimestamps(ctx, false)
 	if err != nil {
 		// Don't err on `cbmem -t` failure. It doesn't work on every device.
 		return

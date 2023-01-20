@@ -111,6 +111,11 @@ func (*BootPerfService) GetBootPerfMetrics(ctx context.Context, _ *empty.Empty) 
 		return nil, err
 	}
 
+	err = bootperf.GatherFirmwareStageTimings(ctx, out)
+	if err != nil {
+		return nil, err
+	}
+
 	testing.ContextLog(ctx, "Gather reboot metrics")
 	err = bootperf.GatherRebootMetrics(out)
 	if err != nil {
