@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "arcBootedWithoutDNSProxy",
+		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"arc"},
 	})
 }
