@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/verifier"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type pingParam struct {
@@ -67,7 +68,8 @@ func init() {
 				},
 			},
 		}, {
-			Name: "ft_psk",
+			Name:              "ft_psk",
+			ExtraHardwareDeps: hwdep.D(hwdep.WifiFT()),
 			Val: wifiutil.ContParam{
 				Rounds: 50,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
@@ -98,7 +100,8 @@ func init() {
 				},
 			},
 		}, {
-			Name: "ft_eap",
+			Name:              "ft_eap",
+			ExtraHardwareDeps: hwdep.D(hwdep.WifiFT()),
 			Val: wifiutil.ContParam{
 				Rounds: 50,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
