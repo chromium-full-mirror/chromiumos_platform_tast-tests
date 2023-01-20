@@ -135,9 +135,6 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 		opts = append(opts, chrome.ExtraArgs("--force-raster-color-profile=srgb"))
 	}
 
-	// Disable launching lacros on login.
-	opts = append(opts, chrome.ExtraArgs("--disable-login-lacros-opening"))
-
 	// Don't show the restore pages popup if lacros crashed in an earlier test.
 	// This can interfere with tests.
 	opts = append(opts, chrome.LacrosExtraArgs("--hide-crash-restore-bubble"))
