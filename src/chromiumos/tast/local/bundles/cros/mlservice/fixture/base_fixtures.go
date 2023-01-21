@@ -21,11 +21,13 @@ import (
 
 // List of fixture names for ML service testing.
 const (
-	LoggedIn              = "mlLoggedIn"
-	GAIALoggedIn          = "mlGaiaLoggedIn"
-	GAIALoggedInClamshell = "mlGAIALoggedInClamshell"
-	GAIALoggedInTablet    = "mlGAIALoggedInTablet"
-	NoLoggedIn            = "mlNoLoggedIn"
+	LoggedIn                    = "mlLoggedIn"
+	GAIALoggedIn                = "mlGaiaLoggedIn"
+	GAIALoggedInClamshell       = "mlGAIALoggedInClamshell"
+	GAIALoggedInTablet          = "mlGAIALoggedInTablet"
+	GAIALoggedInLacrosClamshell = "mlGAIALoggedInLacrosClamshell"
+	GAIALoggedInLacrosTablet    = "mlGAIALoggedInLacrosTablet"
+	NoLoggedIn                  = "mlNoLoggedIn"
 )
 
 const (
@@ -111,6 +113,48 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInLacrosClamshell,
+		Desc: "A fixture with GAIA user logged in Lacros in clamshell mode",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.ExtraArgs("--force-tablet-mode=clamshell"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInLacrosTablet,
+		Desc: "A fixture with GAIA user logged in Lacros in tablet mode",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: NoLoggedIn,
 		Desc: "A fixture with no user logged in",
 		Contacts: []string{
@@ -170,7 +214,9 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 			s.Fatal("Failed to get Chrome options: ", err)
 		}
 	}
-	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(), fOpts...)
+
+	// keep-alive for lacros extension apps. A no-op for ash extensions.
+	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)), fOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

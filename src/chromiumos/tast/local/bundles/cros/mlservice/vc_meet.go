@@ -8,11 +8,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps/googlemeet"
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
@@ -51,6 +52,26 @@ func init() {
 				Fixture: fixture.GAIALoggedInTablet,
 				Val:     false,
 			},
+			{
+				Name:    "clamshell_pwa_lacros",
+				Fixture: fixture.GAIALoggedInLacrosClamshell,
+				Val:     true,
+			},
+			{
+				Name:    "tablet_pwa_lacros",
+				Fixture: fixture.GAIALoggedInLacrosTablet,
+				Val:     true,
+			},
+			{
+				Name:    "clamshell_web_lacros",
+				Fixture: fixture.GAIALoggedInLacrosClamshell,
+				Val:     false,
+			},
+			{
+				Name:    "tablet_web_lacros",
+				Fixture: fixture.GAIALoggedInLacrosTablet,
+				Val:     false,
+			},
 		},
 	})
 }
@@ -65,16 +86,20 @@ func VCMeet(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
 
+	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	var gm *googlemeet.GoogleMeet
-	var err error
-	var cleanup action.Action
 
 	if s.Param().(bool) {
-		gm, cleanup, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, browserType)
+		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br)
 	} else {
 		// Meet can dynamically switch between different segmentation models.
 		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, cleanup, err = googlemeet.StartNewMeeting(ctx, cr, browserType,
+		gm, err = googlemeet.StartNewMeeting(ctx, cr, br,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
 			})
@@ -82,7 +107,7 @@ func VCMeet(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer gm.Close(cleanupCtx)
 
 	sendResolutionName := "High definition (720p)"
 
@@ -91,11 +116,22 @@ func VCMeet(ctx context.Context, s *testing.State) {
 		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
-			gm.SetAdjustVideoLighting(true),
+			func(ctx context.Context) error {
+				// Relighting is not supported on Lacros. The option is not available.
+				if browserType == browser.TypeLacros {
+					return nil
+				}
+				return gm.SetAdjustVideoLighting(true)(ctx)
+			},
 			gm.SetSendResolution(sendResolutionName),
 		),
+		// Video effects are not supported on Lacros on VM due to http://b/265954612.
 		gm.ApplyVideoEffects(gm.SetEffectBlur(true)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
+	}
+
+	if _, err := gm.ScreenshotCanvas(ctx, cr); err != nil {
+		s.Fatal("Failed to take screenshot of canvas: ", err)
 	}
 }

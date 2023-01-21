@@ -6,6 +6,7 @@ package googlemeet
 
 import (
 	"context"
+	"image"
 	"net/url"
 	"regexp"
 	"strings"
@@ -17,12 +18,11 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
-	"chromiumos/tast/local/crostini/faillog"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 )
 
@@ -40,23 +40,25 @@ var (
 	meetRootWebArea = nodewith.NameContaining("Meet").Role(role.RootWebArea)
 
 	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetRootWebArea)
+	videoNode         = nodewith.Role(role.Video).Ancestor(meetRootWebArea)
 )
 
 // GoogleMeet represents a type of GoogleMeet meeting instance.
 type GoogleMeet struct {
+	br    *browser.Browser
 	conn  *chrome.Conn
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
 }
 
 // New creates a new GoogleMeet meeting instance.
-func New(conn *chrome.Conn, tconn *chrome.TestConn) *GoogleMeet {
-	return &GoogleMeet{conn, tconn, uiauto.New(tconn)}
+func New(br *browser.Browser, conn *chrome.Conn, tconn *chrome.TestConn) *GoogleMeet {
+	return &GoogleMeet{br, conn, tconn, uiauto.New(tconn)}
 }
 
 // NewFromTarget creates a new GoogleMeet meeting instance from an existing web target.
-func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatcher) (*GoogleMeet, error) {
-	conn, err := cr.NewConnForTarget(ctx, tm)
+func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tm chrome.TargetMatcher) (*GoogleMeet, error) {
+	conn, err := br.NewConnForTarget(ctx, tm)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +68,7 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatch
 		return nil, err
 	}
 
-	return New(conn, tconn), nil
+	return New(br, conn, tconn), nil
 }
 
 // StartNewMeeting starts a new Google Meeting using given browser.
@@ -78,7 +80,7 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatch
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer cleanup(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, urlParams map[string]string) (gm *GoogleMeet, cleanup action.Action, retErr error) {
+func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, urlParams map[string]string) (*GoogleMeet, error) {
 	newMeetingURL := newMeetingURL
 	if urlParams != nil && len(urlParams) > 0 {
 		values := url.Values{}
@@ -88,36 +90,27 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser
 		newMeetingURL = newMeetingURL + "?" + values.Encode()
 	}
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, newMeetingURL)
+	conn, err := br.NewConn(ctx, newMeetingURL)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	gm = New(conn, tconn)
-
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			faillog.DumpUITreeAndScreenshot(ctx, tconn, "start_meeting", err)
-			if err := closeBrowser(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to close browser in cleanup")
-			}
-		}
-	}(ctx)
+	gm := New(br, conn, tconn)
 
 	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
-		return nil, nil, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
+		return nil, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
 	}
 
 	if err := gm.ClearPromptsForNewMeeting(ctx); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return gm, closeBrowser, nil
+	return gm, nil
 }
 
 // StartNewMeetingUsingPWA starts a new Google Meeting in PWA mode.
@@ -130,14 +123,14 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, browserType browser
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer cleanup(cleanupCtx)
-func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*GoogleMeet, action.Action, error) {
-	if err := InstallPWA(ctx, cr, browserType); err != nil {
-		return nil, nil, err
+func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*GoogleMeet, error) {
+	if err := InstallPWA(ctx, cr, br); err != nil {
+		return nil, err
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	pwaTitle := "Google Meet"
@@ -147,48 +140,55 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType
 
 	// PWA is automatically launched after installation.
 	// Check if app is already running to avoid double launch.
-	isRunning, err := ash.AppRunning(ctx, tconn, apps.Meet.ID)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to check whether Meet is already running")
-	}
-
-	if !isRunning {
-		if err := apps.Launch(ctx, tconn, apps.Meet.ID); err != nil {
-			return nil, nil, err
+	if isAppShownOnShelf, err := ash.AppShown(ctx, tconn, apps.Meet.ID); err != nil {
+		return nil, errors.Wrap(err, "failed to check whether Meet is shown on shelf")
+	} else if isAppShownOnShelf {
+		if isRunning, err := ash.AppRunning(ctx, tconn, apps.Meet.ID); err != nil {
+			return nil, errors.Wrap(err, "failed to check whether Meet is already running")
+		} else if isRunning {
+			// Bring existing Meet PWA to front.
+			if _, err := ash.BringWindowToForeground(ctx, tconn, pwaTitle); err != nil {
+				return nil, errors.Wrap(err, "failed to bring Meet PWA to front")
+			}
 		}
 	} else {
-		// Bring existing Meet PWA to front.
-		if _, err := ash.BringWindowToForeground(ctx, tconn, pwaTitle); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to bring Meet PWA to front")
+		if err := apps.Launch(ctx, tconn, apps.Meet.ID); err != nil {
+			return nil, err
 		}
 	}
 
-	closeApp := func(ctx context.Context) error {
-		return apps.Close(ctx, tconn, apps.Meet.ID)
-	}
-
-	gm, err := NewFromTarget(ctx, cr, pwaTargetMatcher)
+	gm, err := NewFromTarget(ctx, cr, br, pwaTargetMatcher)
 	if err != nil {
-		return nil, closeApp, errors.Wrap(err, "failed to connect to Meet PWA")
+		return nil, errors.Wrap(err, "failed to connect to Meet PWA")
 	}
 
 	if err := gm.conn.Navigate(ctx, newMeetingURL); err != nil {
-		return nil, closeApp, errors.Wrap(err, "failed to start new meeting")
+		return nil, errors.Wrap(err, "failed to start new meeting")
 	}
 	if err := webutil.WaitForQuiescence(ctx, gm.conn, longUITimeout); err != nil {
-		return nil, closeApp, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
+		return nil, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
 	}
 
 	if err := gm.ClearPromptsForNewMeeting(ctx); err != nil {
-		return nil, closeApp, err
+		return nil, err
 	}
 
-	return gm, closeApp, nil
+	return gm, nil
 }
 
 // Conn returns the connection to the Meet page target.
 func (gm *GoogleMeet) Conn() *chrome.Conn {
 	return gm.conn
+}
+
+// Close closes the Meeting browser or PWA app.
+func (gm *GoogleMeet) Close(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		if err := gm.conn.CloseTarget(ctx); err != nil {
+			return err
+		}
+		return gm.conn.Close()
+	}(ctx)
 }
 
 // EnterFullScreen changes setting to turn full screen mode.
@@ -269,7 +269,7 @@ func (gm *GoogleMeet) ApplyVideoEffects(actions ...action.Action) action.Action 
 }
 
 // InstallPWA installs Google Meet PWA.
-func InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) error {
+func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
@@ -281,15 +281,19 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type
 		return nil
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
-	if err != nil {
-		return err
-	}
-	defer closeBrowser(ctx)
-
 	// Install Meet PWA.
 	if err := apps.InstallPWAForURL(ctx, tconn, br, pwaInstallURL, 30*time.Second); err != nil {
 		return errors.Wrap(err, "failed to install Meet PWA")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, tconn, apps.Meet.ID, time.Minute)
+}
+
+// ScreenshotCanvas takes screenshot of the canvas via Javascript.
+func (gm *GoogleMeet) ScreenshotCanvas(ctx context.Context, cr *chrome.Chrome) (image.Image, error) {
+	videoNodeInfo, err := gm.ui.Info(ctx, videoNode)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get video node info")
+	}
+
+	return screenshot.GrabAndCropScreenshot(ctx, cr, videoNodeInfo.Location)
 }

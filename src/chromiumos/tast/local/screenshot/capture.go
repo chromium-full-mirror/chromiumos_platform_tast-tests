@@ -8,12 +8,15 @@ import (
 	"context"
 	"encoding/base64"
 	"image"
+	"image/png"
 	_ "image/png" // PNG decoder
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -193,4 +196,17 @@ func GrabScreenshot(ctx context.Context, cr *chrome.Chrome) (image.Image, error)
 		return nil, errors.Wrap(err, "error decoding image file")
 	}
 	return img, nil
+}
+
+// SaveImageToFile saves the given image (not limited to screenshot) to a local file.
+func SaveImageToFile(img image.Image, outDir, fileName string) action.Action {
+	return func(ctx context.Context) error {
+		path := filepath.Join(outDir, fileName)
+		fd, err := os.Create(path)
+		if err != nil {
+			return errors.Wrap(err, "failed to create file")
+		}
+		defer fd.Close()
+		return png.Encode(fd, img)
+	}
 }
