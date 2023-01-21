@@ -108,7 +108,7 @@ func init() {
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

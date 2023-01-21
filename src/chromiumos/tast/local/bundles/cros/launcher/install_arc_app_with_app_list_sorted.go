@@ -41,7 +41,7 @@ func init() {
 			"andrewxu@chromium.org",
 			"tbarzic@chromium.org",
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         fakeAppInfoForAppInstallWithAppListSortedTest.IconFileNames,

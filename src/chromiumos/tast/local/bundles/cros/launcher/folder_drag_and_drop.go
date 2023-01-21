@@ -32,7 +32,7 @@ func init() {
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

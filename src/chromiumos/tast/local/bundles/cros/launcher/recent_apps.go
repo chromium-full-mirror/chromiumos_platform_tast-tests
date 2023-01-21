@@ -38,7 +38,7 @@ func init() {
 			"anasalazar@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

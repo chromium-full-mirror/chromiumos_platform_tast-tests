@@ -30,7 +30,7 @@ func init() {
 			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

@@ -29,7 +29,7 @@ func init() {
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/232996538): reenable on taniks when it passes.

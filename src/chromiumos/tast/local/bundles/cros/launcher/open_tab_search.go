@@ -44,7 +44,7 @@ func init() {
 			"yulunwu@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "all_tabs_in_one_window",

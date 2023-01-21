@@ -41,7 +41,7 @@ func init() {
 			"yulunwu@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Fixture:      "chromeLoggedIn",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

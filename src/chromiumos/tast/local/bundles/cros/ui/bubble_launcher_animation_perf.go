@@ -42,7 +42,7 @@ func init() {
 			"jamescook@chromium.org",
 			"tbarzic@chromium.org",
 		},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

@@ -32,10 +32,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures smoothness of switching pages within the launcher",
 		Contacts: []string{
-			"newcomer@chromium.org", "tbarzic@chromium.org", "cros-launcher-prod-notifications@google.com",
-			"mukai@chromium.org", // original test author
 			"cros-system-ui-eng@google.com",
+			"cros-launcher-prod-notifications@google.com",
+			"tbarzic@chromium.org",
+			"newcomer@chromium.org",
 		},
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

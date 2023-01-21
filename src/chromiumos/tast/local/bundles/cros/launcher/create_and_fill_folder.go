@@ -27,7 +27,7 @@ func init() {
 			"cros-system-ui-eng@google.com",
 			"mmourgos@chromium.org",
 			"chromeos-sw-engprod@google.com"},
-		BugComponent: "crbug:UI>Shell>Launcher",
+		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
