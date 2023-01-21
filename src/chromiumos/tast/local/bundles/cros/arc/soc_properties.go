@@ -22,7 +22,8 @@ func init() {
 		Func:         SocProperties,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks SOC model-related properties (ro.soc.*)",
-		Contacts:     []string{"matvore@chromium.org", "niwa@chromium.org", "arcvm-eng@google.com"},
+		Contacts:     []string{"arcvm-eng@google.com", "matvore@chromium.org", "niwa@chromium.org"},
+		BugComponent: "b:883059",
 
 		// Exclude boards not planning to support ARCVM. They are
 		// out-of-scope. (see http://go/arcvm-migration)
