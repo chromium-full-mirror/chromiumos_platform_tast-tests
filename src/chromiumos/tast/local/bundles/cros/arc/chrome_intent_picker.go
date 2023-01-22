@@ -26,10 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify Chrome Intent Picker can launch ARC app by visiting URL",
 		Contacts: []string{
-			"mxcai@chromium.org",
 			"chromeos-apps-foundation-team@google.com",
+			"mxcai@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "crbug:Platform>Apps>Foundation>Intents",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},

@@ -31,12 +31,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Install ARC app and share to app via Sharesheet",
 		Contacts: []string{
-			"melzhang@chromium.org",
 			"chromeos-apps-foundation-team@google.com",
+			"melzhang@chromium.org",
 		},
+		BugComponent: "crbug:Platform>Apps>Foundation>Sharesheet",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      7 * time.Minute,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
