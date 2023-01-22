@@ -411,7 +411,8 @@ func (f *FilesApp) OpenPath(expectedTitle, dirName string, path ...string) uiaut
 func (f *FilesApp) DeleteFileOrFolder(kb *input.KeyboardEventWriter, fileName string) uiauto.Action {
 	return uiauto.Combine(fmt.Sprintf("DeleteFileOrFolder(%s)", fileName),
 		f.SelectFile(fileName),
-		kb.AccelAction("Alt+Backspace"),
+		kb.AccelAction("Alt+Shift+Backspace"),
+		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).ClassName("cr-dialog-ok").Role(role.Button)),
 		f.WaitUntilFileGone(fileName),
 	)
 }
@@ -428,7 +429,8 @@ func (f *FilesApp) DeleteMultipleFilesOrFolders(kb *input.KeyboardEventWriter, t
 
 	return uiauto.Combine(fmt.Sprintf("DeleteMultipleFilesOrFolders(%s)", targets),
 		f.SelectMultipleFiles(kb, targets...),
-		kb.AccelAction("Alt+Backspace"),
+		kb.AccelAction("Alt+Shift+Backspace"),
+		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).ClassName("cr-dialog-ok").Role(role.Button)),
 		waitUnitAllTargetsGone,
 	)
 }
