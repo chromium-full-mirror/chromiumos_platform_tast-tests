@@ -20,9 +20,8 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
 
@@ -219,6 +218,12 @@ func testDeleteFromPlayfiles(ctx context.Context, tconn *chrome.TestConn, a *arc
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to find keyboard")
+	}
+	defer kb.Close()
+
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to open Files app")
@@ -235,14 +240,8 @@ func testDeleteFromPlayfiles(ctx context.Context, tconn *chrome.TestConn, a *arc
 		// Wait for file to appear.
 		filesApp.WaitForFile(filename),
 
-		// Delete the file.
-		filesApp.ClickContextMenuItem(filename, filesapp.Delete),
-
-		// Confirm the deletion.
-		filesApp.LeftClick(nodewith.Name("Delete").ClassName("cr-dialog-ok").Role(role.Button)),
-
-		// Wait until file disappear.
-		filesApp.WaitUntilFileGone(filename)}
+		// Delete the file. This also waits for the file to be gone.
+		filesApp.DeleteFileOrFolder(kb, filename)}
 
 	if err := uiauto.Combine("delete file from Play files", steps...)(ctx); err != nil {
 		return err
