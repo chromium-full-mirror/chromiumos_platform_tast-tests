@@ -135,11 +135,11 @@ func Collect(ctx context.Context, tconn *chrome.TestConn) (*ProxySettings, error
 // TODO(b/244330490): Update this method to open the network settings by
 // clicking the network in the network list in the Quick Settings.
 func CollectFromSigninScreen(ctx context.Context, tconn *chrome.TestConn) (*ProxySettings, error) {
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, true); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to network detailed view")
 	}
 
-	if err := quicksettings.OpenNetworkSettings(ctx, tconn, true); err != nil {
+	if err := quicksettings.OpenNetworkSettings(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to open network settings")
 	}
 

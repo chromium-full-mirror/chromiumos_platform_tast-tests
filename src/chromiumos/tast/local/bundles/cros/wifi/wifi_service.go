@@ -91,7 +91,7 @@ func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinW
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, res.tconn, true); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, res.tconn); err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
 	}
 	defer quicksettings.Hide(cleanupCtx, res.tconn)

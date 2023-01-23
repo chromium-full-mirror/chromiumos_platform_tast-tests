@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"time"
 
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -33,6 +35,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
 		Timeout:      2 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
@@ -73,11 +78,11 @@ func CellularConnectDisconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find Disconnect button in OS Settings: ", err)
 	}
 
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, false); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the network section of Quick Settings: ", err)
 	}
 
-	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(quicksettings.NetworkDetailedViewRevamp)
+	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(quicksettings.NetworkDetailedView)
 	connectedQuickSettingsLabel := nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile("Connected")).Ancestor(cellularNetworkQuickSettingsView)
 
 	if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(connectedQuickSettingsLabel)(ctx); err != nil {
@@ -91,7 +96,7 @@ func CellularConnectDisconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disconnect cellular network in OS Settings: ", err)
 	}
 
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, false); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the network section of Quick Settings: ", err)
 	}
 
@@ -119,7 +124,7 @@ func CellularConnectDisconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed navigate away from cellular details page in OS Settings: ", err)
 	}
 
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, false); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the network section of Quick Settings: ", err)
 	}
 

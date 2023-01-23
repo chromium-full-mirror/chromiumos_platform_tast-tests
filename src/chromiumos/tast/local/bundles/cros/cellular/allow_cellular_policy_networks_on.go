@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/cellular"
@@ -34,6 +35,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim", "cellular_e2e"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
@@ -99,7 +103,7 @@ func AllowCellularPolicyNetworksOn(ctx context.Context, s *testing.State) {
 		s.Fatal("Add cellular button is not disabled: ", err)
 	}
 
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, true); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Network view: ", err)
 	}
 

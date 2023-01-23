@@ -59,7 +59,7 @@ func OpenAddCellularSettingsFromQuickSettings(ctx context.Context, s *testing.St
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	defer cancel()
 
-	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn, false); err != nil {
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the network section of Quick Settings: ", err)
 	}
 

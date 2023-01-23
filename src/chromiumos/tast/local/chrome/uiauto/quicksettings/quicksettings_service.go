@@ -37,7 +37,7 @@ type Service struct {
 // are already open.
 func (s *Service) NavigateToNetworkDetailedView(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		return &emptypb.Empty{}, NavigateToNetworkDetailedView(ctx, tconn, true)
+		return &emptypb.Empty{}, NavigateToNetworkDetailedView(ctx, tconn)
 	})
 }
 
