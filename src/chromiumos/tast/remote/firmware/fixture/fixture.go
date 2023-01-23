@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	pb "chromiumos/tast/services/cros/firmware"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 )
 
@@ -28,8 +29,10 @@ const (
 	DevModeGBB              = "bootModeDevGBB"
 	USBDevModeNoServices    = "bootModeUSBDevNoServices"
 	USBDevModeGBBNoServices = "bootModeUSBDevGBBNoServices"
+	USBDevModeGBB           = "bootModeUSBDevGBB"
 	RecModeNoServices       = "bootModeRecNoServices"
 	RecModeCopyServices     = "bootModeRecModeCopyServices"
+	USBDevModeWithReinstall = "bootModeUSBDevGBBAndReinstall"
 )
 
 func init() {
@@ -123,6 +126,27 @@ func init() {
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            USBDevModeGBB,
+		Desc:            "Reboot into usb-dev mode using GBB flags before test",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Impl:            newFixture(common.BootModeUSBDev, true, true),
+		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
+		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
+		ResetTimeout:    10 * time.Second,
+		PreTestTimeout:  12 * time.Minute,
+		PostTestTimeout: 10 * time.Minute,
+		TearDownTimeout: 10 * time.Minute,
+		Data:            []string{firmware.ConfigFile},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            USBDevModeWithReinstall,
+		Desc:            "Reboot into usb dev mode before test, and reinstall ChromeOS after last test",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Impl:            &reinstall{},
+		Parent:          USBDevModeGBB,
+		TearDownTimeout: 30 * time.Minute,
 	})
 }
 
@@ -300,6 +324,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if i.disallowSSH {
 		return
 	}
+
 	// The GBB flags might prevent booting into the correct mode, so check the boot mode,
 	// then save the GBB flags, then set the GBB flags, and finally reboot into the right mode.
 	mode, err := i.value.Helper.Reporter.CurrentBootMode(ctx)
@@ -398,7 +423,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if i.copyTastFiles && mode == *i.origBootMode {
 			opts = append(opts, firmware.CopyTastFiles)
 		}
-		if err := i.rebootToMode(ctx, i.value.BootMode, opts...); err != nil {
+		if err := rebootToMode(ctx, i.value.Helper, i.value.BootMode, opts...); err != nil {
 			s.Fatalf("Failed to reboot to mode %q: %s", i.value.BootMode, err)
 		}
 	}
@@ -484,7 +509,7 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 				opts = append(opts, firmware.AllowGBBForce)
 			}
 		}
-		if err := i.rebootToMode(ctx, toMode, opts...); err != nil {
+		if err := rebootToMode(ctx, i.value.Helper, toMode, opts...); err != nil {
 			s.Errorf("Failed to reboot to mode %q: %s", toMode, err)
 		}
 		// Make sure the DUT is booted, just in case the rebootToMode failed.
@@ -549,19 +574,19 @@ func (i *impl) closeHelper(ctx context.Context, s *testing.FixtState) {
 }
 
 // rebootToMode reboots to the specified mode using the ModeSwitcher, it assumes the helper is present.
-func (i *impl) rebootToMode(ctx context.Context, mode common.BootMode, opts ...firmware.ModeSwitchOption) error {
-	ms, err := firmware.NewModeSwitcher(ctx, i.value.Helper)
+func rebootToMode(ctx context.Context, h *firmware.Helper, mode common.BootMode, opts ...firmware.ModeSwitchOption) error {
+	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
 	}
 	checkPowerState := func() string {
 		powerState := "unknown"
 		testing.ContextLog(ctx, "Checking for the DUT's power state")
-		if hasEC, err := i.value.Helper.Servo.HasControl(ctx, string(servo.ECSystemPowerState)); err != nil {
+		if hasEC, err := h.Servo.HasControl(ctx, string(servo.ECSystemPowerState)); err != nil {
 			testing.ContextLog(ctx, "Failed to check for chrome ec: ", err)
 			return powerState
 		} else if hasEC {
-			out, err := i.value.Helper.Servo.GetECSystemPowerState(ctx)
+			out, err := h.Servo.GetECSystemPowerState(ctx)
 			if err != nil {
 				testing.ContextLog(ctx, "Failed to check for power state: ", err)
 				return powerState
@@ -583,4 +608,47 @@ func (i *impl) rebootToMode(ctx context.Context, mode common.BootMode, opts ...f
 	}
 
 	return nil
+}
+
+type reinstall struct {
+	parentValue *Value
+}
+
+func (r *reinstall) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	r.parentValue = s.ParentValue().(*Value)
+	return r.parentValue
+}
+
+func (r *reinstall) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (r *reinstall) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (r *reinstall) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (r *reinstall) TearDown(ctx context.Context, s *testing.FixtState) {
+	mode, err := r.parentValue.Helper.Reporter.CurrentBootMode(ctx)
+	if err != nil {
+		s.Fatal("Failed to get current boot mode: ", err)
+	}
+
+	if mode != r.parentValue.BootMode {
+		testing.ContextLogf(ctx, "Current boot mode is %q, rebooting to %q to satisfy fixture", mode, r.parentValue.BootMode)
+		var opts []firmware.ModeSwitchOption
+		if r.parentValue.ForcesDevMode {
+			opts = append(opts, firmware.AllowGBBForce)
+		}
+		if err := rebootToMode(ctx, r.parentValue.Helper, r.parentValue.BootMode, opts...); err != nil {
+			s.Fatalf("Failed to reboot to mode %q: %s", r.parentValue.BootMode, err)
+		}
+	}
+	s.Log("Reinstalling ChromeOS")
+	cmd := r.parentValue.Helper.DUT.Conn().CommandContext(ctx, "/usr/sbin/chromeos-install", "--yes")
+	if err := cmd.Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to reinstall ChromeOS: ", err)
+	}
+	r.parentValue.Helper.DUTHasNoTastFilesInternalDisk()
 }

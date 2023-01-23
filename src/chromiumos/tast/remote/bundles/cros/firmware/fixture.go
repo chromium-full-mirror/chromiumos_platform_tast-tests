@@ -6,11 +6,21 @@ package firmware
 
 import (
 	"context"
+	"time"
+
+	cryptossh "golang.org/x/crypto/ssh"
 
 	common "chromiumos/tast/common/firmware"
+	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 )
+
+type fixtureParams struct {
+	expectedMode        common.BootMode
+	leaveStatefulMarker bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -21,42 +31,50 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_smoke"},
 		SoftwareDeps: []string{"crossystem"},
 		Params: []testing.Param{{
-			Name:    "normal",
-			Val:     common.BootModeNormal,
-			Fixture: fixture.NormalMode,
+			Name:      "normal",
+			Val:       fixtureParams{expectedMode: common.BootModeNormal},
+			Fixture:   fixture.NormalMode,
+			ExtraAttr: []string{"group:firmware", "firmware_smoke"},
 		}, {
-			Name:    "dev",
-			Val:     common.BootModeDev,
-			Fixture: fixture.DevMode,
+			Name:      "dev",
+			Val:       fixtureParams{expectedMode: common.BootModeDev},
+			Fixture:   fixture.DevMode,
+			ExtraAttr: []string{"group:firmware", "firmware_smoke"},
 		}, {
-			Name:    "dev_gbb",
-			Val:     common.BootModeDev,
-			Fixture: fixture.DevModeGBB,
+			Name:      "dev_gbb",
+			Val:       fixtureParams{expectedMode: common.BootModeDev},
+			Fixture:   fixture.DevModeGBB,
+			ExtraAttr: []string{"group:firmware", "firmware_smoke"},
 		}, {
 			Name:      "dev_usb",
-			Val:       common.BootModeUSBDev,
+			Val:       fixtureParams{expectedMode: common.BootModeUSBDev},
 			Fixture:   fixture.USBDevModeNoServices,
-			ExtraAttr: []string{"firmware_usb"},
+			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb"},
 		}, {
 			Name:      "dev_usb_gbb",
-			Val:       common.BootModeUSBDev,
+			Val:       fixtureParams{expectedMode: common.BootModeUSBDev},
 			Fixture:   fixture.USBDevModeGBBNoServices,
-			ExtraAttr: []string{"firmware_usb"},
+			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb"},
 		}, {
 			Name:      "rec",
-			Val:       common.BootModeRecovery,
+			Val:       fixtureParams{expectedMode: common.BootModeRecovery},
 			Fixture:   fixture.RecModeNoServices,
-			ExtraAttr: []string{"firmware_usb"},
+			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb"},
+		}, {
+			Name:    "devusb_reinstall",
+			Val:     fixtureParams{expectedMode: common.BootModeUSBDev, leaveStatefulMarker: true},
+			Fixture: fixture.USBDevModeWithReinstall,
+			Timeout: 20 * time.Minute,
 		}},
 	})
 }
 
 func Fixture(ctx context.Context, s *testing.State) {
 	v := s.FixtValue().(*fixture.Value)
-	wantMode := s.Param().(common.BootMode)
+	param := s.Param().(fixtureParams)
+	wantMode := param.expectedMode
 
 	if v.BootMode != wantMode {
 		s.Errorf("Unexpected fixture boot mode: got %q, want %q", v.BootMode, wantMode)
@@ -75,5 +93,28 @@ func Fixture(ctx context.Context, s *testing.State) {
 		s.Error("Failed to get GBB flags: ", err)
 	} else if !common.GBBFlagsStatesEqual(v.GBBFlags, res) {
 		s.Errorf("GBB flags: got %v, want %v", res.Set, v.GBBFlags)
+	}
+
+	if param.leaveStatefulMarker {
+		ms, err := firmware.NewModeSwitcher(ctx, h)
+		if err != nil {
+			s.Fatal("Creating mode switcher: ", err)
+		}
+		if err := ms.RebootToMode(ctx, common.BootModeDev, firmware.AllowGBBForce); err != nil {
+			s.Fatal("Error booting to internal disk: ", err)
+		}
+		// Leave a directory that the ChromeOS installer should delete. If this fails, then a previous test failed to clean it up.
+		if err := h.DUT.Conn().CommandContext(ctx, "mkdir", "/mnt/stateful_partition/please_delete_me").Run(ssh.DumpLogOnError); err != nil {
+			s.Error("Failed to create marker directory: ", err)
+		}
+	} else {
+		err := h.DUT.Conn().CommandContext(ctx, "test", "-d", "/mnt/stateful_partition/please_delete_me").Run()
+		if err == nil {
+			s.Error("Marker directory unexpectedly found")
+		} else if exitErr, ok := err.(*cryptossh.ExitError); !ok {
+			s.Errorf("test -d returned %T; want *cryptossh.ExitError", err)
+		} else if code := exitErr.ExitStatus(); code != 1 {
+			s.Errorf("test -d returned exit code %d; want 1", code)
+		}
 	}
 }

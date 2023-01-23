@@ -459,6 +459,11 @@ func (h *Helper) DoesServerHaveTastHostFiles() bool {
 	return h.hostFilesTmpDir != ""
 }
 
+// DUTHasNoTastFilesInternalDisk clears the flag indicating that the DUT has tast files on the internal disk.
+func (h *Helper) DUTHasNoTastFilesInternalDisk() {
+	h.dutInternalStorageHasTastFiles = false
+}
+
 // CopyTastFilesFromDUT retrieves Tast host files from the DUT and stores them locally for later use.
 // This allows the test server to re-push Tast files to the DUT if a different OS image is booted mid-test.
 func (h *Helper) CopyTastFilesFromDUT(ctx context.Context) error {
