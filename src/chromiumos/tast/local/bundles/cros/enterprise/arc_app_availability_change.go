@@ -105,7 +105,7 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			chrome.ARCSupported(),
 			chrome.UnRestrictARCCPU(),
 			chrome.DMSPolicy(fdms.URL),
-			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+			chrome.ExtraArgs(append(arc.DisableSyncFlags(), "--vmodule=arc_policy_bridge=1")...))
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
 		}
