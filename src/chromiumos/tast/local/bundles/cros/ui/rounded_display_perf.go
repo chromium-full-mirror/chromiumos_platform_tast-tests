@@ -36,7 +36,11 @@ func init() {
 		Func:         RoundedDisplayPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures performance of rounded display",
-		Contacts:     []string{"yichenz@google.com", "chromeos-perf@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"yichenz@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
@@ -56,6 +60,7 @@ func init() {
 		}},
 	})
 }
+
 
 func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	const mouseMoveDuration = 3 * time.Second

@@ -47,7 +47,11 @@ func init() {
 		Func:         DragTabInTabletPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the presentation time of dragging a tab in tablet mode",
-		Contacts:     []string{"yichenz@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"yichenz@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
