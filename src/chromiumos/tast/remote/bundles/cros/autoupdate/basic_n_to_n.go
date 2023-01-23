@@ -24,8 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example test for the N2N update using Nebraska and test images",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
+			"chromeos-commercial-remote-management@google.com",
 			"gabormagda@google.com", // Test author
 		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{

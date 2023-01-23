@@ -19,11 +19,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example test for updating to an older version using Nebraska and test images",
 		Contacts: []string{
-			"gabormagda@google.com", // Test author
+			"cros-engprod-muc@google.com",
 			"chromeos-commercial-remote-management@google.com",
+			"gabormagda@google.com", // Test author
 		},
-		BugComponent: "b:1170223",
-		Attr:         []string{}, // Manual execution only.
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
+		Attr:         []string{},  // Manual execution only.
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.NebraskaService",
