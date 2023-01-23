@@ -26,7 +26,13 @@ func init() {
 		Func:         TrackpadReverseScroll,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that track pad reverse scrolling works properly",
-		Contacts:     []string{"dandersson@chromium.org", "zxdan@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts: []string{
+			"chromeos-wm-corexp@google.com",
+			"zxdan@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		// ChromeOS > Software > Window Management
+		BugComponent: "b:1238037",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
