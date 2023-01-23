@@ -126,7 +126,7 @@ func (f *Finder) WithinPx(r coords.Rect) *Finder {
 	return f.pxConstraintBuilder(&r)
 }
 
-// WithinDp ensures that the element returned must be within the rectangle on the screen, measuren in dp.
+// WithinDp ensures that the element returned must be within the rectangle on the screen, measured in dp.
 func (f *Finder) WithinDp(r coords.Rect) *Finder {
 	return f.newConstraint(func(ctx context.Context, uda *Context, scaleFactor float64) (*coords.Rect, error) {
 		px := coords.ConvertBoundsFromDPToPX(r, scaleFactor)
