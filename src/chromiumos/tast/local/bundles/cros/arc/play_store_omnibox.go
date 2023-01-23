@@ -67,7 +67,7 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "play_store_omnibox")
 
 	for _, tc := range []struct {
 		title     string
