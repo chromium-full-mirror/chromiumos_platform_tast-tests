@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/regdb"
-	network_iface "chromiumos/tast/local/network/iface"
 	"chromiumos/tast/local/network/iw"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
@@ -78,11 +77,6 @@ func Regulatory(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	phy, err := network_iface.NewInterface(iface).PhyName(ctx)
-	if err != nil {
-		s.Fatal("Failed to get phy name: ", err)
-	}
-
 	iwr := iw.NewLocalRunner()
 	if selfManaged, err := iwr.IsRegulatorySelfManaged(ctx); err != nil {
 		s.Fatal("Failed to retrieve regulatory status: ", err)
@@ -122,11 +116,9 @@ func Regulatory(ctx context.Context, s *testing.State) {
 
 		// The kernel processes changes asynchronously, so poll for a short time.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			// Ask for the phy-specific domain, to ensure that (if it's not fully "self-managed") it still respects the global
-			// configuration.
-			dom, err := iwr.PhyRegulatoryDomain(ctx, phy)
+			dom, err := iwr.RegulatoryDomain(ctx)
 			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to get wiphy domain"))
+				return testing.PollBreak(errors.Wrap(err, "failed to retrieve domain"))
 			}
 			if dom != c.Alpha {
 				return errors.Errorf("unexpected country: %q != %q", dom, c.Alpha)
