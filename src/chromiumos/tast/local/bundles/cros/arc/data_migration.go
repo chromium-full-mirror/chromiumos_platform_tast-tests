@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
@@ -21,7 +23,9 @@ import (
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -115,6 +119,9 @@ func init() {
 				managed:      true,
 			},
 			ExtraData: []string{homeDataNameManagedPiX86},
+			ExtraSearchFlags: []*testing.StringPair{
+				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			},
 			ExtraSoftwareDeps: []string{
 				"android_vm",
 				"amd64",
@@ -176,12 +183,16 @@ func DataMigration(ctx context.Context, s *testing.State) {
 		chrome.GAIALogin(creds),
 		chrome.ARCSupported(),
 		chrome.KeepState(),
+		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(args...),
 	}
 
 	if params.managed {
-		packages := []string{appToInstall}
-		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable)
+		arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
+		arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
+		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 		if err != nil {
 			s.Fatal("Failed to setup fake policy server: ", err)
 		}
@@ -216,18 +227,40 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(cleanupCtx)
 
+	// Connect to Test API.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create ScreenRecorder: ", err)
+	}
+	if screenRecorder == nil {
+		s.Fatal("Screen recorder was not found")
+	}
+	if err := screenRecorder.Start(ctx, tconn); err != nil {
+		s.Fatal("Failed to start screen recorder: ", err)
+	}
+
+	defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
+
 	// Regression check for b/173835269.
 	s.Log("Installing app " + appToInstall)
 	var playOpt playstore.Options
 	playOpt.TryLimit = -1
 	playOpt.DefaultUITimeout = 5 * time.Second
 	playOpt.ShortUITimeout = 5 * time.Second
-	if err := playstore.InstallApp(ctx, a, d, appToInstall, &playOpt); err != nil {
+
+	installCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+	if err := playstore.InstallApp(installCtx, a, d, appToInstall, &playOpt); err != nil {
 		s.Error("Failed to install app: ", err)
 
 		s.Log("Taking a screenshot as install-failed.png")
 		path := filepath.Join(s.OutDir(), "install-failed.png")
-		if err := screenshot.Capture(ctx, path); err != nil {
+		if err := screenshot.Capture(cleanupCtx, path); err != nil {
 			s.Log("Failed to take a screenshot: ", err)
 		}
 	}
