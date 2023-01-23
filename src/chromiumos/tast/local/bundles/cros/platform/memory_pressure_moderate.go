@@ -24,7 +24,8 @@ func init() {
 		Func:         MemoryPressureModerate,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure tab switching performance under moderate memory pressure",
-		Contacts:     []string{"vovoy@chromium.org", "chromeos-memory@google.com"},
+		Contacts:     []string{"chromeos-memory@google.com"},
+		BugComponent: "b:167286",
 		Attr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
 		Timeout:      180 * time.Minute,
 		Data: []string{

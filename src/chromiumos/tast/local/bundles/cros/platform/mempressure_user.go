@@ -21,7 +21,8 @@ func init() {
 		Func:         MempressureUser,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests video loading times after creating memory pressure",
-		Contacts:     []string{"asavery@chromium.org", "chromeos-storage@google.com"},
+		Contacts:     []string{"chromeos-memory@google.com", "chromeos-storage@google.com"},
+		BugComponent: "b:167286",
 		// TODO(http://b/172074282): Test is disabled until it can be fixed
 		// Attr:     []string{"group:crosbolt", "crosbolt_memory_nightly"},
 		Timeout: 180 * time.Minute,

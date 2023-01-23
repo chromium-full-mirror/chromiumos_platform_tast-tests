@@ -26,7 +26,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Memd,
 		Desc:         "Checks that memd works",
-		Contacts:     []string{"sonnyrao@chromium.org"},
+		Contacts:     []string{"chromeos-memory@google.com"},
+		BugComponent: "b:167286",
 		SoftwareDeps: []string{"memd"},
 		Attr:         []string{"group:mainline"},
 	})

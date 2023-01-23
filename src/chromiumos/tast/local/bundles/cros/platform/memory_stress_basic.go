@@ -31,7 +31,8 @@ func init() {
 		Func:         MemoryStressBasic,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Create heavy memory pressure and check if oom-killer is invoked",
-		Contacts:     []string{"vovoy@chromium.org", "chromeos-memory@google.com"},
+		Contacts:     []string{"chromeos-memory@google.com"},
+		BugComponent: "b:167286",
 		// This test takes 15-30 minutes to run.
 		Timeout: 45 * time.Minute,
 		Data: []string{

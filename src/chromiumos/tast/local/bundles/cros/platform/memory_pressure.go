@@ -24,7 +24,8 @@ func init() {
 		Func:         MemoryPressure,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Create memory pressure and collect various measurements from Chrome and from the kernel",
-		Contacts:     []string{"bgeffon@chromium.org", "vovoy@chromium.org", "chromeos-memory@google.com"},
+		Contacts:     []string{"chromeos-memory@google.com"},
+		BugComponent: "b:167286",
 		Attr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
 		Timeout:      180 * time.Minute,
 		Data: []string{
