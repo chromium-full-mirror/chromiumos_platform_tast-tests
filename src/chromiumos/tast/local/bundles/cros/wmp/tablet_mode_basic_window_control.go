@@ -37,10 +37,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tablet basics: Scroll, window controls",
 		Contacts: []string{
-			"shidi@chromium.org",
 			"chromeos-wmp@google.com",
+			"shidi@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1253116",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
