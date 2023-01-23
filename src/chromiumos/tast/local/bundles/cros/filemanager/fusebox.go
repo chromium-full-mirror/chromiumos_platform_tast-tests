@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -201,7 +203,7 @@ func exerciseFuseboxAdvanced(ctx context.Context, s *testing.State, tdd tempDirD
 
 		case "rm -rf":
 			for i := 1; i < len(command); i++ {
-				if err := os.RemoveAll(arg(i)); err != nil {
+				if err := removeAll(arg(i)); err != nil {
 					s.Fatalf("exercise %q: RemoveAll, i=%d: %v", command, i, err)
 				}
 			}
@@ -254,6 +256,18 @@ func copyFile(srcName, dstName string) error {
 		return sErr
 	}
 	return dErr
+}
+
+// removeAll is like os.RemoveAll but ignores EINTR.
+//
+// See https://github.com/golang/go/issues/57966
+func removeAll(path string) error {
+	for {
+		err := os.RemoveAll(path)
+		if pe, ok := err.(*os.PathError); !ok || (pe.Err != unix.EINTR) {
+			return err
+		}
+	}
 }
 
 // renameFile is a rough approximation to running /usr/bin/mv on a Fusebox file.
