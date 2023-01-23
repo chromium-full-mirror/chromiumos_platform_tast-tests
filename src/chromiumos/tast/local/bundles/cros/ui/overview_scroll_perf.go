@@ -26,7 +26,12 @@ func init() {
 		Func:         OverviewScrollPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the presentation time of scrolling the overview grid in tablet mode",
-		Contacts:     []string{"sammiequon@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-wmp@google.com",
+			"sammiequon@chromium.org",
+		},
+		// ChromeOS > Software > Window Management > OverviewMode
+		BugComponent: "b:1252584",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
