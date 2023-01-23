@@ -30,11 +30,15 @@ type params struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCaptivePortalHTTP,
-		Desc:     "Ensures that setting up a virtual ethernet pair with a DNS server that points portal detection queries to an http server that responds via the handler. This results in a service state of |ServiceState| via the params for the ethernet service",
-		Contacts: []string{"michaelrygiel@google.com", "cros-network-health-team@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		Fixture:  "shillReset",
+		BugComponent: "b:1166446",
+		Func:         ShillCaptivePortalHTTP,
+		Desc:         "Ensures that setting up a virtual ethernet pair with a DNS server that points portal detection queries to an http server that responds via the handler. This results in a service state of |ServiceState| via the params for the ethernet service",
+		Contacts: []string{
+			"cros-network-health-team@google.com", // Network Healh team
+			"michaelrygiel@google.com",            // Test author
+		},
+		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
+		Fixture: "shillReset",
 		Params: []testing.Param{{
 			Name: "redirectfound",
 			Val: &params{

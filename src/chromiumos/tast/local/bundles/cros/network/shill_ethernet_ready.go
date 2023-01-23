@@ -14,10 +14,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillEthernetReady,
-		Desc:     "Verifies that Shill is running and an Ethernet Device and Service is available",
-		Contacts: []string{"cros-network-health-team@google.com", "stevenjb@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
+		BugComponent: "b:1166446",
+		Func:         ShillEthernetReady,
+		Desc:         "Verifies that Shill is running and an Ethernet Device and Service is available",
+		Contacts: []string{
+			"cros-network-health-team@google.com", // Network Health team
+			"stevenjb@google.com",                 // Test author
+		},
+		Attr: []string{"group:mainline", "informational"},
 	})
 }
 

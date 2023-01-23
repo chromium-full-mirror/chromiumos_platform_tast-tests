@@ -16,11 +16,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShillStability,
-		Desc: "Checks that shill isn't respawning",
+		BugComponent: "b:1166446",
+		Func:         ShillStability,
+		Desc:         "Checks that shill isn't respawning",
 		Contacts: []string{
-			"stevenjb@chromium.org",
-			"cros-networking@google.com",
+			"cros-network-health-team@google.com", // Network Health team
+			"stevenjb@google.com",                 // Test author
 		},
 		Attr: []string{"group:mainline"},
 	})

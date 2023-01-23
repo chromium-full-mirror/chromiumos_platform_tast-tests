@@ -18,13 +18,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShillVeth,
-		Desc: "Verifies that a test veth pair creates a Device and Service in Shill",
+		BugComponent: "b:1166446",
+		Func:         ShillVeth,
+		Desc:         "Verifies that a test veth pair creates a Device and Service in Shill",
 		Contacts: []string{
-			"stevenjb@google.com",
-			"cros-network-health-team@google.com",
+			"cros-network-health-team@google.com", // Network Health team
+			"stevenjb@google.com",                 // Test author
 		},
-		Attr:    []string{"group:mainline", "informational"},
+		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Fixture: "shillReset",
 		Timeout: 5 * time.Minute,
 	})

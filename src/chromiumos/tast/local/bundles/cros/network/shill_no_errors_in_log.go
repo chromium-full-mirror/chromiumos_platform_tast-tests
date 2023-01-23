@@ -21,10 +21,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShillNoErrorsInLog,
-		Desc: "Checks that Shill does not produce any unexpected error logs",
+		BugComponent: "b:1166446",
+		Func:         ShillNoErrorsInLog,
+		Desc:         "Checks that Shill does not produce any unexpected error logs",
 		Contacts: []string{
-			"cros-network-health-team@google.com",
+			"cros-network-health-team@google.com", // Network Health team
+			"stevenjb@google.com",                 // Test author
 		},
 		Attr: []string{"group:mainline", "informational"},
 	})

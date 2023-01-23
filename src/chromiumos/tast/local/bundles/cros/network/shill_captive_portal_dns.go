@@ -24,11 +24,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCaptivePortalDNS,
-		Desc:     "Ensure that shill sends portal detection probes to the IP address given by dnsmasq",
-		Contacts: []string{"tinghaolin@google.com", "cros-network-health-team@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		Fixture:  "shillReset",
+		BugComponent: "b:1166446",
+		Func:         ShillCaptivePortalDNS,
+		Desc:         "Ensure that shill sends portal detection probes to the IP address given by dnsmasq",
+		Contacts: []string{
+			"cros-network-health-team@google.com", // Network Health team
+			"michaelrygiel@google.com",            // Test maintainer
+		},
+		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
+		Fixture: "shillReset",
 	})
 }
 
