@@ -7,12 +7,14 @@ package kiosk
 import (
 	"context"
 	"strings"
-	"syscall"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/syslog"
@@ -28,28 +30,36 @@ func init() {
 			"chromeos-kiosk-eng+TAST@google.com",
 			"zubeil@google.com", // Test author
 		},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		// Disabled due to <1% pass rate over 30 days. See b/241944099
-		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Relaunch PWA kiosk after OS crash.
-			Value: "screenplay-86fc814e-2bdd-4680-bbb2-defed8bde33c",
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// Relaunch PWA kiosk after OS crash.
+				Value: "screenplay-86fc814e-2bdd-4680-bbb2-defed8bde33c",
+			},
+		},
 	})
 }
 
 func LacrosRestartOnCrash(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	chromeOptions := chrome.ExtraArgs("--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore")
 	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),
-		kioskmode.ExtraChromeOptions(chromeOptions),
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
+		kioskmode.PublicAccountPolicies(kioskmode.WebKioskAccountID,
+			[]policy.Policy{
+				&policy.LacrosAvailability{Val: "lacros_only"},
+			}),
 	)
 	if err != nil {
 		s.Error("Failed to start Chrome in Kiosk mode: ", err)
@@ -89,7 +99,7 @@ func LacrosRestartOnCrash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get lacros proc: ", err)
 	}
 
-	if err := proc.SendSignalWithContext(ctx, syscall.SIGSEGV); err != nil {
+	if err := proc.SendSignalWithContext(ctx, unix.SIGSEGV); err != nil {
 		s.Fatal("Failed to crash chrome: ", err)
 	}
 
