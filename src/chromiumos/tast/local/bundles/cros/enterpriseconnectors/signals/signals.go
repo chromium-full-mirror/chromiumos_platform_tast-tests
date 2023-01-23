@@ -52,7 +52,8 @@ type clientSignals struct {
 }
 
 const (
-	expectedKeyTrustLevel          = "CHROME_OS_DEVELOPER_MODE"
+	expectedKeyTrustLevelDev       = "CHROME_OS_DEVELOPER_MODE"
+	expectedKeyTrustLevelVerified  = "CHROME_OS_VERIFIED_MODE"
 	expectedOS                     = "ChromeOS"
 	expectedDeviceEnrollmentDomain = "managedchrome.com"
 	expectedAffiliationIDLength    = 1
@@ -167,8 +168,8 @@ func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals c
 	}
 
 	// Checking pre-known values.
-	if *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevel {
-		return errors.Errorf("unexpected value for serverSignals.keyTrustLevel: got %q, want %q", *parsedServerSignals.KeyTrustLevel, expectedKeyTrustLevel)
+	if *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelDev && *parsedServerSignals.KeyTrustLevel != expectedKeyTrustLevelVerified {
+		return errors.Errorf("unexpected value for serverSignals.keyTrustLevel: got %q, want %q or %q", *parsedServerSignals.KeyTrustLevel, expectedKeyTrustLevelDev, expectedKeyTrustLevelVerified)
 	}
 
 	if *parsedClientSignals.OS != expectedOS {
