@@ -36,12 +36,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, //variation_smoke.go is a test just for lacros
 		Desc:         "Checks that Chrome doesn't crash and basic web content rendering is functional when loading a given variations seed",
 		Contacts: []string{
-			"kyleshima@chromium.org", // Test author
 			"chromeos-sw-engprod@google.com",
+			"kyleshima@chromium.org", // Test author
 			// Variations owners. Refer to //base/metrics/OWNERS for the most up-to-date contacts.
 			"dalerogerson@google.com",
 			"nishantj@google.com",
 		},
+		BugComponent: "b:1034523",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data: []string{
