@@ -66,9 +66,9 @@ func PairNewDeviceFromBluetoothSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if err := uiauto.Combine("Open the \"Pair new device\" dialog",
-		ui.LeftClick(ossettings.BluetoothPairNewDeviceButton),
-		ui.WaitUntilExists(ossettings.BluetoothPairNewDeviceModal),
+	if err := ui.LeftClickUntil(
+		ossettings.BluetoothPairNewDeviceButton,
+		ui.Exists(ossettings.BluetoothPairNewDeviceModal),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open the \"Pair new device\" dialog: ", err)
 	}

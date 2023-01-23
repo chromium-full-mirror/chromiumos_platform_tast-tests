@@ -55,7 +55,7 @@ func NavigateToBluetoothSettingsPage(ctx context.Context, tconn *chrome.TestConn
 
 	if err := uiauto.Combine("Focus and click the Bluetooth Settings button",
 		ui.FocusAndWait(osBluetoothSettingsButton),
-		ui.LeftClick(osBluetoothSettingsButton),
+		ui.LeftClickUntil(osBluetoothSettingsButton, ui.Gone(osBluetoothSettingsButton)),
 	)(ctx); err != nil {
 		return app, err
 	}
