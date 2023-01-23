@@ -18,9 +18,9 @@ import (
 
 const networkSSID = "NonExistentNetwork"
 
-// Wrongly hidden networks are removed on a 1 minute timer. We use 70 seconds here to guarantee
-// that we will always have this migration triggered at least once during each test.
-const migrateTimeout = time.Second * 70
+// We use command line flags to cause wrongly hidden networks to be removed every 1 second.
+// We wait 5 seconds to guarantee that we will always have this migration triggered at least once during each test.
+const migrateTimeout = time.Second * 5
 
 type testConfig struct {
 	hidden bool
@@ -32,8 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that hidden networks are migrated, for more details see go/cros-hidden-ssid-dd-software",
 		Contacts:     []string{"cros-connectivity@google.com", "chadduffin@google.com"},
-		BugComponent: "b:1131912",
-		// TODO(b/236148589): Update this test to use a parameterized migration timeout before promoting from informational.
+		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "hiddenNetworkMigrationEnabled",
@@ -48,7 +47,7 @@ func init() {
 				hidden: true,
 			},
 		}},
-		Timeout: time.Second * 150,
+		Timeout: time.Second * 60,
 	})
 }
 
@@ -117,7 +116,7 @@ func HiddenNetworksAreMigrated(ctx context.Context, s *testing.State) {
 				return errors.New("Network has not been forgotten")
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: migrateTimeout, Interval: time.Second * 10}); err != nil {
+		}, &testing.PollOptions{Timeout: migrateTimeout, Interval: time.Second}); err != nil {
 			s.Fatal("Failed to migrate the hidden network: ", err)
 		}
 	} else {

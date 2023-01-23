@@ -61,7 +61,8 @@ func (f *hiddenNetworkMigrationFixture) SetUp(ctx context.Context, s *testing.Fi
 	cr, err := chrome.New(
 		ctx,
 		chrome.EnableFeatures("HiddenNetworkMigration"),
-		chrome.ExtraArgs("--force-hidden-network-migration"),
+		chrome.ExtraArgs("--hidden-network-migration-age=0"),
+		chrome.ExtraArgs("--hidden-network-migration-interval=1"),
 		chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
