@@ -111,12 +111,14 @@ func HideWebStoreIcon(ctx context.Context, s *testing.State) {
 
 			appName := apps.WebStore.Name
 
-			// Confirm the status of the Web Store icon in the application launcher
-			if err := policyutil.WaitUntilExistsStatus(ctx, tconn, nodewith.Name(appName).HasClass("AppListItemView"), param.wantIcon, 15*time.Second); err != nil {
+			// Confirm the status of the Web Store icon in the application launcher.
+			// Use First() as on the application launcher WebStore may show up twice.
+			// Once on the applications grid and the second on the "Recent" section.
+			if err := policyutil.WaitUntilExistsStatus(ctx, tconn, nodewith.Name(appName).HasClass("AppListItemView").First(), param.wantIcon, 15*time.Second); err != nil {
 				s.Error("Could not confirm the desired status of the Web Store Icon in the application launcher: ", err)
 			}
 
-			// Confirm the status of the Web Store icon on the shelf
+			// Confirm the status of the Web Store icon on the shelf.
 			if err := policyutil.WaitUntilExistsStatus(ctx, tconn, nodewith.Name(appName).HasClass("ash/ShelfAppButton"), param.wantIcon, 15*time.Second); err != nil {
 				s.Error("Could not confirm the desired status of the Web Store Icon on the system shelf: ", err)
 			}
