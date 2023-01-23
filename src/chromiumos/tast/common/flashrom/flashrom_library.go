@@ -392,6 +392,23 @@ func (i *Instance) SoftwareWriteProtectEnableWithRange(ctx context.Context, wpRa
 	return 0, nil
 }
 
+// SoftwareWriteProtectDisable disables software write-protect.
+//
+// Returns
+// output from command line execution, so that the caller can handle it if needed
+// error if it happened or nil
+func (i *Instance) SoftwareWriteProtectDisable(ctx context.Context) ([]byte, error) {
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--wp-disable"}
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
+
+	out, err := i.runCommandLine(ctx, cmdArgs)
+	if err != nil {
+		return out, errors.Wrapf(err, "error while disabling software write-protect with arguments %v", cmdArgs)
+	}
+
+	return out, nil
+}
+
 // Write writes data on chip from the file provided by filePath. Note filePath is a path on the DUT,
 // which will not be local in case of remote test.
 // If optional parameter regionNames is provided, only given regions are written.

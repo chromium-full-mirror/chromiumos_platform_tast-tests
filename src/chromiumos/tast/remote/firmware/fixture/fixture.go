@@ -13,9 +13,9 @@ import (
 	"time"
 
 	common "chromiumos/tast/common/firmware"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/exec"
 	"chromiumos/tast/remote/firmware"
 	pb "chromiumos/tast/services/cros/firmware"
 	"chromiumos/tast/testing"
@@ -355,9 +355,25 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 					s.Fatal("Failed to warm reboot: ", err)
 				}
 			}
-			if err := i.value.Helper.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "host", "--wp-disable").Run(exec.DumpLogOnError); err != nil {
+
+			var flashromConfig flashrom.Config
+			flashromInstance, ctx, cleanup, _, err := flashromConfig.
+				FlashromInit(flashrom.VerbosityInfo).
+				ProgrammerInit(flashrom.ProgrammerHost, "").
+				SetDut(i.value.Helper.DUT).
+				Probe(ctx)
+
+			defer cleanup()
+
+			if err != nil {
+				s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
+			}
+
+			if out, err := flashromInstance.SoftwareWriteProtectDisable(ctx); err != nil {
+				s.Logf("Software WP disable failed with output: %s", string(out))
 				s.Fatal("Failed to disable software WP: ", err)
 			}
+
 			if err := common.SetGBBFlags(ctx, i.value.Helper.DUT, i.value.GBBFlags.Set); err != nil {
 				s.Fatal("SetGBBFlags failed: ", err)
 			}
