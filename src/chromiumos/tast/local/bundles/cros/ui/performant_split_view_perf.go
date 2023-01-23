@@ -42,7 +42,13 @@ func init() {
 		Func:         PerformantSplitViewPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures smoothness of resizing split view windows with and without performant split view enabled",
-		Contacts:     []string{"dandersson@chromium.org", "sammiequon@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-wm-corexp@google.com",
+			"dandersson@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		// ChromeOS > Software > Window Management
+		BugComponent: "b:1238037",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
