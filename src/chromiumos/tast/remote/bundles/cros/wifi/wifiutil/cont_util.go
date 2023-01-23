@@ -281,7 +281,12 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 		s.Fatal("Failed to setup monitor: ", err)
 	}
 
-	dutCapturer, err := pcap.StartCapturer(ctx, s.DUT().Conn(), "dut", "wlan0", "/var/log/")
+	ct.iface, err = ct.tf.DUTWifiClient(wificell.DefaultDUT).Interface(ctx)
+	if err != nil {
+		s.Fatal("Failed to get interface from the DUT: ", err)
+	}
+
+	dutCapturer, err := pcap.StartCapturer(ctx, s.DUT().Conn(), "dut", ct.iface, "/var/log/")
 	if err != nil {
 		s.Fatal("Failed to start DUT capturer: ", err)
 	}
@@ -359,11 +364,6 @@ func (ct *ContTest) ContinuityTestSetupFinalize(ctx context.Context, s *testing.
 			s.Error("Failed to stop the hostapd server on the second AP: ", err)
 		}
 	})
-
-	ct.iface, err = ct.tf.ClientInterface(ctx)
-	if err != nil {
-		s.Fatal("Failed to get interface from the DUT: ", err)
-	}
 
 	return ctx, ds.export().destroy
 }
