@@ -22,9 +22,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Basic,
-		Desc:         "Checks basic typec kernel driver functionality",
-		Contacts:     []string{"pmalani@chromium.org", "chromeos-power@google.com"},
+		Func:     Basic,
+		Desc:     "Checks basic typec kernel driver functionality",
+		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
+		// ChromeOS > Platform > Technologies > USB
+		BugComponent: "b:958036",
 		Attr:         []string{"group:mainline", "group:typec", "informational"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.SkipOnModel("fievel", "habokay", "tiger"), hwdep.ChromeEC()),
 		Vars:         []string{"servo"},
