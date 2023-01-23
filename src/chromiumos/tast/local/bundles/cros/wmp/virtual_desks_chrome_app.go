@@ -31,10 +31,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checks that virtual desks works correctly when creating apps from tabs",
 		Contacts: []string{
-			"shidi@chromium.org",
 			"chromeos-wmp@google.com",
+			"shidi@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1238200",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
