@@ -21,9 +21,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdInstallRemote,
 		Desc: "Checks that fwupd can install using a remote repository",
+		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
+		BugComponent: "b:857851",
 		Contacts: []string{
-			"campello@chromium.org",     // Test Author
 			"chromeos-fwupd@google.com", // CrOS FWUPD
+			"campello@chromium.org",     // Test Author
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},

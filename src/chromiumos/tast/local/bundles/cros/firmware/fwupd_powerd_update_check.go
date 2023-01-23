@@ -22,9 +22,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdPowerdUpdateCheck,
 		Desc: "Checks that the powerd plugin is enabled",
+		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
+		BugComponent: "b:857851",
 		Contacts: []string{
-			"gpopoola@google.com",       // Test Author
 			"chromeos-fwupd@google.com", // CrOS FWUPD
+			"campello@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},

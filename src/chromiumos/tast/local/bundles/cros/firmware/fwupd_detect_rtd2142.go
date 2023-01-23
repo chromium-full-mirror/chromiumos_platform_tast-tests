@@ -31,9 +31,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdDetectRTD2142,
 		Desc: "Checks that fwupd can detect realtek-mst devices",
+		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
+		BugComponent: "b:857851",
 		Contacts: []string{
-			"pmarheine@chromium.org",    // Test Author
 			"chromeos-fwupd@google.com", // CrOS FWUPD
+			"pmarheine@chromium.org",    // Test Author
 		},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"fwupd"},

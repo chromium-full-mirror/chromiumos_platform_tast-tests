@@ -18,9 +18,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdGetDevices,
 		Desc: "Checks that fwupd can detect device",
+		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
+		BugComponent: "b:857851",
 		Contacts: []string{
-			"campello@chromium.org",     // Test Author
 			"chromeos-fwupd@google.com", // CrOS FWUPD
+			"campello@chromium.org",     // Test Author
 		},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"fwupd"},

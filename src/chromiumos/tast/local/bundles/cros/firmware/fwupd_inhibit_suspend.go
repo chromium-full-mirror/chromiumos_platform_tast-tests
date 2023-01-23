@@ -22,9 +22,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdInhibitSuspend,
 		Desc: "Ensures .lock file does not exist before, after update, does exist during",
+		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
+		BugComponent: "b:857851",
 		Contacts: []string{
-			"binarynewts@google.org",    // Test Author
 			"chromeos-fwupd@google.com", // CrOS FWUPD
+			"campello@google.org",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},
