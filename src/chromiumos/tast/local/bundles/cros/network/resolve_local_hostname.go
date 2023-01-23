@@ -17,14 +17,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ResolveLocalHostname,
-		Desc: "Verifies .local mDNS hostnames are resolved via avahi",
-		Contacts: []string{
-			"project-bolton@google.com",
-			"bmgordon@chromium.org",
-		},
-		// ChromeOS > Platform > Services > Printing
-		BugComponent: "b:167231",
+		Func:     ResolveLocalHostname,
+		Desc:     "Verifies .local mDNS hostnames are resolved via avahi",
+		Contacts: []string{"cros-networking@google.com"},
+		// ChromeOS > Platform > System > Networking
+		BugComponent: "b:156085",
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
