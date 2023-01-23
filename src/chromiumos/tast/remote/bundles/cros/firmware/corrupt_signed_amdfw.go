@@ -24,7 +24,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CorruptSignedAMDFW,
 		Desc:         "Servo based Signed AMDFW section corruption test",
-		Contacts:     []string{"chromeos-firmware@google.com", "kramasub@google.com"},
+		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
