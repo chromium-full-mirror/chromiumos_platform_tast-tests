@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Perform SMDS eSIM operations on test eSIM",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "cellular_unstable"},
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		Fixture:      "cellular",
 		Timeout:      5 * time.Minute,
 	})
