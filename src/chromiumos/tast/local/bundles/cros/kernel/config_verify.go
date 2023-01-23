@@ -18,11 +18,12 @@ func init() {
 		Func: ConfigVerify,
 		Desc: "Examines a kernel build CONFIG list to make sure various things are present, missing, built as modules, etc",
 		Contacts: []string{
-			"jeffxu@chromium.org",
-			"chromeos-kernel-test@google.com",
-			"oka@chromium.org", // Tast port author
+			"chromeos-hardening@google.com",
+			"jeffxu@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Security > Hardening
+		BugComponent: "b:1040049",
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name: "chromeos",
 			Val:  addExtraCheckForChromeOS,
