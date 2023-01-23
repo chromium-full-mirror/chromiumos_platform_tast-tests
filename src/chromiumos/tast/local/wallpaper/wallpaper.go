@@ -74,7 +74,7 @@ func selectCollectionNode(ui *uiauto.Context, collectionNode *nodewith.Finder) u
 	return uiauto.Combine("select collection node",
 		ui.WaitUntilExists(collectionNode),
 		ui.MakeVisible(collectionNode),
-		ui.LeftClick(collectionNode),
+		ui.DoDefault(collectionNode),
 	)
 }
 
