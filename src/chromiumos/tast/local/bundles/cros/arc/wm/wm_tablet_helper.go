@@ -209,17 +209,8 @@ func tabletFontScaleChangeHelper(ctx context.Context, tconn *chrome.TestConn, a 
 	}
 
 	// Wait until display rotates to activities desired orientation.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		newDO, err := display.GetOrientation(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-		if actInfo.DesiredDO != newDO.Type {
-			return errors.Errorf("invalid display orientation: got %q; want %q", newDO.Type, actInfo.DesiredDO)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		return err
+	if err := WaitForDisplayOrientation(ctx, tconn, actInfo.DesiredDO); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation")
 	}
 
 	// Store original window info.
@@ -276,16 +267,9 @@ func tabletImmerseViaAPIHelper(ctx context.Context, tconn *chrome.TestConn, a *a
 	}
 
 	// Wait until display rotates to activities desired orientation. Undefined activities are following the previous activity orientation.
-	testing.Poll(ctx, func(ctx context.Context) error {
-		newDO, err := display.GetOrientation(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-		if activityInfo.DesiredDO != newDO.Type {
-			return errors.Errorf("invalid display orientation: got %q, want %q", newDO.Type, activityInfo.DesiredDO)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	if err := WaitForDisplayOrientation(ctx, tconn, activityInfo.DesiredDO); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation")
+	}
 
 	// Get window info before clicking on the immersive button.
 	winBefore, err := ash.GetARCAppWindowInfo(ctx, tconn, Pkg24)
@@ -369,16 +353,9 @@ func displaySizeChangeHelper(ctx context.Context, tconn *chrome.TestConn, a *arc
 	}
 
 	// Wait until display rotates to activities desired orientation. Undefined activities are following the previous activity orientation.
-	testing.Poll(ctx, func(ctx context.Context) error {
-		newDO, err := display.GetOrientation(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-		if activityInfo.DesiredDO != newDO.Type {
-			return errors.Errorf("invalid display orientation: got %q; want %q", newDO.Type, activityInfo.DesiredDO)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	if err := WaitForDisplayOrientation(ctx, tconn, activityInfo.DesiredDO); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation")
+	}
 
 	// Get primary display info before zoom.
 	dispInfoBeforeZoom, err := display.GetPrimaryInfo(ctx, tconn)
@@ -498,15 +475,9 @@ func showHideShelfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC
 		return err
 	}
 
-	// Check the display orientation.
-	displayOrientation, err := display.GetOrientation(ctx, tconn)
-	if err != nil {
-		return err
-	}
-
-	// Compare display orientation after activity is ready, it should be equal to activity's desired orientation.
-	if activityInfo.DesiredDO != displayOrientation.Type {
-		return errors.Errorf("invalid display orientation: got %q; want %q", displayOrientation.Type, activityInfo.DesiredDO)
+	// Wait until display rotates to activities desired orientation.
+	if err := WaitForDisplayOrientation(ctx, tconn, activityInfo.DesiredDO); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation")
 	}
 
 	// Store initial window info to compare with after hiding and showing the shelf.

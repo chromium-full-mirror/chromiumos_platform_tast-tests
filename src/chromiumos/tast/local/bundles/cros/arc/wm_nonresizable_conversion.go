@@ -267,6 +267,11 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 		return errors.Wrap(err, "failed to wait for frame to get hidden")
 	}
 
+	// Wait until display rotates to activities desired orientation.
+	if err := wm.WaitForDisplayOrientation(ctx, tconn, desiredOrientationInTabletMode); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation")
+	}
+
 	// Compare activity's window TargetBounds to primary display work area.
 	if err := wm.CheckMaximizeWindowInTabletMode(ctx, tconn, wm.Pkg24); err != nil {
 		return err
@@ -290,6 +295,11 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
 		return errors.Wrap(err, "failed to disable tablet mode")
 	}
+
+	if err := wm.WaitForDisplayOrientation(ctx, tconn, originalDO.Type); err != nil {
+		return errors.Wrap(err, "failed to wait for display orientation after switching back to clamshell")
+	}
+
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 		return w.ID == windowID && w.IsFrameVisible == true
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
@@ -299,20 +309,6 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 		return err
 	}
 	if err := ash.WaitWindowFinishAnimating(ctx, tconn, windowID); err != nil {
-		return err
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Get display orientaiton after switching to clamshell mode.
-		clamshellDO, err := display.GetOrientation(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-		if clamshellDO.Type != originalDO.Type {
-			return errors.Errorf("invalid display orientation after switching back to clamshell, got: %q, want: %q", clamshellDO.Type, originalDO.Type)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return err
 	}
 
