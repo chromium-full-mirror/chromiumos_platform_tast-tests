@@ -113,7 +113,20 @@ func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for quick setting: ", err)
 		}
 
+		collapseButton := nodewith.Name("Collapse menu").Role(role.Button).Ancestor(quicksettings.RootFinder)
+		// The quick settings view is so big that the Restore notification is collapsed.
+		// Collapse it.
+		if err := ui.LeftClick(collapseButton)(ctx); err != nil {
+			s.Fatal("Failed to collapse quick settings: ", err)
+		}
+
 		notificationDialog := nodewith.HasClass("AshNotificationView").NameStartingWith("Restore apps?")
+		expandButton := nodewith.Name("Expand notification").Role(role.Button).Ancestor(notificationDialog)
+		// The restore notification is collapsed sometimes, expand it.
+		if err := uiauto.IfSuccessThen(ui.WaitUntilExists(expandButton), ui.LeftClick(expandButton))(ctx); err != nil {
+			s.Fatal("Failed to expand Restore notification: ", err)
+		}
+
 		restoreButton := nodewith.Name("Restore").Role(role.Button).Ancestor(notificationDialog)
 		if err := ui.LeftClick(restoreButton)(ctx); err != nil {
 			s.Fatal("Failed to click notification RESTORE button: ", err)
