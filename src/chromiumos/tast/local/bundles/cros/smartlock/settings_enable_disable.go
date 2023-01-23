@@ -35,12 +35,12 @@ func init() {
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture:           "crossdeviceOnboarded",
+				Fixture:           "crossdeviceOnboardedNoLock",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
 			},
 			{
 				Name:              "unstable",
-				Fixture:           "crossdeviceOnboarded",
+				Fixture:           "crossdeviceOnboardedNoLock",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
 			},
 			{
