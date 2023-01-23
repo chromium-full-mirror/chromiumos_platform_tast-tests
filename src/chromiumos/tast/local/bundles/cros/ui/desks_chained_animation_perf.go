@@ -24,7 +24,13 @@ func init() {
 		Func:         DesksChainedAnimationPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the smoothness of a chained desk activation animation",
-		Contacts:     []string{"afakhry@chromium.org", "sammiequon@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-wms@google.com",
+			"dandersson@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		//  ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
