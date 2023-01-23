@@ -9,6 +9,8 @@ import (
 	"context"
 	"image/color"
 	"math"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -24,8 +26,6 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/local/wallpaper"
-	"chromiumos/tast/local/wallpaper/constants"
 	"chromiumos/tast/testing"
 )
 
@@ -95,6 +95,9 @@ const (
 	// When shadow exists, the percentage will be 70~80%, and otherwise, it will be 0%. Let's use the intermediate value.
 	borderColorPixelPercentageThreshold = 35
 	borderWidthPX                       = 6
+
+	// WhiteWallpaperFileName is a filename of the white wallpaper.
+	WhiteWallpaperFileName = "white_wallpaper.jpg"
 )
 
 // Represents the size of a window.
@@ -731,64 +734,18 @@ func checkAppManagementSettingToggleState(ctx context.Context, tconn *chrome.Tes
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
-func openLegacyWallpaperPicker(ui *uiauto.Context) uiauto.Action {
-	setWallpaperMenu := nodewith.Name("Set wallpaper").Role(role.MenuItem)
-	return ui.RetryUntil(uiauto.Combine("open wallpaper picker",
-		ui.LeftClick(nodewith.HasClass("WallpaperView")),
-		ui.RightClick(nodewith.HasClass("WallpaperView")),
-		ui.WithInterval(300*time.Millisecond).LeftClickUntil(setWallpaperMenu, ui.Gone(setWallpaperMenu))),
-		ui.Exists(nodewith.NameContaining("Wallpaper").Role(role.Window).First()))
-}
-
-func scrollDownUntilSucceeds(ctx context.Context, action uiauto.Action, mew *input.MouseEventWriter) error {
-	const (
-		maxNumSelectRetries = 4
-		numScrolls          = 100
-	)
-	var actionErr error
-	for i := 0; i < maxNumSelectRetries; i++ {
-		if actionErr = action(ctx); actionErr == nil {
-			return nil
-		}
-		for j := 0; j < numScrolls; j++ {
-			if err := mew.ScrollDown(); err != nil {
-				return errors.Wrap(err, "failed to scroll down")
-			}
-		}
-	}
-
-	return actionErr
-}
-
 // SetSolidWhiteWallpaper sets the wallpaper to the solid white.
-func SetSolidWhiteWallpaper(ctx context.Context, ui *uiauto.Context) error {
-	mew, err := input.Mouse(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to setup the mouse")
-	}
-	defer mew.Close()
+// To use this function, |WhiteWallpaperFileName| needs to be added to Data attribute of the testcase.
+func SetSolidWhiteWallpaper(ctx context.Context, tconn *chrome.TestConn, s *testing.State) error {
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
 
-	if err := wallpaper.OpenWallpaperPicker(ui)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open wallpaper picker")
-	}
-
-	// Move the cursor to the active photo container before scrolling.
-	if err := ui.MouseMoveTo(nodewith.Role(role.ListBoxOption).Ancestor(nodewith.Name("Wallpaper Collections")).First(), time.Second)(ctx); err != nil {
-		return errors.Wrap(err, "failed to move mouse to the photo container")
-	}
-
-	// "Solid" collection is at the end of the collection list so we need to scroll down to make it visible on a small display.
-	if err := scrollDownUntilSucceeds(ctx, wallpaper.SelectCollection(ui, constants.SolidColorsCollection), mew); err != nil {
-		return errors.Wrap(err, "failed to select wallpaper collection")
-	}
-
-	// "White" wallpaper is at the end of the wallpaper list so we need to scroll down to make it visible on a small display.
-	if err := scrollDownUntilSucceeds(ctx, wallpaper.SelectImage(ui.WithTimeout(5*time.Second), constants.WhiteWallpaperName), mew); err != nil {
-		return errors.Wrap(err, "failed to select wallpaper image")
-	}
-
-	if err := wallpaper.CloseWallpaperPicker()(ctx); err != nil {
-		return errors.Wrap(err, "failed to close wallpaper picker")
+	if err := tconn.Call(ctx, nil, `(url) => tast.promisify(chrome.wallpaper.setWallpaper)({
+              url: url,
+              layout: 'STRETCH',
+              filename: 'test_wallpaper'
+            })`, server.URL+"/"+WhiteWallpaperFileName); err != nil {
+		return errors.Wrap(err, "failed to set white wallpaper")
 	}
 
 	return nil

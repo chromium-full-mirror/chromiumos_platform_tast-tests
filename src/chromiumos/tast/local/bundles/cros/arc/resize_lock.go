@@ -114,6 +114,7 @@ func init() {
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
+		Data:         []string{wm.WhiteWallpaperFileName},
 		Timeout:      5 * time.Minute,
 		Fixture:      "arcBooted",
 		Params: []testing.Param{
@@ -201,8 +202,7 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 
 	// Set a pure white wallpaper to reduce the noises on a screenshot because currently checking the visibility of the translucent window border relies on a screenshot.
 	// The Wallpaper will exist continuous if the Chrome session gets reused.
-	ui := uiauto.New(tconn)
-	if err := wm.SetSolidWhiteWallpaper(ctx, ui); err != nil {
+	if err := wm.SetSolidWhiteWallpaper(ctx, tconn, s); err != nil {
 		s.Fatal("Failed to set the white wallpaper: ", err)
 	}
 

@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/power"
@@ -36,6 +35,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Timeout:      4 * time.Minute,
+		Data:         []string{wm.WhiteWallpaperFileName},
 		Fixture:      "arcBooted",
 	})
 }
@@ -180,8 +180,7 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 
 	// Set a pure white wallpaper to reduce the noises on a screenshot because currently wm.CheckResizeLockState checks the visibility of the translucent window border based on a screenshot.
 	// The wallpaper will exist continuous if the Chrome session gets reused.
-	ui := uiauto.New(tconn)
-	if err := wm.SetSolidWhiteWallpaper(ctx, ui); err != nil {
+	if err := wm.SetSolidWhiteWallpaper(ctx, tconn, s); err != nil {
 		s.Fatal("Failed to set the white wallpaper: ", err)
 	}
 

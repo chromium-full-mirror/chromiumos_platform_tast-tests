@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/testing"
 )
 
@@ -39,6 +38,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBootedWithArcUpdateO4CListViaA2C2",
 		SoftwareDeps: []string{"chrome", "android_vm"},
+		Data:         []string{wm.WhiteWallpaperFileName},
 		Timeout:      5 * time.Minute,
 	})
 }
@@ -105,7 +105,6 @@ func ResizeLockA2C2(ctx context.Context, s *testing.State) {
 	}
 	a := s.FixtValue().(*arc.PreData).ARC
 	d := s.FixtValue().(*arc.PreData).UIDevice
-	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
@@ -140,7 +139,7 @@ func ResizeLockA2C2(ctx context.Context, s *testing.State) {
 
 	// Set a pure white wallpaper to reduce the noises on a screenshot because currently checking the visibility of the translucent window border relies on a screenshot.
 	// The wallpaper will exist continuous if the Chrome session gets reused.
-	if err := wm.SetSolidWhiteWallpaper(ctx, ui); err != nil {
+	if err := wm.SetSolidWhiteWallpaper(ctx, tconn, s); err != nil {
 		s.Fatal("Failed to set the white wallpaper: ", err)
 	}
 
