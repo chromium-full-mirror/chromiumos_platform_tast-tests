@@ -87,7 +87,7 @@ func FullRestoreFilesappReboot(ctx context.Context, s *testing.State) {
 
 		if err := uiauto.Combine("restore files app",
 			// Click Restore on the restore alert.
-			ui.LeftClick(restoreButton),
+			ui.WithTimeout(30*time.Second).LeftClick(restoreButton),
 
 			// Check Files app is restored.
 			ui.WaitUntilExists(downloads))(ctx); err != nil {
