@@ -292,25 +292,6 @@ func MountGuest(ctx context.Context) error {
 	return nil
 }
 
-// MountKiosk sends a request to cryptohome to create a mount point for a
-// kiosk user.
-func MountKiosk(ctx context.Context) error {
-	testing.ContextLog(ctx, "Mounting kiosk cryptohome")
-
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	mountInfo := hwsec.NewCryptohomeMountInfo(cmdRunner, cryptohome)
-
-	if err := cryptohome.MountKiosk(ctx); err != nil {
-		return errors.Wrap(err, "failed to request mounting kiosk vault")
-	}
-
-	if err := mountInfo.WaitForUserMount(ctx, hwsec.KioskUser); err != nil {
-		return errors.Wrap(err, "failed to mount kiosk vault")
-	}
-	return nil
-}
-
 // CheckMountNamespace checks whether the user session mount namespace has been created.
 func CheckMountNamespace(ctx context.Context) error {
 	cmdRunner := hwseclocal.NewLoglessCmdRunner()

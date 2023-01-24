@@ -442,17 +442,8 @@ func (u *CryptohomeClient) MountVault(ctx context.Context, label string, authCon
 
 // MountGuest creates a mount point for a guest user; error is nil if the operation completed successfully.
 func (u *CryptohomeClient) MountGuest(ctx context.Context) error {
-	if _, err := u.binary.mountGuestEx(ctx); err != nil {
+	if _, err := u.binary.prepareGuestVault(ctx); err != nil {
 		return errors.Wrap(err, "failed to mount guest")
-	}
-	return nil
-}
-
-// MountKiosk creates a mount point for a kiosk; error is nil if the operation completed successfully.
-func (u *CryptohomeClient) MountKiosk(ctx context.Context) error {
-	extraFlags := []string{"--public_mount"}
-	if _, err := u.binary.mountEx(ctx, "kiosk", true, "public_mount", extraFlags); err != nil {
-		return errors.Wrap(err, "failed to mount kiosk")
 	}
 	return nil
 }
