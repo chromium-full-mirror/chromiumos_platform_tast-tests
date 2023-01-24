@@ -260,8 +260,8 @@ func SetDropdown(ctx context.Context, tconn *chrome.TestConn, name, value string
 	return nil
 }
 
-// SetCheckboxState sets a checkbox option to checked or unchecked as desired.
-func SetCheckboxState(ctx context.Context, tconn *chrome.TestConn, name string, selected bool) error {
+// SetCheckboxStateInternal sets the checkbox state to the desired value.
+func SetCheckboxStateInternal(ctx context.Context, tconn *chrome.TestConn, checkbox *nodewith.Finder, selected bool) error {
 	// This function takes a bool instead of checked.Checked since you can't put
 	// a checkbox in "mixed" state by clicking on it.
 	var targetState checked.Checked
@@ -271,7 +271,6 @@ func SetCheckboxState(ctx context.Context, tconn *chrome.TestConn, name string, 
 		targetState = checked.False
 	}
 
-	checkbox := nodewith.Name(name).Role(role.CheckBox)
 	ui := uiauto.New(tconn)
 
 	// The checkbox could be in "mixed" state, so we might have to click it twice.
@@ -283,7 +282,7 @@ func SetCheckboxState(ctx context.Context, tconn *chrome.TestConn, name string, 
 		if info.Checked == targetState {
 			break
 		}
-		if err := uiauto.Combine(fmt.Sprintf("find and toggle checkbox '%s'", name),
+		if err := uiauto.Combine(("toggle checkbox value"),
 			ui.WithTimeout(10*time.Second).WaitUntilExists(checkbox.Focusable()),
 			ui.EnsureFocused(checkbox),
 			ui.WaitForEvent(checkbox, event.CheckedStateChanged, ui.DoDefault(checkbox)),
@@ -293,6 +292,12 @@ func SetCheckboxState(ctx context.Context, tconn *chrome.TestConn, name string, 
 	}
 
 	return nil
+}
+
+// SetCheckboxState finds a checkbox node with given name and sets its state to the desired value.
+func SetCheckboxState(ctx context.Context, tconn *chrome.TestConn, name string, selected bool) error {
+	checkbox := nodewith.Name(name).Role(role.CheckBox)
+	return SetCheckboxStateInternal(ctx, tconn, checkbox, selected)
 }
 
 // OpenAdvancedSettings opens the advanced settings dialog.
@@ -318,7 +323,7 @@ func OpenAdvancedSettings(ctx context.Context, tconn *chrome.TestConn) error {
 
 // SetAdvancedSetting sets an option in the advanced settings dialog. Expects
 // that OpenAdvancedSettings() has already been called.
-func SetAdvancedSetting(ctx context.Context, tconn *chrome.TestConn, name, value string) error {
+func SetAdvancedSetting(ctx context.Context, tconn *chrome.TestConn, name string, value interface{}) error {
 	ui := uiauto.New(tconn)
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -331,18 +336,35 @@ func SetAdvancedSetting(ctx context.Context, tconn *chrome.TestConn, name, value
 	printPreviewDialog := nodewith.Name("Print").HasClass("RootView")
 	advancedSettingsDialog := nodewith.Role(role.Dialog).Ancestor(printPreviewDialog)
 	searchSettings := nodewith.Name("Search settings").Role(role.SearchBox).Ancestor(advancedSettingsDialog)
-	dropdown := nodewith.HasClass("md-select").Ancestor(advancedSettingsDialog)
 	clearButton := nodewith.Name("Clear search").Role(role.Button).Ancestor(advancedSettingsDialog)
 
-	if err := uiauto.Combine("find dropdown and select option",
+	if err := uiauto.Combine("type the desired option in the search box",
 		// Type in the search box so that the desired setting's dropdown is the only
 		// one visible. This will fail if the setting's name is contained in another
 		// setting's name.
 		ui.WithTimeout(10*time.Second).WaitUntilExists(searchSettings),
 		ui.EnsureFocused(searchSettings),
-		kb.TypeAction(name),
+		kb.TypeAction(name))(ctx); err != nil {
+		return nil
+	}
+
+	switch value.(type) {
+	case bool:
+		checkbox := nodewith.Role(role.CheckBox).Ancestor(advancedSettingsDialog)
+		if err := SetCheckboxStateInternal(ctx, tconn, checkbox, value.(bool)); err != nil {
+			return errors.Wrap(err, "failed to set checkbox value")
+		}
+	case string:
 		// Open the dropdown menu and select the desired option.
-		setDropdownInternal(ui, dropdown, value),
+		dropdown := nodewith.HasClass("md-select").Ancestor(advancedSettingsDialog)
+		if err := setDropdownInternal(ui, dropdown, value.(string))(ctx); err != nil {
+			return errors.Wrap(err, "failed to select dropdown option")
+		}
+	default:
+		return errors.Errorf("unknown value type %T", value)
+	}
+
+	if err := uiauto.Combine("clear the search text",
 		// Clear the search text so that this function can be called again.
 		ui.WithTimeout(10*time.Second).WaitUntilExists(clearButton),
 		ui.DoDefault(clearButton),
