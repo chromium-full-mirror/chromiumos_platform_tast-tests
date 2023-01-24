@@ -26,6 +26,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test ARC's open with menu show up in Chrome's right click menu",
 		Contacts:     []string{"elkurin@chromium.org", "lacros-tok@google.com"},
+		// ChromeOS > Software > ARC++ > Core
+		BugComponent: "b:216022890",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
