@@ -367,3 +367,13 @@ func (c *Concierge) GetVMInfo(ctx context.Context, vm *VM) error {
 func (c *Concierge) GetOwnerID() string {
 	return c.ownerID
 }
+
+// StopAllVms stops all the running VMs on the host.
+func (c *Concierge) StopAllVms(ctx context.Context) error {
+	if err := dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".StopAllVms", nil, nil); err != nil {
+		return err
+	}
+
+	testing.ContextLog(ctx, "Stopped all VMs")
+	return nil
+}
