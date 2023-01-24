@@ -18,10 +18,11 @@ func init() {
 		Func: ECTelemetry,
 		Desc: "Checks that telemetry requests to the EC (e.g. hardware temperature or fan state info) work on Wilco devices",
 		Contacts: []string{
-			"campello@chromium.org",     // Test maintainer.
-			"chromeos-wilco@google.com", // Possesses some more domain-specific knowledge.
-			"chromeos-kernel-test@google.com",
+			"chromeos-oem-services@google.com", // Use team email for tickets.
+			"bkersting@google.com",
+			"lamzin@google.com",
 		},
+		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"wilco"},
 		Timeout:      10 * time.Second,
 		Attr:         []string{"group:mainline"},
