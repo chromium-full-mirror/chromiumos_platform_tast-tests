@@ -205,8 +205,14 @@ type baseSetupFixtureImpl struct {
 }
 
 func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// Start Chrome instance.
-	var fOpts = []chrome.Option{}
+	// Set VC related flags by default for all fixtures.
+	var fOpts = []chrome.Option{
+		chrome.EnableFeatures("SpeakOnMuteEnabled"),
+		chrome.EnableFeatures("VcControlsUi"),
+		chrome.EnableFeatures("VCBackgroundBlur"),
+		chrome.EnableFeatures("VCPortraitRelighting"),
+	}
+
 	var err error
 	if f.fOpts != nil {
 		fOpts, err = f.fOpts(ctx, s)
