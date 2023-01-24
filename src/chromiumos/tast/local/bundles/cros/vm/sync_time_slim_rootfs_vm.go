@@ -1,0 +1,52 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package vm
+
+import (
+	"context"
+
+	"chromiumos/tast/local/bundles/cros/vm/slimrootfsutils"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/vm"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         SyncTimeSlimRootfsVM,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Syncs time of a Linux VM with a slim rootfs",
+		Contacts:     []string{"crosvm-core@google.com", "abhishekbh@google.com"},
+		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests
+		SoftwareDeps: []string{"chrome", "vm_host"},
+		Attr:         []string{"group:mainline", "informational"},
+		Data:         slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch()),
+		Fixture:      "chromeLoggedIn",
+	})
+}
+
+func SyncTimeSlimRootfsVM(ctx context.Context, s *testing.State) {
+	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(*chrome.Chrome).NormalizedUser())
+	if err != nil {
+		s.Error("Failed to get concierge instance: ", err)
+	}
+
+	kernelAndRootfsFiles := slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch())
+	kernel := s.DataPath(kernelAndRootfsFiles[0])
+	rootfs := s.DataPath(kernelAndRootfsFiles[1])
+
+	vm := vm.NewGenericVM(concierge, false, slimrootfsutils.StatefulDiskSizeBytes, kernel, rootfs, slimrootfsutils.DefaultVMName)
+	if err := vm.Start(ctx); err != nil {
+		s.Fatal("Failed to start the VM: ", err)
+	}
+
+	if err := concierge.GetVMInfo(ctx, vm); err != nil {
+		s.Fatal("Failed to get info about the VM: ", err)
+	}
+
+	if err := concierge.SyncTimes(ctx); err != nil {
+		s.Fatal("Failed to sync time for the VM: ", err)
+	}
+}
