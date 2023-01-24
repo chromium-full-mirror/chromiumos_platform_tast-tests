@@ -33,7 +33,8 @@ func init() {
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Shelf",
+		// ChromeOS > Software > System UI Surfaces > Shelf
+		BugComponent: "b:1288352",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

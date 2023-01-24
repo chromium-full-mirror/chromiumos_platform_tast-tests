@@ -26,7 +26,8 @@ func init() {
 			"newcomer@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Shelf",
+		// ChromeOS > Software > System UI Surfaces > Shelf
+		BugComponent: "b:1288352",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnModel("magister")),

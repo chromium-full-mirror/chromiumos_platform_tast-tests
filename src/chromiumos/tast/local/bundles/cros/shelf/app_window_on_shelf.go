@@ -46,7 +46,8 @@ func init() {
 			"tbarzic@chromium.org",
 			"cros-system-ui-eng@google.com",
 		},
-		BugComponent: "crbug:UI>Shell>Shelf",
+		// ChromeOS > Software > System UI Surfaces > Shelf
+		BugComponent: "b:1288352",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWith100FakeAppsNoAppSort",

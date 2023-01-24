@@ -53,7 +53,8 @@ func init() {
 			"andrewxu@chromium.org",
 			"cros-shelf-prod-notifications@google.com",
 		},
-		BugComponent: "TBA",
+		// ChromeOS > Software > System UI Surfaces > Shelf
+		BugComponent: "b:1288352",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

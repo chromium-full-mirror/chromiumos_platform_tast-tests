@@ -42,6 +42,7 @@ func init() {
 			"jamescook@chromium.org",
 			"tbarzic@chromium.org",
 		},
+		// ChromeOS > Software > System UI Surfaces > Launcher
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},

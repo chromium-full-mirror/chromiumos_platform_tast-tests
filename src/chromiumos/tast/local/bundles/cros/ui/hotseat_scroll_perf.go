@@ -35,8 +35,9 @@ func init() {
 			"andrewxu@chromium.org",
 			"newcomer@chromium.org",
 		},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		BugComponent: "TBA",
+		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
+		// ChromeOS > Software > System UI Surfaces > Shelf
+		BugComponent: "b:1288352",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeLoggedInWith100FakeApps",
