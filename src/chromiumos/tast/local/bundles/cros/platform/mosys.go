@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 				Val: [][]string{
 					{"ec", "info"},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 			},
 			{
 				Name: "memory",
