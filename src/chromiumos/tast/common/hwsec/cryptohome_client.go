@@ -922,15 +922,6 @@ func (u *CryptohomeClient) SupportsLECredentials(ctx context.Context) (bool, err
 	return strings.Contains(string(binaryMsg), "low_entropy_credentials_supported: true"), nil
 }
 
-// GetKeyData returns the key data for the specified user and label.
-func (u *CryptohomeClient) GetKeyData(ctx context.Context, user, keyLabel string) (string, error) {
-	binaryMsg, err := u.binary.getKeyData(ctx, user, keyLabel)
-	if err != nil {
-		return "", errors.Wrap(err, "GetKeyData failed")
-	}
-	return string(binaryMsg), nil
-}
-
 // StartAuthSession starts an AuthSession for a user, returning both the StartAuthSessionReply proto and the generated Auth Session ID.
 func (u *CryptohomeClient) StartAuthSession(ctx context.Context, user string, isEphemeral bool, authIntent uda.AuthIntent) (*uda.StartAuthSessionReply, string, error) {
 	reply := &uda.StartAuthSessionReply{}

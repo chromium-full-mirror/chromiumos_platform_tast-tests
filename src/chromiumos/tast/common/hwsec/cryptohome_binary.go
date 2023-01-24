@@ -253,11 +253,6 @@ func (c *cryptohomeBinary) getSupportedKeyPolicies(ctx context.Context) ([]byte,
 	return c.call(ctx, "--action=get_supported_key_policies")
 }
 
-// getKeyData calls "cryptohome --action=get_key_data_ex".
-func (c *cryptohomeBinary) getKeyData(ctx context.Context, username, keyLabel string) ([]byte, error) {
-	return c.call(ctx, "--action=get_key_data_ex", "--user="+username, "--key_label="+keyLabel)
-}
-
 // startAuthSession calls "cryptohome --action=start_auth_session".
 func (c *cryptohomeBinary) startAuthSession(ctx context.Context, username string, isEphemeral bool, authIntent uda.AuthIntent) ([]byte, error) {
 	args := []string{"--action=start_auth_session", "--output-format=binary-protobuf", "--user=" + username, "--auth_intent=" + authIntent.String()}
