@@ -26,7 +26,8 @@ func init() {
 		Func:         NotificationPopupPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of notification popup animations",
-		Contacts:     []string{"leandre@chromium.org", "amehfooz@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "amehfooz@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

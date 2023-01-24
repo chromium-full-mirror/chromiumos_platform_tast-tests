@@ -28,7 +28,8 @@ func init() {
 		Func:         QuickSettingsPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures animation smoothness of quick settings expand and collapse animations",
-		Contacts:     []string{"amehfooz@chromium.org", "leandre@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "amehfooz@chromium.org", "leandre@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

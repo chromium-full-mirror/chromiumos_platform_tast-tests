@@ -45,7 +45,8 @@ func init() {
 		Func:         NotificationClosePerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation performance of the clear all animation or individual notification deletion in the message center",
-		Contacts:     []string{"newcomer@chromium.org", "cros-status-area-eng@google.com", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "newcomer@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
