@@ -40,6 +40,9 @@ var regExpFPSVP9 = regexp.MustCompile(`encode \d+ frames in \d+.\d+ secondes, FP
 // regExpFPSH264 is the regexp to find the FPS output from the H.264 binary log.
 var regExpFPSH264 = regexp.MustCompile(`PERFORMANCE:\s+Frame Rate\s+: (\d+.\d+)`)
 
+// regExpFPSAV1 is the regexp to find the FPS output from the AV1 binary log.
+var regExpFPSAV1 = regExpFPSH264
+
 // regExpFPSV4L2 is the regexp to find the FPS output from v4l2_stateful_encoder.
 var regExpFPSV4L2 = regexp.MustCompile(`\((\d+\.\d+)fps\)`)
 
@@ -86,6 +89,36 @@ func init() {
 		// (called Kepler), skip this test in these models.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("guado", "buddy", "rikku")),
 		Params: []testing.Param{{
+			Name: "vaapi_av1_360",
+			Val: testParam{
+				command:        "av1encode",
+				filename:       "tulip2-640x360.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(640, 360),
+				commandBuilder: av1argsVAAPI,
+				regExpFPS:      regExpFPSAV1,
+				decoder:        encoding.LibaomDecoder,
+			},
+			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
+			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
+		}, {
+			Name: "vaapi_av1_720",
+			Val: testParam{
+				command:        "av1encode",
+				filename:       "tulip2-1280x720.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(1280, 720),
+				commandBuilder: av1argsVAAPI,
+				regExpFPS:      regExpFPSAV1,
+				decoder:        encoding.LibaomDecoder,
+			},
+			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
+			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
+			// Devices with small SSDs can't store the files, see b/181165183.
+			ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+		}, {
 			Name: "vaapi_vp8_180",
 			Val: testParam{
 				command:        "vp8enc",
@@ -1020,6 +1053,33 @@ func calculateBitrate(encodedFile string, fileFPS float64, numFrames int) (value
 		return 0.0, errors.Wrapf(err, "failed to get stats for file %s", encodedFile)
 	}
 	return float64(s.Size()) * 8 /* bits per byte */ * fileFPS / float64(numFrames), nil
+}
+
+// av1argsVAAPI constructs the command line for the VP8 encoding binary exe.
+func av1argsVAAPI(ctx context.Context, _, exe, yuvFile string, size coords.Size, fps int) (command []string, ivfFile string, bitrate int, _ error) {
+	command = append(command, exe)
+	command = append(command, "--width", strconv.Itoa(size.Width))
+	command = append(command, "--height", strconv.Itoa(size.Height))
+	command = append(command, "--srcyuv", yuvFile)
+
+	ivfFile = yuvFile + ".ivf"
+	command = append(command, "-o", ivfFile)
+
+	// WebRTC uses Constant BitRate (CBR) with a very large intra-frame
+	// period, error resiliency and a certain quality parameter and target
+	// bitrate.
+	command = append(command, "--intra_period", "3000")
+	command = append(command, "--base_q_idx", "24")
+	command = append(command, "--rcmode", "CBR")
+	command = append(command, "--fourcc", "IYUV")
+
+	command = append(command, "-f", strconv.Itoa(fps))
+
+	// AV1 uses a 30% better bitrate than VP9, which targets 0.07 bpp.
+	bitrate = int(0.70 * 0.07 /* BPP */ * float64(fps) * float64(size.Width) * float64(size.Height))
+	command = append(command, "-t", strconv.Itoa(bitrate) /* Kbps */)
+
+	return
 }
 
 // vp8argsVAAPI constructs the command line for the VP8 encoding binary exe.
