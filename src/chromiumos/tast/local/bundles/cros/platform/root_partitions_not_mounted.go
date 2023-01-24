@@ -18,14 +18,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: RootPartitionsNotMounted,
-		Desc: "Check that root partitions are only mounted by processes other than update-engine",
-		Contacts: []string{
-			"benchan@chromium.org", // Autotest author
-			"puthik@chromium.org",  // Autotest author
-			"chavey@chromium.org",  // Migrated autotest to tast
-		},
-		Attr: []string{"group:mainline"},
+		Func:         RootPartitionsNotMounted,
+		Desc:         "Check that root partitions are only mounted by processes other than update-engine",
+		Contacts:     []string{"chromeos-storage@google.com"},
+		BugComponent: "b:974567",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
