@@ -41,6 +41,8 @@ const (
 	CrossystemParamFWResult           CrossystemParam = "fw_result"
 	CrossystemParamFWPrevTried        CrossystemParam = "fw_prev_tried"
 	CrossystemParamFWPrevResult       CrossystemParam = "fw_prev_result"
+	CrossystemParamTpmFwVer           CrossystemParam = "tpm_fwver"
+	CrossystemParamTpmKernelVer       CrossystemParam = "tpm_kernver"
 )
 
 var (
