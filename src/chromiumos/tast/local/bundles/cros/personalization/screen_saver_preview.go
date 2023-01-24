@@ -60,13 +60,13 @@ func ScreenSaverPreview(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable ambient mode: ", err)
 	}
 
-	previewButton := nodewith.Role(role.Button).HasClass("previewButton")
+	previewButton := nodewith.Role(role.Button).HasClass("preview-button")
 	if err := ui.LeftClick(previewButton)(ctx); err != nil {
 		s.Fatal("Failed to click the preview button: ", err)
 	}
 
 	// Preview button text changes to "Downloading" when it gets disabled to load screen saver resources.
-	previewButtonDisabled := nodewith.Role(role.Button).HasClass("previewButtonDisabled")
+	previewButtonDisabled := nodewith.Role(role.Button).HasClass("preview-button-disabled")
 	if err := ui.WaitUntilExists(previewButtonDisabled)(ctx); err != nil {
 		s.Fatal("Failed to show 'Downloading' message: ", err)
 	}
