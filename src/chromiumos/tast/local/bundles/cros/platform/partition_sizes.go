@@ -21,10 +21,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     PartitionSizes,
-		Desc:     "Checks rootfs partition sizes",
-		Contacts: []string{"chromeos-systems@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func:         PartitionSizes,
+		Desc:         "Checks rootfs partition sizes",
+		Contacts:     []string{"chromeos-storage@google.com"},
+		BugComponent: "b:974567",
+		Attr:         []string{"group:mainline"},
 	})
 }
 
