@@ -89,19 +89,25 @@ func runCommandLineRemote(ctx context.Context, conn *ssh.Conn, args []string) ([
 
 // runCommandLineLocal runs command line using testexec command context.
 //
-// It returns output returned by cmd.Output command line execution.
+// It returns joint slice of stderr and stdout from command line execution.
 // When any error happened during command execution non-nil error is returned.
 func runCommandLineLocal(ctx context.Context, args []string) ([]byte, error) {
 	testing.ContextLog(ctx, "Running command line locally with arguments: ", args)
 	cmd := testexec.CommandContext(ctx, args[0], args[1:]...)
-	output, err := cmd.Output(testexec.DumpLogOnError)
 
-	if err != nil {
-		err = errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
+	var outbuf, errbuf bytes.Buffer
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
+	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
 
-	return output, err
+	if err := cmd.Wait(); err != nil {
+		return nil, errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
+	}
+
+	return bytes.Join([][]byte{errbuf.Bytes(), outbuf.Bytes()}, []byte("\n")), nil
 }
 
 // Programmer is Flashrom programmer, one of the values below.
