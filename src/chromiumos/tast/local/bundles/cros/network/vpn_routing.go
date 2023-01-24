@@ -198,24 +198,43 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
 
+	privateEnv, err := networkEnv.CreatePrivateEnv(ctx, server, vpnEnv)
+	if err != nil {
+		s.Fatal("Failed to create VPN private env: ", err)
+	}
+
+	privateEnvIPs, err := privateEnv.GetVethInAddrs(ctx)
+	if err != nil {
+		s.Fatal("Failed to get IPs in private env: ", err)
+	}
+
+	type ipAndRole struct {
+		ip   string
+		role string
+	}
+	var reachableIPs []ipAndRole
+
+	// Note that wgTwoPeers is a split-routing setup, so only verify default route
+	// if that is not enabled.
 	if tc.ipType == vpn.IPTypeIPv4 || tc.ipType == vpn.IPTypeIPv4AndIPv6 {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-			s.Fatalf("Failed to ping %s: %v", server.OverlayIPv4, err)
-		}
-		if secondServer != nil {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, secondServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-				s.Fatalf("Failed to ping %s: %v", secondServer.OverlayIPv4, err)
-			}
+		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "server IPv4"})
+		if tc.wgTwoPeers {
+			reachableIPs = append(reachableIPs, ipAndRole{secondServer.OverlayIPv4, "second server IPv4"})
+		} else {
+			reachableIPs = append(reachableIPs, ipAndRole{privateEnvIPs.IPv4Addr.String(), "private IPv4"})
 		}
 	}
 	if tc.ipType == vpn.IPTypeIPv6 || tc.ipType == vpn.IPTypeIPv4AndIPv6 {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv6, "chronos", 10*time.Second); err != nil {
-			s.Fatalf("Failed to ping %s: %v", server.OverlayIPv6, err)
+		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv6, "server IPv6"})
+		if tc.wgTwoPeers {
+			reachableIPs = append(reachableIPs, ipAndRole{secondServer.OverlayIPv6, "second server IPv6"})
+		} else {
+			reachableIPs = append(reachableIPs, ipAndRole{privateEnvIPs.IPv6Addrs[0].String(), "private IPv6"})
 		}
-		if secondServer != nil {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, secondServer.OverlayIPv6, "chronos", 10*time.Second); err != nil {
-				s.Fatalf("Failed to ping %s: %v", secondServer.OverlayIPv6, err)
-			}
+	}
+	for _, ip := range reachableIPs {
+		if err := routing.ExpectPingSuccessWithTimeout(ctx, ip.ip, "chronos", 10*time.Second); err != nil {
+			s.Errorf("Failed to ping %s %s: %v", ip.role, ip.ip, err)
 		}
 	}
 

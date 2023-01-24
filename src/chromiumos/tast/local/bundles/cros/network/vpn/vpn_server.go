@@ -373,13 +373,14 @@ var (
 
 // Server represents a VPN server that can be used in the test.
 type Server struct {
-	OverlayIPv4  string
-	OverlayIPv6  string
-	UnderlayIP   string
-	serverRunner *serverRunner
-	stopCommands [][]string
-	pidFiles     []string
-	logFiles     []string
+	OverlayIfname string
+	OverlayIPv4   string
+	OverlayIPv6   string
+	UnderlayIP    string
+	serverRunner  *serverRunner
+	stopCommands  [][]string
+	pidFiles      []string
+	logFiles      []string
 }
 
 // StartServer starts a VPN server of type in the given env.
@@ -413,10 +414,11 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthType, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
-		serverRunner: runner,
-		stopCommands: [][]string{},
-		pidFiles:     []string{charonPidFile, xl2tpdPidFile, pppdPidFile},
-		logFiles:     []string{charonLogFile},
+		OverlayIfname: "ppp0",
+		serverRunner:  runner,
+		stopCommands:  [][]string{},
+		pidFiles:      []string{charonPidFile, xl2tpdPidFile, pppdPidFile},
+		logFiles:      []string{charonLogFile},
 	}
 
 	runner.AddRootDirectories(strongSwanDirectories)
@@ -495,10 +497,11 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthT
 func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType, ipType IPType) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
-		serverRunner: runner,
-		stopCommands: [][]string{{"/bin/ip", "link", "del", "xfrm1"}},
-		pidFiles:     []string{charonPidFile},
-		logFiles:     []string{charonLogFile},
+		OverlayIfname: "xfrm1",
+		serverRunner:  runner,
+		stopCommands:  [][]string{{"/bin/ip", "link", "del", "xfrm1"}},
+		pidFiles:      []string{charonPidFile},
+		logFiles:      []string{charonLogFile},
 	}
 
 	runner.AddRootDirectories(strongSwanDirectories)
@@ -584,10 +587,11 @@ func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType,
 func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
-		serverRunner: runner,
-		stopCommands: [][]string{},
-		pidFiles:     []string{openvpnPidFile},
-		logFiles:     []string{openvpnLogFile},
+		OverlayIfname: "tun0",
+		serverRunner:  runner,
+		stopCommands:  [][]string{},
+		pidFiles:      []string{openvpnPidFile},
+		logFiles:      []string{openvpnLogFile},
 	}
 
 	runner.AddRootDirectories(openvpnRootDirectories)
@@ -646,10 +650,11 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 func StartWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
-		serverRunner: runner,
-		stopCommands: [][]string{{"/bin/ip", "link", "del", "wg1"}},
-		pidFiles:     []string{},
-		logFiles:     []string{}, // No log for WireGuard server.
+		OverlayIfname: "wg1",
+		serverRunner:  runner,
+		stopCommands:  [][]string{{"/bin/ip", "link", "del", "wg1"}},
+		pidFiles:      []string{},
+		logFiles:      []string{}, // No log for WireGuard server.
 	}
 
 	configValues := map[string]interface{}{

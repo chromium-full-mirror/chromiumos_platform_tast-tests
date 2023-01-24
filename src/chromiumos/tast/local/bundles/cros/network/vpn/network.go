@@ -24,10 +24,13 @@ import (
 // comments for CreateNetworkTopology() for more detail.
 type Network struct {
 	manager *shill.Manager
+	pool    *subnet.Pool
 
 	Router  *virtualnet.Env
 	Server1 *virtualnet.Env
 	Server2 *virtualnet.Env
+
+	privateEnv *virtualnet.Env
 }
 
 // CreateNetworkTopology sets up a network topology for VPN tests based on
@@ -64,10 +67,8 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 		return nil, errors.Wrap(err, "failed to disable portal detection")
 	}
 
-	pool := subnet.NewPool()
-
 	success := false
-	network := &Network{manager: manager}
+	network := &Network{manager: manager, pool: subnet.NewPool()}
 	defer func(ctx context.Context) {
 		if success {
 			return
@@ -78,7 +79,7 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 	}(cleanupCtx)
 
 	var svc *shill.Service
-	svc, network.Router, network.Server1, err = virtualnet.CreateRouterServerEnv(ctx, manager, pool, virtualnet.EnvOptions{
+	svc, network.Router, network.Server1, err = virtualnet.CreateRouterServerEnv(ctx, manager, network.pool, virtualnet.EnvOptions{
 		Priority:   5,
 		EnableDHCP: true,
 		RAServer:   true,
@@ -91,7 +92,7 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start 2nd server env")
 	}
-	if err := network.Server2.ConnectToRouterWithPool(ctx, network.Router, pool); err != nil {
+	if err := network.Server2.ConnectToRouterWithPool(ctx, network.Router, network.pool); err != nil {
 		return nil, errors.Wrap(err, "failed to connect 2nd server env to router")
 	}
 
@@ -115,11 +116,42 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 	return network, nil
 }
 
+// CreatePrivateEnv creates a virtualnet.Env behind the vpnEnv which can only be
+// reachable via server (done by dropping FORWARD packets from/to the private
+// env except for the ones from/to the vpn interfaces). This env can be used to
+// verify the default route setup on DUT. The returned env will be owned by n
+// and cleaned up on TearDown() so the caller should not clean it up directly.
+func (n *Network) CreatePrivateEnv(ctx context.Context, server *Server, vpnEnv *virtualnet.Env) (*virtualnet.Env, error) {
+	privateEnv, err := virtualnet.CreateEnv(ctx, "private")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create VPN private env")
+	}
+	// Set the member here so that it can be cleaned up by the caller on failures.
+	n.privateEnv = privateEnv
+	if err := privateEnv.ConnectToRouterWithPool(ctx, vpnEnv, n.pool); err != nil {
+		return nil, errors.Wrap(err, "failed to connect private env to VPN server env")
+	}
+	for _, iptablesCmd := range []string{"iptables", "ip6tables"} {
+		cmds := [][]string{
+			{iptablesCmd, "-I", "FORWARD", "-i", privateEnv.VethOutName, "-j", "DROP", "-w"},
+			{iptablesCmd, "-I", "FORWARD", "-o", privateEnv.VethOutName, "-j", "DROP", "-w"},
+			{iptablesCmd, "-I", "FORWARD", "-i", server.OverlayIfname, "-j", "ACCEPT", "-w"},
+			{iptablesCmd, "-I", "FORWARD", "-o", server.OverlayIfname, "-j", "ACCEPT", "-w"},
+		}
+		for _, cmd := range cmds {
+			if err := vpnEnv.RunWithoutChroot(ctx, cmd...); err != nil {
+				return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
+			}
+		}
+	}
+	return privateEnv, nil
+}
+
 // TearDown tears down the network topology.
 func (n *Network) TearDown(ctx context.Context) error {
 	var lastErr error
 
-	for _, netEnv := range []*env.Env{n.Router, n.Server1, n.Server2} {
+	for _, netEnv := range []*env.Env{n.Router, n.Server1, n.Server2, n.privateEnv} {
 		if netEnv == nil {
 			continue
 		}
