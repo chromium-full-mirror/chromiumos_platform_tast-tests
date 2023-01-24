@@ -1,0 +1,72 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package vm
+
+import (
+	"context"
+
+	"chromiumos/tast/local/bundles/cros/vm/slimrootfsutils"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/vm"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         ListSlimRootfsVM,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Syncs time of a Linux VM with a slim rootfs",
+		Contacts:     []string{"crosvm-core@google.com", "abhishekbh@google.com"},
+		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests
+		SoftwareDeps: []string{"chrome", "vm_host"},
+		Attr:         []string{"group:mainline", "informational"},
+		Data:         slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch()),
+		Fixture:      "chromeLoggedIn",
+	})
+}
+
+func ListSlimRootfsVM(ctx context.Context, s *testing.State) {
+	concierge, err := vm.NewConcierge(ctx, s.FixtValue().(*chrome.Chrome).NormalizedUser())
+	if err != nil {
+		s.Error("Failed to get concierge instance: ", err)
+	}
+
+	kernelAndRootfsFiles := slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch())
+	vmNames := []string{slimrootfsutils.DefaultVMName + "one", slimrootfsutils.DefaultVMName + "two"}
+	kernel := s.DataPath(kernelAndRootfsFiles[0])
+	rootfs := s.DataPath(kernelAndRootfsFiles[1])
+
+	var vms []*vm.VM
+	for _, vmName := range vmNames {
+		vm := vm.NewGenericVM(concierge, false, slimrootfsutils.StatefulDiskSizeBytes, kernel, rootfs, vmName)
+		if err := vm.Start(ctx); err != nil {
+			s.Fatal("Failed to start the VM: ", err)
+		}
+		vms = append(vms, vm)
+	}
+
+	runningVms, err := concierge.ListVms(ctx)
+	if err != nil {
+		s.Fatal("Failed to get info about the VM: ", err)
+	}
+
+	if runningVms == nil {
+		s.Fatal("No running VMs found")
+	}
+
+	for _, vmName := range vmNames {
+		foundVM := false
+		for _, runningVM := range runningVms {
+			if vmName == runningVM.Name {
+				foundVM = true
+				break
+			}
+		}
+
+		if !foundVM {
+			s.Fatalf("Failed to find VM %q in running VMs", vmName)
+		}
+	}
+}

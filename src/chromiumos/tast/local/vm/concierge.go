@@ -377,3 +377,22 @@ func (c *Concierge) StopAllVms(ctx context.Context) error {
 	testing.ContextLog(ctx, "Stopped all VMs")
 	return nil
 }
+
+// ListVms lists the Vms currently running.
+func (c *Concierge) ListVms(ctx context.Context) ([]*vmpb.ExtendedVmInfo, error) {
+	resp := &vmpb.ListVmsResponse{}
+	if err := dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".ListVms",
+		&vmpb.ListVmsRequest{
+			OwnerId: c.ownerID,
+		},
+		resp); err != nil {
+		return nil, err
+	}
+
+	if !resp.GetSuccess() {
+		return nil, errors.Errorf("could not list VMs: %v", resp.GetFailureReason())
+	}
+
+	testing.ContextLog(ctx, "List VMs")
+	return resp.GetVms(), nil
+}
