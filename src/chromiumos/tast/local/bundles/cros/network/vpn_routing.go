@@ -69,9 +69,24 @@ func init() {
 			},
 			Fixture: "vpnEnv",
 		}, {
-			Name: "openvpn",
+			Name: "openvpn_ipv4",
 			Val: vpnRoutingTestCase{
 				vpnType: vpn.TypeOpenVPN,
+				ipType:  vpn.IPTypeIPv4,
+			},
+			Fixture: "vpnEnvWithCerts",
+		}, {
+			Name: "openvpn_ipv6",
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeOpenVPN,
+				ipType:  vpn.IPTypeIPv6,
+			},
+			Fixture: "vpnEnvWithCerts",
+		}, {
+			Name: "openvpn_ipv4_ipv6",
+			Val: vpnRoutingTestCase{
+				vpnType: vpn.TypeOpenVPN,
+				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
 			Fixture: "vpnEnvWithCerts",
 		}, {

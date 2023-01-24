@@ -261,7 +261,8 @@ const (
 	openvpnStatusFile        = "tmp/openvpn.status"
 	openvpnUsername          = "username"
 	openvpnPassword          = "password"
-	openvpnServerIPAddress   = "10.11.12.1"
+	openvpnServerIPv4Address = "10.11.12.1"
+	openvpnServerIPv6Address = "fdfd::1"
 )
 
 // dh1024PemKey is the Diffie–Hellman parameter which will be used by OpenVPN
@@ -319,13 +320,14 @@ var (
 			"port 1194\n" +
 			"proto udp\n" +
 			"server 10.11.12.0 255.255.255.0\n" +
+			"{{if .ipv6}} server-ipv6 fdfd::/64 {{end}}\n" +
 			"status /{{.status_file}}\n" +
 			"{{if .tls_auth_file}} tls-auth /{{.tls_auth_file}}\n {{end}}" +
 			"{{if .topology}}topology {{.topology}}{{end}}\n" +
 			"verb 5\n" +
 			"writepid /{{.pid_file}}\n" +
 			"tmp-dir /tmp\n" +
-			"{{if .default_route}}push \"redirect-gateway def1\"\n {{end}}" +
+			"{{if .default_route}}push \"redirect-gateway {{.flags}}\"\n {{end}}" +
 			"{{range .push_route}}push \"route {{.addr}} {{.mask}}\"\n{{end}}" +
 			"{{if .push_dns}}push \"dhcp-option DNS 10.11.12.1\"\n {{end}}" +
 			"{{.optional_user_verification}}\n",
@@ -611,6 +613,16 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		"log_file":                     openvpnLogFile,
 		"push_dns":                     true,
 	}
+	switch config.IPType {
+	case IPTypeIPv4:
+		configValues["flags"] = "def1"
+	case IPTypeIPv6:
+		configValues["ipv6"] = true
+		configValues["flags"] = "ipv6 !ipv4"
+	case IPTypeIPv4AndIPv6:
+		configValues["ipv6"] = true
+		configValues["flags"] = "def1 ipv6"
+	}
 	if config.OpenVPNUseUserPassword {
 		configValues["optional_user_verification"] = fmt.Sprintf("auth-user-pass-verify /%s via-file\nscript-security 2", openvpnAuthScript)
 	}
@@ -651,7 +663,8 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		return nil, errors.Wrap(err, "failed to start OpenVPN server")
 	}
 	server.UnderlayIP = underlayIP
-	server.OverlayIPv4 = openvpnServerIPAddress
+	server.OverlayIPv4 = openvpnServerIPv4Address
+	server.OverlayIPv6 = openvpnServerIPv6Address
 	return server, nil
 }
 
