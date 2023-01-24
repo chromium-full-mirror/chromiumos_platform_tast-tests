@@ -59,8 +59,8 @@ func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 
 		// According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 		// it uses a throttle of 2.5s to save the app launching and window statue information to the backend.
-		// Therefore, sleep 3 seconds here.
-		testing.Sleep(ctx, 3*time.Second)
+		// Therefore, sleep 5 seconds here.
+		testing.Sleep(ctx, 5*time.Second)
 
 	}()
 
