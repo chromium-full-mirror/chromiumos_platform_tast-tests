@@ -29,12 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the Quick Settings managed device info is displayed correctly",
 		Contacts: []string{
+			"cros-status-area-eng@google.com",
 			"leandre@chromium.org",
 			"amehfooz@chromium.org",
-			"tbarzic@chromium.org",
-			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

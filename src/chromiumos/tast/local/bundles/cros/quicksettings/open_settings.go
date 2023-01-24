@@ -22,10 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that settings can be opened from Quick Settings",
 		Contacts: []string{
-			"cros-system-ui-eng@google.com",
+			"cros-status-area-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"amehfooz@chromium.org",
 		},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

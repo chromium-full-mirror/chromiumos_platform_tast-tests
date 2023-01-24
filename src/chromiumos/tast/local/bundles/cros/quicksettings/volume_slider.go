@@ -27,10 +27,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the Quick Settings volume slider can be adjusted by keyboard",
 		Contacts: []string{
+			"cros-status-area-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"sylvieliu@chromium.org",
-			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

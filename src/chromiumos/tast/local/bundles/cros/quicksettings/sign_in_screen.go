@@ -27,7 +27,8 @@ func init() {
 		Func:         SignInScreen,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the Quick Settings from SignIn screen",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-system-ui-eng@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "chromeos-sw-engprod@google.com", "cros-system-ui-eng@google.com"},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
