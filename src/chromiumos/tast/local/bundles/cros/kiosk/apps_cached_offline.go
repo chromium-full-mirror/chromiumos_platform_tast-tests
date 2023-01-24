@@ -29,10 +29,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Kiosk apps can be cached and launched offline",
 		Contacts: []string{
-			"yixie@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"yixie@google.com", // Test author
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "ash",
