@@ -63,7 +63,7 @@ const (
 
 // runCommandLineRemote creates command context from given connection and runs command line with given arguments.
 //
-// It returns joint slice of stdout and strerr from command line execution.
+// It returns joint slice of stderr and stdout from command line execution.
 // When any error happened during command execution (including non-zero exit status in remote), non-nil error
 // is returned.
 func runCommandLineRemote(ctx context.Context, conn *ssh.Conn, args []string) ([]byte, error) {
@@ -84,7 +84,7 @@ func runCommandLineRemote(ctx context.Context, conn *ssh.Conn, args []string) ([
 
 	// TODO(b:247668196) implement full logging if test gives a file?
 
-	return bytes.Join([][]byte{outbuf.Bytes(), errbuf.Bytes()}, []byte("\n")), nil
+	return bytes.Join([][]byte{errbuf.Bytes(), outbuf.Bytes()}, []byte("\n")), nil
 }
 
 // runCommandLineLocal runs command line using testexec command context.
