@@ -33,11 +33,13 @@ const (
 
 	newMeetingURL = "http://meet.google.com/new"
 	pwaInstallURL = "https://meet.google.com"
+
+	appName = "Meet"
 )
 
 var (
 	// Find the web view of Meet window.
-	meetRootWebArea = nodewith.NameContaining("Meet").Role(role.RootWebArea)
+	meetRootWebArea = nodewith.NameContaining(appName).Role(role.RootWebArea)
 
 	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetRootWebArea)
 	videoNode         = nodewith.Role(role.Video).Ancestor(meetRootWebArea)
@@ -198,6 +200,7 @@ func (gm *GoogleMeet) EnterFullScreen(ctx context.Context) error {
 	return uiauto.Combine("enter full screen",
 		gm.ui.DoDefault(moreOptionsButton),
 		gm.ui.DoDefault(fullScreenButton),
+		ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, true, 5*time.Second),
 	)(ctx)
 }
 

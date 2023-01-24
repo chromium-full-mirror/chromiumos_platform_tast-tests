@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -433,6 +434,28 @@ func WaitForFullScreen(ctx context.Context, tconn *chrome.TestConn) error {
 	return WaitForCondition(ctx, tconn, func(window *Window) bool {
 		return window.State == WindowStateFullscreen
 	}, defaultPollOptions)
+}
+
+// WaitForFullscreenConditionWithTitle returns an action that waits for the expected window to
+// be in full screen state if isFullScreen flag is true, or not in full screen state if
+// the flag is false.
+func WaitForFullscreenConditionWithTitle(tconn *chrome.TestConn, title string, isFullScreen bool, timeout time.Duration) action.Action {
+	return func(ctx context.Context) error {
+		if err := WaitForCondition(ctx, tconn, func(w *Window) bool {
+			if !strings.Contains(w.Title, title) {
+				return false
+			}
+			if isFullScreen {
+				// Check the chrome window is in full screen.
+				return w.State == WindowStateFullscreen && !w.IsAnimating
+			}
+			// Check the chrome window is not in full screen.
+			return w.State != WindowStateFullscreen && !w.IsAnimating
+		}, &testing.PollOptions{Timeout: timeout}); err != nil {
+			return errors.Wrap(err, "failed to wait for expected window state")
+		}
+		return nil
+	}
 }
 
 // WaitForCondition waits for a window to satisfy the given predicate.

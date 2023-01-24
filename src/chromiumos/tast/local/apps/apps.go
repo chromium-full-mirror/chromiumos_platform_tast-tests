@@ -343,6 +343,12 @@ var KeyboardSV = App{
 	Name: "Keyboard Shortcut Viewer",
 }
 
+// Zoom has details about the Zoom meeting app.
+var Zoom = App{
+	ID:   "gbmplfifepjenigdepeahbecfkcalfhg",
+	Name: "Zoom",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

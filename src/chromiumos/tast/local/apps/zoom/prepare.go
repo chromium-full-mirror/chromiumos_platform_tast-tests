@@ -13,71 +13,60 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/crostini/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
 
 // navigateToZoomAndSignIn starts a new Chrome browser, navigates to the Zoom website and signs in if not yet.
-func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (conn *chrome.Conn, cleanup action.Action, retErr error) {
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, zoomWebsite)
+func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*chrome.Conn, error) {
+	conn, err := br.NewConn(ctx, zoomWebsite)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			faillog.DumpUITreeAndScreenshot(ctx, tconn, "zoom_login", retErr)
-			if err := closeBrowser(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to close browser in cleanup")
-			}
-		}
-	}(ctx)
 
 	ui := uiauto.New(tconn)
 
 	if err := acceptCookiePrompts(tconn)(ctx); err != nil {
-		return nil, nil, errors.Wrap(retErr, "failed to dimiss cookie prompt")
+		return nil, errors.Wrap(err, "failed to dimiss cookie prompt")
 	}
 
 	// Sign in if needed.
 	var nodeFound *nodewith.Finder
 	nodeFound, err = ui.FindAnyExists(ctx, myAccountLink, myProfileImg, signInLink)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to wait for either MY ACCOUNT or SIGN IN node")
+		return nil, errors.Wrap(err, "failed to wait for either MY ACCOUNT or SIGN IN node")
 	}
 
 	if nodeFound == signInLink {
 		testing.ContextLog(ctx, "Sign in Zoom")
 		if err := signIn(ctx, conn, tconn); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to sign-in")
+			return nil, errors.Wrap(err, "failed to sign-in")
 		}
 	}
 
 	// Register new account if required.
 	nodeFound, err = ui.FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea)
-	if retErr != nil {
-		return nil, nil, errors.Wrap(err, "failed to reach either my account or registration flow")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to reach either my account or registration flow")
 	}
 
 	if nodeFound == agreeToTermsArea {
 		testing.ContextLog(ctx, "Creating new Zoom account")
 		if err := createAccount(ctx, tconn); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to create account")
+			return nil, errors.Wrap(err, "failed to create account")
 		}
 	}
 
-	return conn, closeBrowser, nil
+	return conn, nil
 }
 
 func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) error {
@@ -131,7 +120,7 @@ func createAccount(ctx context.Context, tconn *chrome.TestConn) error {
 func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
-	if err := conn.Navigate(ctx, startNewMeetingURL); err != nil {
+	if err := conn.Navigate(ctx, newMeetingURL); err != nil {
 		return err
 	}
 

@@ -9,28 +9,26 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/apps/googlemeet"
+	"chromiumos/tast/local/apps/zoom"
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
 )
 
-type launchMeetType int
+type launchZoomType int
 
 const (
-	launchMeetWithWeb launchMeetType = iota
-	launchMeetWithPWA
+	launchZoomWithWeb launchZoomType = iota
+	launchZoomWithPWA
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VCMeet,
+		Func:         VCZoom,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks Video Effects in Google Meet",
+		Desc:         "Checks Video Effects in Zoom conference",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"shengjun@chromium.org",
@@ -42,50 +40,50 @@ func init() {
 			{
 				Name:    "clamshell_pwa",
 				Fixture: fixture.GAIALoggedInClamshell,
-				Val:     launchMeetWithPWA,
+				Val:     launchZoomWithPWA,
 			},
 			{
 				Name:    "tablet_pwa",
 				Fixture: fixture.GAIALoggedInTablet,
-				Val:     launchMeetWithPWA,
+				Val:     launchZoomWithPWA,
 			},
 			{
 				Name:    "clamshell_web",
 				Fixture: fixture.GAIALoggedInClamshell,
-				Val:     launchMeetWithWeb,
+				Val:     launchZoomWithWeb,
 			},
 			{
 				Name:    "tablet_web",
 				Fixture: fixture.GAIALoggedInTablet,
-				Val:     launchMeetWithWeb,
+				Val:     launchZoomWithWeb,
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosClamshell,
-				Val:     launchMeetWithPWA,
+				Val:     launchZoomWithPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosTablet,
-				Val:     launchMeetWithPWA,
+				Val:     launchZoomWithPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosClamshell,
-				Val:     launchMeetWithWeb,
+				Val:     launchZoomWithWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosTablet,
-				Val:     launchMeetWithWeb,
+				Val:     launchZoomWithWeb,
 			},
 		},
 	})
 }
 
-func VCMeet(ctx context.Context, s *testing.State) {
+func VCZoom(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
@@ -99,46 +97,23 @@ func VCMeet(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	var gm *googlemeet.GoogleMeet
+	var zm *zoom.Zoom
 
-	if s.Param().(launchMeetType) == launchMeetWithPWA {
-		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br)
+	if s.Param().(launchZoomType) == launchZoomWithPWA {
+		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br)
 	} else {
-		// Meet can dynamically switch between different segmentation models.
-		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, err = googlemeet.StartNewMeeting(ctx, cr, br,
-			map[string]string{
-				"e": "ForceSegmentationModelVariant::GpuMid",
-			})
+		zm, err = zoom.StartNewMeeting(ctx, cr, br)
 	}
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}
-	defer gm.Close(cleanupCtx)
+	defer zm.Close(cleanupCtx)
 
-	sendResolutionName := "High definition (720p)"
-
-	if err := uiauto.Combine("configure Meet",
-		gm.EnterFullScreen,
-		gm.MuteIfMicAvailable,
-		gm.ChangeSettings(
-			gm.SetLeaveEmptyCalls(false),
-			func(ctx context.Context) error {
-				// Relighting is not supported on Lacros. The option is not available.
-				if browserType == browser.TypeLacros {
-					return nil
-				}
-				return gm.SetAdjustVideoLighting(true)(ctx)
-			},
-			gm.SetSendResolution(sendResolutionName),
-		),
-		// Video effects are not supported on Lacros on VM due to http://b/265954612.
-		gm.ApplyVideoEffects(gm.SetEffectBlur(true)),
-	)(ctx); err != nil {
-		s.Fatal("Failed to configure Meet: ", err)
+	if err := zm.EnterFullScreen(ctx); err != nil {
+		s.Fatal("Failed to enter full screen: ", err)
 	}
 
-	if _, err := gm.ScreenshotCanvas(ctx, cr); err != nil {
-		s.Fatal("Failed to take screenshot of canvas: ", err)
+	if err := zm.ExitFullScreen(ctx); err != nil {
+		s.Fatal("Failed to exit full screen: ", err)
 	}
 }
