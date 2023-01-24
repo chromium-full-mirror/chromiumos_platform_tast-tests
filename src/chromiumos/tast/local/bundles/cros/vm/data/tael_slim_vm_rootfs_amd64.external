@@ -1,5 +1,5 @@
 {
-    "sha256sum": "e932f241abb7467177dfc7560365a53d393754c76dd5bac471b93cb550f47623",
+    "sha256sum": "d042e9150aca5c8bab71451a7bda2de54a197346e88e0ae197038c08543bc312",
     "size": 52428800,
-    "url": "gs://chromiumos-test-assets-public/tael-slim-vm-rootfs-20230110.img"
+    "url": "gs://chromiumos-test-assets-public/tael-slim-vm-rootfs-1024-20230124.img"
 }

@@ -1,5 +1,5 @@
 {
-    "sha256sum": "371e2cb9996cc5589fe4b078f1dad23c806f062c4bb827ddbb4fc51dbe7b3c58",
+    "sha256sum": "48aa9b8212bad6a91e69beb1e23f9c4536eab8d87176e6358706fac9ee42e54b",
     "size": 52428800,
-    "url": "gs://chromiumos-test-assets-public/tatl-slim-vm-rootfs-20230110.img"
+    "url": "gs://chromiumos-test-assets-public/tatl-slim-vm-rootfs-1024-20230124.img"
 }
