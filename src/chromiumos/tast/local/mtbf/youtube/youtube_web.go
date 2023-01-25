@@ -75,7 +75,7 @@ func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 		if err != nil {
 			return errors.Wrap(err, "failed to open youtube tab")
 		}
-		if err := webutil.WaitForYoutubeVideo(ctx, y.ytConn, 0); err != nil {
+		if err := webutil.WaitForYoutubeVideo(ctx, y.ytConn, longUITimeout); err != nil {
 			return errors.Wrap(err, "failed to wait for video element")
 		}
 		// If prompted to open in YouTube app, instruct device to stay in Chrome.
