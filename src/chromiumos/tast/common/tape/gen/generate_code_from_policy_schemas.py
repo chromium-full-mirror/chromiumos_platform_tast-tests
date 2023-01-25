@@ -116,16 +116,10 @@ def parse_enum(field, enums):
       continue
     enum_prefix =  enum["name"].upper()
     enum_str = f'type {enum["name"]} int\n\n const (\n'
-    count = 0
     for enum_entry in enum['value']:
       if 'name' not in enum_entry:
         continue
-      enum_str += f'\t{enum_prefix}_{enum_entry["name"]}'
-      if count == 0:
-        enum_str += f' {enum["name"]} = iota // {count}\n'
-      else:
-        enum_str += f' // {count}\n'
-      count+=1
+      enum_str += f'\t{enum_prefix}_{enum_entry["name"]} = {enum_entry["number"]}\n'
     enum_str += ')\n\n'
   return enum_str
 
