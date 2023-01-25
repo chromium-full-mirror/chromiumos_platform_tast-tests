@@ -77,7 +77,7 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 	}
 
-	ctx, restore, originalFirmware, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo)
+	ctx, restore, originalFirmware, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo, flash)
 	if err != nil {
 		s.Fatal("Firmware backup failed: ", err)
 	}

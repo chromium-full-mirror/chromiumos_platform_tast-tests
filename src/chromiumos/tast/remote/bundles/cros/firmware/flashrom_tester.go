@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware/fixture"
@@ -60,7 +61,15 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	ctx, restore, _, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo)
+	var flashromConfig flashrom.Config
+	flash, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer cleanup()
+
+	ctx, restore, _, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo, flash)
 	if err != nil {
 		s.Fatal("Firmware backup failed: ", err)
 	}

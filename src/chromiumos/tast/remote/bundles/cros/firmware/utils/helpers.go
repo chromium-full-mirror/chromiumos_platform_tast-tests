@@ -15,6 +15,7 @@ import (
 	"time"
 
 	fwCommon "chromiumos/tast/common/firmware"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
@@ -350,7 +351,7 @@ func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
 // closure for restoring the AP firmware and resetting hardware and software
 // write protect to the off state. Returns a path to the firmware backup file on
 // the DUT disk.
-func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT, servoCon *servo.Servo) (context.Context, func(s *testing.State), *string, error) {
+func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT, servoCon *servo.Servo, flash *flashrom.Instance) (context.Context, func(s *testing.State), *string, error) {
 	// /var/tmp is used, as /tmp will be cleared on reboot.
 	// Reboot is often required as asurada cannot change write protect without a reboot.
 	backupTmpFileStdout, err := DUT.Conn().CommandContext(ctx, "mktemp", "--tmpdir=/var/tmp", "tast.firmware.APFW.XXXXXXXXXX").Output(ssh.DumpLogOnError)
@@ -359,7 +360,8 @@ func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT
 	}
 	backupTmpFile := strings.TrimSpace(string(backupTmpFileStdout))
 
-	if err := APFirmwareRead(ctx, DUT.Conn(), backupTmpFile); err != nil {
+	if out, err := flash.Read(ctx, backupTmpFile, nil); err != nil {
+		testing.ContextLog(ctx, out)
 		return nil, nil, nil, errors.Wrap(err, "failed to create a AP firmware backup")
 	}
 
@@ -373,12 +375,14 @@ func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT
 		}
 
 		s.Log("Disable software write protect")
-		if err := APSoftwareWriteProtectDisable(cleanupContext, DUT.Conn()); err != nil {
+		if out, err := flash.SoftwareWriteProtectDisable(ctx); err != nil {
+			s.Log(out)
 			s.Error("Failed to disable software write protect: ", err)
 		}
 
 		s.Log("Restore AP firmware")
-		if err := APFirmwareWrite(cleanupContext, DUT.Conn(), backupTmpFile); err != nil {
+		if out, err := flash.Write(cleanupContext, backupTmpFile, false /* noVerifyAll */, true /* noVerify */, "" /* flashcontentsImage */, nil /* region */); err != nil {
+			s.Log(out)
 			s.Error("Failed to restore AP firmware backup: ", err)
 		}
 
@@ -386,26 +390,6 @@ func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT
 
 		cancel()
 	}, &backupTmpFile, nil
-}
-
-// APSoftwareWriteProtectDisable disables software write protect and sets the range to 0,0.
-func APSoftwareWriteProtectDisable(ctx context.Context, conn *ssh.Conn) error {
-	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--wp-disable", "--wp-range=0,0").Output(ssh.DumpLogOnError)
-	return err
-}
-
-// APFirmwareRead reads the AP firmware flash to the file at path.
-// path is a file on the same remote DUT as conn.
-func APFirmwareRead(ctx context.Context, conn *ssh.Conn, path string) error {
-	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "-r", path).Output(ssh.DumpLogOnError)
-	return err
-}
-
-// APFirmwareWrite writes the file at path to the AP firmware flash.
-// path is a file on the same remote DUT as conn.
-func APFirmwareWrite(ctx context.Context, conn *ssh.Conn, path string) error {
-	_, err := conn.CommandContext(ctx, "flashrom", "-p", "host", "--noverify", "-w", path).Output(ssh.DumpLogOnError)
-	return err
 }
 
 // EnableSoftwareSync backs up EC_RW and clears the DISABLE_EC_SOFTWARE_SYNC gbb flag if set and provides a restore function which cleans up side effects.
