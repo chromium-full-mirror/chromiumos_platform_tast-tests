@@ -9,12 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/logsaver"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 )
 
@@ -88,6 +90,19 @@ type accountManagerTestFixture struct {
 }
 
 func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	screenshotCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			path := filepath.Join(s.OutDir(), "fixture_failure.png")
+			if err := screenshot.Capture(ctx, path); err != nil {
+				s.Log("Failed to capture screenshot: ", err)
+			}
+		}
+	}(screenshotCtx)
+
 	chromeLoginCtx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
 	defer cancel()
 
