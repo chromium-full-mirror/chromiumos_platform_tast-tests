@@ -167,6 +167,7 @@ var restartTests = map[string]time.Duration{
 	"backup_restore.go":        10 * time.Minute,
 	"fs_corruption.go":         10 * time.Minute,
 	"resize_backup_restore.go": 15 * time.Minute,
+	"snapshot.go":              3 * time.Minute,
 }
 
 func TestRestartParams(t *testing.T) {

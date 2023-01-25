@@ -7,6 +7,7 @@ package vm
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -695,6 +696,105 @@ func (c *Container) UninstallPackageOwningFile(ctx context.Context, desktopFileI
 			}
 		}
 	}
+}
+
+// CreateSnapshot creates a snapshot with the given name.
+func (c *Container) CreateSnapshot(ctx context.Context, snapshotName string) error {
+	if exist, err := c.CheckSnapshot(ctx, snapshotName); err != nil {
+		return errors.Wrap(err, "failed to check the existence of the snapshot")
+	} else if exist {
+		// Delete any existing snapshot with the same name.
+		if err := c.DeleteSnapshot(ctx, snapshotName); err != nil {
+			return err
+		}
+	}
+
+	if _, err := c.VM.LXCCommand(ctx, "snapshot", "penguin", snapshotName); err != nil {
+		return errors.Wrap(err, "failed to take snapshot")
+	}
+	return nil
+}
+
+// DeleteSnapshot deletes a snapshot with the given name.
+func (c *Container) DeleteSnapshot(ctx context.Context, snapshotName string) error {
+	if _, err := c.VM.LXCCommand(ctx, "delete", "penguin/"+snapshotName); err != nil {
+		// LXD v4 uses a differently formatted name.
+		if _, err := c.VM.LXCCommand(ctx, "delete", "penguin/snapshots/"+snapshotName); err != nil {
+			return errors.Wrap(err, "failed to delete snapshot")
+		}
+	}
+	return nil
+}
+
+// RestoreSnapshot restores the Linux container from a snapshot.
+func (c *Container) RestoreSnapshot(ctx context.Context, snapshotName, logDir string) error {
+	// Stop the container.
+	if err := c.Stop(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop the container")
+	}
+
+	// Restore the snapshot.
+	if _, err := c.VM.LXCCommand(ctx, "restore", "penguin", snapshotName); err != nil {
+		return errors.Wrap(err, "failed to restore snapshot")
+	}
+
+	if err := c.StartAndWait(ctx, logDir); err != nil {
+		return errors.Wrap(err, "failed to start container after restoring snapshot")
+	}
+
+	// Wait until a basic command works. Running commands immediately after
+	// container restart may result in racing issues.
+	if err := testing.Poll(
+		ctx,
+		func(ctx context.Context) error {
+			return c.Command(ctx, "pwd").Run(testexec.DumpLogOnError)
+		},
+		&testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to run basic commands after restore")
+	}
+	return nil
+}
+
+// CheckSnapshot checks whether there is a snapshot of the given name exists.
+func (c *Container) CheckSnapshot(ctx context.Context, snapshotName string) (bool, error) {
+	// List the snapshots.
+	result, err := c.VM.LXCCommand(ctx, "list", "penguin", "--format", "json")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to list snapshot")
+	}
+
+	// The first level of the list result is an array.
+	var sp []map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &sp); err != nil {
+		return false, errors.Wrap(err, "failed to parse output into map")
+	}
+	if len(sp) == 0 {
+		return false, errors.New("the output of lxc list penguin is empty")
+	}
+
+	// There is only one item in the array.
+	// The type of sp[0]["snapshots"] is interface{},
+	// but actually it is []interface{}.
+	// Need to convert it.
+	snapshots, ok := sp[0]["snapshots"].([]interface{})
+	if !ok {
+		return false, errors.New("the format of lxc list is not correct")
+	}
+	for _, i := range snapshots {
+		// Each slice of snapshots is a map[string]interface{}.
+		snpt, ok := i.(map[string]interface{})
+		if !ok {
+			return false, errors.New("the format of lxc list is not correct")
+		}
+
+		// Check the snapshot name.
+		// Since snapshot name is unique, return immediately if found.
+		if fmt.Sprintf("%s", snpt["name"]) == snapshotName {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // containerCommand returns a testexec.Cmd with a vsh command that will run in
