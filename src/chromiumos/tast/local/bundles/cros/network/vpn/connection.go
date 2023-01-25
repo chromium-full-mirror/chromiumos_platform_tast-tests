@@ -49,6 +49,7 @@ type Config struct {
 	OpenVPNCertVerifyWrongCN      bool
 	OpenVPNCertVerifyCNOnly       bool
 	OpenVPNTLSAuth                bool
+	openvpnTopology               OpenVPNTopology
 
 	// Parameters for a WireGuard connection.
 	// WGUsePSK indicates whether the connection uses PSK in authentication.
@@ -252,6 +253,33 @@ func WithCertVals(val CertVals) Option {
 func WithOpenVPNTLSAuth() Option {
 	return func(c *Config) {
 		c.OpenVPNTLSAuth = true
+	}
+}
+
+// OpenVPNTopology is mapped to the `--topology` option which indicates the
+// virtual addressing topology used by the OpenVPN connection. See the manual of
+// OpenVPN for more details. Note that this option only affect IPv4.
+type OpenVPNTopology int
+
+// OpenVPN topology types.
+const (
+	OpenVPNTopologyUnspecified OpenVPNTopology = iota
+	OpenVPNTopologyNet30
+	OpenVPNTopologyP2P
+	OpenVPNTopologySubnet
+)
+
+func (t OpenVPNTopology) String() string {
+	return []string{"", "net30", "p2p", "subnet"}[t]
+}
+
+// WithOpenVPNTopology configures the topology option in OpenVPN. Specifying
+// this option will turn off the default route by default (note that default
+// route and topology are two independent options in OpenVPN, we just do this in
+// the tests).
+func WithOpenVPNTopology(val OpenVPNTopology) Option {
+	return func(c *Config) {
+		c.openvpnTopology = val
 	}
 }
 

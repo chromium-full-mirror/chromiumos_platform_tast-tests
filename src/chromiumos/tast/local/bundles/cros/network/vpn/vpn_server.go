@@ -321,6 +321,7 @@ var (
 			"server 10.11.12.0 255.255.255.0\n" +
 			"status /{{.status_file}}\n" +
 			"{{if .tls_auth_file}} tls-auth /{{.tls_auth_file}}\n {{end}}" +
+			"{{if .topology}}topology {{.topology}}{{end}}\n" +
 			"verb 5\n" +
 			"writepid /{{.pid_file}}\n" +
 			"tmp-dir /tmp\n" +
@@ -616,6 +617,8 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 	if config.OpenVPNTLSAuth {
 		configValues["tls_auth_file"] = openvpnTLSAuthFile
 	}
+
+	defaultRoute := true
 	if len(config.includedRoutesV4) > 0 {
 		var routes []map[string]interface{}
 		for _, prefix := range config.includedRoutesV4 {
@@ -625,7 +628,13 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 			})
 		}
 		configValues["push_route"] = routes
-	} else {
+		defaultRoute = false
+	}
+	if config.openvpnTopology != OpenVPNTopologyUnspecified {
+		configValues["topology"] = config.openvpnTopology.String()
+		defaultRoute = false
+	}
+	if defaultRoute {
 		configValues["default_route"] = true
 	}
 
