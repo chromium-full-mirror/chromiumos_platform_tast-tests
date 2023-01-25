@@ -37,10 +37,16 @@ def _time_from_log_line(line):
   # Time should be immediately after "in" and there is only one occurrence of
   # this word in the corresponding line.
   test_time = words[words.index("in")+1]
+
   # Convert the time to seconds. Time in the logs has the following format:
-  # 0.00s or 0m0.00s. We assume no test will take an hour or more, so parsing
-  # minutes and seconds should be enough.
-  # There is always an s at the end, so we can simply remove it first.
+  # 0ms, 0.00s or 0m0.00s. We assume no test will take an hour or more, so parsing
+  # minutes, seconds, and milliseconds should be enough.
+  # First lets cover the ms case.
+  test_time_ms = test_time.split("ms")
+  if len(test_time_ms) > 1:
+    return float(test_time_ms[0])/1000
+
+  # Otherwise there is always just an s at the end, so we can simply remove it.
   test_time = test_time[:-1]
   # If the test took longer than a minute, there will be an m, we try to split
   # the time by it and convert the time to seconds.
