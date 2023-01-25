@@ -171,13 +171,13 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	if _, err := modemmanager.NewModem(ctx); err != nil && cellular.ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
 		if err := cellular.RestartModemWithHelper(ctx); err != nil {
-			s.Fatal("Failed to restart modem: ", err)
+			s.Fatal("Failed to restart modem (precondition): ", err)
 		}
 	}
 	if f.disableCellularTechnology && f.restartMM {
 		modem, err := modemmanager.NewModemWithSim(ctx)
 		if err != nil {
-			s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+			s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 		}
 		if err := modem.Call(ctx, mmconst.ModemEnable, true).Err; err != nil {
 			s.Fatal("Modem enable failed with: ", err)
