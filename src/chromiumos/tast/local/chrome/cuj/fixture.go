@@ -336,6 +336,29 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	// TODO(crbug/1410581): Remove this variant when done with testing.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithMainThreadCompositingPriority",
+		Desc: "CUJ test fixture with the MainThreadCompositingPriority feature enabled",
+		Contacts: []string{
+			"youssefesmat@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("MainThreadCompositingPriority"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func loginOption(s *testing.FixtState, useEnterprisePool bool) chrome.Option {

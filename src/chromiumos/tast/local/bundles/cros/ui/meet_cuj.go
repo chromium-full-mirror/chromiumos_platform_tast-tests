@@ -229,6 +229,22 @@ func init() {
 			// The list of targeted models which SPERA team uses to analyze.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
 		}, {
+			// 49p variant with MainThreadCompositingPriority feature enabled.
+			// TODO(crbug/1410581): Remove this variant when done with testing.
+			Name:      "49p_maincompositing",
+			Timeout:   defaultTestTimeout,
+			ExtraAttr: []string{"group:cuj"},
+			Val: meetTest{
+				num:         48,
+				layout:      meetLayoutTiled,
+				cam:         true,
+				zoomOut:     true,
+				browserType: browser.TypeAsh,
+			},
+			Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
+			// Same target models as in the 49p variant.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
+		}, {
 			Name:    "lacros_49p",
 			Timeout: defaultTestTimeout,
 			Val: meetTest{
@@ -366,6 +382,24 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 			Fixture: "loggedInToCUJUserWithOneGroupPerRenderer",
+		}, {
+			// 16p_present_notes_split variant with
+			// MainThreadCompositingPriority enabled.
+			// TODO(crbug/1410581): Remove this variant when done with testing.
+			Name:      "16p_present_notes_split_maincompositing",
+			Timeout:   defaultTestTimeout,
+			ExtraAttr: []string{"group:cuj"},
+			Val: meetTest{
+				num:         15,
+				layout:      meetLayoutTiled,
+				present:     true,
+				docs:        true,
+				split:       true,
+				cam:         true,
+				zoomOut:     true,
+				browserType: browser.TypeAsh,
+			},
+			Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
 		}, {
 			// TODO(246324780): Remove when GPU hanging issue is fixed.
 			// This test is primarily to try to reproduce this issue in
