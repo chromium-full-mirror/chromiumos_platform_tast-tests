@@ -43,8 +43,9 @@ const (
 )
 
 const (
-	tpsMetricPrefix   = "TPS."
-	powerMetricPrefix = "Power."
+	tpsMetricPrefix    = "TPS."
+	powerMetricPrefix  = "Power."
+	memoryMetricPrefix = "Memory."
 )
 
 const checkInterval = 5 * time.Second
@@ -184,6 +185,7 @@ func (rec *record) saveMetric(pv *perf.Values, name string) {
 type Recorder struct {
 	cr    *chrome.Chrome
 	tconn *chrome.TestConn
+	arc   *arc.ARC
 
 	// Metrics names keyed by relevant browser type.
 	names map[browser.Type][]string
@@ -241,6 +243,7 @@ type Recorder struct {
 
 	tpsTimeline        *perf.Timeline
 	powerTimeline      *perf.Timeline
+	memoryTimeline     *perf.Timeline
 	gpuDataSource      *perfSrc.GPUDataSource
 	frameDataTracker   *perfSrc.FrameDataTracker
 	zramInfoTracker    *perfSrc.ZramInfoTracker
@@ -452,6 +455,7 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		cr:       cr,
 		tconn:    tconn,
 		tconns:   tconns,
+		arc:      a,
 		options:  options,
 		sessions: make(map[string]*tracing.Session),
 	}
@@ -860,6 +864,23 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil, errors.Wrap(err, "failed to start recording power timeline data")
 	}
 
+	// Create a memory timeline aligned with r.startedAtTm. This memory
+	// timeline tracks relatively inexpensive memory metrics, like PSI.
+	r.memoryTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
+		perfSrc.NewPSIDataSource(r.arc),
+	}, perf.Interval(checkInterval), perf.Prefix(memoryMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create memory timeline")
+	}
+	if err := r.memoryTimeline.Start(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start memory timeline")
+	}
+	if err := r.memoryTimeline.StartRecording(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start recording memory timeline data")
+	}
+
+	// memInfoTracker tracks more expensive memory metrics, and thus is
+	// polled significantly less frequently.
 	if err := r.memInfoTracker.Start(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start recording memory data")
 	}
@@ -1011,6 +1032,14 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		}
 	}
 
+	memoryData, err := r.memoryTimeline.StopRecording(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to stop memory timeline: ", err)
+		if stopErr == nil {
+			stopErr = errors.Wrap(err, "failed to stop memory timeline")
+		}
+	}
+
 	if err := r.memInfoTracker.Stop(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to stop MemInfoTracker: ", err)
 		if stopErr == nil {
@@ -1046,6 +1075,7 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 
 	r.pv.Merge(tpsData)
 	r.pv.Merge(powerData)
+	r.pv.Merge(memoryData)
 
 	displayInfo, err := perfSrc.NewDisplayInfo(ctx, r.tconn)
 	if err != nil {

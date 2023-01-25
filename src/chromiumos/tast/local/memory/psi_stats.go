@@ -104,7 +104,13 @@ func NewPSIStats(ctx context.Context, a *arc.ARC) (*PSIStats, error) {
 		}
 	} // Otherwise, it is a host that does not support PSI.
 
-	if a != nil && ctx != nil {
+	if a == nil {
+		return stats, nil
+	}
+
+	// Android Container does not allow access to PSI, so skip
+	// on those devices.
+	if arcType, arcSupported := arc.Type(); arcSupported && arcType != arc.Container {
 		out, err := a.Command(ctx, "cat", psiFilename).Output(testexec.DumpLogOnError)
 		if err == nil {
 			stats.Arc, err = newPSISystemStats(out)
@@ -210,9 +216,10 @@ func psiDeltaMetrics(base, stat *PSIOneSystemStats, elapsedMicroseconds int64, p
 
 // PSIMetrics writes a JSON file containing statistics from PSI metrics.
 // Parameter base is optional:
-// * if base is set, it defines the starting point for metrics, and its contents
-//   are overwritten with the latest snapshot of PSI metrics.
-// * if base is nil, metrics are averaged since boot.
+//   - if base is set, it defines the starting point for metrics, and its contents
+//     are overwritten with the latest snapshot of PSI metrics.
+//   - if base is nil, metrics are averaged since boot.
+//
 // If outdir is "", then no logs are written.
 func PSIMetrics(ctx context.Context, a *arc.ARC, base *PSIStats, p *perf.Values, outdir, suffix string) error {
 	stat, err := NewPSIStats(ctx, a)
