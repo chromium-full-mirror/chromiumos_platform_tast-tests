@@ -28,8 +28,8 @@ import (
 const memoryReportingTimeout = 7 * time.Minute
 
 type memoryReportingParameters struct {
-	reportingEnabled bool   // test should expect reporting enabled
-	vProSpecific     bool   // test should prepare vPro specific logic
+	reportingEnabled bool // test should expect reporting enabled
+	vProSpecific     bool // test should prepare vPro specific logic
 }
 
 func init() {
@@ -201,6 +201,24 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
 	defer accManager.CleanUp(ctx)
+
+	// Enable or disable the policies depending on the param.
+	var telemetryAllowlist []string
+	if param.reportingEnabled {
+		telemetryAllowlist = []string{"report_memory_info"}
+	} else {
+		telemetryAllowlist = []string{}
+	}
+
+	policy := &tape.EnableGranularDeviceTelemetryReportingDevices{
+		ReportingTelemetryBehavior:     tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST,
+		ReportTelemetryCustomAllowlist: telemetryAllowlist,
+	}
+
+	// API call to set the policy.
+	if err := tapeClient.SetPolicy(ctx, policy, []string{"reportingTelemetryBehavior", "reportTelemetryCustomAllowlist"}, acc.RequestID); err != nil {
+		s.Fatal("Failed to set the policy: ", err)
+	}
 
 	testStartTime := time.Now()
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
