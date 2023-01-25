@@ -69,12 +69,7 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run tmux commands: ", err)
 	}
 
-	waitTmuxPromptMessage := ui.WaitUntilExists(terminalapp.AsRow(nodewith.NameStartingWith("Tmux integration mode activated")))
-
-	if err := uiauto.Combine("verify controlling tab",
-		ta.ClickNthTab(1),
-		waitTmuxPromptMessage,
-	)(ctx); err != nil {
+	if err := ta.ClickNthTabUntilNodeExists(1, terminalapp.TmuxModeMsg)(ctx); err != nil {
 		s.Fatal("Failed to verify controlling tab: ", err)
 	}
 
@@ -82,7 +77,7 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 	vimContent := "abcdefg"
 
 	if err := uiauto.Combine("interact with the first tmux tab",
-		ta.ClickNthTab(2),
+		ta.ClickNthTabUntilNodeExists(2, terminalapp.CmdPrompt),
 		ta.RunSSHCommand("echo "+echoContent),
 		ui.WaitUntilExists(terminalapp.Row(echoContent)),
 	)(ctx); err != nil {
@@ -91,7 +86,7 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open new tmux tab",
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),
-		ui.WaitUntilExists(terminalapp.Row("chronos@localhost ~ $")),
+		ui.WaitUntilExists(terminalapp.CmdPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 2 /*tmuxTabs*/),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open new tmux tab: ", err)
@@ -110,7 +105,7 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 		ta.Kb.AccelAction("Enter"),
 		// Put vim into background.
 		ta.Kb.AccelAction("Ctrl+Z"),
-		ui.WaitUntilExists(terminalapp.Row("chronos@localhost ~ $")),
+		ui.WaitUntilExists(terminalapp.CmdPrompt),
 		ta.RunSSHCommand("echo -n 'content: ' && cat /tmp/tmux_integration_test"),
 		ui.WaitUntilExists(terminalapp.Row("content: "+vimContent)),
 		// Bring vim back to foreground.
@@ -121,10 +116,9 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("detach the tmux session",
-		ta.ClickNthTab(1),
-		waitTmuxPromptMessage,
+		ta.ClickNthTabUntilNodeExists(1, terminalapp.TmuxModeMsg),
 		ta.Kb.AccelAction("Ctrl+C"),
-		ui.WaitUntilExists(terminalapp.Row("chronos@localhost ~ $")),
+		ui.WaitUntilExists(terminalapp.CmdPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 	)(ctx); err != nil {
 		s.Fatal("Failed to detach the tmux session: ", err)
@@ -134,12 +128,9 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 		ta.RunSSHCommand("tmux -CC new -As test"),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 2 /*tmuxTabs*/),
 		// Check first tmux tab.
-		ta.ClickNthTab(2),
-		ui.WaitUntilExists(terminalapp.Row("chronos@localhost ~ $ echo "+echoContent)),
-		ui.Exists(terminalapp.Row(echoContent)),
+		ta.ClickNthTabUntilNodeExists(2, terminalapp.Row(echoContent)),
 		// Check second tmux tab.
-		ta.ClickNthTab(3),
-		ui.WaitUntilExists(terminalapp.Row(vimContent)),
+		ta.ClickNthTabUntilNodeExists(3, terminalapp.Row(vimContent)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to reattach the tmux session: ", err)
 	}
@@ -164,8 +155,7 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 3 /*tmuxTabs*/),
 		// Switch back to the controlling tab.
-		ta.ClickNthTab(1),
-		waitTmuxPromptMessage,
+		ta.ClickNthTabUntilNodeExists(1, terminalapp.TmuxModeMsg),
 		ta.RunSSHCommand("list-windows -F 'tmux-window'"),
 	)(ctx); err != nil {
 		s.Fatal("Failed: ", err)
@@ -196,12 +186,11 @@ func TmuxIntegration(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("close the only remaining tmux tab",
-		ta.ClickNthTab(2),
+		ta.ClickNthTabUntilNodeExists(2, terminalapp.Row(vimContent)),
 		// The remaining one is running vim. Let exit it cleanly.
-		ui.WaitUntilExists(terminalapp.Row("abcdefg")),
 		ta.Kb.TypeAction(":qa!"),
 		ta.Kb.AccelAction("Enter"),
-		ui.WaitUntilExists(terminalapp.Row("chronos@localhost ~ $")),
+		ui.WaitUntilExists(terminalapp.CmdPrompt),
 		ta.RunSSHCommand("exit"),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 		// The controlling tab should be in focus now. We want to check that the

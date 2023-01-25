@@ -49,6 +49,11 @@ var (
 	webArea = nodewith.NameRegex(regexp.MustCompile(`\@penguin\: `)).Role(role.RootWebArea)
 	// Prompt is the input prefix.
 	Prompt = nodewith.Name("$ ").Role(role.StaticText).Ancestor(webArea)
+
+	// CmdPrompt is the input prefix of tmux tabs.
+	CmdPrompt = Row("chronos@localhost ~ $")
+	// TmuxModeMsg represents the controlling tab of Tmux.
+	TmuxModeMsg = AsRow(nodewith.NameStartingWith("Tmux integration mode activated"))
 )
 
 // TerminalApp represents an instance of the Terminal App.
@@ -370,9 +375,9 @@ func (ta *TerminalApp) WaitForTabsCount(nonTmuxTabs, tmuxTabs int) uiauto.Action
 	}
 }
 
-// ClickNthTab clicks the nth (0-index) tab.
-func (ta *TerminalApp) ClickNthTab(n int) uiauto.Action {
-	return ta.ui.LeftClick(nodewith.Role(role.Tab).ClassName("Tab").Nth(n))
+// ClickNthTabUntilNodeExists clicks the nth (0-index) tab.
+func (ta *TerminalApp) ClickNthTabUntilNodeExists(n int, finder *nodewith.Finder) uiauto.Action {
+	return ta.ui.LeftClickUntil(nodewith.Role(role.Tab).ClassName("Tab").Nth(n), ta.ui.WaitUntilExists(finder))
 }
 
 // ClickNthTabCloseButton clicks the nth (0-index) tab close button. Note that
@@ -400,4 +405,28 @@ func Row(content string) *nodewith.Finder {
 // AsRow augments a finder to match a row in the terminal screen.
 func AsRow(finder *nodewith.Finder) *nodewith.Finder {
 	return finder.Role(role.StaticText).Ancestor(nodewith.ClassName("xterm-accessibility-tree"))
+}
+
+// LaunchTmux calls LaunchSSH first then launch tmux.
+func LaunchTmux(ctx context.Context, tconn *chrome.TestConn) (ta *TerminalApp, retErr error) {
+	ta, err := LaunchSSH(ctx, tconn, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open ssh")
+	}
+
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			ta.Close()(ctx)
+		}
+	}(ctx)
+
+	if err := uiauto.Combine("run tmux commands",
+		ta.RunSSHCommand("tmux kill-server"),
+		ta.RunSSHCommand("tmux -CC new -As test"),
+		// Note that there is also an extra home tab.
+		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 1 /*tmuxTabs*/),
+	)(ctx); err != nil {
+		return nil, err
+	}
+	return ta, nil
 }
