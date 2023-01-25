@@ -322,10 +322,10 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to sleep")
 				}
 
-				// If we are on Google Slides, drag the
+				// If we are on chrome://version, drag the
 				// mouse to the left and right of the screen, to ensure
 				// we collect mouse drag input latency.
-				if strings.Contains(activeWindow.Title, "Slides") {
+				if strings.Contains(activeWindow.Title, "Version") {
 					if err := inputsimulations.RunDragMouseCycle(ctx, tconn, info); err != nil {
 						return errors.Wrap(err, "failed to run drag mouse cycle")
 					}
