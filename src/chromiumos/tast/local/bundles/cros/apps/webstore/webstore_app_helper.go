@@ -108,7 +108,7 @@ func UpgradeWebstoreApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Te
 	checkingButton := nodewith.Name("Checking...").Role(role.Button)
 
 	// Wait for addRemove element, if found then click the addRemove button.
-	if err := uiauto.IfSuccessThen(ui.WaitUntilExists(addRemove), ui.LeftClick(addRemove))(ctx); err != nil {
+	if err := uiauto.IfSuccessThen(ui.WithTimeout(time.Minute).WaitUntilExists(addRemove), ui.LeftClick(addRemove))(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait and left click addRemove element")
 	}
 
