@@ -384,6 +384,19 @@ func init() {
 			},
 			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:    "4p_notes_effects",
+			Timeout: defaultTestTimeout,
+			Val: meetTest{
+				num:           3,
+				layout:        meetLayoutTiled,
+				docs:          true,
+				cam:           true,
+				effects:       true,
+				tabSwitchDocs: true,
+				browserType:   browser.TypeAsh,
+			},
+			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 		}},
 	})
 }
