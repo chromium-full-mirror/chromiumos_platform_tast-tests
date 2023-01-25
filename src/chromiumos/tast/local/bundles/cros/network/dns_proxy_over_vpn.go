@@ -71,7 +71,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a few
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 3*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
 	pre := s.PreValue().(*multivm.PreData)
@@ -152,9 +152,11 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 
 	// Toggle plain-text DNS or secureDNS depending on test parameter.
 	params := s.Param().(dnsProxyOverVPNTestParams)
-	if err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider); err != nil {
+	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider)
+	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	// DNS queries that should be routed through VPN should fail if DNS queries on the VPN server are blocked.
 	// System traffic bypass VPN, this is to allow things such as updates and crash reports to always work.

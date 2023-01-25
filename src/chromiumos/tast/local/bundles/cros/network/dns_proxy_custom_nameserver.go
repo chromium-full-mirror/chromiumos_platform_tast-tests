@@ -89,9 +89,11 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	cr := pre.Chrome
 	a := multivm.ARCFromPre(pre)
 	tconn := pre.TestAPIConn
-	if err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHOff, dns.GoogleDoHProvider); err != nil {
+	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, dns.DoHOff, "" /* dohProvider */)
+	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	p, err := dns.InstallDigInARC(ctx, a, s.DataPath(digExecutable()))
 	if err != nil {

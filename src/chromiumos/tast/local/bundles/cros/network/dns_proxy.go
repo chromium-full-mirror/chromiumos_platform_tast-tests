@@ -66,7 +66,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a few
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 3*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
 	pre := s.PreValue().(*multivm.PreData)
@@ -115,9 +115,11 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 
 	// Toggle plain-text DNS or secureDNS depending on test parameter.
 	params := s.Param().(dnsProxyTestParams)
-	if err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider); err != nil {
+	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider)
+	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	// By default, DNS query should work.
 	tc := []dns.ProxyTestCase{
