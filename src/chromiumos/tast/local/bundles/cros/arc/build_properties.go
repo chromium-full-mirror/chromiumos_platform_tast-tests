@@ -324,8 +324,13 @@ var expectedFirstAPILevelMap = map[string]int{
 	"trogdor":   arc.SDKP,
 	"volteer":   arc.SDKP,
 	"zork":      arc.SDKP,
+	// Boards initially shipped with ARC R (sorted alphabetically.)
+	"brya":     arc.SDKR,
+	"corsola":  arc.SDKR,
+	"guybrush": arc.SDKR,
+	"nissa":    arc.SDKR,
 	// Note: This test is public. Do not add new boards unless the board's
-	// overlay already exists in src/overlay/overlay-<board>/.
+	// overlay already exists in src/overlays/overlay-<board>/.
 }
 
 // skipFirstAPILevelCheckMap is the set of devices to skip the first API level check.
