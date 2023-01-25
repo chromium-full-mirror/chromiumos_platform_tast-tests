@@ -7,8 +7,6 @@
 package uitools
 
 import (
-	"regexp"
-
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 )
@@ -23,11 +21,10 @@ const (
 	AppSocketName          = "AppSocket"
 	EditName               = "Edit"
 	EditPrinterName        = "Edit printer"
-	EulaName               = "End User License Agreement"
+	EulaName               = "End User License Agreement: "
 	ManufacturerName       = "Manufacturer"
 	ModelName              = "Model"
 	NameName               = "Name"
-	PpdHeaderName          = "PPD for "
 	PpdStartTextName       = "PPD-Adobe:"
 	PpdRetrieveErrorName   = "Unable to retrieve PPD"
 	PrintersName           = "Printers"
@@ -46,7 +43,6 @@ var (
 	AppSocketFinder          *nodewith.Finder = nodewith.Role(role.ListBoxOption).NameContaining(AppSocketName)
 	EditFinder               *nodewith.Finder = nodewith.Role(role.StaticText).Name(EditName)
 	EditPrinterFinder        *nodewith.Finder = nodewith.Role(role.Dialog).Name(EditPrinterName)
-	EulaFinder               *nodewith.Finder = nodewith.Role(role.Link).Name(EulaName)
 	ManufacturerFinder       *nodewith.Finder = nodewith.Role(role.TextField).Name(ManufacturerName)
 	ModelFinder              *nodewith.Finder = nodewith.Role(role.TextField).Name(ModelName)
 	NameFinder               *nodewith.Finder = nodewith.Role(role.TextField).Name(NameName)
@@ -54,6 +50,15 @@ var (
 	PpdRetrieveErrorFinder   *nodewith.Finder = nodewith.Role(role.StaticText).NameContaining(PpdRetrieveErrorName)
 	PrintersFinder           *nodewith.Finder = nodewith.Role(role.Link).Name(PrintersName)
 	ProtocolFinder           *nodewith.Finder = nodewith.Role(role.ComboBoxSelect).Name(ProtocolName)
-	// TODO(https://crrev.com/c/3994300): Change back to .Name(ViewPpdName) after this CL lands and chrome uprevs
-	ViewPpdFinder *nodewith.Finder = nodewith.Role(role.Button).NameRegex(regexp.MustCompile("View.* PPD"))
+	ViewPpdFinder            *nodewith.Finder = nodewith.Role(role.Button).Name(ViewPpdName)
 )
+
+// GetPpdWindowFinder will create the finder for the given printer name.
+func GetPpdWindowFinder(printerName string) *nodewith.Finder {
+	return nodewith.Role(role.Window).HasClass("Widget").NameStartingWith(printerName + ".ppd").First()
+}
+
+// GetEulaFinder will create the finder for the given eulaLink string.
+func GetEulaFinder(eulaLink string) *nodewith.Finder {
+	return nodewith.Role(role.StaticText).NameContaining(EulaName + eulaLink)
+}

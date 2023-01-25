@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/printer/uitools"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -25,7 +24,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ViewPPD,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a user can view the PPD for an installed printer",
 		Contacts:     []string{"cros-peripherals@google.com", "project-bolton@google.com", "nmuggli@google.com"},
 		// ChromeOS > Platform > Services > Printing
@@ -39,6 +38,16 @@ func init() {
 		},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cros_internal", "cups"},
+		Params: []testing.Param{
+			{
+				Fixture: "chromeLoggedIn",
+			},
+			{
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           "lacrosOnly",
+			},
+		},
 	})
 }
 
@@ -120,10 +129,10 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 
 // checkPpd chooses the edit button for the printer specified by the caller and
 // clicks on the View PPD button.  It then checks that the appropriate web page
-// opens. If containsEula is true, this will additionally check to make sure the
-// EULA link is present and works.
+// opens. If eula is non-empty, this will additionally check to make sure the
+// correct EULA text is present.
 func checkPpd(ctx context.Context, s *testing.State, ui *uiauto.Context,
-	printerName string, containsEula bool, cr *chrome.Chrome) {
+	printerName, eula string, cr *chrome.Chrome) {
 	// Edit the printer and select the View PPD button.
 	printerButton := nodewith.Role(role.Button).Name(printerName).Ancestor(ossettings.WindowFinder)
 	editText := uitools.EditFinder.Ancestor(ossettings.WindowFinder)
@@ -141,39 +150,22 @@ func checkPpd(ctx context.Context, s *testing.State, ui *uiauto.Context,
 
 	// Make sure the tab with the PPD results gets displayed and that it does not
 	// contain the error message.
-	webView := nodewith.Role(role.RootWebArea).Name(printerName)
-	ppdTab := nodewith.Role(role.Heading).Name(uitools.PpdHeaderName + printerName).Ancestor(webView)
-	// All PPDs will beging with this line.  Make sure this shows up.
-	ppdText := uitools.PpdStartTextFinder.Ancestor(webView)
+	ppdWindow := uitools.GetPpdWindowFinder(printerName)
+	// All PPDs will begin with this line.  Make sure this shows up.
+	ppdText := uitools.PpdStartTextFinder.Ancestor(ppdWindow)
 	// This error message should not show up.
-	errorMsg := uitools.PpdRetrieveErrorFinder
+	errorMsg := uitools.PpdRetrieveErrorFinder.Ancestor(ppdWindow)
 	if err := uiauto.Combine("wait for PPD results",
-		ui.WithTimeout(time.Minute).WaitUntilExists(ppdTab),
+		ui.WithTimeout(time.Minute).WaitUntilExists(ppdWindow),
 		ui.WithTimeout(time.Minute).WaitUntilExists(ppdText),
 		ui.Gone(errorMsg),
 	)(ctx); err != nil {
 		s.Fatal("Failed to display PPD results: ", err)
 	}
-	if containsEula {
-		eulaLink := uitools.EulaFinder.Ancestor(webView)
-		if err := ui.DoDefault(eulaLink)(ctx); err != nil {
-			s.Fatal("Failed to click EULA link: ", err)
-		}
-
-		// The EULA page takes a while to load, sometimes loads incorrectly, and is
-		// very large, all of which make searching through the UI tree flaky.
-		// Instead of looking for an element in the EULA page, just make sure the
-		// EULA tab exists.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			matcher := chrome.MatchTargetURL("chrome://os-credits/#xerox-printing-license")
-			if avail, err := cr.IsTargetAvailable(ctx, matcher); err != nil {
-				return err
-			} else if avail != true {
-				return errors.New("failed to find license page")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-			s.Fatal("Failed polling for license page: ", err)
+	if len(eula) > 0 {
+		eulaText := uitools.GetEulaFinder(eula).Ancestor(ppdWindow)
+		if err := ui.WithTimeout(time.Minute).WaitUntilExists(eulaText)(ctx); err != nil {
+			s.Fatal("Failed to find license text: ", err)
 		}
 	}
 }
@@ -183,12 +175,7 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// TODO(http://b/233925425): Remove flag when no longer needed
-	cr, err := chrome.New(ctx, chrome.ExtraArgs("--enable-features=EnableViewPpd"))
-	if err != nil {
-		s.Fatal("Failed to create Chrome instance: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -204,11 +191,13 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 
 	// Test a printer that does not have the EULA
 	printerName := "test-printer"
+	eula := ""
 	createPrinter(ctx, s, cr, tconn, ui, printerName, "Brother", "Brother DCP-1200")
-	checkPpd(ctx, s, ui, printerName, false, cr)
+	checkPpd(ctx, s, ui, printerName, eula, cr)
 
 	// Test with a printer that has an EULA
 	printerName = "test-printer-with-eula"
+	eula = "chrome://os-credits/#xerox-printing-license"
 	createPrinter(ctx, s, cr, tconn, ui, printerName, "Xerox", "Xerox B230")
-	checkPpd(ctx, s, ui, printerName, true, cr)
+	checkPpd(ctx, s, ui, printerName, eula, cr)
 }
