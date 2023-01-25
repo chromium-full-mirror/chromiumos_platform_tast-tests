@@ -115,8 +115,8 @@ func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 
 		collapseButton := nodewith.Name("Collapse menu").Role(role.Button).Ancestor(quicksettings.RootFinder)
 		// The quick settings view is so big that the Restore notification is collapsed.
-		// Collapse it.
-		if err := ui.LeftClick(collapseButton)(ctx); err != nil {
+		// Collapse it if it is expanded.
+		if err := uiauto.IfSuccessThen(ui.WithTimeout(3*time.Second).WaitUntilExists(collapseButton), ui.LeftClick(collapseButton))(ctx); err != nil {
 			s.Fatal("Failed to collapse quick settings: ", err)
 		}
 
