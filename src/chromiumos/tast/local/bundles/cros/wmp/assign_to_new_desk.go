@@ -212,16 +212,16 @@ func clickToMoveWindow(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.C
 		return errors.Wrap(err, "failed to right click the top of the window")
 	}
 
-	// Move mouse to the move window to desk menu item.
 	moveWindowToDeskMenuItem := nodewith.ClassName("MenuItemView").Name("Move window to desk")
-	if err := ac.MouseMoveTo(moveWindowToDeskMenuItem, 0)(ctx); err != nil {
-		return errors.Wrap(err, "failed to move mouse to the move window to desk menu item")
-	}
-
-	// Click the menu item to move window to Desk 2.
 	moveToDesk2 := nodewith.ClassName("MenuItemView").Name("Desk 2")
-	if err := ac.DoDefault(moveToDesk2)(ctx); err != nil {
-		return errors.Wrap(err, "failed to move the window to Desk 2")
+
+	if err := uiauto.Combine(
+		"move mouse to and click Desk 2",
+		ac.MouseMoveTo(moveWindowToDeskMenuItem, 0),
+		ac.WaitUntilExists(moveToDesk2),
+		ac.DoDefault(moveToDesk2),
+	)(ctx); err != nil {
+		return err
 	}
 
 	if err := ash.WaitWindowFinishAnimating(ctx, tconn, w.ID); err != nil {
