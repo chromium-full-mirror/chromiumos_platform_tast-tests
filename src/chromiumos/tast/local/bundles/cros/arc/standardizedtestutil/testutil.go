@@ -222,12 +222,17 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 			// When an app is installed from Play Store and not allowlisted, ResizeLock will be enabled.
 			// Close the ResizeLock splash screen.
 			if isResizeLockTest {
-				if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, true); err != nil {
-					s.Fatal("Failed to wait for splash: ", err)
-				}
+				// Skip closing the Splash windown if it doesn't exist.
+				if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, false /*visible*/); err != nil {
+					if err := wm.CheckVisibility(ctx, tconn, wm.BubbleDialogClassName, true /*visible*/); err != nil {
+						s.Fatal("Failed to wait for splash: ", err)
+					}
 
-				if err := wm.CloseSplash(ctx, tconn, wm.InputMethodClick, nil); err != nil {
-					s.Fatal("Failed to close splash: ", err)
+					if err := wm.CloseSplash(ctx, tconn, wm.InputMethodClick, nil); err != nil {
+						s.Fatal("Failed to close splash: ", err)
+					}
+				} else {
+					s.Log("The Splash window doesn't exist")
 				}
 			}
 
