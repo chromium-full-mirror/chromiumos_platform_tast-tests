@@ -24,10 +24,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the window recorder Tast API works",
 		Contacts: []string{
+			"chromeos-wm-corexp@google.com",
 			"hewer@google.com",
 			"chromeos-wmp@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		// ChromeOS > Software > ScreenCapture
+		BugComponent: "b:1253115",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Attr:         []string{"group:mainline", "informational"},
