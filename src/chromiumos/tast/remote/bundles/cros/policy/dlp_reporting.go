@@ -153,13 +153,15 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
-	// Reset the DUT state.
+	// Reset the DUT state once the test is finished.
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 			s.Error("Failed to reset TPM after test: ", err)
 		}
 	}(ctx)
-	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
+	// Reset the device enrollment state making sure the DUT is rebooted so that the reporting daemon works properly.
+	// Local reset is not enough since it may not reboot the device.
+	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
 		s.Fatal("Failed to reset TPM: ", err)
 	}
 
