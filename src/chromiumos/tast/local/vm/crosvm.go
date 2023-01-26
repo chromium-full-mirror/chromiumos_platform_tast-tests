@@ -40,6 +40,8 @@ func (p *sharedDirParam) toArg() string {
 // CrosvmParams - Parameters for starting a crosvm instance.
 type CrosvmParams struct {
 	vmKernel       string           // path to the VM kernel image
+	vmBios         string           // path to a BIOS file for the VM
+	useBiosFile    bool             // Set to true to boot CrosVM with BIOS
 	rootfsPath     string           // optional path to the VM rootfs
 	diskPaths      []string         // paths that will be mounted read only
 	rwDiskPaths    []string         // paths that will be mounted read/write
@@ -120,7 +122,22 @@ func DisableSandbox() Option {
 // NewCrosvmParams constructs a set of crosvm parameters.
 func NewCrosvmParams(kernel string, opts ...Option) *CrosvmParams {
 	p := &CrosvmParams{
-		vmKernel: kernel,
+		vmKernel:    kernel,
+		useBiosFile: false,
+	}
+
+	for _, opt := range opts {
+		opt(p)
+	}
+
+	return p
+}
+
+// NewCrosvmParamsBIOS constructs a set of crosvm parameters for use with a BIOS.
+func NewCrosvmParamsBIOS(bios string, opts ...Option) *CrosvmParams {
+	p := &CrosvmParams{
+		vmBios:      bios,
+		useBiosFile: true,
 	}
 
 	for _, opt := range opts {
@@ -166,17 +183,28 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, "--vhost-user-net", sock)
 	}
 
-	args = append(args, "-p", strings.Join(p.kernelArgs, " "))
-
-	args = append(args, p.vmKernel)
+	if p.useBiosFile {
+		args = append(args, "--bios", p.vmBios)
+	} else {
+		args = append(args, "-p", strings.Join(p.kernelArgs, " "))
+		args = append(args, p.vmKernel)
+	}
 
 	return args
 }
 
 // NewCrosvm starts a crosvm instance with the optional disk path as an additional disk.
 func NewCrosvm(ctx context.Context, params *CrosvmParams) (*Crosvm, error) {
-	if _, err := os.Stat(params.vmKernel); err != nil {
-		return nil, errors.Wrap(err, "failed to find VM kernel")
+	// A client of this must use a kernel or a BIOS
+	// Check that the one chosen by the client has a valid path
+	if params.useBiosFile {
+		if _, err := os.Stat(params.vmBios); err != nil {
+			return nil, errors.Wrap(err, "failed to find VM bios")
+		}
+	} else {
+		if _, err := os.Stat(params.vmKernel); err != nil {
+			return nil, errors.Wrap(err, "failed to find VM kernel")
+		}
 	}
 
 	vm := &Crosvm{}
