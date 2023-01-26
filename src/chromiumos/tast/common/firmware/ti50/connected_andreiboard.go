@@ -93,6 +93,21 @@ func (a *ConnectedAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd str
 	return nil, errors.New("Unimplemented ConnectedAndreiboard.OpenTitanToolCommand")
 }
 
+// GpioApplyStrap applies a known gpio strap setting
+func (a *ConnectedAndreiboard) GpioApplyStrap(ctx context.Context, strap GpioStrap) error {
+	return errors.New("Unimplemented ConnectedAndreiboard.GpioApplyStrap")
+}
+
+// GpioWrite sets a known gpio pin value
+func (a *ConnectedAndreiboard) GpioWrite(ctx context.Context, gpio Gpio, val bool) error {
+	return errors.New("Unimplemented ConnectedAndreiboard.GpioWrite")
+}
+
+// GpioRead gets the value of a known gpio
+func (a *ConnectedAndreiboard) GpioRead(ctx context.Context, gpio Gpio) (val bool, err error) {
+	return false, errors.New("Unimplemented ConnectedAndreiboard.GpioWrite")
+}
+
 // Reset causes the board FlashImage flashes an image to the board.
 func (a *ConnectedAndreiboard) Reset(ctx context.Context) error {
 	if a.GetSpiFlash() == "" {

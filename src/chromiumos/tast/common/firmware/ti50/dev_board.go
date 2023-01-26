@@ -9,6 +9,16 @@ import (
 	"regexp"
 )
 
+// GpioStrap represents a certain preset gpio configuration
+type GpioStrap interface {
+	StrapName() string
+}
+
+// Gpio represents a gpio that Open Titan Tool can read or write to
+type Gpio interface {
+	GpioName() string
+}
+
 // DevBoard is the generic interface for development boards.
 type DevBoard interface {
 	// Open opens the console port.
@@ -29,4 +39,10 @@ type DevBoard interface {
 	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
+	// GpioApplyStrap applies a known gpio strap setting
+	GpioApplyStrap(ctx context.Context, strap GpioStrap) error
+	// GpioWrite sets a known gpio pin value
+	GpioWrite(ctx context.Context, gpio Gpio, val bool) error
+	// GpioRead gets the value of a known gpio
+	GpioRead(ctx context.Context, gpio Gpio) (val bool, err error)
 }

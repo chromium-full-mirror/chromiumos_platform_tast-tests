@@ -7,6 +7,8 @@ package ti50
 import (
 	"context"
 	"io/ioutil"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +22,10 @@ import (
 const (
 	// A value that is big enough so that console data from the raw uart shouldn't have to be broken up to multiple messages in most cases.
 	consoleDataLen = 1024
+)
+
+var (
+	gpioOutput = regexp.MustCompile("value: (true|false)")
 )
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
@@ -119,16 +125,39 @@ func (a *DUTControlAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd st
 
 // Reset the chip by asking opentitantool to toggle the reset pin.
 func (a *DUTControlAndreiboard) Reset(ctx context.Context) error {
-	_, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "false")
-	if err != nil {
+	if err := a.GpioWrite(ctx, common.GpioTi50ResetL, false); err != nil {
 		return err
 	}
-
-	_, err = a.PlainCommand(ctx, "gpio", "write", "RESET", "true")
-	if err != nil {
+	if err := a.GpioWrite(ctx, common.GpioTi50ResetL, true); err != nil {
 		return err
 	}
 	return nil
+}
+
+// GpioApplyStrap applies a known gpio strap setting
+func (a *DUTControlAndreiboard) GpioApplyStrap(ctx context.Context, strap common.GpioStrap) error {
+	_, err := a.PlainCommand(ctx, "gpio", "apply", strap.StrapName())
+	return err
+}
+
+// GpioWrite sets a known gpio pin value
+func (a *DUTControlAndreiboard) GpioWrite(ctx context.Context, gpio common.Gpio, val bool) error {
+	_, err := a.PlainCommand(ctx, "gpio", "write", gpio.GpioName(), strconv.FormatBool(val))
+	return err
+}
+
+// GpioRead gets the value of a known gpio
+func (a *DUTControlAndreiboard) GpioRead(ctx context.Context, gpio common.Gpio) (val bool, err error) {
+	output, err := a.PlainCommand(ctx, "gpio", "read", gpio.GpioName())
+	if err != nil {
+		return val, err
+	}
+
+	matches := gpioOutput.FindSubmatch(output)
+	if len(matches) != 2 {
+		return false, errors.Errorf("invalid gpio output: %s", string(output))
+	}
+	return strconv.ParseBool(string(matches[1]))
 }
 
 // GSCToolCommand executes gsctool via the DutControl service.

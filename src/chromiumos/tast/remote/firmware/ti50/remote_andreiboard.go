@@ -157,6 +157,21 @@ func (a *RemoteAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd string
 	return nil, errors.New("Unimplemented RemoteAndreiboard.OttCommand")
 }
 
+// GpioApplyStrap applies a known gpio strap setting
+func (a *RemoteAndreiboard) GpioApplyStrap(ctx context.Context, strap common.GpioStrap) error {
+	return errors.New("Unimplemented RemoteAndreiboard.GpioApplyStrap")
+}
+
+// GpioWrite sets a known gpio pin value
+func (a *RemoteAndreiboard) GpioWrite(ctx context.Context, gpio common.Gpio, val bool) error {
+	return errors.New("Unimplemented RemoteAndreiboard.GpioWrite")
+}
+
+// GpioRead gets the value of a known gpio
+func (a *RemoteAndreiboard) GpioRead(ctx context.Context, gpio common.Gpio) (val bool, err error) {
+	return false, errors.New("Unimplemented RemoteAndreiboard.GpioWrite")
+}
+
 // Reset resets the board via spiflash, causing the image to reboot.
 func (a *RemoteAndreiboard) Reset(ctx context.Context) error {
 	if a.GetSpiFlash() == "" {
