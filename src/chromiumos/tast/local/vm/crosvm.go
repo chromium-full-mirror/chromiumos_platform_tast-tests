@@ -275,6 +275,11 @@ func (vm *Crosvm) Stdout() io.Reader {
 	return vm.stdout
 }
 
+// WaitForCompletion waits for the crosvm process to terminate.
+func (vm *Crosvm) WaitForCompletion() error {
+	return vm.cmd.Wait()
+}
+
 // WaitForOutput waits until a line matched by re has been written to stdout,
 // crosvm's stdout is closed, or the deadline is reached. It returns the full
 // line that was matched. This function will consume output from stdout until it
