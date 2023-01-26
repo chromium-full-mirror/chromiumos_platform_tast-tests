@@ -9,11 +9,13 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/familylink"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/testing"
@@ -109,14 +111,22 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
 		s.Fatal("Install Button Exisits: ", err)
 	}
-	if err := installButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click  installButton: ", err)
-	}
 
-	// Verify Parent Permission Dialog is displayed.
 	askinPersonButton := d.Object(ui.ClassName("android.widget.Button"), ui.Text(askinPersonButtonText), ui.Enabled(true))
-	if err := askinPersonButton.WaitForExists(ctx, 90*time.Second); err != nil {
-		s.Fatal("Ask in person button doesn't Exists: ", err)
+
+	if err := uiauto.Retry(3, func(ctx context.Context) error {
+		if err := installButton.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click installButton")
+		}
+
+		// Verify Parent Permission Dialog is displayed.
+		if err := askinPersonButton.WaitForExists(ctx, 90*time.Second); err != nil {
+			return errors.Wrap(err, "Ask in person button doesn't exist")
+		}
+
+		return nil
+	})(ctx); err != nil {
+		s.Fatal("Failed to click installButton and check the existence of Ask in person button: ", err)
 	}
 
 	if err := d.Object(ui.TextMatches(askinMessageButtonText)).Exists(ctx); err != nil {
