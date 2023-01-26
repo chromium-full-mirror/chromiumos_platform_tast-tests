@@ -81,6 +81,7 @@ func FwupdPluginStartup(ctx context.Context, s *testing.State) {
 		"pixart_rf",
 		"powerd",
 		"realtek_mst",
+		"synaptics_cape",
 		"synaptics_cxaudio",
 		// "synaptics_mst", // Disabled on some platforms due to b/187350478.
 		"test",
