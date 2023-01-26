@@ -146,6 +146,23 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	}
 	defer accManager.CleanUp(ctx)
 
+	// Enable or disable the policies depending on the param.
+	var telemetryBehavior tape.ReportingTelemetryBehaviorEnum
+	if param.reportingEnabled {
+		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL
+	} else {
+		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL
+	}
+
+	policy := &tape.EnableGranularDeviceTelemetryReportingDevices{
+		ReportingTelemetryBehavior:     telemetryBehavior,
+		ReportTelemetryCustomAllowlist: []string{},
+	}
+
+	if err := tapeClient.SetPolicy(ctx, policy, []string{"reportingTelemetryBehavior"}, acc.RequestID); err != nil {
+		s.Fatal("Failed to set the policy: ", err)
+	}
+
 	testStartTime := time.Now()
 	if _, err := pc.GAIAEnrollForReporting(ctx, &pspb.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
