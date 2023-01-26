@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,6 +42,7 @@ func (p *sharedDirParam) toArg() string {
 type CrosvmParams struct {
 	vmKernel       string           // path to the VM kernel image
 	vmBios         string           // path to a BIOS file for the VM
+	numCpus        uint             // Number of CPUs to expose to the VM
 	useBiosFile    bool             // Set to true to boot CrosVM with BIOS
 	rootfsPath     string           // optional path to the VM rootfs
 	diskPaths      []string         // paths that will be mounted read only
@@ -119,11 +121,19 @@ func DisableSandbox() Option {
 	}
 }
 
+// NumCpus allows one to set the number of CPUs to expose to the VM
+func NumCpus(numbercpus uint) Option {
+	return func(p *CrosvmParams) {
+		p.numCpus = numbercpus
+	}
+}
+
 // NewCrosvmParams constructs a set of crosvm parameters.
 func NewCrosvmParams(kernel string, opts ...Option) *CrosvmParams {
 	p := &CrosvmParams{
 		vmKernel:    kernel,
 		useBiosFile: false,
+		numCpus:     1,
 	}
 
 	for _, opt := range opts {
@@ -138,6 +148,7 @@ func NewCrosvmParamsBIOS(bios string, opts ...Option) *CrosvmParams {
 	p := &CrosvmParams{
 		vmBios:      bios,
 		useBiosFile: true,
+		numCpus:     1,
 	}
 
 	for _, opt := range opts {
@@ -190,6 +201,9 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, p.vmKernel)
 	}
 
+	if p.numCpus > 1 {
+		args = append(args, "--cpus", strconv.FormatUint((uint64(p.numCpus)), 10))
+	}
 	return args
 }
 
