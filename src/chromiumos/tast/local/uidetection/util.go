@@ -70,6 +70,7 @@ func crop(img image.Image, boundingBox coords.Rect) (image.Image, error) {
 // 2. The screenshot with detection outlines drawn over the image.
 func saveDebugImages(ctx context.Context, imagePng []byte, image image.Image, locations []Location, desc string) {
 	desc = strings.TrimSuffix(desc, ".png")
+	desc = strings.ReplaceAll(desc, "/", "")
 	filename := time.Now().UTC().Format("2006-01-02T15:04:05.000000Z") + "-" + desc
 	debugFilename := filename + ".png"
 	if err := saveBytesImageToOutput(ctx, imagePng, debugFilename); err != nil {
