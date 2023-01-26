@@ -186,11 +186,16 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 	return nil
 }
 
-// HasPinPad checks whether the PIN pad is present, i.e., whether PIN unlock is enabled.
-func HasPinPad(ctx context.Context, tconn *chrome.TestConn) bool {
+// WaitUntilPinPadExists waits until the PIN pad is present.
+func WaitUntilPinPadExists(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	found, _ := ui.IsNodeFound(ctx, nodewith.ClassName("LoginPinView"))
-	return found
+	return ui.WaitUntilExists(nodewith.ClassName("LoginPinView"))(ctx)
+}
+
+// WaitUntilPinPadGone waits until the PIN pad is gone.
+func WaitUntilPinPadGone(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	return ui.WaitUntilGone(nodewith.ClassName("LoginPinView"))(ctx)
 }
 
 // SubmitPINOrPassword submits the entered PIN.

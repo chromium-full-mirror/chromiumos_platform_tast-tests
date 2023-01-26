@@ -82,7 +82,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 	count := 0
 	ui := uiauto.New(tconn)
 	for count < lockoutAttempts {
-		if !lockscreen.HasPinPad(ctx, tconn) {
+		if err := lockscreen.WaitUntilPinPadExists(ctx, tconn); err != nil {
 			s.Fatalf("Failed to find PIN pad after %v incorrect attempts", count)
 		}
 
@@ -107,7 +107,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 
 		count++
 	}
-	if lockscreen.HasPinPad(ctx, tconn) {
+	if err := lockscreen.WaitUntilPinPadGone(ctx, tconn); err != nil {
 		s.Fatal("Failed to see pin pad hidden: ", err)
 	}
 
