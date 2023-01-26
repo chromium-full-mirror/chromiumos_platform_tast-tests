@@ -236,6 +236,7 @@ type Recorder struct {
 	batteryInfoTracker *perfSrc.BatteryInfoTracker
 	memInfoTracker     *perfSrc.MemoryInfoTracker
 	loginEventRecorder *perfSrc.LoginEventRecorder
+	powertopRecorder   *perfSrc.PowertopRecorder
 
 	pv *perf.Values
 
@@ -464,6 +465,15 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	r.memInfoTracker = perfSrc.NewMemoryTracker(a)
 
 	r.loginEventRecorder = perfSrc.NewLoginEventRecorder(tpsMetricPrefix)
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return nil, errors.New("failed to get the out directory")
+	}
+	r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx, 5*time.Second, filepath.Join(outDir, "powertop"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create PowertopRecorder")
+	}
 
 	r.names = make(map[browser.Type][]string)
 	r.records = make(map[browser.Type]map[string]*record)
@@ -740,6 +750,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil, errors.Wrap(err, "failed to start recording memory data")
 	}
 
+	if err := r.powertopRecorder.Start(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start powertop recorder")
+	}
+
 	if r.traceDir != "" && r.perfettoCfgPath != "" {
 		sess, err := tracing.StartSession(ctx, r.perfettoCfgPath)
 		testing.ContextLog(ctx, "Starting system tracing session")
@@ -950,6 +964,13 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		testing.ContextLog(ctx, "Failed to fetch login events date: ", err)
 		if stopErr == nil {
 			stopErr = errors.Wrap(err, "failed to fetch login events")
+		}
+	}
+
+	if err := r.powertopRecorder.Stop(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to stop powertop recorder: ", err)
+		if stopErr == nil {
+			stopErr = errors.Wrap(err, "failed to stop powertop recorder")
 		}
 	}
 
