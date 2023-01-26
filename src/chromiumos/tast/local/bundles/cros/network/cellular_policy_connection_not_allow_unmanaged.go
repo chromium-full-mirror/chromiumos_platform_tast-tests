@@ -92,7 +92,7 @@ func CellularPolicyConnectionNotAllowUnmanaged(ctx context.Context, s *testing.S
 		s.Fatal("Failed to ServeAndRefresh ONC policy: ", err)
 	}
 	s.Log("Applied device policy with managed cellular network configuration")
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {

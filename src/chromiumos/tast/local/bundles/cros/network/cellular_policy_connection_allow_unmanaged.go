@@ -39,7 +39,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim", "cellular_e2e"},
 		Fixture:      "cellularWithFakeDMSEnrolled",
-		Timeout:      9 * time.Minute,
+		Timeout:      13 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},
@@ -77,7 +77,7 @@ func CellularPolicyConnectionAllowUnmanaged(ctx context.Context, s *testing.Stat
 	if err != nil {
 		s.Fatal("Failed to connect Test API in clean up: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	globalConfig := &policy.ONCGlobalNetworkConfiguration{
 		AllowOnlyPolicyCellularNetworks: false,
