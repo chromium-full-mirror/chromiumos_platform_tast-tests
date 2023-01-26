@@ -22,6 +22,7 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"wilco"},
 		Timeout:      10 * time.Second,

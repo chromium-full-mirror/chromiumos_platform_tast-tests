@@ -25,6 +25,7 @@ func init() {
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"vm_host", "wilco", "chrome"},
