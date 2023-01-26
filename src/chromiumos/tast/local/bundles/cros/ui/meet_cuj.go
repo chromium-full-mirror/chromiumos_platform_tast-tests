@@ -795,12 +795,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		return uiauto.Combine(
 			fmt.Sprintf("set effect with node %v", effect),
 			pc.Click(moreOptions),
-			ui.WaitUntilExists(applyEffects),
+			uiLongWait.WaitUntilExists(applyEffects),
 			pc.Click(applyEffects),
 			pc.Click(effect),
 			// Use the keyboard to exit from the effects page, since there
 			// are many possible "Close" buttons visible within the UI tree.
-			ui.WaitUntilExists(effect.Focused()),
+			uiLongWait.WaitUntilExists(effect.Focused()),
 			kw.AccelAction("Esc"),
 		)(ctx)
 	}
