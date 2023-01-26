@@ -230,6 +230,26 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// TODO(b/260624085):
+	// Debugging block. Remove after diagnozing issue. Using d.KeyFile() works
+	// when running the test locally, but fails in the lab environment. Add this block to
+	// log the error message without breaking the test.
+	{
+		s.Log("KeyFile: ", d.KeyFile())
+		s.Log("KeyDir: ", d.KeyDir())
+		out, err := exec.Command("cp", d.KeyFile(), filepath.Join(syzkallerTastDir, "debug")).CombinedOutput()
+		if err != nil {
+			s.Logf("cp [%v] failed: %v: %v", d.KeyFile(), err, string(out))
+		}
+		if d.KeyFile() != "" {
+			out, err = exec.Command("ls", "-ld", filepath.Dir(d.KeyFile())).CombinedOutput()
+			if err != nil {
+				s.Logf("ls failed: %v: %v", err, string(out))
+			}
+			s.Log("ls out: ", string(out))
+		}
+	}
+
 	// Chmod the keyfile so that ssh connections do not fail due to
 	// open permissions.
 	cmd := exec.Command("cp", s.DataPath("testing_rsa"), syzkallerTastDir)
