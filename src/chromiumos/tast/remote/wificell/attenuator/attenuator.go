@@ -52,7 +52,7 @@ func (a *Attenuator) sendCmd(ctx context.Context, cmd string) (string, error) {
 		return "", errors.Wrapf(err, "failed to run command %s", cmd)
 	}
 
-	return string(ret), nil
+	return strings.TrimSpace(string(ret)), nil
 }
 
 // Open access to the attenuator.
@@ -97,6 +97,8 @@ func Open(ctx context.Context, host string, proxyConn *ssh.Conn) (att *Attenuato
 	unpack(retSlice, &a.model, &a.maxFreq, &maxAtten)
 	if a.model == "RC4DAT" {
 		a.channels = 4
+	} else if a.model == "RC8DAT" {
+		a.channels = 8
 	} else {
 		a.channels = 1
 	}
