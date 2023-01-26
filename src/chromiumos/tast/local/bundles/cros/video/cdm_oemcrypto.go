@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/testing"
@@ -53,6 +54,12 @@ func CDMOEMCrypto(ctx context.Context, s *testing.State) {
 	const fwInvalidMarkerFile = "/var/lib/oemcrypto/wv16_fw_version_invalid"
 	if err := os.Remove(fwInvalidMarkerFile); err != nil && !errors.Is(err, os.ErrNotExist) {
 		s.Fatal("Failed to remove FW mismatch indicator: ", err)
+	}
+
+	s.Log("Asking powerd to disable screen dimming and keep the display on")
+	cmd := testexec.CommandContext(ctx, "set_power_policy", "--dim_wake_lock=1", "--screen_wake_lock=1")
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to change power policy: ", err)
 	}
 
 	testExec := s.Param().(string)
