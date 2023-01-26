@@ -227,6 +227,15 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 				},
 			},
 			{
+				name:     "displaysTelemetry",
+				testType: Telemetry,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
+						return telemetry.DisplaysTelemetry != nil
+					})
+				},
+			},
+			{
 				name:     "networkInfo",
 				testType: Info,
 				validator: func(event reportingutil.InputEvent) bool {
@@ -250,6 +259,15 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
 						return info.CpuInfo != nil
+					})
+				},
+			},
+			{
+				name:     "displayInfo",
+				testType: Info,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
+						return info.DisplayInfo != nil
 					})
 				},
 			},

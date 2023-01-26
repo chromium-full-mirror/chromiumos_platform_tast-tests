@@ -88,6 +88,7 @@ type InfoData struct {
 	MemoryInfo  *MemoryInfo  `json:"memoryInfo"`
 	NetworkInfo *NetworkInfo `json:"networksInfo"`
 	CpuInfo     *CpuInfo     `json:"cpuInfo"`
+	DisplayInfo *DisplayInfo `json:"displayInfo"`
 }
 
 // TelemetryData mirrors the telemetryData JSON field.
@@ -95,6 +96,7 @@ type TelemetryData struct {
 	AudioTelemetry       *AudioTelemetry       `json:"audioTelemetry"`
 	NetworkTelemetry     *NetworkTelemetry     `json:"networksTelemetry"`
 	PeripheralsTelemetry *PeripheralsTelemetry `json:"peripheralsTelemetry"`
+	DisplaysTelemetry    *DisplaysTelemetry    `json:"displaysTelemetry"`
 }
 
 // MemoryInfo mirrors the memoryInfo JSON field.
@@ -129,6 +131,20 @@ type KeyLockerInfo struct {
 	Configured bool `json:"configured"`
 }
 
+type DisplayInfo struct {
+	DisplayDevice []DisplayDevice `json:"displayDevice"`
+}
+
+type DisplayDevice struct {
+	DisplayName     string `json:"displayName"`
+	DisplayWidth    int32  `json:"displayWidth"`
+	DisplayHeight   int32  `json:"displayHeight"`
+	IsInternal      bool   `json:"isInternal"`
+	Manufacturer    string `json:"manufacturer"`
+	ModelId         int32  `json:"modelId"`
+	ManufactureYear int32  `json:"manufactureYear"`
+}
+
 // AudioTelemetry mirrors the audioTelemetry JSON field.
 type AudioTelemetry struct {
 	OutputMute       bool   `json:"outputMute"`
@@ -161,6 +177,19 @@ type UsbTelemetry struct {
 	Pid        int32  `json:"pid"`
 	ClassId    int32  `json:"classId"`
 	SubclassId int32  `json:"subclassId"`
+}
+
+// DisplaysTelemetry mirrors the displaysTelemetry JSON field.
+type DisplaysTelemetry struct {
+	DisplayStatus []DisplayStatus `json:"displayStatus"`
+}
+
+// DisplayStatus mirrors the displayStatus JSON field.
+type DisplayStatus struct {
+	DisplayName          string `json:"displayName"`
+	ResolutionVertical   int32  `json:"resolutionVertical"`
+	ResolutionHorizontal int32  `json:"resolutionHorizontal"`
+	RefreshRate          string `json:"refreshRate"`
 }
 
 type inputEventsResponse struct {
