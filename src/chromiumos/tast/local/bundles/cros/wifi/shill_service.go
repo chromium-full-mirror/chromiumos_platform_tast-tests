@@ -3063,13 +3063,24 @@ func waitForTetheringState(ctx context.Context, manager *shill.Manager, state st
 // StartTethering attempts to start a tethering session.
 // This is the implementation of wifi.ShillService/StartTethering gRPC.
 func (s *ShillService) StartTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
+	var err error
 	if request.UseWpaCliApi {
-		return s.startSupplicantTethering(ctx, request)
+		err = s.startSupplicantTethering(ctx, request)
+	} else {
+		err = s.startShillTethering(ctx, request)
 	}
-	return s.startShillTethering(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	info, err := local_iw.NewLocalRunner().RadioConfig(ctx, apIfName)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to detect running AP configuration")
+	}
+
+	return &wifi.TetheringResponse{DownlinkTech: "WiFi", Channel: uint32(info.Number), ChannelWidth: uint32(info.Width)}, nil
 }
 
-func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) (*wifi.TetheringResponse, error) {
+func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) error {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
@@ -3083,14 +3094,14 @@ func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wi
 	// Prepare random MAC, not all drivers are capable of creating new MAC address when adding interface.
 	mac := make(net.HardwareAddr, 6)
 	if _, err := rand.Read(mac); err != nil {
-		return nil, errors.Wrap(err, "failed to generate a random MAC address")
+		return errors.Wrap(err, "failed to generate a random MAC address")
 	}
 	mac[0] = (mac[0] &^ macBitMulticast) | macBitLocal
 
 	// Add interface to the system.
 	err := local_iw.NewLocalRunner().AddInterface(ctx, "phy0", apIfName, iw.IfSetTypeAP, &mac)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to add interface to system")
+		return errors.Wrap(err, "failed to add interface to system")
 	}
 
 	// There are three possible places, where config file can be found.
@@ -3107,22 +3118,22 @@ func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wi
 		}
 	}
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find supplicant conf path")
+		return errors.Wrap(err, "failed to find supplicant conf path")
 	}
 
 	// Add new interface under wpa_supplicant's control.
 	err = s.AddInterface(ctx, apIfName, "nl80211", path)
 	if err != nil {
 		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
-		return nil, errors.Wrap(err, "failed to add interface to supplicant")
+		return errors.Wrap(err, "failed to add interface to supplicant")
 	}
 
-	channel, err := s.startSoftAP(ctx, request)
+	err = s.startSoftAP(ctx, request)
 	if err != nil {
 		localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx)
 		s.RemoveInterface(ctx, apIfName)
 		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
-		return nil, errors.Wrap(err, "failed to start SoftAP")
+		return errors.Wrap(err, "failed to start SoftAP")
 	}
 
 	if err := s.startDHCPServer(ctx); err != nil {
@@ -3130,13 +3141,13 @@ func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wi
 		localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx)
 		s.RemoveInterface(ctx, apIfName)
 		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
-		return nil, errors.Wrap(err, "failed to start DHCP server")
+		return errors.Wrap(err, "failed to start DHCP server")
 	}
 
-	return &wifi.TetheringResponse{DownlinkTech: "WiFi", Channel: channel}, nil
+	return nil
 }
 
-func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
+func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.TetheringRequest) (retErr error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
@@ -3162,16 +3173,16 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 		serviceProps[shillconst.TetheringConfSecurity] = shillconst.SecurityWPA2WPA3
 		serviceProps[shillconst.TetheringConfPassphrase] = request.Psk
 	default:
-		return nil, errors.Errorf("security %q not supported by Shill API", request.Security)
+		return errors.Errorf("security %q not supported by Shill API", request.Security)
 	}
 
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+		return errors.Wrap(err, "failed to create shill manager proxy")
 	}
 
 	if _, err := manager.CreateFakeUserProfile(ctx, wifiTestProfileName); err != nil {
-		return nil, errors.Wrapf(err, "failed to create fake profile %q", wifiTestProfileName)
+		return errors.Wrapf(err, "failed to create fake profile %q", wifiTestProfileName)
 	}
 
 	defer func(ctx context.Context) {
@@ -3189,7 +3200,7 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 	}(ctx)
 
 	if err := manager.SetProperty(ctx, shillconst.ManagerTetheringAllowed, true); err != nil {
-		return nil, errors.Wrap(err, "failed to set ManagerTetheringAllowed")
+		return errors.Wrap(err, "failed to set ManagerTetheringAllowed")
 	}
 	defer func(ctx context.Context) {
 		if retErr == nil {
@@ -3205,26 +3216,26 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 	}(ctx)
 
 	if err := manager.ConfigureTethering(ctx, serviceProps); err != nil {
-		return nil, errors.Wrap(err, "failed to configure tethering")
+		return errors.Wrap(err, "failed to configure tethering")
 	}
 
 	// No need to rollback in case of further failure.
 
 	if err := manager.EnableTethering(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to enable tethering")
+		return errors.Wrap(err, "failed to enable tethering")
 	}
 
 	if _, err := waitForTetheringState(ctx, manager, shillconst.TetheringStateActive); err != nil {
-		return nil, errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateActive)
+		return errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateActive)
 	}
 
 	// TODO(b/275644434): Remove when patchpanel changes take care of DHCP.
 	if err := s.startDHCPServer(ctx); err != nil {
 		s.stopDHCPServer(ctx)
-		return nil, errors.Wrap(err, "failed to start DHCP server")
+		return errors.Wrap(err, "failed to start DHCP server")
 	}
 
-	return &wifi.TetheringResponse{}, nil
+	return nil
 }
 
 // StopTethering attempts to stop the tethering session.
@@ -3295,12 +3306,10 @@ func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) (
 	return &empty.Empty{}, firstErr
 }
 
-func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringRequest) (uint32, error) {
+func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringRequest) error {
 	var freq uint32 = 2437
-	var channel uint32 = 6
 	if request.Band == "5GHz" {
 		freq = 5180
-		channel = 36
 	}
 
 	keyMgmt := "NONE"
@@ -3312,11 +3321,7 @@ func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringR
 		keyMgmt = "WPA-PSK SAE"
 	}
 
-	if err := localwpacli.NewLocalRunnerOnIface(apIfName).StartSoftAP(ctx, freq, string(request.Ssid), keyMgmt, string(request.Psk), string(request.Cipher)); err != nil {
-		return 0, errors.Wrap(err, "failed to start soft AP in wpa_supplicant")
-	}
-
-	return channel, nil
+	return localwpacli.NewLocalRunnerOnIface(apIfName).StartSoftAP(ctx, freq, string(request.Ssid), keyMgmt, string(request.Psk), string(request.Cipher))
 }
 
 func (s *ShillService) startDHCPServer(ctx context.Context) (ret error) {

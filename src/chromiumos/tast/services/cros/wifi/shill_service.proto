@@ -623,6 +623,7 @@ message TetheringResponse {
   string uplink_tech = 1;
   string downlink_tech = 2;
   uint32 channel = 3;
+  uint32 channel_width = 4;
 }
 
 message ServicePathRequest {

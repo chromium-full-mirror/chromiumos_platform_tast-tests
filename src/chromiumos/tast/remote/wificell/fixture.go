@@ -139,6 +139,20 @@ func init() {
 		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "wificellFixtCompanionDutWithCapture",
+		Desc: "Wificell setup with companion Chromebook DUT and packet capture from the pcap device",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+		},
+		Impl:            newTastFixture(TFFeaturesCompanionDUT | TFFeaturesCapture),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: tearDownTimeout,
+		ServiceDeps:     []string{ShillServiceName},
+		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
+	})
 }
 
 // TFFeatures is an enum type for extra features needed for Tast fixture.

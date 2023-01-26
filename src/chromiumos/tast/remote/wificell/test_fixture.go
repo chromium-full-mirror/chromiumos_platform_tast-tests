@@ -43,6 +43,7 @@ import (
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/framesender"
 	"chromiumos/tast/remote/wificell/hostapd"
+	ap "chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/pcap"
 	"chromiumos/tast/remote/wificell/router"
 	"chromiumos/tast/remote/wificell/router/ax"
@@ -271,8 +272,9 @@ type TestFixture struct {
 		routerRequired  bool
 	}
 
-	apID      int
-	capturers map[*APIface]*pcap.Capturer
+	apID              int
+	capturers         map[*APIface]*pcap.Capturer
+	tetheringCapturer *pcap.Capturer
 
 	// aps is a set of APs useful for deconfiguring all APs, which some tests require.
 	aps map[*APIface]struct{}
@@ -2152,7 +2154,7 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) (*APIfa
 }
 
 // StartTethering configures the specific DUT to provide a tethering session with the options specified.
-func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []tethering.Option, fac security.ConfigFactory) (*tethering.Config, *wifi.TetheringResponse, error) {
+func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []tethering.Option, fac security.ConfigFactory) (retCfg *tethering.Config, retResp *wifi.TetheringResponse, retErr error) {
 	ctx, st := timing.Start(ctx, "tf.StartTethering")
 	defer st.End()
 
@@ -2198,6 +2200,55 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		return nil, nil, errors.Wrapf(err, "client failed to start tethering session with SSID %q", c.SSID)
 	}
 
+	testing.ContextLogf(ctx, "Tethering started on channel %v, width: %v", resp.Channel, resp.ChannelWidth)
+
+	var capturer *pcap.Capturer
+	if tf.option.packetCapture {
+		if tf.pcapHost == nil {
+			// This will happen only when running the test maunally.
+			return nil, nil, errors.New("missing pcap, perhaps you forgot to add -var=pcap=<host> argument")
+		}
+		apOptions := []ap.Option{ap.Channel(int(resp.Channel))}
+		// Pick the maximum available standard per band (assuming Gale capabilities).
+		if resp.Channel <= 14 {
+			apOptions = append(apOptions, ap.Mode(ap.Mode80211nMixed))
+		} else {
+			apOptions = append(apOptions, ap.Mode(ap.Mode80211acMixed))
+		}
+		switch resp.ChannelWidth {
+		case 20:
+			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT20))
+		case 40:
+			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40))
+		case 80:
+			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40), ap.VHTCaps(ap.VHTCapSGI80))
+		case 160:
+			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40), ap.VHTCaps(ap.VHTCapVHT160))
+		}
+		config, err := hostapd.NewConfig(apOptions...)
+		if err != nil {
+			return nil, nil, err
+		}
+		freqOps, err := config.PcapFreqOptions()
+		if err != nil {
+			return nil, nil, err
+		}
+		p, ok := tf.pcap.(support.Capture)
+		if !ok {
+			return nil, nil, errors.Errorf("pcap device with router type %q does not have packet capture support", tf.pcap.RouterType().String())
+		}
+		capturer, err = p.StartCapture(ctx, tf.UniqueAPName(), config.Channel, freqOps)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to start capturer")
+		}
+		tf.tetheringCapturer = capturer
+		defer func() {
+			if retErr != nil {
+				p.StopCapture(ctx, capturer)
+			}
+		}()
+	}
+
 	return c, resp, nil
 }
 
@@ -2207,6 +2258,10 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) error {
 	defer st.End()
 
 	_, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI})
+	if tf.tetheringCapturer != nil {
+		p := tf.pcap.(support.Capture)
+		p.StopCapture(ctx, tf.tetheringCapturer)
+	}
 	if err != nil {
 		return errors.Wrap(err, "client failed to stop tethering session")
 	}
@@ -2216,7 +2271,7 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) error {
 
 // ReserveForStopTethering returns a shorter ctx and cancel function for tf.StopTethering().
 func (tf *TestFixture) ReserveForStopTethering(ctx context.Context) (context.Context, context.CancelFunc) {
-	return ctxutil.Shorten(ctx, 10*time.Second)
+	return ctxutil.Shorten(ctx, 15*time.Second)
 }
 
 // RebootDUT reboots DUT and re-establishes wifiClient for the given DUT.
