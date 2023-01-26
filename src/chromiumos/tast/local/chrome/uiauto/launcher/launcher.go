@@ -331,8 +331,7 @@ func SetupContinueSectionFiles(ctx context.Context, tconn *chrome.TestConn,
 // CreateAppSearchFinder creates a finder for an app search result in the current launcher search UI.
 // It expects the launcher search page to be open.
 func CreateAppSearchFinder(ctx context.Context, tconn *chrome.TestConn, appName string) *nodewith.Finder {
-	// TODO(b/261863907): Use just the AppListSearchView class name once the ProductivityLauncherSearchView class rename is landed.
-	searchContainerClassName := nodewith.ClassNameRegex(regexp.MustCompile(`^(ProductivityLauncher|AppList)SearchView$`))
+	searchContainerClassName := nodewith.ClassName("AppListSearchView")
 	re := regexp.MustCompile(regexp.QuoteMeta(appName) + ", [Ii]nstalled [Aa]pp")
 	return nodewith.NameRegex(re).Ancestor(searchContainerClassName)
 }
