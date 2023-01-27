@@ -40,10 +40,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "How much memory can we allocate before the specified canary dies",
 		Contacts: []string{
+			"arcvm-memory@google.com",
 			"kokiryu@chromium.org",
 			"cwd@google.com",
-			"arcvm-memory@google.com",
 		},
+		BugComponent: "b:930563",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
