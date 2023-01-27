@@ -87,11 +87,20 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 
 	timeout := int32(heartbeatReportingTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.Reporting))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
 	defer accManager.CleanUp(ctx)
+
+	// Disable Asset ID screen on enrollment.
+	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{
+		AllowToUpdateDeviceAttribute: false,
+	}
+
+	if err := tapeClient.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, acc.RequestID); err != nil {
+		s.Fatal("Failed to set the asset policy: ", err)
+	}
 
 	testStartTime := time.Now()
 	if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
