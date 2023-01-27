@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/login/userutil"
 	"chromiumos/tast/local/chrome"
@@ -32,6 +33,7 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.CleanOwnership,
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
