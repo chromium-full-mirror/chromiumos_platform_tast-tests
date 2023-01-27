@@ -36,10 +36,9 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name: "quickAnswersLoggedInFixtureLacros",
-		Desc: "Lacros Chrome session logged in with OTA for Quick answres testing",
+		Desc: "Lacros Chrome session logged in with OTA for Quick answers testing",
 		Contacts: []string{
-			"updowndota@google.com",
-			"assitive-eng@google.com",
+			"assistive-eng@google.com",
 		},
 		Vars: []string{"quickanswers.username", "quickanswers.password"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

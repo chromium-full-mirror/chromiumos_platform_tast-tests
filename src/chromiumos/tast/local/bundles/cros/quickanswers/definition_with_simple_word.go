@@ -26,12 +26,16 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test Quick Answers always trigger for single word feature",
 		Contacts: []string{
-			"updowndota@google.com",
-			"angelaxiao@google.com",
 			"croissant-eng@google.com",
+			"angelaxiao@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:hw_agnostic",
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "quickAnswersLoggedInFixture",
