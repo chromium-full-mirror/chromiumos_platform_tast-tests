@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -367,13 +368,10 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		shortCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
-		// Limit running in PFQ for VM devices to 8GB+ RAM spec only. For local
-		// test configs (upload=false) and non-VM, there are no restrictions.
-		// It is known issue that 4GB devices experience memory pressure during the
-		// opt in. This leads to the situation when FS page caches are reclaimed
-		// and captured result does not properly reflect actual FS usage. Don't
-		// upload caches to server for devices lower than 8GB.
-		if param.vmEnabled && param.upload {
+		// Limit running in PFQ for VM devices to 8GB+ RAM spec only for x86-64. On
+		// arm64, we have very few devices in Uprev with >4GB so won't restrict.
+		// No restrictions for local test configs (upload=false && vmEnabled=false).
+		if param.vmEnabled && param.upload && strings.HasPrefix(desc.CPUAbi, "x86") {
 			response, err := service.CheckMinMemory(shortCtx, &empty.Empty{})
 			if err != nil {
 				return errors.Wrap(err, "ureadaheadPackService.CheckMinMemory returned an error")
