@@ -113,7 +113,10 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
-	if err := upstart.RestartJob(ctx, "secagentd", upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"), upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true")); err != nil {
+	if err := upstart.RestartJob(ctx, "secagentd",
+		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
+		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
+		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true")); err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
@@ -175,6 +178,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 		if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
 			s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record")
 		}
+		s.Log("Snooped XdrProcessEvent: ", pe.String())
 		exec := pe.GetProcessExec()
 		if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
 			execFound = true
