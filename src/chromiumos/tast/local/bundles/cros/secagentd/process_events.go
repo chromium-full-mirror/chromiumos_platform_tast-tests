@@ -13,6 +13,7 @@ import (
 
 	rep "chromiumos/reporting"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/upstart"
@@ -103,6 +104,13 @@ func copyUUID(from, to *xdr.Process) {
 // information from procfs, and verifies it against the events emitted by
 // secagentd over dbus.
 func ProcessEvents(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer func(ctx context.Context) {
+		upstart.RestartJob(ctx, "secagentd")
+		cancel()
+	}(cleanupCtx)
+
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
 	if err := upstart.RestartJob(ctx, "secagentd", upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"), upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true")); err != nil {

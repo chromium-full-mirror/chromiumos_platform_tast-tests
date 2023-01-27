@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
@@ -56,7 +57,6 @@ func setXdrPolicy(ctx context.Context, s *testing.State, v bool) {
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to update policies. Make sure Chrome has API keys and apply go/pavolshack if running on a VM: ", err)
 	}
-
 	// Restart secagentd. Don't pass in the flag that would override policy
 	// checks. But do override the wait for missive to successfully enqueue
 	// an event. Bypassing this wait will make secagentd emit more than one
@@ -67,6 +67,16 @@ func setXdrPolicy(ctx context.Context, s *testing.State, v bool) {
 }
 
 func XdrPolicyCheck(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 30*time.Second)
+	defer func(ctx context.Context, s *testing.State) {
+		cr := s.FixtValue().(chrome.HasChrome).Chrome()
+		fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+		policyutil.ResetChrome(ctx, fdms, cr)
+		upstart.RestartJob(ctx, "secagentd")
+		cancel()
+	}(cleanupCtx, s)
+
 	for _, param := range []struct {
 		name          string
 		policy        bool
