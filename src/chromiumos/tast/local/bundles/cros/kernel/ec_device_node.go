@@ -17,11 +17,12 @@ func init() {
 		Func: ECDeviceNode,
 		Desc: "Checks that device node for the primary embedded controller exists",
 		Contacts: []string{
-			"chromeos-chatty-kernel@google.com",
 			"chromeos-kernel-test@google.com",
 			"chromeos-kernel-team@google.com",
+			"kmshelton@google.com", // Original test author
 		},
-		// TODO(kmshelton): Don't assume that /dev/cros_ec should exist on all devices.  A small part of the support
+		BugComponent: "b:167278",
+		// TODO(b/196858433): Don't assume that /dev/cros_ec should exist on all devices.  A small part of the support
 		// matrix does not have a CrOS EC, so this test won't be ready for mainline until the long tail of the support
 		// matrix is accounted for (may need boxster EC data in-place to do this, see b/173741162).
 		Attr: []string{"group:mainline", "informational"},
