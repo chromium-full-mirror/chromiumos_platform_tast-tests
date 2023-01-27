@@ -158,5 +158,5 @@ func (gm *GoogleMeet) SetEffectBlur(value bool) action.Action {
 		blurButtonName = "Blur your background"
 	}
 	blurButton := nodewith.Name(blurButtonName).Role(role.ToggleButton).Ancestor(meetRootWebArea)
-	return gm.setToggleValue(blurButton, value)
+	return gm.setToggleValue(blurButton, true)
 }
