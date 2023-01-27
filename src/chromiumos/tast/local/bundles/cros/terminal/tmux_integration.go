@@ -28,7 +28,7 @@ func init() {
 			"guestos-ui@google.com",
 			"lxj@chromium.org",
 		},
-		BugComponent: "b:1122570",
+		BugComponent: "b:658562",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
