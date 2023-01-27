@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -43,13 +42,9 @@ func init() {
 		}, {
 			Name:              "vm_r",
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// TODO(b/265969396): This dep can be removed once the bug is fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 		}, {
 			Name:              "vm_t",
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// TODO(b/265969396): This dep can be removed once the bug is fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 		}},
 		// Minimum acceptable.
 		Timeout: 5 * time.Minute,
