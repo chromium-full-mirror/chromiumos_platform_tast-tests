@@ -109,7 +109,7 @@ func ReporterStartup(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Disable consent.
+	// Disable consent to make sure that crash_reporter initializes core_pattern even without consent.
 	consentReq := crashservice.SetConsentRequest{Consent: false}
 	if _, err := fixtureService.SetConsent(ctx, &consentReq); err != nil {
 		s.Fatal("SetConsent failed: ", err)
