@@ -337,6 +337,8 @@ type crossdeviceFixture struct {
 	allFeatures                       bool
 	saveAndroidScreenRecordingOnError func(context.Context, func() bool) error
 	saveScreenRecording               bool
+	crosScreenRecordingStarted        bool
+	androidScreenRecordingStarted     bool
 	lockFixture                       bool
 	noSignIn                          bool
 	logcatStartTime                   adb.LogcatTimestamp
@@ -608,24 +610,34 @@ func (f *crossdeviceFixture) PreTest(ctx context.Context, s *testing.FixtTestSta
 	f.logcatStartTime = timestamp
 
 	if f.saveScreenRecording {
-		if f.kb == nil {
-			// Use virtual keyboard since uiauto.StartRecordFromKB assumes F5 is the overview key.
-			kb, err := input.VirtualKeyboard(ctx)
-			if err != nil {
-				s.Fatal("Failed to setup keyboard for screen recording: ", err)
-			}
-			f.kb = kb
-		}
-		if err := uiauto.StartRecordFromKB(ctx, f.tconn, f.kb, f.downloadsPath); err != nil {
-			s.Fatal("Failed to start screen recording on CrOS: ", err)
+		if err := f.startCrOSScreenRecording(ctx); err != nil {
+			s.Log("Failed to start CrOS screen recording: ", err)
 		}
 
 		saveScreen, err := f.androidDevice.StartScreenRecording(s.TestContext(), "android-screen", s.OutDir())
 		if err != nil {
-			s.Fatal("Failed to start screen recording on Android: ", err)
+			s.Log("Failed to start screen recording on Android: ", err)
+		} else {
+			f.saveAndroidScreenRecordingOnError = saveScreen
+			f.androidScreenRecordingStarted = true
 		}
-		f.saveAndroidScreenRecordingOnError = saveScreen
 	}
+}
+
+func (f *crossdeviceFixture) startCrOSScreenRecording(ctx context.Context) error {
+	if f.kb == nil {
+		// Use virtual keyboard since uiauto.StartRecordFromKB assumes F5 is the overview key.
+		kb, err := input.VirtualKeyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to setup keyboard for screen recording")
+		}
+		f.kb = kb
+	}
+	if err := uiauto.StartRecordFromKB(ctx, f.tconn, f.kb, f.downloadsPath); err != nil {
+		return errors.Wrap(err, "failed to start screen recording on CrOS")
+	}
+	f.crosScreenRecordingStarted = true
+	return nil
 }
 
 func (f *crossdeviceFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -665,22 +677,26 @@ func (f *crossdeviceFixture) PostTest(ctx context.Context, s *testing.FixtTestSt
 	}
 
 	if f.saveScreenRecording {
-		if err := f.saveAndroidScreenRecordingOnError(ctx, s.HasError); err != nil {
-			s.Fatal("Failed to save Android screen recording: ", err)
+		if f.androidScreenRecordingStarted {
+			if err := f.saveAndroidScreenRecordingOnError(ctx, s.HasError); err != nil {
+				s.Log("Failed to save Android screen recording: ", err)
+			}
+			f.saveAndroidScreenRecordingOnError = nil
 		}
-		f.saveAndroidScreenRecordingOnError = nil
 
-		ui := uiauto.New(f.tconn)
-		var crosRecordErr error
-		if err := ui.Exists(uiauto.ScreenRecordStopButton)(ctx); err != nil {
-			// Smart Lock tests automatically stop the screen recording when they lock the screen.
-			// The screen recording should still exist though.
-			crosRecordErr = uiauto.SaveRecordFromKBOnError(ctx, f.tconn, s.HasError, s.OutDir(), f.downloadsPath)
-		} else {
-			crosRecordErr = uiauto.StopRecordFromKBAndSaveOnError(ctx, f.tconn, s.HasError, s.OutDir(), f.downloadsPath)
-		}
-		if crosRecordErr != nil {
-			s.Fatal("Failed to save CrOS screen recording: ", crosRecordErr)
+		if f.crosScreenRecordingStarted {
+			ui := uiauto.New(f.tconn)
+			var crosRecordErr error
+			if err := ui.Exists(uiauto.ScreenRecordStopButton)(ctx); err != nil {
+				// Smart Lock tests automatically stop the screen recording when they lock the screen.
+				// The screen recording should still exist though.
+				crosRecordErr = uiauto.SaveRecordFromKBOnError(ctx, f.tconn, s.HasError, s.OutDir(), f.downloadsPath)
+			} else {
+				crosRecordErr = uiauto.StopRecordFromKBAndSaveOnError(ctx, f.tconn, s.HasError, s.OutDir(), f.downloadsPath)
+			}
+			if crosRecordErr != nil {
+				s.Log("Failed to save CrOS screen recording: ", crosRecordErr)
+			}
 		}
 	}
 
