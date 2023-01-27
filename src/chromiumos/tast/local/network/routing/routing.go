@@ -209,8 +209,7 @@ func expectPingSuccess(ctx context.Context, addr, user string) error {
 	if err := deletePingEntriesInConntrack(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset conntrack before pinging")
 	}
-	testing.ContextLogf(ctx, "Start to ping %s as user %s", addr, user)
-	pr := localping.NewLocalRunner()
+	pr := localping.NewLocalRunnerWithoutLogOnError()
 	// Only ping once, continuous pings will be very likely to be affected by the
 	// connection pinging so it does not make sense. In the routing tests, all the
 	// ping targets are in the DUT, so use a small timeout value here.
@@ -234,6 +233,7 @@ func ExpectPingSuccessWithTimeout(ctx context.Context, addr, user string, timeou
 		}
 	}()
 
+	testing.ContextLogf(ctx, "Verifying ping success to %s as user %s", addr, user)
 	if timeout == 0 {
 		return expectPingSuccess(ctx, addr, user)
 	}
@@ -264,8 +264,8 @@ func ExpectPingFailure(ctx context.Context, addr, user string) (retErr error) {
 	if err := deletePingEntriesInConntrack(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset conntrack before pinging")
 	}
-	testing.ContextLog(ctx, "Start to ping ", addr)
-	pr := localping.NewLocalRunner()
+	testing.ContextLogf(ctx, "Verifying ping failure to %s as user %s", addr, user)
+	pr := localping.NewLocalRunnerWithoutLogOnError()
 	// Only ping once, continuous pings will be very likely to be affected by the
 	// connection pinging so it does not make sense. In the routing tests, all the
 	// ping targets are in the DUT, so use a small timeout value here.

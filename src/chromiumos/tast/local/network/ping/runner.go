@@ -14,3 +14,11 @@ import (
 func NewLocalRunner() *ping.Runner {
 	return ping.NewRunner(&cmd.LocalCmdRunner{})
 }
+
+// NewLocalRunnerWithoutLogOnError creates a ping Runner on the given dut for
+// local execution. Different from NewLocalRunner(), the runner created by this
+// function will not dump log on error, which could be helpful when a ping
+// failure is expected.
+func NewLocalRunnerWithoutLogOnError() *ping.Runner {
+	return ping.NewRunner(&cmd.LocalCmdRunner{NoLogOnError: true})
+}
