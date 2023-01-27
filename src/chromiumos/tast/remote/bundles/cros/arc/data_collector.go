@@ -256,12 +256,10 @@ func init() {
 			// arm64 ARC: gimble(herobrine), steelix(corsola)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "morphius", "steelix", "hoglin")),
 			Val: testParam{
-				vmEnabled:      true,
-				androidPackage: "android-vm-rvc",
-				upload:         true,
-				uprevBranch:    true,
-				// ARCVM does not have arm64 on branch.
-				// TODO(b/252805449): Include arm64 once we have first ARM device branched.
+				vmEnabled:                     true,
+				androidPackage:                "android-vm-rvc",
+				upload:                        true,
+				uprevBranch:                   true,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
 			},
