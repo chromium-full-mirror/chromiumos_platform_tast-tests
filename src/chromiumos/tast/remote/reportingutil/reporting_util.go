@@ -66,8 +66,11 @@ type InputEvent struct {
 
 // WrappedEncryptedData mirrors the wrappedEncryptedData JSON field.
 type WrappedEncryptedData struct {
-	MetricData     *MetricData     `json:"metricData"`
-	DlpPolicyEvent *DlpPolicyEvent `json:"dlpPolicyEvent"`
+	MetricData         *MetricData         `json:"metricData"`
+	DlpPolicyEvent     *DlpPolicyEvent     `json:"dlpPolicyEvent"`
+	LockUnlockEvent    *LockUnlockEvent    `json:"lockUnlockEvent"`
+	LoginLogoutEvent   *LoginLogoutEvent   `json:"loginLogoutEvent"`
+	AddRemoveUserEvent *AddRemoveUserEvent `json:"addRemoveUserEvent"`
 }
 
 // DlpPolicyEvent mirrors the dlpPolicyEvent JSON field.
@@ -75,6 +78,59 @@ type DlpPolicyEvent struct {
 	Restriction string `json:"restriction"`
 	Mode        string `json:"mode"`
 }
+
+// LockUnlockEvent mirrors the lockUnlockEvent JSON field.
+type LockUnlockEvent struct {
+	Time           string          `json:"eventTimestampSec"`
+	AffiliatedUser *AffiliatedUser `json:"affiliatedUser"`
+	LockEvent      *LockEvent      `json:"lockEvent"`
+	UnlockEvent    *UnlockEvent    `json:"unlockEvent"`
+}
+
+// LoginLogoutEvent mirrors the loginLogoutEvent JSON field.
+type LoginLogoutEvent struct {
+	Time           string          `json:"eventTimestampSec"`
+	AffiliatedUser *AffiliatedUser `json:"affiliatedUser"`
+	LoginEvent     *LoginEvent     `json:"loginEvent"`
+	LogoutEvent    *LogoutEvent    `json:"logoutEvent"`
+	SessionType    string          `json:"sessionType"`
+}
+
+// AddRemoveUserEvent mirrors the addRemoveUserEvent JSON field.
+type AddRemoveUserEvent struct {
+	Time             string            `json:"timestampMs"`
+	AffiliatedUser   *AffiliatedUser   `json:"affiliatedUser"`
+	UserAddedEvent   *UserAddedEvent   `json:"userAddedEvent"`
+	UserRemovedEvent *UserRemovedEvent `json:"userRemovedEvent"`
+}
+
+// AffiliatedUser mirrors the affiliatedUser JSON field.
+type AffiliatedUser struct {
+	UserEmail string `json:"userEmail"`
+}
+
+// LockEvent mirrors the lockEvent JSON field.
+type LockEvent struct{}
+
+// UnlockEvent mirrors the unlockEvent JSON field.
+type UnlockEvent struct {
+	Success    bool   `json:"success"`
+	UnlockType string `json:"unlockType"`
+}
+
+// UserAddedEvent mirrors the userAddedEvent JSON field.
+type UserAddedEvent struct{}
+
+// UserRemovedEvent mirrors the userRemovedEvent JSON field.
+type UserRemovedEvent struct {
+	Reason string `json:"reason"`
+}
+
+// LoginEvent mirrors the loginEvent JSON field.
+type LoginEvent struct{}
+
+// LogoutEvent mirrors the logoutEvent JSON field.
+type LogoutEvent struct{}
 
 // MetricData mirrors the metricData JSON field.
 type MetricData struct {
