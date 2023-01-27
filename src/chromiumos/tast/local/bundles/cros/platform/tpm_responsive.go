@@ -22,6 +22,7 @@ func init() {
 			"apronin@chromium.org",
 			"nya@chromium.org", // Tast port author
 		},
+		BugComponent: "b:885467", // ChromeOS > Platform > System > Health Monitoring
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline", "group:labqual"},
 	})

@@ -20,6 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that region is forced in Chrome tests",
 		Contacts:     []string{"nya@chromium.org", "chromeos-ui@google.com"},
+		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

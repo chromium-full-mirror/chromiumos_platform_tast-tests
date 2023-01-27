@@ -17,10 +17,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     CheckProcesses,
-		Desc:     "Checks that all expected processes are running",
-		Contacts: []string{"nya@chromium.org"},
-		Attr:     []string{"group:mainline"},
+		Func:         CheckProcesses,
+		Desc:         "Checks that all expected processes are running",
+		Contacts:     []string{"nya@chromium.org"},
+		BugComponent: "b:885467", // ChromeOS > Platform > System > Health Monitoring
+		Attr:         []string{"group:mainline"},
 	})
 }
 

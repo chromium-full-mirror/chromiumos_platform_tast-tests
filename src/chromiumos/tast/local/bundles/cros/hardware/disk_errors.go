@@ -25,8 +25,9 @@ func init() {
 			"nya@chromium.org",
 			"tast-core@google.com",
 		},
-		Attr:    []string{"group:mainline"},
-		Timeout: time.Minute,
+		BugComponent: "b:575445", // Chrome Operations > Fleet > Operations > Repairs
+		Attr:         []string{"group:mainline"},
+		Timeout:      time.Minute,
 	})
 }
 
