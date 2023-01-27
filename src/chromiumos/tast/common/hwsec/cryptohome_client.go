@@ -869,7 +869,15 @@ func (u *CryptohomeClient) AuthenticatePinAuthFactor(ctx context.Context, authSe
 
 // AuthenticateKioskAuthFactor authenticates an AuthSession with a given authSessionID via a kiosk authfactor.
 func (u *CryptohomeClient) AuthenticateKioskAuthFactor(ctx context.Context, authSessionID string) error {
-	_, err := u.binary.authenticateKioskAuthFactor(ctx, authSessionID)
+	_, err := u.binary.authenticateKioskAuthFactor(ctx, authSessionID, "public_mount")
+	return err
+}
+
+// AuthenticateKioskAuthFactorWithLabel authenticates an AuthSession with a given authSessionID via a
+// kiosk factor with a specific label. You usually would prefer to use the unlabelled version but
+// legacy kiosks can require a non-standard label.
+func (u *CryptohomeClient) AuthenticateKioskAuthFactorWithLabel(ctx context.Context, authSessionID, label string) error {
+	_, err := u.binary.authenticateKioskAuthFactor(ctx, authSessionID, label)
 	return err
 }
 

@@ -18,6 +18,19 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type ussMigrationKioskParam struct {
+	// Specify if the test should use a legacy as kiosk-as-password VK or a
+	// more modern factor that explicitly identifies itself.
+	testLegacyKiosk bool
+	// The label of the kiosk factor to test.
+	kioskLabel string
+	// Specify if the test should also verify mounting the user directory. If
+	// not specified then only authentication is tested.
+	testMount bool
+	// The path of the auth factor file for the kiosk factor.
+	factorFile string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UssMigrationKiosk,
@@ -30,6 +43,23 @@ func init() {
 		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		Params: []testing.Param{{
+			Name: "legacy",
+			Val: ussMigrationKioskParam{
+				testLegacyKiosk: true,
+				kioskLabel:      "legacy-0",
+				testMount:       false,
+				factorFile:      "/auth_factors/kiosk.legacy-0",
+			},
+		}, {
+			Name: "modern",
+			Val: ussMigrationKioskParam{
+				testLegacyKiosk: false,
+				kioskLabel:      "public_mount",
+				testMount:       true,
+				factorFile:      "/auth_factors/kiosk.public_mount",
+			},
+		}},
 	})
 }
 
@@ -39,18 +69,23 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		cleanupTime     = 20 * time.Second
 		kioskKeysetFile = "master.0" // nocheck
 		ussFile         = "/user_secret_stash/uss.0"
-		kioskFactorFile = "/auth_factors/kiosk.public_mount"
 	)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
+	userParam := s.Param().(ussMigrationKioskParam)
+
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
 	helper, err := hwseclocal.NewHelper(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
+	}
+	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	if err != nil {
+		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
 	daemonController := helper.DaemonController()
 
@@ -85,8 +120,18 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 			if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
 				return errors.Wrap(err, "failed to prepare new persistent vault")
 			}
-			if err := client.AddKioskAuthFactor(ctx, authSessionID); err != nil {
-				return errors.Wrap(err, "failed to add kiosk credentials")
+
+			// Create the actual kiosk credential, depending on the current modeof operation.
+			if userParam.testLegacyKiosk {
+				// In the legacy setup, create a keydata-less credential with no identifying info.
+				if err := testTool.CreateLegacyKioskVaultKeyset(ctx, cryptohome.KioskUser); err != nil {
+					return errors.Wrap(err, "failed to create VaultKeyset")
+				}
+			} else {
+				// In the typed setup, create a modern kiosk VK using the standard auth factor API.
+				if err := client.AddKioskAuthFactor(ctx, authSessionID); err != nil {
+					return errors.Wrap(err, "failed to add kiosk credentials")
+				}
 			}
 
 			// Check that the kiosk VaultKeyset file is created.
@@ -122,18 +167,20 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		defer enableUssCleanup(cleanupCtx)
 
 		// Check that migrated Kiosk factor has not been migrated.
-		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskFactorFile, cryptohome.KioskUser); err == nil {
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, userParam.factorFile, cryptohome.KioskUser); err == nil {
 			return errors.New("kiosk auth factor file was created before migration should have happened")
 		}
 
 		// Start a new auth session and mount the persistent vault.
 		// This should do migration.
 		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			if err := client.AuthenticateKioskAuthFactor(ctx, authSessionID); err != nil {
+			if err := client.AuthenticateKioskAuthFactorWithLabel(ctx, authSessionID, userParam.kioskLabel); err != nil {
 				return errors.Wrap(err, "failed to authenticate with kiosk credential")
 			}
-			if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
-				return errors.Wrap(err, "failed to mount and verify persistence")
+			if userParam.testMount {
+				if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
+					return errors.Wrap(err, "failed to mount and verify persistence")
+				}
 			}
 			return nil
 		}); err != nil {
@@ -145,7 +192,7 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, cryptohome.KioskUser); err != nil {
 			return errors.Wrap(err, "USS file was not created")
 		}
-		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskFactorFile, cryptohome.KioskUser); err != nil {
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, userParam.factorFile, cryptohome.KioskUser); err != nil {
 			return errors.Wrap(err, "kiosk auth factor file was not created")
 		}
 
@@ -170,11 +217,13 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		// Start a new auth session and mount the persistent vault.
 		// This should work with the migrated factor.
 		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			if err := client.AuthenticateKioskAuthFactor(ctx, authSessionID); err != nil {
+			if err := client.AuthenticateKioskAuthFactorWithLabel(ctx, authSessionID, userParam.kioskLabel); err != nil {
 				return errors.Wrap(err, "failed to authenticate with kiosk credential")
 			}
-			if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
-				return errors.Wrap(err, "failed to mount and verify persistence")
+			if userParam.testMount {
+				if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
+					return errors.Wrap(err, "failed to mount and verify persistence")
+				}
 			}
 			return nil
 		}); err != nil {
@@ -202,11 +251,13 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		// Start a new auth session and mount the persistent vault.
 		// This should work with the old VK credentials.
 		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			if err := client.AuthenticateKioskAuthFactor(ctx, authSessionID); err != nil {
+			if err := client.AuthenticateKioskAuthFactorWithLabel(ctx, authSessionID, userParam.kioskLabel); err != nil {
 				return errors.Wrap(err, "failed to authenticate with kiosk credential")
 			}
-			if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
-				return errors.Wrap(err, "failed to mount and verify persistence")
+			if userParam.testMount {
+				if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
+					return errors.Wrap(err, "failed to mount and verify persistence")
+				}
 			}
 			return nil
 		}); err != nil {
@@ -220,7 +271,7 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, cryptohome.KioskUser); err != nil {
 			return errors.Wrap(err, "USS file no longer exists")
 		}
-		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskFactorFile, cryptohome.KioskUser); err != nil {
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, userParam.factorFile, cryptohome.KioskUser); err != nil {
 			return errors.Wrap(err, "kiosk auth factor file no longer exists")
 		}
 

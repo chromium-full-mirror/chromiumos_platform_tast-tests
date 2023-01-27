@@ -213,6 +213,18 @@ func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, username, keyD
 	return c.call(ctx, args...)
 }
 
+// CreateLegacyKioskVaultKeyset calls "--action=create_vault_keyset".
+func (c *RecoveryTestTool) CreateLegacyKioskVaultKeyset(ctx context.Context, username string) error {
+	args := []string{
+		"--action=create_vault_keyset",
+		"--username=" + username,
+		"--passkey=" + username,
+		"--enable_key_data=false",
+		"--use_public_mount_salt=true",
+	}
+	return c.call(ctx, args...)
+}
+
 // FakeMediate calls "--action=recovery_crypto_mediate" step.
 func (c *RecoveryTestTool) FakeMediate(ctx context.Context) error {
 	if !c.useFakeMediator() {
