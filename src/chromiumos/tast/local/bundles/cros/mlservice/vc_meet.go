@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/local/apps/googlemeet"
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -123,13 +122,8 @@ func VCMeet(ctx context.Context, s *testing.State) {
 		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
-			func(ctx context.Context) error {
-				// Relighting is not supported on Lacros. The option is not available.
-				if browserType == browser.TypeLacros {
-					return nil
-				}
-				return gm.SetAdjustVideoLighting(true)(ctx)
-			},
+			// Video lighting option is not available on Lacros due to http://b/265954612.
+			gm.SetAdjustVideoLighting(true),
 			gm.SetSendResolution(sendResolutionName),
 		),
 		// Video effects are not supported on Lacros on VM due to http://b/265954612.

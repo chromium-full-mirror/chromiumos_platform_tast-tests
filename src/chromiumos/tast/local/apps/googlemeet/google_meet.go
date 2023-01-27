@@ -32,7 +32,7 @@ const (
 	shortUITimeout  = 3 * time.Second  // Used for situations where UI response are faster.
 
 	newMeetingURL = "http://meet.google.com/new"
-	pwaInstallURL = "https://meet.google.com"
+	homePageURL   = "https://meet.google.com/"
 
 	appName = "Meet"
 )
@@ -43,6 +43,10 @@ var (
 
 	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetRootWebArea)
 	videoNode         = nodewith.Role(role.Video).Ancestor(meetRootWebArea)
+
+	endMeetingButton = nodewith.Name("Leave call").Role(role.Button).Ancestor(meetRootWebArea)
+	// Use end meeting button to identify whether it is currently in a meeting.
+	inMeetingIdentifier = endMeetingButton
 )
 
 // GoogleMeet represents a type of GoogleMeet meeting instance.
@@ -83,16 +87,32 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, 
 //	}
 //	defer cleanup(cleanupCtx)
 func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, urlParams map[string]string) (*GoogleMeet, error) {
-	newMeetingURL := newMeetingURL
+	gm, err := startMeeting(ctx, cr, br, newMeetingURL, urlParams)
+	if err != nil {
+		return gm, err
+	}
+	return gm, gm.waitUntilInMeeting(ctx)
+}
+
+// JoinMeeting joins an existing meeting using given browser.
+func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingCode string, urlParams map[string]string) (*GoogleMeet, error) {
+	gm, err := startMeeting(ctx, cr, br, homePageURL+meetingCode, urlParams)
+	if err != nil {
+		return gm, err
+	}
+	return gm, gm.joinConference(ctx)
+}
+
+func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingURL string, urlParams map[string]string) (*GoogleMeet, error) {
 	if urlParams != nil && len(urlParams) > 0 {
 		values := url.Values{}
 		for k, v := range urlParams {
 			values.Add(k, v)
 		}
-		newMeetingURL = newMeetingURL + "?" + values.Encode()
+		meetingURL = meetingURL + "?" + values.Encode()
 	}
 
-	conn, err := br.NewConn(ctx, newMeetingURL)
+	conn, err := br.NewConn(ctx, meetingURL)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +146,23 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 //	}
 //	defer cleanup(cleanupCtx)
 func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*GoogleMeet, error) {
+	gm, err := startMeetingUsingPWA(ctx, cr, br, newMeetingURL)
+	if err != nil {
+		return gm, err
+	}
+	return gm, gm.waitUntilInMeeting(ctx)
+}
+
+// JoinMeetingUsingPWA joins an existing meeting using PWA.
+func JoinMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingCode string) (*GoogleMeet, error) {
+	gm, err := startMeetingUsingPWA(ctx, cr, br, homePageURL+meetingCode)
+	if err != nil {
+		return gm, err
+	}
+	return gm, gm.joinConference(ctx)
+}
+
+func startMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingURL string) (*GoogleMeet, error) {
 	if err := InstallPWA(ctx, cr, br); err != nil {
 		return nil, err
 	}
@@ -164,7 +201,7 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 		return nil, errors.Wrap(err, "failed to connect to Meet PWA")
 	}
 
-	if err := gm.conn.Navigate(ctx, newMeetingURL); err != nil {
+	if err := gm.conn.Navigate(ctx, meetingURL); err != nil {
 		return nil, errors.Wrap(err, "failed to start new meeting")
 	}
 	if err := webutil.WaitForQuiescence(ctx, gm.conn, longUITimeout); err != nil {
@@ -285,7 +322,7 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 	}
 
 	// Install Meet PWA.
-	if err := apps.InstallPWAForURL(ctx, tconn, br, pwaInstallURL, 30*time.Second); err != nil {
+	if err := apps.InstallPWAForURL(ctx, tconn, br, homePageURL, 30*time.Second); err != nil {
 		return errors.Wrap(err, "failed to install Meet PWA")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, tconn, apps.Meet.ID, time.Minute)
@@ -299,4 +336,36 @@ func (gm *GoogleMeet) ScreenshotCanvas(ctx context.Context, cr *chrome.Chrome) (
 	}
 
 	return screenshot.GrabAndCropScreenshot(ctx, cr, videoNodeInfo.Location)
+}
+
+// joinConference joins the conference from the home screen.
+// It deals with a few scenarios to enter google meet room:
+// 1. If joins the meeting automatically skipping the home sreen, do nothing.
+// 2. If there is a "Join now" or "Ask for join" button, click it.
+func (gm *GoogleMeet) joinConference(ctx context.Context) error {
+	joinNowButton := nodewith.Name("Join now").Role(role.Button)
+	askToJoinButton := nodewith.Name("Ask to join").Role(role.Button)
+
+	nodeFinder, err := gm.ui.FindAnyExists(ctx, joinNowButton, askToJoinButton, inMeetingIdentifier)
+	if err != nil {
+		return err
+	}
+
+	// Do nothing if the user joins the meeting automatically.
+	if nodeFinder == inMeetingIdentifier {
+		return nil
+	}
+
+	return uiauto.Combine("join meeting",
+		gm.ui.WithTimeout(longUITimeout).DoDefaultUntil(
+			nodeFinder,
+			// The joining process takes a while. Using default timeout here.
+			gm.ui.WaitUntilGone(nodeFinder)),
+		gm.waitUntilInMeeting,
+		gm.ClearPromptsForNewMeeting,
+	)(ctx)
+}
+
+func (gm *GoogleMeet) waitUntilInMeeting(ctx context.Context) error {
+	return gm.ui.WithTimeout(mediumUITimeout).WaitUntilExists(inMeetingIdentifier)(ctx)
 }
