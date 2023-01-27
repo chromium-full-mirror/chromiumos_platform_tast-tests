@@ -23,6 +23,9 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto/lockscreen"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/externaldata"
 	"chromiumos/tast/local/session"
@@ -679,4 +682,54 @@ func (c *PolicyService) ClientID(ctx context.Context, req *empty.Empty) (*ppb.Cl
 func (c *PolicyService) GetTimeOfDay(ctx context.Context, req *empty.Empty) (*ppb.GetTimeOfDayResponse, error) {
 	now := time.Now()
 	return &ppb.GetTimeOfDayResponse{Hour: int32(now.Hour()), Minute: int32(now.Minute())}, nil
+}
+
+// LockDevice locks the device's screen.
+func (c *PolicyService) LockDevice(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	if err := quicksettings.LockScreen(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to lock the screen with quick settings")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// UnlockDeviceWithPassword tries to unlock the lock screen with the password provided as a param.
+func (c *PolicyService) UnlockDeviceWithPassword(ctx context.Context, req *ppb.UnlockDeviceWithPasswordRequest) (*empty.Empty, error) {
+	tconn, err := c.chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	if err := lockscreen.WaitForPasswordField(ctx, tconn, req.Username, 10*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the password field")
+	}
+	keyboard, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get virtual keyboard")
+	}
+	defer keyboard.Close()
+
+	if err := lockscreen.EnterPassword(ctx, tconn, req.Username, req.Password, keyboard); err != nil {
+		return nil, errors.Wrap(err, "failed to enter password")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// Logout performs a logout on the current user session.
+func (c *PolicyService) Logout(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+	if err := quicksettings.SignOut(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to sign out with quick settings")
+	}
+
+	return &empty.Empty{}, nil
 }

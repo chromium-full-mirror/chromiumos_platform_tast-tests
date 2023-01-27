@@ -54,6 +54,18 @@ service PolicyService {
 
   // Gets the local time.
   rpc GetTimeOfDay(google.protobuf.Empty) returns (GetTimeOfDayResponse) {}
+
+  // Locks the device.
+  rpc LockDevice(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // Unlock the device with password.
+  rpc UnlockDeviceWithPassword(UnlockDeviceWithPasswordRequest) returns (google.protobuf.Empty) {}
+
+  // Log outs of the user session.
+  rpc Logout(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
 }
 
 message VerifyPolicyStatusRequest {
@@ -160,4 +172,9 @@ message ClientIdResponse {
 message GetTimeOfDayResponse{
   int32 hour = 1;
   int32 minute = 2;
+}
+
+message UnlockDeviceWithPasswordRequest{
+  string username = 1;
+  string password = 2;
 }
