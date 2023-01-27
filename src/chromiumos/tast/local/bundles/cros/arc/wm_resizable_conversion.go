@@ -179,7 +179,7 @@ func wmRV20(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	}
 
 	// Store activity's original window info to be compared with after tablet mode disabled.
-	ow, err := ash.GetARCAppWindowInfo(ctx, tconn, wm.Pkg24)
+	windowInfoBeforeTabletMode, err := ash.GetARCAppWindowInfo(ctx, tconn, wm.Pkg24)
 	if err != nil {
 		return nil
 	}
@@ -189,7 +189,7 @@ func wmRV20(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	}
 
 	// window id will be used to wait on certain conditions.
-	wID := ow.ID
+	wID := windowInfoBeforeTabletMode.ID
 
 	// Enable tablet mode, the activity should go to Maximized state.
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
@@ -233,7 +233,8 @@ func wmRV20(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for frame to become visible")
 	}
-	if err := ash.WaitForARCAppWindowState(ctx, tconn, wm.Pkg24, ash.WindowStateMaximized); err != nil {
+	// Converting to clamshell should restore the previous state.
+	if err := ash.WaitForARCAppWindowState(ctx, tconn, wm.Pkg24, windowInfoBeforeTabletMode.State); err != nil {
 		return err
 	}
 	if err := ash.WaitWindowFinishAnimating(ctx, tconn, wID); err != nil {

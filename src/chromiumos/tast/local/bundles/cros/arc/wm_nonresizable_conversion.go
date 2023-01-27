@@ -305,7 +305,8 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for frame to become visible")
 	}
-	if err := ash.WaitForARCAppWindowState(ctx, tconn, wm.Pkg24, ash.WindowStateMaximized); err != nil {
+	// Converting to clamshell should restore the previous state.
+	if err := ash.WaitForARCAppWindowState(ctx, tconn, wm.Pkg24, windowInfoBeforeTabletMode.State); err != nil {
 		return err
 	}
 	if err := ash.WaitWindowFinishAnimating(ctx, tconn, windowID); err != nil {
