@@ -87,16 +87,17 @@ func Fusebox(ctx context.Context, s *testing.State) {
 
 	switch s.Param().(string) {
 	case "basicVal":
-		exerciseFuseboxBasic(ctx, cleanupCtx, cr, s)
+		exerciseFuseboxTempDir(ctx, cleanupCtx, s, cr, nil)
 	case "advancedVal":
-		tdd := exerciseFuseboxBasic(ctx, cleanupCtx, cr, s)
-		exerciseFuseboxAdvanced(ctx, s, tdd)
+		exerciseFuseboxTempDir(ctx, cleanupCtx, s, cr, exerciseFuseboxAdvanced)
 	case "fspVal":
 		exerciseFuseboxFSP(ctx, s)
 	}
 }
 
-func exerciseFuseboxBasic(ctx, cleanupCtx context.Context, cr *chrome.Chrome, s *testing.State) tempDirData {
+func exerciseFuseboxTempDir(ctx, cleanupCtx context.Context, s *testing.State, cr *chrome.Chrome,
+	extraTests func(context.Context, *testing.State, tempDirData)) {
+
 	// Make a temporary directory.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -118,7 +119,10 @@ func exerciseFuseboxBasic(ctx, cleanupCtx context.Context, cr *chrome.Chrome, s 
 		"wfru.txt", "write fusebox; read underlying")
 	checkFuseboxRoundTrip(s, tdd.UnderlyingFilePath, tdd.FuseboxFilePath,
 		"wurf.txt", "write underlying; read fusebox")
-	return tdd
+
+	if extraTests != nil {
+		extraTests(ctx, s, tdd)
+	}
 }
 
 func checkFuseboxRoundTrip(s *testing.State, writeFilePath, readFilePath, baseName, data string) {
