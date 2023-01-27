@@ -38,3 +38,23 @@ In the chroot they can be found under
 On the DUT they can be found under
 `/usr/local/libexec/tast/apks/local/cros/`
 
+# Code Styles
+
+Please follow
+[AOSP Java style](https://source.android.com/docs/setup/contribute/code-style)
+unless there's a specific reason.
+
+Currently we have a limitation that we cannot use any external library for
+building apks (b/217501318), including androidx support library, all code
+should be written using standard android SDK only.
+If androidx or some other dependency is needed, it’s still possible to put your
+source code under ARC++ internal repository and use the prebuilt apk as
+external data
+([example](https://crsrc.org/o/src/platform/tast-tests/src/chromiumos/tast/local/bundles/cros/arc/data/ArcCompanionLibDemo.apk.external)).
+From maintenance perspective, this is not recommended.
+
+# About OWNERS
+
+Tast reviewers (tast-owners@google.com) are experts on Go language and Tast
+tests, but not Java and Android. Thus, we have additional OWNERS for this
+directory to review Android and Java code.
