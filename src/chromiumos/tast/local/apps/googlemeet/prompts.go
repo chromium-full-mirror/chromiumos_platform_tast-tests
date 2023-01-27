@@ -34,12 +34,19 @@ var (
 		PromptFinder:      whiteboardDialogFinder,
 		ClearButtonFinder: prompts.GotItButtonFinder.Ancestor(whiteboardDialogFinder),
 	}
+
+	micMutedAlertFinder = nodewith.Name("Your mic is muted by your system settings").Role(role.Alert).Ancestor(meetRootWebArea)
+	micMutedPrompt      = prompts.Prompt{
+		Name:              "Your mic is muted by your system settings",
+		PromptFinder:      micMutedAlertFinder,
+		ClearButtonFinder: prompts.CloseButtonFinder.Ancestor(micMutedAlertFinder),
+	}
 )
 
 // ClearPromptsForNewMeeting clears potential prompts on launching new meeting.
 func (gm *GoogleMeet) ClearPromptsForNewMeeting(ctx context.Context) error {
 	promptsToBeManaged := []prompts.Prompt{
-		prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt, meetingReadyPrompt, meetKeepsYouSafePrompt, whiteboardPrompt,
+		prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt, meetingReadyPrompt, meetKeepsYouSafePrompt, whiteboardPrompt, micMutedPrompt,
 	}
 	return prompts.ClearPotentialPrompts(gm.tconn, 3*time.Second, promptsToBeManaged...)(ctx)
 }
