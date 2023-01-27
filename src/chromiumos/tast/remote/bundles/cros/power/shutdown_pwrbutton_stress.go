@@ -153,7 +153,7 @@ func pwrOnDut(ctx context.Context, pxy *servo.Proxy, d *dut.DUT) error {
 	if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
 		return errors.Wrap(err, "failed to power normal press")
 	}
-	wtCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	wtCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 	if err := d.WaitConnect(wtCtx); err != nil {
 		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
