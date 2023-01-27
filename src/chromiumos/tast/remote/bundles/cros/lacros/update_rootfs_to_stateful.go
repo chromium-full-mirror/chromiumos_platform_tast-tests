@@ -24,7 +24,8 @@ func init() {
 		Desc:         "Tests that Stateful Lacros is selected when it is newer than Rootfs Lacros",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-team@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO(b/266740467): Reenable this test for the group:mainline once fixed.
+		// Attr:         []string{"group:mainline", "informational"},	// running manually
 		SoftwareDeps: []string{"chrome", "lacros"},
 		ServiceDeps:  []string{"tast.cros.lacros.UpdateTestService"},
 		// lacrosComponent is a runtime var to specify a name of the component which Lacros is provisioned to.
