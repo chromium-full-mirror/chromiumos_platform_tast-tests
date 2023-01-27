@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/hypervisor"
 	"chromiumos/tast/rpc"
@@ -41,6 +42,7 @@ func init() {
 				panicCmd: kernelPanicCmd,
 				execName: "kernel",
 			},
+			Fixture: fixture.CleanOwnership,
 		}, {
 			Name: "mock_consent",
 			Val: testParams{

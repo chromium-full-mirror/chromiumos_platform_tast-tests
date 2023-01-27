@@ -14,6 +14,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/rpc"
 	crash_service "chromiumos/tast/services/cros/crash"
@@ -35,6 +36,7 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			Val:               crash_service.SetUpCrashTestRequest_REAL_CONSENT,
+			Fixture:           fixture.CleanOwnership,
 		}, {
 			Name: "mock_consent",
 			Val:  crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
