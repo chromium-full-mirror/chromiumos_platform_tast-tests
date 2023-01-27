@@ -80,7 +80,14 @@ func Autoconnect(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure service's state matches expectations.
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 150*time.Second); err != nil {
-		s.Fatal("Failed to get service state: ", err)
+	autoconnectErr := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 150*time.Second)
+	if autoconnectErr == nil {
+		return
+	}
+	_, err = helper.Connect(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to cellular (precondition): ", err)
+	} else {
+		s.Fatal("Failed to reach online state: ", autoconnectErr)
 	}
 }
