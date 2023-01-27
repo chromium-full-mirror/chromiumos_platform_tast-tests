@@ -269,7 +269,7 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 	// E.g. I:*  If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
 	reI := regexp.MustCompile(`^I:[*] If#=([0-9 ]{2}) .* Cls=([0-9a-f]{2}).* Sub=([0-9a-f]{2}) Prot=([0-9a-f]{2}) Driver=([\S]*)`)
 	// E.g. S:  SerialNumber=0000064ffcb5
-	reSerial := regexp.MustCompile(`SerialNumber=(.*)`)
+	reSerial := regexp.MustCompile(`SerialNumber=([\S]*)`)
 
 	var res []Device
 	devs, err := usbDevices(ctx)

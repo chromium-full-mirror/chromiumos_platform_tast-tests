@@ -86,6 +86,20 @@ S:  Product=Test Serial With Trailing Spaces
 S:  SerialNumber=serial  
 C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=100mA
 I:* If#= 0 Alt= 0 #EPs= 0 Cls=fe(app. ) Sub=01 Prot=01 Driver=(none)
+
+T:  Bus=01 Lev=01 Prnt=01 Port=07 Cnt=01 Dev#=  2 Spd=480  MxCh= 0
+D:  Ver= 2.01 Cls=ef(misc ) Sub=02 Prot=01 MxPS=64 #Cfgs=  1
+P:  Vendor=5986 ProdID=115f Rev=56.14
+S:  Manufacturer=Bison
+S:  Product=Integrated Camera
+S:  SerialNumber= 
+C:* #Ifs= 3 Cfg#= 1 Atr=80 MxPwr=500mA
+A:  FirstIf#= 0 IfCount= 2 Cls=0e(video) Sub=03 Prot=00
+A:  FirstIf#= 2 IfCount= 1 Cls=fe(app. ) Sub=01 Prot=00
+I:* If#= 0 Alt= 0 #EPs= 1 Cls=0e(video) Sub=01 Prot=00 Driver=uvcvideo
+E:  Ad=83(I) Atr=03(Int.) MxPS=  32 Ivl=4ms
+I:* If#= 1 Alt= 0 #EPs= 0 Cls=0e(video) Sub=02 Prot=00 Driver=uvcvideo
+I:* If#= 2 Alt= 0 #EPs= 0 Cls=fe(app. ) Sub=01 Prot=01 Driver=(none)
 `,
 }
 
@@ -254,9 +268,40 @@ Device Descriptor:
 	  "VendorId" : "USB:0x2A2B",
 	  "Version" : "trailing_spaces_version",
 	  "VersionFormat" : "plain"
-	}
+	},
+    {
+      "Name" : "Integrated Camera",
+      "Guid" : [
+        "3b357631-bd94-5a1a-9d53-428c2853c0b0",
+        "1e16fab8-dc77-520c-aaa0-25ddc8429318"
+      ],
+      "Serial" : "",
+      "Vendor" : "Bison",
+      "VendorId" : "USB:0x5986",
+      "Version" : "56.14",
+      "VersionFormat" : "bcd"
+    }
   ]
 }`,
+	// Test camera device that has an empty serial number along with
+	// the trailing whitespace in the libusb reference.
+	"lsusb -v -d5986:115f -s01:2": `Bus 001 Device 002: ID 5986:115f Acer, Inc Integrated Camera
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.01
+  bDeviceClass          239 Miscellaneous Device
+  bDeviceSubClass         2 
+  bDeviceProtocol         1 Interface Association
+  bMaxPacketSize0        64
+  idVendor           0x5986 Acer, Inc
+  idProduct          0x115f 
+  bcdDevice           56.14
+  iManufacturer           3 Bison
+  iProduct                1 Integrated Camera
+  iSerial                 2  
+  bNumConfigurations      1
+`,
 }
 
 func ptr(s string) *string {
@@ -431,6 +476,24 @@ func TestAttachedDevices(t *testing.T) {
 			FwupdFirmwareVersionInfo: &FwupdFirmwareVersionInfo{
 				Version:       "trailing_spaces_version",
 				VersionFormat: "plain",
+			},
+		},
+		Device{
+			VendorID:    "5986",
+			ProdID:      "115f",
+			VendorName:  "Acer, Inc",
+			ProductName: "Integrated Camera",
+			Class:       "ef",
+			SubClass:    "02",
+			Protocol:    "01",
+			Interfaces: []Interface{
+				{Class: "0e", SubClass: "01", Protocol: "00", Driver: ptr("uvcvideo")},
+				{InterfaceNumber: 1, Class: "0e", SubClass: "02", Protocol: "00", Driver: ptr("uvcvideo")},
+				{InterfaceNumber: 2, Class: "fe", SubClass: "01", Protocol: "01"},
+			},
+			FwupdFirmwareVersionInfo: &FwupdFirmwareVersionInfo{
+				Version:       "56.14",
+				VersionFormat: "bcd",
 			},
 		},
 	}
