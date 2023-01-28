@@ -390,8 +390,7 @@ func init() {
 				// Verifies that DUT can connect to an AP broadcasting a WPA2 network using AES based CCMP.
 				// In addition, the client must also support 802.11w protected management frames.
 				// And the client uses WPA-PSK-SHA256 for key management suite
-				Name:      "wpa2pmfsha256",
-				ExtraAttr: []string{"wificell_unstable"},
+				Name: "wpa2pmfsha256",
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory(

@@ -352,7 +352,6 @@ func simpleConnectWPA() []simpleConnectParams {
 		Doc: append(simpleConnectDocPref("an AP broadcasting a WPA2 network using AES based CCMP."),
 			"In addition, the client must also support 802.11w protected management frames.",
 			"And the client uses WPA-PSK-SHA256 for key management suite"),
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 		Val: []simpleConnectParamsVal{{
 			APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
