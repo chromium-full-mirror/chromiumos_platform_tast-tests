@@ -227,23 +227,22 @@ type baseSetupFixtureImpl struct {
 
 func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Set VC related flags by default for all fixtures.
-	var fOpts = []chrome.Option{
+	var opts = []chrome.Option{
 		chrome.EnableFeatures("SpeakOnMuteEnabled"),
-		chrome.EnableFeatures("VcControlsUi"),
-		chrome.EnableFeatures("VCBackgroundBlur"),
-		chrome.EnableFeatures("VCPortraitRelighting"),
+		chrome.EnableFeatures("VideoConference"),
 	}
 
 	var err error
 	if f.fOpts != nil {
-		fOpts, err = f.fOpts(ctx, s)
+		fOpts, err := f.fOpts(ctx, s)
 		if err != nil {
 			s.Fatal("Failed to get Chrome options: ", err)
 		}
+		opts = append(opts, fOpts...)
 	}
 
 	// keep-alive for lacros extension apps. A no-op for ash extensions.
-	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)), fOpts...)
+	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
