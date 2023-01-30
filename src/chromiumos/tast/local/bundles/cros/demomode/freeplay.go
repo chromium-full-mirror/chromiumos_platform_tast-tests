@@ -25,7 +25,7 @@ func init() {
 		Func:         Freeplay,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify that all preinstalled sample apps are present in Demo Mode freeplay",
-		Contacts:     []string{"jacksontadie@google.com", "cros-demo-mode-eng@google.com"},
+		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},

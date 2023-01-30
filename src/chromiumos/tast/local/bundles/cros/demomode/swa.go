@@ -27,7 +27,8 @@ func init() {
 		Func:         SWA,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the Demo Mode System Web App launches in fullscreen and goes to windowed mode after user interaction",
-		Contacts:     []string{"jacksontadie@google.com", "cros-demo-mode-eng@google.com"},
+		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
+		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which

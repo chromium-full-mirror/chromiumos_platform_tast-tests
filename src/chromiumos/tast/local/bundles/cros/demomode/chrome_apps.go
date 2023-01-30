@@ -22,7 +22,8 @@ func init() {
 		Func:         ChromeApps,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify state about the core demo mode Chrome Apps",
-		Contacts:     []string{"cros-demo-mode-eng@google.com"},
+		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
+		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBE,
 		Attr:         []string{"group:mainline", "informational"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
