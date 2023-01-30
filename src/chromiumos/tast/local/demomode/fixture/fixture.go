@@ -156,6 +156,17 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.DemoPreferencesScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the demo preferences screen to be visible: ", err)
 	}
+	retailerNameInput := nodewith.Role(role.TextField).Name("Retailer Name")
+	storeNumberInput := nodewith.Role(role.TextField).Name("Store Number")
+	if err := uiauto.Combine("Enter Retailer Name And Store Number",
+		ui.LeftClickUntil(retailerNameInput, ui.WaitUntilExists(retailerNameInput.Editable().Focused())),
+		kb.TypeAction("Tast Retailer"),
+		kb.AccelAction("tab"),
+		ui.WaitUntilExists(storeNumberInput.Editable().Focused()),
+		kb.TypeAction("1234"),
+	)(ctx); err != nil {
+		s.Fatal("Failed to enter Retailer Name or Store Number: ", err)
+	}
 	findAndClickButton("DemoPreferencesScreen.getDemoPreferencesNextButtonName()")
 
 	shouldSkipEulaScreen := false
