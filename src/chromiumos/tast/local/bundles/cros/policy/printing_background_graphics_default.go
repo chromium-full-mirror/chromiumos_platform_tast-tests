@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -124,16 +125,22 @@ func PrintingBackgroundGraphicsDefault(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to create Test API connection: ", err)
 			}
 
-			checkbox := nodewith.Role(role.CheckBox).Name("Background graphics")
-
 			ui := uiauto.New(tconn)
-			if err := uiauto.Combine("open print preview",
+			if err := uiauto.Combine("open Print Preview with a shortcut",
 				kb.AccelAction("Ctrl+P"),
-				ui.LeftClick(nodewith.Role(role.Button).Name("More settings")),
-				ui.WaitUntilExists(checkbox),
-			)(ctx); err != nil {
-				s.Fatal("Failed to open print preview: ", err)
+				printpreview.WaitForPrintPreview(tconn))(ctx); err != nil {
+				s.Fatal("Failed to open the Print Preview: ", err)
 			}
+
+			if err := printpreview.ExpandMoreSettings(ctx, tconn); err != nil {
+				s.Fatal("Failed to expand 'more settings': ", err)
+			}
+
+			checkbox := nodewith.Role(role.CheckBox).Name("Background graphics")
+			if err := ui.WaitUntilExists(checkbox)(ctx); err != nil {
+				s.Fatal("Failed to wait until 'Background graphics' checkbox exists: ", err)
+			}
+
 			nodeInfo, err := ui.Info(ctx, checkbox)
 			if err != nil {
 				s.Fatal("Failed to check state of 'Background graphics' checkbox: ", err)

@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/printmanagementapp"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
@@ -31,13 +32,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DeletePrintJobHistoryAllowed policy, checking the corresponding button state after setting the policy",
 		Contacts: []string{
-			"poromov@chromium.org", // Test author
+			"chromeos-commercial-printing@google.com",
+			"project-bolton@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeletePrintJobHistoryAllowed{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.Printers{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
@@ -114,24 +119,25 @@ func DeletePrintJobHistoryAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Open print management page.
-			conn, err := cr.NewConn(ctx, "chrome://print-management")
+			// Launch Print Management app.
+			_, err := printmanagementapp.Launch(ctx, tconn)
 			if err != nil {
-				s.Fatal("Failed to connect to the print management page: ", err)
+				s.Fatal("Failed to launch Print Management app: ", err)
 			}
-			defer conn.Close()
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
-			// Print the current page.
-			if err := uiauto.Combine("Select the printer and print",
+			if err := uiauto.Combine("open Print Preview with a shortcut",
 				kb.AccelAction("Ctrl+P"),
-				uia.WaitUntilExists(printpreview.PrintPreviewNode),
-				uia.LeftClick(nodewith.Role(role.PopUpButton).NameStartingWith("Destination")),
-				uia.LeftClick(nodewith.Role(role.MenuItem).Name("See more destinations")),
-				uia.LeftClick(nodewith.Role(role.Cell).NameStartingWith(printerName)),
-				uia.LeftClick(nodewith.Role(role.Button).Name("Print")),
-			)(ctx); err != nil {
-				s.Fatal("Failed to select printer in print destination popup and print: ", err)
+				printpreview.WaitForPrintPreview(tconn))(ctx); err != nil {
+				s.Fatal("Failed to open the Print Preview: ", err)
+			}
+
+			if err := printpreview.SelectPrinter(ctx, tconn, printerName); err != nil {
+				s.Fatal("Failed to select printer: ", err)
+			}
+
+			if err := printpreview.Print(ctx, tconn); err != nil {
+				s.Fatal("Failed to print: ", err)
 			}
 
 			// Cancel the print job.

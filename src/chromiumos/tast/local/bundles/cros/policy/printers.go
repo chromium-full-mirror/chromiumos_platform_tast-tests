@@ -19,10 +19,8 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/printmanagementapp"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -129,19 +127,25 @@ func Printers(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("select the printer and print",
+	if err := uiauto.Combine("open Print Preview with a shortcut",
 		kb.AccelAction("Ctrl+P"),
-		ui.WaitUntilExists(printpreview.PrintPreviewNode),
-		ui.DoDefault(nodewith.Role(role.PopUpButton).NameStartingWith("Destination")),
-		ui.DoDefault(nodewith.Role(role.MenuItem).Name("See more destinations")),
-		ui.DoDefault(nodewith.Role(role.Cell).NameStartingWith(printerName)),
-		ui.DoDefault(nodewith.Role(role.Button).Name("Print")),
-		// Wait for the print preview window to close. Otherwise, the print preview
-		// may still be in the process of closing when we launch the print
-		// management app, and, once fully closed, steal focus from the print
-		// management app.
-		ui.WaitUntilGone(printpreview.PrintPreviewNode),
-	)(ctx); err != nil {
+		printpreview.WaitForPrintPreview(tconn))(ctx); err != nil {
+		s.Fatal("Failed to open the Print Preview: ", err)
+	}
+
+	if err := printpreview.SelectPrinter(ctx, tconn, printerName); err != nil {
+		s.Fatal("Failed to select printer: ", err)
+	}
+
+	if err := printpreview.Print(ctx, tconn); err != nil {
+		s.Fatal("Failed to print: ", err)
+	}
+
+	// Wait for the print preview window to close. Otherwise, the print preview
+	// may still be in the process of closing when we launch the print
+	// management app, and, once fully closed, steal focus from the print
+	// management app
+	if err := ui.WaitUntilGone(printpreview.PrintPreviewNode)(ctx); err != nil {
 		s.Fatal("Failed to select printer in print destination popup and print: ", err)
 	}
 

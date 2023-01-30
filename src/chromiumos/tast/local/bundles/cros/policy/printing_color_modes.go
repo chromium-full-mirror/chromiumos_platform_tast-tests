@@ -185,22 +185,20 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				s.Error("Failed to create Test API connection: ", err)
 			}
 
-			colorSelection := nodewith.Role(role.ComboBoxSelect).Name("Color")
-
 			ui := uiauto.New(tconn)
-			if err := uiauto.Combine("open print preview",
-				// Wait until the color selection box is available.
+			if err := uiauto.Combine("open Print Preview with a shortcut",
 				kb.AccelAction("Ctrl+P"),
-				ui.WaitUntilExists(printpreview.PrintPreviewNode))(ctx); err != nil {
-				s.Error("Failed to open print preview: ", err)
+				printpreview.WaitForPrintPreview(tconn))(ctx); err != nil {
+				s.Error("Failed to open the Print Preview: ", err)
 			}
 
-			if err := uiauto.Combine("select a printer",
-				ui.DoDefault(nodewith.Role(role.PopUpButton).NameStartingWith("Destination")),
-				ui.DoDefault(nodewith.Role(role.MenuItem).Name("See more destinations")),
-				ui.DoDefault(nodewith.Role(role.Cell).NameStartingWith(printerName)),
-				ui.WaitUntilExists(colorSelection))(ctx); err != nil {
+			if err := printpreview.SelectPrinter(ctx, tconn, printerName); err != nil {
 				s.Error("Failed to select a printer: ", err)
+			}
+
+			colorSelection := nodewith.Role(role.ComboBoxSelect).Name("Color")
+			if err := ui.WaitUntilExists(colorSelection)(ctx); err != nil {
+				s.Error("Failed to find the color selection box: ", err)
 			}
 
 			nodeInfo, err := ui.Info(ctx, colorSelection)
