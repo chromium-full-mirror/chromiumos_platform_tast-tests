@@ -11,6 +11,7 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -353,6 +354,9 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 	if err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed in querying")
 	}
+
+	switchMap := make(map[string]int)
+
 	var mainSwitches, mainRunnableCnt, mainSumRunnableDur uint64 = 0, 0, 0
 	var switches, runnableCnt, sumRunnableDur uint64 = 0, 0, 0
 	for _, res := range results[1:] { // Skip, the first line, "ts","dur","state","tid","name", "is_main_thread".
@@ -372,6 +376,8 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 		switch res[stateIdx] {
 		case "Running":
 			switches++
+			thName := res[nameIdx]
+			switchMap[thName]++
 			if isMainThread {
 				mainSwitches++
 			}
@@ -391,6 +397,25 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 				mainSumRunnableDur += uint64(dur)
 			}
 		}
+	}
+
+	keys := make([]string, 0, len(switchMap))
+	for key := range switchMap {
+		keys = append(keys, key)
+	}
+	// Sort the thread names according to the number of context switches, from more to
+	// fewer.
+	sort.SliceStable(keys, func(i, j int) bool {
+		return switchMap[keys[i]] > switchMap[keys[j]]
+	})
+
+	testing.ContextLog(ctx, "Switches in GPU process: ", switches)
+	const maxPrintKeys = 8
+	for i, key := range keys {
+		if i > maxPrintKeys {
+			break
+		}
+		testing.ContextLogf(ctx, "%15s: %d", key, switchMap[key])
 	}
 
 	gpu.count = switches
