@@ -82,7 +82,9 @@ func RecoveryCryptoWithServer(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.DontSkipOOBEAfterLogin(),
+		// TODO(b/239435669): Remove the old flag after the merge CL.
 		chrome.EnableFeatures("CryptohomeRecoveryFlow"),
+		chrome.EnableFeatures("CryptohomeRecovery"),
 		chrome.ExtraArgs("--force-cryptohome-recovery-for-testing"))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
