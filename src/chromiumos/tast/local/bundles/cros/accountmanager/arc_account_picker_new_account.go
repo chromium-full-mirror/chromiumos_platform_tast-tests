@@ -121,7 +121,7 @@ func ARCAccountPickerNewAccount(ctx context.Context, s *testing.State) {
 	}
 
 	if err := arc.ClickAddAccountInSettings(ctx, d, tconn); err != nil {
-		s.Fatal("Failed to open Add account dialog from ARC")
+		s.Fatal("Failed to open Add account dialog from ARC: ", err)
 	}
 
 	addAccountItem := nodewith.Name("Add Google Account").Role(role.Button).Focusable().Ancestor(addAccountDialog)
