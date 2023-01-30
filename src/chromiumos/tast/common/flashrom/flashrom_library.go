@@ -199,7 +199,10 @@ func appendFileAndRegionNamesArgs(cmdArgs []string, fullSizeFilePath string, reg
 		cmdArgs = append(cmdArgs, fullSizeFilePath)
 	}
 	for _, regionName := range regionNames {
-		cmdArgs = append(cmdArgs, "-i", regionName)
+		// Only non-empty string is allowed after -i.
+		if regionName != "" {
+			cmdArgs = append(cmdArgs, "-i", regionName)
+		}
 	}
 	return cmdArgs
 }

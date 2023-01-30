@@ -243,23 +243,23 @@ func NewImageFromData(data []byte, sections map[ImageSection]SectionInfo) *Image
 }
 
 // NewImage creates an Image object representing the currently loaded BIOS image. If you pass in a section, only that section will be read.
-func NewImage(ctx context.Context, section ImageSection, programmer flashrom.Programmer) (*Image, error) {
+func NewImage(ctx context.Context, section ImageSection, flashromInstance *flashrom.Instance) (*Image, error) {
 	tmpFile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile for image contents")
 	}
 	defer os.Remove(tmpFile.Name())
 
-	frArgs := []string{"-p", string(programmer), "-r"}
 	isOneSection := section != ""
+	fullSizeFilePath := tmpFile.Name()
+	regionName := ""
 	if isOneSection {
-		frArgs = append(frArgs, "-i", fmt.Sprintf("%s:%s", section, tmpFile.Name()))
-	} else {
-		frArgs = append(frArgs, tmpFile.Name())
+		fullSizeFilePath = ""
+		regionName = fmt.Sprintf("%s:%s", section, tmpFile.Name())
 	}
 
-	if err = testexec.CommandContext(ctx, "flashrom", frArgs...).Run(testexec.DumpLogOnError); err != nil {
-		return nil, errors.Wrap(err, "could not read firmware host image")
+	if out, err := flashromInstance.Read(ctx, fullSizeFilePath, []string{regionName}); err != nil {
+		return nil, errors.Wrapf(err, "could not read firmware host image: %v", string(out))
 	}
 
 	data, err := ioutil.ReadFile(tmpFile.Name())
@@ -287,7 +287,7 @@ func NewImage(ctx context.Context, section ImageSection, programmer flashrom.Pro
 }
 
 // NewImageToFile creates a file representing the desired section of currently loaded firmware image.
-func NewImageToFile(ctx context.Context, section ImageSection, programmer flashrom.Programmer, dirpath string) (string, error) {
+func NewImageToFile(ctx context.Context, section ImageSection, flashromInstance *flashrom.Instance, dirpath string) (string, error) {
 	fileDir := dirpath
 	if dirpath == "" {
 		fileDir = "/var/tmp"
@@ -297,15 +297,14 @@ func NewImageToFile(ctx context.Context, section ImageSection, programmer flashr
 		return "", errors.Wrap(err, "creating tmpfile for image contents")
 	}
 
-	frArgs := []string{"-p", string(programmer), "-r"}
-	isOneSection := section != EmptyImageSection
-	if isOneSection {
-		frArgs = append(frArgs, "-i", fmt.Sprintf("%s:%s", section, tmpFile.Name()))
-	} else {
-		frArgs = append(frArgs, tmpFile.Name())
+	fullSizeFileName := tmpFile.Name()
+	regionName := ""
+	if section != EmptyImageSection {
+		fullSizeFileName = ""
+		regionName = fmt.Sprintf("%s:%s", section, tmpFile.Name())
 	}
 
-	if out, err := testexec.CommandContext(ctx, "flashrom", frArgs...).Output(testexec.DumpLogOnError); err != nil {
+	if out, err := flashromInstance.Read(ctx, fullSizeFileName, []string{regionName}); err != nil {
 		os.Remove(tmpFile.Name())
 		return "", errors.Wrapf(err, "could not read firmware host image: %v", string(out))
 	}
@@ -339,7 +338,7 @@ func (i *Image) WriteImageToFile(ctx context.Context, sec ImageSection, dirpath 
 }
 
 // WriteFlashrom writes the current data in the specified section into flashrom.
-func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer flashrom.Programmer) error {
+func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, flashromInstance *flashrom.Instance) error {
 	// dirpath arg is irrelevant here since file gets deleted in the defer call.
 	imgTmp, err := i.WriteImageToFile(ctx, sec, "")
 	if err != nil {
@@ -347,8 +346,7 @@ func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer 
 	}
 	defer os.Remove(imgTmp)
 
-	// -N == no verify all. Verify is slow.
-	if out, err := testexec.CommandContext(ctx, "flashrom", "-N", "-p", string(programmer), "-i", fmt.Sprintf("%s:%s", sec, imgTmp), "-w").Output(testexec.DumpLogOnError); err != nil {
+	if out, err := flashromInstance.Write(ctx, "", true /* -N == no verify all.*/, false, "", []string{fmt.Sprintf("%s:%s", sec, imgTmp)}); err != nil {
 		return errors.Wrapf(err, "could not write host image, flashrom output: %s", string(out))
 	}
 
@@ -356,39 +354,34 @@ func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer 
 }
 
 // WriteImageFromSingleSectionFile writes the provided single section file in the specified section.
-func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec ImageSection, programmer flashrom.Programmer) error {
+func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec ImageSection, flashromInstance *flashrom.Instance) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return errors.Wrap(err, "file does not exist")
 	} else if err != nil {
 		return errors.Wrap(err, "reading image from file")
 	}
 
-	if err := testexec.CommandContext(ctx, "flashrom", "-p", string(programmer), "-i", fmt.Sprintf("%s:%s", sec, path), "-w").Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "could not write host image")
+	if out, err := flashromInstance.Write(ctx, "", false, false, "", []string{fmt.Sprintf("%s:%s", sec, path)}); err != nil {
+		return errors.Wrapf(err, "could not write host image: %v", string(out))
 	}
 
 	return nil
 }
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
-func WriteImageFromMultiSectionFile(ctx context.Context, path string, sec ImageSection, programmer flashrom.Programmer) error {
+func WriteImageFromMultiSectionFile(ctx context.Context, path string, sec ImageSection, flashromInstance *flashrom.Instance) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return errors.Wrap(err, "file does not exist")
 	} else if err != nil {
 		return errors.Wrap(err, "reading image from file")
 	}
 
-	// In case EmptyImageSection, no '-i' argument would be needed and the whole AP/EC will be targeted.
-	frArgs := []string{"-N", "-p", string(programmer)}
-	switch sec {
-	case EmptyImageSection:
-		frArgs = append(frArgs, "-w", path)
-	default:
-		// This specific syntax is required to flash a single section from a file with multiple sections on it.
-		frArgs = append(frArgs, "-i", string(sec), "-w", path)
+	regionName := ""
+	if sec != EmptyImageSection {
+		regionName = string(sec)
 	}
 
-	if out, err := testexec.CommandContext(ctx, "flashrom", frArgs...).Output(testexec.DumpLogOnError); err != nil {
+	if out, err := flashromInstance.Write(ctx, path, true /* -N */, false, "", []string{regionName}); err != nil {
 		return errors.Wrapf(err, "could not write image: %v", string(out))
 	}
 
@@ -551,15 +544,14 @@ func ChromeosFirmwareUpdate(ctx context.Context, mode FirmwareUpdateMode, option
 }
 
 // ParseFMAP reads FMAP for given programmer then parses it into map.
-func ParseFMAP(ctx context.Context, programmer flashrom.Programmer) ([]*pb.FMAP_FMAPEntry, error) {
+func ParseFMAP(ctx context.Context, flashromInstance *flashrom.Instance) ([]*pb.FMAP_FMAPEntry, error) {
 	tmpFile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile to read FMAP")
 	}
 	defer os.Remove(tmpFile.Name())
 
-	frArgs := []string{"-p", string(programmer), "-r", "-i", fmt.Sprintf("FMAP:%s", tmpFile.Name())}
-	if err = testexec.CommandContext(ctx, "flashrom", frArgs...).Run(testexec.DumpLogOnError); err != nil {
+	if _, err := flashromInstance.Read(ctx, "", []string{fmt.Sprintf("FMAP:%s", tmpFile.Name())}); err != nil {
 		return nil, errors.Wrap(err, "could not read FMAP with flashrom")
 	}
 

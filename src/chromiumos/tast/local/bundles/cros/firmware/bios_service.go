@@ -111,7 +111,18 @@ var updateModeEnumtoMode = map[pb.UpdateMode]bios.FirmwareUpdateMode{
 
 // BackupImageSection dumps the image region into temporary file locally and returns its path.
 func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInfo) (*pb.FWSectionInfo, error) {
-	path, err := bios.NewImageToFile(ctx, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	path, err := bios.NewImageToFile(ctx, sectionEnumToSection[req.Section], flashromInstance, req.Path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not backup %s region with programmer %s", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer])
 	}
@@ -120,12 +131,23 @@ func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInf
 
 // RestoreImageSection restores image region from temporary file locally and restores fw with it.
 func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectionInfo) (*empty.Empty, error) {
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
 	if req.Section != pb.ImageSection_EmptyImageSection {
-		if err := bios.WriteImageFromSingleSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer]); err != nil {
+		if err := bios.WriteImageFromSingleSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], flashromInstance); err != nil {
 			return nil, errors.Wrapf(err, "could not restore %q region with programmer %q from path %q", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
 		}
 	} else {
-		if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer]); err != nil {
+		if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], flashromInstance); err != nil {
 			return nil, errors.Wrapf(err, "could not restore %q region with programmer %q from path %q", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
 		}
 	}
@@ -154,7 +176,18 @@ func (bs *BiosService) SetAPSoftwareWriteProtect(ctx context.Context, req *pb.WP
 // CorruptFWSection writes garbage over part of the specified firmware section.
 // Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
 func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionInfo) (*pb.FWSectionInfo, error) {
-	img, err := bios.NewImage(ctx, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer])
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	img, err := bios.NewImage(ctx, sectionEnumToSection[req.Section], flashromInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read firmware")
 	}
@@ -173,7 +206,7 @@ func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionIn
 	}
 
 	// Write corrupted image with flashrom.
-	err = bios.WriteImageFromSingleSectionFile(ctx, corruptedImg, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer])
+	err = bios.WriteImageFromSingleSectionFile(ctx, corruptedImg, sectionEnumToSection[req.Section], flashromInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not write firmware")
 	}
@@ -187,7 +220,18 @@ func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionIn
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
 func (bs *BiosService) WriteImageFromMultiSectionFile(ctx context.Context, req *pb.FWSectionInfo) (*empty.Empty, error) {
-	if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer]); err != nil {
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], flashromInstance); err != nil {
 		return nil, errors.Wrapf(err, "could not write %s region with programmer %s from path %s", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
 	}
 	return &empty.Empty{}, nil
@@ -209,7 +253,18 @@ func (*BiosService) ChromeosFirmwareUpdate(ctx context.Context, req *pb.Firmware
 }
 
 func (bs *BiosService) ParseFMAP(ctx context.Context, req *pb.FMAP) (*pb.FMAP, error) {
-	fmap, err := bios.ParseFMAP(ctx, programmerEnumToProgrammer[req.Programmer])
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	fmap, err := bios.ParseFMAP(ctx, flashromInstance)
 	if err != nil {
 		return nil, err
 	}
