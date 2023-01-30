@@ -34,7 +34,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			"accountmanager.accountPool",
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -45,7 +45,7 @@ func init() {
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				chrome.GAIALoginPool(s.RequiredVar("accountmanager.accountPool")),
 				chrome.EnableFeatures("ArcAccountRestrictions"),
 				chrome.ARCSupported(),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...))).Opts()
@@ -53,7 +53,7 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{"accountmanager.accountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToChromeAndArcWithLacros",
@@ -65,7 +65,7 @@ func init() {
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.gaiaPoolDefault"},
+		Vars:            []string{"accountmanager.accountPool"},
 	})
 }
 
@@ -107,7 +107,7 @@ func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	defer cancel()
 
 	opts := []chrome.Option{
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.GAIALoginPool(s.RequiredVar("accountmanager.accountPool")),
 		chrome.EnableFeatures("ArcAccountRestrictions"),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
