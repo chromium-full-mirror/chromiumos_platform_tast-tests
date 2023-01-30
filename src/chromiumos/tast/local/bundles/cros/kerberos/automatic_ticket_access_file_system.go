@@ -39,9 +39,9 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
 		BugComponent: "b:1253670",
-		// TODO(crbug/1380920): Remove when this bug is fixed.
+		// TODO(b/260522053): Remove when this bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel(
-			[]string{"rusty", "steelix", "tentacruel", "lazor", "pompom", "limozeen", "pazquel"}...)),
+			[]string{"rusty", "steelix", "tentacruel", "lazor", "pompom", "limozeen", "pazquel", "magneton", "pazquel360"}...)),
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
