@@ -86,23 +86,6 @@ func Smoke(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	shouldSkipEulaScreen := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.EulaScreen.shouldSkip()", &shouldSkipEulaScreen); err != nil {
-		s.Fatal("Failed to evaluate whether to skip Eula screen: ", err)
-	}
-
-	if !shouldSkipEulaScreen {
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EulaScreen.isVisible()"); err != nil {
-			s.Fatal("Failed to wait for the eula screen to be visible: ", err)
-		}
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EulaScreen.nextButton.isEnabled()"); err != nil {
-			s.Fatal("Failed to wait for the accept eula button to be enabled: ", err)
-		}
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.EulaScreen.clickNext()", nil); err != nil {
-			s.Fatal("Failed to click accept eula button: ", err)
-		}
-	}
-
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.UserCreationScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the user creation screen to be visible: ", err)
 	}

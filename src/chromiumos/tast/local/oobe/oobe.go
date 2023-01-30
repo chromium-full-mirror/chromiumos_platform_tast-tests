@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/state"
 )
 
 // IsWelcomeScreenVisible checks the current page in OOBE to see if it's
@@ -94,4 +95,44 @@ func IsHidDetectionMouseDetected(ctx context.Context, oobeConn *chrome.Conn, tco
 	}
 	mouseDetectedTextNode := nodewith.Role(role.StaticText).Name(mouseDetectedText)
 	return uiauto.New(tconn).WaitUntilExists(mouseDetectedTextNode)(ctx)
+}
+
+// AdvanceThroughConsolidatedConsentIfShown checks whether the consolidated screen is shown.
+// If the consolidated screen is shown, wait for it to load, click the accept button in the
+// consolidated consent screen after clicking the read more button if it's shown.
+func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chrome.Conn, tconn *chrome.TestConn) error {
+	var shouldSkipConsolidatedConsentScreen bool
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.shouldSkip()", &shouldSkipConsolidatedConsentScreen); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether to skip consolidated consent screen")
+	}
+	if shouldSkipConsolidatedConsentScreen {
+		return nil
+	}
+
+	isReadMoreButtonShown := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()", &isReadMoreButtonShown); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether the consolidated consent screen read more button is shown")
+	}
+
+	ui := uiauto.New(tconn).WithTimeout(50 * time.Second)
+	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
+	if isReadMoreButtonShown {
+		if err := uiauto.Combine("click the consolidated consent screen read more button",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the consolidated consent screen read more button")
+		}
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()"); err != nil {
+			return errors.Wrap(err, "failed to wait for the consolidated consent read more to be hidden")
+		}
+	}
+
+	if err := uiauto.Combine("Click the consolidated consent screen accept button",
+		ui.WaitUntilExists(focusedButton),
+		ui.LeftClick(focusedButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the consolidated consent screen accept button")
+	}
+	return nil
 }

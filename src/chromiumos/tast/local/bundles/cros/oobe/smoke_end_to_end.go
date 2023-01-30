@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"chromiumos/tast/local/oobe"
 	"chromiumos/tast/testing"
 )
 
@@ -142,28 +143,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to click network page next button: ", err)
 			}
 		}
-
-		shouldSkipEulaScreen := false
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.EulaScreen.shouldSkip()", &shouldSkipEulaScreen); err != nil {
-			s.Fatal("Failed to evaluate whether to skip Eula screen: ", err)
-		}
-
-		if shouldSkipEulaScreen {
-			s.Log("Skipping the EULA screen")
-		} else {
-			s.Log("Waiting for the EULA screen")
-			if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EulaScreen.isReadyForTesting()"); err != nil {
-				s.Fatal("Failed to wait for the eula screen to be visible: ", err)
-			}
-			if err := uiauto.Combine("Click next on EULA screen",
-				ui.WaitUntilExists(focusedButton),
-				ui.LeftClick(focusedButton),
-			)(ctx); err != nil {
-				s.Fatal("Failed to click EULA screen next button: ", err)
-			}
-		}
 	}
-
 	// TODO(b/255972416) - Remove this.
 	// Even though clicking on the 'Add Person' shows the User Creation screen first, the
 	// flow in performGAIALogin (gaia.go) has been hardcoded to inject JS into the page
@@ -193,42 +173,9 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to continue login: ", err)
 	}
 
-	var shouldSkipConsolidatedConsentScreen bool
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.shouldSkip()", &shouldSkipConsolidatedConsentScreen); err != nil {
-		s.Fatal("Failed to evaluate whether to skip consolidated consent screen: ", err)
-	}
-
-	if shouldSkipConsolidatedConsentScreen {
-		s.Log("Skipping the consolidated consent screen")
-	} else {
-		s.Log("Waiting for the consolidated consent screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadyForTesting()"); err != nil {
-			s.Fatal("Failed to wait for the consolidated consent screen to be visible: ", err)
-		}
-
-		isReadMoreButtonShown := false
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()", &isReadMoreButtonShown); err != nil {
-			s.Fatal("Failed to evaluate whether the read more button on the consolidated consent screen is shown: ", err)
-		}
-		if isReadMoreButtonShown {
-			if err := uiauto.Combine("Click read more button on the consolidated consent screen",
-				ui.WaitUntilExists(focusedButton),
-				ui.LeftClick(focusedButton),
-			)(ctx); err != nil {
-				s.Fatal("Failed to click the consolidated consent read more button: ", err)
-			}
-
-			if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()"); err != nil {
-				s.Fatal("Failed to wait for the consolidated consent read more to be hidden: ", err)
-			}
-		}
-
-		if err := uiauto.Combine("Click accept on the consolidated consent screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
-			s.Fatal("Failed to click consolidated consent screen accept button: ", err)
-		}
+	s.Log("Waiting for the consolidated consent screen")
+	if err := oobe.AdvanceThroughConsolidatedConsentIfShown(ctx, oobeConn, tconn); err != nil {
+		s.Fatal("Failed to advance through consolidated consent screen: ", err)
 	}
 
 	s.Log("Waiting for the sync screen")

@@ -166,7 +166,6 @@ func (c *PolicyService) GAIAZTEEnrollUsingChrome(ctx context.Context, req *ppb.G
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
 		chrome.LoadSigninProfileExtension(req.ManifestKey),
-		chrome.ExtraArgs("--enable-features=OobeConsolidatedConsent"),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")

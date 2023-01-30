@@ -14,9 +14,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/oobe"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/testing"
 )
@@ -66,9 +66,6 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	cr, err := chrome.New(ctx,
 		chrome.NoLogin(),
 		chrome.ARCSupported(),
-		// TODO(crbug.com/1291183): Parameterize this test to also run a version that tests the
-		// Consolidated Consent screen instead of EULA + ARC TOS.
-		chrome.DisableFeatures("OobeConsolidatedConsent"),
 		// Enable DemoModeSWA feature so that component is downloaded during setup. Chrome Apps behavior
 		// can still be tested by explicitly disabling the feature in tests that use this fixture.
 		chrome.EnableFeatures("DemoModeSWA"),
@@ -169,36 +166,6 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	}
 	findAndClickButton("DemoPreferencesScreen.getDemoPreferencesNextButtonName()")
 
-	shouldSkipEulaScreen := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.EulaScreen.shouldSkip()", &shouldSkipEulaScreen); err != nil {
-		s.Fatal("Failed to evaluate whether to skip EULA screen: ", err)
-	}
-	if shouldSkipEulaScreen {
-		s.Log("EulaScreen.shouldSkip() is true; skipped")
-	} else {
-		s.Log("Proceeding through EULA screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EulaScreen.isVisible()"); err != nil {
-			s.Fatal("Failed to wait for the EULA screen to be visible: ", err)
-		}
-		// TODO(b/244185713): Switch to uiauto based button clicking.
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.EulaScreen.clickNext()", nil); err != nil {
-			s.Fatal("Failed to click accept EULA button: ", err)
-		}
-	}
-
-	s.Log("Proceeding through ARC TOS screen")
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ArcTosScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the ARC TOS screen to be visible: ", err)
-	}
-	// Can find the first ARC TOS button (more) by state.Focused, but we should retrieve the
-	// second (accept) by name to avoid re-retrieving the first while it's still focused
-	arcTosMoreButton := nodewith.State(state.Focused, true).Role(role.Button)
-	if err := uiauto.Combine("Click more button from ARC TOS screen",
-		ui.WaitUntilExists(arcTosMoreButton),
-		ui.LeftClick(arcTosMoreButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to click more button from ARC TOS screen: ", err)
-	}
 	// Connect to session manager now for post-setup session login, before clicking
 	// final accept button and entering non-interactive part of demo setup
 	sm, err := session.NewSessionManager(ctx)
@@ -210,8 +177,11 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		s.Fatal("Failed to watch for session manager D-Bus signals: ", err)
 	}
 	defer sw.Close(ctx)
-	// Click ARC TOS accept to finish interactive part of setup
-	findAndClickButton("ArcTosScreen.getArcTosDemoModeAcceptButtonName()")
+	// Click Consolidated Consent accept to finish interactive part of setup
+	s.Log("Proceeding through consolidated consent screen")
+	if err := oobe.AdvanceThroughConsolidatedConsentIfShown(ctx, oobeConn, tconn); err != nil {
+		s.Fatal("Failed to advance through consolidated consent screen: ", err)
+	}
 
 	s.Log("Waiting for SessionStateChanged \"started\" D-Bus signal from session_manager")
 	select {
