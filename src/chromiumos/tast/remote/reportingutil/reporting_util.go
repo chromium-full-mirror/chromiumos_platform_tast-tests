@@ -146,6 +146,7 @@ type InfoData struct {
 	CpuInfo           *CpuInfo           `json:"cpuInfo"`
 	DisplayInfo       *DisplayInfo       `json:"displayInfo"`
 	PrivacyScreenInfo *PrivacyScreenInfo `json:"privacyScreenInfo"`
+	TouchScreenInfo   *TouchScreenInfo   `json:"touchScreenInfo"`
 }
 
 // TelemetryData mirrors the telemetryData JSON field.
@@ -204,6 +205,17 @@ type DisplayDevice struct {
 
 type PrivacyScreenInfo struct {
 	Supported bool `json:"supported"`
+}
+
+type TouchScreenInfo struct {
+	LibraryName        string               `json:"libraryName"`
+	TouchScreenDevices []TouchScreenDevices `json:"touchScreenDevices"`
+}
+
+type TouchScreenDevices struct {
+	DisplayName string `json:"displayName"`
+	TouchPoints int    `json:"touchPoints"`
+	HasStylus   bool   `json:"hasStylus"`
 }
 
 // AudioTelemetry mirrors the audioTelemetry JSON field.
