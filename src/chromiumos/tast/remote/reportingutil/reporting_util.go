@@ -85,10 +85,11 @@ type MetricData struct {
 
 // InfoData mirrors the infoData JSON field.
 type InfoData struct {
-	MemoryInfo  *MemoryInfo  `json:"memoryInfo"`
-	NetworkInfo *NetworkInfo `json:"networksInfo"`
-	CpuInfo     *CpuInfo     `json:"cpuInfo"`
-	DisplayInfo *DisplayInfo `json:"displayInfo"`
+	MemoryInfo        *MemoryInfo        `json:"memoryInfo"`
+	NetworkInfo       *NetworkInfo       `json:"networksInfo"`
+	CpuInfo           *CpuInfo           `json:"cpuInfo"`
+	DisplayInfo       *DisplayInfo       `json:"displayInfo"`
+	PrivacyScreenInfo *PrivacyScreenInfo `json:"privacyScreenInfo"`
 }
 
 // TelemetryData mirrors the telemetryData JSON field.
@@ -143,6 +144,10 @@ type DisplayDevice struct {
 	Manufacturer    string `json:"manufacturer"`
 	ModelId         int32  `json:"modelId"`
 	ManufactureYear int32  `json:"manufactureYear"`
+}
+
+type PrivacyScreenInfo struct {
+	Supported bool `json:"supported"`
 }
 
 // AudioTelemetry mirrors the audioTelemetry JSON field.
