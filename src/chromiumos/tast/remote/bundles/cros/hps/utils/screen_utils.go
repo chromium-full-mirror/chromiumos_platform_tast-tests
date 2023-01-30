@@ -149,3 +149,18 @@ func EnsureHpsSenseSignal(ctx context.Context, client pb.HpsServiceClient, expec
 	}
 	return nil
 }
+
+// RetrieveHpsNotifySignal returns true if powerd currently sees positive HPS presence.
+func RetrieveHpsNotifySignal(ctx context.Context, client pb.HpsServiceClient) (bool, error) {
+	result, err := client.RetrieveHpsNotifySignal(ctx, &empty.Empty{})
+	if err != nil {
+		return false, err
+	}
+	if result.RawValue == "POSITIVE" {
+		return true, nil
+	}
+	if result.RawValue == "NEGATIVE" {
+		return false, nil
+	}
+	return false, errors.Errorf("unknown HPS Notify Signal: %q", result.RawValue)
+}

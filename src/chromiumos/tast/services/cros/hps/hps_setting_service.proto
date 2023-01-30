@@ -30,6 +30,9 @@ service HpsService {
   // RetrieveHpsSenseSignal gets current HpsSenseSignal from powerd.
   rpc RetrieveHpsSenseSignal(google.protobuf.Empty) returns (HpsSenseSignalResponse) {}
 
+  // RetrieveHpsNotifySignal gets current HpsNotifySignal from powerd.
+  rpc RetrieveHpsNotifySignal(google.protobuf.Empty) returns (HpsNotifySignalResponse) {}
+
   // CheckSPAEyeIcon checks if the eye icon is at the right bottom side of the screen when there is spa alert.
   rpc CheckSPAEyeIcon(google.protobuf.Empty) returns (google.protobuf.BoolValue) {}
 
@@ -55,5 +58,9 @@ message RetrieveDimMetricsResponse {
 }
 
 message HpsSenseSignalResponse {
+  string raw_value = 1;
+}
+
+message HpsNotifySignalResponse {
   string raw_value = 1;
 }

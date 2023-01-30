@@ -210,7 +210,7 @@ func (hss *SettingService) RetrieveDimMetrics(ctx context.Context, quickDimEnabl
 	return response, err
 }
 
-// RetrieveHpsSenseSignal gets current HpsSenseSignal from powerd.
+// RetrieveHpsSenseSignal gets current HpsSenseSignal from powerd log.
 func (hss *SettingService) RetrieveHpsSenseSignal(ctx context.Context, req *empty.Empty) (*pb.HpsSenseSignalResponse, error) {
 	dat, err := os.ReadFile(powerdLog)
 	if err != nil {
@@ -223,6 +223,31 @@ func (hss *SettingService) RetrieveHpsSenseSignal(ctx context.Context, req *empt
 	response := &pb.HpsSenseSignalResponse{
 		RawValue: rawValue,
 	}
+	return response, nil
+}
+
+// RetrieveHpsNotifySignal gets current HpsNotifySignal from DBus.
+func (hss *SettingService) RetrieveHpsNotifySignal(ctx context.Context, req *empty.Empty) (*pb.HpsNotifySignalResponse, error) {
+	const (
+		dbusName      = "org.chromium.Hps"
+		dbusPath      = "/org/chromium/Hps"
+		dbusInterface = "org.chromium.Hps"
+	)
+
+	_, obj, err := dbusutil.Connect(ctx, dbusName, dbus.ObjectPath(dbusPath))
+	if err != nil {
+		return nil, err
+	}
+
+	result := &hps_proto.HpsResultProto{}
+	if err := dbusutil.CallProtoMethod(ctx, obj, dbusInterface+".GetResultHpsNotify", nil, result); err != nil {
+		return nil, err
+	}
+
+	response := &pb.HpsNotifySignalResponse{}
+
+	response.RawValue = result.Value.String()
+
 	return response, nil
 }
 
