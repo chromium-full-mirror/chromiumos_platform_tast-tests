@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -38,6 +39,10 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.AuthServerAllowlist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.KerberosEnabled{}, pci.VerifiedFunctionalityUI),
+		},
 	})
 }
 
