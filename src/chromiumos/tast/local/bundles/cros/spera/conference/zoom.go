@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps/zoom"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -36,6 +37,7 @@ type ZoomConference struct {
 	ui                         *uiauto.Context
 	uiHandler                  cuj.UIActionHandler
 	zoomConn                   *chrome.Conn
+	zm                         *zoom.Zoom
 	displayAllParticipantsTime time.Duration
 	tabletMode                 bool
 	roomType                   RoomType
@@ -58,78 +60,12 @@ const (
 var zoomWebArea = nodewith.NameContaining("Zoom Meeting").Role(role.RootWebArea)
 
 // Join joins a new conference room.
-func (conf *ZoomConference) Join(ctx context.Context, room string) error {
+func (conf *ZoomConference) Join(ctx context.Context, room string) (err error) {
 	ui := conf.ui
-	openZoomAndSignIn := func(ctx context.Context) (err error) {
-		// Set newWindow to true to launch zoom in the first Chrome tab.
-		conf.zoomConn, err = conf.uiHandler.NewChromeTab(ctx, conf.br, cuj.ZoomURL, true)
-		if err != nil {
-			return errors.Wrap(err, "failed to open the zoom website")
-		}
 
-		if err := webutil.WaitForQuiescence(ctx, conf.zoomConn, mediumUITimeout); err != nil {
-			// Occasionally, there is a timeout when loading the Zoom website on Lacros, but the page actually
-			// has display elements. So print the error message instead of return error.
-			testing.ContextLogf(ctx, "Failed to wait for %q to be loaded and achieve quiescence: %q", room, err)
-		}
-
-		// Maximize the zoom window to show all the browser UI elements for precise clicking.
-		if err := cuj.MaximizeBrowserWindow(ctx, conf.tconn, conf.tabletMode, zoomTitle); err != nil {
-			return err
-		}
-		zoomMainWebArea := nodewith.NameContaining(zoomTitle).Role(role.RootWebArea)
-		zoomMainPage := nodewith.NameRegex(regexp.MustCompile("(?i)sign in|MY ACCOUNT")).Role(role.Link).Ancestor(zoomMainWebArea)
-		if err := ui.WithTimeout(mediumUITimeout).WaitUntilExists(zoomMainPage)(ctx); err != nil {
-			return errors.Wrap(err, "failed to load the zoom website")
-		}
-		if err := ui.Exists(nodewith.Name("MY ACCOUNT").Role(role.Link))(ctx); err != nil {
-			testing.ContextLog(ctx, "Start to sign in")
-			if err := conf.zoomConn.Navigate(ctx, cuj.ZoomSignInURL); err != nil {
-				return err
-			}
-			account := nodewith.Name(conf.account).First()
-			profilePicture := nodewith.Name("Profile picture").First()
-			// If the DUT has only one account, it would login to profile page directly.
-			// Otherwise, it would show list of accounts.
-			if err := uiauto.Combine("sign in",
-				uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(account),
-					ui.LeftClickUntil(account, ui.Gone(account))),
-				ui.WaitUntilExists(profilePicture),
-			)(ctx); err != nil {
-				return err
-			}
-		} else {
-			testing.ContextLog(ctx, "It has been signed in")
-		}
-		if err := conf.zoomConn.Navigate(ctx, room); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// allowPerm allows camera and microphone if browser asks for the permissions.
-	allowPerm := func(ctx context.Context) error {
-		startVideoButton := nodewith.NameRegex(regexp.MustCompile(startVideoRegexCapture)).Role(role.Button)
-		joinAudioButton := nodewith.Name("Join Audio").Role(role.Button)
-		spinnerImage := nodewith.ClassName("spinner").Role(role.Image).First()
-		checkSpinnerImageExists := ui.WithTimeout(shortUITimeout).WaitUntilExists(spinnerImage)
-		dialogRE := regexp.MustCompile(".*Use your (microphone|camera).*")
-		avPerm := nodewith.NameRegex(dialogRE).ClassName("RootView").Role(role.AlertDialog).First()
-		allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(avPerm)
-		allowPermissions := uiauto.IfSuccessThen(
-			ui.WaitUntilExists(avPerm),
-			uiauto.NamedAction("allow microphone and camera permissions",
-				ui.LeftClickUntil(allowButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(spinnerImage)),
-			))
-		return uiauto.Combine("allow permissions",
-			uiauto.IfSuccessThen(ui.Exists(startVideoButton),
-				ui.LeftClickUntil(startVideoButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(startVideoButton))),
-			uiauto.IfSuccessThen(ui.Exists(joinAudioButton),
-				ui.LeftClickUntil(joinAudioButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioButton))),
-			// Check the spinner image to quickly determine if it requires permission to allow microphone and camera.
-			uiauto.IfSuccessThen(checkSpinnerImageExists, allowPermissions),
-			allowPagePermissions(conf.tconn),
-		)(ctx)
+	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conf.br, room)
+	if err != nil {
+		return errors.Wrap(err, "failed to join zoom meeting")
 	}
 
 	// Checks the number of participants in the conference that
@@ -158,64 +94,12 @@ func (conf *ZoomConference) Join(ctx context.Context, room string) error {
 		testing.ContextLog(ctx, "Join Audio by Computer")
 		return ui.WithTimeout(mediumUITimeout).LeftClickUntil(joinAudioButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioButton))(ctx)
 	}
-	startVideo := func(ctx context.Context) error {
-		cameraButton := nodewith.NameRegex(regexp.MustCompile(cameraRegexCapture)).Role(role.Button)
-		startVideoButton := nodewith.NameRegex(regexp.MustCompile(startVideoRegexCapture)).Role(role.Button)
-		stopVideoButton := nodewith.NameRegex(regexp.MustCompile(stopVideoRegexCapture)).Role(role.Button)
-		// Start video requires camera permission.
-		// Allow permission doesn't succeed every time. So add retry here.
-		return ui.Retry(retryTimes, uiauto.NamedCombine("start video",
-			conf.showInterface,
-			uiauto.NamedAction("to detect camera button within 15 seconds", ui.WaitUntilExists(cameraButton)),
-			// Some DUTs start playing video for the first time.
-			// If there is a stop video button, do nothing.
-			uiauto.IfSuccessThen(ui.Exists(startVideoButton),
-				ui.LeftClickUntil(startVideoButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(startVideoButton))),
-			ui.WaitUntilExists(stopVideoButton),
-		))(ctx)
-	}
 
-	joinButton := nodewith.Name("Join").Role(role.Button)
-	previewVideo := nodewith.ClassName("preview-video").Ancestor(zoomWebArea)
-	joinFromYourBrowser := nodewith.Name("Join from Your Browser").Role(role.StaticText)
-	// There are two types of cookie accept dialogs: "ACCEPT COOKIES" and "ACCEPT ALL COOKIES".
-	acceptCookiesButton := nodewith.NameRegex(regexp.MustCompile("ACCEPT.*COOKIES")).Role(role.Button)
-	// In Zoom website, the join button may be hidden in tablet mode.
-	// Make it visible before clicking.
-	// Since ui.MakeVisible() is not always successful, add a retry here.
-	clickJoinButton := ui.Retry(retryTimes, uiauto.Combine("click join button",
-		ui.WaitForLocation(joinButton),
-		ui.MakeVisible(joinButton),
-		ui.LeftClickUntil(joinButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinButton)),
-	))
-	waitForZoomPageToLoad := func(ctx context.Context) error {
-		// Use 1 minute timeout value because it may take longer to wait for page loading,
-		// especially for some low end DUTs.
-		if err := ui.WithTimeout(longUITimeout).WaitUntilExists(zoomWebArea)(ctx); err != nil {
-			noPermissionText := nodewith.Name("No permission. (200)").Role(role.StaticText)
-			if ui.Exists(noPermissionText)(ctx) == nil {
-				return errors.Wrap(err, `the "No Permission" problem is displayed, zoom account may require re-registration`)
-			}
-			return err
-		}
-		return nil
-	}
-	return uiauto.NamedCombine("join conference",
-		openZoomAndSignIn,
-		ui.WaitUntilExists(joinFromYourBrowser),
-		uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(acceptCookiesButton),
-			ui.LeftClickUntil(acceptCookiesButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(acceptCookiesButton))),
-		ui.LeftClick(joinFromYourBrowser),
-		ui.WithTimeout(longUITimeout).WaitUntilExists(joinButton),
-		ui.WaitUntilExists(previewVideo),
-		allowPerm,
-		clickJoinButton,
-		waitForZoomPageToLoad,
+	return uiauto.Combine("check participants and join audio",
 		// Sometimes participants number caught at the beginning is wrong, it will be correct after a while.
 		// Add retry to get the correct participants number.
 		ui.WithInterval(time.Second).Retry(10, checkParticipantsNum),
 		ui.Retry(retryTimes, joinAudio),
-		startVideo,
 	)(ctx)
 }
 
@@ -514,13 +398,7 @@ func (conf *ZoomConference) End(ctx context.Context) error {
 
 // CloseConference closes the conference.
 func (conf *ZoomConference) CloseConference(ctx context.Context) error {
-	if err := conf.zoomConn.CloseTarget(ctx); err != nil {
-		return errors.Wrap(err, "failed to close target")
-	}
-	if err := conf.zoomConn.Close(); err != nil {
-		return errors.Wrap(err, "failed to close connection")
-	}
-	return nil
+	return conf.zm.Close(ctx)
 }
 
 var _ Conference = (*ZoomConference)(nil)
