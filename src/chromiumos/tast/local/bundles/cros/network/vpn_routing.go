@@ -195,7 +195,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Failed to dump network info after VPN connect")
 	}
 	if connectErr != nil {
-		s.Fatal("Failed to connect to VPN server: ", err)
+		s.Fatal("Failed to connect to VPN server: ", connectErr)
 	}
 
 	privateEnv, err := networkEnv.CreatePrivateEnv(ctx, server, vpnEnv)
