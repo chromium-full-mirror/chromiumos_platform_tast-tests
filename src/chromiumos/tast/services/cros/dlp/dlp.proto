@@ -15,6 +15,10 @@ message EnrollAndLoginRequest {
   bool enable_lacros = 6;
 }
 
+message ClientIdResponse {
+  string clientId = 1;
+}
+
 enum BrowserType {
   ASH = 0;
   LACROS = 1;
@@ -37,6 +41,7 @@ message ActionRequest {
 service DataLeakPreventionService {
   rpc EnrollAndLogin(EnrollAndLoginRequest) returns (google.protobuf.Empty) {}
   rpc StopChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc ClientID(google.protobuf.Empty) returns (ClientIdResponse) {}
   rpc ClipboardCopyPaste(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Print(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Screenshot(ActionRequest) returns (google.protobuf.Empty) {}

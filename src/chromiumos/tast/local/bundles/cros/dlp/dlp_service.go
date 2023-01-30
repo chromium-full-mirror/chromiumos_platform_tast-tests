@@ -31,6 +31,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/local/session"
 	pb "chromiumos/tast/services/cros/dlp"
 	"chromiumos/tast/testing"
 )
@@ -91,6 +92,20 @@ func (service *DataLeakPreventionService) StopChrome(ctx context.Context, req *e
 	service.chrome = nil
 
 	return &empty.Empty{}, firstErr
+}
+
+func (service *DataLeakPreventionService) ClientID(ctx context.Context, req *empty.Empty) (*pb.ClientIdResponse, error) {
+	sm, err := session.NewSessionManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create session_manager binding")
+	}
+
+	p, err := session.RetrievePolicyData(ctx, sm)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve settings")
+	}
+
+	return &pb.ClientIdResponse{ClientId: *p.DeviceId}, nil
 }
 
 // createHTMLTextPage creates an HTML page with some text.

@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/remote/reportingutil"
 	"chromiumos/tast/rpc"
 	dlp "chromiumos/tast/services/cros/dlp"
-	ps "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/testing"
 )
 
@@ -189,11 +188,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	}
 	defer service.StopChrome(ctx, &empty.Empty{})
 
-	// Create client instance of the Policy service just to retrieve the clientID.
-	pc := ps.NewPolicyServiceClient(cl.Conn)
-
-	// TODO(crbug.com/1376853): consider whether porting this method to the DataLeakPrevention service.
-	c, err := pc.ClientID(ctx, &empty.Empty{})
+	c, err := service.ClientID(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to grab client ID from device: ", err)
 	}
