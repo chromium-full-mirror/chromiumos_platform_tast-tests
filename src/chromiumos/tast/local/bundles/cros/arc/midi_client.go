@@ -25,7 +25,9 @@ func init() {
 		Func:         MIDIClient,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks MIDI Apps can send messages to devices",
-		Contacts:     []string{"pmalani@chromium.org", "arc-eng@google.com"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "arc-eng@google.com", "judyhsiao@chromium.org"},
+		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
+		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},
