@@ -349,6 +349,12 @@ var Zoom = App{
 	Name: "Zoom",
 }
 
+// Text has details about the Text app.
+var Text = App{
+	ID:   "mmfbcljfglbokpmkimbfghdkjmjhdgbg",
+	Name: "Text",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

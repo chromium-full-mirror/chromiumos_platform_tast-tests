@@ -133,9 +133,11 @@ func (v *mgsFixtureState) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	installPolicy := policy.ExtensionInstallForcelist{Val: []string{
 		v.vdiApplicationToStart.ID,
+		apps.Text.ID,
 	}}
 	pinPolicy := policy.PinnedLauncherApps{Val: []string{
 		v.vdiApplicationToStart.ID,
+		apps.Text.ID,
 	}}
 	// Using this policy will present a suggestion for logging out to be showed
 	// when we close all the windows in PostTest.
@@ -150,6 +152,7 @@ func (v *mgsFixtureState) SetUp(ctx context.Context, s *testing.FixtState) inter
 			&pinPolicy,
 			&supressLoggingOutDialog,
 		}),
+		mgs.ExtraChromeOptions(chrome.ExtraArgs("--force-devtools-available")),
 	)
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "vdi_mgs_fixture_failure.png")

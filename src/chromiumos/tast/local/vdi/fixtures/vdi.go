@@ -196,6 +196,7 @@ func (v *fixtureState) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	cr, err := chrome.New(ctx,
 		chrome.GAIALogin(chrome.Creds{User: otaUsername, Pass: otaPassword}),
 		chrome.ProdPolicy(),
+		chrome.ExtraArgs("--force-devtools-available"),
 	)
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "vdi_usersession_fixture_failure.png")
