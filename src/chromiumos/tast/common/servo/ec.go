@@ -138,7 +138,7 @@ var KeyMatrix = map[string]KBMatrixPair{
 	"<shift_r>":   KBMatrixPair{7, 7},
 	"<ctrl_l>":    KBMatrixPair{2, 0},
 	"<alt_l>":     KBMatrixPair{6, 10},
-	" ":           KBMatrixPair{5, 1},
+	" ":           KBMatrixPair{5, 11},
 	"<alt_r>":     KBMatrixPair{0, 10},
 	"<ctrl_r>":    KBMatrixPair{4, 0},
 	"<left>":      KBMatrixPair{7, 12},
