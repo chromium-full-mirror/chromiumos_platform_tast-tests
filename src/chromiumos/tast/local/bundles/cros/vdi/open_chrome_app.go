@@ -33,14 +33,18 @@ func init() {
 		Timeout:      5 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
-			// Find the right VDI app: COM_VDI_CUJ1_TASK2_WF1.
+			// Launch VDI app: COM_VDI_CUJ4_TASK1_WF1.
+			Value: "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a",
+		}, {
+			Key: "feature_id",
+			// Launch VDI app: COM_VDI_CUJ4_TASK2_WF1.
 			Value: "screenplay-bbe00399-7b52-49ec-8402-9440c89f412c",
 		}, {
 			Key: "feature_id",
-			// Launch VDI app: COM_VDI_CUJ4_TASK1_WF1.
-			Value: "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a",
+			// Launch VDI app: COM_VDI_CUJ4_TASK4_WF1.
+			Value: "screenplay-4d67baa6-bbcd-4858-bf9e-f33960accead",
 		}},
-		Requirements: []string{"screenplay-bbe00399-7b52-49ec-8402-9440c89f412c", "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a"},
+		Requirements: []string{"screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a", "screenplay-bbe00399-7b52-49ec-8402-9440c89f412c", "screenplay-4d67baa6-bbcd-4858-bf9e-f33960accead"},
 		Params: []testing.Param{
 			{
 				Name:      "citrix",
