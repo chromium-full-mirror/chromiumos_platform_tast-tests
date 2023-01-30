@@ -131,11 +131,11 @@ func TelemedicineCUJ(ctx context.Context, s *testing.State) {
 	defer cancel()
 	roomType := conference.TwoRoomSize
 	roomSize := conference.ZoomRoomParticipants[roomType] - 1
-	room, prepare, err := zoomserver.CreateConference(ctx, roomSize, sessionToken, host)
+	room, cleanup, err := zoomserver.CreateConference(ctx, roomSize, sessionToken, host)
 	if err != nil {
 		s.Fatal("Failed to create conference room: ", err)
 	}
-	defer prepare(cleanUpRoomCtx)
+	defer cleanup(cleanUpRoomCtx)
 
 	scenario := enterprisecuj.NewTelemedicineScenario(room, citrixZoomAccount, citrixZoomPassword)
 	params := &enterprisecuj.TestParams{

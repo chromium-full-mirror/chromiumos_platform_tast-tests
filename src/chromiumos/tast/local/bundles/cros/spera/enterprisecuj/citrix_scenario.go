@@ -14,5 +14,5 @@ import (
 
 // CitrixScenario contains actions when a user enters a citrix workplace.
 type CitrixScenario interface {
-	Run(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, citrix *cx.Citrix, p *TestParams) error
+	Run(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, citrix *cx.Citrix, params *TestParams) error
 }

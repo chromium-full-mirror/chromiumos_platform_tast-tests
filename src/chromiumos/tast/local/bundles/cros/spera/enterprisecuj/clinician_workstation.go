@@ -54,7 +54,7 @@ var ClinicianWorkstationData = []string{
 // 7. Logout and login again.
 
 // Run runs scenario for clinician workstation cuj.
-func (c *ClinicianWorkstationScenario) Run(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, citrix *cx.Citrix, p *TestParams) error {
+func (c *ClinicianWorkstationScenario) Run(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, citrix *cx.Citrix, params *TestParams) error {
 	const (
 		searchTerm  = "health"
 		noteContent = "Sample note"
@@ -86,14 +86,14 @@ func (c *ClinicianWorkstationScenario) Run(ctx context.Context, tconn *chrome.Te
 		}
 		return nil
 	}
-	if p.TestMode == cx.ReplayMode {
+	if params.TestMode == cx.ReplayMode {
 		if err := citrix.LoadRecordFile(coordinatesFile, uiWaitFile); err != nil {
 			return err
 		}
 	}
 
 	return uiauto.NamedCombine("run the clinician workstation cuj scenario",
-		citrix.ConnectRemoteDesktop(p.DesktopName),
+		citrix.ConnectRemoteDesktop(params.DesktopName),
 		citrix.CloseAllChromeBrowsers(),
 		// 1. Maximize the Citrix app.
 		citrix.FullscreenDesktop(),
@@ -115,9 +115,9 @@ func (c *ClinicianWorkstationScenario) Run(ctx context.Context, tconn *chrome.Te
 		citrix.CloseAllChromeBrowsers(),
 		// 7. Logout and login again.
 		citrix.ExitFullscreenDesktop(),
-		p.UIHandler.SwitchToAppWindow(apps.Citrix.Name),
+		params.UIHandler.SwitchToAppWindow(apps.Citrix.Name),
 		citrix.Logout(),
-		citrix.Login(p.CitrixServerURL, p.CitrixUserName, p.CitrixPassword),
+		citrix.Login(params.CitrixServerURL, params.CitrixUserName, params.CitrixPassword),
 	)(ctx)
 }
 

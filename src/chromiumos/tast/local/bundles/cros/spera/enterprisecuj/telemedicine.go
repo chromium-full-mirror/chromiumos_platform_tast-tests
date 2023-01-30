@@ -44,7 +44,7 @@ var TelemedicineData = []string{
 // 4. Concurrently type notes at 70 wpm in Google keep and switch between browser windows without occluding Zoom window.
 
 // Run runs scenario for telemedicine cuj.
-func (t *TelemedicineScenario) Run(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, citrix *cx.Citrix, p *TestParams) error {
+func (t *TelemedicineScenario) Run(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, citrix *cx.Citrix, params *TestParams) error {
 	const noteContent = "Sample note"
 	// Substitute Google, Google Photos, Wikipedia, WebMD for health provider website.
 	firstChromeURLs := []string{cuj.GoogleURL, cuj.GooglePhotosURL}
@@ -67,13 +67,13 @@ func (t *TelemedicineScenario) Run(ctx context.Context, tconn *chrome.TestConn, 
 		}
 		return nil
 	}
-	if p.TestMode == cx.ReplayMode {
+	if params.TestMode == cx.ReplayMode {
 		if err := citrix.LoadRecordFile(telemedicineCoordinatesFile, telemedicineUIWaitFile); err != nil {
 			return err
 		}
 	}
 	return uiauto.NamedCombine("run the telemedicine cuj scenario",
-		citrix.ConnectRemoteDesktop(p.DesktopName),
+		citrix.ConnectRemoteDesktop(params.DesktopName),
 		citrix.CloseAllChromeBrowsers(),
 		// 1. Maximize the Citrix app.
 		citrix.FullscreenDesktop(),
