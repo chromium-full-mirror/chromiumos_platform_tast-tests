@@ -34,9 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if secondary apps and extensions in a Kiosk app can be installed and launched",
 		Contacts: []string{
-			"yixie@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"yixie@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

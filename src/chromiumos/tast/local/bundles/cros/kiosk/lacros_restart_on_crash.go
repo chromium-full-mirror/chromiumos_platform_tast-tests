@@ -25,9 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Kiosk Lacros properly restarts",
 		Contacts: []string{
-			"zubeil@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"zubeil@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		// Disabled due to <1% pass rate over 30 days. See b/241944099
 		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},

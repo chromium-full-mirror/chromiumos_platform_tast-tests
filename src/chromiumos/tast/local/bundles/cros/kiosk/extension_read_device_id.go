@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verifies that kiosk extensions can access the Directory API ID",
 		Contacts: []string{
-			"zubeil@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"zubeil@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,

@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that Progressive Web Apps (PWA) are working in a managed guest session by trying to install and start a test PWA",
 		Contacts: []string{
-			"mpolzer@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"mpolzer@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"pwa_manifest.json", "pwa_service.js", "pwa_index.html", "pwa_icon.png"},

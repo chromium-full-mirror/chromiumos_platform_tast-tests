@@ -24,9 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that no system UI is shown in PWA Kiosk",
 		Contacts: []string{
-			"irfedorova@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"irfedorova@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

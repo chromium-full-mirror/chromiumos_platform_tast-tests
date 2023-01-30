@@ -27,9 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Kiosk.Launch.Error UMA is logged when there is an error",
 		Contacts: []string{
-			"yixie@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"yixie@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

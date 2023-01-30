@@ -23,9 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Stop a kiosk app launch on a splash screen",
 		Contacts: []string{
-			"pbond@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"pbond@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,

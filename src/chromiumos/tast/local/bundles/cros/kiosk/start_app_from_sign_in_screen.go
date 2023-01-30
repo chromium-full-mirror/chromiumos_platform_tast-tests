@@ -25,11 +25,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Adds 2 Kiosk accounts, checks if both are available then starts one of them",
 		Contacts: []string{
+			"chromeos-kiosk-eng+TAST@google.com",
 			"kamilszarek@google.com", // Test author
 			"vkovalova@google.com",   // Lacros test author
-			"chromeos-kiosk-eng+TAST@google.com",
 		},
-		Vars: []string{"ui.signinProfileTestExtensionManifestKey"},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
+		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		// Informational attribute can only be removed when
 		// https://crbug.com/1207293 is resolved.
 		Attr:         []string{"group:mainline", "informational"},

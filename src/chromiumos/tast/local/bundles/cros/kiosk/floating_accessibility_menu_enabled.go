@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Start Kiosk application with FloatingAccessibilityMenuEnabled applied to the account",
 		Contacts: []string{
+			"chromeos-kiosk-eng+TAST@google.com",
 			"kamilszarek@google.com", // Test author - Ash.
 			"anqing@google.com",      // Test author - Lacros.
-			"chromeos-kiosk-eng+TAST@google.com",
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",

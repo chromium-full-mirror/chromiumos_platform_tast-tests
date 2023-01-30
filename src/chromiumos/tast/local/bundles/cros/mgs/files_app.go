@@ -29,9 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that files app is working with managed guest sessions by saving and opening a pdf",
 		Contacts: []string{
-			"mpolzer@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"mpolzer@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.FakeDMSEnrolled,

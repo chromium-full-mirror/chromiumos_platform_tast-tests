@@ -22,9 +22,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the camera is working in managed guest sessions",
 		Contacts: []string{
-			"mpolzer@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"mpolzer@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{"cca_ui.js"},

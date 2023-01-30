@@ -25,9 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that managed guest session (MGS) is ephermeral by checking that a toggled setting is lost upon session exit",
 		Contacts: []string{
-			"mpolzer@google.com", // Test author
 			"chromeos-kiosk-eng+TAST@google.com",
+			"mpolzer@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.FakeDMSEnrolled,
