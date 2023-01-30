@@ -23,7 +23,7 @@ import (
 // 2. About Version -- lightweight website.
 var simpleWebsites = []string{
 	"https://bugs.chromium.org/p/chromium/issues/list",
-	chrome.VersionURL,
+	"https://chromium.org/Home",
 }
 
 // openChromeTabs opens Chrome tabs and returns the number of windows
