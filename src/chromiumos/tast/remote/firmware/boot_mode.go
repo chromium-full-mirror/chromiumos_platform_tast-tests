@@ -1013,7 +1013,13 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 		thermalShutdown := regexp.MustCompile(regexpThermalShutdown).FindStringSubmatch(ecStream)
 		if len(thermalShutdown) != 0 {
 			testing.ContextLog(ctx, "Warning!!! Captured thermal shutdown")
-			return errors.Errorf("captured %s after rebooting dut to recovery", thermalShutdown)
+			currPowerState, err := h.Servo.GetECSystemPowerState(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to check for powerstate after thermal shutdown detected")
+			}
+			if currPowerState == "G3" {
+				return errors.Errorf("captured %s at G3 after rebooting dut to recovery", thermalShutdown)
+			}
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
