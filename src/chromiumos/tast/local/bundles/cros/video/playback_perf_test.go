@@ -262,36 +262,44 @@ func TestPlaybackPerfParams(t *testing.T) {
 		for _, resGrid := range [][3]int{{1080, 2, 1}, {480, 3, 3}, {360, 4, 4}} {
 			resolution, gridW, gridH := resGrid[0], resGrid[1], resGrid[2]
 			numVideos := gridW * gridH
-			for _, decoderTaskRunnerType := range []taskRunnerType{
-				oneThreadPoolSequenceSharedByAllDecoders,
-				oneThreadPoolThreadSharedByAllDecoders,
-				oneDedicatedThreadSharedByAllDecoders,
-				oneThreadPoolThreadPerDecoder} {
-				fps, dec := 30, "hw"
-				testNameSuffix := fmt.Sprintf("x%d", numVideos)
-				var fixtureName string
-				switch decoderTaskRunnerType {
-				case oneThreadPoolThreadPerDecoder:
-					testNameSuffix += "_1dedicatedthreadperdecoder"
-					fixtureName = "chromeVideoWithGlobalVaapiLockDisabled"
-				case oneDedicatedThreadSharedByAllDecoders:
-					testNameSuffix += "_1dedicatedthreadsharedbyalldecoders"
-					fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneDedicatedThreadSharedByAllDecoders"
-				case oneThreadPoolThreadSharedByAllDecoders:
-					testNameSuffix += "_1poolthreadsharedbyalldecoders"
-					fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolThreadSharedByAllDecoders"
-				case oneThreadPoolSequenceSharedByAllDecoders:
-					testNameSuffix += "_1poolsequencesharedbyalldecoders"
-					fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolSequenceSharedByAllDecoders"
+			for _, enableMediaServiceSequence := range []bool{true, false} {
+				for _, decoderTaskRunnerType := range []taskRunnerType{
+					oneThreadPoolSequenceSharedByAllDecoders,
+					oneThreadPoolThreadSharedByAllDecoders,
+					oneDedicatedThreadSharedByAllDecoders,
+					oneThreadPoolThreadPerDecoder} {
+					fps, dec := 30, "hw"
+					testNameSuffix := fmt.Sprintf("x%d", numVideos)
+					var fixtureName string
+					switch decoderTaskRunnerType {
+					case oneThreadPoolThreadPerDecoder:
+						testNameSuffix += "_1dedicatedthreadperdecoder"
+						fixtureName = "chromeVideoWithGlobalVaapiLockDisabled"
+					case oneDedicatedThreadSharedByAllDecoders:
+						testNameSuffix += "_1dedicatedthreadsharedbyalldecoders"
+						fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneDedicatedThreadSharedByAllDecoders"
+					case oneThreadPoolThreadSharedByAllDecoders:
+						testNameSuffix += "_1poolthreadsharedbyalldecoders"
+						fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolThreadSharedByAllDecoders"
+					case oneThreadPoolSequenceSharedByAllDecoders:
+						testNameSuffix += "_1poolsequencesharedbyalldecoders"
+						fixtureName = "chromeVideoWithGlobalVaapiLockDisabledAndOneThreadPoolSequenceSharedByAllDecoders"
+					}
+					if enableMediaServiceSequence {
+						testNameSuffix += "_mediaservicesequence"
+						fixtureName += "AndMediaServiceSequence"
+					} else {
+						testNameSuffix += "_mediasinglethread"
+					}
+					param := genPlaybackParam(codec,
+						genPlaybackPerfDataPath(codec, resolution, fps),
+						resolution, fps, dec, testNameSuffix, fixtureName, []string{"thread_safe_libva_backend"})
+					param.GridWidth = gridW
+					param.GridHeight = gridH
+					param.PerfTracing = true
+					param.Attr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
+					params = append(params, param)
 				}
-				param := genPlaybackParam(codec,
-					genPlaybackPerfDataPath(codec, resolution, fps),
-					resolution, fps, dec, testNameSuffix, fixtureName, []string{"thread_safe_libva_backend"})
-				param.GridWidth = gridW
-				param.GridHeight = gridH
-				param.PerfTracing = true
-				param.Attr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
-				params = append(params, param)
 			}
 		}
 	}
