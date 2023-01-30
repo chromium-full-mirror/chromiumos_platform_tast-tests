@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -76,8 +77,9 @@ func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) erro
 
 	ui := uiauto.New(tconn)
 
-	signInArea := nodewith.Name("Sign in – Google accounts").Role(role.RootWebArea)
-	accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@gmail.com")).Role(role.Link).Ancestor(signInArea)
+	signInArea := nodewith.NameContaining("Google").Role(role.RootWebArea)
+	// Use First() to select the first account in the account list.
+	accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@.*.com")).Role(role.Link).Ancestor(signInArea).First()
 	return ui.LeftClickUntil(accountSelectLink,
 		ui.WithTimeout(shortUITimeout).WaitUntilGone(accountSelectLink))(ctx)
 }
@@ -117,20 +119,22 @@ func createAccount(ctx context.Context, tconn *chrome.TestConn) error {
 }
 
 // launchNewMeeting creates a new meeting and choose to join meeting via browser.
-func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) error {
+func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, meetingURL string) error {
 	ui := uiauto.New(tconn)
 
-	if err := conn.Navigate(ctx, newMeetingURL); err != nil {
+	if err := conn.Navigate(ctx, meetingURL); err != nil {
 		return err
 	}
 
 	// After navigating to the start new meeting url. 3 possible results can be expected sequentially:
 	// 1. (Optional) The user is already in another meeting. It asks confirmation to start this one.
 	// 2. (Optional) It is the only meeting of this user. It continues to ask how to join the meeting.
-	// 3. The user enters the meeting page.
+	// 3. (Optional) If meetingURL is invite link, there will be the join page to enter meeting page.
+	// 4. The user enters the meeting page.
 	joinFromYourBrowser := nodewith.Name("Join from Your Browser").Role(role.StaticText)
 	// If user is already in another meeting, then we need to explicitly end the meeting before joining this one.
 	startThisMeetingButton := nodewith.Name("Start this Meeting").Role(role.Button).Ancestor(zoomMainWebArea)
+	joinButton := nodewith.Name("Join").Role(role.Button).Ancestor(zoomMainWebArea)
 
 	if foundNode, err := ui.FindAnyExists(ctx, startThisMeetingButton, joinFromYourBrowser, mainLayoutCanvas); err != nil {
 		return errors.Wrap(err, "failed to create new meeting")
@@ -152,7 +156,38 @@ func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.Test
 			return errors.Wrap(err, "failed to join meeting from browser")
 		}
 	}
-	return ui.WaitUntilExists(mainLayoutCanvas)(ctx)
+
+	if foundNode, err := ui.WithTimeout(longUITimeout).FindAnyExists(ctx, joinButton, mainLayoutCanvas); err != nil {
+		return errors.Wrap(err, "failed to join meeting")
+	} else if foundNode == joinButton {
+		previewVideo := nodewith.ClassName("preview-video").Ancestor(zoomMainWebArea)
+		// In Zoom website, the join button may be hidden in tablet mode.
+		// Make it visible before clicking.
+		// Since ui.MakeVisible() is not always successful, add a retry here.
+		clickJoinButton := ui.Retry(3, uiauto.Combine("click join button",
+			ui.WaitForLocation(joinButton),
+			ui.MakeVisible(joinButton),
+			ui.LeftClickUntil(joinButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinButton)),
+		))
+
+		if err := uiauto.NamedCombine("join meeting",
+			ui.WaitUntilExists(previewVideo),
+			allowPerm(tconn),
+			clickJoinButton,
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to join meeting")
+		}
+	}
+	// Use 1 minute timeout value because it may take longer to wait for page loading,
+	// especially for some low end DUTs.
+	if err := ui.WithTimeout(longUITimeout).WaitUntilExists(mainLayoutCanvas)(ctx); err != nil {
+		noPermissionText := nodewith.Name("No permission. (200)").Role(role.StaticText)
+		if ui.Exists(noPermissionText)(ctx) == nil {
+			return errors.Wrap(err, `the "No Permission" problem is displayed, zoom account may require re-registration`)
+		}
+		return err
+	}
+	return nil
 }
 
 func acceptCookiePrompts(tconn *chrome.TestConn) action.Action {
@@ -165,4 +200,22 @@ func acceptCookiePrompts(tconn *chrome.TestConn) action.Action {
 	}
 
 	return prompts.ClearPotentialPrompts(tconn, shortUITimeout, acceptCookiesPrompt)
+}
+
+// allowPerm allows camera and microphone if browser asks for the permissions.
+func allowPerm(tconn *chrome.TestConn) action.Action {
+	ui := uiauto.New(tconn)
+	joinAudioButton := nodewith.Name("Join Audio").Role(role.Button)
+	spinnerImage := nodewith.ClassName("spinner").Role(role.Image).First()
+	checkSpinnerImageExists := ui.WithTimeout(shortUITimeout).WaitUntilExists(spinnerImage)
+	allowPermissions := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt)
+	return uiauto.Combine("allow permissions",
+		uiauto.IfSuccessThen(ui.Exists(startVideoButton),
+			ui.LeftClickUntil(startVideoButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(startVideoButton))),
+		uiauto.IfSuccessThen(ui.Exists(joinAudioButton),
+			ui.LeftClickUntil(joinAudioButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioButton))),
+		// Check the spinner image to quickly determine if it requires permission to allow microphone and camera.
+		uiauto.IfSuccessThen(checkSpinnerImageExists, allowPermissions),
+		apps.AllowPagePermissions(tconn),
+	)
 }

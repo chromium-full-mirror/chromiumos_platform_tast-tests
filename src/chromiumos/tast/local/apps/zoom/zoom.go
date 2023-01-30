@@ -55,6 +55,7 @@ var (
 	// End button in the meeting.
 	endMenu                = nodewith.Name("End").Role(role.PopUpButton).Ancestor(zoomMainWebArea)
 	endMeetingForAllButton = nodewith.Name("End Meeting for All").Role(role.MenuItem).Ancestor(zoomMainWebArea)
+	leaveButton            = nodewith.Name("Leave").Role(role.Button).Ancestor(zoomMainWebArea)
 
 	// Toggle video buttons.
 	startVideoButton = nodewith.NameRegex(regexp.MustCompile("Start Video|start sending my video|start my video")).Role(role.Button).Ancestor(zoomMainWebArea)
@@ -110,12 +111,11 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 		return nil, err
 	}
 
-	if err := launchNewMeeting(ctx, conn, tconn); err != nil {
+	if err := launchNewMeeting(ctx, conn, tconn, newMeetingURL); err != nil {
 		return nil, errors.Wrap(err, "failed to launch meeting")
 	}
 
-	ui := uiauto.New(tconn)
-	zm := &Zoom{br, conn, tconn, ui}
+	zm := New(br, conn, tconn)
 
 	if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to clear notification prompt")
@@ -128,6 +128,24 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 	}
 
 	return zm, nil
+}
+
+// JoinMeeting joins a Zoom meeting via invite link.
+// And make sure the camera and microphone are turned on before entering the meeting.
+func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, inviteLink string) (*Zoom, error) {
+	conn, err := navigateToZoomAndSignIn(ctx, cr, br)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := launchNewMeeting(ctx, conn, tconn, inviteLink); err != nil {
+		return nil, errors.Wrap(err, "failed to launch meeting")
+	}
+
+	return New(br, conn, tconn), nil
 }
 
 // StartNewMeetingUsingPWA starts a new Zoom Meeting in PWA mode.
@@ -183,10 +201,9 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 		return nil, errors.Wrap(err, "failed to sign in on Zoom PWA")
 	}
 
-	if err := launchNewMeeting(ctx, zm.conn, tconn); err != nil {
+	if err := launchNewMeeting(ctx, zm.conn, tconn, newMeetingURL); err != nil {
 		return nil, errors.Wrap(err, "failed to launch meeting")
 	}
-
 	if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to clear notification prompt")
 	}
@@ -202,11 +219,11 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 
 // Close closes the Zoom meeting browser or PWA app and clean up resources.
 func (zm *Zoom) Close(ctx context.Context) error {
-	if err := uiauto.NamedCombine("cleanup Zoom",
-		zm.EndMeetingForAll,
-		zm.conn.CloseTarget,
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to cleanup Zoom")
+	if err := zm.EndMeetingForAll(ctx); err != nil {
+		return errors.Wrap(err, "failed to end meeting for all")
+	}
+	if err := zm.conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close Zoom")
 	}
 	return zm.conn.Close()
 }
@@ -242,12 +259,23 @@ func (zm *Zoom) ExitFullScreen(ctx context.Context) error {
 	)(ctx)
 }
 
-// EndMeetingForAll select "End Meeting For All" in the "End" menu.
+// EndMeetingForAll selects "End Meeting For All" in the "End" menu when the user is the host.
+// If there is "Leave" button, do nothing.
 // This function should be called in cleanup function to ensure the user can host a new meeting successfully.
 func (zm *Zoom) EndMeetingForAll(ctx context.Context) error {
 	ui := zm.ui
+	if err := zm.showInterface(ctx); err != nil {
+		return err
+	}
+	endButton, err := ui.FindAnyExists(ctx, endMenu, leaveButton)
+	if err != nil {
+		return err
+	}
+	if endButton == leaveButton {
+		return nil
+	}
+	// Only the host needs to end the meeting.
 	return uiauto.Combine("end meeting for all",
-		zm.showInterface,
 		ui.DoDefaultUntil(endMenu, ui.WithTimeout(shortUITimeout).WaitUntilExists(endMeetingForAllButton)),
 		ui.DoDefaultUntil(endMeetingForAllButton, ui.WaitUntilGone(mainLayoutCanvas)),
 	)(ctx)
