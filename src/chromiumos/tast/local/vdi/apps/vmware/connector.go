@@ -83,34 +83,12 @@ func (c *Connector) Login(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "VMware: logging in")
 	c.cfg = cfg // It is needed for reauth after re opening app.
 
-	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.CustomIcon(c.dataPath(VmwareData[SplashscreenAddBtn])))(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for VMware splashscreen")
+	if err := c.EnterServerURL(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to enter server url")
 	}
 
-	if err := uiauto.Combine("click on adding new connection and wait to next screen",
-		c.detector.LeftClick(uidetection.CustomIcon(c.dataPath(VmwareData[SplashscreenAddBtn]))),
-		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("Connect")),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed clicking on add new connection")
-	}
-
-	testing.ContextLog(ctx, "VMware: entering server url")
-	if err := uiauto.Combine("enter VMware server url, connect and wait for next screen",
-		c.keyboard.TypeAction(cfg.Server),
-		c.keyboard.AccelAction("Enter"),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed adding server url")
-	}
-
-	testing.ContextLog(ctx, "VMware: entering username and password")
-	if err := uiauto.Combine("enter username and password and connect login",
-		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("Login")),
-		c.keyboard.TypeAction(cfg.Username),
-		c.keyboard.AccelAction("Tab"),
-		c.keyboard.TypeAction(cfg.Password),
-		c.keyboard.AccelAction("Enter"),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed entering username or password")
+	if err := c.EnterCredentialsAndLogin(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to enter credentials and log in")
 	}
 
 	return nil

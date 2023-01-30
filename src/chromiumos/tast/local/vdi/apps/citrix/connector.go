@@ -76,29 +76,12 @@ func (c *Connector) EnterCredentialsAndLogin(ctx context.Context, cfg *apps.VDIL
 func (c *Connector) Login(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "Citrix: logging in")
 
-	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("https://URL"))(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for Citrix splashscreen")
+	if err := c.EnterServerURL(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to enter server url")
 	}
 
-	testing.ContextLog(ctx, "Citrix: entering server url")
-	if err := uiauto.Combine("enter citrix server url, connect and wait for next screen",
-		c.keyboard.AccelAction("Tab"), // Enter server test box.
-		c.keyboard.TypeAction(cfg.Server),
-		c.keyboard.AccelAction("Enter"), // Connect to the server.
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed entering server url")
-	}
-
-	testing.ContextLog(ctx, "Citrix: entering username and password")
-	if err := uiauto.Combine("enter username and password and connect login",
-		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"User", "name"})),
-		c.keyboard.TypeAction(cfg.Username),
-		c.keyboard.AccelAction("Tab"),
-		c.keyboard.TypeAction(cfg.Password),
-		c.keyboard.AccelAction("Tab"),
-		c.keyboard.AccelAction("Enter"),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed entering username or password")
+	if err := c.EnterCredentialsAndLogin(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to enter credentials and log in")
 	}
 
 	return nil
