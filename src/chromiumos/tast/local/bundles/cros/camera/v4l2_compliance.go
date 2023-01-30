@@ -26,7 +26,8 @@ func init() {
 		BugComponent: "b:1093480",
 		Attr:         []string{"group:mainline", "group:camera-usb-qual", "informational"},
 		// TODO(b/258798506) Re-enable on ampton when the focus issue is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("ampton")),
+		// TODO(b/173778998) Jinlon privacy switch is not compliance: EBUSY during streamoff.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("ampton", "jinlon")),
 		SoftwareDeps: []string{"uvc_compliant"},
 	})
 }
