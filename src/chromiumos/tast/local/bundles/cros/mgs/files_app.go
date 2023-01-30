@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mgs"
 	"chromiumos/tast/testing"
@@ -30,7 +31,7 @@ func init() {
 		Desc:         "Verify that files app is working with managed guest sessions by saving and opening a pdf",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
-			"mpolzer@google.com", // Test author
+			"bfranz@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"chrome"},
@@ -74,12 +75,17 @@ func FilesApp(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
+	textInpt := nodewith.NameStartingWith(fileName).First()
+	saveBtn := nodewith.Name("Save").
+		Role(role.Button).
+		Ancestor(nodewith.Name("Save file as").Role(role.Window))
 	if err := uiauto.Combine("open Print Preview with shortcut Ctrl+P",
 		kb.AccelAction("Ctrl+P"),
 		printpreview.WaitForPrintPreview(tconn),
 		kb.AccelAction("enter"),
-		ui.WaitUntilExists(nodewith.NameStartingWith(fileName).First()),
-		kb.AccelAction("enter"),
+		ui.WaitUntilExists(textInpt),
+		ui.WaitUntilExists(saveBtn),
+		ui.DoDefault(saveBtn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to save to pdf: ", err)
 	}
