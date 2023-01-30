@@ -164,9 +164,9 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 
 	var roughness float64
 	var gpuCSStat, gpuMainCSStat contextSwitchStat
-	var gpuErr, cStateErr, cpuErr, fdErr, dramErr, batErr, roughnessErr, traceErr error
+	var gpuErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr, traceErr error
 	var wg sync.WaitGroup
-	wg.Add(6)
+	wg.Add(7)
 	go func() {
 		defer wg.Done()
 		gpuErr = graphics.MeasureGPUCounters(ctx, measurementDuration, p)
@@ -182,6 +182,10 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	go func() {
 		defer wg.Done()
 		fdErr = graphics.MeasureFdCount(ctx, measurementDuration, p)
+	}()
+	go func() {
+		defer wg.Done()
+		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, tconn, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()
@@ -221,6 +225,9 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}
 	if fdErr != nil {
 		return errors.Wrap(fdErr, "failed to measure open FD count")
+	}
+	if wakeupErr != nil {
+		return errors.Wrap(wakeupErr, "failed to measure unnecessary wakeups of ThreadPool")
 	}
 	if dramErr != nil {
 		return errors.Wrap(dramErr, "failed to measure DRAM bandwidth consumption")

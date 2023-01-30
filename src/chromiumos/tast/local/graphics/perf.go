@@ -788,3 +788,33 @@ func MeasureCPUUsageAndPower(ctx context.Context, stabilization, measurement tim
 	}
 	return nil
 }
+
+// MeasureThreadPoolUnnecessaryWakeups measures the spurious wakeups of threads
+// in chrome base::ThreadPool of chrome renderer process, chrome Browser process
+// and chrome GPU process in measurement duration.
+func MeasureThreadPoolUnnecessaryWakeups(ctx context.Context, tconn *chrome.TestConn, measurement time.Duration, p *perf.Values) error {
+	wakeupHistogramNames := []string{
+		"ThreadPool.UnnecessaryWakeup.Browser.Foreground",
+		"ThreadPool.UnnecessaryWakeup.Renderer.Foreground",
+		"ThreadPool.UnnecessaryWakeup.GPU.Foreground",
+	}
+	histograms, err := metrics.Run(ctx, tconn, func(ctx context.Context) error {
+		if err := testing.Sleep(ctx, measurement); err != nil {
+			return errors.Wrap(err, "failed to wait")
+		}
+		return nil
+	}, wakeupHistogramNames...)
+	if err != nil {
+		return errors.Wrap(err, "failed to read histograms of ThreadPool.UnnecessaryWakeup")
+	}
+
+	for _, h := range histograms {
+		// h.Sum is ok because ThreadPool.UnnecessaryWakeup is a BooleanHit histogram which has a single bucket.
+		p.Set(perf.Metric{
+			Name:      h.Name,
+			Unit:      "count",
+			Direction: perf.SmallerIsBetter,
+		}, float64(h.Sum))
+	}
+	return nil
+}
