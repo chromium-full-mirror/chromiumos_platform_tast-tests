@@ -97,7 +97,8 @@ func init() {
 			"family.gellerEmail",
 		},
 		Impl: &persistentFixture{
-			policyUserVar: "family.gellerEmail",
+			policyUserVar:                       "family.gellerEmail",
+			persistentDisableDomainVerification: &[]bool{true}[0],
 		},
 		SetUpTimeout:    5 * time.Second,
 		ResetTimeout:    5 * time.Second,
