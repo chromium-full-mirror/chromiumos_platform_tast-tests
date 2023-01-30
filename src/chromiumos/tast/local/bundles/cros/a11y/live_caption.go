@@ -21,9 +21,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const liveCaptionSubPageURL = "audioAndCaptions"
-const liveCaptionToggleName = "Live Caption"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LiveCaption,
@@ -72,17 +69,8 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	}
 	ui := uiauto.New(tconn)
 
-	// Turn on Live Caption toggle via OS settings.
-	captionsHeading := nodewith.NameStartingWith("Audio and captions").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, liveCaptionSubPageURL, ui.Exists(captionsHeading))
-	if err != nil {
-		s.Fatal("Failed to open setting page: ", err)
-	}
-	if err := uiauto.Combine("turn on live caption",
-		ui.WaitUntilExists(nodewith.Name(liveCaptionToggleName).Role(role.ToggleButton)),
-		settings.SetToggleOption(cr, liveCaptionToggleName, true),
-	)(ctx); err != nil {
-		s.Fatal("Failed to turn on live caption toggle: ", err)
+	if err := ossettings.ToggleLiveCaption(cr, tconn, true)(ctx); err != nil {
+		s.Fatal("Failed to toggle on live caption: ", err)
 	}
 
 	// Wait until dlc libsoda and libsoda-model-en-us are installed.

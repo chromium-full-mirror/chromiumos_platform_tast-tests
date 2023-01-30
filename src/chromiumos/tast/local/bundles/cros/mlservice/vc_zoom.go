@@ -10,18 +10,12 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps/zoom"
+	"chromiumos/tast/local/bundles/cros/mlservice/commontype"
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
-)
-
-type launchZoomType int
-
-const (
-	launchZoomWithWeb launchZoomType = iota
-	launchZoomWithPWA
 )
 
 func init() {
@@ -40,42 +34,42 @@ func init() {
 			{
 				Name:    "clamshell_pwa",
 				Fixture: fixture.GAIALoggedInClamshell,
-				Val:     launchZoomWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa",
 				Fixture: fixture.GAIALoggedInTablet,
-				Val:     launchZoomWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web",
 				Fixture: fixture.GAIALoggedInClamshell,
-				Val:     launchZoomWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web",
 				Fixture: fixture.GAIALoggedInTablet,
-				Val:     launchZoomWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosClamshell,
-				Val:     launchZoomWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosTablet,
-				Val:     launchZoomWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosClamshell,
-				Val:     launchZoomWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosTablet,
-				Val:     launchZoomWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 		},
 	})
@@ -99,7 +93,7 @@ func VCZoom(ctx context.Context, s *testing.State) {
 
 	var zm *zoom.Zoom
 
-	if s.Param().(launchZoomType) == launchZoomWithPWA {
+	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
 		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br)
 	} else {
 		zm, err = zoom.StartNewMeeting(ctx, cr, br)

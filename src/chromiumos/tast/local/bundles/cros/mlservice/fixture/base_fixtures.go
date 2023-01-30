@@ -25,6 +25,7 @@ const (
 	GAIALoggedIn                = "mlGaiaLoggedIn"
 	GAIALoggedInClamshell       = "mlGAIALoggedInClamshell"
 	GAIALoggedInTablet          = "mlGAIALoggedInTablet"
+	GAIALoggedInLacros          = "mlGaiaLoggedInLacros"
 	GAIALoggedInLacrosClamshell = "mlGAIALoggedInLacrosClamshell"
 	GAIALoggedInLacrosTablet    = "mlGAIALoggedInLacrosTablet"
 	NoLoggedIn                  = "mlNoLoggedIn"
@@ -103,6 +104,26 @@ func init() {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInLacros,
+		Desc: "A fixture with GAIA user logged in Lacros",
+		Contacts: []string{
+			"chromeos-platform-ml-accelerators@google.com",
+			"shengjun@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,

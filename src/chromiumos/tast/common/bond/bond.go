@@ -213,10 +213,22 @@ type addBotsOptions struct {
 	requestedLayout string
 	allowVP9        bool
 	sendVP9         bool
+	audio           bool
+	audioFilePath   string
 }
 
 // AddBotsOption customizes the request of AddBods.
 type AddBotsOption func(*addBotsOptions)
+
+// WithAudio enables bot audio and indicates the input file.
+// Only available audio files on sever can be used.
+// http://go/javagoog/communication/meetings/testing/bots/service/resources/media/
+func WithAudio(audioFilePath string) AddBotsOption {
+	return func(opts *addBotsOptions) {
+		opts.audio = true
+		opts.audioFilePath = audioFilePath
+	}
+}
 
 // WithSendFPS can change the frame rate a bot produces.
 func WithSendFPS(fps int) AddBotsOption {
@@ -261,6 +273,8 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		requestedLayout: layout,
 		allowVP9:        true,
 		sendVP9:         true,
+		audio:           false,
+		audioFilePath:   "what_color_is_cheese_32bit_48k_stereo.raw",
 	}
 	for _, opt := range opts {
 		opt(&options)
@@ -278,8 +292,8 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 			"send_vp9":  options.sendVP9,
 		},
 		"media_options": map[string]interface{}{
-			"audio_file_path":  "audio_32bit_48k_stereo.raw",
-			"mute_audio":       true,
+			"audio_file_path":  options.audioFilePath,
+			"mute_audio":       !options.audio,
 			"video_fps":        options.sendFPS,
 			"mute_video":       false,
 			"requested_layout": options.requestedLayout,

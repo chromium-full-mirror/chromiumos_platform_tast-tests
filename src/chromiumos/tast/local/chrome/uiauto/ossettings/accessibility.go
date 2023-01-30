@@ -1,0 +1,38 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package ossettings
+
+import (
+	"context"
+
+	"chromiumos/tast/common/action"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
+)
+
+const (
+	liveCaptionSubPageURL = "audioAndCaptions"
+	liveCaptionToggleName = "Live Caption"
+)
+
+// ToggleLiveCaption toggles on/off live caption option in Accessibiility tab.
+func ToggleLiveCaption(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) action.Action {
+	return func(ctx context.Context) error {
+		ui := uiauto.New(tconn)
+		captionsHeading := nodewith.NameStartingWith("Audio and captions").Role(role.Heading)
+		settings, err := LaunchAtPageURL(ctx, tconn, cr, liveCaptionSubPageURL, ui.Exists(captionsHeading))
+		if err != nil {
+			return errors.Wrap(err, "failed to open setting page")
+		}
+		defer settings.Close(ctx)
+		return uiauto.Combine("toggle live caption",
+			ui.WaitUntilExists(nodewith.Name(liveCaptionToggleName).Role(role.ToggleButton)),
+			settings.SetToggleOption(cr, liveCaptionToggleName, value),
+		)(ctx)
+	}
+}

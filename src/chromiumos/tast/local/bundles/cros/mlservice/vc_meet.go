@@ -10,19 +10,13 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps/googlemeet"
+	"chromiumos/tast/local/bundles/cros/mlservice/commontype"
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
-)
-
-type launchMeetType int
-
-const (
-	launchMeetWithWeb launchMeetType = iota
-	launchMeetWithPWA
 )
 
 func init() {
@@ -41,42 +35,42 @@ func init() {
 			{
 				Name:    "clamshell_pwa",
 				Fixture: fixture.GAIALoggedInClamshell,
-				Val:     launchMeetWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa",
 				Fixture: fixture.GAIALoggedInTablet,
-				Val:     launchMeetWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web",
 				Fixture: fixture.GAIALoggedInClamshell,
-				Val:     launchMeetWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web",
 				Fixture: fixture.GAIALoggedInTablet,
-				Val:     launchMeetWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosClamshell,
-				Val:     launchMeetWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosTablet,
-				Val:     launchMeetWithPWA,
+				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosClamshell,
-				Val:     launchMeetWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosTablet,
-				Val:     launchMeetWithWeb,
+				Val:     commontype.LaunchAppInWeb,
 			},
 		},
 	})
@@ -100,7 +94,7 @@ func VCMeet(ctx context.Context, s *testing.State) {
 
 	var gm *googlemeet.GoogleMeet
 
-	if s.Param().(launchMeetType) == launchMeetWithPWA {
+	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
 		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br)
 	} else {
 		// Meet can dynamically switch between different segmentation models.
