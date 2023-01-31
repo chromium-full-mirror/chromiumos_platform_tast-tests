@@ -46,16 +46,7 @@ type ZoomConference struct {
 	outDir                     string
 }
 
-// Zoom has two versions of ui that need to be captured.
-const (
-	zoomTitle              = "Zoom"
-	startVideoRegexCapture = "(Start Video|start sending my video|start my video)"
-	stopVideoRegexCapture  = "(Stop Video|stop sending my video|stop my video)"
-	muteRegexCapture       = "(Mute|mute).*"
-	unmuteRegexCapture     = "(Unmute|unmute).*"
-	audioRegexCapture      = "(" + muteRegexCapture + "|" + unmuteRegexCapture + ")"
-	cameraRegexCapture     = "(" + startVideoRegexCapture + "|" + stopVideoRegexCapture + ")"
-)
+const zoomTitle = "Zoom"
 
 var zoomWebArea = nodewith.NameContaining("Zoom Meeting").Role(role.RootWebArea)
 
@@ -82,24 +73,11 @@ func (conf *ZoomConference) Join(ctx context.Context, room string) (err error) {
 		testing.ContextLog(ctx, "Current participants: ", participants)
 		return nil
 	}
-	joinAudio := func(ctx context.Context) error {
-		audioButton := nodewith.NameRegex(regexp.MustCompile(audioRegexCapture)).Role(role.Button).Focusable()
-		// Not every room will automatically join audio.
-		// If there is no automatic join audio, do join audio action.
-		if err := ui.WaitUntilExists(audioButton)(ctx); err == nil {
-			testing.ContextLog(ctx, "It has automatically joined audio")
-			return nil
-		}
-		joinAudioButton := nodewith.Name("Join Audio by Computer").Role(role.Button)
-		testing.ContextLog(ctx, "Join Audio by Computer")
-		return ui.WithTimeout(mediumUITimeout).LeftClickUntil(joinAudioButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioButton))(ctx)
-	}
-
 	return uiauto.Combine("check participants and join audio",
 		// Sometimes participants number caught at the beginning is wrong, it will be correct after a while.
 		// Add retry to get the correct participants number.
 		ui.WithInterval(time.Second).Retry(10, checkParticipantsNum),
-		ui.Retry(retryTimes, joinAudio),
+		ui.Retry(retryTimes, conf.zm.SetJoinAudio(true)),
 	)(ctx)
 }
 
@@ -178,51 +156,12 @@ func (conf *ZoomConference) changeLayout(mode string) action.Action {
 
 // VideoAudioControl controls the video and audio during conference.
 func (conf *ZoomConference) VideoAudioControl(ctx context.Context) error {
-	ui := conf.ui
-	toggleVideo := func(ctx context.Context) error {
-		cameraButton := nodewith.NameRegex(regexp.MustCompile(cameraRegexCapture)).Role(role.Button).Focusable()
-		info, err := ui.Info(ctx, cameraButton)
-		if err != nil {
-			return errors.Wrap(err, "failed to wait for the meet camera switch button to show")
-		}
-		startVideoButton := nodewith.NameRegex(regexp.MustCompile(startVideoRegexCapture)).Role(role.Button).Focusable()
-		if err := ui.Exists(startVideoButton)(ctx); err == nil {
-			testing.ContextLog(ctx, "Turn camera from off to on")
-		} else {
-			testing.ContextLog(ctx, "Turn camera from on to off")
-		}
-		nowCameraButton := nodewith.Name(info.Name).Role(role.Button).Focusable()
-		if err := ui.WithTimeout(mediumUITimeout).DoDefaultUntil(nowCameraButton, ui.WaitUntilGone(nowCameraButton))(ctx); err != nil {
-			return errors.Wrap(err, "failed to switch camera")
-		}
-		return nil
-	}
-
-	toggleAudio := func(ctx context.Context) error {
-		audioButton := nodewith.NameRegex(regexp.MustCompile(audioRegexCapture)).Role(role.Button).Focusable()
-		info, err := ui.Info(ctx, audioButton)
-		if err != nil {
-			return errors.Wrap(err, "failed to wait for the meet microphone switch button to show")
-		}
-		unmuteButton := nodewith.NameRegex(regexp.MustCompile(unmuteRegexCapture)).Role(role.Button).Focusable()
-		if err := ui.Exists(unmuteButton)(ctx); err == nil {
-			testing.ContextLog(ctx, "Turn microphone from mute to unmute")
-		} else {
-			testing.ContextLog(ctx, "Turn microphone from unmute to mute")
-		}
-		nowAudioButton := nodewith.Name(info.Name).Role(role.Button).Focusable()
-		if err := ui.WithTimeout(mediumUITimeout).DoDefaultUntil(nowAudioButton, ui.WaitUntilGone(nowAudioButton))(ctx); err != nil {
-			return errors.Wrap(err, "failed to switch microphone")
-		}
-		return nil
-	}
-
-	return uiauto.Combine("toggle video and audio",
+	return uiauto.Combine("switch video and audio",
 		// Remain in the state for 5 seconds after each action.
-		toggleVideo, uiauto.Sleep(viewingTime),
-		toggleVideo, uiauto.Sleep(viewingTime),
-		toggleAudio, uiauto.Sleep(viewingTime),
-		toggleAudio, uiauto.Sleep(viewingTime),
+		conf.zm.SwitchVideo(false), uiauto.Sleep(viewingTime),
+		conf.zm.SwitchVideo(true), uiauto.Sleep(viewingTime),
+		conf.zm.SwitchAudio(false), uiauto.Sleep(viewingTime),
+		conf.zm.SwitchAudio(true), uiauto.Sleep(viewingTime),
 	)(ctx)
 }
 
