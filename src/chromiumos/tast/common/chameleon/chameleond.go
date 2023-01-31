@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"chromiumos/tast/common/chameleon/devices"
 	"chromiumos/tast/common/chameleon/devices/common/bluetooth"
@@ -1050,8 +1051,18 @@ func (c *CommonChameleond) SetVgaMode(ctx context.Context, portID PortID, mode s
 
 // WaitVideoInputStable calls the Chameleond RPC method of the same name.
 // This implements Chameleond.WaitVideoInputStable, see that for more details.
-func (c *CommonChameleond) WaitVideoInputStable(ctx context.Context, portID PortID, timeoutSeconds float64) (stableBeforeTimeout bool, err error) {
-	return c.RPC("WaitVideoInputStable").Args(portID.Int(), timeoutSeconds).CallForBool(ctx)
+func (c *CommonChameleond) WaitVideoInputStable(ctx context.Context, portID PortID, timeoutSeconds float64) (isVideoStable bool, err error) {
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		isVideoStable, err = c.RPC("WaitVideoInputStable").Args(portID.Int(), timeoutSeconds).CallForBool(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "Waited on WaitVideoInputStable but it returned an error: ", err)
+		}
+		return err
+	}, &testing.PollOptions{
+		Timeout: time.Duration(timeoutSeconds) * time.Second,
+	})
+
+	return isVideoStable, err
 }
 
 // CreateEdid calls the Chameleond RPC method of the same name.
