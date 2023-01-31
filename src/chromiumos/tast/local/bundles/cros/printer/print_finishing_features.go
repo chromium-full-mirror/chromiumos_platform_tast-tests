@@ -62,6 +62,18 @@ func init() {
 				Fixture:           "lacros",
 			},
 		},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Set up a printer with advanced features (COM_FOUND_CUJ17_TASK1_WF1).
+				Value: "screenplay-487ce3a6-0cb5-4a33-9951-1a8780162b6b",
+			},
+			{
+				Key: "feature_id",
+				// Initiate a print job from a printer with advanced features (COM_FOUND_CUJ17_TASK2_WF1).
+				Value: "screenplay-8ca42bd6-e9d2-4ce4-a493-1e2c57b9aaca",
+			},
+		},
 	})
 }
 
