@@ -170,7 +170,6 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 
 	// Don't set BatteryDischarge, since that's handled with servo.
 	sup.Add(setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
-		Fwupd:     setup.DisableFwupd,
 		Powerd:    setup.DisablePowerd,
 		Backlight: setup.DoNotChangeBacklight,
 		DPTF:      setup.DoNotChangeDPTF,

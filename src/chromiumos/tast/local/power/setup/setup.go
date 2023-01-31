@@ -108,16 +108,6 @@ func (s *Setup) Check(ctx context.Context) error {
 	return nil
 }
 
-// FwupdMode indicates what fwupd setup is needed for a test.
-type FwupdMode int
-
-const (
-	// DisableFwupd indicates that fwupd should be disabled.
-	DisableFwupd FwupdMode = iota
-	// DoNotChangeFwupd indicates that fwupd should be left in the same state.
-	DoNotChangeFwupd
-)
-
 // PowerdMode indicates what powerd setup is needed for a test.
 type PowerdMode int
 
@@ -310,7 +300,6 @@ type PowerTestOptions struct {
 	NightLight NightLightMode
 
 	// The default value of the following options is to perform the actions.
-	Fwupd              FwupdMode
 	Powerd             PowerdMode
 	UpdateEngine       UpdateEngineMode
 	VNC                VNCMode
@@ -327,10 +316,6 @@ type PowerTestOptions struct {
 // noise, and consistently configuring components that change power draw.
 func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions, batteryDischarge *BatteryDischarge) (CleanupCallback, error) {
 	return Nested(ctx, "power test", func(s *Setup) error {
-		// fwupd should be stopped before powerd
-		if options.Fwupd == DisableFwupd {
-			s.Add(DisableServiceIfExists(ctx, "fwupd"))
-		}
 		if options.Powerd == DisablePowerd {
 			s.Add(DisableService(ctx, "powerd"))
 		}
