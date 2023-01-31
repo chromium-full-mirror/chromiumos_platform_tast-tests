@@ -7,6 +7,7 @@ package hwsec
 import (
 	"context"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
@@ -65,28 +66,34 @@ func create2VaultsForTesting(ctx context.Context, utility *hwsec.CryptohomeClien
 	}()
 
 	// Create 2 vaults for testing.
-	if err := utility.MountVault(ctx, keyInfo1[0].keyLabel, hwsec.NewPassAuthConfig(keyInfo1[0].username, keyInfo1[0].password), true, hwsec.NewVaultConfig()); err != nil {
-		return errors.Wrap(err, "failed to create first user")
-	}
-	if err := utility.MountVault(ctx, keyInfo2[0].keyLabel, hwsec.NewPassAuthConfig(keyInfo2[0].username, keyInfo2[0].password), true, hwsec.NewVaultConfig()); err != nil {
-		return errors.Wrap(err, "failed to create second user")
+	for _, infoList := range [][]keyInfo{keyInfo1, keyInfo2} {
+		if err := utility.WithAuthSession(ctx, infoList[0].username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			if err := utility.CreatePersistentUser(ctx, authSessionID); err != nil {
+				return errors.Wrap(err, "failed to create user")
+			}
+			if _, err := utility.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to prepare persistent vault")
+			}
+			for _, info := range infoList {
+				if info.lowEntropy {
+					if err := utility.AddPinAuthFactor(ctx, authSessionID, info.keyLabel, info.password); err != nil {
+						return errors.Wrap(err, "failed to add PIN key to vault")
+					}
+				} else {
+					if err := utility.AddAuthFactor(ctx, authSessionID, info.keyLabel, info.password); err != nil {
+						return errors.Wrap(err, "failed to add password key to vault")
+					}
+				}
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrapf(err, "failed to create vault and add keys for user %s", infoList[0].username)
+		}
 	}
 
 	// Unmount the vault before further testing.
 	if err := utility.UnmountAll(ctx); err != nil {
 		return errors.Wrap(err, "failed to unmount vault before testing")
-	}
-
-	for _, info := range keyInfo1[1:] {
-		if err := utility.AddVaultKey(ctx, keyInfo1[0].username, keyInfo1[0].password, keyInfo1[0].keyLabel, info.password, info.keyLabel, info.lowEntropy); err != nil {
-			return errors.Wrap(err, "failed to add key to vault for first user")
-		}
-	}
-
-	for _, info := range keyInfo2[1:] {
-		if err := utility.AddVaultKey(ctx, keyInfo2[0].username, keyInfo2[0].password, keyInfo2[0].keyLabel, info.password, info.keyLabel, info.lowEntropy); err != nil {
-			return errors.Wrap(err, "failed to add key to vault for second user")
-		}
 	}
 
 	return nil
@@ -113,9 +120,25 @@ func cleanupVault(ctx context.Context, utility *hwsec.CryptohomeClient) (returne
 // checkVaultWorks will check that the vault specified by username, both passwords and pin (if supported) works in both mounting and unlock (CheckKeyEx).
 func checkVaultWorks(ctx context.Context, utility *hwsec.CryptohomeClient, keyInfos []keyInfo) error {
 	for _, info := range keyInfos {
-		if err := utility.MountVault(ctx, info.keyLabel, hwsec.NewPassAuthConfig(info.username, info.password), false, hwsec.NewVaultConfig()); err != nil {
+		if err := utility.WithAuthSession(ctx, info.username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			if info.lowEntropy {
+				if _, err := utility.AuthenticatePinAuthFactor(ctx, authSessionID, info.keyLabel, info.password); err != nil {
+					return errors.Wrap(err, "failed to authenticate AuthFactor")
+				}
+			} else {
+				if _, err := utility.AuthenticateAuthFactor(ctx, authSessionID, info.keyLabel, info.password); err != nil {
+					return errors.Wrap(err, "failed to authenticate AuthFactor")
+				}
+			}
+			if _, err := utility.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to prepare persistent vault")
+			}
+
+			return nil
+		}); err != nil {
 			return errors.Wrapf(err, "failed to mount with %s", info.keyLabel)
 		}
+
 		if err := utility.UnmountAll(ctx); err != nil {
 			return errors.Wrap(err, "failed to unmount vault")
 		}

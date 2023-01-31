@@ -162,20 +162,6 @@ func (c *cryptohomeBinary) listKeysEx(ctx context.Context, username string) ([]b
 	return c.call(ctx, "--action=list_keys_ex", "--user="+username)
 }
 
-// addKeyEx calls "cryptohome --action=add_key_ex".
-func (c *cryptohomeBinary) addKeyEx(ctx context.Context, username, password, label, newPassword, newLabel string, lowEntropy bool) ([]byte, error) {
-	args := []string{"--action=add_key_ex", "--user=" + username, "--password=" + password, "--key_label=" + label, "--new_password=" + newPassword, "--new_key_label=" + newLabel}
-	if lowEntropy {
-		args = append(args, "--key_policy=le")
-	}
-	return c.call(ctx, args...)
-}
-
-// removeKeyEx calls "cryptohome --action=remove_key_ex".
-func (c *cryptohomeBinary) removeKeyEx(ctx context.Context, username, password, removeLabel string) ([]byte, error) {
-	return c.call(ctx, "--action=remove_key_ex", "--user="+username, "--password="+password, "--remove_key_label="+removeLabel)
-}
-
 // remove calls "cryptohome --action=remove".
 func (c *cryptohomeBinary) remove(ctx context.Context, username string) ([]byte, error) {
 	return c.call(ctx, "--action=remove", "--user="+username, "--force")

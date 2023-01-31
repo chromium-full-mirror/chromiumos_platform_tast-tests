@@ -26,8 +26,6 @@ const (
 	cryptohomeWrappedKeysetString          = "TPM_WRAPPED"
 	installAttributesFinalizeSuccessOutput = "InstallAttributesFinalize(): 1"
 	listKeysExLabelPrefix                  = "Label: "
-	addKeyExSuccessMessage                 = "Key added."
-	removeKeyExSuccessMessage              = "Key removed."
 	shadowHome                             = "/home/.shadow"
 )
 
@@ -446,38 +444,6 @@ func (u *CryptohomeClient) ListVaultKeys(ctx context.Context, username string) (
 		}
 	}
 	return result, nil
-}
-
-// AddVaultKey adds the key with newLabel and newPassword to the user specified by username, with password password and label label. nil is returned iff the operation is successful.
-func (u *CryptohomeClient) AddVaultKey(ctx context.Context, username, password, label, newPassword, newLabel string, lowEntropy bool) error {
-	binaryOutput, err := u.binary.addKeyEx(ctx, username, password, label, newPassword, newLabel, lowEntropy)
-	if err != nil {
-		return errors.Wrap(err, "failed to call AddKeyEx")
-	}
-
-	output := string(binaryOutput)
-	if !strings.Contains(output, addKeyExSuccessMessage) {
-		testing.ContextLogf(ctx, "Incorrect AddKeyEx message; got %q, want %q", output, addKeyExSuccessMessage)
-		return errors.Errorf("incorrect message from AddKeyEx; got %q, want %q", output, addKeyExSuccessMessage)
-	}
-
-	return nil
-}
-
-// RemoveVaultKey removes the key with label removeLabel from user specified by username's vault. password for username is supplied so the operation can be proceeded. nil is returned iff the operation is successful.
-func (u *CryptohomeClient) RemoveVaultKey(ctx context.Context, username, password, removeLabel string) error {
-	binaryOutput, err := u.binary.removeKeyEx(ctx, username, password, removeLabel)
-	if err != nil {
-		return errors.Wrap(err, "failed to call RemoveKeyEx")
-	}
-
-	output := string(binaryOutput)
-	if !strings.Contains(output, removeKeyExSuccessMessage) {
-		testing.ContextLogf(ctx, "Incorrect RemoveKeyEx message; got %q, want %q", output, removeKeyExSuccessMessage)
-		return errors.Errorf("incorrect message from RemoveKeyEx; got %q, want %q", output, removeKeyExSuccessMessage)
-	}
-
-	return nil
 }
 
 // RemoveVault remove the vault for username.
