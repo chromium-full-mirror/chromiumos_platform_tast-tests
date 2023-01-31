@@ -231,23 +231,23 @@ func Wrapper(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(b/260624085):
-	// Debugging block. Remove after diagnozing issue. Using d.KeyFile() works
-	// when running the test locally, but fails in the lab environment. Add this block to
-	// log the error message without breaking the test.
+	// Debugging block. Remove after diagnozing issue. Ensure ssh to DUT works without
+	// specifying the key.
 	{
 		s.Log("KeyFile: ", d.KeyFile())
 		s.Log("KeyDir: ", d.KeyDir())
-		out, err := exec.Command("cp", d.KeyFile(), filepath.Join(syzkallerTastDir, "debug")).CombinedOutput()
-		if err != nil {
-			s.Logf("cp [%v] failed: %v: %v", d.KeyFile(), err, string(out))
-		}
-		if d.KeyFile() != "" {
-			out, err = exec.Command("ls", "-ld", filepath.Dir(d.KeyFile())).CombinedOutput()
-			if err != nil {
-				s.Logf("ls failed: %v: %v", err, string(out))
+		if _, err := os.Stat(filepath.Join(d.KeyDir(), "config")); err != nil {
+			if os.IsNotExist(err) {
+				s.Log("Config file does not exist")
+			} else {
+				s.Log("Unexpected error stat config file: ", err)
 			}
-			s.Log("ls out: ", string(out))
 		}
+		out, err := exec.Command("ssh", "root@"+d.HostName(), "ls").CombinedOutput()
+		if err != nil {
+			s.Logf("SSH [%v] failed: %v: %v", d.HostName(), err, string(out))
+		}
+		s.Logf("SSH [%v] success: %v", d.HostName(), string(out))
 	}
 
 	// Chmod the keyfile so that ssh connections do not fail due to
