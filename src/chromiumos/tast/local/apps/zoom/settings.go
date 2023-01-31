@@ -24,7 +24,8 @@ var (
 	moreOptionsButton = nodewith.Name("More meeting control").Ancestor(zoomMainWebArea)
 	closeDialogButton = nodewith.Role(role.Button).HasClass("settings-dialog__close").Ancestor(settingsDialog)
 
-	backgroundTab = nodewith.Name("Background").Role(role.Tab).Ancestor(settingsDialog)
+	backgroundTab   = nodewith.Name("Background").Role(role.Tab).Ancestor(settingsDialog)
+	backgroundPanel = nodewith.Name("Background").Role(role.TabPanel).Ancestor(settingsDialog)
 )
 
 // ChangeSettings changes one or more settings from main screen.
@@ -166,26 +167,39 @@ func (zm *Zoom) SwitchAudio(value bool) action.Action {
 	}
 }
 
+// BackgroundOption indicates the option name of the background that can be selected.
+type BackgroundOption string
+
+const (
+	// NoBackground is the no background option.
+	NoBackground BackgroundOption = "None"
+	// BlurBackground is the blur background option.
+	BlurBackground BackgroundOption = "blur.jpg"
+	// StaticBackground is the static background option.
+	StaticBackground BackgroundOption = "San Francisco.jpg"
+)
+
 // SetBackgroundBlur chooses "Blur" option in "Background" Tab.
 func (zm *Zoom) SetBackgroundBlur(ctx context.Context) error {
-	return zm.chooseBackground("blur.jpg selected")(ctx)
+	return zm.ChooseBackground(BlurBackground)(ctx)
 }
 
 // SetBackgroundNone chooses "None" option in "Background" Tab.
 func (zm *Zoom) SetBackgroundNone(ctx context.Context) error {
-	return zm.chooseBackground("None selected")(ctx)
+	return zm.ChooseBackground(NoBackground)(ctx)
 }
 
-// chooseBackground chooses background option in "Background" Tab.
-func (zm *Zoom) chooseBackground(optionName string) action.Action {
+// ChooseBackground chooses background option in "Background" Tab.
+func (zm *Zoom) ChooseBackground(optionName BackgroundOption) action.Action {
 	ui := zm.ui
-	backgroundItem := nodewith.NameContaining(optionName).Role(role.ListBoxOption).Ancestor(settingsDialog)
+	backgroundName := string(optionName) + " selected"
+	backgroundOption := nodewith.NameContaining(backgroundName).Role(role.ListBoxOption).Ancestor(settingsDialog)
 
-	return uiauto.Combine(fmt.Sprintf("set background to %q", optionName),
+	return uiauto.NamedCombine(fmt.Sprintf("set background to %q", optionName),
 		ui.LeftClickUntil(backgroundTab,
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(backgroundTab.Focused())),
-		ui.DoDefaultUntil(backgroundItem,
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(backgroundItem.Focused())),
+			ui.WithTimeout(shortUITimeout).WaitUntilExists(backgroundPanel)),
+		ui.DoDefaultUntil(backgroundOption,
+			ui.WithTimeout(shortUITimeout).WaitUntilExists(backgroundOption.Focused())),
 		// After applying the new background, give it 3 seconds to load the new background.
 		// TODO(b/264370256): Work out a better way to check background effect rather than sleep.
 		uiauto.Sleep(shortUITimeout),
@@ -202,7 +216,8 @@ func (zm *Zoom) openSettings(ctx context.Context) error {
 		return nil
 	}
 
-	return uiauto.Combine("open Meet settings page",
+	// Sometimes the menu will disappear and need to retry to open.
+	return uiauto.Retry(3, uiauto.Combine("open Meet settings page",
 		zm.ShowInterface,
 		// If the screen width is not enough, the settings button will be moved to more options.
 		// So checking whether if the settings button is on screen, otherwise clicks More button to expand menu.
@@ -216,8 +231,8 @@ func (zm *Zoom) openSettings(ctx context.Context) error {
 			settingsButton = nodewith.Name("Settings").Role(role.MenuItem).Ancestor(zoomMainWebArea)
 			return ui.DoDefaultUntil(moreOptionsButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(settingsButton))(ctx)
 		},
-		ui.LeftClickUntil(settingsButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(settingsDialog)),
-	)(ctx)
+		ui.WithTimeout(longUITimeout).LeftClickUntil(settingsButton, ui.WaitUntilExists(settingsDialog)),
+	))(ctx)
 }
 
 // closeSettings closes the settings page in Zoom.
