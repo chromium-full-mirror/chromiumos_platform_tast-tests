@@ -199,7 +199,7 @@ func (zm *Zoom) openSettings(ctx context.Context) error {
 	}
 
 	return uiauto.Combine("open Meet settings page",
-		zm.showInterface,
+		zm.ShowInterface,
 		// If the screen width is not enough, the settings button will be moved to more options.
 		// So checking whether if the settings button is on screen, otherwise clicks More button to expand menu.
 		func(ctx context.Context) error {

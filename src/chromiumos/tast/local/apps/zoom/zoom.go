@@ -268,7 +268,7 @@ func (zm *Zoom) ExitFullScreen(ctx context.Context) error {
 // This function should be called in cleanup function to ensure the user can host a new meeting successfully.
 func (zm *Zoom) EndMeetingForAll(ctx context.Context) error {
 	ui := zm.ui
-	if err := zm.showInterface(ctx); err != nil {
+	if err := zm.ShowInterface(ctx); err != nil {
 		return err
 	}
 	endButton, err := ui.FindAnyExists(ctx, endMenu, leaveButton)
@@ -305,15 +305,15 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 	return ash.WaitForChromeAppInstalled(ctx, tconn, apps.Zoom.ID, time.Minute)
 }
 
-// showInterface moves mouse or taps in web area in order to make the menu interface reappear.
-func (zm *Zoom) showInterface(ctx context.Context) error {
+// ShowInterface moves mouse or taps in web area in order to make the menu interface reappear.
+func (zm *Zoom) ShowInterface(ctx context.Context) error {
 	return zm.ui.LeftClickUntil(mainLayoutCanvas,
-		zm.ui.WaitForLocation(endMenu))(ctx)
+		zm.ui.WaitForLocation(moreOptionsButton))(ctx)
 }
 
 // hideInterface moves mouse to the center point of canvas.
 func (zm *Zoom) hideInterface(ctx context.Context) error {
-	isNodeFound, err := zm.ui.IsNodeFound(ctx, endMenu)
+	isNodeFound, err := zm.ui.IsNodeFound(ctx, moreOptionsButton)
 	if err != nil {
 		return err
 	} else if !isNodeFound {
@@ -322,6 +322,6 @@ func (zm *Zoom) hideInterface(ctx context.Context) error {
 
 	return zm.ui.RetryUntil(
 		zm.ui.MouseMoveTo(mainLayoutCanvas, 10*time.Millisecond),
-		zm.ui.WaitUntilGone(endMenu),
+		zm.ui.WaitUntilGone(moreOptionsButton),
 	)(ctx)
 }
