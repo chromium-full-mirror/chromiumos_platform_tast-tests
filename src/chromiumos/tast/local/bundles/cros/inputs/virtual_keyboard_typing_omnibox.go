@@ -113,15 +113,6 @@ func VirtualKeyboardTypingOmnibox(ctx context.Context, s *testing.State) {
 			ctx, shortCancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer shortCancel()
 
-			defer func(ctx context.Context) {
-				outDir := filepath.Join(s.OutDir(), testName)
-				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, s.HasError, cr, "ui_tree_"+testName)
-
-				if err := vkbCtx.HideVirtualKeyboard()(ctx); err != nil {
-					s.Log("Failed to hide virtual keyboard: ", err)
-				}
-			}(cleanupCtx)
-
 			br, err := apps.PrimaryBrowser(ctx, tconn)
 			if err != nil {
 				s.Fatal("Failed to get browser app: ", err)
@@ -135,8 +126,14 @@ func VirtualKeyboardTypingOmnibox(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to launch %s: %s", br.Name, err)
 			}
 			defer func(ctx context.Context) {
+				outDir := filepath.Join(s.OutDir(), testName)
+				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, s.HasError, cr, "ui_tree_"+testName)
+
+				if err := vkbCtx.HideVirtualKeyboard()(ctx); err != nil {
+					s.Log("Failed to hide virtual keyboard: ", err)
+				}
 				if err := apps.Close(ctx, tconn, br.ID); err != nil {
-					testing.ContextLog(ctx, "Failed to close Chrome browser: ", err)
+					s.Log("Failed to close Chrome browser: ", err)
 				}
 			}(cleanupCtx)
 
