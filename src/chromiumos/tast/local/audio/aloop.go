@@ -5,7 +5,11 @@
 package audio
 
 import (
+	"bytes"
 	"context"
+	"os"
+	"path/filepath"
+	"text/template"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -23,7 +27,15 @@ func init() {
 		Name:            fixture.AloopLoaded,
 		Desc:            "Configure the ALSA loopback device for CRAS",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		Impl:            aloopLoadedFixture{},
+		Impl:            &aloopLoadedFixture{},
+		SetUpTimeout:    20 * time.Second,
+		TearDownTimeout: 20 * time.Second,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.StereoAloopLoaded,
+		Desc:            "Configure the ALSA loopback device as a stereo device for CRAS",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Impl:            &aloopLoadedFixture{Channels: 2},
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
 	})
@@ -32,6 +44,16 @@ func init() {
 		Desc:            "Configure the ALSA loopback device for CRAS and stop UI",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            uiStoppedFixture{},
+		Parent:          fixture.AloopLoaded,
+		SetUpTimeout:    20 * time.Second,
+		TearDownTimeout: 20 * time.Second,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.StereoAloopLoadedWithoutUI,
+		Desc:            "Configure the ALSA loopback device as a stereo device for CRAS and stop UI",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Impl:            uiStoppedFixture{},
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
 	})
@@ -114,17 +136,81 @@ func SetupLoopback(ctx context.Context, cr *chrome.Chrome) error {
 	return nil
 }
 
-type aloopLoadedFixture struct{}
+const aloopUCMPath = "/usr/share/alsa/ucm/Loopback/HiFi.conf"
 
-func (aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+const aloopUCMTemplate = `SectionVerb {
+	Value {
+		FullySpecifiedUCM "1"
+	}
+
+	EnableSequence [
+	]
+
+	DisableSequence [
+	]
+}
+
+SectionDevice."Loopback Playback".0 {
+	Value {
+		PlaybackPCM "hw:Loopback,0"
+		PlaybackChannels "{{.Channels}}"
+	}
+}
+
+SectionDevice."Loopback Capture".0 {
+	Value {
+		CapturePCM "hw:Loopback,1"
+		CaptureChannels "{{.Channels}}"
+	}
+}
+`
+
+type aloopLoadedFixture struct {
+	// Channels of the aloop device. 0 to not change the existing configuration.
+	Channels int
+
+	originalUCM []byte
+}
+
+func (f *aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if f.Channels != 0 {
+		s.Logf("Replacing %s with channels=%d", aloopUCMPath, f.Channels)
+		var ucmContent bytes.Buffer
+		if err := template.Must(template.New("HiFi.conf").Parse(aloopUCMTemplate)).Execute(&ucmContent, f); err != nil {
+			s.Fatal("Cannot generate aloop HiFi.conf: ", err)
+		}
+		overrideUCMPath := filepath.Join(s.OutDir(), "LoopbackOverrideHiFi.conf")
+		if err := os.WriteFile(overrideUCMPath, ucmContent.Bytes(), 0644); err != nil {
+			s.Fatalf("Cannot write to %s: %v", overrideUCMPath, err)
+		}
+		if err := testexec.CommandContext(ctx, "mount", "--bind", overrideUCMPath, aloopUCMPath).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Cannot mount loopback UCM override: ", err)
+		}
+	}
+
 	if _, err := LoadAloop(ctx); err != nil {
 		s.Fatal("Cannot load aloop: ", err)
+	}
+
+	if f.Channels != 0 {
+		// Restart CRAS, in case the UCM for aloop was already loaded.
+		if err := RestartCras(ctx); err != nil {
+			s.Fatal("Cannot restart CRAS: ", err)
+		}
 	}
 
 	return nil
 }
 
-func (aloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *aloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.Channels != 0 {
+		s.Log("Restoring ", aloopUCMPath)
+		if err := testexec.CommandContext(ctx, "umount", aloopUCMPath).Run(testexec.DumpLogOnError); err != nil {
+			s.Errorf("Cannot restore %s: %v", aloopUCMPath, err)
+		}
+	}
+
+	// Unload aloop, which also restarts CRAS.
 	if err := unloadAloop(ctx); err != nil {
 		s.Error("Cannot unload aloop: ", err)
 	}

@@ -7,16 +7,20 @@ package audio
 import (
 	"context"
 	"os"
+	"regexp"
+	"strconv"
 	"time"
 
 	"chromiumos/tast/common/fixture"
 	upstartcommon "chromiumos/tast/common/upstart"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
 type aloopLoadedFixtureParam struct {
+	channels   int
 	uiJobGoal  upstartcommon.Goal
 	uiJobState upstartcommon.State
 }
@@ -33,6 +37,16 @@ func init() {
 			{
 				Fixture: fixture.AloopLoaded,
 				Val: aloopLoadedFixtureParam{
+					channels:   8, // the default
+					uiJobGoal:  upstartcommon.StartGoal,
+					uiJobState: upstartcommon.RunningState,
+				},
+			},
+			{
+				Name:    "stereo",
+				Fixture: fixture.StereoAloopLoaded,
+				Val: aloopLoadedFixtureParam{
+					channels:   2,
 					uiJobGoal:  upstartcommon.StartGoal,
 					uiJobState: upstartcommon.RunningState,
 				},
@@ -41,6 +55,16 @@ func init() {
 				Name:    "without_ui",
 				Fixture: fixture.AloopLoadedWithoutUI,
 				Val: aloopLoadedFixtureParam{
+					channels:   8, // the default
+					uiJobGoal:  upstartcommon.StopGoal,
+					uiJobState: upstartcommon.WaitingState,
+				},
+			},
+			{
+				Name:    "stereo_without_ui",
+				Fixture: fixture.StereoAloopLoadedWithoutUI,
+				Val: aloopLoadedFixtureParam{
+					channels:   2,
 					uiJobGoal:  upstartcommon.StopGoal,
 					uiJobState: upstartcommon.WaitingState,
 				},
@@ -73,6 +97,13 @@ func AloopLoadedFixture(ctx context.Context, s *testing.State) {
 		s.Error("CRAS alsa loopback device not found: ", err)
 	}
 
+	channels, err := crasAloopChannels()
+	if err != nil {
+		s.Error("Cannot get number of aloop channels: ", err)
+	} else if channels != param.channels {
+		s.Errorf("Unexpected aloop channels: want %d; got %d", param.channels, channels)
+	}
+
 	// Check for UI job status
 	goal, state, _, err := upstart.JobStatus(ctx, "ui")
 	if err != nil {
@@ -81,4 +112,21 @@ func AloopLoadedFixture(ctx context.Context, s *testing.State) {
 	if goal != param.uiJobGoal || state != param.uiJobState {
 		s.Errorf("Expected UI in %s/%s; got %s/%s", param.uiJobGoal, param.uiJobState, goal, state)
 	}
+}
+
+// crasAloopChannels the number of channels of the aloop device configured in CRAS.
+func crasAloopChannels() (int, error) {
+	// TODO(aaronyu): Figure out the channel count from CRAS, instead of a config file.
+	b, err := os.ReadFile("/usr/share/alsa/ucm/Loopback/HiFi.conf")
+	if err != nil {
+		return 0, err
+	}
+
+	config := string(b)
+	m := regexp.MustCompile(`PlaybackChannels "(\d+)"`).FindStringSubmatch(config)
+	if m == nil {
+		return 0, errors.New("cannot find PlaybackChannels from UCM")
+	}
+
+	return strconv.Atoi(m[1])
 }
