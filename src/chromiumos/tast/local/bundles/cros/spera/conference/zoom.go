@@ -20,7 +20,6 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
@@ -135,7 +134,7 @@ func (conf *ZoomConference) changeLayout(mode string) action.Action {
 		// Sometimes the zoom's menu disappears too fast. Add retry to check whether the device supports
 		// speaker and gallery view.
 		if err := uiauto.Combine("check view button",
-			conf.showInterface,
+			conf.zm.ShowInterface,
 			ui.LeftClickUntil(viewButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(viewMenu)),
 			ui.WithTimeout(shortUITimeout).WaitUntilExists(speakerNode),
 		)(ctx); err != nil {
@@ -147,7 +146,7 @@ func (conf *ZoomConference) changeLayout(mode string) action.Action {
 		modeNode := nodewith.Name(mode).Role(role.MenuItem)
 		actionName := "Change layout to " + mode
 		return ui.Retry(retryTimes, uiauto.NamedCombine(actionName,
-			conf.showInterface,
+			conf.zm.ShowInterface,
 			uiauto.IfSuccessThen(ui.Gone(modeNode), ui.LeftClick(viewButton)),
 			ui.LeftClick(modeNode),
 		))(ctx)
@@ -234,7 +233,7 @@ func (conf *ZoomConference) BackgroundChange(ctx context.Context) error {
 		closeButton := nodewith.Role(role.Button).HasClass("settings-dialog__close").Ancestor(settingsWindow)
 		openBackgroundPanel := func(ctx context.Context) error {
 			var actions []action.Action
-			if err := conf.showInterface(ctx); err != nil {
+			if err := conf.zm.ShowInterface(ctx); err != nil {
 				return err
 			}
 			if err := ui.Exists(settingsButton)(ctx); err == nil {
@@ -308,7 +307,7 @@ func (conf *ZoomConference) Presenting(ctx context.Context, application googleAp
 		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
 		return uiauto.NamedCombine("share Screen",
 			conf.uiHandler.SwitchToChromeTabByName(zoomTitle),
-			conf.showInterface,
+			conf.zm.ShowInterface,
 			ui.LeftClickUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presenMode)),
 			ui.LeftClick(presenMode),
 			ui.LeftClick(presentTab),
@@ -341,42 +340,6 @@ func (conf *ZoomConference) CloseConference(ctx context.Context) error {
 }
 
 var _ Conference = (*ZoomConference)(nil)
-
-// showInterface moves mouse or taps in web area in order to make the menu interface reappear.
-func (conf *ZoomConference) showInterface(ctx context.Context) error {
-	ui := conf.ui
-	information := nodewith.Name("Meeting information").Role(role.Button).Ancestor(zoomWebArea)
-
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.Exists(information)(ctx); err == nil {
-			return nil
-		}
-
-		if conf.tabletMode {
-			testing.ContextLog(ctx, "Tap web area to show interface")
-			if err := conf.uiHandler.Click(zoomWebArea)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click the web area")
-			}
-		} else {
-			testing.ContextLog(ctx, "Mouse move to show interface")
-			webAreaInfo, err := ui.Info(ctx, zoomWebArea)
-			if err != nil {
-				return err
-			}
-			if err := mouse.Move(conf.tconn, webAreaInfo.Location.TopLeft(), 200*time.Millisecond)(ctx); err != nil {
-				return errors.Wrap(err, "failed to move mouse to top left corner of the web area")
-			}
-			if err := ui.MouseMoveTo(zoomWebArea, 200*time.Millisecond)(ctx); err != nil {
-				return errors.Wrap(err, "failed to move mouse to the center of the web area")
-			}
-		}
-
-		if err := ui.WaitUntilExists(information)(ctx); err != nil {
-			return err
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: mediumUITimeout})
-}
 
 // SetBrowser sets browser to chrome or lacros.
 func (conf *ZoomConference) SetBrowser(br *browser.Browser) {
