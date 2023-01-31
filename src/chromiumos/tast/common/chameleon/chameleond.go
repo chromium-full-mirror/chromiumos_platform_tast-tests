@@ -226,6 +226,8 @@ type Chameleond interface {
 	// Resets Chameleon board.
 	Reset(ctx context.Context) error
 
+	GetChameleondLogs(ctx context.Context, cursor string) (string, error)
+
 	// GetDetectedStatus calls the Chameleond RPC method of the same name.
 	// Returns the detected status of all devices. This can be used to determine
 	// the capability of the Chameleon board.
@@ -734,6 +736,16 @@ func (c *CommonChameleond) callForPortIDs(ctx context.Context, callBuilder *xmlr
 // This implements Chameleond.Reset, see that for more details.
 func (c *CommonChameleond) Reset(ctx context.Context) error {
 	return c.RPC("Reset").Call(ctx)
+}
+
+// GetChameleondLogs calls the Chameleond RPC method of the same name.
+// |cursor| is an optional parameter for chameleon, so we're handling the case it gets passed as empty string.
+// This implements Chameleond.GetChameleondLogs, see that for more details.
+func (c *CommonChameleond) GetChameleondLogs(ctx context.Context, cursor string) (string, error) {
+	if cursor == "" {
+		return c.RPC("GetChameleondLogs").CallForString(ctx)
+	}
+	return c.RPC("GetChameleondLogs").Args(cursor).CallForString(ctx)
 }
 
 // GetDetectedStatus calls the Chameleond RPC method of the same name.

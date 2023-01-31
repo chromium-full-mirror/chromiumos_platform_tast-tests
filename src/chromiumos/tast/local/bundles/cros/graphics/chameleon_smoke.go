@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
@@ -60,6 +61,11 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
+	defer func(ctx context.Context, s *testing.State, cham chameleon.Chameleond) {
+		if s.HasError() {
+			graphics.ChameleonPrintLogs(ctx, cham)
+		}
+	}(ctx, s, cham)
 
 	supportedPorts := [...]string{"dp1", "dp2", "hdmi1", "hdmi2"}
 	for _, portStr := range supportedPorts {

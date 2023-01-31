@@ -46,7 +46,8 @@ var (
 		"9992",
 		"Port for chameleond on Chameleon (optional/used)")
 
-	stableVideoTimeout = 30.0
+	stableVideoTimeout      = 30.0
+	chameleonLogsCursorName = "TAST"
 )
 
 // DisplayMode is an enum used to describe Chrome's display modes.
@@ -212,7 +213,7 @@ func ChameleonGetURL() (string, error) {
 	return chamURL, nil
 }
 
-// ChameleonGetConnection retrieves the connected Chameleond instance
+// ChameleonGetConnection retrieves the connected Chameleond instance and resets the logs.
 func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 	chamURL, err := ChameleonGetURL()
 	if err != nil {
@@ -222,9 +223,14 @@ func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 	if err != nil {
 		return nil, errors.Errorf("failed to connect to Chameleon: %s", err)
 	}
+
+	// Reset logs so we can read it later just for this test.
+	cham.GetChameleondLogs(ctx, chameleonLogsCursorName)
+
 	if err = cham.Reset(ctx); err != nil {
 		return nil, errors.Errorf("failed to reset Chameleon: %s", err)
 	}
+
 	testing.ContextLog(ctx, "Connected to Chameleon")
 	return cham, nil
 }
@@ -275,7 +281,13 @@ func ChameleonShouldUsePort(ctx context.Context, cham chameleon.Chameleond, port
 	if err != nil {
 		return false, port, errors.Errorf("failed to unplug the port %d : %s", port, err)
 	}
-	return isPhysPlug && hasVideoSupport, port, nil
+
+	willUseConnector := isPhysPlug && hasVideoSupport
+	if !willUseConnector {
+		testing.ContextLogf(ctx, "IsPhysicalPlugged: %t, HasVideoSupport: %t", isPhysPlug, hasVideoSupport)
+	}
+
+	return willUseConnector, port, nil
 }
 
 // ChameleonResizePng resizes a png to the proper format for ChameleonPerceptualDiff
@@ -308,4 +320,14 @@ func ChameleonPerceptualDiff(ctx context.Context, imagePath1, imagePath2, outDir
 		return false, nil
 	}
 	return true, nil
+}
+
+// ChameleonPrintLogs gets the Chameleond logs since the last time it was called.
+func ChameleonPrintLogs(ctx context.Context, cham chameleon.Chameleond) {
+	logs, err := cham.GetChameleondLogs(ctx, chameleonLogsCursorName)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get and print Chameleon logs: ", err)
+	} else {
+		testing.ContextLog(ctx, "Chameleon logs: ", logs)
+	}
 }
