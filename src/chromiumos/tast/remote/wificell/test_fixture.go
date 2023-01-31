@@ -1941,7 +1941,11 @@ func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
 
 // P2PDeconfigureGO deconfigures the p2p group owner (GO).
 func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) error {
-	wpa := remotewpacli.NewRemoteRunner(tf.p2pGO.Conn())
+	iface, err := tf.DUTWifiClient(DefaultDUT).Interface(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the WiFi interface")
+	}
+	wpa := remotewpacli.NewRemoteRunnerOnIface(tf.p2pGO.Conn(), iface)
 
 	if err := wpa.P2PGroupRemove(ctx, tf.p2pGOIface); err != nil {
 		return err
@@ -1956,7 +1960,11 @@ func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) error {
 
 // P2PDeconfigureClient deconfigures the p2p client.
 func (tf *TestFixture) P2PDeconfigureClient(ctx context.Context) error {
-	wpa := remotewpacli.NewRemoteRunner(tf.p2pClient.Conn())
+	iface, err := tf.DUTWifiClient(PeerDUT).Interface(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the WiFi interface")
+	}
+	wpa := remotewpacli.NewRemoteRunnerOnIface(tf.p2pClient.Conn(), iface)
 
 	if err := wpa.P2PGroupRemove(ctx, tf.p2pClientIface); err != nil {
 		return err
