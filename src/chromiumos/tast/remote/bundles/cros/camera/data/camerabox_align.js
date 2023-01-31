@@ -338,8 +338,6 @@ window.Tast = class Tast {
       }
       break;
     }
-    Tast.patternChecker_.destructor();
-    delete Tast.patternChecker_;
   }
 
   /**
@@ -351,7 +349,6 @@ window.Tast = class Tast {
     await Tast.waitForPassAlignN_(facing, AspectRatio.AR16X9, 5000, 15000);
     Tast.feedbackAlign_(true, 'All passed');
     Tast.patternChecker_.destructor();
-    delete Tast.patternChecker_;
   }
 
   /**
