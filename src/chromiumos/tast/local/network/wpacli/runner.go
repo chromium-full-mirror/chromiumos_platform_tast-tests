@@ -18,7 +18,7 @@ func NewLocalRunner() *Runner {
 	return wpacli.NewRunner(&cmd.LocalCmdRunner{})
 }
 
-// NewSpecificLocalRunner creates an wpacli runner for local execution in the specific interface context.
-func NewSpecificLocalRunner(i string) *Runner {
-	return wpacli.NewSpecificRunner(&cmd.LocalCmdRunner{}, i)
+// NewLocalRunnerOnIface creates an wpacli runner for local execution in the specific interface context.
+func NewLocalRunnerOnIface(i string) *Runner {
+	return wpacli.NewRunnerOnIface(&cmd.LocalCmdRunner{}, i)
 }

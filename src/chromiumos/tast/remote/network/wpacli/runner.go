@@ -18,3 +18,8 @@ type Runner = wpacli.Runner
 func NewRemoteRunner(host *ssh.Conn) *Runner {
 	return wpacli.NewRunner(&cmd.RemoteCmdRunner{Host: host})
 }
+
+// NewRemoteRunnerOnIface creates a wpacli runner for remote execution for the particular interface.
+func NewRemoteRunnerOnIface(host *ssh.Conn, iface string) *Runner {
+	return wpacli.NewRunnerOnIface(&cmd.RemoteCmdRunner{Host: host}, iface)
+}

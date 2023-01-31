@@ -3027,7 +3027,7 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 
 	channel, err := s.startSoftAP(ctx, request)
 	if err != nil {
-		localwpacli.NewSpecificLocalRunner(apIfName).StopSoftAP(ctx)
+		localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx)
 		s.RemoveInterface(ctx, apIfName)
 		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return nil, errors.Wrap(err, "failed to start SoftAP")
@@ -3035,7 +3035,7 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 
 	if err := s.startDHCPServer(ctx); err != nil {
 		s.stopDHCPServer(ctx)
-		localwpacli.NewSpecificLocalRunner(apIfName).StopSoftAP(ctx)
+		localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx)
 		s.RemoveInterface(ctx, apIfName)
 		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return nil, errors.Wrap(err, "failed to start DHCP server")
@@ -3060,7 +3060,7 @@ func (s *ShillService) StopTethering(ctx context.Context, _ *empty.Empty) (*empt
 	}
 
 	// TODO(b/235758932): Change to use Shill dbus call instead of wpa_supplicant when tethering support in Shill is ready.
-	if err := localwpacli.NewSpecificLocalRunner(apIfName).StopSoftAP(ctx); err != nil {
+	if err := localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop soft AP in wpa_supplicant"))
 	}
 
@@ -3087,7 +3087,7 @@ func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringR
 		keyMgmt = "WPA-PSK SAE"
 	}
 
-	if err := localwpacli.NewSpecificLocalRunner(apIfName).StartSoftAP(ctx, freq, string(request.Ssid), keyMgmt, string(request.Psk), string(request.Cipher)); err != nil {
+	if err := localwpacli.NewLocalRunnerOnIface(apIfName).StartSoftAP(ctx, freq, string(request.Ssid), keyMgmt, string(request.Psk), string(request.Cipher)); err != nil {
 		return 0, errors.Wrap(err, "failed to start soft AP in wpa_supplicant")
 	}
 

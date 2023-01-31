@@ -53,7 +53,7 @@ func TestSpecificSudoWPACLI(t *testing.T) {
 			expect: []string{"-u", "wpa", "-g", "wpa", "wpa_cli", "-i", "ap0", "ping"},
 		},
 	}
-	r := NewSpecificRunner(newCmdRunner(), "ap0")
+	r := NewRunnerOnIface(newCmdRunner(), "ap0")
 	for _, tc := range testcases {
 		result := r.sudoWPACLI(tc.input...)
 		if !reflect.DeepEqual(result, tc.expect) {

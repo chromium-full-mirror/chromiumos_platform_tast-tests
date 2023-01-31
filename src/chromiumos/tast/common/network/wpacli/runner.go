@@ -31,8 +31,8 @@ func NewRunner(c cmd.Runner) *Runner {
 	return &Runner{cmd: c}
 }
 
-// NewSpecificRunner creates a new wpa_cli command utility runner specific for the particular interface.
-func NewSpecificRunner(c cmd.Runner, i string) *Runner {
+// NewRunnerOnIface creates a new wpa_cli command utility runner specific for the particular interface.
+func NewRunnerOnIface(c cmd.Runner, i string) *Runner {
 	return &Runner{cmd: c, iface: i}
 }
 
