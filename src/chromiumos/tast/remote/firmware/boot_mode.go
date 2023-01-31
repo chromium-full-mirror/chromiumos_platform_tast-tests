@@ -185,12 +185,6 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		}
 	}
 
-	// Perform sync prior to reboot, then close the RPC connection.
-	if err := h.DUT.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
-		testing.ContextLogf(ctx, "Failed to sync DUT: %s", err)
-	}
-	h.CloseRPCConnection(ctx)
-
 	// Booting from rec to anything else will cause EC to restart, potentally breaking the servo watchdog.
 	if fromMode == fwCommon.BootModeRecovery {
 		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
