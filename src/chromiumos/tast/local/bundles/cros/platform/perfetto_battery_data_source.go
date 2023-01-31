@@ -30,10 +30,7 @@ func init() {
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		Data: []string{batteryTraceConfigFile,
-			batteryTraceQueryFile,
-			tracing.TraceProcessorAmd64,
-			tracing.TraceProcessorArm,
-			tracing.TraceProcessorArm64},
+			batteryTraceQueryFile},
 		Attr: []string{"group:mainline"},
 	})
 }
@@ -59,7 +56,7 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 	//   { "batt.sbs-12-000b.charge_uah", "5450000.000000" }
 	//   { "batt.sbs-12-000b.current_ua", "0.000000" }
 	// }
-	batt, err := sess.RunQuery(ctx, s.DataPath(tracing.TraceProcessor()), s.DataPath(batteryTraceQueryFile))
+	batt, err := sess.RunQuery(ctx, s.DataPath(batteryTraceQueryFile))
 	if err != nil {
 		s.Fatal("Failed to process the trace data: ", err)
 	}

@@ -25,7 +25,6 @@ import (
 
 type metricsPath struct {
 	trace     string
-	processor string
 	query     string
 	outputDir string
 }
@@ -42,10 +41,7 @@ func init() {
 			getusermedia.DataFiles(),
 			"getusermedia.html",
 			"perfetto/camera_config.pbtxt",
-			"perfetto/camera_query.sql",
-			tracing.TraceProcessorAmd64,
-			tracing.TraceProcessorArm,
-			tracing.TraceProcessorArm64),
+			"perfetto/camera_query.sql"),
 		Params: []testing.Param{
 			{
 				Pre: pre.ChromeCameraPerf(),
@@ -72,7 +68,7 @@ func collectMetrics(ctx context.Context, pv *perf.Values, sess *tracing.Session,
 	}
 
 	// Collect important metrics and upload to CrosBolt.
-	metrics, err := sess.RunQuery(ctx, paths.processor, paths.query)
+	metrics, err := sess.RunQuery(ctx, paths.query)
 	if err != nil {
 		return errors.Wrap(err, "failed to process the trace data")
 	}
@@ -124,7 +120,6 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 	p := perf.NewValues()
 	paths := metricsPath{
 		trace:     s.OutDir() + "/trace.pb",
-		processor: s.DataPath(tracing.TraceProcessor()),
 		query:     s.DataPath("perfetto/camera_query.sql"),
 		outputDir: s.OutDir()}
 	defer func(cleanupCtx context.Context) {

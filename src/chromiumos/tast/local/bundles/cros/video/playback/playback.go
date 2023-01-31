@@ -350,7 +350,7 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 	defer sess.RemoveTraceResultFile()
 	testing.ContextLog(ctx, "Completed tracing events")
 
-	results, err := sess.RunQuery(ctx, s.DataPath(tracing.TraceProcessor()), s.DataPath(GPUThreadSchedSQLFile))
+	results, err := sess.RunQuery(ctx, s.DataPath(GPUThreadSchedSQLFile))
 	if err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed in querying")
 	}

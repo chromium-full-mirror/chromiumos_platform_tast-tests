@@ -26,12 +26,8 @@ func init() {
 			"chinglinyu@chromium.org",
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
-		Data: []string{traceConfig,
-			traceQuery,
-			tracing.TraceProcessorAmd64,
-			tracing.TraceProcessorArm,
-			tracing.TraceProcessorArm64},
-		Attr: []string{"group:mainline", "informational"},
+		Data:         []string{traceConfig, traceQuery},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
@@ -49,8 +45,7 @@ func PerfettoTraceProcessing(ctx context.Context, s *testing.State) {
 	defer sess.RemoveTraceResultFile()
 
 	// Process the trace data using inline string query for simple queries.
-	res1, err := sess.RunQueryString(ctx, s.DataPath(tracing.TraceProcessor()),
-		"select cmdline from process where pid=1")
+	res1, err := sess.RunQueryString(ctx, "select cmdline from process where pid=1")
 	if err != nil {
 		s.Fatal("Failed to process the trace data: ", err)
 	}
@@ -59,8 +54,7 @@ func PerfettoTraceProcessing(ctx context.Context, s *testing.State) {
 	}
 
 	// Process the trace data using external SQL query file. This is preferable if the query is complex.
-	res2, err := sess.RunQuery(ctx, s.DataPath(tracing.TraceProcessor()),
-		s.DataPath(traceQuery))
+	res2, err := sess.RunQuery(ctx, s.DataPath(traceQuery))
 	if err != nil {
 		s.Fatal("Failed to process the trace data: ", err)
 	}

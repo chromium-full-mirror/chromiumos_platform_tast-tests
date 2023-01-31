@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"runtime"
 	"strings"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
@@ -22,6 +21,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
 )
+
+const traceProcessorPath = "/usr/local/bin/trace_processor_shell"
 
 // Session stores the cmd and the result file of the trace.
 // Remember to call Session.RemoveTraceResultFile to clean up the
@@ -54,7 +55,7 @@ func (sess *Session) Wait() error {
 }
 
 // RunMetrics collects the result with trace_processor_shell.
-func (sess *Session) RunMetrics(ctx context.Context, traceProcessorPath string, metrics []string) (*perfetto_proto.TraceMetrics, error) {
+func (sess *Session) RunMetrics(ctx context.Context, metrics []string) (*perfetto_proto.TraceMetrics, error) {
 	metric := strings.Join(metrics, ",")
 	cmd := testexec.CommandContext(ctx, traceProcessorPath, sess.TraceResultFile.Name(), "--run-metrics", metric)
 	out, err := cmd.Output(testexec.DumpLogOnError)
@@ -71,7 +72,7 @@ func (sess *Session) RunMetrics(ctx context.Context, traceProcessorPath string, 
 }
 
 // RunQueryString processes the trace data with a SQL query string and returns the query csv result as [][]string.
-func (sess *Session) RunQueryString(ctx context.Context, traceProcessorPath, query string) ([][]string, error) {
+func (sess *Session) RunQueryString(ctx context.Context, query string) ([][]string, error) {
 	// trace_processor_shell accepts the SQL query as a file. Create a temp query file.
 	queryFile, err := ioutil.TempFile("", "trace_processor_query_*.sql")
 	if err != nil {
@@ -87,11 +88,11 @@ func (sess *Session) RunQueryString(ctx context.Context, traceProcessorPath, que
 		return nil, errors.Wrap(err, "failed to create the temp SQL query file")
 	}
 
-	return sess.RunQuery(ctx, traceProcessorPath, queryFile.Name())
+	return sess.RunQuery(ctx, queryFile.Name())
 }
 
 // RunQuery processes the trace data with a SQL query and returns the query csv result as [][]string.
-func (sess *Session) RunQuery(ctx context.Context, traceProcessorPath, queryPath string) ([][]string, error) {
+func (sess *Session) RunQuery(ctx context.Context, queryPath string) ([][]string, error) {
 	cmd := testexec.CommandContext(ctx, traceProcessorPath, sess.TraceResultFile.Name(), "-q", queryPath)
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
@@ -108,20 +109,6 @@ func (sess *Session) RunQuery(ctx context.Context, traceProcessorPath, queryPath
 func (sess *Session) RemoveTraceResultFile() {
 	if err := os.Remove(sess.TraceResultFile.Name()); err != nil {
 		log.Printf("failed to remove the temporary trace result file: %v", err)
-	}
-}
-
-// TraceProcessor returns the TraceProcessor name could be used on the DUT's
-// architecture.
-// Developers should also add the TraceProcessor name in their tests' Data.
-func TraceProcessor() string {
-	switch runtime.GOARCH {
-	case "arm":
-		return TraceProcessorArm
-	case "arm64":
-		return TraceProcessorArm64
-	default:
-		return TraceProcessorAmd64
 	}
 }
 

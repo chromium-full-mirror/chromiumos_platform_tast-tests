@@ -32,11 +32,8 @@ func init() {
 			"chinglinyu@chromium.org",
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
-		Data: []string{tracing.TBMTracedProbesConfigFile,
-			tracing.TraceProcessorAmd64,
-			tracing.TraceProcessorArm,
-			tracing.TraceProcessorArm64},
-		Attr: []string{"group:mainline"},
+		Data:         []string{tracing.TBMTracedProbesConfigFile},
+		Attr:         []string{"group:mainline"},
 		// TODO(b/208476320): Reenable when reven is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("reven")),
 	})
@@ -110,7 +107,7 @@ func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to stop the tracing session: ", err)
 	}
 
-	metrics, err := sess.RunMetrics(ctx, s.DataPath(tracing.TraceProcessor()), []string{traceMetricCPU, traceMetricMEM})
+	metrics, err := sess.RunMetrics(ctx, []string{traceMetricCPU, traceMetricMEM})
 	if err != nil {
 		s.Fatal("Failed to RunMetrics: ", err)
 	}

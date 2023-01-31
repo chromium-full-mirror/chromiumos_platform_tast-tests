@@ -34,7 +34,7 @@ func init() {
 			"chinglinyu@chromium.org",
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
-		Data:         []string{trackEventsPidNSConfigFile, trackEventsPidNSQueryFile, tracing.TraceProcessorAmd64, tracing.TraceProcessorArm, tracing.TraceProcessorArm64},
+		Data:         []string{trackEventsPidNSConfigFile, trackEventsPidNSQueryFile},
 		Attr:         []string{"group:mainline", "informational"},
 	})
 }
@@ -64,7 +64,7 @@ func verifyTrackEventPid(ctx context.Context, s *testing.State, sess *tracing.Se
 	//   { "name", "tid" }
 	//   { "Trial1", "6838" }
 	// }
-	res, err := sess.RunQuery(ctx, s.DataPath(tracing.TraceProcessor()), s.DataPath(trackEventsPidNSQueryFile))
+	res, err := sess.RunQuery(ctx, s.DataPath(trackEventsPidNSQueryFile))
 	if err != nil {
 		s.Fatal("Failed to process the trace data: ", err)
 	}

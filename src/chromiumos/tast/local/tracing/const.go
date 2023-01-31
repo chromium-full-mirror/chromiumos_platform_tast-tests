@@ -17,11 +17,4 @@ const (
 
 	// TracedProbesJobName is the upstart job name of the Perfetto system tracing probes (traced_probes).
 	TracedProbesJobName = "traced_probes"
-
-	// TraceProcessorAmd64 is the name of tps for architecture: amd64.
-	TraceProcessorAmd64 = "trace_processor_shell-amd64"
-	// TraceProcessorArm is the name of tps for architecture: arm.
-	TraceProcessorArm = "trace_processor_shell-arm"
-	// TraceProcessorArm64 is the name of tps for architecture: arm64.
-	TraceProcessorArm64 = "trace_processor_shell-arm64"
 )
