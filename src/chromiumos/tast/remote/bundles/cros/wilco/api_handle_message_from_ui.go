@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/wilco/wilcoextension"
@@ -41,6 +42,9 @@ func init() {
 			"tast.cros.wilco.WilcoService",
 		},
 		Timeout: 10 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceWilcoDtcAllowed{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
