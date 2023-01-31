@@ -67,14 +67,7 @@ func ECHash(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get initial ec hash: ", err)
 	}
-	s.Log("Current EC hash is: ", initialECHash.Hash)
-	defer func(ctx context.Context) {
-		s.Log("Reset EC hash offset and size to initial values and recalculate")
-		resetECHash, err := ectool.Hash(ctx, "recalc", initialECHash.Offset, initialECHash.Size)
-		if err != nil {
-			s.Fatalf("Failed to reset EC hash to initial value of %v, %v", *resetECHash, err)
-		}
-	}(cleanupContext)
+	s.Log("Initial EC hash is: ", initialECHash.Hash)
 
 	// Below this line, the EC_RW contents should be considered as
 	// modified and every failure should lead to immediate restore

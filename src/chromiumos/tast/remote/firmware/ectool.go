@@ -104,14 +104,8 @@ type hashinfo struct {
 
 // Hash returns the EC hash of the active firmware.
 func (ec *ECTool) Hash(ctx context.Context, args ...string) (*hashinfo, error) {
-	var err error = nil
-	var outBytes []byte
-	if len(args) > 0 {
-		cmdAndArgs := append([]string{string("echash")}, args...)
-		outBytes, err = ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
-	} else {
-		outBytes, err = ec.Command(ctx, "echash").Output(ssh.DumpLogOnError)
-	}
+	cmdAndArgs := append([]string{string("echash")}, args...)
+	outBytes, err := ec.Command(ctx, cmdAndArgs...).Output(ssh.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrap(err, "running 'ectool echash' on DUT")
 	}
