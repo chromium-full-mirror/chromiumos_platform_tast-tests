@@ -406,6 +406,35 @@ func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.
 	return nil
 }
 
+// DeleteDeskTemplateByName deletes desk template with savedDeskName.
+func DeleteDeskTemplateByName(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn, savedDeskName string) error {
+	savedDesk := nodewith.ClassName("SavedDeskNameView").Name(savedDeskName)
+	closeButton := nodewith.ClassName("CloseButton").Name("Delete")
+	deleteDialog := nodewith.ClassName("SavedDeskDialog")
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed create keyboard")
+	}
+	defer kb.Close()
+
+	// Delete the save and recall desk template.
+	if err := ac.MouseMoveTo(savedDesk, 0)(ctx); err != nil {
+		return errors.Wrap(err, "failed to mouse over to designated desk")
+	}
+	if err := uiauto.Combine(
+		"Delete desk template by name",
+		ac.WaitUntilExists(closeButton),
+		ac.DoDefault(closeButton),
+		ac.WaitUntilExists(deleteDialog),
+		kb.AccelAction("Enter"),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "fail to desk template by its name")
+	}
+
+	return nil
+}
+
 // ExitAndReenterLibrary exits and reenters the library view.
 func ExitAndReenterLibrary(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn) error {
 	if err := SetOverviewModeAndWait(ctx, tconn, false); err != nil {
