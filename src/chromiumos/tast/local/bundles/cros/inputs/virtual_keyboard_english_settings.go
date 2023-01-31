@@ -30,9 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the input settings works in Chrome",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
-		// TODO(b/243336476): Remove informational
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		Timeout:      5 * time.Minute,
@@ -51,8 +50,8 @@ func init() {
 			{
 				Name:              "lacros",
 				Fixture:           fixture.LacrosTabletVKRestart,
+				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"lacros_stable"},
 			},
 		},
