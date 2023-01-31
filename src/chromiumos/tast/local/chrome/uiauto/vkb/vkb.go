@@ -529,7 +529,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToSymbolNumberLayout() uiauto.Action
 func (vkbCtx *VirtualKeyboardContext) SwitchToMultipaste() uiauto.Action {
 	return uiauto.Combine("switch to multipaste keyboard",
 		vkbCtx.ShowAccessPoints(),
-		vkbCtx.ui.LeftClick(NodeFinder.Name("Multipaste clipboard")),
+		vkbCtx.ui.LeftClick(NodeFinder.NameRegex(regexp.MustCompile("(Multipaste clipboard)|(clipboard)"))),
 	)
 }
 
