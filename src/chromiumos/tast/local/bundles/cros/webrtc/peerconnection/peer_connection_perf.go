@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/graphics"
 	mediacpu "chromiumos/tast/local/media/cpu"
@@ -41,84 +40,6 @@ const (
 	// Time to measure GPU usage counters.
 	gpuMeasuring = 10 * time.Second
 )
-
-// makePerfRTCTestParams creates RTCTestParams for profile, width, height,
-// verifyDecoderMode and verifyEncoderMode.
-func makePerfRTCTestParams(profile string, width, height int, verifyDecoderMode VerifyDecoderMode, verifyEncoderMode VerifyEncoderMode, browserType browser.Type) RTCTestParams {
-	return RTCTestParams{
-		VerifyDecoderMode:  verifyDecoderMode,
-		VerifyEncoderMode:  verifyEncoderMode,
-		Profile:            profile,
-		StreamWidth:        width,
-		StreamHeight:       height,
-		VideoGridDimension: 1,
-		BrowserType:        browserType,
-	}
-}
-
-// MakeHWTestParams creates RTCTestParams for profile, width and height and with
-// HW Encoding/Decoding enabled.
-func MakeHWTestParams(profile string, width, height int, browserType browser.Type) RTCTestParams {
-	return makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed, browserType)
-}
-
-// MakeSWEncoderTestParams creates RTCTestParams for profile, width and height and
-// with HW Decoding and SW Encoding.
-func MakeSWEncoderTestParams(profile string, width, height int) RTCTestParams {
-	return makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifySWEncoderUsed, browser.TypeAsh)
-}
-
-// MakeSWTestParams creates RTCTestParams for profile, width and height and
-// with HW Encoding/Decoding disabled.
-func MakeSWTestParams(profile string, width, height int) RTCTestParams {
-	return makePerfRTCTestParams(profile, width, height, VerifySWDecoderUsed, VerifySWEncoderUsed, browser.TypeAsh)
-}
-
-// MakeSimulcastTestParams creates RTCTestParams for profile, width and height.
-// While a hardware decoder is used, if hwEncs[i] is true then a hardware encoder is used for i-th stream in simulcast.
-func MakeSimulcastTestParams(profile string, width, height int, hwEncs []bool) RTCTestParams {
-	verifyEncoderMode := VerifySWEncoderUsed
-	if hwEncs[len(hwEncs)-1] {
-		verifyEncoderMode = VerifyHWEncoderUsed
-	}
-
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, verifyEncoderMode, browser.TypeAsh)
-	params.Svc = "" // L1T3?
-	params.Simulcasts = len(hwEncs)
-	params.SimulcastHWEncs = hwEncs
-	return params
-}
-
-// MakeHWTestParamsWithSVC creates RTCTestParams for profile, width and height
-// with HW Decoding enabled and with a layer structure as per svc definition.
-// hwEnc specifies enabling a hardware encoder.
-func MakeHWTestParamsWithSVC(profile string, width, height int, svc string, hwEnc bool) RTCTestParams {
-	verifyEncoderMode := VerifySWEncoderUsed
-	if hwEnc {
-		verifyEncoderMode = VerifyHWEncoderUsed
-	}
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, verifyEncoderMode, browser.TypeAsh)
-	params.Svc = svc
-	return params
-}
-
-// MakeHWTestParamsWithVideoGrid creates RTCTestParams for profile, width and
-// height with HW Encoding/Decoding enabled and embedding the RTCPeerConnection
-// in a grid of videoGridDimension x videoGridDimension videoGridFiles.
-func MakeHWTestParamsWithVideoGrid(profile string, width, height, videoGridDimension int, videoGridFile string) RTCTestParams {
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed, browser.TypeAsh)
-	params.VideoGridDimension = videoGridDimension
-	params.VideoGridFile = videoGridFile
-	return params
-}
-
-// MakeCaptureTestParams creates RTCTestParams for profile, width, height and displayMediaType
-// and with HW Encoding/Decoding enabled.
-func MakeCaptureTestParams(profile string, width, height int, displayMediaType DisplayMediaType) RTCTestParams {
-	params := makePerfRTCTestParams(profile, width, height, VerifyHWDecoderUsed, VerifyHWEncoderUsed, browser.TypeAsh)
-	params.DisplayMediaType = displayMediaType
-	return params
-}
 
 // WebRTC Stats collected on transmission side.
 type txMeas struct {
