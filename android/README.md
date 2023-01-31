@@ -22,7 +22,6 @@ if err := a.Install(ctx, arc.APKPath("ArcGamepadTest.apk")); err != nil {
 ```bash
 # one time setup
 setup_board --board=${BOARD}
-./build_packages --board=${BOARD}
 
 cros_workon --board=${BOARD} start tast-local-apks-cros
 emerge-${BOARD} tast-local-apks-cros
