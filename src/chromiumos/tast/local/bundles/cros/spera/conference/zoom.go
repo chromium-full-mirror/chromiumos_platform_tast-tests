@@ -220,67 +220,24 @@ func (conf *ZoomConference) TypingInChat(ctx context.Context) error {
 // Zoom doesn't have background blur option for web version so changing background is used to fullfil
 // the requirement.
 func (conf *ZoomConference) BackgroundChange(ctx context.Context) error {
-	const (
-		noneBackground   = "None"
-		staticBackground = "San Francisco.jpg"
-	)
-	ui := conf.ui
-	changeBackground := func(backgroundOption string) error {
-		settingsButton := nodewith.Name("Settings").Role(role.Button).Ancestor(zoomWebArea)
-		settingsWindow := nodewith.Name("settings dialog window").Role(role.Application).Ancestor(zoomWebArea)
-		backgroundTab := nodewith.Name("Background").Role(role.Tab).Ancestor(settingsWindow)
-		backgroundItem := nodewith.NameContaining(backgroundOption).Role(role.ListBoxOption).Ancestor(settingsWindow)
-		closeButton := nodewith.Role(role.Button).HasClass("settings-dialog__close").Ancestor(settingsWindow)
-		openBackgroundPanel := func(ctx context.Context) error {
-			var actions []action.Action
-			if err := conf.zm.ShowInterface(ctx); err != nil {
-				return err
-			}
-			if err := ui.Exists(settingsButton)(ctx); err == nil {
-				actions = append(actions,
-					uiauto.NamedAction("click settings button",
-						ui.WithTimeout(longUITimeout).DoDefaultUntil(settingsButton, ui.WaitUntilExists(backgroundTab)),
-					))
-			} else {
-				// If the screen width is not enough, the settings button will be moved to more options.
-				moreOptions := nodewith.Name("More meeting control").Ancestor(zoomWebArea)
-				moreSettingsButton := nodewith.Name("Settings").Role(role.MenuItem).Ancestor(zoomWebArea)
-				actions = append(actions,
-					uiauto.NamedAction("click more option", ui.LeftClick(moreOptions)),
-					uiauto.NamedAction("click settings menu item", ui.LeftClick(moreSettingsButton)),
-				)
-			}
-			actions = append(actions, ui.LeftClick(backgroundTab))
-			if err := uiauto.Combine("open background panel", actions...)(ctx); err != nil {
-				return errors.Wrap(err, "failed to background panel")
-			}
-			return nil
-		}
-		return uiauto.NamedCombine("change background to "+backgroundOption,
-			ui.Retry(retryTimes, openBackgroundPanel), // Open "Background" panel.
-			// Some low end DUTs need more time to load the background settings.
-			ui.WithTimeout(longUITimeout).DoDefaultUntil(backgroundItem,
-				ui.WithTimeout(shortUITimeout).WaitUntilExists(backgroundItem.Focused())),
-			// After applying the new background, give it 3 seconds to load the new background before closing the settings.
-			uiauto.Sleep(shortUITimeout),
-			ui.LeftClick(closeButton), // Close "Background" panel.
-			takeScreenshot(conf.cr, conf.outDir, fmt.Sprintf("change-background-to-background-%q", backgroundOption)),
-			// Double click to enter full screen.
-			doFullScreenAction(conf.tconn, ui.DoubleClick(zoomWebArea), zoomTitle, true),
+	changeBackgroundAndToggleFullScreen := func(backgroundOption zoom.BackgroundOption) action.Action {
+		return uiauto.Combine("change background and toggle full screen",
+			conf.zm.ChangeSettings(
+				conf.zm.ChooseBackground(backgroundOption),
+				takeScreenshot(conf.cr, conf.outDir, fmt.Sprintf("change-background-to-%q", backgroundOption)),
+			),
+			conf.zm.EnterFullScreen,
 			// After applying new background, give it 5 seconds for viewing before applying next one.
 			uiauto.Sleep(viewingTime),
-			// Double click to exit full screen.
-			doFullScreenAction(conf.tconn, ui.DoubleClick(zoomWebArea), zoomTitle, false),
-		)(ctx)
+			conf.zm.ExitFullScreen,
+		)
 	}
-	if err := conf.uiHandler.SwitchToChromeTabByName(zoomTitle)(ctx); err != nil {
-		return CheckSignedOutError(ctx, conf.tconn, errors.Wrap(err, "failed to switch to zoom page"))
-	}
-	if err := changeBackground(staticBackground); err != nil {
-		return errors.Wrap(err, "failed to change background to static background")
-	}
-	if err := changeBackground(noneBackground); err != nil {
-		return errors.Wrap(err, "failed to change background to none")
+	if err := uiauto.Combine("change background",
+		conf.uiHandler.SwitchToChromeTabByName(zoomTitle),
+		changeBackgroundAndToggleFullScreen(zoom.StaticBackground),
+		changeBackgroundAndToggleFullScreen(zoom.NoBackground),
+	)(ctx); err != nil {
+		return CheckSignedOutError(ctx, conf.tconn, err)
 	}
 	return nil
 }
