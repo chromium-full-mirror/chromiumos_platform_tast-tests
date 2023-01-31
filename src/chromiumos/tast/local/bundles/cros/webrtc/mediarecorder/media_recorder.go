@@ -115,7 +115,7 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 		return errors.Wrap(err, "failed to stop recording")
 	}
 
-	hwAccelUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess))
+	hwAccelUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess), histogram.SuccessCountAtLeastOne)
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram")
 	}
@@ -275,7 +275,7 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", codec, recordTime.Milliseconds())
 	}
 
-	if hwUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess)); err != nil {
+	if hwUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess), histogram.SuccessCountAtLeastOne); err != nil {
 		return errors.Wrap(err, "failed to verify histogram")
 	} else if !hwUsed {
 		return errors.New("hardware accelerator was not used")

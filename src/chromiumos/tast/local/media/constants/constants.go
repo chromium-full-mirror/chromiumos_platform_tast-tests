@@ -15,6 +15,13 @@ const (
 	// MediaGVDError is the name of histogram used to report video decode errors.
 	MediaGVDError = "Media.GpuVideoDecoderError"
 
+	// MediaPepperVideoDecoderHardwareAccelerationBehavior is the name of the histogram used to report the hardware/software decoding behavior used for a PPB_VideoDecoder API instance.
+	MediaPepperVideoDecoderHardwareAccelerationBehavior = "Media.PepperVideoDecoder.HardwareAccelerationBehavior"
+	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when a hardware decoder is backed by the legacy VideoDecodeAccelerator.
+	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD = 1
+	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when a hardware decoder is backed by the MojoVideoDecoder.
+	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD = 3
+
 	// MediaRecorderVEAUsed is the name of histogram used to report VEA usage when running MediaRecorder.
 	MediaRecorderVEAUsed = "Media.MediaRecorder.VEAUsed"
 	// MediaRecorderVEAUsedSuccess is the bucket value in MediaRecorderVEAUsed to be incremented in success.

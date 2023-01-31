@@ -15,16 +15,23 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// SuccessCountAtLeastOne is a constant for the sentinel value of -1 that can
+// be used to let WasHWAccelUsed know that we want a success count >= 1
+// instead of equal to a concrete value.
+const SuccessCountAtLeastOne = -1
+
 // WasHWAccelUsed returns whether HW acceleration is used for certain action.
 // initHistogram is the histogram obtained before the action.
 // successValue is the bucket value of HW acceleration success case.
-// Note that it returns true even if more than one successful count is observed.
-// It is because in some cases, we occassionally observed more than one
-// successful count (crbug.com/985068). To prevent it from reporting false
-// negative result, we relax the condition from successful count == 1 to >= 1,
-// regardless it may introuce some false positive result.
-// TODO(crbug.com/985068#c5): follow up the improvement plan.
-func WasHWAccelUsed(ctx context.Context, tconn *chrome.TestConn, initHistogram *metrics.Histogram, histogramName string, successValue int64) (bool, error) {
+// successCount is the expected number of successful counts.
+// It has been observed that in some cases, we occasionally see more than one
+// successful count (crbug.com/985068) when only one count is expected.
+// To prevent it from reporting false negative results, we can relax the condition
+// by checking that the count is >= 1 instead of equal to 1, regardless it may
+// introduce some false positive results. To indicate we want to relax the check
+// this way we just need to pass a successCount of -1 (the constant
+// SuccessCountAtLeastOne defined above can be used for this).
+func WasHWAccelUsed(ctx context.Context, tconn *chrome.TestConn, initHistogram *metrics.Histogram, histogramName string, successValue, successCount int64) (bool, error) {
 	// There are three valid cases.
 	// 1. No histogram is updated. This is the case if HW Acceleration is disabled due to Chrome flag, ex. --disable-accelerated-video-decode.
 	// 2. Histogram is updated with 15. This is the case if Chrome tries to initailize HW Acceleration but it fails because the codec is not supported on DUT.
@@ -44,10 +51,24 @@ func WasHWAccelUsed(ctx context.Context, tconn *chrome.TestConn, initHistogram *
 	}
 
 	diff := histogramDiff.Buckets[0]
-	hwAccelUsed := diff.Min == successValue && diff.Max == successValue+1 && diff.Count >= 1
+
+	var hwAccelUsed bool
+	if successCount == SuccessCountAtLeastOne {
+		hwAccelUsed = diff.Min == successValue && diff.Max == successValue+1 && diff.Count >= 1
+	} else {
+		hwAccelUsed = diff.Min == successValue && diff.Max == successValue+1 && diff.Count == successCount
+	}
+
 	if !hwAccelUsed {
-		testing.ContextLogf(ctx, "Histogram update: %s, if HW accel were used, it should be [[%d, %d) 1]", histogramDiff, successValue, successValue+1)
-	} else if diff.Count > 1 {
+		var targetCount int64
+		if successCount == SuccessCountAtLeastOne {
+			targetCount = 1
+		} else {
+			targetCount = successCount
+		}
+
+		testing.ContextLogf(ctx, "Histogram update: %s, if HW accel were used, it should be [[%d, %d) %d]", histogramDiff, successValue, successValue+1, targetCount)
+	} else if diff.Count > 1 && successCount == SuccessCountAtLeastOne {
 		testing.ContextLog(ctx, "Note that more than one successful count is observed: ", diff.Count)
 	}
 
