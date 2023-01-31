@@ -9,7 +9,6 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
 )
 
@@ -205,8 +204,7 @@ func (f *clamshellFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 func (f *clamshellFixture) Reset(ctx context.Context) error {
 	return nil
 }
+
 func (f *clamshellFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
-func (f *clamshellFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, f.cr, "ui_dump")
-	f.cr = nil
-}
+
+func (f *clamshellFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
