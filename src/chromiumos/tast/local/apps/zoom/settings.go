@@ -35,33 +35,77 @@ func (zm *Zoom) ChangeSettings(actions ...action.Action) action.Action {
 	)
 }
 
+// expandAudioOption expands audio option menu.
+func (zm *Zoom) expandAudioOption(ctx context.Context) error {
+	ui := zm.ui
+	moreAudioControlsButton := nodewith.Name("More audio controls").Role(role.Button)
+	moreAudioControlsMenu := nodewith.Name("More audio controls").Role(role.Menu)
+	return uiauto.NamedCombine("expand audio option",
+		ui.LeftClickUntil(moreAudioControlsButton,
+			ui.WithTimeout(shortUITimeout).WaitUntilExists(moreAudioControlsMenu)))(ctx)
+}
+
+// leaveComputerAudio leaves computer audio from audio option menu.
+func (zm *Zoom) leaveComputerAudio(ctx context.Context) error {
+	ui := zm.ui
+	leaveComputerAudioItem := nodewith.Name("Leave Computer Audio").Role(role.MenuItem)
+	return uiauto.NamedCombine("leave computer audio",
+		zm.expandAudioOption,
+		ui.LeftClickUntil(leaveComputerAudioItem,
+			ui.WithTimeout(shortUITimeout).WaitUntilGone(leaveComputerAudioItem)))(ctx)
+}
+
 // SetJoinAudio chooses an audio option or dismisses the dialog on the Join Audio page.
-func (zm *Zoom) SetJoinAudio(expectedValue, isDialogAlreadyOpened bool) action.Action {
+func (zm *Zoom) SetJoinAudio(expectedValue bool) action.Action {
+	ui := zm.ui
 	joinAudioByComputerButton := nodewith.Name("Join Audio by Computer").Role(role.Button)
 	closeButton := nodewith.Name("close").HasClass("join-dialog__close").Role(role.Button)
 	joinAudioButton := nodewith.Name("Join Audio").Role(role.Button).Focusable()
-	ui := zm.ui
+	dismissJoinAudioDialog := ui.DoDefaultUntil(
+		closeButton,
+		ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton))
+	triggerJoinAudioDialog := ui.DoDefaultUntil(
+		joinAudioButton,
+		ui.WithTimeout(shortUITimeout).WaitUntilExists(joinAudioByComputerButton))
 
 	return func(ctx context.Context) error {
-		if !expectedValue && !isDialogAlreadyOpened {
-			return nil
+		audioButton, err := ui.FindAnyExists(ctx, unmuteButton, muteButton, joinAudioButton)
+		if err != nil {
+			return errors.Wrap(err, "failed to find audio buttons")
 		}
 
-		if isDialogAlreadyOpened {
-			if err := ui.WaitUntilExists(closeButton)(ctx); err != nil {
-				return errors.Wrap(err, "join audio dialog is not found")
+		if audioButton != joinAudioButton {
+			if expectedValue {
+				testing.ContextLog(ctx, "It has automatically joined audio")
+				return nil
 			}
+			// Leave audio since it it not expected.
+			return uiauto.Combine("leave audio",
+				zm.leaveComputerAudio,
+				dismissJoinAudioDialog,
+			)(ctx)
+		}
+
+		// Check whether `Join audio dialog` is automatically shown up.
+		// This can add 3s wait time if user decides to join audio after initial setup. But it is unusual.
+		if err := ui.WithTimeout(shortUITimeout).WaitUntilExists(joinAudioByComputerButton)(ctx); err != nil {
 			if !expectedValue {
-				return ui.DoDefaultUntil(
-					closeButton,
-					ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton))(ctx)
+				testing.ContextLog(ctx, "Audio is not joined")
+				return nil
+			}
+			if err := triggerJoinAudioDialog(ctx); err != nil {
+				return err
 			}
 		}
 
-		return uiauto.Combine("join audio by computer",
-			ui.DoDefault(joinAudioButton),
-			ui.DoDefault(joinAudioByComputerButton),
-			ui.WaitUntilGone(closeButton),
+		// Join audio dialog is shown but expected not to join audio.
+		if !expectedValue {
+			return dismissJoinAudioDialog(ctx)
+		}
+
+		return ui.DoDefaultUntil(
+			joinAudioByComputerButton,
+			ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioByComputerButton),
 		)(ctx)
 	}
 }
@@ -78,11 +122,41 @@ func (zm *Zoom) SwitchVideo(value bool) action.Action {
 			return errors.Wrap(err, "failed to find video toggle button")
 		}
 		if value && cameraToggleButton == startVideoButton {
-			return ui.DoDefaultUntil(startVideoButton,
-				ui.WithTimeout(shortUITimeout).WaitUntilExists(stopVideoButton))(ctx)
+			return uiauto.NamedCombine("turn on the camera",
+				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(startVideoButton,
+					ui.WaitUntilGone(startVideoButton)),
+				ui.WaitUntilExists(stopVideoButton))(ctx)
 		} else if !value && cameraToggleButton == stopVideoButton {
-			return ui.DoDefaultUntil(stopVideoButton,
-				ui.WithTimeout(shortUITimeout).WaitUntilExists(startVideoButton))(ctx)
+			return uiauto.NamedCombine("turn off the camera",
+				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(stopVideoButton,
+					ui.WaitUntilGone(stopVideoButton)),
+				ui.WaitUntilExists(startVideoButton))(ctx)
+		}
+		return nil
+	}
+}
+
+// SwitchAudio switches on / off microphone.
+// It turns on audio if value is true, otherwise turns off audio.
+// It skips action if the microphone status is already as expected.
+func (zm *Zoom) SwitchAudio(value bool) action.Action {
+	ui := zm.ui
+
+	return func(ctx context.Context) error {
+		audioToggleButton, err := ui.FindAnyExists(ctx, unmuteButton, muteButton)
+		if err != nil {
+			return errors.Wrap(err, "failed to find audio toggle button")
+		}
+		if value && audioToggleButton == unmuteButton {
+			return uiauto.NamedCombine("turn on the microphone",
+				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(unmuteButton,
+					ui.WaitUntilGone(unmuteButton)),
+				ui.WaitUntilExists(muteButton))(ctx)
+		} else if !value && audioToggleButton == muteButton {
+			return uiauto.NamedCombine("turn off the microphone",
+				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(muteButton,
+					ui.WaitUntilGone(muteButton)),
+				ui.WaitUntilExists(unmuteButton))(ctx)
 		}
 		return nil
 	}

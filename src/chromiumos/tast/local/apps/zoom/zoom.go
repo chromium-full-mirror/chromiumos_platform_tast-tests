@@ -60,6 +60,10 @@ var (
 	// Video toggle buttons.
 	startVideoButton = nodewith.NameRegex(regexp.MustCompile("(Start Video|start sending my video|start my video)")).Role(role.Button).Ancestor(zoomMainWebArea)
 	stopVideoButton  = nodewith.NameRegex(regexp.MustCompile("(Stop Video|stop sending my video|stop my video)")).Role(role.Button).Ancestor(zoomMainWebArea)
+
+	// Audio toggle buttons.
+	muteButton   = nodewith.NameRegex(regexp.MustCompile("^(?i)mute.*")).Role(role.Button).Ancestor(zoomMainWebArea)
+	unmuteButton = nodewith.NameRegex(regexp.MustCompile("^(?i)unmute.*")).Role(role.Button).Ancestor(zoomMainWebArea)
 )
 
 // Zoom represents a type of Zoom meeting instance.
@@ -123,7 +127,7 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 
 	// Do not join audio by default by dismissing the dialog.
 	// Assume the dialog is not shown up if not found in a certain time.
-	if err := zm.SetJoinAudio(false, true)(ctx); err != nil {
+	if err := zm.SetJoinAudio(false)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to choose not join audio")
 	}
 
@@ -210,7 +214,7 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 
 	// Do not join audio by default by dismissing the dialog.
 	// Assume the dialog is not shown up if not found in a certain time.
-	if err := zm.SetJoinAudio(false, true)(ctx); err != nil {
+	if err := zm.SetJoinAudio(false)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to choose not join audio")
 	}
 
