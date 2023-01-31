@@ -20,7 +20,8 @@ import (
 )
 
 const (
-	theQuickBrownFoxWav = "the-quick-brown-fox.wav"
+	theQuickBrownFoxWav         = "the-quick-brown-fox.wav"
+	theQuickBrownFoxWavDuration = 3410 * time.Millisecond
 
 	// The ALSA device to playback directly to simulate speech from the user's mouth.
 	aloopPlaybackPCM = "hw:Loopback,0"
@@ -36,7 +37,160 @@ func init() {
 		Fixture:      fixture.StereoAloopLoadedWithoutUI,
 		Data:         []string{theQuickBrownFoxWav},
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name: "rtc_stream_with_apm", // testplan#1
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: true,
+					},
+					speechSource:      mouth,
+					expectedDetection: true,
+				},
+			},
+			{
+				Name: "rtc_stream_without_apm", // testplan#2
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: false,
+					},
+					speechSource:      mouth,
+					expectedDetection: true,
+				},
+			},
+			{
+				Name: "non_rtc_stream_with_apm", // testplan#3
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: false,
+						apm: true,
+					},
+					speechSource:      mouth,
+					expectedDetection: false,
+				},
+			},
+			{
+				Name: "non_rtc_stream_without_apm", // testplan#4
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: false,
+						apm: false,
+					},
+					speechSource:      mouth,
+					expectedDetection: false,
+				},
+			},
+			{
+				Name: "rtc_stream_with_apm_at_speaker", // testplan#7
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: true,
+					},
+					speechSource:      speaker,
+					expectedDetection: false,
+				},
+			},
+			{
+				Name: "rtc_stream_without_apm_at_speaker", // testplan#8
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: false,
+					},
+					speechSource:      speaker,
+					expectedDetection: false,
+				},
+			},
+			{
+				Name: "rtc_stream_with_apm_unmuted", // testplan#9
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: true,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: true,
+					},
+					speechSource:      mouth,
+					expectedDetection: false,
+				},
+			},
+			{
+				Name: "rtc_stream_with_apm_feature_disabled", // testplan#10
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: false,
+					inputMuted:     true,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: true,
+					},
+					speechSource:      mouth,
+					expectedDetection: false,
+				},
+			},
+			{
+				Name: "rtc_stream_with_apm_unmuted_feature_disabled", // testplan#11
+				Val: crasSpeakOnMuteDetectionParam{
+					featureEnabled: false,
+					inputMuted:     false,
+					clientStream: clientStreamConfig{
+						rtc: true,
+						apm: true,
+					},
+					speechSource:      mouth,
+					expectedDetection: false,
+				},
+			},
+		},
 	})
+}
+
+type speechSource int
+
+const (
+	mouth speechSource = iota
+	speaker
+)
+
+type crasSpeakOnMuteDetectionParam struct {
+	featureEnabled    bool
+	inputMuted        bool
+	clientStream      clientStreamConfig
+	speechSource      speechSource
+	expectedDetection bool
+}
+
+type clientStreamConfig struct {
+	rtc bool
+	apm bool
+}
+
+func (c *clientStreamConfig) crasTestClientArgs() []string {
+	var args []string
+	if c.rtc {
+		args = append(args, "--block_size=480")
+	} else {
+		args = append(args, "--block_size=240")
+	}
+
+	if c.apm {
+		args = append(args, "--effects=aec")
+	}
+	return args
 }
 
 func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
@@ -51,14 +205,16 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	param := s.Param().(crasSpeakOnMuteDetectionParam)
+
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
 		s.Fatal("Cannot connect to CRAS: ", err)
 	}
-	if err := cras.SetInputMute(ctx, true); err != nil {
+	if err := cras.SetInputMute(ctx, param.inputMuted); err != nil {
 		s.Fatal("Cannot mute input: ", err)
 	}
-	if err := cras.SetSpeakOnMuteDetection(ctx, true); err != nil {
+	if err := cras.SetSpeakOnMuteDetection(ctx, param.featureEnabled); err != nil {
 		s.Fatal("Cannot enable speak-on-mute detection: ", err)
 	}
 	if err := internal.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
@@ -84,6 +240,7 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 	}()
 
 	speechWav := filepath.Join(s.OutDir(), "speech.wav")
+	speechWavDuration := theQuickBrownFoxWavDuration * 2 // "repeat 1" gives us double the duration.
 	if err := testexec.CommandContext(ctx, "sox", s.DataPath(theQuickBrownFoxWav), "--channels=2", "--rate=48000", speechWav, "repeat", "1").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Cannot prepare speech.wav with sox: ", err)
 	}
@@ -91,13 +248,27 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 	playbackDone := make(chan struct{})
 	go func() {
 		defer close(playbackDone)
-		s.Log("Playing speech directly to ", aloopPlaybackPCM)
-		if err := testexec.CommandContext(ctx, "aplay", "-D"+aloopPlaybackPCM, speechWav).Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Cannot run aplay: ", err)
+
+		// go/tast-writing#contexts-and-timeouts recommends the timeout to be double of the expected worst case performance.
+		ctx, cancel := context.WithTimeout(ctx, 2*speechWavDuration)
+		defer cancel()
+
+		var err error
+		switch param.speechSource {
+		case mouth:
+			// Play to PCM device to simulate speech from mouth.
+			err = internal.PlayWavToPCM(ctx, speechWav, aloopPlaybackPCM)
+		case speaker:
+			// Play to default device which goes through to CRAS,
+			// to simulate speech played by apps.
+			err = internal.PlayWavToDefault(ctx, speechWav)
+		}
+		if err != nil {
+			s.Fatal("Cannot simulate speech: ", err)
 		}
 	}()
 
-	delayCapture := time.Second
+	delayCapture := 2 * time.Second
 	s.Logf("Delay capture for %v to let playback start first", delayCapture)
 	if err := testing.Sleep(ctx, delayCapture); err != nil {
 		s.Fatal("Cannot sleep: ", err)
@@ -107,7 +278,10 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 	captureRaw := filepath.Join(s.OutDir(), "capture.raw")
 	captureCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	if err := testexec.CommandContext(captureCtx, "cras_test_client", "-C", captureRaw, "--rate=48000", "-c", "2", "--block_size=480", "--duration=5").Run(testexec.DumpLogOnError); err != nil {
+
+	clientCommand := testexec.CommandContext(captureCtx, "cras_test_client", "-C", captureRaw, "--rate=48000", "-c", "2", "--duration=5")
+	clientCommand.Args = append(clientCommand.Args, param.clientStream.crasTestClientArgs()...)
+	if err := clientCommand.Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Cannot capture with cras_test_client: ", err)
 	}
 	captureWav := filepath.Join(s.OutDir(), "capture.wav")
@@ -123,15 +297,16 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Error("Cannot get RMS from capture.raw")
 	} else {
-		if rms != 0 {
-			s.Error("Captured audio is not muted; rms: ", rms)
+		captureMuted := rms == 0
+		if captureMuted != param.inputMuted {
+			s.Errorf("Captured audio muted want: %v; got: %v, rms: %v", param.inputMuted, captureMuted, rms)
 		}
 	}
 
 	s.Log("Waiting for playback to complete")
 	<-playbackDone
 
-	if !detected {
-		s.Fatal("Did not detect speech")
+	if detected != param.expectedDetection {
+		s.Fatalf("Detect speech: want: %v; got: %v", param.expectedDetection, detected)
 	}
 }
