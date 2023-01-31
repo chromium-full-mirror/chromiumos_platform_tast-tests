@@ -135,24 +135,73 @@ func (c *Cras) GetNodes(ctx context.Context) ([]CrasNode, error) {
 	return nodes, nil
 }
 
-// GetNodeByType returns the first node with given type.
-func (c *Cras) GetNodeByType(ctx context.Context, t string) (*CrasNode, error) {
+// NodeMatcher matches a CrasNode, used by *NodeByMatcher functions.
+type NodeMatcher interface {
+	Match(*CrasNode) bool
+	fmt.Stringer
+}
+
+// MatchNodeType is a NodeMatcher that matches CrasNode's type.
+type MatchNodeType struct {
+	Type string
+}
+
+var _ NodeMatcher = MatchNodeType{}
+
+// Match implements NodeMatcher.Match.
+func (m MatchNodeType) Match(n *CrasNode) bool {
+	if n.Type == m.Type {
+		return true
+	}
+	// Regard the front mic as the internal mic.
+	if m.Type == "INTERNAL_MIC" && n.Type == "FRONT_MIC" {
+		return true
+	}
+	return false
+}
+
+func (m MatchNodeType) String() string {
+	return fmt.Sprintf("%#v", m)
+}
+
+// MatchNodeTypeDirection is a NodeMatcher that matches CrasNode's type and direction.
+type MatchNodeTypeDirection struct {
+	Type      string
+	Direction StreamType
+}
+
+var _ NodeMatcher = MatchNodeTypeDirection{}
+
+// Match implements NodeMatcher.Match.
+func (m MatchNodeTypeDirection) Match(n *CrasNode) bool {
+	return (m.Direction == InputStream) == n.IsInput &&
+		MatchNodeType{Type: m.Type}.Match(n)
+
+}
+
+func (m MatchNodeTypeDirection) String() string {
+	return fmt.Sprintf("%#v", m)
+}
+
+// GetNodeByMatcher returns the first node matching the matcher.
+func (c *Cras) GetNodeByMatcher(ctx context.Context, matcher NodeMatcher) (*CrasNode, error) {
 	nodes, err := c.GetNodes(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, n := range nodes {
-		if n.Type == t {
-			return &n, nil
-		}
-		// Regard the front mic as the internal mic.
-		if t == "INTERNAL_MIC" && n.Type == "FRONT_MIC" {
+		if matcher.Match(&n) {
 			return &n, nil
 		}
 	}
 
-	return nil, errors.Errorf("failed to find a node with type %s", t)
+	return nil, errors.Errorf("failed to find a node matching %s", matcher)
+}
+
+// GetNodeByType returns the first node with given type.
+func (c *Cras) GetNodeByType(ctx context.Context, t string) (*CrasNode, error) {
+	return c.GetNodeByMatcher(ctx, MatchNodeType{Type: t})
 }
 
 // call is a wrapper around CallWithContext for convenience.
@@ -169,26 +218,26 @@ func (c *Cras) SetActiveNode(ctx context.Context, node CrasNode) error {
 	return c.call(ctx, cmd, node.ID).Err
 }
 
-// SetActiveNodeByType sets node with specified type active.
-func (c *Cras) SetActiveNodeByType(ctx context.Context, nodeType string) error {
+// SetActiveNodeByMatcher sets node with specified matcher active.
+func (c *Cras) SetActiveNodeByMatcher(ctx context.Context, matcher NodeMatcher) error {
 	var node *CrasNode
 
 	// Wait until the node with this type is existing.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		n, err := c.GetNodeByType(ctx, nodeType)
+		n, err := c.GetNodeByMatcher(ctx, matcher)
 		node = n
 		return err
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return errors.Errorf("failed to wait node %s", nodeType)
+		return errors.Errorf("failed to wait node %s", matcher)
 	}
 
 	if err := c.SetActiveNode(ctx, *node); err != nil {
-		return errors.Errorf("failed to set node %s active", nodeType)
+		return errors.Errorf("failed to set node %s active", matcher)
 	}
 
 	// Wait until that node is active.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		n, err := c.GetNodeByType(ctx, nodeType)
+		n, err := c.GetNodeByMatcher(ctx, matcher)
 		if err != nil {
 			return err
 		}
@@ -197,10 +246,15 @@ func (c *Cras) SetActiveNodeByType(ctx context.Context, nodeType string) error {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return errors.Errorf("failed to wait node %s to be active", nodeType)
+		return errors.Errorf("failed to wait node %s to be active", matcher)
 	}
 
 	return nil
+}
+
+// SetActiveNodeByType sets node with specified type active.
+func (c *Cras) SetActiveNodeByType(ctx context.Context, nodeType string) error {
+	return c.SetActiveNodeByMatcher(ctx, MatchNodeType{Type: nodeType})
 }
 
 // SetOutputNodeVolume calls cras.Control.SetOutputNodeVolume over D-Bus.
