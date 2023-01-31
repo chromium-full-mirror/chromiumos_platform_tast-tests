@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/cellular"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/testing"
@@ -38,12 +40,19 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		Timeout:      9 * time.Minute,
-		Vars:         []string{"autotest_host_info_labels"},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
+		},
+		Timeout: 9 * time.Minute,
+		Vars:    []string{"autotest_host_info_labels"},
 	})
 }
 
 func SimLockPolicyLockSettingOff(ctx context.Context, s *testing.State) {
+	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
+		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	}
+
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,

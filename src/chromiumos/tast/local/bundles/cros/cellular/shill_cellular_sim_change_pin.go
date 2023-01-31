@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
+	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -29,6 +30,10 @@ func init() {
 
 // ShillCellularSimChangePin tests successfully changing SIM pin.
 func ShillCellularSimChangePin(ctx context.Context, s *testing.State) {
+	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
+		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	}
+
 	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
 	if err != nil {
 		s.Fatal("Failed to read autotest_host_info_labels: ", err)

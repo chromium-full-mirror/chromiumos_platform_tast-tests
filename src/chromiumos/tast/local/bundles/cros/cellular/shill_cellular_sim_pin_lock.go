@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
+	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
 )
 
@@ -28,6 +29,10 @@ func init() {
 
 // ShillCellularSimPinLock tests enabling sim lock and locking the sim with pin-lock.
 func ShillCellularSimPinLock(ctx context.Context, s *testing.State) {
+	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
+		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	}
+
 	// Gather Shill Device sim properties.
 	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
 	if err != nil {
