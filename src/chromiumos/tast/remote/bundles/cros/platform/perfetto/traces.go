@@ -19,16 +19,6 @@ import (
 	"chromiumos/tast/services/cros/platform"
 )
 
-const (
-	// TraceProcessor is retrieved from the script in
-	// https://get.perfetto.dev/trace_processor, with "os" being "linux"
-	// and "arch" being "x86_64".
-	// We download trace_processor_shell from gs bucket "perfetto".
-	// Update the external data file correspondingly when we need to
-	// uprev trace_processor_shell.
-	TraceProcessor = "trace_processor_shell-linux-a3ce2cbf4cbe4f86cc10b02957db727cecfafae8"
-)
-
 // RunPerfetto uses gRPC to run perfetto cmdline with
 // |traceConfigFile| in the DUT.
 func RunPerfetto(ctx context.Context, pc platform.PerfettoTraceBasedMetricsServiceClient, traceConfigPath string) (ret string, retErr error) {
@@ -72,7 +62,8 @@ func RunPerfetto(ctx context.Context, pc platform.PerfettoTraceBasedMetricsServi
 }
 
 // RunMetrics collects the result with trace_processor_shell.
-func RunMetrics(ctx context.Context, traceProcessorPath, outputPath string, metrics []string) (*perfetto_proto.TraceMetrics, error) {
+func RunMetrics(ctx context.Context, outputPath string, metrics []string) (*perfetto_proto.TraceMetrics, error) {
+	const traceProcessorPath = "/usr/bin/trace_processor_shell"
 	metric := strings.Join(metrics, ",")
 	cmd := testexec.CommandContext(ctx, traceProcessorPath, outputPath, "--run-metrics", metric)
 	out, err := cmd.Output(testexec.DumpLogOnError)

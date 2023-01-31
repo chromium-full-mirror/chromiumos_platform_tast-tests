@@ -34,7 +34,7 @@ func init() {
 			"chenghaoyang@chromium.org",
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
-		Data:         []string{traceConfigFile, perfetto.TraceProcessor},
+		Data:         []string{traceConfigFile},
 		ServiceDeps:  []string{"tast.cros.platform.PerfettoTraceBasedMetricsService"},
 	})
 }
@@ -103,7 +103,7 @@ func PerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to RunPerfetto: ", err)
 	}
 
-	metrics, err := perfetto.RunMetrics(ctx, s.DataPath(perfetto.TraceProcessor), outputPath, []string{traceMetricCPU, traceMetricMEM})
+	metrics, err := perfetto.RunMetrics(ctx, outputPath, []string{traceMetricCPU, traceMetricMEM})
 	if err != nil {
 		s.Fatal("Failed to RunMetrics: ", err)
 	}
