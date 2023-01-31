@@ -84,8 +84,8 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 		// E.g., "Files" in the menu of VS Code.
 		wordInApp string
 	}{
-		{"Emacs (GUI)", "emacs@penguin", "Files"},
-		{"Visual Studio Code", "Visual Studio Code", "Files"},
+		{"Emacs (GUI)", "emacs@penguin", "File"},
+		{"Visual Studio Code", "Visual Studio Code", "File"},
 		// TODO(b/205650026) Maximize button is missing in Firefox-ESR and
 		// Audacity, add these two apps once the issue is fixed.
 	}
