@@ -766,17 +766,18 @@ func expandPIPViaMenuTouchR(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 
 		bounds := window.BoundsInRoot
 
-		// Move the cursor away from the PIP window and then to the center of the PIP window slowly, otherwise
-		// the PIP menu won't activate.
-		if err := mouse.Move(tconn, coords.NewPoint(0, 0), time.Second)(ctx); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to move the mouse to the top-left corner of the screen"))
-		}
-		if err := mouse.Move(tconn, coords.NewPoint(bounds.Left+bounds.Width/2, bounds.Top+bounds.Height/2), time.Second)(ctx); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to move the mouse to center of the PIP window"))
-		}
 		// Try clicking the center of the window several times until the PIP window gets expanded.
 		// The PIP menu has a bit of delay until it gets shown after the mouse hovers on the window.
 		return testing.Poll(ctx, func(ctx context.Context) error {
+			// Move the cursor away from the PIP window and then to the center of the PIP window slowly, otherwise
+			// the PIP menu won't activate.
+			if err := mouse.Move(tconn, coords.NewPoint(0, 0), time.Second)(ctx); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to move the mouse to the top-left corner of the screen"))
+			}
+			if err := mouse.Move(tconn, coords.NewPoint(bounds.Left+bounds.Width/2, bounds.Top+bounds.Height/2), time.Second)(ctx); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to move the mouse to center of the PIP window"))
+			}
+
 			// Click on the expand button.
 			if err := mouse.Press(tconn, mouse.LeftButton)(ctx); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to press the left button"))
@@ -790,7 +791,7 @@ func expandPIPViaMenuTouchR(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 				return errors.Wrap(err, "did not expand to restore window state")
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond})
+		}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 500 * time.Millisecond})
 	}, &testing.PollOptions{Timeout: 20 * time.Second})
 }
 
