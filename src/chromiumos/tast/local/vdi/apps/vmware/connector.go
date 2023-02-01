@@ -78,6 +78,23 @@ func (c *Connector) EnterCredentialsAndLogin(ctx context.Context, cfg *apps.VDIL
 	return nil
 }
 
+// acceptAnnouncementIfSuchExists makes sure that if Accept button exists, it gets clicked.
+func (c *Connector) acceptAnnouncementIfSuchExists(ctx context.Context, cfg *apps.VDILoginConfig) error {
+	testing.ContextLog(ctx, "VMware: Click the Accept button of an announcement if it exists")
+	if err := uiauto.IfSuccessThen(
+		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("Accept")),
+		uiauto.Combine("VMware: Click the Accept button",
+			c.keyboard.AccelAction("Tab"), // Move to the part displaying the instructions.
+			c.keyboard.AccelAction("Tab"), // Move to the Accept btn.
+			c.keyboard.AccelAction("Enter"),
+		),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the Accept button despite it exists")
+	}
+
+	return nil
+}
+
 // Login connects to the server and logs in using information provided in config.
 func (c *Connector) Login(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "VMware: logging in")
@@ -85,6 +102,10 @@ func (c *Connector) Login(ctx context.Context, cfg *apps.VDILoginConfig) error {
 
 	if err := c.EnterServerURL(ctx, cfg); err != nil {
 		return errors.Wrap(err, "failed to enter server url")
+	}
+
+	if err := c.acceptAnnouncementIfSuchExists(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to accept the announcement")
 	}
 
 	if err := c.EnterCredentialsAndLogin(ctx, cfg); err != nil {
@@ -156,12 +177,15 @@ func (c *Connector) SearchAndOpenApplication(ctx context.Context, appName string
 	return func(ctx context.Context) error {
 		testing.ContextLogf(ctx, "VMware: opening %s app", appName)
 		return uiauto.Combine("open "+appName+" application in VMware",
-			c.keyboard.TypeAction(appName),      // Focus is already on search field.
-			c.keyboard.AccelAction("Shift+Tab"), // Cycle away from search field.
-			c.keyboard.AccelAction("Shift+Tab"), // Cycle back to the applications.
-			c.keyboard.AccelAction("Shift+Tab"), // Select the first star bookmarking.
-			c.keyboard.AccelAction("Shift+Tab"), // Select the first result icon.
-			c.keyboard.AccelAction("Enter"),     // Launch first app.
+			c.keyboard.TypeAction(appName),  // Focus is already on search field.
+			c.keyboard.AccelAction("Tab"),   // Move to the "empty search" icon.
+			c.keyboard.AccelAction("Tab"),   // Move to the 1/5 of the buttons on the right of the search bar.
+			c.keyboard.AccelAction("Tab"),   // Move to the 2/5 button...
+			c.keyboard.AccelAction("Tab"),   // Move to the 3/5 button...
+			c.keyboard.AccelAction("Tab"),   // Move to the 4/5 button...
+			c.keyboard.AccelAction("Tab"),   // Move to the 5/5 button...
+			c.keyboard.AccelAction("Tab"),   // Select the first result icon.
+			c.keyboard.AccelAction("Enter"), // Launch first app.
 			checkIfOpened,
 		)(ctx)
 	}
