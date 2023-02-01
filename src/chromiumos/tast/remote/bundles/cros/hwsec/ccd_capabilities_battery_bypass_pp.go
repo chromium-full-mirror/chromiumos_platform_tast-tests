@@ -27,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesBatteryBypassPP,
 		Desc: "Test to verify BatteryBypassPP CCD capability locks out restricted console commands",
-		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
+		Attr: []string{"group:firmware", "group:hwsec", "firmware_cr50"},
 		Contacts: []string{
 			"cros-hwsec@chromium.org",
 			"mvertescher@google.com",
