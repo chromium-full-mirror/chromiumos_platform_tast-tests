@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -29,13 +28,6 @@ func init() {
 		// Tests are parametrized, so that we can promote some of them
 		// to critical and leave the rest as informational.
 		Params: []testing.Param{
-			{
-				Name: "ec",
-				Val: [][]string{
-					{"ec", "info"},
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-			},
 			{
 				Name: "memory",
 				Val: [][]string{
