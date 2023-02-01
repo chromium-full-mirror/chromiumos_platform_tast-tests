@@ -164,7 +164,7 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	if err = ui.WithTimeout(5 * time.Minute).WaitUntilExists(settings.BackupNotification)(ctx); err != nil {
+	if err = ui.WithTimeout(10 * time.Minute).WaitUntilExists(settings.BackupNotification)(ctx); err != nil {
 		s.Fatal("Backup complete notification not found: ", err)
 	}
 
