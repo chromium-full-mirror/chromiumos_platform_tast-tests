@@ -14,13 +14,15 @@ import (
 	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VCZoom,
+		Func:         VCZoomEffects,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Video Effects in Zoom conference",
 		Contacts: []string{
@@ -29,53 +31,57 @@ func init() {
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:mainline", "informational", "group:ml_service",
+		},
+		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{
 			{
 				Name:    "clamshell_pwa",
-				Fixture: fixture.GAIALoggedInClamshell,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa",
-				Fixture: fixture.GAIALoggedInTablet,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web",
-				Fixture: fixture.GAIALoggedInClamshell,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web",
-				Fixture: fixture.GAIALoggedInTablet,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshell,
+				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTablet,
+				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshell,
+				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTablet,
+				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},
 	})
 }
 
-func VCZoom(ctx context.Context, s *testing.State) {
+func VCZoomEffects(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -103,11 +109,11 @@ func VCZoom(ctx context.Context, s *testing.State) {
 	}
 	defer zm.Close(cleanupCtx)
 
-	if err := zm.EnterFullScreen(ctx); err != nil {
-		s.Fatal("Failed to enter full screen: ", err)
-	}
-
-	if err := zm.ExitFullScreen(ctx); err != nil {
-		s.Fatal("Failed to exit full screen: ", err)
+	if err := uiauto.NamedCombine("configure meeting",
+		zm.SwitchVideo(true),
+		zm.ChangeSettings(zm.SetBackgroundBlur),
+		zm.EnterFullScreen,
+	)(ctx); err != nil {
+		s.Fatal("Failed to configure meeting: ", err)
 	}
 }

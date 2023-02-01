@@ -39,6 +39,9 @@ func init() {
 		},
 		BugComponent: "b:187682",
 		Timeout:      5 * time.Minute,
+		Attr: []string{
+			"group:mainline", "informational", "group:ml_service",
+		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			credsVarName,
