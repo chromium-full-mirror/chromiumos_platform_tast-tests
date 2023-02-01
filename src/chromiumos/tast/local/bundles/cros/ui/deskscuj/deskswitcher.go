@@ -23,19 +23,17 @@ import (
 // |run| takes in the currently active desk and the expected next desk,
 // and activates the next desk.
 type deskSwitchWorkflow struct {
-	name        string
-	description string
-	itinerary   []int
-	run         func(context.Context, int, int) error
+	name      string // name is a name satisfying the conditions for recorder.Annotate.
+	itinerary []int
+	run       func(context.Context, int, int) error
 }
 
 // getKeyboardSearchBracketWorkflow returns the workflow for switching
 // between desks using Search+[ and Search+].
 func getKeyboardSearchBracketWorkflow(tconn *chrome.TestConn, kw *input.KeyboardEventWriter) deskSwitchWorkflow {
 	return deskSwitchWorkflow{
-		name:        "Search+] and Search+[",
-		description: "Cycle through desks using Search+] and Search+[",
-		itinerary:   []int{0, 1, 2, 3, 2, 1},
+		name:      "Search-Bracket",
+		itinerary: []int{0, 1, 2, 3, 2, 1},
 		run: func(ctx context.Context, fromDesk, toDesk int) error {
 			var direction string
 			switch toDesk {
@@ -55,9 +53,8 @@ func getKeyboardSearchBracketWorkflow(tconn *chrome.TestConn, kw *input.Keyboard
 // between desks using Search+Shift+Number.
 func getKeyboardSearchNumberWorkflow(tconn *chrome.TestConn, kw *input.KeyboardEventWriter) deskSwitchWorkflow {
 	return deskSwitchWorkflow{
-		name:        "Search+Shift+Number",
-		description: "Cycle through desks using Search+Shift+Number",
-		itinerary:   []int{0, 1, 2, 3, 2, 1},
+		name:      "Search-Shift-Number",
+		itinerary: []int{0, 1, 2, 3, 2, 1},
 		run: func(ctx context.Context, fromDesk, toDesk int) error {
 			if fromDesk == toDesk {
 				return errors.Errorf("invalid target desk, can't switch from desk %d to itself", fromDesk)
@@ -73,9 +70,8 @@ func getKeyboardSearchNumberWorkflow(tconn *chrome.TestConn, kw *input.KeyboardE
 // by entering overview mode and selecting the next desk.
 func getOverviewWorkflow(tconn *chrome.TestConn, ac *uiauto.Context, setOverviewModeAndWait action.Action) deskSwitchWorkflow {
 	return deskSwitchWorkflow{
-		name:        "Overview",
-		description: "Cycle through desks using overview mode",
-		itinerary:   []int{0, 1, 2, 3, 2, 1},
+		name:      "Overview",
+		itinerary: []int{0, 1, 2, 3, 2, 1},
 		run: func(ctx context.Context, fromDesk, toDesk int) error {
 			if fromDesk == toDesk {
 				return errors.Errorf("invalid target desk, can't switch from desk %d to itself", fromDesk)

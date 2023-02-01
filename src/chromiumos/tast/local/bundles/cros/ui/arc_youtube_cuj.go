@@ -178,6 +178,7 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 			// Log the position along the timeline of video playback. Video playback starts from the
 			// position where the user left off if they were watching the same video in the past.
 			s.Log("Video is starting from: ", videoPosition)
+			recorder.Annotate(ctx, "Video_loaded")
 			return nil
 		}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
 			return errors.Wrap(err, "failed to wait for video to load")
@@ -202,7 +203,7 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		// Log the position along the timeline of video playback.
 		s.Log("Initial video position (after waiting for everything to load): ", videoPosition)
 
-		// Monitor video playback.
+		recorder.Annotate(ctx, "Start_watching_video")
 		for endTime := time.Now().Add(10 * time.Minute); time.Now().Before(endTime); {
 			const verificationInterval = 30 * time.Second
 			if err := testing.Sleep(ctx, verificationInterval); err != nil {

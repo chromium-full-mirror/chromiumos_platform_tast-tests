@@ -237,6 +237,7 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 		defer recorder.StopTracing(ctx)
 
+		recorder.Annotate(ctx, "Open_Aquarium")
 		// Open another Chrome tab so we can save the tab connection.
 		// We will use this tab connection to navigate away from the
 		// page to ensure collection of
@@ -249,6 +250,7 @@ func Run(ctx context.Context, s *testing.State) {
 		numBrowserWindows++
 		numWindows := numAppWindows + numBrowserWindows
 
+		recorder.Annotate(ctx, "Initialize_task_switching_workflows")
 		// Initialize task switch workflows only after launching Chrome
 		// tabs and applications, because switching by Hotseat requires
 		// knowing the bounds of the icons of the open windows.

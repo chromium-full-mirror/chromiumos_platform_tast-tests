@@ -164,6 +164,7 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 		activeDesk := 0
 
+		recorder.Annotate(ctx, "Open_Google_Slides")
 		slidesURL, err := cuj.GetTestSlidesURL(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get Google Slides URL")
@@ -180,8 +181,6 @@ func Run(ctx context.Context, s *testing.State) {
 			getKeyboardSearchNumberWorkflow(tconn, kw),
 			getOverviewWorkflow(tconn, ac, setOverviewModeAndWait),
 		} {
-			s.Log(deskSwitcher.description)
-
 			cycles := 0
 
 			if startDesk := deskSwitcher.itinerary[0]; activeDesk != startDesk {
@@ -190,6 +189,8 @@ func Run(ctx context.Context, s *testing.State) {
 				}
 				activeDesk = startDesk
 			}
+
+			recorder.Annotate(ctx, "Cycle_through_desks_with_"+deskSwitcher.name)
 
 			i := 0
 			for endTime := time.Now().Add(deskSwitchingDuration); time.Now().Before(endTime); {

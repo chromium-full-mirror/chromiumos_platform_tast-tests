@@ -271,7 +271,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 
 	for index, data := range test.webPages {
 		conns := make([]*chrome.Conn, 0, numPages)
-
+		test.recorder.Annotate(ctx, "Start_opening_"+data.name)
 		// Create the homepage of the site.
 		firstPage, err := test.br.NewConn(ctx, data.startURL)
 		if err != nil {
@@ -314,8 +314,6 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 			return errors.New("test scenario does not specify any web pages")
 		}
 
-		testing.ContextLog(ctx, "Start switching tabs")
-
 		// Record tracing in the first iteration.
 		if index == 0 {
 			if err := test.recorder.StartTracing(ctx, test.outDir, test.perfettoConfigPath); err != nil {
@@ -331,6 +329,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		i := 0
 		currentTab := 0
 		endTime := time.Now().Add(coreTestDuration/time.Duration(len(test.webPages)) + time.Second)
+		test.recorder.Annotate(ctx, "Start_tab_switching_"+data.name)
 		for time.Now().Before(endTime) {
 			tabToClick := nodewith.HasClass("TabIcon").Nth(currentTab)
 			if err := action.Combine(

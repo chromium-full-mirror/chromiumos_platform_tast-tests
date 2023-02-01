@@ -8,6 +8,7 @@ package docscuj
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -165,6 +166,7 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 		defer recorder.StopTracing(ctx)
 
+		recorder.Annotate(ctx, "Open_new_Google_Doc")
 		const docsURL = "https://docs.new"
 		if err := conn.Navigate(ctx, docsURL); err != nil {
 			return errors.Wrapf(err, "failed to navigate to %q", docsURL)
@@ -187,6 +189,7 @@ func Run(ctx context.Context, s *testing.State) {
 			return errors.Wrapf(err, "unexpected number of open windows; got %d, expected 1", len(ws))
 		}
 
+		recorder.Annotate(ctx, "Maximize_window")
 		if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStateMaximized); err != nil {
 			return errors.Wrap(err, "failed to set window state to maximized")
 		}
@@ -227,11 +230,12 @@ func Run(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "tab renderer crashed")
 			}
 
-			s.Logf("Starting %s paragraph", p.description)
+			paragraphDescription := strings.ReplaceAll(p.description, " ", "_")
 
 			// Use a mixture of key/mouse/touch actions to type a
 			// bolded header for every paragraph. These titles are in
 			// English, regardless of the language being typed.
+			recorder.Annotate(ctx, fmt.Sprintf("Start_%s_paragraph", paragraphDescription))
 			if err := action.Combine(
 				fmt.Sprintf("type bolded header for the %s paragraph", p.description),
 
@@ -251,6 +255,7 @@ func Run(ctx context.Context, s *testing.State) {
 			)(ctx); err != nil {
 				return err
 			}
+			recorder.Annotate(ctx, fmt.Sprintf("Completed_%s_paragraph", paragraphDescription))
 
 			// Some paragraphs require some additional setup. For
 			// example, when writing a paragraph in pageless mode,

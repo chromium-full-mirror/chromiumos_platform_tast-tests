@@ -909,7 +909,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		var collaborationRE *regexp.Regexp
 		if meet.docs {
-			recorder.Annotate(ctx, "Open_up_collaboration_window")
+			recorder.Annotate(ctx, "Open_Google_Doc")
 			docsURL := defaultDocsURL
 			if docsURLOverride, ok := s.Var("ui.MeetCUJ.doc"); ok {
 				docsURL = docsURLOverride
@@ -925,6 +925,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			collaborationRE = regexp.MustCompile(`\bDocs\b`)
 		} else if meet.jamboard {
 			// Create another browser window and open a new Jamboard file.
+			recorder.Annotate(ctx, "Open_Jamboard_window")
 			jamboardConn, err := cs.NewConn(ctx, jamboardURL, browser.WithNewWindow())
 			if err != nil {
 				return errors.Wrap(err, "failed to open the Jamboard website")
@@ -946,6 +947,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		if meet.split {
+			recorder.Annotate(ctx, "Split_screen_windows")
 			if collaborationRE == nil {
 				return errors.New("need a collaboration window for split view")
 			}
@@ -1036,7 +1038,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return errors.New("need a Google Docs or Jamboard tab to present")
 			}
 
-			// Start presenting the tab.
+			recorder.Annotate(ctx, "Start_presenting_tab")
 			if err := meetConn.Eval(ctx, "hrTelemetryApi.presentation.presentTab()", nil); err != nil {
 				return errors.Wrap(err, "failed to start to present a tab")
 			}
@@ -1069,6 +1071,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to select the tab to share")
 			}
+
+			recorder.Annotate(ctx, "Finished_presenting_tab")
 		}
 
 		errc := make(chan error)
@@ -1111,11 +1115,14 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					taskSwitch,
 				)
 			}
+
+			recorder.Annotate(ctx, "Start_typing_on_Docs")
 			for time.Until(end) > 36*time.Second {
 				if err := action.Combine(cycleDescription, cycleActions...)(ctx); err != nil {
 					return err
 				}
 			}
+			recorder.Annotate(ctx, "End_typing_on_Docs")
 
 			// Toggle the Google Docs File menu button for press and
 			// release metrics.
@@ -1205,6 +1212,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 			centerX, centerY, offsetX, offsetY := contentArea.CenterPoint().X, contentArea.CenterPoint().Y, 10, 10
 			end := time.Now().Add(meetTimeout)
+			recorder.Annotate(ctx, "Start_Jamboard_interactions")
 			for end.Sub(time.Now()).Seconds() > 42 {
 				for i := 1; i <= 10; i++ {
 					if err := uiauto.Combine(
