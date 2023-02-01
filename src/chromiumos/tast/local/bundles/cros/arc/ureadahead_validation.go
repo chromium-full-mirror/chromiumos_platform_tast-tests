@@ -68,6 +68,20 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get whether ARCVM is enabled: ", err)
 	}
 
+	// If VM, only verify guest OS ureadahead dump.
+	if vmEnabled {
+		vmLogPath := filepath.Join(s.OutDir(), ureadaheadGuestLogName)
+		if err = dumpGuestPack(ctx, vmLogPath); err != nil {
+			s.Fatal("Failed to dump guest ureadahead pack: ", err)
+		}
+
+		// Verify the guest pack file dump.
+		if err = checkPackFileDump(ctx, vmLogPath, minAcceptableGuestUreadaheadPackSizeKB); err != nil {
+			s.Fatalf("Failed to verify guest ureadahead pack file dump, please check %q: %v", ureadaheadGuestLogName, err)
+		}
+		return
+	}
+
 	packPath := ""
 	if vmEnabled {
 		packPath = "/opt/google/vms/android/ureadahead.pack"
@@ -107,19 +121,6 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 	defer logFile.Close()
 	if err = checkPackFileDump(ctx, logPath, minAcceptableUreadaheadPackSizeKB); err != nil {
 		s.Fatalf("Failed to verify ureadahead pack file dump, please check %q: %v", ureadaheadLogName, err)
-	}
-
-	// If VM, also verify guest OS ureadahead dump.
-	if vmEnabled {
-		vmLogPath := filepath.Join(s.OutDir(), ureadaheadGuestLogName)
-		if err = dumpGuestPack(ctx, vmLogPath); err != nil {
-			s.Fatal("Failed to dump guest ureadahead pack: ", err)
-		}
-
-		// Verify the guest pack file dump.
-		if err = checkPackFileDump(ctx, vmLogPath, minAcceptableGuestUreadaheadPackSizeKB); err != nil {
-			s.Fatalf("Failed to verify guest ureadahead pack file dump, please check %q: %v", ureadaheadGuestLogName, err)
-		}
 	}
 }
 
