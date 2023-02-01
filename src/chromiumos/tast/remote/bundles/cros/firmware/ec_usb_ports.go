@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -70,14 +71,6 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	if err := h.DUT.Reboot(ctx); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
-	}
-
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to sleep for 5 seconds: ", err)
-	}
-
 	enablePins, err := getUSBPorts(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to probe usb ports: ", err)
@@ -108,6 +101,10 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 			}
 		}()
 	case testUSBOnLidClose:
+		// Restart UI to ensure no user is logged in, as this will change power state behaviour on lid close.
+		if err := h.DUT.Conn().CommandContext(ctx, "restart", "ui").Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to restart ui before test: ", err)
+		}
 		if err := testPortsAfterLidClose(ctx, h, enablePins); err != nil {
 			s.Fatal("Some USB Ports enabled after lidclose: ", err)
 		}
