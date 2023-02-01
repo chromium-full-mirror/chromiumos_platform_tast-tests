@@ -182,11 +182,6 @@ type Param struct {
 	// Add this for backward-compatibility to preserve names when removing
 	// MinimalSet to add bullseye coverage.
 	NoBusterInTestName bool
-
-	// DO NOT USE.
-	// This flag is only used for b/234390590 to increase coverage for bullseye
-	// tests and will be deleted after the migration.
-	BullseyeInformational bool
 }
 
 type generatedParam struct {
@@ -301,9 +296,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			// _unstable tests can never be CQ critical.
-			// TODO(b/234390590) Remove BullseyeInformational when the new bullseye tests are promoted to critical.
 			var extraAttr []string
-			if (!i.stable && canBeCritical) || bt == browser.TypeLacros || testCase.DeviceMode == devicemode.TabletMode || (i.debianVersion == vm.DebianBullseye && testCase.BullseyeInformational) {
+			if (!i.stable && canBeCritical) || bt == browser.TypeLacros || testCase.DeviceMode == devicemode.TabletMode {
 				extraAttr = append(extraAttr, "informational")
 			}
 

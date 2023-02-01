@@ -94,7 +94,6 @@ func init() {
 				Timeout:           15 * time.Minute,
 			}, {
 				Name:              "bullseye_clamshell_stable",
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
 				Fixture:           "crostiniBullseyeLargeContainerClamshell",

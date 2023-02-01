@@ -39,7 +39,6 @@ func init() {
 				Timeout:           3 * time.Minute,
 			}, {
 				Name:              "bullseye_stable",
-				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseyeRestart",

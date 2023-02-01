@@ -46,7 +46,6 @@ func init() {
 				Timeout:           14 * time.Minute,
 			}, {
 				Name:              "bullseye_stable",
-				ExtraAttr:         []string{"informational"},
 				ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,

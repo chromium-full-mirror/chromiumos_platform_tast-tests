@@ -155,9 +155,8 @@ func TestExpensiveParams(t *testing.T) {
 
 	for filename, duration := range mainlineExpensiveTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:               duration,
-			UseFixture:            true,
-			BullseyeInformational: true,
+			Timeout:    duration,
+			UseFixture: true,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -173,10 +172,9 @@ var restartTests = map[string]time.Duration{
 func TestRestartParams(t *testing.T) {
 	for filename, duration := range restartTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:               duration,
-			Restart:               true,
-			UseFixture:            true,
-			BullseyeInformational: true,
+			Timeout:    duration,
+			Restart:    true,
+			UseFixture: true,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -201,26 +199,24 @@ func TestOldAppTestParams(t *testing.T) {
 	for _, filename := range oldAppTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
-				Timeout:               15 * time.Minute,
-				StableHardwareDep:     "crostini.CrostiniAppStable",
-				UnstableHardwareDep:   "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:     []string{"crostini_app"},
-				UseLargeContainer:     true,
-				UseFixture:            true,
-				DeviceMode:            devicemode.TabletMode,
-				NoBusterInTestName:    true,
-				BullseyeInformational: true,
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:   []string{"crostini_app"},
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.TabletMode,
+				NoBusterInTestName:  true,
 			},
 			{
-				Timeout:               15 * time.Minute,
-				StableHardwareDep:     "crostini.CrostiniAppStable",
-				UnstableHardwareDep:   "crostini.CrostiniAppUnstable",
-				ExtraSoftwareDeps:     []string{"crostini_app"},
-				UseLargeContainer:     true,
-				UseFixture:            true,
-				DeviceMode:            devicemode.ClamshellMode,
-				NoBusterInTestName:    true,
-				BullseyeInformational: true,
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:   []string{"crostini_app"},
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.ClamshellMode,
+				NoBusterInTestName:  true,
 			}})
 		genparams.Ensure(t, filename, params)
 	}
