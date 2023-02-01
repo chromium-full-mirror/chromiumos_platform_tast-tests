@@ -241,9 +241,12 @@ func doMountUserTurn(ctx context.Context, state *chapsStressState, cryptohome *h
 	username := state.usernames[u]
 	password := state.passwords[u]
 
-	// Mount the vault.
+	// Mount the vault. If the user already exists try mounting without creating the user.
 	if err := cryptohome.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(username, password), true, hwsec.NewVaultConfig()); err != nil {
-		return errors.Wrapf(err, "failed to mount vault in mount user turn for user %d", u)
+		testing.ContextLog(ctx, "Mount attempt with creating new user has failed: ", err)
+		if err := cryptohome.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(username, password), false, hwsec.NewVaultConfig()); err != nil {
+			return errors.Wrapf(err, "failed to mount vault in mount user turn for user %d", u)
+		}
 	}
 
 	// Wait for it to be ready.
