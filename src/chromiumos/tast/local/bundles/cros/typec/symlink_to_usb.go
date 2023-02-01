@@ -18,7 +18,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SymlinkToUsb,
 		Desc:         "Checks if Type C connectors have symlink to corresponding USB ports and vice versa",
-		Contacts:     []string{"wonchung@google.com", "chromeos-usb@google.com"},
+		Contacts:     []string{"chromeos-usb@google.com", "wonchung@google.com"},
+		BugComponent: "b:958036", // ChromeOS > Platform > Technologies > USB
 		Attr:         []string{"group:mainline", "group:typec", "informational"},
 		SoftwareDeps: []string{"typec_usb_link"},
 	})
