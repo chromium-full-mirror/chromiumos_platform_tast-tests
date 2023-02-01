@@ -34,7 +34,6 @@ func init() {
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Fixture:      "arcBooted",
-		Data:         []string{"ArcShelfIconTest.apk"},
 		Timeout:      30 * time.Second,
 	})
 }
@@ -87,7 +86,7 @@ func ShelfIcons(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	s.Log("Installing app")
-	if err := a.Install(ctx, s.DataPath(apk)); err != nil {
+	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
 	for i, color := range iconColors {

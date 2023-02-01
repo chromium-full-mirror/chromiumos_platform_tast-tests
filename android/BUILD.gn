@@ -58,6 +58,7 @@ group("all") {
     "ArcRandomUIElementsApp:ArcRandomUIElementsApp",
     "ArcResizeLockTest:ArcResizeLockTest",
     "ArcSensorLatencyTest:ArcSensorLatencyTest",
+    "ArcShelfIconTest:ArcShelfIconTest",
     "ArcSoftInputModeTest:ArcSoftInputModeTest",
     "ArcSurfaceInsetsTest:ArcSurfaceInsetsTest",
     "ArcTtsTest:ArcTtsTest",
