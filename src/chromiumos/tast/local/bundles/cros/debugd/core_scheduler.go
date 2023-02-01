@@ -22,8 +22,13 @@ func init() {
 		Func: CoreScheduler,
 		Desc: "Verifies debugd's SetSchedulerConfiguration D-Bus API works",
 		Contacts: []string{
-			"kerrnel@chromium.org",
+			"cros-debugd@google.com",
+			"aashay@google.com",
+			"jorgelo@google.com",
+			"vapier@google.com",
 		},
+		// ChromeOS > Software > System Services > debugd
+		BugComponent: "b:1309999",
 		SoftwareDeps: []string{"amd64"},
 		// TODO(b/197182645): re-enable Volteer once CPU offlining issues are resolved.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("volteer")),
