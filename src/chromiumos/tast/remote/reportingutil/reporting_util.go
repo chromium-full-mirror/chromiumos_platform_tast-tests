@@ -143,7 +143,7 @@ type MetricData struct {
 type InfoData struct {
 	MemoryInfo        *MemoryInfo        `json:"memoryInfo"`
 	NetworkInfo       *NetworkInfo       `json:"networksInfo"`
-	CpuInfo           *CpuInfo           `json:"cpuInfo"`
+	CPUInfo           *CPUInfo           `json:"cpuInfo"`
 	DisplayInfo       *DisplayInfo       `json:"displayInfo"`
 	PrivacyScreenInfo *PrivacyScreenInfo `json:"privacyScreenInfo"`
 	TouchScreenInfo   *TouchScreenInfo   `json:"touchScreenInfo"`
@@ -170,39 +170,46 @@ type TMEInfo struct {
 	MemoryEncryptionAlgorithm string `json:"encryptionAlgorithm"`
 }
 
+// NetworkInfo mirrors the networkInfo JSON field.
 type NetworkInfo struct {
 	NetworkInterfaces []NetworkInterfaces `json:"networkInterfaces"`
 }
 
+// NetworkInterfaces mirrors the networkInterfaces JSON field.
 type NetworkInterfaces struct {
 	Type       string `json:"type"`
 	MacAddress string `json:"macAddress"`
 	DevicePath string `json:"devicePath"`
 }
 
-type CpuInfo struct {
+// CPUInfo mirrors the cpuInfo JSON field.
+type CPUInfo struct {
 	KeyLockerInfo *KeyLockerInfo `json:"keyLockerInfo"`
 }
 
+// KeyLockerInfo mirrors the keyLockerInfo JSON field.
 type KeyLockerInfo struct {
 	Supported  bool `json:"supported"`
 	Configured bool `json:"configured"`
 }
 
+// DisplayInfo mirrors the displayInfo JSON field.
 type DisplayInfo struct {
 	DisplayDevice []DisplayDevice `json:"displayDevice"`
 }
 
+// DisplayDevice mirrors the displayDevice JSON field.
 type DisplayDevice struct {
 	DisplayName     string `json:"displayName"`
 	DisplayWidth    int32  `json:"displayWidth"`
 	DisplayHeight   int32  `json:"displayHeight"`
 	IsInternal      bool   `json:"isInternal"`
 	Manufacturer    string `json:"manufacturer"`
-	ModelId         int32  `json:"modelId"`
+	ModelID         int32  `json:"modelId"`
 	ManufactureYear int32  `json:"manufactureYear"`
 }
 
+// PrivacyScreenInfo mirrors the privacyScreenInfo JSON field.
 type PrivacyScreenInfo struct {
 	Supported bool `json:"supported"`
 }
@@ -228,12 +235,13 @@ type AudioTelemetry struct {
 	InputDeviceName  string `json:"inputDeviceName"`
 }
 
-// NetworkTelemetry mirrors the audioTelemetry JSON field.
+// NetworkTelemetry mirrors the networkTelemetry JSON field.
 type NetworkTelemetry struct {
-	BandwithData *BandwithData `json:"bandwidthData"`
+	BandwidthData *BandwidthData `json:"bandwidthData"`
 }
 
-type BandwithData struct {
+// BandwidthData mirrors the bandwidthData JSON field.
+type BandwidthData struct {
 	DownloadSpeedKbps string `json:"downloadSpeedKbps"`
 }
 
@@ -248,8 +256,8 @@ type UsbTelemetry struct {
 	Name       string `json:"name"`
 	Vid        int32  `json:"vid"`
 	Pid        int32  `json:"pid"`
-	ClassId    int32  `json:"classId"`
-	SubclassId int32  `json:"subclassId"`
+	ClassID    int32  `json:"classId"`
+	SubclassID int32  `json:"subclassId"`
 }
 
 // DisplaysTelemetry mirrors the displaysTelemetry JSON field.

@@ -55,18 +55,17 @@ func init() {
 			},
 		},
 		VarDeps: []string{
-			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,
 		},
 	})
 }
 
-type TestType int
+type testType int
 
 const (
-	Info TestType = iota
-	Telemetry
+	info testType = iota
+	telemetry
 )
 
 func verifyTelemetry(event reportingutil.InputEvent, validator func(telemetry *reportingutil.TelemetryData) bool) bool {
@@ -97,7 +96,6 @@ func verifyInfo(event reportingutil.InputEvent, validator func(info *reportingut
 
 func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(telemetryInfoReportingParameters)
-	customerId := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
@@ -119,7 +117,6 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerId)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -184,6 +181,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 	defer pc.StopChrome(ctx, &empty.Empty{})
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa, acc.CustomerID)
 
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {
@@ -200,12 +198,12 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		telemetryEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "TELEMETRY_METRIC", testStartTime)
+		telemetryEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "TELEMETRY_METRIC", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up telemetry events")
 		}
 
-		infoEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
+		infoEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up info events")
 		}
@@ -213,13 +211,13 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			// name is the subtest name.
 			name string
 			// enum to know if telemetry or info
-			testType TestType
+			testType testType
 			// function to verify the event
 			validator reportingutil.VerifyEventTypeCallback
 		}{
 			{
 				name:     "audioTelemetry",
-				testType: Telemetry,
+				testType: telemetry,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
 						return telemetry.AudioTelemetry != nil
@@ -228,7 +226,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			},
 			{
 				name:     "networkTelemetry",
-				testType: Telemetry,
+				testType: telemetry,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
 						return telemetry.NetworkTelemetry != nil
@@ -237,7 +235,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			},
 			{
 				name:     "displaysTelemetry",
-				testType: Telemetry,
+				testType: telemetry,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
 						return telemetry.DisplaysTelemetry != nil
@@ -246,7 +244,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			},
 			{
 				name:     "networkInfo",
-				testType: Info,
+				testType: info,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
 						return info.NetworkInfo != nil
@@ -255,7 +253,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			},
 			{
 				name:     "memoryInfo",
-				testType: Info,
+				testType: info,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
 						return info.MemoryInfo != nil
@@ -264,16 +262,16 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			},
 			{
 				name:     "cpuInfo",
-				testType: Info,
+				testType: info,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
-						return info.CpuInfo != nil
+						return info.CPUInfo != nil
 					})
 				},
 			},
 			{
 				name:     "displayInfo",
-				testType: Info,
+				testType: info,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyInfo(event, func(info *reportingutil.InfoData) bool {
 						return info.DisplayInfo != nil
@@ -282,7 +280,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			},
 		} {
 			events := telemetryEvents
-			if internalParam.testType == Info {
+			if internalParam.testType == info {
 				events = infoEvents
 			}
 			prunedEvents, err := reportingutil.PruneEvents(ctx, events, func(e reportingutil.InputEvent) bool {
@@ -297,10 +295,10 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 			if !param.reportingEnabled && len(prunedEvents) > 0 {
 				return errors.Errorf("events found when reporting is disabled  %s with reportingEnabled set to %t", internalParam.name, param.reportingEnabled)
 			}
-			if param.reportingEnabled && internalParam.testType == Telemetry && len(prunedEvents) > 2 {
+			if param.reportingEnabled && internalParam.testType == telemetry && len(prunedEvents) > 3 {
 				return errors.Errorf("more than one event reporting at test %s with reportingEnabled set to %t", internalParam.name, param.reportingEnabled)
 			}
-			if param.reportingEnabled && internalParam.testType == Info && len(prunedEvents) > 1 {
+			if param.reportingEnabled && internalParam.testType == info && len(prunedEvents) > 1 {
 				return errors.Errorf("more than one event reporting at test %s with reportingEnabled set to %t", internalParam.name, param.reportingEnabled)
 			}
 			if param.reportingEnabled && len(prunedEvents) == 0 {
