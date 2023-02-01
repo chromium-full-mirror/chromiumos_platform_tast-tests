@@ -11,23 +11,21 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/bundles/cros/benchmark/setup"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
 
 const (
+	apkName            = "com_futuremark_pcmark.apk"
 	pcmarkPkgName      = "com.futuremark.pcmark.android.benchmark"
 	pcmarkAppName      = "PCMark"
 	pcmarkActivityName = "com.futuremark.gypsum.activity.SplashPageActivity"
@@ -38,10 +36,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PCMarkWorkAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Execute PCMark Android App to do benchmark for PCMark Work and acquire test score",
+		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
+		Desc:         "Execute PCMark Android App v3.0.4061 to do benchmark for PCMark Work and acquire test score",
 		Contacts:     []string{"alfredyu@cienet.com", "xliu@cienet.com"},
 		// Purposely leave the empty Attr here. Public benchmark tests are not included in crosbolt group for now.
-		Attr:         []string{},
+		Attr:         []string{"group:crosbolt", "crosbolt_weekly"},
 		SoftwareDeps: []string{"arc", "chrome"},
 		HardwareDeps: hwdep.D(
 			hwdep.InternalDisplay(),
@@ -49,7 +48,8 @@ func init() {
 			setup.PublicBenchmarkAllowed(),
 		),
 		Timeout: 45 * time.Minute,
-		Fixture: setup.BenchmarkARCFixture,
+		Fixture: "arcBooted",
+		Data:    []string{apkName},
 	})
 }
 
@@ -68,25 +68,9 @@ func PCMarkWorkAndroidApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to setup ARC and Play Store: ", err)
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-	defer func(ctx context.Context) {
-		uiDevice.Close(ctx)
-		faillog.SaveScreenshotOnError(ctx, cr, s.OutDir(), s.HasError)
-		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-		a.DumpUIHierarchyOnError(ctx, s.OutDir(), s.HasError)
-		if w, err := ash.GetARCAppWindowInfo(ctx, tconn, pcmarkPkgName); err == nil {
-			w.CloseWindow(ctx, tconn)
-		}
-	}(cleanupCtx)
-
-	s.Log("Installing app from play store") // Let users know what's going on because installing APP takes time.
-	if err := playstore.InstallApp(ctx, a, uiDevice, pcmarkPkgName, &playstore.Options{TryLimit: -1}); err != nil {
-		s.Fatalf("Failed to install %s: %v", pcmarkPkgName, err)
-	}
-	if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
-		s.Fatal("Failed to close Play Store: ", err)
+	s.Log("Installing with InstallOptionGrantPermissions: ", apkName)
+	if err := a.Install(ctx, s.DataPath(apkName), adb.InstallOptionGrantPermissions); err != nil {
+		s.Fatal("Failed to install app: ", err)
 	}
 
 	s.Log("Launching PCMark app")
