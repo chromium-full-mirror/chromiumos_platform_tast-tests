@@ -52,6 +52,7 @@ type Context struct {
 	pollOpts           testing.PollOptions
 	options            *Options
 	screenshotStrategy ScreenshotStrategy
+	resizingEnabled    bool
 }
 
 // New returns a new UI Detection automation instance.
@@ -69,6 +70,7 @@ func New(t *chrome.TestConn, keyType, key, server string) *Context {
 		},
 		options:            DefaultOptions(),
 		screenshotStrategy: StableScreenshot,
+		resizingEnabled:    false,
 	}
 }
 
@@ -112,6 +114,19 @@ func (uda *Context) WithPollOpts(pollOpts testing.PollOptions) *Context {
 func (uda *Context) WithScreenshotStrategy(s ScreenshotStrategy) *Context {
 	c := uda.copy()
 	c.screenshotStrategy = s
+	return c
+}
+
+// WithScreenshotResizing returns a new Context with screenshot resizing enabled.
+// Resizing scales the screenshot up by 50% with bicubic scaling to prevent common
+// detection issues. Detection coordinates are automatically scaled back down in
+// the response.
+//
+// For example, resizing may help when two words, "Log" and "In", are incorrectly
+// detected as one: "Login".
+func (uda *Context) WithScreenshotResizing() *Context {
+	c := uda.copy()
+	c.resizingEnabled = true
 	return c
 }
 

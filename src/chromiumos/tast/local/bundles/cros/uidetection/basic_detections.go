@@ -201,7 +201,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 				ud.LeftClick(chromeIcon.WithinA11yNode(bottomBar)),
 				verifyChromeIsShown)),
 
-		uiauto.Combine("verify that relative pixel successfully match",
+		uiauto.Combine("verify that relative and pixel bounds successfully match",
 			uiauto.Combine("for a11y nodes",
 				expectError(chromeIcon.RightOfA11yNode(chromeWindow), uidetection.ErrEmptyBoundingBox),
 				expectError(chromeIcon.LeftOfA11yNode(chromeWindow), uidetection.ErrEmptyBoundingBox),
@@ -218,7 +218,13 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 			uiauto.Combine("for px",
 				expectError(chromeIcon.AbovePx(100), uidetection.ErrNotFound),
 				ud.LeftClick(chromeIcon.BelowPx(100)),
-				verifyChromeIsShown)))(ctx); err != nil {
+				verifyChromeIsShown)),
+
+		uiauto.Combine("verify that resized images successfully match",
+			ud.WithScreenshotResizing().WaitUntilExists(addShortcut),
+			ud.WithScreenshotResizing().WaitUntilExists(chromeIcon),
+			ud.WithScreenshotResizing().WaitUntilExists(uidetection.Word("Tab")),
+		))(ctx); err != nil {
 		s.Fatal("Failed to perform image-based UI interactions: ", err)
 	}
 }
