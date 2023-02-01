@@ -734,7 +734,7 @@ func (app *MicrosoftWebOffice) openOneDrive(ctx context.Context) (*chrome.Conn, 
 
 	myFiles := nodewith.Name("My files").Role(role.Heading).First()
 	alertDialog := nodewith.Role(role.AlertDialog).First()
-	closeDialog := nodewith.Name("Close dialog").Role(role.Button).Ancestor(alertDialog)
+	closeDialog := nodewith.NameStartingWith("Close").Role(role.Button).Ancestor(alertDialog)
 	noThanksButton := nodewith.Name("No, thanks").Role(role.Button).Ancestor(alertDialog)
 	gotItButton := nodewith.Name("Got it").Role(role.Button)
 
@@ -755,12 +755,12 @@ func (app *MicrosoftWebOffice) openOneDrive(ctx context.Context) (*chrome.Conn, 
 // openNewFile opens a new document for the specified service.
 func (app *MicrosoftWebOffice) openNewFile(service string) action.Action {
 	newItem := nodewith.NameStartingWith("New").Role(role.MenuItem).Ancestor(myFilesWebArea)
-	newItemMenu := nodewith.Role(role.Menu).Ancestor(newItem)
-	serviceItem := nodewith.NameContaining(service).Role(role.MenuItem).Ancestor(myFilesWebArea)
+	newMenu := nodewith.Name("New").Role(role.Menu).Ancestor(myFilesWebArea)
+	serviceItem := nodewith.NameContaining(service).Role(role.MenuItem).Ancestor(newMenu)
 	return uiauto.NamedCombine("open a new "+service,
 		// Make sure "New" exists before creating a new file. This is especially necessary on low-end DUTs.
 		app.ui.WithTimeout(longerUIWaitTime).WaitUntilExists(newItem),
-		app.uiHdl.ClickUntil(newItem, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(newItemMenu)),
+		app.uiHdl.ClickUntil(newItem, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(newMenu)),
 		app.uiHdl.ClickUntil(serviceItem, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(myFilesWebArea)),
 	)
 }
@@ -874,7 +874,7 @@ func (app *MicrosoftWebOffice) selectMenuItem(menu *nodewith.Finder, itemName st
 	)
 
 	checkMenuItem := func(ctx context.Context) error {
-		menuItem := nodewith.Name(itemName).Role(role.MenuItemCheckBox).Ancestor(menu)
+		menuItem := nodewith.Name(itemName).Role(role.MenuItemCheckBox).Ancestor(myFilesWebArea)
 		if found, err := app.ui.IsNodeFound(ctx, menuItem); err != nil {
 			return errors.Wrapf(err, "failed to check %v", menuItem)
 		} else if !found {
