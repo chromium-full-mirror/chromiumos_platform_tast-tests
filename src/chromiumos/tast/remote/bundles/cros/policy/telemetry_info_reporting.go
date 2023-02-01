@@ -144,11 +144,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	defer accManager.CleanUp(ctx)
 
 	// Disable Asset ID screen on enrollment.
-	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{
-		AllowToUpdateDeviceAttribute: false,
-	}
-
-	if err := tapeClient.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, acc.RequestID); err != nil {
+	if err := reportingutil.DisableUpdatingDeviceAttribute(ctx, tapeClient, acc.RequestID); err != nil {
 		s.Fatal("Failed to set the asset policy: ", err)
 	}
 

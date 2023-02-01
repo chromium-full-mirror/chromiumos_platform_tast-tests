@@ -277,6 +277,11 @@ type inputEventsResponse struct {
 	Event []InputEvent `json:"event"`
 }
 
+// Interface for calling methods in tape.client.
+type tapeClient interface {
+	SetPolicy(context.Context, tape.PolicySchema, []string, string) error
+}
+
 // PruneEvents reduces the events response to only memory events after test began.
 func PruneEvents(ctx context.Context, events []InputEvent, correctEventType VerifyEventTypeCallback) ([]InputEvent, error) {
 	var prunedEvents []InputEvent
@@ -350,6 +355,19 @@ func Deprovision(ctx context.Context, cc grpc.ClientConnInterface, serviceAccoun
 
 	if err = tapeClient.Deprovision(ctx, res.DeviceID, customerID); err != nil {
 		return errors.Wrap(err, "failed to deprovision device")
+	}
+	return nil
+}
+
+// DisableUpdatingDeviceAttribute disallows updating device attribute. Can be used to disable Asset
+// ID screen on enrollment.
+func DisableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requestID string) error {
+	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{
+		AllowToUpdateDeviceAttribute: false,
+	}
+
+	if err := client.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, requestID); err != nil {
+		return errors.Wrap(err, "failed to disable the AllowToUpdateDeviceAttribute policy")
 	}
 	return nil
 }
