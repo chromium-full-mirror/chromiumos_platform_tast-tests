@@ -20,7 +20,11 @@ func init() {
 		Func:         Login,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests Chrome Login with different VMs running",
-		Contacts:     []string{"cwd@chromium.org"},
+		Contacts: []string{
+			"arcvm-memory@google.com",
+			"cwd@google.com",
+		},
+		BugComponent: "b:930563",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"chrome"},

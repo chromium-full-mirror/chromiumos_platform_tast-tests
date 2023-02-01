@@ -32,7 +32,11 @@ func init() {
 		Func:         LifecycleShifting,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Create many Apps, Tabs, Processes in turn across multiple VMs, and see how many can stay alive",
-		Contacts:     []string{"cwd@google.com", "cros-platform-kernel-core@google.com"},
+		Contacts: []string{
+			"arcvm-memory@google.com",
+			"cwd@google.com",
+		},
+		BugComponent: "b:930563",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      30 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
