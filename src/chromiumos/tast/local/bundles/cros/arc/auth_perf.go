@@ -41,6 +41,8 @@ type testParam struct {
 	// maxErrorBootCount is the number of maximum allowed boot errors.
 	maxErrorBootCount int
 	chromeArgs        []string
+	// Whether to use io_uring async executor for block devices in crosvm.
+	useIoUringBlock bool
 }
 
 var resultPropRegexp = regexp.MustCompile(`OK,(\d+)`)
@@ -119,6 +121,15 @@ func init() {
 				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
 			},
 		}, {
+			Name:              "unmanaged_iouring_virtio_blk_vm",
+			ExtraSoftwareDeps: []string{"android_vm", "io_uring"},
+			Val: testParam{
+				browserType:       browser.TypeAsh,
+				maxErrorBootCount: 3,
+				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
+				useIoUringBlock:   true,
+			},
+		}, {
 			Name:              "unmanaged_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
@@ -191,6 +202,13 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(testParam)
 	maxErrorBootCount := param.maxErrorBootCount
+
+	if param.useIoUringBlock {
+		if err := arc.WriteArcvmDevConf(ctx, "BLOCK_ASYNC_EXECUTOR=uring\n"); err != nil {
+			s.Fatal("Failed to set arcvm_dev.conf: ", err)
+		}
+		defer arc.RestoreArcvmDevConf(ctx)
+	}
 
 	var gaia chrome.Option
 	if param.username != "" {
