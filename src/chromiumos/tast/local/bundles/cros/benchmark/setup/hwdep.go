@@ -15,6 +15,6 @@ func PublicBenchmarkAllowed() hwdep.Condition {
 		"ampton", "barla", "bluebird", "drawlat", "dirinboz",
 		"eve", "hayato", "kled", "kohaku", "krane", "lazor", "liara",
 		"maple14", "morphius", "nightfury", "pantheon", "pyke",
-		"shyvana", "voxel",
+		"shyvana", "voxel", "steelix", "rusty", "tentacruel", "magneton",
 	)
 }
