@@ -40,6 +40,7 @@ import (
 	_ "chromiumos/tast/remote/bundles/cros/power"
 	_ "chromiumos/tast/remote/bundles/cros/rollback"
 	_ "chromiumos/tast/remote/bundles/cros/sdcard"
+	_ "chromiumos/tast/remote/bundles/cros/secagentd"
 	_ "chromiumos/tast/remote/bundles/cros/security"
 	_ "chromiumos/tast/remote/bundles/cros/shimlessrma"
 	_ "chromiumos/tast/remote/bundles/cros/spera"
