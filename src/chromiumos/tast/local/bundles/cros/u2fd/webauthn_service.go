@@ -245,17 +245,6 @@ func (c *WebauthnService) StartWebauthn(ctx context.Context, req *hwsec.StartWeb
 }
 
 func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *empty.Empty) (*hwsec.WebAuthnCredential, error) {
-	tconn, err := c.cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get test API connection")
-	}
-
-	if !c.cfg.hasDialog {
-		if err := u2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
-			return nil, err
-		}
-	}
-
 	config := u2fd.WebAuthnRegistrationConfig{
 		Uv: uvToString(c.cfg.userVerification),
 	}
@@ -315,7 +304,7 @@ func (c *WebauthnService) DoMakeCredential(ctx context.Context, req *empty.Empty
 	return &empty.Empty{}, nil
 }
 
-func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.StartGetAssertionRequest) (*empty.Empty, error) {
+func (c *WebauthnService) EndMakeCredential(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	tconn, err := c.cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get test API connection")
@@ -327,6 +316,10 @@ func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.Star
 		}
 	}
 
+	return &empty.Empty{}, nil
+}
+
+func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.StartGetAssertionRequest) (*empty.Empty, error) {
 	cred := req.GetCred()
 	if cred == nil {
 		return nil, errors.New("failed to parse WebAuthn credential from request")
@@ -368,6 +361,21 @@ func (c *WebauthnService) DoGetAssertion(ctx context.Context, req *empty.Empty) 
 		}
 	} else {
 		if err := u2fd.WaitForPopup(ctx, tconn); err != nil {
+			return nil, err
+		}
+	}
+
+	return &empty.Empty{}, nil
+}
+
+func (c *WebauthnService) EndGetAssertion(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get test API connection")
+	}
+
+	if !c.cfg.hasDialog {
+		if err := u2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
 			return nil, err
 		}
 	}

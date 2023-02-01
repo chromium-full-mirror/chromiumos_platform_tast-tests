@@ -22,11 +22,15 @@ service WebauthnService {
 
   rpc StartMakeCredential (google.protobuf.Empty) returns (WebAuthnCredential) {}
 
+  rpc EndMakeCredential (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   rpc DoMakeCredential (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc StartGetAssertion (StartGetAssertionRequest) returns (google.protobuf.Empty) {}
 
   rpc DoGetAssertion (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc EndGetAssertion (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc EnterPassword (EnterPasswordRequest) returns (google.protobuf.Empty) {}
 }

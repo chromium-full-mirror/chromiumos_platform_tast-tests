@@ -27,6 +27,12 @@ func WaitUntilPopupGone(ctx context.Context, tconn *chrome.TestConn) error {
 	if err := ui.WaitUntilGone(popupMessageNode)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for power button press prompt gone")
 	}
+	// EnsureGoneFor is needed because the caller might summon the popup more than once.
+	// The purpose of this function is to wait until the ongoing state of previous
+	// operation is ended.
+	if err := ui.EnsureGoneFor(popupMessageNode, 3*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure power button press prompt gone for a while")
+	}
 	return nil
 }
 

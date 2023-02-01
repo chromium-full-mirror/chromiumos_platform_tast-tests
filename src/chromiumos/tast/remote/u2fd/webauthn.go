@@ -61,6 +61,9 @@ func RemoteMakeCredentialInLocalSite(ctx context.Context, client hwsecpb.Webauth
 	if err := authCallback(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to call the auth callback")
 	}
+	if _, err := client.EndMakeCredential(ctx, &empty.Empty{}); err != nil {
+		return nil, errors.Wrap(err, "failed to perform EndMakeCredential")
+	}
 
 	select {
 	case res := <-channel:
@@ -87,6 +90,9 @@ func RemoteGetAssertionInLocalSite(ctx context.Context, client hwsecpb.WebauthnS
 	}
 	if err := authCallback(ctx); err != nil {
 		return errors.Wrap(err, "failed to call the auth callback")
+	}
+	if _, err := client.EndGetAssertion(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to perform EndGetAssertion")
 	}
 
 	select {
