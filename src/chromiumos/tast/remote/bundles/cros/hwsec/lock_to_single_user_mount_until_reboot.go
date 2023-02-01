@@ -242,6 +242,9 @@ func LockToSingleUserMountUntilReboot(ctx context.Context, s *testing.State) {
 		})
 	}
 
+	// Clean up before the test run to make sure we start with a clean slate.
+	cleanupVault(ctx, utility)
+
 	if err := create2VaultsForTesting(ctx, utility, keyInfos1, keyInfos2); err != nil {
 		s.Fatal("Failed to initialize vaults for testing: ", err)
 	}
