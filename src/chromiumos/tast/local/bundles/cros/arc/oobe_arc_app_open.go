@@ -48,6 +48,15 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 		appActivity = ".app.BooksActivity"
 	)
 
+	requeiredPkgNames := []string{
+		"com.google.android.apps.books",
+		"com.google.android.apps.youtube.music.pwa",
+		"com.google.android.apps.photos",
+		"com.google.android.apps.books",
+		"com.google.android.play.games",
+		"com.google.android.videos",
+	}
+
 	username := s.RequiredVar("arc.parentUser")
 	password := s.RequiredVar("arc.parentPassword")
 
@@ -67,8 +76,17 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go through the oobe flow: ", err)
 	}
 
-	if err := oobeutil.CompleteTabletOnboarding(ctx, ui); err != nil {
-		s.Fatal("Failed to test oobe Arc tablet flow: ", err)
+	tabletMode, err := ash.TabletModeEnabled(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to check if tablet mode is enabled: ", err)
+	}
+
+	s.Log("Tablet mode state: ", tabletMode)
+	// Go through the the tablet specific oobe screens.
+	if tabletMode {
+		if err := oobeutil.CompleteTabletOnboarding(ctx, ui); err != nil {
+			s.Fatal("Failed to test oobe Arc tablet flow: ", err)
+		}
 	}
 
 	// Setup ARC.
@@ -91,7 +109,9 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 
 		setupCompleteNotification := uidetection.TextBlock([]string{"Setup", "complete"})
 		if err := uda.WithTimeout(5 * time.Second).WaitUntilExists(setupCompleteNotification)(ctx); err != nil {
-			s.Fatal("Failed waiting for Setup complete notification: ", err)
+			if err := a.WaitForPackages(ctx, requeiredPkgNames); err != nil {
+				s.Fatal("Failed waiting for Setup complete notification after checking installed packages: ", err)
+			}
 		}
 	}
 
