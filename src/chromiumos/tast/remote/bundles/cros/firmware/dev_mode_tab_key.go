@@ -48,6 +48,10 @@ const (
 	returnToSecureMode fwScreenID = 0x310
 )
 
+type noDebugInfoErr struct {
+	*errors.E
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DevModeTabKey,
@@ -144,7 +148,7 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	// Grep texts relevant to firmware screens from
 	// the firmware log file, and verify that they appeared
 	// in the expected sequence.
-	regs := `^(vboot_draw_|vb2ex_display_ui).*screen=0x|VbDisplayDebugInfo`
+	regs := `^(vboot_draw_|vb2ex_display_ui|ui_display).*screen=0x|VbDisplayDebugInfo`
 	cmd := h.DUT.Conn().CommandContext(ctx, "grep", "-E", regs, logPath)
 	stdout, err := cmd.StdoutPipe()
 	scanner := bufio.NewScanner(stdout)
@@ -156,12 +160,27 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set fw screen verification sequence: ", err)
 	}
+	hasDebugInfoData := true
 	for _, targetScreen := range verifyScreenSeq {
 		var found, checkDebugInfoPage bool
 		for scanner.Scan() {
 			screenID, err := getScreenID(scanner.Text(), mainFwScreenID, checkDebugInfoPage)
 			if err != nil {
-				s.Fatal("Failed to get the fw screen id: ", err)
+				if _, ok := err.(*noDebugInfoErr); !ok {
+					s.Fatal("Failed to get the fw screen id: ", err)
+				}
+				// If the debug info page wasn't found in the log file, the debug info
+				// was probably printed in the top-left corner of the dut's screen. When
+				// this is the case, check for the background screen, which would be the
+				// same screen as the one that the dut has just traversed to. In the firmware
+				// log, this screen would get recorded twice.
+				s.Log("While scanning for firmware log: ", err.(*noDebugInfoErr))
+				if screenID != targetScreen {
+					s.Fatal("Unable to find background screen repeating when debug info page absent")
+				}
+				// In cases where debug info data are found floating at the top-left
+				// corner, they are usually not recorded in the firmware log.
+				hasDebugInfoData = false
 			}
 			if checkDebugInfoPage {
 				break
@@ -184,8 +203,10 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	// Verify debug info data. Because the debug info content should be
 	// consistent across all firmware screens. This was only verified once
 	// based on the mainFwScreenId.
-	if err := checkDebugInfo(ctx, h, mainFwScreenID, logPath); err != nil {
-		s.Fatal("Failed to check debug info data: ", err)
+	if hasDebugInfoData {
+		if err := checkDebugInfo(ctx, h, mainFwScreenID, logPath); err != nil {
+			s.Fatal("Failed to check debug info data: ", err)
+		}
 	}
 }
 
@@ -217,18 +238,19 @@ func getScreenID(log string, mainFwScreen fwScreenID, checkDebugInfoPage bool) (
 	if checkDebugInfoPage {
 		// On some DUTs, such as astronaut/coral, debug info is shown in the top left corner.
 		// On some other DUTs, such as jinlon/hatch, pressing <tab> would bring up a separate debug info page.
-		// For the former case, check for the VbDisplayDebugInfo string. For the latter case, verify
-		// vboot_draw_ui at the developer warning screen.
+		// For the former case, return the id of the background firmware screen.
+		// For the latter case, check for the VbDisplayDebugInfo or the screen=0x140 string.
 		if strings.Contains(log, "VbDisplayDebugInfo") ||
-			strings.Contains(log, "screen=0x140") ||
-			((mainFwScreen == developerWarning) && (strings.HasPrefix(log, "vboot_draw_ui:"))) {
+			strings.Contains(log, "screen=0x140") {
 			return debugInfo, nil
 		}
-		return screenID, errors.New("Unable to find the debug info page")
 	}
 	var screenPrefix string
 	if _, err := fmt.Sscanf(log, "%s screen=0x%x", &screenPrefix, &screenID); err != nil {
 		return screenID, errors.Wrap(err, "failed to sscanf the screen prefix and id")
+	}
+	if checkDebugInfoPage {
+		return screenID, &noDebugInfoErr{E: errors.New("did not find the debug info page, returning its background screen id")}
 	}
 	return screenID, nil
 }
@@ -239,12 +261,6 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen fwScre
 	// data is available.
 	output, err := h.DUT.Conn().CommandContext(ctx, "grep", "-m1", "-A20", `HWID:[^\n\r]*`, logPath).Output()
 	if err != nil {
-		// In cases where debug info data are found floating at the top-left
-		// corner, they are usually not recorded in the firmware log. Don't fail on such cases.
-		if mainFwScreen == developerWarning {
-			testing.ContextLog(ctx, "Skip verifying for debug info data found floating at the top-left corner")
-			return nil
-		}
 		return errors.Wrap(err, "failed to capture debug info data")
 	}
 	debugInfo := string(output)
