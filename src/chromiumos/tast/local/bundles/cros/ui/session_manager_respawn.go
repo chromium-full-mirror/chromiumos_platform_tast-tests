@@ -22,8 +22,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that session_manager respawns after exit",
 		Contacts: []string{
-			"chromeos-ui@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+			"hidehiko@chromium.org",
 		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 	})
