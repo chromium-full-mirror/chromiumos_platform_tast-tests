@@ -94,17 +94,17 @@ func init() {
 			Val:     peerconnection.MakeSWTestParams("VP9", 1280, 720),
 			Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		}, {
-			Name:              "vp9_hw_1080p",
+			Name:              "vp9_1080p_hw",
 			Val:               peerconnection.MakeHWTestParams("VP9", 1920, 1080, browser.TypeAsh),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "vp9_hw_dec_1080p",
+			Name:              "vp9_1080p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP9", 1920, 1080),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
-			Name:    "vp9_sw_1080p",
+			Name:    "vp9_1080p_sw",
 			Val:     peerconnection.MakeSWTestParams("VP9", 1920, 1080),
 			Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		}, {
@@ -194,7 +194,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "h264_180p_sw",
+			Name:              "h264_180p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("H264", 320, 180),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
@@ -204,7 +204,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "vp8_180p_sw",
+			Name:              "vp8_180p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP8", 320, 180),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
@@ -214,7 +214,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "vp9_180p_sw",
+			Name:              "vp9_180p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP9", 320, 180),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
@@ -229,7 +229,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name:              "h264_360p_sw",
+			Name:              "h264_360p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("H264", 640, 360),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
@@ -244,7 +244,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name:              "vp8_360p_sw",
+			Name:              "vp8_360p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP8", 640, 360),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
@@ -259,21 +259,21 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name:              "vp9_360p_sw",
+			Name:              "vp9_360p_sw_enc",
 			Val:               peerconnection.MakeSWEncoderTestParams("VP9", 640, 360),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			// VP8 simulcast compositing of two streams, 180p and 360p.
 			// Both 180p and 360p streams are encoded by a software encoder.
-			Name:              "vp8_simulcast_180_sw_360_sw",
+			Name:              "vp8_360p_simulcast_180_sw_360_sw_enc",
 			Val:               peerconnection.MakeSimulcastTestParams("VP8", 640, 360, []bool{false, false}),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			// VP8 simulcast compositing of two streams, 180p and 360p.
 			// 180p is encoded by a software encoder and 360p is encoded by a hardware encoder.
-			Name: "vp8_simulcast_180_sw_360_hw",
+			Name: "vp8_360p_simulcast_180_sw_360_hw_enc",
 			Val:  peerconnection.MakeSimulcastTestParams("VP8", 640, 360, []bool{false, true}),
 			// Run VA-API only because V4L2 API encoders's supported resolution is less than 180p.
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8, "vaapi"},
@@ -281,14 +281,14 @@ func init() {
 		}, {
 			// VP8 simulcast compositing of two streams, 180p and 360p.
 			// Both 180p and 360p streams are encoded by hardware encoders.
-			Name:              "vp8_simulcast_180_hw_360_hw",
+			Name:              "vp8_360p_simulcast_180_hw_360_hw",
 			Val:               peerconnection.MakeSimulcastTestParams("VP8", 640, 360, []bool{true, true}),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			// VP8 simulcast compositing of two streams, 180p, 360p and 720p.
 			// The all streams are encoded by software encoders.
-			Name:              "vp8_simulcast_180_sw_360_sw_720_sw",
+			Name:              "vp8_simulcast_180_sw_360_sw_720_sw_enc",
 			Val:               peerconnection.MakeSimulcastTestParams("VP8", 1280, 720, []bool{false, false, false}),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
@@ -296,7 +296,7 @@ func init() {
 			// VP8 simulcast compositing of two streams, 180p, 360p and 720p.
 			// 180p is encoded by a software encoder and the other two streams
 			// are encoded by hardware encoders.
-			Name: "vp8_simulcast_180_sw_360_hw_720_hw",
+			Name: "vp8_simulcast_180_sw_360_hw_720_hw_enc",
 			Val:  peerconnection.MakeSimulcastTestParams("VP8", 1280, 720, []bool{false, true, true}),
 			// Run VA-API only because V4L2 API encoder's supported resolution is less than 180p.
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8, "vaapi"},
@@ -309,26 +309,25 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "vp9_svc_l2t3_270p_sw",
+			Name:              "vp9_270p_sw_svc_l2t3_key_enc",
 			Val:               peerconnection.MakeHWTestParamsWithSVC("VP9", 480, 270, "L2T3_KEY", false),
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledAndSWEncoding",
 		}, {
-
-			Name:              "vp9_svc_l2t3_270p_hw",
+			Name:              "vp9_270p_hw_svc_l2t3_key",
 			Val:               peerconnection.MakeHWTestParamsWithSVC("VP9", 480, 270, "L2T3_KEY", true),
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
 		}, {
-			Name:              "vp9_svc_l2t3_360p_sw",
+			Name:              "vp9_360p_sw_svc_l2t3_key_enc",
 			Val:               peerconnection.MakeHWTestParamsWithSVC("VP9", 640, 360, "L2T3_KEY", false),
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledAndSWEncoding",
 		}, {
-			Name:              "vp9_svc_l2t3_360p_hw",
+			Name:              "vp9_360p_hw_svc_l2t3_key",
 			Val:               peerconnection.MakeHWTestParamsWithSVC("VP9", 640, 360, "L2T3_KEY", true),
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, caps.HWEncodeVP9},
