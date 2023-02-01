@@ -33,10 +33,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of SafeBrowsingExtendedReportingEnabled policy, checking the correspoding toggle button states (restriction and checked) after setting the policy",
 		Contacts: []string{
-			"laurila@google.com", // Test author. Looking for a new owner.
+			"chrome-counter-abuse-core@google.com",
+			"nparker@google.com", // Policy owner
 		},
+		BugComponent: "b:23766", // Security > Safe Browsing > API
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{},
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
