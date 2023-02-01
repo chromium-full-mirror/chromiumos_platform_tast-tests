@@ -47,7 +47,12 @@ func init() {
 		Func:         NativeBridge,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks whether native bridge is properly set up for ARCVM",
-		Contacts:     []string{"youkichihosoi@chromium.org", "arcvm-eng@google.com"},
+		Contacts: []string{
+			"ndk_translation-eng@google.com",
+			"levarum@google.com",
+		},
+		// Android > Android OS & Apps > Runtime > 119451 > ndk_translation
+		BugComponent: "b:153129",
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
