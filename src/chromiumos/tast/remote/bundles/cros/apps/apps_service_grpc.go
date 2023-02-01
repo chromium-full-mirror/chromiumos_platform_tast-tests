@@ -28,7 +28,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppsServiceGRPC,
 		Desc:         "Check basic functionalities of AppsService",
-		Contacts:     []string{"msta@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"chromeos-engprod-syd@google.com", "msta@google.com"},
+		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Apps
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("betty")),
