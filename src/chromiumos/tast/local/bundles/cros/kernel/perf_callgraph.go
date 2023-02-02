@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:167278",
 		// Call stacks can't currently be unwound on ARM due to the
 		// Thumb and ARM ISAs using different registers for the frame pointer.
-		SoftwareDeps: []string{"amd64"},
+		SoftwareDeps: []string{"no_arm"},
 		Attr:         []string{"group:mainline"},
 	})
 }
