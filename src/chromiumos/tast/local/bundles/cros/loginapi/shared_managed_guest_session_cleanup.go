@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
@@ -37,11 +38,17 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Clean shared MGS on clinician logout (COM_HEALTH_CUJ2_TASK1_WF1).
-			Value: "screenplay-3422ba87-53ab-4a6b-9ee2-135ad7eca0f5",
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceLoginScreenExtensions{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{}, pci.VerifiedFunctionalityJS),
+			{
+				Key: "feature_id",
+				// Clean shared MGS on clinician logout (COM_HEALTH_CUJ2_TASK1_WF1).
+				Value: "screenplay-3422ba87-53ab-4a6b-9ee2-135ad7eca0f5",
+			},
+		},
 	})
 }
 
@@ -67,9 +74,6 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 
 	accountID := "foo@managedchrome.com"
 
-	loginScreenExtensionID := mgs.LoginScreenExtensionID
-	inSessionExtensionID := mgs.InSessionExtensionID
-
 	// ID for Google Keep extension. Note this extension is arbitrarily chosen
 	// and is used to test the
 	// RestrictedManagedGuestSessionExtensionCleanupExemptList policy.
@@ -77,21 +81,21 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	// ID for the Test API extension.
 	testAPIExtensionID := "behllobkkfkfnphdnhnkndlbkcpglgmj"
 
-	mgs, cr, err := mgs.New(
+	m, cr, err := mgs.New(
 		ctx,
 		fdms,
 		mgs.Accounts(accountID),
 		mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
 			&policy.ExtensionInstallForcelist{
-				Val: []string{inSessionExtensionID, googleKeepExtensionID},
+				Val: []string{mgs.InSessionExtensionID, googleKeepExtensionID},
 			},
 			&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{
-				Val: []string{inSessionExtensionID, testAPIExtensionID},
+				Val: []string{mgs.InSessionExtensionID, testAPIExtensionID},
 			},
 		}),
 		mgs.ExtraPolicies([]policy.Policy{
 			&policy.DeviceLoginScreenExtensions{
-				Val: []string{loginScreenExtensionID},
+				Val: []string{mgs.LoginScreenExtensionID},
 			},
 			&policy.DeviceRestrictedManagedGuestSessionEnabled{
 				Val: true,
@@ -102,7 +106,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("Failed to start Chrome on Signin screen with MGS accounts: ", err)
 	}
-	defer mgs.Close(ctx)
+	defer m.Close(ctx)
 
 	sm, err := session.NewSessionManager(ctx)
 	if err != nil {
@@ -115,7 +119,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(ctx)
 
-	loginScreenBGURL := chrome.ExtensionBackgroundPageURL(loginScreenExtensionID)
+	loginScreenBGURL := chrome.ExtensionBackgroundPageURL(mgs.LoginScreenExtensionID)
 	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(loginScreenBGURL))
 	if err != nil {
 		s.Fatal("Failed to connect to login screen background page: ", err)
@@ -143,7 +147,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Timeout before getting SessionStateChanged signal: ", err)
 	}
 
-	inSessionBGURL := chrome.ExtensionBackgroundPageURL(inSessionExtensionID)
+	inSessionBGURL := chrome.ExtensionBackgroundPageURL(mgs.InSessionExtensionID)
 	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(inSessionBGURL))
 	if err != nil {
 		s.Fatal("Failed to connect to in-session background page: ", err)
