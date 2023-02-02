@@ -21,7 +21,7 @@ func init() {
 			"pwang@chromium.org",
 		},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
-		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline", "informational"},
+		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},
 		Fixture:      "gpuWatchDog",
 	})
 }
