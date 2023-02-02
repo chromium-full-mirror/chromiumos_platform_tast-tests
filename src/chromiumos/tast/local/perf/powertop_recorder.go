@@ -28,8 +28,10 @@ type PowertopRecorder struct {
 // NewPowertopRecorder creates a new instance of PowertopRecorder.
 func NewPowertopRecorder(ctx context.Context, interval time.Duration, outDir string) (*PowertopRecorder, error) {
 	// Ensures that the output dir exists.
-	if err := os.Mkdir(outDir, 0755); err != nil {
-		return nil, errors.Wrap(err, "failed to create powertop output directory")
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		if err := os.Mkdir(outDir, 0755); err != nil {
+			return nil, errors.Wrap(err, "failed to create powertop output directory")
+		}
 	}
 
 	// maxTestDurationSeconds is an arbitrary long time that should be longer than
