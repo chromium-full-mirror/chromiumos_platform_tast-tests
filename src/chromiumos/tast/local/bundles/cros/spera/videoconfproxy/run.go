@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
@@ -122,6 +124,26 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 			defer recorder.StopTracing(ctx)
 		}
 
+		videoConn, err := uiHandler.NewChromeTab(ctx, br, p.VideoCallURL, true)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open URL: %s", p.VideoCallURL)
+		}
+		defer func(ctx context.Context) {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return recorderErr != nil }, cr, "ui_dump")
+			cuj.CloseAllTabs(ctx, bTconn, p.BrowserType)
+			videoConn.Close()
+		}(cleanupCtx)
+		if err := webutil.WaitForQuiescence(ctx, videoConn, time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
+		}
+
+		if err := uiauto.Combine("grant page permissions",
+			apps.AllowPagePermissions(tconn),
+			prompts.ClearPotentialPrompts(tconn, 3*time.Second, prompts.AllowAVPermissionPrompt),
+		)(ctx); err != nil {
+			return err
+		}
+
 		docsConn, err := br.NewConn(ctx, cuj.VideoCallDocsURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open docs window")
@@ -131,32 +153,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 			docsConn.CloseTarget(ctx)
 			docsConn.Close()
 		}(cleanupCtx)
-		videoConn, err := uiHandler.NewChromeTab(ctx, br, p.VideoCallURL, true)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open URL: %s", p.VideoCallURL)
-		}
-		defer func(ctx context.Context) {
-			faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return recorderErr != nil }, cr, "ui_dump")
-			videoConn.CloseTarget(ctx)
-			videoConn.Close()
-		}(cleanupCtx)
-		if err := webutil.WaitForQuiescence(ctx, videoConn, time.Minute); err != nil {
-			return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
-		}
 
 		ui := uiauto.New(tconn)
-		bubbleView := nodewith.ClassName("PermissionPromptBubbleView").First()
-		allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(bubbleView)
-		clearPromptBubble := uiauto.IfSuccessThen(ui.WithTimeout(3*time.Second).WaitUntilExists(allowButton),
-			ui.DoDefaultUntil(allowButton, ui.WithTimeout(3*time.Second).WaitUntilGone(allowButton)))
 		editHereField := nodewith.Name("Edit here").Role(role.TextField)
-
-		if err := uiauto.Combine("initial test",
-			clearPromptBubble,
+		if err := uiauto.Combine("initialize window locations",
 			putWindowSideBySide(tconn),
 			uiauto.NamedAction("select text input field", ui.LeftClick(editHereField)),
 		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to initial test")
+			return err
 		}
 
 		if err := videoConfProxyScenario(ctx, tconn, videoConn, kb, pv); err != nil {
