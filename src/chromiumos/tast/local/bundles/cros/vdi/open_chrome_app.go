@@ -109,7 +109,7 @@ func OpenChromeApp(ctx context.Context, s *testing.State) {
 
 		// Use First() as in VMWare mouse hovers over the tab showing its ballon
 		// tip containing "New tab".
-		textBlock := []string{"New", "tab"}
+		textBlock := []string{"New", "Tab"}
 		if err := uidetector.WithTimeout(60 * time.Second).WaitUntilExists(uidetection.TextBlock(textBlock).First())(ctx); err != nil {
 			s.Fatalf("Did not find text block %v confirming %s has started: %v", textBlock, appToOpen, err)
 		}
