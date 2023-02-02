@@ -56,18 +56,18 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Br
 // NewSlide returns an action that creates a new slide, edits its title and content.
 func NewSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title, content, pageNumber string) action.Action {
 	ui := uiauto.New(tconn)
-	newSlide := nodewith.Name("New slide (Ctrl+M)").Role(role.Button)
-	titleNode := nodewith.Name("title").First()
-	pageNumberNode := nodewith.Name(pageNumber).First()
-	textNode := nodewith.Name("text").First()
-	return uiauto.NamedCombine(fmt.Sprintf("to create a new slide with page number %s and edit its content", pageNumber),
+	newSlide := nodewith.Name("New slide (Ctrl+M)").Role(role.Button).Ancestor(slideWebArea)
+	filmstripView := nodewith.Name("Filmstrip view").Role(role.Navigation).Ancestor(slideWebArea)
+	titleNode := nodewith.Name("title").Role(role.StaticText).Ancestor(slideWebArea).First()
+	pageNumberText := nodewith.Name(pageNumber).Role(role.StaticText).Ancestor(filmstripView)
+	textNode := nodewith.Name("text").Role(role.StaticText).Ancestor(slideWebArea).First()
+	return uiauto.NamedCombine(fmt.Sprintf("create a new slide with page number %s and edit its content", pageNumber),
 		ui.WaitUntilExists(newSlide),
-		ui.WithTimeout(longUITimeout).DoDefaultUntil(newSlide, ui.WithTimeout(25*time.Second).WaitUntilExists(pageNumberNode)),
-		ui.WaitUntilExists(titleNode),
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(newSlide,
+			ui.WithTimeout(25*time.Second).WaitUntilExists(pageNumberText)),
 		ui.DoubleClick(titleNode),
 		uiauto.Sleep(time.Second),
 		kb.TypeAction(title),
-		ui.WaitUntilExists(textNode),
 		ui.DoubleClick(textNode),
 		uiauto.Sleep(time.Second),
 		kb.TypeAction(content),
