@@ -324,14 +324,8 @@ func hideAmbientMode(
 
 		// Move the mouse a small amount. Ambient mode should turn off. Session
 		// should still be locked.
-		mouse, err := input.Mouse(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get mouse")
-		}
-		defer mouse.Close()
-
-		if err := mouse.Move(10, 10); err != nil {
-			return errors.Wrap(err, "failed to move mouse")
+		if err := moveMouse(ctx); err != nil {
+			return err
 		}
 
 		// Ambient mode container should not exist.
@@ -345,4 +339,24 @@ func hideAmbientMode(
 
 		return nil
 	}
+}
+
+// moveMouse moves the mouse a small amount. Ambient mode should turn off. Session
+// should still be locked.
+func moveMouse(ctx context.Context) error {
+	mouse, err := input.Mouse(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get mouse")
+	}
+	defer mouse.Close()
+
+	if err := mouse.Move(10, 10); err != nil {
+		return errors.Wrap(err, "failed to move mouse")
+	}
+
+	if err := mouse.Move(-10, -10); err != nil {
+		return errors.Wrap(err, "failed to move mouse")
+	}
+
+	return nil
 }
