@@ -101,7 +101,12 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	isOpened := func(ctx context.Context) error {
-		if err := uidetector.WithTimeout(60 * time.Second).WaitUntilExists(uidetection.CustomIcon(s.DataPath("toolbar_buttons_icon.png")))(ctx); err != nil {
+		recycleBin := uidetection.TextBlock([]string{"Recycle", "Bin"})
+		// Find the Recycle Bin first.
+		if err := uidetector.WithTimeout(60 * time.Second).WaitUntilExists(recycleBin)(ctx); err != nil {
+			return errors.Wrap(err, "failed waiting for the recycle bin to appear")
+		}
+		if err := uidetector.WithTimeout(10 * time.Second).WaitUntilExists(uidetection.CustomIcon(s.DataPath("toolbar_buttons_icon.png")))(ctx); err != nil {
 			return errors.Wrap(err, "failed waiting for the toolbar buttons icon to appear")
 		}
 
@@ -129,7 +134,7 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 	// Invoke opening the run dialog box.
 	if err := ui.RetryUntil(
 		kb.AccelAction(keysToOpenRunDialog),
-		uidetector.WithTimeout(10*time.Second).WaitUntilExists(uidetection.Word("Run").First()),
+		uidetector.WithTimeout(30*time.Second).WaitUntilExists(uidetection.Word("Run").First()),
 	)(ctx); err != nil {
 		s.Error("Failed to invoke opening the run dialog box: ", err)
 	}
