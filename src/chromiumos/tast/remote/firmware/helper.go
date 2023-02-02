@@ -1235,6 +1235,11 @@ func (h *Helper) pressPowerSequenceToOpenCCD(ctx context.Context, openNoTPMWipe 
 		}
 
 		if h.DUT.Connected(ctx) {
+			// Space an esc key between each press on the power button
+			// to clear the power menu, preventing DUT from shutting down.
+			if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+				return errors.Wrap(err, "failed to press the esc key")
+			}
 			return errors.New("DUT still connected")
 		}
 		return nil
