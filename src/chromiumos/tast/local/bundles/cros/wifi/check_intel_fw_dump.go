@@ -26,11 +26,11 @@ func init() {
 		Func: CheckIntelFWDump,
 		Desc: "Verifies that device coredumps are not empty",
 		Contacts: []string{
-			"arowa@chromium.org",              // Test author
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 			"cros-telemetry@google.com",
 		},
-		Attr: []string{"group:mainline", "group:wificell", "wificell_func"},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		// TODO(b:169152720), Remove "no_kernel_upstream" to enable the test to run on
 		// boards with upstream kernel when upstream iwlwifi is able to produce valid
 		// fw dumps.
