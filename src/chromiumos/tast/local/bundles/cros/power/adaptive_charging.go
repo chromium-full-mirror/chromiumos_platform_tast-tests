@@ -25,6 +25,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/mlservice"
+	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/charge"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -112,27 +113,34 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Chrome Test API Connection: ", err)
 	}
 
-	f, err := mlservice.StartFakeAdaptiveChargingMLService(ctx)
-	if err != nil {
-		s.Fatal("Failed to start fake Adaptive Charging ML service: ", err)
-	}
-	defer f.StopService()
-
 	for _, param := range []struct {
 		// the subtest name
 		name string
 		// the callback to run the subtest
-		testFunc adaptiveChargingTestFunc
+		testFunc   adaptiveChargingTestFunc
+		prediction []float64
 	}{
 		{
-			name:     "charge_now",
-			testFunc: testChargeNow,
+			name:       "slowcharging",
+			testFunc:   testSlowCharging,
+			prediction: []float64{0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0},
 		}, {
-			name:     "settings",
-			testFunc: testSettings,
+			name:       "charge_now",
+			testFunc:   testChargeNow,
+			prediction: []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0},
+		}, {
+			name:       "settings",
+			testFunc:   testSettings,
+			prediction: []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0},
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			f, err := mlservice.StartFakeAdaptiveChargingMLService(ctx, param.prediction)
+			if err != nil {
+				s.Fatal("Failed to start fake Adaptive Charging ML service: ", err)
+			}
+			defer f.StopService()
+
 			if err := upstart.RestartJob(ctx, "powerd"); err != nil {
 				s.Fatal("Failed to restart powerd: ", err)
 			}
@@ -144,6 +152,27 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 		})
 	}
+}
+
+// testSlowCharging will verify that slow charging occurs in Adaptive Charging.
+func testSlowCharging(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	// The battery percentage is between 80% and 95%, and the predicted unplug
+	// time is 3 hours away which provides sufficient time for slow charging. We
+	// expect powerd to disable the battery sustain and set a charge current
+	// limit in the EC for slow charging,
+	//
+	// Verify that the battery charge current limit is set for slow charging.
+	if err := pollUntilSlowChargingState(ctx); err != nil {
+		return err
+	}
+
+	// Verify that battery sustain is disabled and Adaptive Charging is not
+	// delaying charge.
+	if err := pollUntilBatterySustainingState(ctx, false); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // testChargeNow will verify that clicking the "Fully Charge Now" button that
@@ -258,6 +287,82 @@ func pollUntilBatterySustainingState(ctx context.Context, sustaining bool) error
 			}
 			return errors.New("Battery sustainer is still on")
 		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second})
+}
+
+// Expression to extract `chg_current` from the output of the `ectool
+// chargestate show` command.
+var chargeCurrentRegex = regexp.MustCompile(`chg_current = ([0-9]+)mA`)
+
+// parseChargeCurrent parses the output of `ectool chargestate show` to return
+// the value of `chg_current` which is the charge current limit set by the EC.
+func parseChargeCurrent(output []byte) (int, error) {
+	chargeCurrentMatch := chargeCurrentRegex.FindSubmatch([]byte(output))
+	if chargeCurrentMatch == nil {
+		return -1, errors.New("no `chg_current` value found")
+	}
+
+	return strconv.Atoi(string(chargeCurrentMatch[1]))
+}
+
+func pollUntilSlowChargingState(ctx context.Context) error {
+	testing.ContextLog(ctx, "Waiting for slow charging to start")
+
+	return testing.Poll(ctx, func(c context.Context) error {
+		out, err := testexec.CommandContext(ctx, "ectool", "chargestate", "show").Output()
+		if err != nil {
+			return errors.Wrap(err, "failed to check charge state")
+		}
+		testing.ContextLogf(ctx, "chargestate: %s", out)
+
+		// Check the current charge limit set by the EC.
+		chargeCurrentLimitMA, err := parseChargeCurrent(out)
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain set charge current limit")
+		}
+
+		status, err := power.GetStatus(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain DUT power status")
+		}
+
+		// Check the actual current being supplied to the battery.
+		actualCurrentMA := status.BatteryCurrent * 1000
+
+		// We expect the charge current limit to be set to 0.1C (i.e. 10% of the
+		// battery design capacity) for slow charging.
+		expectedLimitMA := int(status.BatteryChargeFullDesign * 0.1 * 1000)
+
+		testing.ContextLogf(ctx, "Actual current: %vmA; Current charge limit: %vmA; Expected limit: %vmA", actualCurrentMA, chargeCurrentLimitMA, expectedLimitMA)
+
+		// Check if the charge current limit has been set.
+		//
+		// If `chargeCurrentLimitMA` is 0, it means that the battery is not
+		// actively charging, which indicates that battery sustain is enabled or
+		// the battery is discharging.
+		//
+		// Else, if `chargeCurrentLimitMA` is greater than the expected limit,
+		// the current limit has not been set. The EC will round down the
+		// current limit to the closest supported rate. The exception is a
+		// charger with a minimum current limit above 0.1C, which will set a
+		// higher current limit. We should add exceptions for such devices if we
+		// ever encounter any.
+		//
+		// Otherwise, if the current limit has been set but the actual current
+		// supplied to the battery exceeds the set limit by more than 10% (to
+		// allow for a charger circuit tolerance of 5% and potential 5%
+		// measurement error), this could indicate a failure in the EC or
+		// hardware to ensure the supplied current is limited accordingly.
+		if chargeCurrentLimitMA == 0 {
+			return errors.New("Battery is not charging")
+		} else if chargeCurrentLimitMA > expectedLimitMA {
+			return errors.New("Charge current limit is higher than expected slow charging limit")
+		} else if actualCurrentMA > float64(chargeCurrentLimitMA)*1.1 {
+			return errors.New("Actual charge current supplied to the battery is greater than the limit that has been set by the EC")
+		}
+
+		testing.ContextLog(ctx, "Charge current limit has now been set")
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second})
 }
