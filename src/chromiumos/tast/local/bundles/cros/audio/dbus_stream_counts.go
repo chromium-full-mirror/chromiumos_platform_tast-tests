@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -23,8 +24,12 @@ func init() {
 			"chromeos-audio-bugs@google.com",
 			"aaronyu@google.com",
 		},
+		HardwareDeps: hwdep.D(
+			// TODO(b/267614582): Fix platform specific failure.
+			hwdep.SkipOnPlatform("corsola"),
+		),
 		BugComponent: "b:875484",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
