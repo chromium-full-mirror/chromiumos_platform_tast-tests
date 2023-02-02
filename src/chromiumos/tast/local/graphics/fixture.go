@@ -87,6 +87,22 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeGraphicsHDR",
+		Desc:     "Logged into a user session for graphics testing for HDR buffers",
+		Contacts: []string{"chromeos-gfx-compositor@google.com", "mrfemi@google.com"},
+		Parent:   "gpuWatchDog",
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.EnableFeatures("UseHDRTransferFunction"),
+				chrome.EnableFeatures("LacrosColorManagement"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeGraphicsLacros",
 		Desc:     "Logged into a user session for graphics testing (lacros)",
 		Contacts: []string{"lacros-team@google.com"},
