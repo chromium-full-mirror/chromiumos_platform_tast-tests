@@ -14,8 +14,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/audio"
+	"chromiumos/tast/local/audio/audionode"
 	"chromiumos/tast/local/audio/crastestclient"
-	"chromiumos/tast/local/bundles/cros/audio/audionode"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"

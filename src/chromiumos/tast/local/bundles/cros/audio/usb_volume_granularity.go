@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
-	"chromiumos/tast/local/bundles/cros/audio/audionode"
+	"chromiumos/tast/local/audio/audionode"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
