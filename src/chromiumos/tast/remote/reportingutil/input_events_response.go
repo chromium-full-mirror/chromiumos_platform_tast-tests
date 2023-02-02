@@ -1,0 +1,237 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package reportingutil
+
+// InputEventsResponse represents the response from Reporting API. It
+// consists of a list of InputEvent json objects.
+type InputEventsResponse struct {
+	Event []InputEvent `json:"event"`
+}
+
+// InputEvent is the model for the response from Reporting API. Add to this
+// when you want to query for new fields.
+type InputEvent struct {
+	APIEvent *struct {
+		ReportingRecordEvent *struct {
+			Destination string `json:"destination"`
+			Time        string `json:"timestampUs"`
+		} `json:"reportingRecordEvent"`
+	} `json:"apiEvent"`
+	ObfuscatedCustomerID string                `json:"obfuscatedCustomerID"`
+	ObfuscatedGaiaID     string                `json:"obfuscatedGaiaID"`
+	ClientID             string                `json:"clientId"`
+	WrappedEncryptedData *WrappedEncryptedData `json:"wrappedEncryptedData"`
+}
+
+// WrappedEncryptedData mirrors the wrappedEncryptedData JSON field.
+type WrappedEncryptedData struct {
+	MetricData         *MetricData         `json:"metricData"`
+	DlpPolicyEvent     *DlpPolicyEvent     `json:"dlpPolicyEvent"`
+	LockUnlockEvent    *LockUnlockEvent    `json:"lockUnlockEvent"`
+	LoginLogoutEvent   *LoginLogoutEvent   `json:"loginLogoutEvent"`
+	AddRemoveUserEvent *AddRemoveUserEvent `json:"addRemoveUserEvent"`
+}
+
+// DlpPolicyEvent mirrors the dlpPolicyEvent JSON field.
+type DlpPolicyEvent struct {
+	Restriction string `json:"restriction"`
+	Mode        string `json:"mode"`
+}
+
+// LockUnlockEvent mirrors the lockUnlockEvent JSON field.
+type LockUnlockEvent struct {
+	Time           string          `json:"eventTimestampSec"`
+	AffiliatedUser *AffiliatedUser `json:"affiliatedUser"`
+	LockEvent      *LockEvent      `json:"lockEvent"`
+	UnlockEvent    *UnlockEvent    `json:"unlockEvent"`
+}
+
+// LoginLogoutEvent mirrors the loginLogoutEvent JSON field.
+type LoginLogoutEvent struct {
+	Time           string          `json:"eventTimestampSec"`
+	AffiliatedUser *AffiliatedUser `json:"affiliatedUser"`
+	LoginEvent     *LoginEvent     `json:"loginEvent"`
+	LogoutEvent    *LogoutEvent    `json:"logoutEvent"`
+	SessionType    string          `json:"sessionType"`
+}
+
+// AddRemoveUserEvent mirrors the addRemoveUserEvent JSON field.
+type AddRemoveUserEvent struct {
+	Time             string            `json:"timestampMs"`
+	AffiliatedUser   *AffiliatedUser   `json:"affiliatedUser"`
+	UserAddedEvent   *UserAddedEvent   `json:"userAddedEvent"`
+	UserRemovedEvent *UserRemovedEvent `json:"userRemovedEvent"`
+}
+
+// AffiliatedUser mirrors the affiliatedUser JSON field.
+type AffiliatedUser struct {
+	UserEmail string `json:"userEmail"`
+}
+
+// LockEvent mirrors the lockEvent JSON field.
+type LockEvent struct{}
+
+// UnlockEvent mirrors the unlockEvent JSON field.
+type UnlockEvent struct {
+	Success    bool   `json:"success"`
+	UnlockType string `json:"unlockType"`
+}
+
+// UserAddedEvent mirrors the userAddedEvent JSON field.
+type UserAddedEvent struct{}
+
+// UserRemovedEvent mirrors the userRemovedEvent JSON field.
+type UserRemovedEvent struct {
+	Reason string `json:"reason"`
+}
+
+// LoginEvent mirrors the loginEvent JSON field.
+type LoginEvent struct{}
+
+// LogoutEvent mirrors the logoutEvent JSON field.
+type LogoutEvent struct{}
+
+// MetricData mirrors the metricData JSON field.
+type MetricData struct {
+	Time          string         `json:"timestampMs"`
+	InfoData      *InfoData      `json:"infoData"`
+	TelemetryData *TelemetryData `json:"telemetryData"`
+}
+
+// InfoData mirrors the infoData JSON field.
+type InfoData struct {
+	MemoryInfo        *MemoryInfo        `json:"memoryInfo"`
+	NetworkInfo       *NetworkInfo       `json:"networksInfo"`
+	CPUInfo           *CPUInfo           `json:"cpuInfo"`
+	DisplayInfo       *DisplayInfo       `json:"displayInfo"`
+	PrivacyScreenInfo *PrivacyScreenInfo `json:"privacyScreenInfo"`
+	TouchScreenInfo   *TouchScreenInfo   `json:"touchScreenInfo"`
+}
+
+// TelemetryData mirrors the telemetryData JSON field.
+type TelemetryData struct {
+	AudioTelemetry       *AudioTelemetry       `json:"audioTelemetry"`
+	NetworkTelemetry     *NetworkTelemetry     `json:"networksTelemetry"`
+	PeripheralsTelemetry *PeripheralsTelemetry `json:"peripheralsTelemetry"`
+	DisplaysTelemetry    *DisplaysTelemetry    `json:"displaysTelemetry"`
+}
+
+// MemoryInfo mirrors the memoryInfo JSON field.
+type MemoryInfo struct {
+	TMEInfo *TMEInfo `json:"tmeInfo"`
+}
+
+// TMEInfo mirrors the TMEInfo JSON field.
+type TMEInfo struct {
+	MemoryEncryptionState     string `json:"encryptionState"`
+	MaxKeys                   string `json:"maxKeys"`
+	KeyLength                 string `json:"keyLength"`
+	MemoryEncryptionAlgorithm string `json:"encryptionAlgorithm"`
+}
+
+// NetworkInfo represents a list of NetworkInterfaces.
+type NetworkInfo struct {
+	NetworkInterfaces []NetworkInterfaces `json:"networkInterfaces"`
+}
+
+// NetworkInterfaces mirrors the networkInterfaces JSON field.
+type NetworkInterfaces struct {
+	Type       string `json:"type"`
+	MacAddress string `json:"macAddress"`
+	DevicePath string `json:"devicePath"`
+}
+
+// CPUInfo mirrors the CPUInfo JSON field.
+type CPUInfo struct {
+	KeyLockerInfo *KeyLockerInfo `json:"keyLockerInfo"`
+}
+
+// KeyLockerInfo mirrors the KeyLockerInfo JSON field.
+type KeyLockerInfo struct {
+	Supported  bool `json:"supported"`
+	Configured bool `json:"configured"`
+}
+
+// DisplayInfo lists the displayDevice JSON field.
+type DisplayInfo struct {
+	DisplayDevice []DisplayDevice `json:"displayDevice"`
+}
+
+// DisplayDevice mirrors the displayDevice json field.
+type DisplayDevice struct {
+	DisplayName     string `json:"displayName"`
+	DisplayWidth    int32  `json:"displayWidth"`
+	DisplayHeight   int32  `json:"displayHeight"`
+	IsInternal      bool   `json:"isInternal"`
+	Manufacturer    string `json:"manufacturer"`
+	ModelID         int32  `json:"modelId"`
+	ManufactureYear int32  `json:"manufactureYear"`
+}
+
+// TouchScreenInfo mirrors the touchScreenInfo JSON field.
+type TouchScreenInfo struct {
+	LibraryName        string               `json:"libraryName"`
+	TouchScreenDevices []TouchScreenDevices `json:"touchScreenDevices"`
+}
+
+// TouchScreenDevices mirrors the touchScreenDevices JSON field.
+type TouchScreenDevices struct {
+	DisplayName string `json:"displayName"`
+	TouchPoints int    `json:"touchPoints"`
+	HasStylus   bool   `json:"hasStylus"`
+}
+
+// PrivacyScreenInfo mirrors the privacyScreenInfo field.
+type PrivacyScreenInfo struct {
+	Supported bool `json:"supported"`
+}
+
+// AudioTelemetry mirrors the audioTelemetry JSON field.
+type AudioTelemetry struct {
+	OutputMute       bool   `json:"outputMute"`
+	InputMute        bool   `json:"inputMute"`
+	OutputVolume     int32  `json:"outputVolume"`
+	OutputDeviceName string `json:"outputDeviceName"`
+	InputGain        int32  `json:"inputGain"`
+	InputDeviceName  string `json:"inputDeviceName"`
+}
+
+// NetworkTelemetry mirrors the audioTelemetry JSON field.
+type NetworkTelemetry struct {
+	BandwidthData *BandwidthData `json:"bandwidthData"`
+}
+
+// BandwidthData mirrors the bandwidthData JSON field.
+type BandwidthData struct {
+	DownloadSpeedKbps string `json:"downloadSpeedKbps"`
+}
+
+// PeripheralsTelemetry mirrors the peripheralsTelemetry JSON field.
+type PeripheralsTelemetry struct {
+	UsbTelemetry *UsbTelemetry `json:"usbTelemetry"`
+}
+
+// UsbTelemetry mirrors the usbTelemetry JSON field.
+type UsbTelemetry struct {
+	Vendor     string `json:"vendor"`
+	Name       string `json:"name"`
+	Vid        int32  `json:"vid"`
+	Pid        int32  `json:"pid"`
+	ClassID    int32  `json:"classId"`
+	SubclassDd int32  `json:"subclassId"`
+}
+
+// DisplaysTelemetry mirrors the displaysTelemetry JSON field.
+type DisplaysTelemetry struct {
+	DisplayStatus []DisplayStatus `json:"displayStatus"`
+}
+
+// DisplayStatus mirrors the displayStatus JSON field.
+type DisplayStatus struct {
+	DisplayName          string `json:"displayName"`
+	ResolutionVertical   int32  `json:"resolutionVertical"`
+	ResolutionHorizontal int32  `json:"resolutionHorizontal"`
+	RefreshRate          string `json:"refreshRate"`
+}
