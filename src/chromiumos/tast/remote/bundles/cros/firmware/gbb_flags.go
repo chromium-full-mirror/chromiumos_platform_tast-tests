@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	common "chromiumos/tast/common/firmware"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/firmware"
@@ -41,13 +39,8 @@ func GBBFlags(ctx context.Context, s *testing.State) {
 			s.Fatal("Closing helper: ", err)
 		}
 	}()
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
 
-	bs := h.BiosServiceClient
-
-	old, err := bs.GetGBBFlags(ctx, &empty.Empty{})
+	old, err := common.GetGBBFlags(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("initial GetGBBFlags failed: ", err)
 	}
@@ -55,7 +48,7 @@ func GBBFlags(ctx context.Context, s *testing.State) {
 
 	req := &pb.GBBFlagsState{Set: common.GBBToggle(old.Set, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY), Clear: common.GBBToggle(old.Clear, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)}
 
-	if _, err = bs.ClearAndSetGBBFlags(ctx, req); err != nil {
+	if err = common.ClearAndSetGBBFlags(ctx, s.DUT(), req); err != nil {
 		s.Fatal("initial ClearAndSetGBBFlags failed: ", err)
 	}
 	ctxForCleanup := ctx
@@ -65,7 +58,7 @@ func GBBFlags(ctx context.Context, s *testing.State) {
 
 	checker := checkers.New(h)
 	defer func(ctx context.Context) {
-		if _, err := bs.ClearAndSetGBBFlags(ctx, old); err != nil {
+		if err := common.ClearAndSetGBBFlags(ctx, s.DUT(), old); err != nil {
 			s.Fatal("ClearAndSetGBBFlags to restore original values failed: ", err)
 		}
 

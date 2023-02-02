@@ -16,8 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
@@ -456,7 +454,7 @@ func EnableSoftwareSync(ctx context.Context, h *firmware.Helper, syncBackup bool
 	}
 
 	testing.ContextLog(ctx, "Get intial GBB flags")
-	old, err := h.BiosServiceClient.GetGBBFlags(ctx, &empty.Empty{})
+	old, err := fwCommon.GetGBBFlags(ctx, h.DUT)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get initial GetGBBFlags")
 	}
@@ -476,7 +474,7 @@ func EnableSoftwareSync(ctx context.Context, h *firmware.Helper, syncBackup bool
 		testing.ContextLog(ctx, "Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
 		req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 
-		if _, err := h.BiosServiceClient.ClearAndSetGBBFlags(ctx, &req); err != nil {
+		if err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req); err != nil {
 			return nil, errors.Wrap(err, "failed to clear gbb flag")
 		}
 	}

@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
@@ -65,7 +66,6 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
-	bs := h.BiosServiceClient
 
 	s.Log("Backing up current EC_RW region for safety")
 	ecPath, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{
@@ -124,7 +124,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 
 	s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
 	clear := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if _, err := bs.ClearAndSetGBBFlags(ctx, &clear); err != nil {
+	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &clear); err != nil {
 		s.Fatal("Failed to clear GBB flag: ", err)
 	}
 
@@ -164,7 +164,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 
 	s.Log("Setting GBB flag DISABLE_EC_SOFTWARE_SYNC")
 	set := pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if _, err := bs.ClearAndSetGBBFlags(ctx, &set); err != nil {
+	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &set); err != nil {
 		s.Fatal("Failed to clear GBB flag: ", err)
 	}
 

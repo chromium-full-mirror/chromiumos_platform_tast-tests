@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
@@ -27,7 +28,6 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
@@ -64,13 +64,10 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 		if err := h.WaitConnect(ctx); err != nil {
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to connect to the bios service on the DUT: ", err)
-		}
 
 		s.Log("Clear GBBFlag_DISABLE_LID_SHUTDOWN flag after test end")
 		flags := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_LID_SHUTDOWN}, Set: []pb.GBBFlag{}}
-		if _, err := h.BiosServiceClient.ClearAndSetGBBFlags(ctx, &flags); err != nil {
+		if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &flags); err != nil {
 			s.Fatal("Failed to clear GBBFlag_DISABLE_LID_SHUTDOWN flag after test end: ", err)
 		}
 	}()
@@ -99,9 +96,6 @@ func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (r
 	if err := h.WaitConnect(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the bios service on the DUT")
-	}
 
 	flags := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_LID_SHUTDOWN}, Set: []pb.GBBFlag{}}
 	flagState := "clearing"
@@ -110,7 +104,7 @@ func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (r
 		flagState = "setting"
 	}
 	testing.ContextLogf(ctx, "%s GBBFlag_DISABLE_LID_SHUTDOWN flag", flagState)
-	if _, err := h.BiosServiceClient.ClearAndSetGBBFlags(ctx, &flags); err != nil {
+	if err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags); err != nil {
 		return errors.Wrapf(err, "failed %s GBBFlag_DISABLE_LID_SHUTDOWN flag", flagState)
 	}
 
