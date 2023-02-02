@@ -36,10 +36,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks video playback functionalities after reloading webpage",
 		Contacts: []string{
-			"lance.wang@cienet.com",
-			"cienet-development@googlegroups.com",
+			"croste-av@google.com",
+			"chromeos-gfx-video@google.com",
 			"chromeos-sw-engprod@google.com",
+			"cienet-development@googlegroups.com",
 		},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{mp4URL, webmURL},
