@@ -17,10 +17,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Limits,
-		Desc:     "Checks kernel limits and settings in /proc",
-		Contacts: []string{"chromeos-kernel-test@google.com"},
-		Attr:     []string{"group:mainline"},
+		Func: Limits,
+		Desc: "Checks kernel limits and settings in /proc",
+		Contacts: []string{
+			"chromeos-kernel-test@google.com",
+			"briannorris@chromium.org",
+		},
+		BugComponent: "b:167278", // ChromeOS > Platform > System > Kernel
+		Attr:         []string{"group:mainline"},
 	})
 }
 

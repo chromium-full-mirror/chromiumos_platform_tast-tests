@@ -19,16 +19,17 @@ func init() {
 		Func: HighResTimers,
 		Desc: "Fails if timers have nanosecond resolution that is not 1 ns",
 		Contacts: []string{
-			"tbroch@chromium.org",
 			"chromeos-kernel-test@google.com",
-			"kathrelkeld@chromium.org", // Tast port author
+			"briannorris@chromium.org",
 		},
-		Attr: []string{"group:mainline"},
+		BugComponent: "b:167278", // ChromeOS > Platform > System > Kernel
+		Attr:         []string{"group:mainline"},
 	})
 }
 
 // HighResTimers reads from /proc/timer_list to verify that any resolution
-// listed in nsecs has a value of 1.
+// listed in nsecs has a value of 1. This is intended to catch issues with our
+// ability to switch to high-resolution timers within the kernel.
 func HighResTimers(ctx context.Context, s *testing.State) {
 	re := regexp.MustCompile(`^\s*\.resolution:\s(\d+)\s*nsecs$`)
 
