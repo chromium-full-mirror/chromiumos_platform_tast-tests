@@ -243,7 +243,7 @@ func (v *mgsFixtureState) SetUp(ctx context.Context, s *testing.FixtState) inter
 func (v *mgsFixtureState) TearDown(ctx context.Context, s *testing.FixtState) {
 	// Use a shortened context to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	if v.useTape {

@@ -236,7 +236,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 func (v *kioskFixtureState) TearDown(ctx context.Context, s *testing.FixtState) {
 	// Use a shortened context to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	if v.useTape {
