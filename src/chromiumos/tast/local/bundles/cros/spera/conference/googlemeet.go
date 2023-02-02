@@ -127,7 +127,7 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) error {
 				shortUITimeout,
 				prompts.ShowNotificationsPrompt,
 				prompts.AllowAVPermissionPrompt),
-			allowPagePermissions(tconn))(ctx)
+			apps.AllowPagePermissions(tconn))(ctx)
 	}
 
 	switchWindow := func(ctx context.Context) error {
