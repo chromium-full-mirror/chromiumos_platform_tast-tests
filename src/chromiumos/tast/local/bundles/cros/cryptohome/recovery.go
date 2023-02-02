@@ -12,6 +12,7 @@ import (
 	cryptohomecommon "chromiumos/tast/common/cryptohome"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
@@ -29,7 +30,7 @@ func init() {
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "informational"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
-		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
+		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",
 		Params: []testing.Param{
 			{
@@ -49,7 +50,11 @@ func Recovery(ctx context.Context, s *testing.State) {
 	const (
 		userName             = "foo@bar.baz"
 		userPassword         = "secret"
+		userNewPassword      = "don't-forget-this-one"
 		passwordLabel        = "online-password"
+		userPin              = "123456"
+		userNewPin           = "654321"
+		pinLabel             = "pin"
 		recoveryLabel        = "test-recovery"
 		recoveryUserGaiaID   = "123456789"
 		recoveryDeviceUserID = "123-456-AA-BB"
@@ -70,30 +75,7 @@ func Recovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Create and mount the persistent user.
-	_, authSessionID, err := client.StartAuthSession(ctx, userName /*ephemeral=*/, false, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		s.Fatal("Failed to start auth session: ", err)
-	}
-	if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
-		s.Fatal("Failed to create persistent user: ", err)
-	}
-	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
-	if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
-		s.Fatal("Failed to prepare new persistent vault: ", err)
-	}
-	defer client.UnmountAll(ctxForCleanUp)
-
-	// Add a password auth factor to the user.
-	if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-		s.Fatal("Failed to add a password authfactor: ", err)
-	}
-
-	// Write a test file to verify persistence.
-	if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
-		s.Fatal("Failed to write test file: ", err)
-	}
-
+	// Setup the recovery test tool and fakes.
 	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
@@ -109,57 +91,159 @@ func Recovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get mediator pub key: ", err)
 	}
 
-	// Add a recovery auth factor to the user.
-	if err := client.AddRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, mediatorPubKey, recoveryUserGaiaID, recoveryDeviceUserID); err != nil {
-		s.Fatal("Failed to add a recovery auth factor: ", err)
-	}
+	// Create and mount the persistent user.
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Set up the user with a password and PIN auth factor.
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+		if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+			return errors.Wrap(err, "failed to add a password authfactor")
+		}
+		if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
+			return errors.Wrap(err, "failed to add a pin authfactor")
+		}
 
-	// Unmount the user.
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for re-mounting: ", err)
+		// Write a test file to verify persistence.
+		if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to write test file")
+		}
+
+		// Add a recovery auth factor to the user.
+		if err := client.AddRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, mediatorPubKey, recoveryUserGaiaID, recoveryDeviceUserID); err != nil {
+			return errors.Wrap(err, "failed to add a recovery auth factor")
+		}
+
+		// Unmount the user.
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
+
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to create and set up the user: ", err)
 	}
+	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
 	// Authenticate a new auth session via the new added recovery auth factor and mount the user.
-	_, authSessionID, err = client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		s.Fatal("Failed to start auth session for re-mounting: ", err)
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		epoch, err := testTool.FetchFakeEpochResponseHex(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get fake epoch response")
+		}
+
+		requestHex, err := client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
+		if err != nil {
+			return errors.Wrap(err, "failed to get recovery request")
+		}
+
+		response, err := testTool.FakeMediateWithRequest(ctx, requestHex)
+		if err != nil {
+			return errors.Wrap(err, "failed to mediate")
+		}
+
+		// Authenticate using recovery.
+		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response); err != nil {
+			return errors.Wrap(err, "failed to authenticate recovery auth factor")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare persistent vault")
+		}
+
+		// Verify that the test file is still there.
+		if err := cryptohome.VerifyFileForPersistence(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to verify file persistence")
+		}
+
+		// Update the password and pin auth factors.
+		if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel, passwordLabel, userNewPassword); err != nil {
+			return errors.Wrap(err, "failed to update user password after recovery")
+		}
+		if err := client.UpdatePinAuthFactor(ctx, authSessionID, pinLabel, userNewPin); err != nil {
+			return errors.Wrap(err, "failed to update user PIN after recovery")
+		}
+
+		// Remove the recovery auth factor.
+		if err := client.RemoveAuthFactor(ctx, authSessionID, recoveryLabel); err != nil {
+			return errors.Wrap(err, "failed to remove recovery auth factor")
+		}
+
+		// Unmount the user.
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
+
+		// Re-authentication via recovery should fail now should fail now.
+		err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response)
+		if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_KEY_NOT_FOUND); err != nil {
+			return errors.Wrap(err, "failed to get the correct error code after auth factor removal")
+		}
+
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to recover the user: ", err)
 	}
 
-	epoch, err := testTool.FetchFakeEpochResponseHex(ctx)
-	if err != nil {
-		s.Fatal("Failed to get fake epoch response: ", err)
+	// Authenticate a new auth session via their updated password.
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Authenticating with the old password should fail.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err == nil {
+			return errors.New("was incorrectly able to authenticate with the old password after changing it during recovery")
+		}
+
+		// Authenticate using the changed password.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userNewPassword); err != nil {
+			return errors.Wrap(err, "failed to authenticate password auth factor")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare persistent vault")
+		}
+
+		// Verify that the test file is still there.
+		if err := cryptohome.VerifyFileForPersistence(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to verify file persistence")
+		}
+
+		// Unmount the user.
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
+
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to authenticate the user with their new password after recovery: ", err)
 	}
 
-	requestHex, err := client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
-	if err != nil {
-		s.Fatal("Failed to get recovery request: ", err)
-	}
+	// Authenticate a new auth session via their updated PIN.
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Authenticating with the old PIN should fail
+		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userPin); err == nil {
+			return errors.New("was incorrectly able to authenticate with the old PIN after changing it during recovery")
+		}
 
-	response, err := testTool.FakeMediateWithRequest(ctx, requestHex)
-	if err != nil {
-		s.Fatal("Failed to mediate: ", err)
-	}
+		// Authenticate using the changed PIN.
+		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, userNewPin); err != nil {
+			return errors.Wrap(err, "failed to authenticate PIN auth factor")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare persistent vault")
+		}
 
-	if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response); err != nil {
-		s.Fatal("Failed to authenticate recovery auth factor: ", err)
-	}
-	if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-		s.Fatal("Failed to prepare persistent vault: ", err)
-	}
+		// Verify that the test file is still there.
+		if err := cryptohome.VerifyFileForPersistence(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to verify file persistence")
+		}
 
-	// Verify that the test file is still there.
-	if err := cryptohome.VerifyFileForPersistence(ctx, userName); err != nil {
-		s.Fatal("Failed to verify file persistence: ", err)
-	}
+		// Unmount the user.
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
 
-	// Remove the recovery auth factor.
-	if err := client.RemoveAuthFactor(ctx, authSessionID, recoveryLabel); err != nil {
-		s.Fatal("Failed to remove recovery auth factor: ", err)
-	}
-
-	// Authentication should fail now.
-	err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response)
-	if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_KEY_NOT_FOUND); err != nil {
-		s.Fatal("Failed to get the correct error code for auth factor removal: ", err)
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to authenticate the user with their new PIN after recovery: ", err)
 	}
 }
