@@ -159,7 +159,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 				for _, dec := range decs {
 					params = append(params,
 						genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-							resolution, fps, dec, "", "", []string{}))
+							resolution, fps, dec, "", "", nil))
 				}
 			}
 		}
@@ -211,7 +211,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 		for _, fps := range fpss {
 			params = append(params,
 				genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
-					resolution, fps, "hw", "oopvd", "chromeVideoOOPVD", []string{}))
+					resolution, fps, "hw", "oopvd", "chromeVideoOOPVD", nil))
 		}
 	}
 
@@ -233,7 +233,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		resolution, fps, dec := 720, 30, "hw"
 		param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-			resolution, fps, dec, "3x3", "", []string{})
+			resolution, fps, dec, "3x3", "", nil)
 		param.GridWidth = 3
 		param.GridHeight = 3
 		params = append(params, param)
@@ -293,7 +293,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 					}
 					param := genPlaybackParam(codec,
 						genPlaybackPerfDataPath(codec, resolution, fps),
-						resolution, fps, dec, testNameSuffix, fixtureName, []string{"thread_safe_libva_backend"})
+						resolution, fps, dec, testNameSuffix, fixtureName, nil)
 					param.GridWidth = gridW
 					param.GridHeight = gridH
 					param.PerfTracing = true
