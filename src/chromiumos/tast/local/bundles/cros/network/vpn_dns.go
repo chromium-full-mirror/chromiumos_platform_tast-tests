@@ -116,8 +116,11 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to ping server overlay %s: %v", conn.Server.OverlayIPv4, err)
 	}
 
-	// Verify that user and system traffic are using correct DNS correspondingly
-	if err := verifyDNS(ctx, "chronos", privateDomain, true, privateDomainAddr); err != nil {
+	// Verify that user and system traffic are using correct DNS correspondingly.
+	// The first verification is relaxed with a timeout for dnsproxy to finish initialization.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return verifyDNS(ctx, "chronos", privateDomain, true, privateDomainAddr)
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		s.Error("DNS verification failure: ", err)
 	}
 	if err := verifyDNS(ctx, "root", privateDomain, false, ""); err != nil {
@@ -137,7 +140,7 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 //	expectResolvable == true, len(expectedIP) != 0: wanted resolvable into expectedIP
 //	expectResolvable == true, len(expectedIP) == 0: wanted resolvable (into any IP)
 func verifyDNS(ctx context.Context, user, domain string, expectResolvable bool, expectedIP string) error {
-	out, err := testexec.CommandContext(ctx, "sudo", "-u", user, "/usr/local/bin/dig", "+short", domain).Output()
+	out, err := testexec.CommandContext(ctx, "sudo", "-u", user, "/usr/local/bin/dig", "+short", domain, "+tries=2", "+timeout=2").Output()
 	if err != nil {
 		return errors.Wrapf(err, "running dig %s as user %s failed:", domain, user)
 	}
