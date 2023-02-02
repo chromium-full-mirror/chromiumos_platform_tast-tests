@@ -189,9 +189,8 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	// telemetry is reported every few hours if not using the
 	// "EnableTelemetryTestingRates" feature enabled above which reports it
 	// in 4-5 minutes.
-	testing.ContextLog(ctx, "Waiting for 5 min to check for reported telemetry")
-	if err = testing.Sleep(ctx, 5*time.Minute); err != nil {
-		s.Fatal("Failed to sleep: ", err)
+	if err := reportingutil.SleepWithContextLog(ctx, 5); err != nil {
+		s.Fatal("Failed to sleep and log into context: ", err)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

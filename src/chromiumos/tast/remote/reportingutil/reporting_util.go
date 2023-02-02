@@ -371,3 +371,13 @@ func DisableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requ
 	}
 	return nil
 }
+
+// SleepWithContextLog sleeps for the given number of minutes and log it to the context.
+func SleepWithContextLog(ctx context.Context, minutes int) error {
+	testing.ContextLog(ctx,
+		fmt.Sprintf("Waiting for %d minutes to check for reported telemetry", minutes))
+	if err := testing.Sleep(ctx, time.Duration(minutes) * time.Minute); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+	return nil
+}
