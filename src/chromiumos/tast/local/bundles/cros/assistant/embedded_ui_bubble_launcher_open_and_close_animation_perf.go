@@ -23,7 +23,8 @@ func init() {
 		Func:         EmbeddedUIBubbleLauncherOpenAndCloseAnimationPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the smoothness of the bubble launcher embedded UI open and close animation",
-		Contacts:     []string{"xiaohuic@chromium.org", "assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantClamshellPerf",

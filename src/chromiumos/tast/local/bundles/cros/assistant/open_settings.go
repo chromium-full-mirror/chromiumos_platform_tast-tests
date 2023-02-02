@@ -21,11 +21,8 @@ func init() {
 		Func:         OpenSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests opening the Settings app using an Assistant query",
-		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"meilinw@chromium.org",
-			"assistive-eng@google.com",
-		},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{

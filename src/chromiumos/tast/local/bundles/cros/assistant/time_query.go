@@ -24,7 +24,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant time query response",
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Contacts:     []string{"meilinw@chromium.org", "xiaohuic@chromium.org", "assistive-eng@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{

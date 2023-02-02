@@ -20,7 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that assistant focuses Android app if both web and Android versions are open",
 		Attr:         []string{"group:mainline", "informational"},
-		Contacts:     []string{"yawano@google.com", "assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,

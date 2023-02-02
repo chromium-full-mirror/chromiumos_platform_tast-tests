@@ -22,7 +22,8 @@ func init() {
 		Func:         VolumeQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests setting and increasing volume actions via Assistant",
-		Contacts:     []string{"meilinw@chromium.org", "xiaohuic@chromium.org", "assistive-eng@google.com", "chromeos-sw-engprod@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),

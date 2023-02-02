@@ -24,7 +24,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that Assistant Audio Decoder service starts on demand",
 		Attr:         []string{"group:mainline", "informational"},
-		Contacts:     []string{"yawano@google.com", "assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithStartAudioDecoderOnDemand",
 		Timeout:      5 * time.Minute,

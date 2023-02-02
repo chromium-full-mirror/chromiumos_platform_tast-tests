@@ -30,7 +30,8 @@ func init() {
 		Func:         CardElementAnimationPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of card elements and transition from peeking to half height",
-		Contacts:     []string{"cowmoo@chromium.org", "xiaohuic@chromium.org"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{{

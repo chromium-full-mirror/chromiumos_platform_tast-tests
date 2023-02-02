@@ -23,7 +23,8 @@ func init() {
 		Func:         BrightnessQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests changing the screen brightness using Assistant queries",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},

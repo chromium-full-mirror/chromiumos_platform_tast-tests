@@ -21,7 +21,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Assistant hotkey to toggle launcher",
 		Attr:         []string{"group:mainline"},
-		Contacts:     []string{"yawano@google.com", "assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistant",
 		// Parametrize this test case with Assistant hotkeys as the hotkey is the main part of this

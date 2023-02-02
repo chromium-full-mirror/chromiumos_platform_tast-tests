@@ -18,7 +18,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "OOBE flow for a GAIA which has used Assistant and whose voice match is ready",
 		Attr:         []string{"group:mainline", "informational"},
-		Contacts:     []string{"yawano@google.com", "assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantOOBEUsedVMReady",
 	})

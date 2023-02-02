@@ -20,13 +20,8 @@ func init() {
 		Func:         SimpleQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant basic functionality with simple queries",
-		Contacts: []string{
-			"yawano@google.com",
-			"updowndota@chromium.org",
-			"xiaohuic@chromium.org",
-			"assistive-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-		},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{{
