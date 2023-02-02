@@ -34,11 +34,11 @@ func init() {
 		Desc:         "Test that all tabs should be displayed in the task manager",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
+			"afakhry@google.com",
 			"cienet-development@googlegroups.com",
 			"sun.tsai@cienet.com",
 		},
-		// ChromeOS > Software > Task Manager
-		BugComponent: "b:1238037",
+		BugComponent: "b:1238037", // ChromeOS > Software > Task Manager
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

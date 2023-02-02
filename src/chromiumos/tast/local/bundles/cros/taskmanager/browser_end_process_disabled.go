@@ -20,11 +20,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     BrowserEndProcessDisabled,
-		Desc:     "Verify that 'Browser' cannot be killed from Task Manager",
-		Contacts: []string{"kevin.wu@cienet.com", "cash.hsu@cienet.com", "cienet-development@googlegroups.com", "chromeos-sw-engprod@google.com"},
-		Attr:     []string{"group:mainline", "informational"},
-		Fixture:  "chromeLoggedIn",
+		Func: BrowserEndProcessDisabled,
+		Desc: "Verify that 'Browser' cannot be killed from Task Manager",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+			"afakhry@google.com",
+			"cienet-development@googlegroups.com",
+			"sun.tsai@cienet.com",
+		},
+		BugComponent: "b:1238037", // ChromeOS > Software > Task Manager
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
