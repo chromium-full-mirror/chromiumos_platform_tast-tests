@@ -132,36 +132,6 @@ func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectio
 	return &empty.Empty{}, nil
 }
 
-// GetGBBFlags gets the flags that are cleared and set.
-func (*BiosService) GetGBBFlags(ctx context.Context, req *empty.Empty) (*pb.GBBFlagsState, error) {
-	img, err := bios.NewImage(ctx, bios.GBBImageSection, flashrom.ProgrammerHost)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read firmware")
-	}
-	cf, sf, err := img.GetGBBFlags()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not get GBB flags")
-	}
-	ret := pb.GBBFlagsState{Clear: cf, Set: sf}
-	return &ret, nil
-}
-
-// ClearAndSetGBBFlags clears and sets specified GBB flags, leaving the rest unchanged.
-func (bs *BiosService) ClearAndSetGBBFlags(ctx context.Context, req *pb.GBBFlagsState) (*empty.Empty, error) {
-	bs.s.Logf("Start ClearAndSetGBBFlags: %v", req)
-	img, err := bios.NewImage(ctx, bios.GBBImageSection, flashrom.ProgrammerHost)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not read firmware")
-	}
-	if err = img.ClearAndSetGBBFlags(req.Clear, req.Set); err != nil {
-		return nil, errors.Wrap(err, "could not clear/set flags")
-	}
-	if err = img.WriteFlashrom(ctx, bios.GBBImageSection, flashrom.ProgrammerHost); err != nil {
-		return nil, errors.Wrap(err, "could not write image")
-	}
-	return &empty.Empty{}, nil
-}
-
 // SetAPSoftwareWriteProtect sets the AP software write protect.
 func (bs *BiosService) SetAPSoftwareWriteProtect(ctx context.Context, req *pb.WPRequest) (*empty.Empty, error) {
 	args := &bios.WPArgs{

@@ -12,10 +12,6 @@ option go_package = "chromiumos/tast/services/cros/firmware";
 
 // BiosService provides ability to manipulate bios settings on DUT
 service BiosService {
-  // GetGBBFlags gets the flags that are cleared and set.
-  rpc GetGBBFlags (google.protobuf.Empty) returns (GBBFlagsState) {}
-  // ClearAndSetGBBFlags modifies the specified flags, leaving the rest unchanged.
-  rpc ClearAndSetGBBFlags (GBBFlagsState) returns (google.protobuf.Empty) {}
   // SetAPSoftwareWriteProtect sets the software AP write protect.
   rpc SetAPSoftwareWriteProtect (WPRequest) returns (google.protobuf.Empty) {}
   // CorruptFWSection writes garbage bytes to the entire section specified.

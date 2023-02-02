@@ -6,57 +6,7 @@ package bios
 
 import (
 	"testing"
-
-	pb "chromiumos/tast/services/cros/firmware"
 )
-
-func TestCalcGBB(t *testing.T) {
-	// 1 bit
-	m := calcGBBMask([]pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY})
-	if m != 0x0001<<pb.GBBFlag_DEV_SCREEN_SHORT_DELAY {
-		t.Fatalf("unexpected mask for 1 bit: %v", m)
-	}
-
-	f := calcGBBFlags(m)
-	if len(f) != 1 || f[0] != pb.GBBFlag_DEV_SCREEN_SHORT_DELAY {
-		t.Fatalf("unexpected flagfor 1 bit: %v", f)
-	}
-
-	// 2 bits
-	m = calcGBBMask([]pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY, pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP})
-
-	if m != (0x0001<<pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)|(0x0001<<pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP) {
-		t.Fatalf("unexpected mask for 2 bits: %v", m)
-	}
-
-	f = calcGBBFlags(m)
-	if len(f) != 2 || f[0] != pb.GBBFlag_DEV_SCREEN_SHORT_DELAY || f[1] != pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP {
-		t.Fatalf("unexpected flags for 2 bits: %v", f)
-	}
-}
-
-func TestCalcGBBBits(t *testing.T) {
-	tests := []struct {
-		curr  uint32
-		clear uint32
-		set   uint32
-		want  uint32
-	}{
-		{0b0101, 0b0000, 0b0000, 0b0101},
-		{0b0101, 0b1111, 0b0000, 0b0000},
-		{0b0100, 0b0000, 0b0001, 0b0101},
-		{0b0010, 0b0010, 0b0001, 0b0001},
-		{0b0011, 0b1100, 0b1100, 0b1111},
-		{0b0101, 0b1010, 0b0101, 0b0101},
-	}
-
-	for _, tc := range tests {
-		got := calcGBBBits(tc.curr, tc.clear, tc.set)
-		if got != tc.want {
-			t.Errorf("calcGBBBits, updating %04b with %04b(clear) and %04b(set), got %04b, want %04b", tc.curr, tc.clear, tc.set, got, tc.want)
-		}
-	}
-}
 
 func TestReadSectionData(t *testing.T) {
 	s := map[ImageSection]SectionInfo{GBBImageSection: {1, 16}}
@@ -98,91 +48,6 @@ func TestShortGBBSection(t *testing.T) {
 	err := i.ReadSectionData(GBBImageSection, 12, 4, &flag)
 	if err == nil {
 		t.Fatal("Short section not detected: ", err)
-	}
-}
-
-func TestGetGBBFlags(t *testing.T) {
-	s := map[ImageSection]SectionInfo{GBBImageSection: {1, 16}}
-	i := Image{[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x01, 0, 0, 0xff}, s}
-	cf, sf, err := i.GetGBBFlags()
-	if err != nil {
-		t.Fatalf("failed to perform GetGBBFlags: %v", err)
-	}
-	if len(cf) != len(pb.GBBFlag_name)-2 {
-		t.Errorf("cleared flags count incorrect, wanted %v, got %v: %v", len(pb.GBBFlag_name)-2, len(cf), cf)
-	}
-	if len(sf) != 2 {
-		t.Fatalf("set flags count incorrect, wanted 2, got %v: %v", len(sf), sf)
-	}
-	if int(sf[0]) != 0 {
-		t.Fatalf("1st set flag incorrect: %v", sf)
-	}
-	if int(sf[1]) != 8 {
-		t.Fatalf("2nd set flag incorrect: %v", sf)
-	}
-}
-
-func TestClearAndSetGBBFlags(t *testing.T) {
-	beforeBytes := [13]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
-	afterBytes := [1]byte{14}
-	dataSlice := make([]byte, 18)
-	copy(dataSlice[0:13], beforeBytes[:])
-	copy(dataSlice[17:18], afterBytes[:])
-
-	s := map[ImageSection]SectionInfo{GBBImageSection: {1, 16}}
-	i := Image{dataSlice, s}
-
-	if err := i.ClearAndSetGBBFlags([]pb.GBBFlag{}, []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY, pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP}); err != nil {
-		t.Fatal("failed to initially ClearAndSetGBBFlags: ", err)
-	}
-	cf, sf, err := i.GetGBBFlags()
-	if err != nil {
-		t.Fatalf("failed to initially perform GetGBBFlags: %v", err)
-	}
-	if len(cf) != len(pb.GBBFlag_name)-2 {
-		t.Errorf("cleared initial flags count incorrect, wanted %v, got %v: %v", len(pb.GBBFlag_name)-2, len(cf), cf)
-	}
-	if len(sf) != 2 {
-		t.Fatalf("set initial flags count incorrect, wanted 2, got %v: %v", len(sf), sf)
-	}
-	if sf[0] != pb.GBBFlag_DEV_SCREEN_SHORT_DELAY {
-		t.Fatalf("1st set initial flag incorrect: %v", sf)
-	}
-	if sf[1] != pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP {
-		t.Fatalf("2nd set initial flag incorrect: %v", sf)
-	}
-
-	if err := i.ClearAndSetGBBFlags([]pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}, []pb.GBBFlag{pb.GBBFlag_DISABLE_LID_SHUTDOWN}); err != nil {
-		t.Fatal("failed to ClearAndSetGBBFlags: ", err)
-	}
-	cf, sf, err = i.GetGBBFlags()
-	if err != nil {
-		t.Fatalf("failed to perform GetGBBFlags: %v", err)
-	}
-	if len(cf) != len(pb.GBBFlag_name)-2 {
-		t.Errorf("cleared flags count incorrect, wanted %d, got %d: %v", len(pb.GBBFlag_name)-2, len(cf), cf)
-	}
-	if len(sf) != 2 {
-		t.Fatalf("set flags count incorrect, wanted 2, got %d: %v", len(sf), sf)
-	}
-	if sf[0] != pb.GBBFlag_DISABLE_LID_SHUTDOWN {
-		t.Fatalf("1st set flag incorrect: %v", sf)
-	}
-	if sf[1] != pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP {
-		t.Fatalf("2nd set flag incorrect: %v", sf)
-	}
-
-	var resBeforeBytes [13]byte
-	var resAfterBytes [1]byte
-
-	copy(resBeforeBytes[:], i.Data[:13])
-	copy(resAfterBytes[:], i.Data[17:])
-
-	if resBeforeBytes != beforeBytes {
-		t.Fatalf("bytes before GBB header changed, got %v, want %v", resBeforeBytes, beforeBytes)
-	}
-	if resAfterBytes != afterBytes {
-		t.Fatalf("bytes after GBB header changed, got %v, want %v", resAfterBytes, afterBytes)
 	}
 }
 

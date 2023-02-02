@@ -16,7 +16,6 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -341,31 +340,6 @@ func (i *Image) WriteImageToFile(ctx context.Context, sec ImageSection, dirpath 
 	return imgFile.Name(), nil
 }
 
-// GetGBBFlags returns the list of cleared and list of set flags.
-func (i *Image) GetGBBFlags() ([]pb.GBBFlag, []pb.GBBFlag, error) {
-	var gbb uint32
-	if err := i.ReadSectionData(GBBImageSection, GbbHeaderOffset, 4, &gbb); err != nil {
-		return nil, nil, err
-	}
-	setFlags := calcGBBFlags(gbb)
-	clearFlags := calcGBBFlags(^gbb)
-	return clearFlags, setFlags, nil
-}
-
-// ClearAndSetGBBFlags clears and sets the specified flags, leaving the rest unchanged, set has precedence over clear.
-func (i *Image) ClearAndSetGBBFlags(clearFlags, setFlags []pb.GBBFlag) error {
-	var currGBB uint32
-	if err := i.ReadSectionData(GBBImageSection, GbbHeaderOffset, 4, &currGBB); err != nil {
-		return err
-	}
-	newGBB := calcGBBBits(currGBB, calcGBBMask(clearFlags), calcGBBMask(setFlags))
-	if newGBB == currGBB {
-		// No need to write section data if GBB flags are already correct.
-		return nil
-	}
-	return i.WriteSectionData(GBBImageSection, GbbHeaderOffset, newGBB)
-}
-
 // WriteFlashrom writes the current data in the specified section into flashrom.
 func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer flashrom.Programmer) error {
 	// dirpath arg is irrelevant here since file gets deleted in the defer call.
@@ -440,31 +414,6 @@ func ParseSections(fmap string) (map[ImageSection]SectionInfo, error) {
 		ret[ImageSection(cols[0])] = SectionInfo{uint(start), uint(length)}
 	}
 	return ret, nil
-}
-
-// calcGBBFlags interprets mask as a GBBFlag bit mask and returns the set flags.
-func calcGBBFlags(mask uint32) []pb.GBBFlag {
-	var res []pb.GBBFlag
-	for _, pos := range firmware.AllGBBFlags() {
-		if mask&(0x0001<<pos) != 0 {
-			res = append(res, pb.GBBFlag(pos))
-		}
-	}
-	return res
-}
-
-// calcGBBMask returns the bit mask corresponding to the list of GBBFlags.
-func calcGBBMask(flags []pb.GBBFlag) uint32 {
-	var mask uint32
-	for _, f := range flags {
-		mask |= 0x0001 << f
-	}
-	return mask
-}
-
-// calcGBBBits returns the final GBB bits after applying clear and set to curr.  Set has precedence over clear in the same bit position.
-func calcGBBBits(curr, clear, set uint32) uint32 {
-	return (curr & ^clear) | set
 }
 
 // ReadSectionData returns interpreted data of a given size from raw bytes at the specified location.

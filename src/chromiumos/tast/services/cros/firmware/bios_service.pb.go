@@ -1013,18 +1013,8 @@ var file_bios_service_proto_rawDesc = []byte{
 	0x6e, 0x65, 0x64, 0x41, 0x4d, 0x44, 0x46, 0x57, 0x42, 0x49, 0x6d, 0x61, 0x67, 0x65, 0x53, 0x65,
 	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x10, 0x33, 0x22, 0x04, 0x08, 0x05, 0x10, 0x05, 0x2a, 0x1e, 0x0a,
 	0x0a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x12, 0x10, 0x0a, 0x0c, 0x52,
-	0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x79, 0x4d, 0x6f, 0x64, 0x65, 0x10, 0x00, 0x32, 0x96, 0x06,
-	0x0a, 0x0b, 0x42, 0x69, 0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x4a, 0x0a,
-	0x0b, 0x47, 0x65, 0x74, 0x47, 0x42, 0x42, 0x46, 0x6c, 0x61, 0x67, 0x73, 0x12, 0x16, 0x2e, 0x67,
-	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x21, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
-	0x2e, 0x66, 0x69, 0x72, 0x6d, 0x77, 0x61, 0x72, 0x65, 0x2e, 0x47, 0x42, 0x42, 0x46, 0x6c, 0x61,
-	0x67, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x22, 0x00, 0x12, 0x52, 0x0a, 0x13, 0x43, 0x6c, 0x65,
-	0x61, 0x72, 0x41, 0x6e, 0x64, 0x53, 0x65, 0x74, 0x47, 0x42, 0x42, 0x46, 0x6c, 0x61, 0x67, 0x73,
-	0x12, 0x21, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x66, 0x69, 0x72,
-	0x6d, 0x77, 0x61, 0x72, 0x65, 0x2e, 0x47, 0x42, 0x42, 0x46, 0x6c, 0x61, 0x67, 0x73, 0x53, 0x74,
-	0x61, 0x74, 0x65, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x54, 0x0a,
+	0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x79, 0x4d, 0x6f, 0x64, 0x65, 0x10, 0x00, 0x32, 0xf6, 0x04,
+	0x0a, 0x0b, 0x42, 0x69, 0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x54, 0x0a,
 	0x19, 0x53, 0x65, 0x74, 0x41, 0x50, 0x53, 0x6f, 0x66, 0x74, 0x77, 0x61, 0x72, 0x65, 0x57, 0x72,
 	0x69, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x65, 0x63, 0x74, 0x12, 0x1d, 0x2e, 0x74, 0x61, 0x73,
 	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x66, 0x69, 0x72, 0x6d, 0x77, 0x61, 0x72, 0x65, 0x2e,
@@ -1109,26 +1099,22 @@ var file_bios_service_proto_depIdxs = []int32{
 	10, // 8: tast.cros.firmware.FMAP.fmap:type_name -> tast.cros.firmware.FMAP.FMAPEntry
 	2,  // 9: tast.cros.firmware.FMAP.FMAPEntry.section:type_name -> tast.cros.firmware.ImageSection
 	7,  // 10: tast.cros.firmware.FMAP.FMAPEntry.range:type_name -> tast.cros.firmware.Range
-	11, // 11: tast.cros.firmware.BiosService.GetGBBFlags:input_type -> google.protobuf.Empty
-	4,  // 12: tast.cros.firmware.BiosService.ClearAndSetGBBFlags:input_type -> tast.cros.firmware.GBBFlagsState
-	8,  // 13: tast.cros.firmware.BiosService.SetAPSoftwareWriteProtect:input_type -> tast.cros.firmware.WPRequest
-	5,  // 14: tast.cros.firmware.BiosService.CorruptFWSection:input_type -> tast.cros.firmware.FWSectionInfo
-	5,  // 15: tast.cros.firmware.BiosService.BackupImageSection:input_type -> tast.cros.firmware.FWSectionInfo
-	5,  // 16: tast.cros.firmware.BiosService.RestoreImageSection:input_type -> tast.cros.firmware.FWSectionInfo
-	5,  // 17: tast.cros.firmware.BiosService.WriteImageFromMultiSectionFile:input_type -> tast.cros.firmware.FWSectionInfo
-	6,  // 18: tast.cros.firmware.BiosService.ChromeosFirmwareUpdate:input_type -> tast.cros.firmware.FirmwareUpdateModeRequest
-	9,  // 19: tast.cros.firmware.BiosService.ParseFMAP:input_type -> tast.cros.firmware.FMAP
-	4,  // 20: tast.cros.firmware.BiosService.GetGBBFlags:output_type -> tast.cros.firmware.GBBFlagsState
-	11, // 21: tast.cros.firmware.BiosService.ClearAndSetGBBFlags:output_type -> google.protobuf.Empty
-	11, // 22: tast.cros.firmware.BiosService.SetAPSoftwareWriteProtect:output_type -> google.protobuf.Empty
-	5,  // 23: tast.cros.firmware.BiosService.CorruptFWSection:output_type -> tast.cros.firmware.FWSectionInfo
-	5,  // 24: tast.cros.firmware.BiosService.BackupImageSection:output_type -> tast.cros.firmware.FWSectionInfo
-	11, // 25: tast.cros.firmware.BiosService.RestoreImageSection:output_type -> google.protobuf.Empty
-	11, // 26: tast.cros.firmware.BiosService.WriteImageFromMultiSectionFile:output_type -> google.protobuf.Empty
-	11, // 27: tast.cros.firmware.BiosService.ChromeosFirmwareUpdate:output_type -> google.protobuf.Empty
-	9,  // 28: tast.cros.firmware.BiosService.ParseFMAP:output_type -> tast.cros.firmware.FMAP
-	20, // [20:29] is the sub-list for method output_type
-	11, // [11:20] is the sub-list for method input_type
+	8,  // 11: tast.cros.firmware.BiosService.SetAPSoftwareWriteProtect:input_type -> tast.cros.firmware.WPRequest
+	5,  // 12: tast.cros.firmware.BiosService.CorruptFWSection:input_type -> tast.cros.firmware.FWSectionInfo
+	5,  // 13: tast.cros.firmware.BiosService.BackupImageSection:input_type -> tast.cros.firmware.FWSectionInfo
+	5,  // 14: tast.cros.firmware.BiosService.RestoreImageSection:input_type -> tast.cros.firmware.FWSectionInfo
+	5,  // 15: tast.cros.firmware.BiosService.WriteImageFromMultiSectionFile:input_type -> tast.cros.firmware.FWSectionInfo
+	6,  // 16: tast.cros.firmware.BiosService.ChromeosFirmwareUpdate:input_type -> tast.cros.firmware.FirmwareUpdateModeRequest
+	9,  // 17: tast.cros.firmware.BiosService.ParseFMAP:input_type -> tast.cros.firmware.FMAP
+	11, // 18: tast.cros.firmware.BiosService.SetAPSoftwareWriteProtect:output_type -> google.protobuf.Empty
+	5,  // 19: tast.cros.firmware.BiosService.CorruptFWSection:output_type -> tast.cros.firmware.FWSectionInfo
+	5,  // 20: tast.cros.firmware.BiosService.BackupImageSection:output_type -> tast.cros.firmware.FWSectionInfo
+	11, // 21: tast.cros.firmware.BiosService.RestoreImageSection:output_type -> google.protobuf.Empty
+	11, // 22: tast.cros.firmware.BiosService.WriteImageFromMultiSectionFile:output_type -> google.protobuf.Empty
+	11, // 23: tast.cros.firmware.BiosService.ChromeosFirmwareUpdate:output_type -> google.protobuf.Empty
+	9,  // 24: tast.cros.firmware.BiosService.ParseFMAP:output_type -> tast.cros.firmware.FMAP
+	18, // [18:25] is the sub-list for method output_type
+	11, // [11:18] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name
@@ -1258,10 +1244,6 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BiosServiceClient interface {
-	// GetGBBFlags gets the flags that are cleared and set.
-	GetGBBFlags(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GBBFlagsState, error)
-	// ClearAndSetGBBFlags modifies the specified flags, leaving the rest unchanged.
-	ClearAndSetGBBFlags(ctx context.Context, in *GBBFlagsState, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// SetAPSoftwareWriteProtect sets the software AP write protect.
 	SetAPSoftwareWriteProtect(ctx context.Context, in *WPRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CorruptFWSection writes garbage bytes to the entire section specified.
@@ -1284,24 +1266,6 @@ type biosServiceClient struct {
 
 func NewBiosServiceClient(cc grpc.ClientConnInterface) BiosServiceClient {
 	return &biosServiceClient{cc}
-}
-
-func (c *biosServiceClient) GetGBBFlags(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GBBFlagsState, error) {
-	out := new(GBBFlagsState)
-	err := c.cc.Invoke(ctx, "/tast.cros.firmware.BiosService/GetGBBFlags", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *biosServiceClient) ClearAndSetGBBFlags(ctx context.Context, in *GBBFlagsState, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.firmware.BiosService/ClearAndSetGBBFlags", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *biosServiceClient) SetAPSoftwareWriteProtect(ctx context.Context, in *WPRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
@@ -1369,10 +1333,6 @@ func (c *biosServiceClient) ParseFMAP(ctx context.Context, in *FMAP, opts ...grp
 
 // BiosServiceServer is the server API for BiosService service.
 type BiosServiceServer interface {
-	// GetGBBFlags gets the flags that are cleared and set.
-	GetGBBFlags(context.Context, *emptypb.Empty) (*GBBFlagsState, error)
-	// ClearAndSetGBBFlags modifies the specified flags, leaving the rest unchanged.
-	ClearAndSetGBBFlags(context.Context, *GBBFlagsState) (*emptypb.Empty, error)
 	// SetAPSoftwareWriteProtect sets the software AP write protect.
 	SetAPSoftwareWriteProtect(context.Context, *WPRequest) (*emptypb.Empty, error)
 	// CorruptFWSection writes garbage bytes to the entire section specified.
@@ -1393,12 +1353,6 @@ type BiosServiceServer interface {
 type UnimplementedBiosServiceServer struct {
 }
 
-func (*UnimplementedBiosServiceServer) GetGBBFlags(context.Context, *emptypb.Empty) (*GBBFlagsState, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGBBFlags not implemented")
-}
-func (*UnimplementedBiosServiceServer) ClearAndSetGBBFlags(context.Context, *GBBFlagsState) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ClearAndSetGBBFlags not implemented")
-}
 func (*UnimplementedBiosServiceServer) SetAPSoftwareWriteProtect(context.Context, *WPRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAPSoftwareWriteProtect not implemented")
 }
@@ -1423,42 +1377,6 @@ func (*UnimplementedBiosServiceServer) ParseFMAP(context.Context, *FMAP) (*FMAP,
 
 func RegisterBiosServiceServer(s *grpc.Server, srv BiosServiceServer) {
 	s.RegisterService(&_BiosService_serviceDesc, srv)
-}
-
-func _BiosService_GetGBBFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BiosServiceServer).GetGBBFlags(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tast.cros.firmware.BiosService/GetGBBFlags",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BiosServiceServer).GetGBBFlags(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BiosService_ClearAndSetGBBFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GBBFlagsState)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BiosServiceServer).ClearAndSetGBBFlags(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tast.cros.firmware.BiosService/ClearAndSetGBBFlags",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BiosServiceServer).ClearAndSetGBBFlags(ctx, req.(*GBBFlagsState))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _BiosService_SetAPSoftwareWriteProtect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1591,14 +1509,6 @@ var _BiosService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.firmware.BiosService",
 	HandlerType: (*BiosServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GetGBBFlags",
-			Handler:    _BiosService_GetGBBFlags_Handler,
-		},
-		{
-			MethodName: "ClearAndSetGBBFlags",
-			Handler:    _BiosService_ClearAndSetGBBFlags_Handler,
-		},
 		{
 			MethodName: "SetAPSoftwareWriteProtect",
 			Handler:    _BiosService_SetAPSoftwareWriteProtect_Handler,
