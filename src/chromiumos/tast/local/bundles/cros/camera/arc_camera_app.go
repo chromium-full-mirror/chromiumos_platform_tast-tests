@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -67,6 +68,11 @@ func broadcastIntentGetData(ctx context.Context, a *arc.ARC, action string, para
 }
 
 func ARCCameraApp(ctx context.Context, s *testing.State) {
+	// Ensure camera service running to avoid bad state from previous tests.
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		s.Fatal("Failed to start cros-camera: ", err)
+	}
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
