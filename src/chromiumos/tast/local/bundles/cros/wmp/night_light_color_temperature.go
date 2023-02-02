@@ -29,11 +29,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the adjustment of night light color temperature",
 		Contacts: []string{
-			"zxdan@chromium.org",
 			"chromeos-wmp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"zxdan@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		// ChromeOS > Software > Nightlight
+		BugComponent: "b:1252585",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

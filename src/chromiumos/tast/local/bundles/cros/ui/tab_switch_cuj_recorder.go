@@ -19,7 +19,14 @@ func init() {
 		Func:         TabSwitchCUJRecorder,
 		LacrosStatus: testing.LacrosVariantUnneeded, // used to record all web traffic via wpr so that later TabSwitchCUJ could run without really talking to real sites
 		Desc:         "Run tab-switching CUJ test in chromewpr recording mode",
-		Contacts:     []string{"mukai@chromium.org", "tclaiborne@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"tclaiborne@chromium.org",
+			"xiyuan@chromium.org",
+			"yichenz@chromium.org",
+		},
+		// ChromeOS > Software > Performance > TPS
+		BugComponent: "b:1045832",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		Vars:         []string{"mute"},

@@ -29,7 +29,14 @@ func init() {
 		Func:         DragWindowFromShelfPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the presentation time of dragging a window from the shelf in tablet mode",
-		Contacts:     []string{"tbarzic@chromium.org", "xdai@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-wm-corexp@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+			"tbarzic@chromium.org",
+			"xdai@chromium.org",
+		},
+		// ChromeOS > Software > GestureNav
+		BugComponent: "b:1253088",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

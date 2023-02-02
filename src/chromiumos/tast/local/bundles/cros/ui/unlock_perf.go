@@ -29,7 +29,13 @@ func init() {
 		Func:         UnlockPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of screen unlock",
-		Contacts:     []string{"mukai@chromium.org", "oshima@chromium.org", "chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+			"oshima@chromium.org",
+		},
+		// ChromeOS > Software > Performance > TPS
+		BugComponent: "b:1045832",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,

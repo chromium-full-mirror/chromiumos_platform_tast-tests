@@ -29,12 +29,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if the performance around window controlling is good enough; go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
 		Contacts: []string{
+			"chromeos-wm-corexp@google.com",
+			"chromeos-perfmetrics-eng@google.com",
 			"oshima@chromium.org",
 			"afakhry@chromium.org",
-			"chromeos-wmp@google.com",
-			"mukai@chromium.org", // Tast author
 		},
-		Attr: []string{"group:mainline"},
+		// ChromeOS > Software > Window Management
+		BugComponent: "b:1238037",
+		Attr:         []string{"group:mainline"},
 		// no_qemu: VMs often fail performance expectations.
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

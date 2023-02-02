@@ -30,7 +30,13 @@ func init() {
 		Func:         ScreenRotationPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of screen rotation in tablet mode",
-		Contacts:     []string{"chromeos-wmp@google.com"},
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+			"oshima@chromium.org",
+		},
+		// ChromeOS > Software > Performance > TPS
+		BugComponent: "b:1045832",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

@@ -26,11 +26,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that full screen video record works correctly",
 		Contacts: []string{
-			"afakhry@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"afakhry@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		// ChromeOS > Software > ScreenCapture
+		BugComponent: "b:1253115",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{
