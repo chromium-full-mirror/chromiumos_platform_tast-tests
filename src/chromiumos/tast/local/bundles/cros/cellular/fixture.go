@@ -145,6 +145,13 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.disableCellularTechnology {
+		// Check if the modem is exported by ModemManager before calling NewHelper().
+		if _, err := modemmanager.NewModem(ctx); err != nil && cellular.ModemHelperPathExists() {
+			testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
+			if err := cellular.RestartModemWithHelper(ctx); err != nil {
+				s.Fatal("Failed to restart modem: ", err)
+			}
+		}
 		f.helper, err = cellular.NewHelper(ctx)
 		if err != nil {
 			s.Fatal("Failed to create cellular.Helper: ", err)
