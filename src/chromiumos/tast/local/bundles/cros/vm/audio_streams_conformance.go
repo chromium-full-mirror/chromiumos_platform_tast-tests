@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/audio/audionode"
 	"chromiumos/tast/testing"
 )
 
@@ -95,6 +96,12 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 	// Run audio_streams_conformance_test.
 	runCtx, cancel := context.WithTimeout(ctx, audioStreamsConformanceTimeout)
 	defer cancel()
+
+	const expectedAudioNode = "INTERNAL_SPEAKER"
+	_, err := audionode.SetAudioNode(ctx, expectedAudioNode)
+	if err != nil {
+		s.Fatal("Failed to set the Audio node: ", err)
+	}
 	dump, err := testexec.CommandContext(
 		runCtx, "/usr/local/bin/audio_streams_conformance_test",
 		"-P", string(param.StreamSource),
@@ -113,7 +120,7 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 	}
 
 	if stats.EstimatedRate.Rate < sampleRate*(1-param.RateCriteria) || stats.EstimatedRate.Rate > sampleRate*(1+param.RateCriteria) {
-		s.Fatalf("Expect sample rate: %f (+- %f%%), got: %f", sampleRate, param.RateCriteria, stats.EstimatedRate.Rate)
+		s.Fatalf("Expect sample rate: %f (+- %f%%), got: %f", sampleRate, param.RateCriteria*100, stats.EstimatedRate.Rate)
 	}
 
 	if stats.EstimatedRate.Error > sampleRate*param.RateErrCriteria {
