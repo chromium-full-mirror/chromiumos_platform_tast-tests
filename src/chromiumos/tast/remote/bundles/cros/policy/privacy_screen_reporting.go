@@ -119,6 +119,7 @@ func validatePrivacyScreenInfo(ctx context.Context, events []reportingutil.Input
 	return nil
 }
 
+// PrivacyScreenReporting tests reporting related to privacy screens.
 func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(privacyScreenReportingParameters)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)

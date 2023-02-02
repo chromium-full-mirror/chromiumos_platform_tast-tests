@@ -46,8 +46,9 @@ func init() {
 	})
 }
 
+// HeartbeatReporting tests that the ERP sends heartbeats to the server if enabled.
 func HeartbeatReporting(ctx context.Context, s *testing.State) {
-	customerId := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
+	customerID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
@@ -66,7 +67,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerId)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerID)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -121,7 +122,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "HEARTBEAT_EVENTS", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, c.ClientId, APIKey, "HEARTBEAT_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up events")
 		}

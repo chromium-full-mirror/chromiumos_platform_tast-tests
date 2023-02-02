@@ -94,6 +94,7 @@ func verifyInfo(event reportingutil.InputEvent, validator func(info *reportingut
 	return false
 }
 
+// TelemetryInfoReporting tests the reporting of various info and telemetry metrics.
 func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(telemetryInfoReportingParameters)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)

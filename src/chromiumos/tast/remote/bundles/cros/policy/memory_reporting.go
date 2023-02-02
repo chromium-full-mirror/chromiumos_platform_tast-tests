@@ -145,9 +145,10 @@ func validateTMEInfo(ctx context.Context, tmeInfo reportingutil.TMEInfo, vProSpe
 	return nil
 }
 
+// MemoryReporting tests memory info reported for vPro.
 func MemoryReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(memoryReportingParameters)
-	customerId := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
+	customerID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
@@ -165,7 +166,7 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerId)
+	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerID)
 
 	if param.vProSpecific {
 		if su, err := vProSupported(ctx, cl.Conn); err != nil {
@@ -253,7 +254,7 @@ func MemoryReporting(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerId, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
+		events, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, customerID, c.ClientId, APIKey, "INFO_METRIC", testStartTime)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to look up events"))
 		}

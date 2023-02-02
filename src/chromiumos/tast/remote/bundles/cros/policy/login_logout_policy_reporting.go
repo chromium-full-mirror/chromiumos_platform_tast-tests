@@ -1,4 +1,4 @@
-// Copyright 2023 The ChromiumOS Authors.
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -35,6 +35,7 @@ func init() {
 			"albertojuarez@google.com", // Test owner
 			"cros-reporting-team@google.com",
 		},
+		BugComponent: "b:817866",
 		Attr:         []string{"group:dpanel-end2end", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service"},
@@ -154,6 +155,7 @@ func validateLockUnlockEvents(ctx context.Context, events []reportingutil.InputE
 	return nil
 }
 
+// LoginLogoutPolicyReporting tests data reported when the ReportLoginLogout policy is enabled.
 func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 	reportingEnabled := s.Param().(loginLogoutPolicyReportingParameters).reportingEnabled
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
