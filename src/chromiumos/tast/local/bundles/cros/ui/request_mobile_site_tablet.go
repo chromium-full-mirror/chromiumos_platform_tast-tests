@@ -28,14 +28,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: RequestMobileSiteTablet,
-		Desc: "Test request mobile site function on websites under different types of login account",
-		Contacts: []string{
-			"cj.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
-		},
+		Func:         RequestMobileSiteTablet,
 		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Test request mobile site function on websites under different types of login account",
+		Contacts: []string{
+			"chromeos-wmp@google.com",
+			"cienet-development@googlegroups.com",
+			"cj.tsai@cienet.com",
+		},
+		BugComponent: "b:1238037", // ChromeOS > Software > Window Management
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      12 * time.Minute,

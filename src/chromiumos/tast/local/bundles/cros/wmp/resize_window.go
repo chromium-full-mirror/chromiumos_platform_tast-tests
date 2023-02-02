@@ -69,11 +69,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Resize different windows by dragging 4 corners and 4 sides",
 		Contacts: []string{
-			"lance.wang@cienet.com",
-			"alfred.yu@cienet.com",
+			"chromeos-wmp@google.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			"bossan.fang@cienet.com",
 		},
+		BugComponent: "b:1238037", // ChromeOS > Software > Window Management
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.gaiaPoolDefault"}, // GAIA is required to install an app from Chrome Webstore.
