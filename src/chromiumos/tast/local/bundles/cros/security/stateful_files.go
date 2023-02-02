@@ -145,7 +145,7 @@ func StatefulFiles(ctx context.Context, s *testing.State) {
 		chk.NewPattern(chk.Path("unencrypted/preserve/log"), chk.SkipChildren()),                                          // only exists for testing
 		chk.NewPattern(chk.Path("unencrypted/preserve/rollback_data"), chk.Users("oobe_config_save"), chk.SkipChildren()), // only exists after rollback
 		chk.NewPattern(chk.Tree("unencrypted/preserve"), chk.Users("attestation", "root"), chk.NotMode(022)),              // other children
-		chk.NewPattern(chk.Path("unencrypted/userspace_swap.tmp"), chk.Users("chronos"), chk.SkipChildren()),
+		chk.NewPattern(chk.Path("unencrypted/userspace_swap.tmp"), chk.Users("root"), chk.SkipChildren()),
 		chk.NewPattern(chk.Tree("unencrypted"), chk.Users("root"), chk.NotMode(022)),
 
 		chk.NewPattern(chk.Path("var_overlay"), chk.SkipChildren()), // only exists for dev images
