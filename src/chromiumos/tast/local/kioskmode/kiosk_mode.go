@@ -64,6 +64,7 @@ var (
 		KioskAppInfo: &policy.KioskAppInfo{
 			AppId: &KioskAppID,
 		}}
+	cancelLaunchText = nodewith.Name("Press Ctrl + Alt + S to switch to ChromeOS").Role("staticText")
 )
 
 const (
@@ -80,6 +81,7 @@ const (
 // Kiosk structure holds necessary references and provides a way to safely
 // close Kiosk mode.
 type Kiosk struct {
+	ctx           context.Context
 	cr            *chrome.Chrome
 	fdms          *fakedms.FakeDMS
 	localAccounts *policy.DeviceLocalAccounts
@@ -338,17 +340,6 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, 
 				cr.Close(ctx)
 				return nil, nil, errors.Wrap(err, "there was a problem while checking chrome logs for Kiosk related entries")
 			}
-		} else {
-			// If a test does not want to wait for Kiosk to be launched the
-			// library will still make sure that Kiosk start sequence started
-			// and Kiosk is ready for launch.
-			if err := confirmKioskInitialized(ctx, reader); err != nil {
-				if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceLocalAccounts}); err != nil {
-					testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test: ", err)
-				}
-				cr.Close(ctx)
-				return nil, nil, errors.Wrap(err, "there was a problem while checking chrome logs for Kiosk startup")
-			}
 		}
 	} else {
 		opts := []chrome.Option{
@@ -366,7 +357,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, 
 		}
 	}
 
-	return &Kiosk{cr: cr, fdms: fdms, localAccounts: deviceLocalAccounts, httpServer: httpServer, autostart: cfg.m.AutoLaunch}, cr, nil
+	return &Kiosk{ctx: ctx, cr: cr, fdms: fdms, localAccounts: deviceLocalAccounts, httpServer: httpServer, autostart: cfg.m.AutoLaunch}, cr, nil
 }
 
 // startChromeClearPolicies is called when Chrome fails to start in autostart
@@ -454,7 +445,6 @@ func StartFromSignInScreen(ctx context.Context, ui *uiauto.Context, name string)
 	testing.ContextLog(ctx, "Starting Kiosk app from sign-in screen: "+name)
 	localAccountsBtn := nodewith.Name("Apps").HasClass("MenuButton")
 	kioskAppBtn := nodewith.Name(name).HasClass("MenuItemView")
-	cancelLaunchText := nodewith.Name("Press Ctrl + Alt + S to switch to ChromeOS").Role("staticText")
 	if err := uiauto.Combine("launch Kiosk app from menu",
 		ui.WaitUntilExists(localAccountsBtn),
 		ui.LeftClick(localAccountsBtn),
@@ -598,6 +588,21 @@ func webKioskServerHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, contentHTML)
 	return
+}
+
+// WaitForSplashScreenShowing waits for the kiosk splash screen to show up as
+// identified by the cancelation message
+func (k *Kiosk) WaitForSplashScreenShowing() error {
+	testConn, err := k.cr.SigninProfileTestAPIConn(k.ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to signin extension")
+	}
+
+	ui := uiauto.New(testConn)
+	if err := ui.WaitUntilExists(cancelLaunchText)(k.ctx); err != nil {
+		return errors.Wrap(err, "failed to find splash screen")
+	}
+	return nil
 }
 
 // GetLocalAccounts fetches DeviceLocalAccounts policy

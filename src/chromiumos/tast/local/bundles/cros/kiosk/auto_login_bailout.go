@@ -9,10 +9,10 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/testing"
 )
@@ -37,50 +37,54 @@ func init() {
 }
 
 func AutoLoginBailout(ctx context.Context, s *testing.State) {
-	kw, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to create a keyboard: ", err)
-	}
-	defer kw.Close()
-
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	// Lacros test only, since PWA kiosk is going to be launched with lacros.
-	chromeOptions := chrome.ExtraArgs("--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore")
+
+	chromeOptions := chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60")
 
 	kiosk, _, err := kioskmode.New(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),
-		kioskmode.ExtraChromeOptions(chromeOptions),
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
-		// Instead of waiting for startup, it waits for kiosk mode to be ready to launch.
 		kioskmode.SkipSuccessfulLaunchCheck(),
+		kioskmode.ExtraChromeOptions(
+			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+			chromeOptions,
+		),
 	)
 
 	if err != nil {
 		s.Error("Failed to start Chrome in Kiosk mode: ", err)
 	}
-
 	defer kiosk.Close(ctx)
 
-	// Sign-in profile extension is needed to check the error message on the UI.
+	if err := kiosk.WaitForSplashScreenShowing(); err != nil {
+		s.Error("Failed to wait for kiosk splash screen: ", err)
+	}
+
 	cr, err := kiosk.CancelKioskLaunch(
 		ctx,
 		chrome.NoLogin(),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.KeepState(),
-		chromeOptions)
+		chrome.KeepState())
 	if err != nil {
 		s.Fatal("Failed to connect to new chrome instance: ", err)
 	}
 
+	if err := verifyKioskCanceledToastShown(ctx, cr); err != nil {
+		s.Fatal("Failed to verify the canceled toast")
+	}
+}
+
+func verifyKioskCanceledToastShown(ctx context.Context, cr *chrome.Chrome) error {
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+		return errors.Wrap(err, "failed to connect to signin extension")
 	}
 	ui := uiauto.New(tconn)
 	if err := ui.WaitUntilExists(nodewith.Name("Kiosk application launch canceled."))(ctx); err != nil {
-		s.Fatal("Launch cancelled message did not appear: ", err)
+		return errors.Wrap(err, "failed to find canceled toast")
 	}
+	return nil
 }
