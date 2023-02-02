@@ -51,7 +51,8 @@ func getTestConfig(cameraType UseCameraType) ([]byte, error) {
 	if cameraType == UseFakeHALCamera {
 		return json.Marshal(map[string]interface{}{
 			"abort_when_capture_monitor_timeout": true,
-			"enabled_hals":                       []string{"fake.so"},
+			// Guarantee that only the fake HAL camera is available and all other cameras are disabled.
+			"enabled_hals": []string{"fake.so"},
 		})
 	}
 	return json.Marshal(map[string]bool{
@@ -59,7 +60,8 @@ func getTestConfig(cameraType UseCameraType) ([]byte, error) {
 	})
 }
 
-func setupTestConfig(ctx context.Context, cameraType UseCameraType) error {
+// SetupTestConfig writes the test config based on camera type.
+func SetupTestConfig(ctx context.Context, cameraType UseCameraType) error {
 	jsonCfg, err := getTestConfig(cameraType)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode test config as json")
@@ -103,20 +105,20 @@ func SetupFakeHALConfig(ctx context.Context) error {
 	})
 }
 
-// removeTestConfig removes the test config if it exists or returns nil otherwise.
-func removeTestConfig(ctx context.Context) error {
+// RemoveTestConfig removes the test config if it exists or returns nil otherwise.
+func RemoveTestConfig(ctx context.Context) error {
 	return os.RemoveAll(jsonConfigPath)
 }
 
-// removeFakeHALConfig removes the fake hal config if it exists or returns nil otherwise.
-func removeFakeHALConfig(ctx context.Context) error {
+// RemoveFakeHALConfig removes the fake hal config if it exists or returns nil otherwise.
+func RemoveFakeHALConfig(ctx context.Context) error {
 	return os.RemoveAll(fakeHALConfigPath)
 }
 
 // NewTestBridge returns a new test bridge instance.
 func NewTestBridge(ctx context.Context, cr *chrome.Chrome, cameraType UseCameraType) (*TestBridge, error) {
 	if cameraType != UseFakeVCDCamera {
-		if err := setupTestConfig(ctx, cameraType); err != nil {
+		if err := SetupTestConfig(ctx, cameraType); err != nil {
 			return nil, errors.Wrap(err, "failed to setup test config")
 		}
 		if cameraType == UseFakeHALCamera {
@@ -138,7 +140,7 @@ func NewTestBridge(ctx context.Context, cr *chrome.Chrome, cameraType UseCameraT
 
 // NewTestBridgeWithoutTestConfig returns a new test bridge instance without test config.
 func NewTestBridgeWithoutTestConfig(ctx context.Context, cr *chrome.Chrome, cameraType UseCameraType) (*TestBridge, error) {
-	if err := removeTestConfig(ctx); err != nil {
+	if err := RemoveTestConfig(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to remove test config")
 	}
 	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
@@ -236,10 +238,10 @@ func (t *TestBridge) TearDown(ctx context.Context) error {
 		}
 		t.pageConn = nil
 	}
-	if err := removeFakeHALConfig(ctx); err != nil {
+	if err := RemoveFakeHALConfig(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to remove fake hal config: ", err)
 	}
-	if err := removeTestConfig(ctx); err != nil {
+	if err := RemoveTestConfig(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to remove test config: ", err)
 	}
 	return nil

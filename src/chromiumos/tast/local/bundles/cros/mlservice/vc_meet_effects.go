@@ -17,11 +17,12 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VCMeet,
+		Func:         VCMeetEffects,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks Video Effects in Google Meet",
 		Contacts: []string{
@@ -30,53 +31,57 @@ func init() {
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:mainline", "informational", "group:ml_service",
+		},
+		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{
 			{
 				Name:    "clamshell_pwa",
-				Fixture: fixture.GAIALoggedInClamshell,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa",
-				Fixture: fixture.GAIALoggedInTablet,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web",
-				Fixture: fixture.GAIALoggedInClamshell,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web",
-				Fixture: fixture.GAIALoggedInTablet,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshell,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTablet,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshell,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTablet,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},
 	})
 }
 
-func VCMeet(ctx context.Context, s *testing.State) {
+func VCMeetEffects(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -115,18 +120,11 @@ func VCMeet(ctx context.Context, s *testing.State) {
 		gm.EnterFullScreen,
 		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
-			gm.SetLeaveEmptyCalls(false),
-			// Video lighting option is not available on Lacros due to http://b/265954612.
 			gm.SetAdjustVideoLighting(true),
 			gm.SetSendResolution(sendResolutionName),
 		),
-		// Video effects are not supported on Lacros on VM due to http://b/265954612.
 		gm.ApplyVideoEffects(gm.SetEffectBlur(true)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
-	}
-
-	if _, err := gm.ScreenshotCanvas(ctx, cr); err != nil {
-		s.Fatal("Failed to take screenshot of canvas: ", err)
 	}
 }

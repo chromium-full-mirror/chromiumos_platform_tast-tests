@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/testing"
 )
 
@@ -230,6 +231,8 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	var opts = []chrome.Option{
 		chrome.EnableFeatures("SpeakOnMuteEnabled"),
 		chrome.EnableFeatures("VideoConference"),
+		// Avoid the need to grant camera/microphone permissions.
+		chrome.ExtraArgs("--use-fake-ui-for-media-stream"),
 	}
 
 	var err error
@@ -277,6 +280,16 @@ func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTest
 }
 
 func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
+	// Check oauth2 token is still valid. If not, return an error to restart
+	// chrome and re-login.
+	if f.cr.LoginMode() == "GAIA" {
+		if st, err := loginstatus.GetLoginStatus(ctx, f.tconn); err != nil {
+			return errors.Wrap(err, "failed to get login status")
+		} else if !*st.HasValidOauth2Token {
+			return errors.New("invalid oauth2 token")
+		}
+	}
+
 	if err := f.cr.Responded(ctx); err != nil {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
 	}
