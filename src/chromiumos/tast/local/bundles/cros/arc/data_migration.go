@@ -64,7 +64,6 @@ func init() {
 		Contacts:     []string{"arc-storage@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
-		Attr:         []string{"group:mainline", "informational"},
 		// "no_qemu" is added for excluding betty from the target board list.
 		// TODO(b/179636279): Remove "no_qemu" after making the test pass on betty.
 		SoftwareDeps: []string{"chrome", "no_qemu"},
@@ -78,6 +77,7 @@ func init() {
 				dataFileName: homeDataNameNycX86,
 				managed:      false,
 			},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraData:         []string{homeDataNameNycX86},
 			ExtraSoftwareDeps: []string{"android_p", "amd64"},
 		}, {
@@ -88,6 +88,7 @@ func init() {
 				dataFileName: homeDataNamePiX86,
 				managed:      false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiX86},
 			ExtraSoftwareDeps: []string{
 				"android_vm",
@@ -103,6 +104,7 @@ func init() {
 				dataFileName: homeDataNamePiArm,
 				managed:      false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiArm},
 			ExtraSoftwareDeps: []string{
 				"android_vm",
@@ -118,6 +120,7 @@ func init() {
 				dataFileName: homeDataNameManagedPiX86,
 				managed:      true,
 			},
+			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
 			ExtraData: []string{homeDataNameManagedPiX86},
 			ExtraSearchFlags: []*testing.StringPair{
 				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
