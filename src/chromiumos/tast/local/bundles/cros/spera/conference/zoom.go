@@ -290,19 +290,13 @@ func (conf *ZoomConference) BackgroundChange(ctx context.Context) error {
 func (conf *ZoomConference) Presenting(ctx context.Context, application googleApplication) (err error) {
 	tconn := conf.tconn
 	ui := uiauto.New(tconn)
+	appName := string(application)
 
-	var appTabName string
-	switch application {
-	case googleSlides:
-		appTabName = slideTabName
-	case googleDocs:
-		appTabName = docTabName
-	}
 	// shareScreen shares screen by "Chrome Tab" and selects the tab which is going to present.
 	shareScreen := func(ctx context.Context) error {
 		shareScreenButton := nodewith.Name("Share Screen").Role(role.StaticText)
 		presenMode := nodewith.Name("Chrome Tab").Role(role.Tab)
-		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).Name(appTabName)
+		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(appName)
 		shareButton := nodewith.Name("Share").Role(role.Button)
 		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
 		return uiauto.NamedCombine("share Screen",
@@ -324,7 +318,7 @@ func (conf *ZoomConference) Presenting(ctx context.Context, application googleAp
 	presentOnExtendedDisplay := false
 	if err := presentApps(ctx, tconn, conf.uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
 		application, conf.outDir, presentOnExtendedDisplay); err != nil {
-		return errors.Wrapf(err, "failed to present %s", string(application))
+		return errors.Wrapf(err, "failed to present %s", appName)
 	}
 	return nil
 }
