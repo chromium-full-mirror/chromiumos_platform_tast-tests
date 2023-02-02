@@ -1,0 +1,5 @@
+{
+	"url": "gs://chromiumos-test-assets-public/tast/cros/graphics/CROSVM_20230201.fd",
+	"sha256sum": "cb81cb8d928f10ce00b4ca26d1acf4b3735b029ca10dfd0dbbd46d3a86539402",
+	"size": 4194304
+}

@@ -1,0 +1,5 @@
+{
+	"url": "gs://chromiumos-test-assets-public/tast/cros/graphics/QuantifiedWork2min_20230201.img",
+	"sha256sum": "08f75b10bf40e9380208f132ae5915c7e575e8bce08f485eb024037e2fded200",
+	"size": 16777216
+}
