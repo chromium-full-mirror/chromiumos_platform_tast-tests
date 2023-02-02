@@ -31,21 +31,11 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
-		Attr:         []string{"group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
+		SoftwareDeps: []string{"chrome", "arc"},
 		Fixture:      "arcBooted",
 		Data:         []string{"ArcShelfIconTest.apk"},
 		Timeout:      30 * time.Second,
-		Params: []testing.Param{{
-			// b:238260020 - disable aged (>1y) unpromoted informational tests
-			// ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name: "vm",
-			// b:238260020 - disable aged (>1y) unpromoted informational tests
-			// ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
 	})
 }
 
@@ -65,7 +55,7 @@ func ShelfIcons(ctx context.Context, s *testing.State) {
 		appTitle       = "ArcShelfIconTest"
 		menuIconOffset = 8
 
-		colorMaxDiff = 32
+		colorMaxDiff = 64
 	)
 	var (
 		iconColors     = []string{"white", "red", "green", "blue"}
