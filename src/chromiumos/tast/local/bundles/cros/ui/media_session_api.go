@@ -34,11 +34,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify the control buttons exist and there should be a space for artwork if the audio has artwork",
 		Contacts: []string{
-			"cj.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-status-area-eng@google.com",
+			"cienet-development@googlegroups.com",
+			"cj.tsai@cienet.com",
 		},
+		BugComponent: "b:1246148", // ChromeOS > Software > System UI Surfaces
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"media_session_api.html", "Lenna.png", "five_minute_audio_20211116.mp3"},

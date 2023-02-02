@@ -41,11 +41,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that settings can be found on Quick Settings",
 		Contacts: []string{
-			"cros-status-area-eng@google.com",
-			"ting.chen@cienet.com",
-			"lance.wang@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
+			"cros-status-area-eng@google.com",
+			"cienet-development@googlegroups.com",
+			"alfredyu@cienet.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
