@@ -103,8 +103,8 @@ func GetGBBFlags(ctx context.Context, dut *dut.DUT) (*pb.GBBFlagsState, error) {
 	}
 	testing.ContextLogf(ctx, "Current GBB flags = %#x", currentGBB)
 	return &pb.GBBFlagsState{
-		Clear: calcGBBFlags(^currentGBB),
-		Set:   calcGBBFlags(currentGBB),
+		Clear: CalcGBBFlags(^currentGBB),
+		Set:   CalcGBBFlags(currentGBB),
 	}, nil
 }
 
@@ -115,10 +115,10 @@ func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsSt
 	if err != nil {
 		return err
 	}
-	clearMask := calcGBBMask(state.Clear)
-	setMask := calcGBBMask(state.Set)
+	clearMask := CalcGBBMask(state.Clear)
+	setMask := CalcGBBMask(state.Set)
 	testing.ContextLogf(ctx, "Current GBB flags = %#x, want clear %#x, set %#x", currentGBB, clearMask, setMask)
-	newGBB := (currentGBB & ^clearMask) | setMask
+	newGBB := CalcGBBBits(currentGBB, clearMask, setMask)
 	if newGBB != currentGBB {
 		testing.ContextLogf(ctx, "Setting GBB flags = %#x", newGBB)
 		if err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", newGBB)).Run(exec.DumpLogOnError); err != nil {
@@ -130,9 +130,15 @@ func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsSt
 	return nil
 }
 
+// CalcGBBBits returns the final GBB bits after applying clear and set to curr.
+// Set has precedence over clear in the same bit position.
+func CalcGBBBits(curr, clear, set uint32) uint32 {
+	return (curr & ^clear) | set
+}
+
 // SetGBBFlags ignores the previous GBB flags and sets them to the specified flags.
 func SetGBBFlags(ctx context.Context, dut *dut.DUT, flags []pb.GBBFlag) error {
-	setMask := calcGBBMask(flags)
+	setMask := CalcGBBMask(flags)
 	testing.ContextLogf(ctx, "Setting GBB flags = %#x", setMask)
 	if err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", setMask)).Run(exec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "futility gbb --set")
@@ -140,8 +146,8 @@ func SetGBBFlags(ctx context.Context, dut *dut.DUT, flags []pb.GBBFlag) error {
 	return nil
 }
 
-// calcGBBFlags interprets mask as a GBBFlag bit mask and returns the set flags.
-func calcGBBFlags(mask uint32) []pb.GBBFlag {
+// CalcGBBFlags interprets mask as a GBBFlag bit mask and returns the set flags.
+func CalcGBBFlags(mask uint32) []pb.GBBFlag {
 	var res []pb.GBBFlag
 	for _, pos := range AllGBBFlags() {
 		if mask&(0x0001<<pos) != 0 {
@@ -151,8 +157,8 @@ func calcGBBFlags(mask uint32) []pb.GBBFlag {
 	return res
 }
 
-// calcGBBMask returns the bit mask corresponding to the list of GBBFlags.
-func calcGBBMask(flags []pb.GBBFlag) uint32 {
+// CalcGBBMask returns the bit mask corresponding to the list of GBBFlags.
+func CalcGBBMask(flags []pb.GBBFlag) uint32 {
 	var mask uint32
 	for _, f := range flags {
 		mask |= 0x0001 << f

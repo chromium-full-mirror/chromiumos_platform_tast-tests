@@ -31,8 +31,8 @@ type ImageSection string
 type FirmwareUpdateMode string
 
 const (
-	// gbbHeaderOffset is the location of the GBB header in GBBImageSection.
-	gbbHeaderOffset uint = 12
+	// GbbHeaderOffset is the location of the GBB header in GBBImageSection.
+	GbbHeaderOffset uint = 12
 
 	// RecoveryMode is the named chromeOS Firmware Updater to perform firmware recovery mode.
 	RecoveryMode FirmwareUpdateMode = "--mode=recovery"
@@ -344,7 +344,7 @@ func (i *Image) WriteImageToFile(ctx context.Context, sec ImageSection, dirpath 
 // GetGBBFlags returns the list of cleared and list of set flags.
 func (i *Image) GetGBBFlags() ([]pb.GBBFlag, []pb.GBBFlag, error) {
 	var gbb uint32
-	if err := i.readSectionData(GBBImageSection, gbbHeaderOffset, 4, &gbb); err != nil {
+	if err := i.ReadSectionData(GBBImageSection, GbbHeaderOffset, 4, &gbb); err != nil {
 		return nil, nil, err
 	}
 	setFlags := calcGBBFlags(gbb)
@@ -355,7 +355,7 @@ func (i *Image) GetGBBFlags() ([]pb.GBBFlag, []pb.GBBFlag, error) {
 // ClearAndSetGBBFlags clears and sets the specified flags, leaving the rest unchanged, set has precedence over clear.
 func (i *Image) ClearAndSetGBBFlags(clearFlags, setFlags []pb.GBBFlag) error {
 	var currGBB uint32
-	if err := i.readSectionData(GBBImageSection, gbbHeaderOffset, 4, &currGBB); err != nil {
+	if err := i.ReadSectionData(GBBImageSection, GbbHeaderOffset, 4, &currGBB); err != nil {
 		return err
 	}
 	newGBB := calcGBBBits(currGBB, calcGBBMask(clearFlags), calcGBBMask(setFlags))
@@ -363,7 +363,7 @@ func (i *Image) ClearAndSetGBBFlags(clearFlags, setFlags []pb.GBBFlag) error {
 		// No need to write section data if GBB flags are already correct.
 		return nil
 	}
-	return i.writeSectionData(GBBImageSection, gbbHeaderOffset, newGBB)
+	return i.WriteSectionData(GBBImageSection, GbbHeaderOffset, newGBB)
 }
 
 // WriteFlashrom writes the current data in the specified section into flashrom.
@@ -467,8 +467,8 @@ func calcGBBBits(curr, clear, set uint32) uint32 {
 	return (curr & ^clear) | set
 }
 
-// readSectionData returns interpreted data of a given size from raw bytes at the specified location.
-func (i *Image) readSectionData(sec ImageSection, off, sz uint, out interface{}) error {
+// ReadSectionData returns interpreted data of a given size from raw bytes at the specified location.
+func (i *Image) ReadSectionData(sec ImageSection, off, sz uint, out interface{}) error {
 	si, ok := i.Sections[sec]
 	if !ok {
 		return errors.Errorf("Section %s not found", sec)
@@ -483,8 +483,8 @@ func (i *Image) readSectionData(sec ImageSection, off, sz uint, out interface{})
 	return binary.Read(r, binary.LittleEndian, out)
 }
 
-// writeSectionData writes data to the specified section location.
-func (i *Image) writeSectionData(sec ImageSection, off uint, data interface{}) error {
+// WriteSectionData writes data to the specified section location.
+func (i *Image) WriteSectionData(sec ImageSection, off uint, data interface{}) error {
 	var buf bytes.Buffer
 	if err := binary.Write(&buf, binary.LittleEndian, data); err != nil {
 		return errors.Wrap(err, "could not parse section start")

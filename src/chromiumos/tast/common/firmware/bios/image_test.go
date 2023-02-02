@@ -62,7 +62,7 @@ func TestReadSectionData(t *testing.T) {
 	s := map[ImageSection]SectionInfo{GBBImageSection: {1, 16}}
 	i := Image{[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4}, s}
 	var flag uint32
-	err := i.readSectionData(GBBImageSection, 12, 4, &flag)
+	err := i.ReadSectionData(GBBImageSection, 12, 4, &flag)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestWriteSectionData(t *testing.T) {
 
 	var flag uint32
 	flag = 0x04030201
-	if err := i.writeSectionData(GBBImageSection, 12, flag); err != nil {
+	if err := i.WriteSectionData(GBBImageSection, 12, flag); err != nil {
 		t.Fatal(err)
 	}
 
@@ -95,7 +95,7 @@ func TestShortGBBSection(t *testing.T) {
 	s := map[ImageSection]SectionInfo{GBBImageSection: {0, 15}}
 	i := Image{[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4}, s}
 	var flag uint32
-	err := i.readSectionData(GBBImageSection, 12, 4, &flag)
+	err := i.ReadSectionData(GBBImageSection, 12, 4, &flag)
 	if err == nil {
 		t.Fatal("Short section not detected: ", err)
 	}

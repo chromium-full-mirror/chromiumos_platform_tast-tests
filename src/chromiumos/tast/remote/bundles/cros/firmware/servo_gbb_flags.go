@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/go-cmp/cmp"
 
 	common "chromiumos/tast/common/firmware"
@@ -38,7 +37,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_ccd"},
 		SoftwareDeps: []string{"flashrom"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Fixture:      fixture.NormalMode,
 		Data:         []string{"fw-config.json"},
 		// b/111215677: CCD servo detection doesn't work on soraka.
@@ -146,16 +144,12 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	programmer = fmt.Sprintf(programmer, ccdSerial)
 	s.Logf("Programmer is %s", programmer)
 
-	if err = h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
-
 	if err = h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
 		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 
-	s.Log("Getting GBB flags from BiosService")
-	old, err := h.BiosServiceClient.GetGBBFlags(ctx, &empty.Empty{})
+	s.Log("Getting GBB flags")
+	old, err := common.GetGBBFlags(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("initial GetGBBFlags failed: ", err)
 	}
@@ -173,7 +167,7 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	cf, sf, err := img.GetGBBFlags()
+	cf, sf, err := getFlagsFromImage(img)
 	if err != nil {
 		s.Fatal("Could not get GBB flags: ", err)
 	}
@@ -198,7 +192,7 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	// Toggle DEV_SCREEN_SHORT_DELAY
 	cf = common.GBBToggle(cf, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)
 	sf = common.GBBToggle(sf, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)
-	if err := img.ClearAndSetGBBFlags(cf, sf); err != nil {
+	if err := setFlagsFromImage(img, cf, sf); err != nil {
 		s.Fatal("Failed to toggle GBB flag in image: ", err)
 	}
 
@@ -219,12 +213,8 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to connect to DUT: %s", err)
 	}
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
-
-	s.Log("Getting GBB flags from BiosService")
-	newFlags, err := h.BiosServiceClient.GetGBBFlags(ctx, &empty.Empty{})
+	s.Log("Getting GBB flags")
+	newFlags, err := common.GetGBBFlags(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("final GetGBBFlags failed: ", err)
 	}
@@ -233,4 +223,27 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	if !cmp.Equal(expected.Set, newFlags.Set, sortSlice) {
 		s.Fatal("Updated GBB flags do not match SSH'd GBB flags ", cmp.Diff(expected.Set, newFlags.Set, sortSlice))
 	}
+}
+
+func getFlagsFromImage(i *commonbios.Image) ([]pb.GBBFlag, []pb.GBBFlag, error) {
+	var gbb uint32
+	if err := i.ReadSectionData(commonbios.GBBImageSection, commonbios.GbbHeaderOffset, 4, &gbb); err != nil {
+		return nil, nil, err
+	}
+	setFlags := common.CalcGBBFlags(gbb)
+	clearFlags := common.CalcGBBFlags(^gbb)
+	return clearFlags, setFlags, nil
+}
+
+func setFlagsFromImage(i *commonbios.Image, clearFlags, setFlags []pb.GBBFlag) error {
+	var currGBB uint32
+	if err := i.ReadSectionData(commonbios.GBBImageSection, commonbios.GbbHeaderOffset, 4, &currGBB); err != nil {
+		return err
+	}
+	newGBB := common.CalcGBBBits(currGBB, common.CalcGBBMask(clearFlags), common.CalcGBBMask(setFlags))
+	if newGBB == currGBB {
+		// No need to write section data if GBB flags are already correct.
+		return nil
+	}
+	return i.WriteSectionData(commonbios.GBBImageSection, commonbios.GbbHeaderOffset, newGBB)
 }
