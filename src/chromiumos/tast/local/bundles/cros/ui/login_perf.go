@@ -586,6 +586,14 @@ func testFunction(
 
 	// CUJ TPS metrics recording wrapper
 	cujFunc := func(ctx context.Context) error {
+		if runTracing {
+			// Start tracing now.
+			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer cujRecorder.StopTracing(ctx)
+		}
+
 		var err error
 		histograms, err = metrics.RunAndWaitAll(
 			ctx,
@@ -607,12 +615,6 @@ func testFunction(
 		return err
 	}
 	if err := cujRecorder.Run(ctx, cujFunc); err != nil {
-		// Start tracing now.
-		if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return cr, l, nil, nil, errors.Wrap(err, "failed to start tracing")
-		}
-		defer cujRecorder.StopTracing(ctx)
-
 		return cr, l, nil, nil, errors.Wrap(err, "failed to run the test scenario")
 	}
 	tpsValues := perf.NewValues()
