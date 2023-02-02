@@ -9,13 +9,14 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-// StableModels is a list of boards that stable enough and aim to run inputs tests in CQ.
+// StableModels is a list of models that are stable enough and aim to run
+// inputs tests in CQ.
 var StableModels = []string{
 	// VM models for testing.
 	"betty",
 	"reven", // ChromeOS Flex.
 
-	// Random boards on the top boards for VK list.
+	// Random models on the top models for VK list.
 	"bobba",
 	"bobba360",
 	"casta",
@@ -23,13 +24,29 @@ var StableModels = []string{
 	"kefka",
 	// Convertible chromebook, top usage in 2018 and 2019.
 	"cyan",
-	// Top VK usage board in 2020 -- convertible, ARM.
+	// Top VK usage models in 2020 -- convertible, ARM.
 	"hana",
 	"krane",
 	"kukui",
-	// Another top board -- convertible, x64.
+	// Another top model -- convertible, x64.
 	"snappy",
+	// jacuzzi models, ARM board covered in CrOS CQ.
+	"burnet",
+	"cozmo",
+	"damu",
+	"esche",
+	"fennel",
+	"fennel14",
+	"juniper",
+	"kappa",
+	"kenzo",
+	"pico",
+	"willow",
 }
+
+// UnstableModels is a list of newly proposed models that are expected to be
+// merged into StableModels.
+var UnstableModels = []string{}
 
 // GrammarEnabledModels is a list boards where Grammar Check is enabled.
 var GrammarEnabledModels = []string{
@@ -55,10 +72,10 @@ var MultiwordEnabledModels = []string{
 // More information refers to http://b/161415599.
 var InputsStableModels = hwdep.Model(StableModels...)
 
-// InputsUnstableModels is a list of models to run inputs tests at 'informational' so that we know once they are stable enough to be promoted to CQ.
-// kevin64 is an experimental board does not support nacl, which fails Canvas installation.
-// To stabilize the tests, have to exclude entire kevin model as no distinguish between kevin and kevin64.
-var InputsUnstableModels = hwdep.SkipOnModel(append(StableModels, "kevin")...)
+// InputsUnstableModels is a list of models to run inputs tests at
+// 'informational' so that we know once they are stable enough to be promoted
+// to CQ.
+var InputsUnstableModels = hwdep.Model(UnstableModels...)
 
 // PhysicalKeyboardPerfModels is a list of models that are useful for performance testing.
 // This should be a mix of devices with a variety of performance characteristics.
