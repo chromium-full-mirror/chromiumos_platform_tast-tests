@@ -270,7 +270,7 @@ type RecorderOptions struct {
 	DoNotChangeBluetooth bool
 }
 
-var performanceCUJDischargeThreshold = 20.0
+var performanceCUJDischargeThreshold = 25.0
 
 // NewPerformanceCUJOptions indicates the power test settings for performance CUJs run by partners.
 func NewPerformanceCUJOptions() RecorderOptions {
@@ -698,11 +698,10 @@ func (r *Recorder) chargeBatteryCapacityBeforePowerTest(ctx context.Context, min
 		if err != nil {
 			return errors.Wrap(err, "failed to get battery capacity")
 		}
-		testing.ContextLog(ctx, "Current battery capacity:", capacity, "%")
+		testing.ContextLogf(ctx, "Current battery capacity: %f%%", capacity)
 		if capacity < minimumBatteryCapacity {
-			return errors.New("Waiting for battery to be charged")
+			return errors.New("waiting for battery to be charged")
 		}
-
 		return nil
 	}, chargeBatteryTestPollOpt); err != nil {
 		return errors.Wrap(err, "failed to get battery status")
