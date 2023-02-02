@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/testing"
@@ -29,12 +30,12 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"chrome", "cros_internal", "metrics_consent"},
-		Pre:          crash.ChromePreWithVerboseConsent(),
+		Fixture:      fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
 	})
 }
 
 func SenderNoConsent(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(*chrome.Chrome)
 	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes(crash.FilterInIgnoreAllCrashes), crash.WithConsent(cr)); err != nil {
 		s.Fatal("Setup failed: ", err)
 	}
