@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/sys/unix"
 
@@ -33,13 +34,17 @@ type perf struct {
 }
 
 const (
-	perfRecordFileName     = "perf_record.data"
-	perfStatRecordFileName = "perf_stat_record.data"
-	perfStatFileName       = "perf_stat.data"
-	perfSchedFileName      = "perf_sched.data"
+	perfRecordFileName                      = "perf_record.data"
+	perfStatRecordFileName                  = "perf_stat_record.data"
+	perfStatCyclesPerSecondFileName         = "perf_stat_cycles_per_second.data"
+	perfStatInstructionsAtIntervalsFileName = "perf_stat_instructions_at_intervals.data"
+	perfSchedFileName                       = "perf_sched.data"
 
 	// PerfAllProcs is used in perf stat to get CPU cycle count on all processes.
 	PerfAllProcs = 0
+
+	eventCycles       = "cycles"
+	eventInstructions = "instructions"
 )
 
 // PerfRecordSamplingType optionally adds extra information to samples.
@@ -75,6 +80,11 @@ var (
 	//   17364020      cpu_atom/cycles/          #    1.800 M/sec
 	cyclesRegexp  = regexp.MustCompile(`(?s)\s+(\d+)\s+([_\w]+)?/?cycles`)
 	secondsRegexp = regexp.MustCompile(`(?s)\s+(\d+\.?[\d+]*)\s+seconds time elapsed`)
+
+	// Regexp for CPU instructions with timestamp.
+	// Sample input:
+	//   5.005296106           73734125      instructions
+	instructionsWithTimeRegexp = regexp.MustCompile(`(?s)\s+([0-9]*\.?[0-9]*)\s+(\d+)\s+instructions`)
 )
 
 type cyclesPerSecond struct {
@@ -82,9 +92,22 @@ type cyclesPerSecond struct {
 	Value    float64
 }
 
-// PerfStatOutput holds output of perf stat.
-type PerfStatOutput struct {
+type valueWithTimestamp struct {
+	// Timestamp of the sample relative to when perf stat starts.
+	Timestamp time.Duration
+	Value     int64
+}
+
+// PerfStatCyclesPerSecondOutput holds output of "perf stat -e cycles".
+type PerfStatCyclesPerSecondOutput struct {
 	CyclesPerSecond []cyclesPerSecond // Can have multiple values for CPUs with P- and E-Cores
+}
+
+// PerfStatInstructionsAtIntervalsOutput holds output of
+//
+//	"perf stat -e instructions -I <intervalMs>".
+type PerfStatInstructionsAtIntervalsOutput struct {
+	InstructionsAtIntervals []valueWithTimestamp
 }
 
 // PerfSchedOutput holds output metrics of perf sched.
@@ -140,16 +163,39 @@ type perfStatOpts struct {
 	// Indicate the target process.
 	pid int
 
-	// A pointer to the output of perf stat.
-	output *PerfStatOutput
+	// Specify which event to run per stat with. Default to `eventCycles` if empty.
+	event string
+
+	// Optional intervalMs. It adds "-I" arg to perf stat if specified.
+	intervalMs int64
+
+	// Holds pointers to PerfStatCyclesPerSecond or PerfStatInstructionsAtIntervals.
+	output interface{}
 }
 
-// PerfStatOpts creates a PerfOpts for running "perf stat -a" on the DUT.
+// PerfStatCyclesPerSecondOpts creates a PerfOpts for running "perf stat -a" on the DUT.
 // out is a pointer to PerfStatOutput, which will hold CPU cycle count per second spent
 // on pid process after End() is called on RunningProf.
 // Set pid to PerfAllProcs to get cycle count for the whole system.
-func PerfStatOpts(out *PerfStatOutput, pid int) *PerfOpts {
-	return &PerfOpts{stat: &perfStatOpts{pid: pid, output: out}}
+func PerfStatCyclesPerSecondOpts(out *PerfStatCyclesPerSecondOutput, pid int) *PerfOpts {
+	return &PerfOpts{stat: &perfStatOpts{
+		pid:    pid,
+		event:  eventCycles,
+		output: out,
+	}}
+}
+
+// PerfStatInstructionsAtIntervalsOpts creates a PerfOpts for running
+//
+//	"perf stat -a -e instructions -I <intervalMs>"
+//
+// on the DUT.
+func PerfStatInstructionsAtIntervalsOpts(out *PerfStatInstructionsAtIntervalsOutput, intervalMs int64) *PerfOpts {
+	return &PerfOpts{stat: &perfStatOpts{
+		event:      eventInstructions,
+		intervalMs: intervalMs,
+		output:     out,
+	}}
 }
 
 // PerfRecordOpts creates PerfOpts for running "perf record -e <event> [-c <period>|-F <freq>] [-b|-g]" on DUT.
@@ -221,6 +267,16 @@ func newPerf(ctx context.Context, outDir string, opts *PerfOpts) (instance, erro
 	}, nil
 }
 
+func getPerfStateFileName(stat *perfStatOpts) (string, error) {
+	if stat.event == eventCycles && stat.intervalMs == 0 {
+		return perfStatCyclesPerSecondFileName, nil
+	}
+	if stat.event == eventInstructions && stat.intervalMs != 0 {
+		return perfStatInstructionsAtIntervalsFileName, nil
+	}
+	return "", errors.New("unsupported perf stat")
+}
+
 func getCmd(ctx context.Context, outDir string, opts *PerfOpts) (*testexec.Cmd, error) {
 	perfArgs := make([]string, 0)
 	if opts.record != nil {
@@ -231,7 +287,7 @@ func getCmd(ctx context.Context, outDir string, opts *PerfOpts) (*testexec.Cmd, 
 		if opts.record.event != "" {
 			event = opts.record.event
 		} else {
-			event = "cycles"
+			event = eventCycles
 		}
 		perfArgs = append(perfArgs, "-e", event)
 		if opts.record.samplingRate != nil {
@@ -256,10 +312,24 @@ func getCmd(ctx context.Context, outDir string, opts *PerfOpts) (*testexec.Cmd, 
 		if len(perfArgs) != 0 {
 			return nil, errors.Errorf("more than one command option was initialized: perf %v and stat", perfArgs[0])
 		}
+		perfStatFileName, err := getPerfStateFileName(opts.stat)
+		if err != nil {
+			return nil, err
+		}
 		outputPath := filepath.Join(outDir, perfStatFileName)
-		perfArgs = append(perfArgs, "stat", "-a", "-e", "cycles", "--output", outputPath)
+		perfArgs = append(perfArgs, "stat", "-a", "--output", outputPath)
 		if opts.stat.pid != PerfAllProcs {
 			perfArgs = append(perfArgs, "-p", strconv.Itoa(opts.stat.pid))
+		}
+		var event string
+		if opts.stat.event != "" {
+			event = opts.stat.event
+		} else {
+			event = eventCycles
+		}
+		perfArgs = append(perfArgs, "-e", event)
+		if opts.stat.intervalMs != 0 {
+			perfArgs = append(perfArgs, "-I", strconv.FormatInt(opts.stat.intervalMs, 10))
 		}
 	}
 	if opts.statRecord != nil {
@@ -321,10 +391,10 @@ func getMaxLatencyMs(ctx context.Context, perfSchedFile, procName string) (float
 	return 0, errors.New("failed to read perf sched file")
 }
 
-// parseStatFile parses the output file of perf stat command to get CPU cycles per second
+// parseStatFileCycles parses the output file of perf stat command to get CPU cycles per second
 // spent in a process. The file should contain cycles and seconds elapsed.
 // The return value is a float64 for cycles per second.
-func parseStatFile(path string) ([]cyclesPerSecond, error) {
+func parseStatFileCycles(path string) ([]cyclesPerSecond, error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %q", path)
@@ -367,14 +437,63 @@ func parseStatFile(path string) ([]cyclesPerSecond, error) {
 	return cps, nil
 }
 
+// parseStatFileInstructions parses the output file of perf stat of outputting
+// instructions at intervals.
+func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read %q", path)
+	}
+
+	var values []valueWithTimestamp
+	for _, l := range strings.Split(string(b), "\n") {
+		m := instructionsWithTimeRegexp.FindStringSubmatch(l)
+		if m == nil {
+			continue
+		}
+
+		if len(m) != 3 {
+			return nil, errors.Errorf("unexpected output: %q", l)
+		}
+
+		t, err := time.ParseDuration(m[1] + "s")
+		if err != nil {
+		}
+
+		instructions, err := strconv.ParseInt(m[2], 0, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse cycles")
+		}
+
+		values = append(values, valueWithTimestamp{t, instructions})
+	}
+
+	return values, nil
+}
+
 func (p *perf) handleStat() error {
+	perfStatFileName, err := getPerfStateFileName(p.opts.stat)
+	if err != nil {
+		return err
+	}
 	perfPath := filepath.Join(p.outDir, perfStatFileName)
 
-	cyclesPerSecond, err := parseStatFile(perfPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse stat file")
+	if p.opts.stat.event == eventCycles && p.opts.stat.intervalMs == 0 {
+		cyclesPerSecond, err := parseStatFileCycles(perfPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse stat file for cycles")
+		}
+		p.opts.stat.output.(*PerfStatCyclesPerSecondOutput).CyclesPerSecond = cyclesPerSecond
+	} else if p.opts.stat.event == eventInstructions && p.opts.stat.intervalMs != 0 {
+		instructions, err := parseStatFileInstructions(perfPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse stat file for instructions")
+		}
+		p.opts.stat.output.(*PerfStatInstructionsAtIntervalsOutput).InstructionsAtIntervals = instructions
+	} else {
+		return errors.New("unsupported stat opt")
 	}
-	p.opts.stat.output.CyclesPerSecond = cyclesPerSecond
+
 	return nil
 }
 

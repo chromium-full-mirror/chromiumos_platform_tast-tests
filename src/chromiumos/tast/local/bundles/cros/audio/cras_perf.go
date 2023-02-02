@@ -80,14 +80,14 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 	runCtx, cancel := context.WithTimeout(ctx, contextDuration)
 	defer cancel()
 
-	var out profiler.PerfStatOutput
+	var out profiler.PerfStatCyclesPerSecondOutput
 	var outSched profiler.PerfSchedOutput
 
 	profs := []profiler.Profiler{
 		profiler.Top(&profiler.TopOpts{
 			Interval: topInterval,
 		}),
-		profiler.Perf(profiler.PerfStatOpts(&out, pid)),
+		profiler.Perf(profiler.PerfStatCyclesPerSecondOpts(&out, pid)),
 		profiler.Perf(profiler.PerfRecordOpts("", nil, profiler.PerfRecordCallgraph)),
 		profiler.Perf(profiler.PerfSchedOpts(&outSched, "cras")),
 	}

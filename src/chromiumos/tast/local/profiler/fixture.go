@@ -55,7 +55,7 @@ func newProfilerFixture() *profilerFixture {
 // newProfilers creates an array of profilers from runtime var args, also sets f.modes to corresponding modes.
 func (f *profilerFixture) newProfilers() ([]Profiler, error) {
 	var profs []Profiler
-	var stat PerfStatOutput
+	var stat PerfStatCyclesPerSecondOutput
 	var sched PerfSchedOutput
 
 	args := strings.Split(profilerMode.Value(), ",")
@@ -64,7 +64,7 @@ func (f *profilerFixture) newProfilers() ([]Profiler, error) {
 		switch mode(arg) {
 		case modeStat:
 			f.modes = append(f.modes, modeStat)
-			profs = append(profs, Perf(PerfStatOpts(&stat, 0)))
+			profs = append(profs, Perf(PerfStatCyclesPerSecondOpts(&stat, 0)))
 		case modeSched:
 			f.modes = append(f.modes, modeSched)
 			profs = append(profs, Perf(PerfSchedOpts(&sched, "")))
@@ -87,7 +87,7 @@ func (f *profilerFixture) filePaths(outDir string) []string {
 	for _, arg := range f.modes {
 		switch arg {
 		case modeStat:
-			paths = append(paths, filepath.Join(outDir, perfStatFileName))
+			paths = append(paths, filepath.Join(outDir, perfStatCyclesPerSecondFileName))
 		case modeSched:
 			paths = append(paths, filepath.Join(outDir, perfSchedFileName))
 		case modeRecord:

@@ -241,6 +241,7 @@ type Recorder struct {
 	memInfoTracker     *perfSrc.MemoryInfoTracker
 	loginEventRecorder *perfSrc.LoginEventRecorder
 	powertopRecorder   *perfSrc.PowertopRecorder
+	profilerRecorder   *perfSrc.ProfilerRecorder
 
 	pv *perf.Values
 
@@ -477,6 +478,11 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx, 5*time.Second, filepath.Join(outDir, "powertop"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create PowertopRecorder")
+	}
+
+	r.profilerRecorder, err = perfSrc.NewProfilerRecorder(ctx, tpsMetricPrefix, 5*time.Second, outDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create ProfilerRecorder")
 	}
 
 	r.names = make(map[browser.Type][]string)
@@ -850,6 +856,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil, errors.Wrap(err, "failed to start powertop recorder")
 	}
 
+	if err := r.profilerRecorder.Start(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start ProfilerRecorder")
+	}
+
 	// Start metrics recording per browser.
 	r.mr = make(map[browser.Type]*metrics.Recorder)
 	for bt := range r.names {
@@ -1007,6 +1017,13 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		}
 	}
 
+	if err := r.profilerRecorder.Stop(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to stop ProfilerRecorder: ", err)
+		if stopErr == nil {
+			stopErr = errors.Wrap(err, "failed to stop ProfilerRecorder")
+		}
+	}
+
 	if stopErr != nil {
 		return stopErr
 	}
@@ -1092,6 +1109,7 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	r.batteryInfoTracker.Record(r.pv)
 	r.memInfoTracker.Record(r.pv)
 	r.loginEventRecorder.Record(ctx, r.pv)
+	r.profilerRecorder.Record(r.pv)
 
 	collectCLCP(ctx, r.pv)
 

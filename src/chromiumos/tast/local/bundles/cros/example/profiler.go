@@ -26,7 +26,8 @@ func init() {
 }
 
 func Profiler(ctx context.Context, s *testing.State) {
-	var perfStatOutput profiler.PerfStatOutput
+	var perfStatCyclesPerSecondOutput profiler.PerfStatCyclesPerSecondOutput
+	var perfStatInstuctionsAtIntervalsOutput profiler.PerfStatInstructionsAtIntervalsOutput
 
 	profs := []profiler.Profiler{
 		profiler.Top(&profiler.TopOpts{
@@ -35,7 +36,9 @@ func Profiler(ctx context.Context, s *testing.State) {
 		profiler.VMStat(nil),
 		profiler.Perf(profiler.PerfStatRecordOpts()),
 		// Get CPU cycle count for all processes.
-		profiler.Perf(profiler.PerfStatOpts(&perfStatOutput, profiler.PerfAllProcs)),
+		profiler.Perf(profiler.PerfStatCyclesPerSecondOpts(&perfStatCyclesPerSecondOutput, profiler.PerfAllProcs)),
+		// Get instructions at 500ms intervals.
+		profiler.Perf(profiler.PerfStatInstructionsAtIntervalsOpts(&perfStatInstuctionsAtIntervalsOutput, 500)),
 	}
 
 	p, err := profiler.Start(ctx, s.OutDir(), profs...)
@@ -47,7 +50,11 @@ func Profiler(ctx context.Context, s *testing.State) {
 		if err := p.End(ctx); err != nil {
 			s.Error("Failure in ending the profiler: ", err)
 		}
-		s.Log("All CPU cycle count per second: ", perfStatOutput.CyclesPerSecond)
+		s.Log("All CPU cycle count per second: ", perfStatCyclesPerSecondOutput.CyclesPerSecond)
+		s.Log("Instructions at intervals:")
+		for _, inst := range perfStatInstuctionsAtIntervalsOutput.InstructionsAtIntervals {
+			s.Log("  t=", inst.Timestamp, ",  inst=", inst.Value)
+		}
 	}()
 
 	// Wait for 2 seconds to gather perf.data.
