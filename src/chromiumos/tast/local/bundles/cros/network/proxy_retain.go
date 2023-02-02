@@ -38,10 +38,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the proxy settings will be retained after login or across different users",
 		Contacts: []string{
-			"lance.wang@cienet.com",
+			"cros-connectivity@google.com",
+			"cros-conn-test-team@google.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			"edgar.chang@cienet.com",
 		},
+		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:network", "network_e2e_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},

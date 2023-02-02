@@ -24,10 +24,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the proxy values remain the same after DUT reboots",
 		Contacts: []string{
-			"lance.wang@cienet.com",
+			"cros-connectivity@google.com",
+			"cros-conn-test-team@google.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			"edgar.chang@cienet.com",
 		},
+		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:network", "network_e2e_unstable"},
 		ServiceDeps:  []string{"tast.cros.network.ProxySettingService"},
 		SoftwareDeps: []string{"chrome"},
