@@ -136,10 +136,13 @@ func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusion
 		// These are created implicitly by the ip netns command which is used
 		// for network namespaces for ARC and for the proxy DNS service.
 		"^/run/netns$": true,
-		// These namespaces specifically are for the system and default
-		// network DNS proxy processes.
-		"^/run/netns/connected_netns_0$": true,
-		"^/run/netns/connected_netns_1$": true,
+		// These namespaces specifically are for DNS proxy processes. There
+		// are two namespaces for the system and default proxy process, and
+		// an additional namespace for each physical network interface to be
+		// used by the ARC proxy process. The ARC namespaces are only created
+		// after ARC is started but lingers to avoid IPv6 issues with certain
+		// routers (b/266496850).
+		"^/run/netns/connected_netns_[0-9]+": true,
 		// These mount points are to ensure that the root namespace's
 		// /home/root/<hash> is propagated into the mnt_concierge namespace even
 		// when the latter namespace is created before login. This mount is not
