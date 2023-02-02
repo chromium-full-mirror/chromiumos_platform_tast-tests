@@ -25,7 +25,8 @@ func init() {
 		Func:         Resourced,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that resourced works",
-		Contacts:     []string{"vovoy@chromium.org"},
+		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
+		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
