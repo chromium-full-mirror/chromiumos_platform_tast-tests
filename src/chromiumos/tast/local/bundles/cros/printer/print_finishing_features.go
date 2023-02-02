@@ -29,6 +29,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/testing"
 )
@@ -160,7 +161,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Settings page: ", err)
 	}
 
-	const printerName = "IPP Everywhere Printer"
+	const printerDisplayName = "IPP Everywhere Printer"
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
@@ -183,7 +184,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("set printer details",
 		ui.LeftClick(nameFinder),
 		ui.EnsureFocused(nameFinder),
-		kb.TypeAction(printerName),
+		kb.TypeAction(printerDisplayName),
 		ui.LeftClick(addressFinder),
 		ui.EnsureFocused(addressFinder),
 		kb.TypeAction(fmt.Sprintf("localhost:%d", printerPort)),
@@ -215,7 +216,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 
 	// Select printer and click Print button.
 	s.Log("Selecting printer")
-	if err := printpreview.SelectPrinter(ctx, tconn, printerName); err != nil {
+	if err := printpreview.SelectPrinter(ctx, tconn, printerDisplayName); err != nil {
 		s.Fatal("Failed to select printer: ", err)
 	}
 
@@ -245,7 +246,28 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to print: ", err)
 	}
 
-	cmd := testexec.CommandContext(ctx, "ipptool", "-tv", fmt.Sprintf("ipp://localhost:%d/ipp/print", printerPort), s.DataPath("get-jobs-finishings-info.test"))
+	printerURI := fmt.Sprintf("ipp://localhost:%d/ipp/print", printerPort)
+	printerName, err := lp.PrinterNameByURI(ctx, printerURI)
+	if err != nil {
+		s.Fatal("Failed to find printer: ", err)
+	}
+	// We assume that the first print job always has ID equal to 1
+	jobID := 1
+	lpstatID := fmt.Sprintf("%s-%d", printerName, jobID)
+	s.Log("Waiting for print job to complete")
+	if err = testing.Poll(ctx, func(ctx context.Context) error {
+		if done, err := lp.JobCompleted(ctx, printerName, lpstatID); err != nil {
+			return testing.PollBreak(err)
+		} else if !done {
+			return errors.New("Print job has not completed yet")
+		}
+		s.Log("Print job has completed")
+		return nil
+	}, nil); err != nil {
+		s.Fatal("Print job failed to complete: ", err)
+	}
+
+	cmd := testexec.CommandContext(ctx, "ipptool", "-tv", printerURI, s.DataPath("get-jobs-finishings-info.test"))
 	stdout, _, err := cmd.SeparatedOutput()
 	// ippeveprinter cleans up print jobs after 60 seconds, so we should be able to see information about the job sent in this test
 	if !strings.Contains(string(stdout), "finishings (1setOf enum) = fold-double-gate,punch-dual-left,staple-top-right") {
