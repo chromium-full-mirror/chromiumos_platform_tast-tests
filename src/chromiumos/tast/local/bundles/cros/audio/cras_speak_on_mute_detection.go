@@ -14,17 +14,11 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
+	"chromiumos/tast/local/bundles/cros/audio/data"
+	"chromiumos/tast/local/bundles/cros/audio/device"
 	"chromiumos/tast/local/bundles/cros/audio/internal"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/testing"
-)
-
-const (
-	theQuickBrownFoxWav         = "the-quick-brown-fox.wav"
-	theQuickBrownFoxWavDuration = 3410 * time.Millisecond
-
-	// The ALSA device to playback directly to simulate speech from the user's mouth.
-	aloopPlaybackPCM = "hw:Loopback,0"
 )
 
 func init() {
@@ -35,7 +29,7 @@ func init() {
 		BugComponent: "b:875484", // ChromeOS > Platform > Technologies > Audio > Test > Tast
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.StereoAloopLoadedWithoutUI,
-		Data:         []string{theQuickBrownFoxWav},
+		Data:         []string{data.TheQuickBrownFoxWav},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -240,8 +234,8 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 	}()
 
 	speechWav := filepath.Join(s.OutDir(), "speech.wav")
-	speechWavDuration := theQuickBrownFoxWavDuration * 2 // "repeat 1" gives us double the duration.
-	if err := testexec.CommandContext(ctx, "sox", s.DataPath(theQuickBrownFoxWav), "--channels=2", "--rate=48000", speechWav, "repeat", "1").Run(testexec.DumpLogOnError); err != nil {
+	speechWavDuration := data.TheQuickBrownFoxWavDuration * 2 // "repeat 1" gives us double the duration.
+	if err := testexec.CommandContext(ctx, "sox", s.DataPath(data.TheQuickBrownFoxWav), "--channels=2", "--rate=48000", speechWav, "repeat", "1").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Cannot prepare speech.wav with sox: ", err)
 	}
 
@@ -257,7 +251,7 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 		switch param.speechSource {
 		case mouth:
 			// Play to PCM device to simulate speech from mouth.
-			err = internal.PlayWavToPCM(ctx, speechWav, aloopPlaybackPCM)
+			err = internal.PlayWavToPCM(ctx, speechWav, device.AloopPlaybackPCM)
 		case speaker:
 			// Play to default device which goes through to CRAS,
 			// to simulate speech played by apps.

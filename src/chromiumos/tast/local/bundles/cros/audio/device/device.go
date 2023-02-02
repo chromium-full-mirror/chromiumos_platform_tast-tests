@@ -21,6 +21,9 @@ import (
 const (
 	playbackDevicePath = "/proc/asound/card*/pcm*p/sub0/status"
 	captureDevicePath  = "/proc/asound/card*/pcm*c/sub0/status"
+
+	// AloopPlaybackPCM is ALSA device to playback directly, which will be available in CRAS's ALSA_LOOPBACK capture device.
+	AloopPlaybackPCM = "hw:Loopback,0"
 )
 
 // TestDeviceFiles tests device files matching pattern, a regular expression
