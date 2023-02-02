@@ -726,12 +726,14 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 		len(btpeerHosts), strings.Join(btpeerHosts, ", "))
 	for _, host := range btpeerHosts {
 		// Connect to btpeer over ssh using standard test credentials.
-		sshConn, err := ssh.New(ctx, &ssh.Options{
-			User:     "root",
-			Hostname: host,
-			KeyDir:   s.DUT().KeyDir(),
-			KeyFile:  s.DUT().KeyFile(),
-		})
+		sshOptions := &ssh.Options{
+			KeyDir:  s.DUT().KeyDir(),
+			KeyFile: s.DUT().KeyFile(),
+		}
+		if err := ssh.ParseTarget(host, sshOptions); err != nil {
+			return errors.Wrapf(err, "failed to parse ssh target btpeer host %q", host)
+		}
+		sshConn, err := ssh.New(ctx, sshOptions)
 		if err != nil {
 			return errors.Wrapf(err, "failed to connect to btpeer host %q over ssh", host)
 		}
