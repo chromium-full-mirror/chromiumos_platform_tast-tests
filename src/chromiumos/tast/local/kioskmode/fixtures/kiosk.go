@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash/ashproc"
+	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/screenshot"
@@ -49,7 +50,10 @@ func init() {
 		Impl: &kioskFixture{
 			autoLaunchKioskAppID:    kioskmode.WebKioskAccountID,
 			useDefaultLocalAccounts: true,
-			extraOpts:               []chrome.Option{chrome.ExtraArgs("--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore")},
+			extraPublicAccountPolicies: []policy.Policy{
+				&policy.LacrosAvailability{Val: "lacros_only"},
+			},
+			lacros: true,
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
@@ -72,13 +76,15 @@ type kioskFixture struct {
 	localAccounts *policy.DeviceLocalAccounts
 	// autoLaunchKioskAppID is a preselected Kiosk app ID used for autolaunch.
 	autoLaunchKioskAppID string
-	// extraOpts contains extra options passed to Chrome.
-	extraOpts []chrome.Option
+	// extraPublicAccountPolicies holds a policies that will be applied.
+	extraPublicAccountPolicies []policy.Policy
 	// proc is the root Chrome process. Kept to be used in Reset() checking if
 	// Chrome process hasn't restarted.
 	proc *process.Process
 	// kiosk is a reference to the Kiosk intstance.
 	kiosk *kioskmode.Kiosk
+	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
+	lacros bool
 }
 
 // KioskFixtData is returned by the fixture.
@@ -118,7 +124,7 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	options := []kioskmode.Option{
 		kioskmode.AutoLaunch(k.autoLaunchKioskAppID),
-		kioskmode.ExtraChromeOptions(k.extraOpts...),
+		kioskmode.PublicAccountPolicies(k.autoLaunchKioskAppID, k.extraPublicAccountPolicies),
 	}
 	if k.useDefaultLocalAccounts {
 		options = append(options, kioskmode.DefaultLocalAccounts())
@@ -133,6 +139,14 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			s.Error("Failed to take screenshot: ", err)
 		}
 		s.Fatal("Failed to create Chrome in kiosk mode: ", err)
+	}
+
+	if k.lacros {
+		testConn, err := cr.TestAPIConn(ctx)
+		_, err = lacrosproc.Root(ctx, testConn)
+		if err != nil {
+			s.Fatal("Failed to get lacros proc: ", err)
+		}
 	}
 
 	proc, err := ashproc.Root()
