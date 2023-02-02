@@ -80,18 +80,12 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	testing.ContextLogf(ctx, "Using callbox: %q", tf.Vars.Callbox)
 
 	callboxManager, ok := s.Var("callboxManager")
-	if !ok {
-		testing.ContextLog(ctx, "No callboxManager specified, defaulting to lookup")
-		callboxManager = ""
-		tf.Vars.CallboxManager = callboxManager
+	if !ok || callboxManager == "" {
+		testing.ContextLog(ctx, "No callbox specified, using default")
+		callboxManager = labProxyHostname
 	}
-	if callboxManager != "" {
-		testing.ContextLogf(ctx, "callboxManager: %s", callboxManager)
-		tf.Vars.CallboxManager = callboxManager
-	} else if callboxManager := callboxManagerByCallbox(tf.Vars.Callbox); callboxManager != "" {
-		testing.ContextLogf(ctx, "callboxManager: %s (deduced from callbox)", callboxManager)
-		tf.Vars.CallboxManager = callboxManager
-	}
+	tf.Vars.CallboxManager = callboxManager
+	testing.ContextLogf(ctx, "Using callboxManager: %q", tf.Vars.CallboxManager)
 
 	// Initialize CallboxManagerClient
 	if tf.Vars.CallboxManager == labProxyHostname {
@@ -233,20 +227,6 @@ func callboxHostName(dut *dut.DUT) (string, error) {
 	// CallboxManager expects callbox hostnames to end in .cros
 	hostname = hostname[0 : len(hostname)-1]
 	return fmt.Sprintf("%s.cros", strings.Join(hostname, "-")), nil
-}
-
-var callboxManagerByCallboxLookup = map[string]string{
-	"chromeos1-donutlab-callbox1.cros": labProxyHostname,
-	"chromeos1-donutlab-callbox2.cros": labProxyHostname,
-	"chromeos1-donutlab-callbox3.cros": labProxyHostname,
-	"chromeos1-donutlab-callbox4.cros": labProxyHostname,
-}
-
-func callboxManagerByCallbox(callbox string) string {
-	if callboxManager, ok := callboxManagerByCallboxLookup[callbox]; ok && callboxManager != "" {
-		return callboxManager
-	}
-	return ""
 }
 
 // Reset does nothing currently, but is required for the test fixture.
