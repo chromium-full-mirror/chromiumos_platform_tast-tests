@@ -44,6 +44,41 @@ var alsaConformanceUnstableModels = []string{"chronicler", "soraka", "karma", "b
 // TODO(b/136614687): Relex the criteria for grunt devices, the audio still sounds fine as CRAS can compensate the rate, if the rate error is not huge.
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}
 
+var mergeThresholdSize480Models = []string{
+	"nahera",
+	"banshee",
+	"brya",
+	"chronicler",
+	"collis",
+	"copano",
+	"crota",
+	"crota360",
+	"delbin",
+	"drobit",
+	"eldrid",
+	"elemi",
+	"felwinter",
+	"gimble",
+	"kano",
+	"lillipup",
+	"lindar",
+	"mithrax",
+	"osiris",
+	"primus",
+	"redrix",
+	"skolas",
+	"taeko",
+	"taniks",
+	"vell",
+	"voema",
+	"volet",
+	"volmar",
+	"volta",
+	"volteer2",
+	"voxel",
+	"zavala",
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ALSAConformance,
@@ -71,29 +106,33 @@ func init() {
 	})
 }
 
-func isInRelexedCriteriaModel(ctx context.Context) (bool, error) {
-	model, err := crosconfig.Get(ctx, "/", "name")
-	if err != nil {
-		return false, err
-	}
-
+func isInRelexedCriteriaModel(ctx context.Context, model string) bool {
 	for _, name := range relexedCriteriaModels {
 		if name == model {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
+}
+
+func isInMergeThresholdSize480Model(ctx context.Context, model string) bool {
+	for _, name := range mergeThresholdSize480Models {
+		if name == model {
+			return true
+		}
+	}
+	return false
 }
 
 func ALSAConformance(ctx context.Context, s *testing.State) {
-	// TODO(yuhsuan): Tighten the ratio if the current version is stable. (b/136614687)
-	useRelexedCriteria, err := isInRelexedCriteriaModel(ctx)
+	model, err := crosconfig.Get(ctx, "/", "name")
 	if err != nil {
 		s.Fatal("Failed query model: ", err)
 	}
 
+	// TODO(yuhsuan): Tighten the ratio if the current version is stable. (b/136614687)
 	var rateCriteria, rateErrCriteria float32
-	if !useRelexedCriteria {
+	if !isInRelexedCriteriaModel(ctx, model) {
 		rateCriteria = 0.1
 		rateErrCriteria = 100.0
 	} else {
@@ -209,11 +248,13 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 		} else {
 			arg = "-P"
 		}
+		var args = []string{arg, alsaDev, "--rate-criteria-diff-pct", fmt.Sprintf("%f", rateCriteria), "--rate-err-criteria", fmt.Sprintf("%f", rateErrCriteria), "--json"}
+		if isInMergeThresholdSize480Model(ctx, model) {
+			args = append(args, "--merge-thld-size", "480")
+		}
+
 		out, err := testexec.CommandContext(
-			ctx, "alsa_conformance_test.py", arg, alsaDev,
-			"--rate-criteria-diff-pct", fmt.Sprintf("%f", rateCriteria),
-			"--rate-err-criteria", fmt.Sprintf("%f", rateErrCriteria),
-			"--json").Output(testexec.DumpLogOnError)
+			ctx, "alsa_conformance_test.py", args...).Output(testexec.DumpLogOnError)
 		if err != nil {
 			s.Fatal("Failed to run alsa_conformance_test: ", err)
 		}
