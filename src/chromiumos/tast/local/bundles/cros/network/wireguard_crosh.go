@@ -50,7 +50,7 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to push test profile: ", err)
 	}
-	defer popProfile()
+	defer popProfile(cleanupCtx)
 	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
 		s.Fatal("Failed to create network topology for VPN tests: ", err)

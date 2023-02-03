@@ -64,7 +64,7 @@ func ShillVeth(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer func() {
 		if !restarted {
-			popFunc()
+			popFunc(cleanupCtx)
 		} else {
 			m.RemoveTestProfile(cleanupCtx)
 		}

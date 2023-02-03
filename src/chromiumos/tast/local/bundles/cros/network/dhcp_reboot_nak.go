@@ -59,7 +59,7 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to install the test profile: ", err)
 	}
-	defer popFunc()
+	defer popFunc(cleanupCtx)
 
 	// Prepare the environment.
 	simWiFi := s.FixtValue().(*hwsim.ShillSimulatedWiFi)

@@ -32,7 +32,7 @@ type SimpleNetworkEnv struct {
 	hasIPv4DNS bool
 	hasIPv6DNS bool
 
-	popTestProfile func()
+	popTestProfile func(ctx context.Context)
 	// Manager wraps the Manager D-Bus object in shill.
 	Manager *shill.Manager
 	// Pool is the subnet pool used in this test.
@@ -184,6 +184,6 @@ func (e *SimpleNetworkEnv) TearDown(ctx context.Context) error {
 		}
 	}
 
-	e.popTestProfile()
+	e.popTestProfile(ctx)
 	return lastErr
 }

@@ -550,7 +550,7 @@ func (m *Manager) RemoveTestProfile(ctx context.Context) error {
 // or the DUT restarts, making it safe to save changes to it while testing.
 // Assumes that there are no user profiles loaded (otherwise the test profile will be ignored).
 // Returns a function that should be deferred to pop and remove the profile.
-func (m *Manager) PushTestProfile(ctx context.Context) (func(), error) {
+func (m *Manager) PushTestProfile(ctx context.Context) (func(ctx context.Context), error) {
 	if err := m.RemoveTestProfile(ctx); err != nil {
 		return nil, err
 	}
@@ -560,7 +560,7 @@ func (m *Manager) PushTestProfile(ctx context.Context) (func(), error) {
 	if _, err := m.PushProfile(ctx, testProfileName); err != nil {
 		return nil, errors.Wrap(err, "PushProfile failed")
 	}
-	return func() {
+	return func(ctx context.Context) {
 		if err := m.PopProfile(ctx, testProfileName); err != nil {
 			testing.ContextLog(ctx, "Error popping test profile: ", err)
 			return

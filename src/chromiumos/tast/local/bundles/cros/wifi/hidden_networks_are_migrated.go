@@ -71,10 +71,10 @@ func HiddenNetworksAreMigrated(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to push test profile: ", err)
 	}
+	defer popFunc(ctx)
 	// Shorten deadline to leave time for cleanup.
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	defer popFunc()
 
 	networkConfig, err := netconfig.CreateOobeCrosNetworkConfig(ctx, cr)
 	if err != nil {

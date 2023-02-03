@@ -35,7 +35,7 @@ import (
 type TestEnv struct {
 	// resetProfile indicates whether a test profile is pushed during setup.
 	resetProfile   bool
-	popTestProfile func()
+	popTestProfile func(ctx context.Context)
 
 	// Manager wraps the Manager D-Bus object in shill.
 	Manager *shill.Manager
@@ -196,7 +196,7 @@ func (e *TestEnv) TearDown(ctx context.Context) error {
 	}
 
 	if e.popTestProfile != nil {
-		e.popTestProfile()
+		e.popTestProfile(ctx)
 	}
 
 	return lastErr

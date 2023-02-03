@@ -91,7 +91,7 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to push test profile: ", err)
 	}
-	defer popFunc()
+	defer popFunc(cleanupCtx)
 
 	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
