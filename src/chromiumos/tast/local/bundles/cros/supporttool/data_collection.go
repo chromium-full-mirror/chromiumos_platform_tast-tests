@@ -110,7 +110,7 @@ func DataCollection(ctx context.Context, s *testing.State) {
 			// Check the support case ID field.
 			if err := ud.WithTimeout(uiDetectionTimeout).WaitUntilExists(
 				uidetection.Word(param.caseID).First().
-					Below(uidetection.TextBlock([]string{"Support", "Case", "ID"})))(ctx); err != nil {
+					BelowA11yNode(nodewith.HasClass("support-tool-title")))(ctx); err != nil {
 				s.Fatal("Failed to verify support case ID: ", err)
 			}
 
@@ -159,17 +159,14 @@ func DataCollection(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to click Export button: ", err)
 			}
 
-			// Set the exported filename.
-			filename := "support_packet"
-			// Support Tool will try to export to file into a file named as
-			// "support_packet_<case id>_<timestamp>".
+			// Support Tool will try to name the exported file as "support_packet_<case id>_<timestamp>.zip",
+			// change it to "support_packet.zip" before saving.
 			filenameNode := nodewith.NameContaining("support_packet_" + param.caseID).First()
 			if err := uiauto.Combine("change exported file name",
-				// Double click and left click to select all text on the text field.
-				ui.DoubleClick(filenameNode),
 				ui.LeftClick(filenameNode),
+				keyboard.AccelAction("Ctrl+A"),
 				keyboard.AccelAction("Backspace"),
-				keyboard.TypeAction(filename),
+				keyboard.TypeAction("support_packet"),
 			)(ctx); err != nil {
 				s.Fatal("Failed to change filename: ", err)
 			}
@@ -179,7 +176,7 @@ func DataCollection(ctx context.Context, s *testing.State) {
 			}
 
 			if err := ui.WithTimeout(uiDetectionTimeout).WaitUntilExists(
-				nodewith.NameContaining(filename + ".zip").First())(ctx); err != nil {
+				nodewith.Name("support_packet.zip").First())(ctx); err != nil {
 				s.Fatal("Failed to verify the file exported message on the UI: ", err)
 			}
 
@@ -188,7 +185,7 @@ func DataCollection(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to get the cryptohome user path for %s: %v", cr.NormalizedUser(), err)
 			}
-			path := filepath.Join(cryptohomeUserPath, "MyFiles", "Downloads", filename+".zip")
+			path := filepath.Join(cryptohomeUserPath, "MyFiles", "Downloads", "support_packet.zip")
 			if fileInfo, err := os.Stat(path); err != nil {
 				s.Fatal("Failed to verify that the exported file exists in the filesystem: ", err)
 			} else if fileInfo.Size() == 0 {
