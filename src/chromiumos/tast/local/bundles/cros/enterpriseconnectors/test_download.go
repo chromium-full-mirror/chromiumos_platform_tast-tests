@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -202,6 +203,8 @@ func TestDownload(ctx context.Context, s *testing.State) {
 	defer dconn.Close()
 	defer dconn.CloseTarget(cleanupCtx)
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
+
 	// Need to wait for a valid dm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
 		s.Log("Checking for dm token")
@@ -230,6 +233,8 @@ func TestDownload(ctx context.Context, s *testing.State) {
 			}
 			defer dconnSafebrowsing.Close()
 			defer dconnSafebrowsing.CloseTarget(cleanupCtx)
+
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error_safe_browsing_page")
 
 			dlFileName := params.FileName
 

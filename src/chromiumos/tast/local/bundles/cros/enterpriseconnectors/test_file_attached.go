@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filepicker"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -293,12 +294,17 @@ func testFileAttachedForBrowserAndFile(
 		}
 	}
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
+
 	dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr, br)
 	if err != nil {
 		s.Fatal("Failed to get clean safe browsing page: ", err)
 	}
 	defer dconnSafebrowsing.Close()
 	defer dconnSafebrowsing.CloseTarget(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error_safe_browsing_page")
 
 	dconn, err := br.NewConn(ctx, server.URL+"/file_input.html")
 	if err != nil {
