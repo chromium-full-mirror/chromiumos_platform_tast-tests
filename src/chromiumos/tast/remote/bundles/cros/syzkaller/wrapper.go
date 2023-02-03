@@ -243,7 +243,12 @@ func Wrapper(ctx context.Context, s *testing.State) {
 				s.Log("Unexpected error stat config file: ", err)
 			}
 		}
-		out, err := exec.Command("ssh", "root@"+d.HostName(), "ls").CombinedOutput()
+		hostname, port := d.HostName(), "22"
+		parts := strings.Split(d.HostName(), ":")
+		if len(parts) == 2 {
+			hostname, port = parts[0], parts[1]
+		}
+		out, err := exec.Command("ssh", "-p", port, "root@"+hostname, "ls").CombinedOutput()
 		if err != nil {
 			s.Logf("SSH [%v] failed: %v: %v", d.HostName(), err, string(out))
 		}
