@@ -231,6 +231,8 @@ const (
 	SetBacklight BacklightMode = iota
 	// DoNotChangeBacklight indicates that back light should be left in the same state.
 	DoNotChangeBacklight
+	// SetBacklightToZero indicates that display backlight should be set to 0.
+	SetBacklightToZero
 )
 
 // KbBrightnessMode indicates what keyboard brightness setup is needed for a test.
@@ -333,6 +335,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.Backlight == SetBacklight {
 			s.Add(SetBacklightLux(ctx, 150))
+		}
+		if options.Backlight == SetBacklightToZero {
+			s.Add(SetBacklightBrightnessLinearPercent(ctx, 0))
 		}
 		if options.KeyboardBrightness == SetKbBrightness {
 			s.Add(SetKeyboardBrightness(ctx, 24))

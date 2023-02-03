@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// backlightBrightness returns the current backlight brightness in percent.
+// backlightBrightness returns the current backlight brightness in level.
 func backlightBrightness(ctx context.Context) (uint, error) {
 	output, err := testexec.CommandContext(ctx, "backlight_tool", "--get_brightness").Output(testexec.DumpLogOnError)
 	if err != nil {
@@ -46,22 +46,34 @@ func defaultBacklightBrightness(ctx context.Context, lux uint) (uint, error) {
 	return uint(brightness), nil
 }
 
-// setBacklightBrightness sets the backlight brightness.
+// setBacklightBrightness sets the backlight brightness level.
 func setBacklightBrightness(ctx context.Context, brightness uint) error {
 	brightnessArg := "--set_brightness=" + strconv.FormatUint(uint64(brightness), 10)
-	if err := testexec.CommandContext(ctx, "backlight_tool", brightnessArg).Run(testexec.DumpLogOnError); err != nil {
+	err := testexec.CommandContext(ctx, "backlight_tool", brightnessArg).Run(testexec.DumpLogOnError)
+	if err != nil {
 		return errors.Wrap(err, "unable to set backlight brightness")
 	}
 	return nil
 }
 
-// listBacklightPaths lists paths of backlights in sysfs
+// setBacklightBrightnessLinearPercent sets the backlight brightness linear
+// percentage.
+func setBacklightBrightnessLinearPercent(ctx context.Context, percent float64) error {
+	brightnessArg := "--set_brightness_percent=" + strconv.FormatFloat(percent, 'f', -1, 64)
+	err := testexec.CommandContext(ctx, "backlight_tool", brightnessArg).Run(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "unable to set backlight brightness")
+	}
+	return nil
+}
+
+// listBacklightPaths lists paths of backlights in sysfs.
 func listBacklightPaths() ([]string, error) {
 	const sysfsBacklightPath = "/sys/class/backlight"
 	files, err := ioutil.ReadDir(sysfsBacklightPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Ignore NotExist error since /sys/class/backlight may not exist
+			// Ignore NotExist error since /sys/class/backlight may not exist.
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "failed to read sysfs dir")
@@ -74,36 +86,74 @@ func listBacklightPaths() ([]string, error) {
 	return backlightPaths, nil
 }
 
-// SetBacklightLux sets the screen backlight to a brightness in lux.
-func SetBacklightLux(ctx context.Context, lux uint) (CleanupCallback, error) {
+// checkBacklightExists returns whether display backlights exist.
+func checkBacklightExists(ctx context.Context) (bool, error) {
 	backlightPaths, err := listBacklightPaths()
+	if err != nil {
+		return false, err
+	}
+	numBacklights := len(backlightPaths)
+	// TODO(hikalium): Remove listing backlights after checking this logic works
+	// on all platforms.
+	testing.ContextLogf(ctx, "%v backlights found: %s", numBacklights, strings.Join(backlightPaths[:], ","))
+	return numBacklights != 0, nil
+}
+
+// SetBacklightLux sets the screen backlight to a brightness in lux, and returns
+// a callback to restore backlight brightness after test finishes.
+func SetBacklightLux(ctx context.Context, lux uint) (CleanupCallback, error) {
+	backlightExists, err := checkBacklightExists(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if len(backlightPaths) == 0 {
+	if !backlightExists {
 		testing.ContextLog(ctx, "Skipping setting screen backlight brightness since there are no backlights")
 		return nil, nil
-	}
-	// TODO(hikarun): Remove listing backlights after checking this logic works on all platforms
-	testing.ContextLogf(ctx, "%v backlights found:", len(backlightPaths))
-	for _, path := range backlightPaths {
-		testing.ContextLog(ctx, path)
 	}
 	prevBrightness, err := backlightBrightness(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	brightness, err := defaultBacklightBrightness(ctx, lux)
 	if err != nil {
 		return nil, err
 	}
-	testing.ContextLogf(ctx, "Setting screen backlight brightness to %d (%d lux) from %d", brightness, lux, prevBrightness)
+	testing.ContextLogf(ctx, "Setting screen backlight brightness to level %d (%d lux) from level %d", brightness, lux, prevBrightness)
 	if err := setBacklightBrightness(ctx, brightness); err != nil {
 		return nil, err
 	}
 
 	return func(ctx context.Context) error {
-		testing.ContextLogf(ctx, "Reseting screen backlight brightness to %d", prevBrightness)
+		testing.ContextLogf(ctx, "Restoring screen backlight brightness to level %d", prevBrightness)
+		return setBacklightBrightness(ctx, prevBrightness)
+	}, nil
+}
+
+// SetBacklightBrightnessLinearPercent sets the backlight brightness linear
+// percentage, and returns a callback to restore backlight brightness after test
+// finishes.
+func SetBacklightBrightnessLinearPercent(ctx context.Context, percent float64) (CleanupCallback, error) {
+	backlightExists, err := checkBacklightExists(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !backlightExists {
+		testing.ContextLog(ctx, "Skipping setting screen backlight brightness since there are no backlights")
+		return nil, nil
+	}
+	prevBrightness, err := backlightBrightness(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	testing.ContextLogf(ctx, "Setting screen backlight brightness to %f linear percent from level %d", percent, prevBrightness)
+	if err := setBacklightBrightnessLinearPercent(ctx, percent); err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context) error {
+		testing.ContextLogf(ctx, "Restoring screen backlight brightness to level %d", prevBrightness)
 		return setBacklightBrightness(ctx, prevBrightness)
 	}, nil
 }
