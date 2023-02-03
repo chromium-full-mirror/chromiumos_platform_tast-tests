@@ -95,7 +95,6 @@ type runResources struct {
 	ui         *uiauto.Context
 	vh         *audio.Helper
 	uiHandler  cuj.UIActionHandler
-	recorder   *cujrecorder.Recorder
 	browserApp apps.App
 }
 
@@ -219,22 +218,28 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 	var appStartTime int64
-	switch params.appName {
-	case HelloWorldAppName:
-		testing.ContextLog(ctx, "Launch \"Hello world\" ARC app")
-		if err := recorder.Run(ctx, func(ctx context.Context) error {
+
+	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
+		if params.traceConfigPath != "" {
+			// Start tracing now.
+			if err := recorder.StartTracing(ctx, params.outDir, params.traceConfigPath); err != nil {
+				return errors.Wrap(err, "failed to start tracing")
+			}
+			defer recorder.StopTracing(ctx)
+		}
+
+		switch params.appName {
+		case HelloWorldAppName:
+			testing.ContextLog(ctx, "Launch \"Hello world\" ARC app")
 			startTime := time.Now()
 			// Use arc.WithWaitForLaunch() because we are measuring how long the launch takes.
 			if err := appHelloWorld.Start(ctx, tconn, arc.WithWaitForLaunch()); err != nil {
-				return err
+				return errors.Wrap(err, "failed to launch \"Hello world\" ARC app")
 			}
 			appStartTime = time.Since(startTime).Milliseconds()
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to launch \"Hello world\" ARC app")
-		}
-	case SpotifyAppName:
-		if err = recorder.Run(ctx, func(ctx context.Context) error {
+
+		case SpotifyAppName:
+			testing.ContextLog(ctx, "Launch \"Spotify\" ARC app")
 			t, err := appSpotify.Launch(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to Launch Spotify")
@@ -246,21 +251,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 				return errors.Wrap(err, "failed to play Spotify")
 			}
 			// Let spotify continue to play for some time.
-			return testing.Sleep(ctx, 3*time.Second)
-		}); err != nil {
-			return errors.Wrap(err, "failed to launch Spotify")
-		}
-	}
-
-	resources := &runResources{kb: kb, topRow: topRow, ui: ui, vh: vh, uiHandler: uiHandler, recorder: recorder, browserApp: browserApp}
-
-	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-		if params.traceConfigPath != "" {
-			// Start tracing now.
-			if err := recorder.StartTracing(ctx, params.outDir, params.traceConfigPath); err != nil {
-				return errors.Wrap(err, "failed to start tracing")
+			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+				return errors.Wrap(err, "failed to sleep")
 			}
-			defer recorder.StopTracing(ctx)
+		}
+
+		resources := &runResources{
+			kb:         kb,
+			topRow:     topRow,
+			ui:         ui,
+			vh:         vh,
+			uiHandler:  uiHandler,
+			browserApp: browserApp,
 		}
 
 		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
