@@ -50,6 +50,7 @@ func init() {
 		Contacts: []string{
 			"chrome-autofill@google.com", // Feature owner
 		},
+		BugComponent: "crbug:UI>Browser>Autofill",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{},
 		Params: []testing.Param{{

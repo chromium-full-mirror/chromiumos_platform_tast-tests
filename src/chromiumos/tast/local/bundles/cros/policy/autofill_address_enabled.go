@@ -38,8 +38,9 @@ func init() {
 		Contacts: []string{
 			"chrome-autofill@google.com", // Feature owner
 		},
+		BugComponent: "crbug:UI>Browser>Autofill",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{},
+		Attr:         []string{"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
@@ -97,7 +98,7 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 			htmlFieldID: "city",
 		},
 		{
-			fieldName:   "ZIP code",
+			fieldName:   "Postal code",
 			fieldValue:  "11111",
 			htmlFieldID: "postal-code",
 		},
