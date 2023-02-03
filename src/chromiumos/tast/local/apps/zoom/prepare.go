@@ -24,7 +24,7 @@ import (
 
 // navigateToZoomAndSignIn starts a new Chrome browser, navigates to the Zoom website and signs in if not yet.
 func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*chrome.Conn, error) {
-	conn, err := br.NewConn(ctx, zoomWebsite)
+	conn, err := br.NewTab(ctx, zoomWebsite)
 	if err != nil {
 		return nil, err
 	}

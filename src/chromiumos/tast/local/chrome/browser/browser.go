@@ -40,6 +40,36 @@ func New(sess *driver.Session, autotestPrivateSupported bool) *Browser {
 	return &Browser{sess, autotestPrivateSupported}
 }
 
+// NewTab creates a new Google Chrome tab.
+// Lacros-Chrome initially starts with a new tab page (chrome://newtab/).
+// If this new tab page exists, use the new tab to navigate to the URL.
+func (b *Browser) NewTab(ctx context.Context, url string) (*Conn, error) {
+	targets, err := b.FindTargets(ctx, driver.MatchTargetURL("chrome://newtab/"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find new tab targets")
+	}
+	if len(targets) != 1 {
+		// If there are no new tab or there are multiple new tabs,
+		// create a new tab and return.
+		return b.NewConn(ctx, url)
+	}
+
+	return b.NavigateToURLUsingNewTab(ctx, url)
+}
+
+// NavigateToURLUsingNewTab finds the new tab and navigate to the given URL.
+func (b *Browser) NavigateToURLUsingNewTab(ctx context.Context, url string) (*Conn, error) {
+	conn, err := b.NewConnForTarget(ctx, driver.MatchTargetURL("chrome://newtab/"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find new tab")
+	}
+	if err := conn.Navigate(ctx, url); err != nil {
+		return nil, errors.Wrapf(err, "failed to navigate to %s, error", url)
+	}
+
+	return conn, nil
+}
+
 // CreateTargetOption is cpdutil.CreateTargetOption.
 type CreateTargetOption = cdputil.CreateTargetOption
 

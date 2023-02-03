@@ -113,7 +113,7 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, m
 		meetingURL = meetingURL + "?" + values.Encode()
 	}
 
-	conn, err := br.NewConn(ctx, meetingURL)
+	conn, err := br.NewTab(ctx, meetingURL)
 	if err != nil {
 		return nil, err
 	}
