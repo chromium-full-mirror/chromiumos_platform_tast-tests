@@ -34,8 +34,8 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		// This may take a while on zork boards.
-		Timeout:      time.Minute * 5,
+		// This may take a while on slower boards.
+		Timeout:      time.Minute * 9,
 		SoftwareDeps: []string{"cros_internal", "cups"},
 		Data:         []string{ppdsAll},
 	})
