@@ -6,9 +6,11 @@ package hwsec
 
 import (
 	"context"
+	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
@@ -47,6 +49,7 @@ func init() {
 				Val:               testParam{pinWeaverSupported: true},
 			},
 		},
+		Timeout: 5 * time.Minute,
 	})
 }
 
@@ -185,6 +188,11 @@ func checkOthersAreBlocked(ctx context.Context, utility *hwsec.CryptohomeClient,
 }
 
 func LockToSingleUserMountUntilReboot(ctx context.Context, s *testing.State) {
+	// Shorten deadline to leave time for cleanup
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
+	defer cancel()
+
 	// Standard initializations.
 	r := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewHelper(r, s.DUT())
@@ -241,11 +249,11 @@ func LockToSingleUserMountUntilReboot(ctx context.Context, s *testing.State) {
 	if err := create2VaultsForTesting(ctx, utility, keyInfos1, keyInfos2); err != nil {
 		s.Fatal("Failed to initialize vaults for testing: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if err := cleanupVault(ctx, utility); err != nil {
 			s.Error("Failed to cleanup vault: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	// Before starting the actual test, check that everything is alright.
 	if err := checkBothVaultsAreOperational(ctx, utility, keyInfos1, keyInfos2); err != nil {
@@ -256,6 +264,16 @@ func LockToSingleUserMountUntilReboot(ctx context.Context, s *testing.State) {
 	if err := utility.MountVault(ctx, util.Password2Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword2), false, hwsec.NewVaultConfig()); err != nil {
 		s.Fatal("Failed to mount the user for lock to single user mount: ", err)
 	}
+
+	hasRebooted := false
+	defer func(ctx context.Context) {
+		if !hasRebooted {
+			if err := helper.Reboot(ctx); err != nil {
+				s.Error("Failed to reboot: ", err)
+			}
+		}
+	}(cleanupCtx)
+
 	if err := utility.LockToSingleUserMountUntilReboot(ctx, util.FirstUsername); err != nil {
 		s.Fatal("Failed to lock to single user mount: ", err)
 	}
@@ -279,6 +297,7 @@ func LockToSingleUserMountUntilReboot(ctx context.Context, s *testing.State) {
 	if err := helper.Reboot(ctx); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
+	hasRebooted = true
 
 	if err := checkBothVaultsAreOperational(ctx, utility, keyInfos1, keyInfos2); err != nil {
 		s.Fatal("Vaults doesn't work after reboot: ", err)
