@@ -194,13 +194,20 @@ func validateAdminPolicy(ctx context.Context, info *bluetoothInfo, adapter *blue
 
 // validateAdvertising validate the data from LEAdvertisingManager1 interface.
 func validateAdvertising(ctx context.Context, info *bluetoothInfo, adapter *bluez.Adapter) error {
-	if supportedCapabilities, err := adapter.SupportedCapabilities(ctx); err != nil {
+	supportedCapabilities, err := adapter.SupportedCapabilities(ctx)
+	if err != nil {
 		// Pass if neither cros_healthd nor D-Bus has supportedCapabilities.
 		if info.Adapters[0].SupportedCapabilities == nil {
 			return nil
 		}
 		return err
-	} else if info.Adapters[0].SupportedCapabilities.MaxAdvLen != supportedCapabilities.MaxAdvLen ||
+	}
+
+	if info.Adapters[0].SupportedCapabilities == nil {
+		return errors.Errorf("invalid supportedCapabilities value: got nil; want %v", supportedCapabilities)
+	}
+
+	if info.Adapters[0].SupportedCapabilities.MaxAdvLen != supportedCapabilities.MaxAdvLen ||
 		info.Adapters[0].SupportedCapabilities.MaxScnRspLen != supportedCapabilities.MaxScnRspLen ||
 		info.Adapters[0].SupportedCapabilities.MaxTxPower != supportedCapabilities.MaxTxPower ||
 		info.Adapters[0].SupportedCapabilities.MinTxPower != supportedCapabilities.MinTxPower {
