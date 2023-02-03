@@ -324,6 +324,19 @@ type Chameleond interface {
 	// expected to support.
 	StartPlayingAudio(ctx context.Context, portID PortID, path string, format *AudioDataFormat) error
 
+	// StartPlayingAudioWithToken calls the Chameleond RPC method of the same name.
+	// We use token here instead of exact path which is used by StartPlayingAudio API
+	// to keep requester agnostic to how the data stored in chameleon.
+	StartPlayingAudioWithToken(ctx context.Context, portID PortID, token string, format *AudioDataFormat) error
+
+	// CopyFileToChameleon calls the Chameleond RPC method of the same name.
+	// Copies a file to chameleon. Return a token which refers the file is successfully stored.
+	CopyFileToChameleon(ctx context.Context, content []byte, filename string) (token string, err error)
+
+	// DeleteFileInChameleon calls the Chameleond RPC method of the same name.
+	// Deletes file that stored in chameleon. Use the token to specify the file that you want to delete.
+	DeleteFileInChameleon(ctx context.Context, token string) error
+
 	// StartPlayingEcho calls the Chameleond RPC method of the same name.
 	// Echoes audio data received from inputID and plays to portID.
 	StartPlayingEcho(ctx context.Context, portID, inputID PortID) error
@@ -916,6 +929,25 @@ func (c *CommonChameleond) StopCapturingAudio(ctx context.Context, portID PortID
 // This implements Chameleond.StartPlayingAudio, see that for more details.
 func (c *CommonChameleond) StartPlayingAudio(ctx context.Context, portID PortID, path string, format *AudioDataFormat) error {
 	return c.RPC("StartPlayingAudio").Args(portID.Int(), path, format.Map()).Call(ctx)
+}
+
+// StartPlayingAudioWithToken calls the Chameleond RPC method of the same name.
+// This implements Chameleond.StartPlayingAudioWithToken, see that for more details.
+func (c *CommonChameleond) StartPlayingAudioWithToken(ctx context.Context, portID PortID, token string, format *AudioDataFormat) error {
+	return c.RPC("StartPlayingAudioWithToken").Args(portID.Int(), token, format.Map()).Call(ctx)
+}
+
+// CopyFileToChameleon calls the Chameleond RPC method of the same name.
+// Copies a file to chameleon. Simply use os.ReadFile() and pass in binary form.
+// Return a token which refers the file is successfully stored.
+func (c *CommonChameleond) CopyFileToChameleon(ctx context.Context, content []byte, filename string) (token string, err error) {
+	return c.RPC("CopyFileToChameleon").Args(content, filename).CallForString(ctx)
+}
+
+// DeleteFileInChameleon calls the Chameleond RPC method of the same name.
+// Deletes file that stored in chameleon. Use the token to specify the file that you want to delete.
+func (c *CommonChameleond) DeleteFileInChameleon(ctx context.Context, token string) (err error) {
+	return c.RPC("DeleteFileInChameleon").Args(token).Call(ctx)
 }
 
 // StartPlayingEcho calls the Chameleond RPC method of the same name.
