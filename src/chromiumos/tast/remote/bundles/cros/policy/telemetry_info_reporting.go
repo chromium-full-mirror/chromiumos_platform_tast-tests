@@ -144,25 +144,15 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 	}
 	defer accManager.CleanUp(ctx)
 
-	// Disable Asset ID screen on enrollment.
-	if err := reportingutil.DisableUpdatingDeviceAttribute(ctx, tapeClient, acc.RequestID); err != nil {
-		s.Fatal("Failed to set the asset policy: ", err)
-	}
-
 	// Enable or disable the policies depending on the param.
-	var telemetryBehavior tape.ReportingTelemetryBehaviorEnum
+	var updatePolicy reportingutil.UpdatePolicy
 	if param.reportingEnabled {
-		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL
+		updatePolicy = reportingutil.EnableAll
 	} else {
-		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL
+		updatePolicy = reportingutil.DisableAll
 	}
 
-	policy := &tape.EnableGranularDeviceTelemetryReportingDevices{
-		ReportingTelemetryBehavior:     telemetryBehavior,
-		ReportTelemetryCustomAllowlist: []string{},
-	}
-
-	if err := tapeClient.SetPolicy(ctx, policy, []string{"reportingTelemetryBehavior"}, acc.RequestID); err != nil {
+	if err := reportingutil.SetTelemetryPolicies(ctx, tapeClient, acc.RequestID, updatePolicy, []string{}, true); err != nil {
 		s.Fatal("Failed to set the policy: ", err)
 	}
 

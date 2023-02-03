@@ -194,15 +194,6 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 	}
 	defer accManager.CleanUp(ctx)
 
-	// Disable Asset ID screen on enrollment.
-	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{
-		AllowToUpdateDeviceAttribute: false,
-	}
-
-	if err := tapeClient.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, acc.RequestID); err != nil {
-		s.Fatal("Failed to set the asset policy: ", err)
-	}
-
 	// Enable or disable the policies depending on the param.
 	var telemetryAllowlist []string
 	if reportingEnabled {
@@ -211,12 +202,7 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 		telemetryAllowlist = []string{}
 	}
 
-	policy := &tape.EnableGranularDeviceTelemetryReportingDevices{
-		ReportingTelemetryBehavior:     tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST,
-		ReportTelemetryCustomAllowlist: telemetryAllowlist,
-	}
-
-	if err := tapeClient.SetPolicy(ctx, policy, []string{"reportingTelemetryBehavior", "reportTelemetryCustomAllowlist"}, acc.RequestID); err != nil {
+	if err := reportingutil.SetTelemetryPolicies(ctx, tapeClient, acc.RequestID, reportingutil.Custom, telemetryAllowlist, true); err != nil {
 		s.Fatal("Failed to set the policy: ", err)
 	}
 

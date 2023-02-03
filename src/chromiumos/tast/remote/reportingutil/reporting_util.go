@@ -33,6 +33,15 @@ const DmServerURL = "https://crosman-alpha.sandbox.google.com/devicemanagement/d
 // ReportingServerURL is the URL to the autopush reporting server.
 const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleapis.com/v1"
 
+// UpdatePolicy is used to identify which policies need to updated for a test.
+type UpdatePolicy int
+
+const (
+	EnableAll UpdatePolicy = iota
+	DisableAll
+	Custom
+)
+
 // VerifyEventTypeCallback is passed to the PruneEvents function. If this function returns false for an event
 // then PruneEvents will not include the event in the returned list.
 type VerifyEventTypeCallback func(InputEvent) bool
@@ -138,6 +147,46 @@ func SleepWithContextLog(ctx context.Context, minutes int) error {
 		"Waiting for %d minutes to check for reported telemetry", minutes)
 	if err := testing.Sleep(ctx, time.Duration(minutes)*time.Minute); err != nil {
 		return errors.Wrap(err, "failed to sleep")
+	}
+	return nil
+}
+
+// SetTelemetryPolicies makes a call to the DMServer API to update the policies of a device.
+func SetTelemetryPolicies(ctx context.Context, client tapeClient, requestID string, updatePolicy UpdatePolicy, allowlist []string, skipAssetIdScreen bool) error {
+	// Make the device skip the asset id screen for enrollment.
+	if skipAssetIdScreen {
+		if err := DisableUpdatingDeviceAttribute(ctx, client, requestID); err != nil {
+			return errors.Wrap(err, "Failed to set the asset policy: ")
+		}
+	}
+
+	// Enable or disable the policies depending on the param.
+	var telemetryBehavior tape.ReportingTelemetryBehaviorEnum
+	if updatePolicy == EnableAll {
+		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL
+	} else if updatePolicy == DisableAll {
+		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL
+	} else if updatePolicy == Custom && len(allowlist) == 0 {
+		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL
+	} else if updatePolicy == Custom {
+		telemetryBehavior = tape.REPORTINGTELEMETRYBEHAVIORENUM_REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST
+	}
+
+	policy := &tape.EnableGranularDeviceTelemetryReportingDevices{
+		ReportingTelemetryBehavior:     telemetryBehavior,
+		ReportTelemetryCustomAllowlist: allowlist,
+	}
+
+	// Change the UpdateMask depending on the changes needed.
+	updateMask := []string{}
+	if updatePolicy == Custom && len(allowlist) > 0 {
+		updateMask = []string{"reportingTelemetryBehavior", "reportTelemetryCustomAllowlist"}
+	} else {
+		updateMask = []string{"reportingTelemetryBehavior"}
+	}
+
+	if err := client.SetPolicy(ctx, policy, updateMask, requestID); err != nil {
+		return errors.Wrap(err, "Failed to set the policy: ")
 	}
 	return nil
 }
