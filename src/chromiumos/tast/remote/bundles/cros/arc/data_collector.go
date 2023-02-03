@@ -273,7 +273,7 @@ func init() {
 func DataCollector(ctx context.Context, s *testing.State) {
 	const (
 		// ureadahed packs bucket
-		ureadAheadPack = "ureadahead_pack"
+		ureadaheadPack = "ureadahead_pack"
 
 		// GMS Core caches bucket
 		gmsCoreCache = "gms_core_cache"
@@ -387,7 +387,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		// Prepare target directory on host for pack file.
-		targetDir := filepath.Join(dataDir, ureadAheadPack)
+		targetDir := filepath.Join(dataDir, ureadaheadPack)
 		defer func() {
 			// Cleanup in case of failure. Might be needed for next retry passes.
 			if retErr != nil {
@@ -399,12 +399,18 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		var filesToGet = map[string]string{}
-		filesToGet[response.PackPath] = initialPack
-		filesToGet[response.LogPath] = initialPackLog
-
 		if param.vmEnabled {
+			if response.VmPackPath == "" || response.VmLogPath == "" {
+				s.Fatal("Failed to obtain VM file paths from ureadaheadPackService.Generate response")
+			}
 			filesToGet[response.VmPackPath] = vmInitialPack
 			filesToGet[response.VmLogPath] = vmInitialPackLog
+		} else {
+			if response.PackPath == "" || response.LogPath == "" {
+				s.Fatal("Failed to obtain file paths from ureadaheadPackService.Generate response")
+			}
+			filesToGet[response.PackPath] = initialPack
+			filesToGet[response.LogPath] = initialPackLog
 		}
 
 		for source, targetShort := range filesToGet {
@@ -415,13 +421,13 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		targetTar := filepath.Join(targetDir, vUreadahead+".tar")
-		testing.ContextLogf(shortCtx, "Compressing ureadahead packs to %q", targetTar)
+		testing.ContextLogf(shortCtx, "Compressing ureadahead files to %q", targetTar)
 		if err = exec.Command("tar", "-cvpf", targetTar, "-C", targetDir, ".").Run(); err != nil {
 			s.Fatalf("Failed to compress %q: %v", targetDir, err)
 		}
 
-		if err := duUreadahead.uploadIfNeeded(targetTar, ureadAheadPack); err != nil {
-			s.Fatalf("Failed to upload %q: %v", ureadAheadPack, err)
+		if err := duUreadahead.uploadIfNeeded(targetTar, ureadaheadPack); err != nil {
+			s.Fatalf("Failed to upload %q: %v", ureadaheadPack, err)
 		}
 
 		return nil
