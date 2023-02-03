@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -36,6 +37,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.network.ProxySettingService",
+			"tast.cros.ui.ChromeUIService",
 			wificell.TFServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
@@ -49,16 +51,7 @@ func init() {
 func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	manifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
-	proxyConfigs := &network.ProxyConfigs{
-		NetworkInfo:         &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},
-		ProxyConnectionType: network.ProxyConnectionType_ManualProxyConfiguration,
-		HttpHost:            "localhost",
-		HttpPort:            "123",
-		HttpsHost:           "localhost",
-		HttpsPort:           "456",
-		SocksHost:           "socks5://localhost",
-		SocksPort:           "8080",
-	}
+	proxyConfigs := wificell.DefaultProxyConfigForEthernet()
 
 	setUpBeforeReboot := func(ctx context.Context) error {
 		cleanupCtx := ctx
@@ -67,13 +60,11 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 
 		rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 		crSvc := pb.NewChromeServiceClient(rpcClient.Conn)
-		if _, err := crSvc.New(ctx, &pb.NewRequest{
-			LoginMode:                    pb.LoginMode_LOGIN_MODE_NO_LOGIN,
-			SigninProfileTestExtensionId: manifestKey,
-		}); err != nil {
-			return errors.Wrap(err, "failed to start Chrome")
+		chromeUISvc := pb.NewChromeUIServiceClient(rpcClient.Conn)
+		if err := bootToOOBE(ctx, crSvc, chromeUISvc, false /* keepState */, manifestKey); err != nil {
+			s.Fatal("Failed to boot DUT to OOBE screen: ", err)
 		}
-		defer crSvc.Close(cleanupCtx, &empty.Empty{})
+		defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
 		proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
 		if _, err := proxySettingSvc.Initialize(ctx, &empty.Empty{}); err != nil {
@@ -110,14 +101,11 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
 	crSvc := pb.NewChromeServiceClient(rpcClient.Conn)
-	if _, err := crSvc.New(ctx, &pb.NewRequest{
-		LoginMode:                    pb.LoginMode_LOGIN_MODE_NO_LOGIN,
-		KeepState:                    true,
-		SigninProfileTestExtensionId: manifestKey,
-	}); err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+	chromeUISvc := pb.NewChromeUIServiceClient(rpcClient.Conn)
+	if err := bootToOOBE(ctx, crSvc, chromeUISvc, true /* keepState */, manifestKey); err != nil {
+		s.Fatal("Failed to boot DUT to OOBE screen: ", err)
 	}
-	defer crSvc.Close(cleanupCtx, &empty.Empty{})
+	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
 	proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
 	if _, err := proxySettingSvc.Initialize(ctx, &empty.Empty{}); err != nil {
@@ -140,4 +128,30 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	if diff := cmp.Diff(returnedConfigs, proxyConfigs, protocmp.Transform()); diff != "" {
 		s.Fatalf("Unexpected proxy values (-want +got): %s", diff)
 	}
+}
+
+func bootToOOBE(ctx context.Context, crSvc pb.ChromeServiceClient, chromeUISvc pb.ChromeUIServiceClient, keepState bool, manifestKey string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	if _, err := crSvc.New(ctx, &pb.NewRequest{
+		LoginMode:                    pb.LoginMode_LOGIN_MODE_NO_LOGIN,
+		KeepState:                    keepState,
+		SigninProfileTestExtensionId: manifestKey,
+	}); err != nil {
+		return errors.Wrap(err, "failed to start Chrome")
+	}
+	defer func() {
+		if retErr != nil {
+			crSvc.Close(cleanupCtx, &empty.Empty{})
+		}
+	}()
+
+	// Waiting for the OOBE to be stabled and ready for test to avoid the unexpected display rendering event and
+	// causes proxy-setting-service-client unable to complete its action.
+	if _, err := chromeUISvc.WaitForWelcomeScreen(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to wait for OOBE is ready for testing")
+	}
+	return nil
 }

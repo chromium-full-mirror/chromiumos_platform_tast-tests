@@ -68,6 +68,20 @@ func DefaultProxyConfig(ssid string) *network.ProxyConfigs {
 	}
 }
 
+// DefaultProxyConfigForEthernet returns a default proxy config for manual proxy configuration on Ethernet network.
+func DefaultProxyConfigForEthernet() *network.ProxyConfigs {
+	return &network.ProxyConfigs{
+		NetworkInfo:         &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},
+		ProxyConnectionType: network.ProxyConnectionType_ManualProxyConfiguration,
+		HttpHost:            "localhost",
+		HttpPort:            "123",
+		HttpsHost:           "localhost",
+		HttpsPort:           "456",
+		SocksHost:           "socks5://localhost",
+		SocksPort:           "8080",
+	}
+}
+
 // ProxyFixtureData provides a container for the data used by the proxyFixtureImpl fixture and tests that use this fixture.
 type ProxyFixtureData struct {
 	WifiTestFixture  *TestFixture

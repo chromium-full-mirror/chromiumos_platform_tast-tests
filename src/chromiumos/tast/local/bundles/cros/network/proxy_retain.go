@@ -123,21 +123,19 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 		resources.manifestKey = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	}
 
-	s.Log("Creating user pod by signing in and out")
-	cr, err := startChrome(ctx, resources, false /* isNoLogin */, false /* isKeepState */, chrome.FakeLogin(primaryUser))
+	cr, err := chrome.New(ctx, chrome.FakeLogin(primaryUser))
 	if err != nil {
-		s.Fatal("Failed to create user pod: ", err)
+		s.Fatal("Failed to create primary user: ", err)
 	}
-
 	if err := cr.Close(ctx); err != nil {
-		s.Fatal("Failed to close Chrome instance: ", err)
+		s.Log("Failed to close Chrome: ", err)
 	}
 
-	if err := param.test.preparationAtLoginScreen(ctx, cr, resources, proxyValues); err != nil {
+	if err := param.test.preparationAtLoginScreen(ctx, resources, proxyValues); err != nil {
 		s.Fatalf("Failed to set proxy at login screen for test %q: %v", param.description, err)
 	}
 
-	if err := param.test.preparationAfterLoggedIn(ctx, cr, resources, proxyValues); err != nil {
+	if err := param.test.preparationAfterLoggedIn(ctx, resources, proxyValues); err != nil {
 		s.Fatalf("Failed to set proxy after logged in for test %q: %v", param.description, err)
 	}
 
@@ -148,7 +146,8 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 	s.Logf("Looping proxy verification for test %q", param.description)
 	for _, loginOpt := range param.loginUsers {
 		func() {
-			if cr, err = startChrome(ctx, resources, false /* isNoLogin */, true /* isKeepState */, loginOpt); err != nil {
+			cr, err := startChrome(ctx, resources, false /* isNoLogin */, loginOpt)
+			if err != nil {
 				s.Fatal("Failed to sign in: ", err)
 			}
 			defer cr.Close(cleanupCtx)
@@ -174,21 +173,17 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 
 // startChrome starts the Chrome with specified configurations and returns the Chrome instance.
 // It also reestablish other resources associated with the chrome.Chrome instance.
-func startChrome(ctx context.Context, res *proxyRetainResource, isNoLogin, isKeepState bool, loginOpt ...chrome.Option) (cr *chrome.Chrome, retErr error) {
+func startChrome(ctx context.Context, res *proxyRetainResource, isNoLogin bool, loginOpt ...chrome.Option) (cr *chrome.Chrome, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	opts := loginOpt
+	opts := append(loginOpt, chrome.KeepState())
 	if isNoLogin {
 		opts = append(opts,
 			chrome.NoLogin(),
 			chrome.LoadSigninProfileExtension(res.manifestKey),
 		)
-	}
-
-	if isKeepState {
-		opts = append(opts, chrome.KeepState())
 	}
 
 	cr, err := chrome.New(ctx, opts...)
@@ -220,23 +215,23 @@ func startChrome(ctx context.Context, res *proxyRetainResource, isNoLogin, isKee
 
 type proxyRetainTest interface {
 	// preparationAtLoginScreen prepares the test environment at the login screen.
-	preparationAtLoginScreen(context.Context, *chrome.Chrome, *proxyRetainResource, []*proxysettings.Config) error
+	preparationAtLoginScreen(context.Context, *proxyRetainResource, []*proxysettings.Config) error
 
 	// preparationAfterLoggedIn prepares the test environment after logged in.
-	preparationAfterLoggedIn(context.Context, *chrome.Chrome, *proxyRetainResource, []*proxysettings.Config) error
+	preparationAfterLoggedIn(context.Context, *proxyRetainResource, []*proxysettings.Config) error
 }
 
 // retainAfterLoginTest is a test case structure for the proxy retain after login.
 type retainAfterLoginTest struct{}
 
-func (t *retainAfterLoginTest) preparationAtLoginScreen(ctx context.Context, cr *chrome.Chrome, res *proxyRetainResource, pvs []*proxysettings.Config) (retErr error) {
+func (t *retainAfterLoginTest) preparationAtLoginScreen(ctx context.Context, res *proxyRetainResource, pvs []*proxysettings.Config) (retErr error) {
 	testing.ContextLog(ctx, "Setting up proxy at login screen")
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := startChrome(ctx, res, true /* isNoLogin */, true /* isKeepState */, chrome.FakeLogin(primaryUser))
+	cr, err := startChrome(ctx, res, true /* isNoLogin */)
 	if err != nil {
 		return errors.Wrap(err, "failed to sign in")
 	}
@@ -256,25 +251,25 @@ func (t *retainAfterLoginTest) preparationAtLoginScreen(ctx context.Context, cr 
 	return nil
 }
 
-func (t *retainAfterLoginTest) preparationAfterLoggedIn(ctx context.Context, cr *chrome.Chrome, res *proxyRetainResource, pvs []*proxysettings.Config) error {
+func (t *retainAfterLoginTest) preparationAfterLoggedIn(ctx context.Context, res *proxyRetainResource, pvs []*proxysettings.Config) error {
 	return nil
 }
 
 // retainAcrossUsersTest is a test case structure for the proxy retain across users.
 type retainAcrossUsersTest struct{}
 
-func (t *retainAcrossUsersTest) preparationAtLoginScreen(ctx context.Context, cr *chrome.Chrome, res *proxyRetainResource, pvs []*proxysettings.Config) error {
+func (t *retainAcrossUsersTest) preparationAtLoginScreen(ctx context.Context, res *proxyRetainResource, pvs []*proxysettings.Config) error {
 	return nil
 }
 
-func (t *retainAcrossUsersTest) preparationAfterLoggedIn(ctx context.Context, cr *chrome.Chrome, res *proxyRetainResource, pvs []*proxysettings.Config) (retErr error) {
+func (t *retainAcrossUsersTest) preparationAfterLoggedIn(ctx context.Context, res *proxyRetainResource, pvs []*proxysettings.Config) (retErr error) {
 	testing.ContextLog(ctx, "Setting up proxy after logged in")
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := startChrome(ctx, res, false /* isNoLogin */, true /* isKeepState */, chrome.FakeLogin(primaryUser))
+	cr, err := startChrome(ctx, res, false /* isNoLogin */, chrome.FakeLogin(primaryUser))
 	if err != nil {
 		return errors.Wrap(err, "failed to sign in")
 	}

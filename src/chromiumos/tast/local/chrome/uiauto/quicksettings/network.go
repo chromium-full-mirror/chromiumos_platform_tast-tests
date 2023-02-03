@@ -6,11 +6,13 @@ package quicksettings
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/testing"
 )
 
 var (
@@ -40,16 +42,20 @@ var (
 // within the Quick Settings. This is safe to call even when the Quick Settings
 // are already open.
 func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := Expand(ctx, tconn); err != nil {
-		return err
-	}
-
 	ui := uiauto.New(tconn)
 
-	return uiauto.Combine("click the Network feature pod label",
-		ui.LeftClick(NetworkFeaturePodLabelButton),
-		ui.WaitUntilExists(NetworkDetailedView),
-	)(ctx)
+	// The quicksettings could be collapsed during navigating to the certain view,
+	// typically caused by pop-up window, notifications or other display rendering event, retrying it is essential.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := Expand(ctx, tconn); err != nil {
+			return err
+		}
+
+		return uiauto.Combine("click the Network feature pod label",
+			ui.WithTimeout(5*time.Second).LeftClick(NetworkFeaturePodLabelButton),
+			ui.WithTimeout(5*time.Second).WaitUntilExists(NetworkDetailedView),
+		)(ctx)
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
 }
 
 // OpenNetworkSettings will open the Network settings within the Quick Settings.
