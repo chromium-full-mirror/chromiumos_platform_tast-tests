@@ -21,18 +21,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// ReportingPoliciesDisabledUser is the path to the secert username for the policies disabled OU.
-const ReportingPoliciesDisabledUser = "policy.reporting_policies_disabled_username"
-
-// ReportingPoliciesDisabledPassword is the path to the secert password for the policies disabled OU.
-const ReportingPoliciesDisabledPassword = "policy.reporting_policies_disabled_password"
-
-// ReportingPoliciesEnabledUser is the path to the secert username for the policies enabled OU.
-const ReportingPoliciesEnabledUser = "policy.reporting_policies_enabled_username"
-
-// ReportingPoliciesEnabledPassword is the path to the secert password for the policies enabled OU.
-const ReportingPoliciesEnabledPassword = "policy.reporting_policies_enabled_password"
-
 // ManagedChromeCustomerIDPath is the path to the secret customer ID var for managedchrome.
 const ManagedChromeCustomerIDPath = "policy.managedchrome_obfuscated_customer_id"
 
