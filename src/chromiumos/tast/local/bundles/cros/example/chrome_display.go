@@ -18,7 +18,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Demonstrates how to use the chrome.display API",
 		Contacts:     []string{"ricardoq@chromium.org", "tast-owners@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 	})

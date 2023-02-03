@@ -37,7 +37,8 @@ func init() {
 		Contacts: []string{"chromeos-performance-eng@google.com"},
 		// chromeos-assets is not available on devices without Chrome, require chrome
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 	})
 }
 

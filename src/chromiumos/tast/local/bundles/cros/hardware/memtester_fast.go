@@ -19,7 +19,8 @@ func init() {
 			"puthik@chromium.org", // Original Autotest author
 			"cros-partner-avl@google.com",
 		},
-		Attr: []string{"group:mainline"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr: []string{"group:mainline"},
 	})
 }
 

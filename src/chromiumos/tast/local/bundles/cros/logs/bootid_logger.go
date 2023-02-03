@@ -20,7 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests related to bootid-logger",
 		Contacts:     []string{"yoshiki@chromium.org"},
-		Attr:         []string{"group:mainline", "informational"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }

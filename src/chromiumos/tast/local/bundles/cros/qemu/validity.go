@@ -25,7 +25,8 @@ func init() {
 		},
 		// This test should be kept as informational, because if not informational, as it detects a change in GCE
 		// environment, any change to GCE could break the CQ.
-		Attr:         []string{"group:mainline", "informational"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"qemu"},
 	})
 }

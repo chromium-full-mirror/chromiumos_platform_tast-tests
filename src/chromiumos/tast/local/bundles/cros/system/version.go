@@ -22,7 +22,8 @@ func init() {
 		Contacts: []string{
 			"pwang@chromium.org",
 		},
-		Attr: []string{"group:mainline", "group:graphics", "graphics_perbuild"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr: []string{"group:mainline", "group:graphics", "graphics_perbuild"},
 	})
 }
 

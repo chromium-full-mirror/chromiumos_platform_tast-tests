@@ -23,7 +23,8 @@ func init() {
 		// TODO(b/213995159): Update the test, manatee memory management
 		// is different and hypervisor doesn't give us all the memory.
 		SoftwareDeps: []string{"mosys", "no_manatee"},
-		Attr:         []string{"group:mainline"},
+		// b/267781987: Disable unclaimed Tast tests
+		// Attr:         []string{"group:mainline"},
 	})
 }
 
