@@ -527,7 +527,12 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		defer cancelWaitConnect()
 
 		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
-			return errors.Wrapf(err, "failed to rest DUT: %s", resetType)
+			if resetType == WarmReset {
+				if h.Servo.SetStringAndCheck(ctx, servo.WarmReset, "off"); err != nil {
+					return errors.Wrapf(err, "failed to set %s to off after sending 'power_state:warm_reset'", servo.WarmReset)
+				}
+			}
+			return errors.Wrapf(err, "failed to reset DUT: %s", resetType)
 		}
 	}
 

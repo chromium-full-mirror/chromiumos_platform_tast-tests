@@ -38,6 +38,7 @@ const (
 	Type                  StringControl = "servo_type"
 	UARTCmd               StringControl = "servo_v4_uart_cmd"
 	UARTCmdV4p1           StringControl = "servo_v4p1_uart_cmd"
+	WarmReset             StringControl = "warm_reset"
 	Watchdog              StringControl = "watchdog"
 	WatchdogAdd           StringControl = "watchdog_add"
 	WatchdogRemove        StringControl = "watchdog_remove"
