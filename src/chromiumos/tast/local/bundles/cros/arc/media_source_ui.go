@@ -36,10 +36,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if the media control widget is displaying correct media source",
 		Contacts: []string{
+			"cros-arc-te@google.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
-			"ting.chen@cienet.com",
+			"cj.tsai@cienet.com",
 		},
+		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc"},
 		Data:         []string{testfile},

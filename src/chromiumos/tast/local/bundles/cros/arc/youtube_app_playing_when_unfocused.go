@@ -26,10 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "ARC++ Youtube video should not be paused while window focus shifted",
 		Contacts: []string{
+			"cros-arc-te@google.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
 			"edgar.chang@cienet.com",
 		},
+		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		Fixture:      "arcBootedWithPlayStore",
