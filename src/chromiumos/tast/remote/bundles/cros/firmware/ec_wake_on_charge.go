@@ -579,19 +579,33 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 			}
 			return nil
 		}
-		// Note: when lid is closed without log-in, power state transitions from S0 to S5,
-		// and then eventually to G3, which would be equivalent to long pressing on power
-		// to put DUT asleep.
+		// Note: In most cases, when lid is closed without log-in, power state transitions from S0 to S5,
+		// and then eventually to G3, which would be equivalent to long pressing on power to put DUT asleep.
+		// However, recent Stainless results showed that dedede(kracko) remained connected with power state
+		// at S0 after lid closed. Attempt power-off if closing lid didn't put DUTs in G3.
 		testing.ContextLog(ctx, "Waiting for power state to become G3 or S5")
-		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "G3", "S5"); err != nil {
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 5*time.Minute, "G3", "S5"); err != nil {
 			// Sometimes EC becomes unresponsive when lid is closed. But, for this test's
 			// purposes, we're more concerned about whether DUT wakes when AC is re-attached.
 			if strings.Contains(err.Error(), "No data was sent from the pty") ||
 				strings.Contains(err.Error(), "Timed out waiting for interfaces to become available") {
 				testing.ContextLog(ctx, "DUT appears to be completely offline. We're okay as long as reconnecting power resumes it")
-			} else {
-				return errors.Wrap(err, "failed to get powerstates at G3 or S5")
+				return nil
 			}
+			if h.DUT.Connected(ctx) {
+				testing.ContextLog(ctx, "Found dut still connected after lid closed, attempting power-off")
+				if err := h.DUT.Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
+					return errors.Wrap(err, "failed to run poweroff cmd")
+				}
+				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+					return errors.Wrap(err, "failed to sleep")
+				}
+				if err := h.DUT.WaitUnreachable(ctx); err != nil {
+					return errors.Wrap(err, "failed to wait for DUT unreachable")
+				}
+				return nil
+			}
+			return errors.Wrap(err, "failed to get powerstates at G3 or S5")
 		}
 	case "yes":
 		if formFactor == "convertible" || formFactor == "detachable" {
