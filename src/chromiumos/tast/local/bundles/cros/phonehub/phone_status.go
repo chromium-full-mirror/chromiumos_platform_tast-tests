@@ -37,6 +37,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
+				ExtraAttr:         []string{"cross-device_cq"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
 			},
 			{
