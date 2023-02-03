@@ -58,14 +58,16 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 	// so that all Chameleon tests can focus on testing the active ports only
 	// and ignore inactive ones.
 	cham, err := graphics.ChameleonGetConnection(ctx)
-	if err != nil {
-		s.Fatal("Failed to get the Chameleond instance: ", err)
-	}
+
 	defer func(ctx context.Context, s *testing.State, cham chameleon.Chameleond) {
 		if s.HasError() {
 			graphics.ChameleonPrintLogs(ctx, cham)
 		}
 	}(ctx, s, cham)
+
+	if err != nil {
+		s.Fatal("Failed to get the Chameleond instance: ", err)
+	}
 
 	supportedPorts := [...]string{"dp1", "dp2", "hdmi1", "hdmi2"}
 	for _, portStr := range supportedPorts {

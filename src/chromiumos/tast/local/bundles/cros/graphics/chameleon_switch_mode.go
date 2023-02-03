@@ -149,6 +149,13 @@ func ChameleonSwitchMode(ctx context.Context, s *testing.State) {
 	pixelDiffThreshold := 5000
 
 	cham, err := graphics.ChameleonGetConnection(ctx)
+
+	defer func(ctx context.Context, s *testing.State, cham chameleon.Chameleond) {
+		if s.HasError() {
+			graphics.ChameleonPrintLogs(ctx, cham)
+		}
+	}(ctx, s, cham)
+
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}

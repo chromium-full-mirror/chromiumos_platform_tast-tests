@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
@@ -91,6 +92,13 @@ func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 	portStr := testOpt.Port
 
 	cham, err := graphics.ChameleonGetConnection(ctx)
+
+	defer func(ctx context.Context, s *testing.State, cham chameleon.Chameleond) {
+		if s.HasError() {
+			graphics.ChameleonPrintLogs(ctx, cham)
+		}
+	}(ctx, s, cham)
+
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
