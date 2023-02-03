@@ -236,7 +236,10 @@ func (s *ShillService) discoverService(ctx context.Context, m *shill.Manager, pr
 		}
 		return err
 	}, &testing.PollOptions{
-		Timeout:  15 * time.Second,
+		// Discovering a service on a hidden network takes an average of 20 seconds,
+		// but could up over 30 seconds. Therefore longer timeout is essential.
+		// TODO(b/272629074): Parameterized the timeout depends on different services.
+		Timeout:  1 * time.Minute,
 		Interval: 200 * time.Millisecond, // RequestScan is spammy, but shill handles that for us.
 	}); err != nil {
 		return nil, err
