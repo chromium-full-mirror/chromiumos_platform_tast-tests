@@ -86,8 +86,7 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"generic_camera"},
 				}}},
-			ExtraSoftwareDeps: []string{"amd64"},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "network",
 			Val: verifySandboxTestParams{
