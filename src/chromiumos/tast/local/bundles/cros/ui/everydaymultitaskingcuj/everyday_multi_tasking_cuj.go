@@ -83,7 +83,6 @@ type runResources struct {
 	ui         *uiauto.Context
 	vh         *audio.Helper
 	uiHandler  cuj.UIActionHandler
-	recorder   *cujrecorder.Recorder
 	browserApp apps.App
 }
 
@@ -220,22 +219,20 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		recorder.EnableTracing(params.outDir, params.traceConfigPath)
 	}
 	var appStartTime int64
-	switch params.appName {
-	case HelloWorldAppName:
-		testing.ContextLog(ctx, "Launch \"Hello world\" ARC app")
-		if err := recorder.Run(ctx, func(ctx context.Context) error {
+
+	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		switch params.appName {
+		case HelloWorldAppName:
+			testing.ContextLog(ctx, "Launch \"Hello world\" ARC app")
+
 			startTime := time.Now()
 			// Use arc.WithWaitForLaunch() because we are measuring how long the launch takes.
 			if err := appHelloWorld.Start(ctx, tconn, arc.WithWaitForLaunch()); err != nil {
 				return err
 			}
 			appStartTime = time.Since(startTime).Milliseconds()
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to launch \"Hello world\" ARC app")
-		}
-	case SpotifyAppName:
-		if err = recorder.Run(ctx, func(ctx context.Context) error {
+		case SpotifyAppName:
+			testing.ContextLog(ctx, "Launch \"Spotify\" ARC app")
 			t, err := appSpotify.Launch(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to Launch Spotify")
@@ -247,25 +244,31 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 				return errors.Wrap(err, "failed to play Spotify")
 			}
 			// Let spotify continue to play for some time.
-			return testing.Sleep(ctx, 3*time.Second)
-		}); err != nil {
-			return errors.Wrap(err, "failed to launch Spotify")
+			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+				return errors.Wrap(err, "failed to sleep")
+			}
 		}
-	}
+		resources := &runResources{
+			kb:         kb,
+			topRow:     topRow,
+			ui:         ui,
+			vh:         vh,
+			uiHandler:  uiHandler,
+			browserApp: browserApp,
+		}
+		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
+			return errors.Wrap(err, "failed to open and switch chrome tabs")
+		}
 
-	resources := &runResources{kb: kb, topRow: topRow, ui: ui, vh: vh, uiHandler: uiHandler, recorder: recorder, browserApp: browserApp}
+		if err := switchWindows(ctx, tconn, params, resources); err != nil {
+			return errors.Wrap(err, "failed to switch windows")
+		}
 
-	if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
-		return errors.Wrap(err, "failed to open and switch chrome tabs")
-	}
+		if err := takePhotoAndVideo(ctx, cr, params.ccaScriptPaths, params.outDir); err != nil {
+			return errors.Wrap(err, "failed to take photo and video")
+		}
 
-	if err := switchWindows(ctx, tconn, params, resources); err != nil {
-		return errors.Wrap(err, "failed to switch windows")
-	}
-
-	testing.ContextLog(ctx, "Take photo and video")
-	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		return takePhotoAndVideo(ctx, cr, params.ccaScriptPaths, params.outDir)
+		return nil
 	}); err != nil {
 		return errors.Wrap(err, "failed to run the camera scenario")
 	}
@@ -417,29 +420,24 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 		return nil
 	}
 
-	if err := resources.recorder.Run(ctx, func(ctx context.Context) error {
-		if resources.browserApp.ID == apps.LacrosID {
-			activeWindow, err := ash.GetActiveWindow(ctx, tconn)
-			if err != nil {
-				return errors.Wrap(err, "failed to get the active window")
-			}
-			if activeWindow.WindowType != ash.WindowTypeLacros {
-				if err := resources.uiHandler.SwitchToAppWindow(resources.browserApp.Name)(ctx); err != nil {
-					return errors.Wrap(err, "failed to switch to lacros window")
-				}
+	if resources.browserApp.ID == apps.LacrosID {
+		activeWindow, err := ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the active window")
+		}
+		if activeWindow.WindowType != ash.WindowTypeLacros {
+			if err := resources.uiHandler.SwitchToAppWindow(resources.browserApp.Name)(ctx); err != nil {
+				return errors.Wrap(err, "failed to switch to lacros window")
 			}
 		}
-		for _, list := range pageList {
-			if err := openBrowserWithTabs(list); err != nil {
-				return errors.Wrap(err, "failed to open browser with tabs")
-			}
+	}
+	for _, list := range pageList {
+		if err := openBrowserWithTabs(list); err != nil {
+			return errors.Wrap(err, "failed to open browser with tabs")
 		}
-		if err := switchAllBrowserTabs(ctx); err != nil {
-			return errors.Wrap(err, "failed to switch all browser tabs")
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "failed to run the open tabs and switch tabs scenario")
+	}
+	if err := switchAllBrowserTabs(ctx); err != nil {
+		return errors.Wrap(err, "failed to switch all browser tabs")
 	}
 
 	return nil
@@ -510,26 +508,21 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 
 	for _, subtest := range switchWindowTests {
 		testing.ContextLog(ctx, subtest.desc)
-		if err := resources.recorder.Run(ctx, func(ctx context.Context) error {
-			if err := resources.vh.SetVolume(ctx, initialVolume); err != nil {
-				return errors.Wrapf(err, "failed to set volume to %v percents", initialVolume)
-			}
-			testing.ContextLog(ctx, "Volume up")
-			if err := resources.vh.VerifyVolumeChanged(ctx, func() error {
-				return resources.kb.Accel(ctx, resources.topRow.VolumeUp)
-			}); err != nil {
-				return errors.Wrap(err, `volume not changed after press "VolumeUp"`)
-			}
-
-			for i := range ws {
-				// Switch between windows by calling the switch window function.
-				if err := subtest.switchWindowFunc(ctx, ws, i); err != nil {
-					return errors.Wrap(err, "failed to switch window")
-				}
-			}
-			return nil
+		if err := resources.vh.SetVolume(ctx, initialVolume); err != nil {
+			return errors.Wrapf(err, "failed to set volume to %v percents", initialVolume)
+		}
+		testing.ContextLog(ctx, "Volume up")
+		if err := resources.vh.VerifyVolumeChanged(ctx, func() error {
+			return resources.kb.Accel(ctx, resources.topRow.VolumeUp)
 		}); err != nil {
-			return errors.Wrap(err, "failed to run the switch window scenario")
+			return errors.Wrap(err, `volume not changed after press "VolumeUp"`)
+		}
+
+		for i := range ws {
+			// Switch between windows by calling the switch window function.
+			if err := subtest.switchWindowFunc(ctx, ws, i); err != nil {
+				return errors.Wrap(err, "failed to switch window")
+			}
 		}
 	}
 
