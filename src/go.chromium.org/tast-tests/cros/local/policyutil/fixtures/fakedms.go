@@ -38,7 +38,7 @@ func init() {
 		Desc:     "Fixture for a running FakeDMS",
 		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
 		Impl: &fakeDMSFixture{
-			importState: filepath.Join(fakedms.EnrollmentFakeDMSDir, fakedms.StateFile),
+			importState: true,
 		},
 		SetUpTimeout:    15 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -58,7 +58,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Impl: &fakeDMSFixture{
-			importState: filepath.Join(fakedms.EnrollmentFakeDMSDir, fakedms.StateFile),
+			importState: true,
 		},
 		SetUpTimeout:    15 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -74,8 +74,8 @@ type fakeDMSFixture struct {
 	fakeDMS *fakedms.FakeDMS
 	// fdmsDir is the directory where FakeDMS is currently running.
 	fdmsDir string
-	// importState is the path to an existing state file for FakeDMS.
-	importState string
+	// importState determines if state should be imported from the parent fixture.
+	importState bool
 	// Marker for per-test log.
 	logMarker *logsaver.Marker
 }
@@ -91,9 +91,19 @@ func (f *fakeDMSFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	}
 	f.fdmsDir = tmpdir
 
-	if f.importState != "" {
-		if err := fsutil.CopyFile(f.importState, filepath.Join(f.fdmsDir, fakedms.StateFile)); err != nil {
-			s.Fatalf("Failed to import the existing state from %q: %v", f.importState, err)
+	if f.importState {
+		var fixtData policy.EnrolledFixtureData
+		if err := s.ParentFillValue(&fixtData); err != nil {
+			s.Fatal("Parent fixture did not pass directory: ", err)
+		}
+		if fixtData.FakeDMSDirectory == "" {
+			s.Fatal("Parent fixture passed an empty directory")
+		}
+
+		stateTarget := filepath.Join(f.fdmsDir, fakedms.StateFile)
+		stateSource := filepath.Join(fixtData.FakeDMSDirectory, fakedms.StateFile)
+		if err := fsutil.CopyFile(stateSource, stateTarget); err != nil {
+			s.Fatalf("Failed to import the existing state from %q to %q: %v", stateSource, stateTarget, err)
 		}
 	}
 

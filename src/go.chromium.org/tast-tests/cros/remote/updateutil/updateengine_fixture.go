@@ -86,6 +86,8 @@ func (*updateEngineFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 	}
 }
 
-func (*updateEngineFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} { return nil }
-func (*updateEngineFixture) Reset(ctx context.Context) error                             { return nil }
-func (*updateEngineFixture) TearDown(ctx context.Context, s *testing.FixtState)          {}
+func (*updateEngineFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	return s.ParentValue()
+}
+func (*updateEngineFixture) Reset(ctx context.Context) error                    { return nil }
+func (*updateEngineFixture) TearDown(ctx context.Context, s *testing.FixtState) {}

@@ -39,10 +39,9 @@ const StateFile = "state.json"
 // GRPCUnixSocketURI is the path of the unix socket to communicate with the gRPC server in fake_dmserver.
 const GRPCUnixSocketURI = "grpc.sock"
 
-// EnrollmentFakeDMSDir is the directory where FakeDMS stores state during enrollment.
-// Used to share state between the enrolled fixture and the fakeDMSEnrolled fixtures.
-// TODO(crbug.com/1187473): Remove
-const EnrollmentFakeDMSDir = "/var/enrolling-fdms"
+// EnrollmentFakeDMSDirRoot is the directory where FakeDMS stores state during enrollment.
+// Enrollment data needs to survive a reboot, /tmp is not a good place to store it.
+const EnrollmentFakeDMSDirRoot = "/var/enrolling-fdms"
 
 // fakeDMServerPath is the path where the executable binary of the fake_dmserver is located.
 var fakeDMServerPath = "/usr/local/libexec/chrome-binary-tests/fake_dmserver"

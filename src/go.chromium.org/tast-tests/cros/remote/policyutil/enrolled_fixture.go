@@ -154,9 +154,6 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}()
 
-	// TODO(crbug.com/1187473): use a temporary directory.
-	e.fdmsDir = fakedms.EnrollmentFakeDMSDir
-
 	// Collect errors of enrollment attempts and raise them even in case of a Fatal error.
 	var errs []error
 	defer func() {
@@ -200,12 +197,13 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 		defer cl.Close(enrollCtx)
 
-		if err := Enroll(enrollCtx, attemptDir, s.DUT(), cl, e.fdmsDir, true); err != nil {
+		if fdmsDir, err := Enroll(enrollCtx, attemptDir, s.DUT(), cl, true); err != nil {
 			s.Logf("Attempt %d failed: %v", tries, err)
 			errs = append(errs, err)
 		} else {
 			// When the enrollment is successful, there is no need to retry again.
 			s.Logf("Attempt %d succeded", tries)
+			e.fdmsDir = fdmsDir
 			ok = true
 			break
 		}
@@ -225,7 +223,11 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	for _, err := range errs {
 		errorStrings = append(errorStrings, err.Error())
 	}
-	return errorStrings
+
+	return &policy.EnrolledFixtureData{
+		FakeDMSDirectory: e.fdmsDir,
+		Errors:           errorStrings,
+	}
 }
 
 func (e *enrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -274,7 +276,7 @@ func (e *enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // Enroll enrolls the DUT under the managedchrome.com domain.
-func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Client, fdmsDir string, stopFdms bool) (retErr error) {
+func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Client, stopFdms bool) (fdmsDir string, retErr error) {
 	// Reserve time for cleaning up and copying the logs from the DUT.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -294,11 +296,14 @@ func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Clien
 	}(cleanupCtx)
 
 	policyClient := pspb.NewPolicyServiceClient(rpc.Conn)
-	if _, err := policyClient.CreateFakeDMSDir(ctx, &pspb.CreateFakeDMSDirRequest{
-		Path: fdmsDir,
-	}); err != nil {
-		return errors.Wrap(err, "failed to create FakeDMS directory")
+	res, err := policyClient.CreateTempFakeDMSDir(ctx, &pspb.CreateTempFakeDMSDirRequest{
+		Path: fakedms.EnrollmentFakeDMSDirRoot,
+	})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create FakeDMS directory")
 	}
+
+	fdmsDir = res.Path
 
 	defer func(ctx context.Context) {
 		if !ok {
@@ -341,7 +346,7 @@ func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Clien
 
 	pJSON, err := json.Marshal(policy.NewBlob())
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal policy blob")
+		return "", errors.Wrap(err, "failed to marshal policy blob")
 	}
 
 	if _, err := policyClient.EnrollUsingChrome(ctx, &pspb.EnrollUsingChromeRequest{
@@ -349,20 +354,20 @@ func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Clien
 		FakedmsDir: fdmsDir,
 		SkipLogin:  true,
 	}); err != nil {
-		return errors.Wrap(err, "failed to enroll using Chrome")
+		return "", errors.Wrap(err, "failed to enroll using Chrome")
 	}
 
 	if stopFdms {
 		if _, err := policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to stop Chrome and FakeDMS")
+			return "", errors.Wrap(err, "failed to stop Chrome and FakeDMS")
 		}
 	} else {
 		if _, err := policyClient.StopChrome(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to stop Chrome")
+			return "", errors.Wrap(err, "failed to stop Chrome")
 		}
 	}
 
 	ok = true
 
-	return nil
+	return fdmsDir, nil
 }

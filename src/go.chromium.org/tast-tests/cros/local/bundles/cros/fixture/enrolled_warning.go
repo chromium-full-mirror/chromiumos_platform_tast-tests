@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -42,13 +43,13 @@ func init() {
 func EnrolledWarning(ctx context.Context, s *testing.State) {
 	// TODO(b/243629567): Remove this test when the workarounds from the enrolled fixture
 	// are removed.
-	var fixtErrs []string
+	var fixtData policy.EnrolledFixtureData
 
-	if err := s.FixtFillValue(&fixtErrs); err != nil {
+	if err := s.FixtFillValue(&fixtData); err != nil {
 		s.Fatal("Failed to deserialize fixture data with FixtFillValue: ", err)
 	}
 
-	for _, err := range fixtErrs {
+	for _, err := range fixtData.Errors {
 		s.Error("Failed enrollment attempt in the Enrolled fixture: ", err)
 	}
 }

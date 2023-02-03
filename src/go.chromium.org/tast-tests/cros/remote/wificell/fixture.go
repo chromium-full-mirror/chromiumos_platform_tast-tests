@@ -14,7 +14,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/network/iw"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
@@ -580,7 +579,9 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 				enrollCtx, cancel := context.WithTimeout(ctx, enrollmentRunTimeout)
 				defer cancel()
 
-				if err := policyutil.Enroll(enrollCtx, attemptDir, f.tf.duts[i].dut, f.tf.duts[i].rpc, fakedms.EnrollmentFakeDMSDir, false); err != nil {
+				// The resulting FakeDMS directory is not yet used. If needed it can be passed along in tf for each DUT.
+				_, err := policyutil.Enroll(enrollCtx, attemptDir, f.tf.duts[i].dut, f.tf.duts[i].rpc, false)
+				if err != nil {
 					s.Logf("Attempt %d failed", tries)
 				} else {
 					// When the enrollment is successful, there is no need to retry again.

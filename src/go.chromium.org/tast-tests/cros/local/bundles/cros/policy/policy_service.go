@@ -546,6 +546,22 @@ func (c *PolicyService) CreateFakeDMSDir(ctx context.Context, req *ppb.CreateFak
 	return &empty.Empty{}, nil
 }
 
+// CreateTempFakeDMSDir creates a temporary directory under the provided path. It needs to be removed with RemoveFakeDMSDir.
+func (c *PolicyService) CreateTempFakeDMSDir(ctx context.Context, req *ppb.CreateTempFakeDMSDirRequest) (*ppb.CreateTempFakeDMSDirResponse, error) {
+	if err := os.MkdirAll(req.Path, 0755); err != nil {
+		return nil, errors.Wrap(err, "failed to create temporary directory root")
+	}
+
+	dir, err := os.MkdirTemp(req.Path, "fakedms-")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create temporary FakeDMS directory")
+	}
+
+	return &ppb.CreateTempFakeDMSDirResponse{
+		Path: dir,
+	}, nil
+}
+
 // RemoveFakeDMSDir removes a directory created with CreateFakeDMSDir.
 func (c *PolicyService) RemoveFakeDMSDir(ctx context.Context, req *ppb.RemoveFakeDMSDirRequest) (*empty.Empty, error) {
 	if err := os.RemoveAll(req.Path); err != nil {

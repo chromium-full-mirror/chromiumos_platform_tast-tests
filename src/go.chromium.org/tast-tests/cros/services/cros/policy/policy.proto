@@ -29,6 +29,7 @@ service PolicyService {
   rpc ContinueLogin(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc CreateFakeDMSDir(CreateFakeDMSDirRequest) returns (google.protobuf.Empty) {}
+  rpc CreateTempFakeDMSDir(CreateTempFakeDMSDirRequest) returns (CreateTempFakeDMSDirResponse) {}
   rpc RemoveFakeDMSDir(RemoveFakeDMSDirRequest) returns (google.protobuf.Empty) {}
 
   rpc StartExternalDataServer(google.protobuf.Empty)
@@ -124,6 +125,14 @@ message SAMLTestIdPEnrollUsingChromeRequest {
 }
 
 message CreateFakeDMSDirRequest {
+  string path = 1;
+}
+
+message CreateTempFakeDMSDirRequest {
+  string path = 1;
+}
+
+message CreateTempFakeDMSDirResponse {
   string path = 1;
 }
 
