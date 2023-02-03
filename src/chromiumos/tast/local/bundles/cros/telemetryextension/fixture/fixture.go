@@ -35,8 +35,6 @@ const (
 	TelemetryExtensionLacros                = "telemetryExtensionLacros"
 	TelemetryExtensionOverrideOEMName       = "telemetryExtensionOverrideOEMName"
 	TelemetryExtensionOverrideOEMNameLacros = "telemetryExtensionOverrideOEMNameLacros"
-	TelemetryExtensionOptionsPage           = "telemetryExtensionOptionsPage"
-	TelemetryExtensionOptionsPageLacros     = "telemetryExtensionOptionsPageLacros"
 )
 
 const (
@@ -59,7 +57,7 @@ func init() {
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(false),
+		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: TelemetryExtensionLacros,
@@ -74,7 +72,7 @@ func init() {
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(false),
+		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: TelemetryExtensionOverrideOEMName,
@@ -89,7 +87,7 @@ func init() {
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(false),
+		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: TelemetryExtensionOverrideOEMNameLacros,
@@ -104,53 +102,12 @@ func init() {
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
 		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(false),
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionOptionsPage,
-		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension with options page",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
-		Impl:            newTelemetryExtensionFixture(optionsPage()),
-		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
-		TearDownTimeout: cleanupTimeout,
-		PreTestTimeout:  10 * time.Second,
-		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(true),
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionOptionsPageLacros,
-		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension with options page in Lacros browser",
-		Contacts: []string{
-			"chromeos-oem-services@google.com", // Use team email for tickets.
-			"bkersting@google.com",
-			"lamzin@google.com",
-		},
-		Impl:            newTelemetryExtensionFixture(lacros(), optionsPage()),
-		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
-		TearDownTimeout: cleanupTimeout,
-		PreTestTimeout:  10 * time.Second,
-		PostTestTimeout: 10 * time.Second,
-		Data:            extFiles(true),
+		Data:            extFiles(),
 	})
 }
 
-func manifestFile(optionsPage bool) string {
-	if optionsPage {
-		return "manifest_with_options_page.json"
-	}
-	return "manifest_without_options_page.json"
-}
-
-func extFiles(optionsPage bool) []string {
-	files := []string{manifestFile(optionsPage), "sw.js"}
-	if optionsPage {
-		files = append(files, "options.html")
-	}
-	return files
+func extFiles() []string {
+	return []string{"manifest.json", "sw.js"}
 }
 
 type option func(*telemetryExtensionFixture)
@@ -158,12 +115,6 @@ type option func(*telemetryExtensionFixture)
 func lacros() func(*telemetryExtensionFixture) {
 	return func(f *telemetryExtensionFixture) {
 		f.bt = browser.TypeLacros
-	}
-}
-
-func optionsPage() func(*telemetryExtensionFixture) {
-	return func(f *telemetryExtensionFixture) {
-		f.optionsPage = true
 	}
 }
 
@@ -187,7 +138,6 @@ func newTelemetryExtensionFixture(opts ...option) *telemetryExtensionFixture {
 // telemetryExtensionFixture implements testing.FixtureImpl.
 type telemetryExtensionFixture struct {
 	bt              browser.Type
-	optionsPage     bool
 	overrideOEMName bool
 
 	dir     string
@@ -331,7 +281,7 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 		return errors.Wrap(err, "failed to chown TelemetryExtension dir")
 	}
 
-	for _, file := range extFiles(f.optionsPage) {
+	for _, file := range extFiles() {
 		if err := fsutil.CopyFile(dataPathFunc(file), filepath.Join(dir, file)); err != nil {
 			return errors.Wrapf(err, "failed to copy %q file to %q", file, dir)
 		}
@@ -339,10 +289,6 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 		if err := os.Chown(filepath.Join(dir, file), int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
 			return errors.Wrapf(err, "failed to chown %q", file)
 		}
-	}
-
-	if err := os.Rename(filepath.Join(dir, manifestFile(f.optionsPage)), filepath.Join(dir, "manifest.json")); err != nil {
-		return errors.Wrap(err, "failed to rename manifest file")
 	}
 
 	var opts []chrome.Option
