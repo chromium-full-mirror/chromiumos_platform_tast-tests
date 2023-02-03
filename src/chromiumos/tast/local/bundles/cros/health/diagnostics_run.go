@@ -139,7 +139,6 @@ func init() {
 			Name:              "led_lit_up",
 			Val:               newRoutineParams(croshealthd.RoutineLedLitUp),
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
