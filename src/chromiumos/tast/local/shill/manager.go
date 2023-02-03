@@ -533,6 +533,12 @@ func (m *Manager) RecheckPortal(ctx context.Context) error {
 
 // RemoveTestProfile removes any existing test profile.
 func (m *Manager) RemoveTestProfile(ctx context.Context) error {
+	// Try popping the test profile from the stack if it exists, otherwise the
+	// following removal will fail.
+	errNotExist := testProfileName + " is not the active profile"
+	if err := m.PopProfile(ctx, testProfileName); err != nil && err.Error() != errNotExist {
+		return errors.Wrap(err, "failed to pop test profile before remove")
+	}
 	if err := m.RemoveProfile(ctx, testProfileName); err != nil {
 		return errors.Wrap(err, "RemoveTestProfile failed")
 	}
