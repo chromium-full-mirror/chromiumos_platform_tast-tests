@@ -28,6 +28,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 )
 
@@ -40,6 +41,9 @@ const (
 	// CPUStablizationTimeout is the time to wait for cpu stablization, which
 	// is the sum of cpu cool down time and cpu idle time.
 	CPUStablizationTimeout = CPUCoolDownTimeout + CPUIdleTimeout
+	// BatteryChargingTimeout is the battery charging duration if capacity is
+	//  below 25%
+	BatteryChargingTimeout = 3 * time.Minute
 	// webRTCLogsGatherTimeout is the time allowed for gathering the WebRTC
 	// event log files into a gzip archive in the test output directory.
 	webRTCLogsGatherTimeout = 15 * time.Second
@@ -67,6 +71,17 @@ var isLocalVar = testing.RegisterVarString(
 	"",
 	"A boolean string (true/false) signifying whether or not to skip certain startup procedures for local testing",
 )
+
+// disableChargeBatteryBeforeTest is a runtime variable that specifies
+// whether to disable battery charging when battery capacity is below
+// minimumBatteryCapacity
+var disableChargeBatteryBeforeTest = testing.RegisterVarString(
+	"cuj.disableChargeBatteryBeforeTest",
+	"",
+	"A boolean string (true/false) signifying whether to charge battery before running a test",
+)
+var minimumBatteryCapacity = 25.0
+var chargeBatteryTestPollOpt = &testing.PollOptions{Interval: 60 * time.Second, Timeout: 3 * time.Minute}
 
 // EnableWaylandLoggingVar is a runtime variable that specifies
 // whether to enable Wayland logging into Lacros logs.
@@ -97,7 +112,7 @@ func init() {
 			"chromeos-perfmetrics-eng@google.com",
 		},
 		Impl:            &cpuIdleForCUJFixture{},
-		PreTestTimeout:  CPUIdleTimeout + 5*time.Second,
+		PreTestTimeout:  CPUIdleTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -439,6 +454,32 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 func (f *prepareCUJFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
+// chargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
+// is lower than a pre-defined level.
+func (f *cpuIdleForCUJFixture) chargeBatteryCapacityBeforePowerTest(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
+	if err := setup.AllowBatteryCharging(ctx); err != nil {
+		return err
+	}
+	devPath, err := power.SysfsBatteryPath(ctx)
+	if err != nil {
+		return err
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		capacity, err := power.ReadBatteryCapacity(ctx, devPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to get battery capacity")
+		}
+		testing.ContextLogf(ctx, "Current battery capacity: %.1f%%", capacity)
+		if capacity < minimumBatteryCapacity {
+			return errors.New("current battery capacity is less than minimum")
+		}
+		return nil
+	}, chargeBatteryTestPollOpt); err != nil {
+		return errors.Wrap(err, "failed to get battery status")
+	}
+	return nil
+}
+
 type cpuIdleForCUJFixture struct{}
 
 func (f *cpuIdleForCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -453,6 +494,18 @@ func (f *cpuIdleForCUJFixture) Reset(ctx context.Context) error {
 }
 
 func (f *cpuIdleForCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if strings.ToLower(disableChargeBatteryBeforeTest.Value()) != "true" {
+		// Wait for battery to be charged.
+		err := f.chargeBatteryCapacityBeforePowerTest(ctx, minimumBatteryCapacity, chargeBatteryTestPollOpt)
+		if err != nil {
+			if errors.Is(err, power.ErrNoBattery) {
+				testing.ContextLog(ctx, "Battery not found: ", err)
+			} else {
+				testing.ContextLog(ctx, "Battery failed to be charged to minimum level: ", err)
+			}
+		}
+	}
+
 	if strings.ToLower(isLocalVar.Value()) == "true" {
 		s.Log("Skipping waiting until CPU is idle because local testing variable is set")
 		return

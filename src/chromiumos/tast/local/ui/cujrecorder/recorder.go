@@ -255,8 +255,6 @@ type RecorderOptions struct {
 	// DischargeThreshold is the battery discharge threshold.
 	// If not set, defaultDischargeThreshold will be used.
 	DischargeThreshold *float64
-	// ChargeBatteryTestPollOpt is to set charing Timeout and poll interval
-	ChargeBatteryTestPollOpt *testing.PollOptions
 	// FailOnDischargeErr, if set, will cause test to fail on battery discharge error.
 	// NoBatteryError is not considered as dischage error, though.
 	FailOnDischargeErr   bool
@@ -272,13 +270,12 @@ var performanceCUJDischargeThreshold = 25.0
 // NewPerformanceCUJOptions indicates the power test settings for performance CUJs run by partners.
 func NewPerformanceCUJOptions() RecorderOptions {
 	return RecorderOptions{
-		DischargeThreshold:       &performanceCUJDischargeThreshold,
-		ChargeBatteryTestPollOpt: &testing.PollOptions{Interval: 60 * time.Second, Timeout: 3 * time.Minute},
-		FailOnDischargeErr:       true,
-		DoNotChangeWifi:          true,
-		DoNotChangePowerd:        true,
-		DoNotChangeDPTF:          true,
-		DoNotChangeAudio:         true,
+		DischargeThreshold: &performanceCUJDischargeThreshold,
+		FailOnDischargeErr: true,
+		DoNotChangeWifi:    true,
+		DoNotChangePowerd:  true,
+		DoNotChangeDPTF:    true,
+		DoNotChangeAudio:   true,
 	}
 }
 
@@ -675,36 +672,6 @@ func (r *Recorder) getBootAndShutdownMetricNames(bt browser.Type) ([]string, err
 	return r.filterBootAndShutdownMetricNames(true, bt)
 }
 
-// chargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
-// is lower than a pre-defined level. Note that the charing time should not exceed 3 mins to avoid TPS
-// test suite timeout.
-func (r *Recorder) chargeBatteryCapacityBeforePowerTest(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
-	if err := setup.AllowBatteryCharging(ctx); err != nil {
-		return err
-	}
-	devPath, err := power.SysfsBatteryPath(ctx)
-	if err != nil {
-		if errors.Is(err, power.ErrNoBattery) {
-			return err
-		}
-		return errors.Wrap(err, "failed to get SysfsBatteryPath")
-	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		capacity, err := power.ReadBatteryCapacity(ctx, devPath)
-		if err != nil {
-			return errors.Wrap(err, "failed to get battery capacity")
-		}
-		testing.ContextLogf(ctx, "Current battery capacity: %f%%", capacity)
-		if capacity < minimumBatteryCapacity {
-			return errors.New("waiting for battery to be charged")
-		}
-		return nil
-	}, chargeBatteryTestPollOpt); err != nil {
-		return errors.Wrap(err, "failed to get battery status")
-	}
-	return nil
-}
-
 // startRecording starts to record CUJ data.
 //
 // In:
@@ -794,19 +761,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	if strings.ToLower(skipPowerTest.Value()) == "true" {
 		testing.ContextLog(ctx, "Skipping power test because cujrecorder.skipPowerTest is set")
 	} else {
-		var err error
 		// Create batteryDischarge with both discharge and ignoreErr set to true.
 		batteryDischarge := setup.NewBatteryDischarge(true, true, dischargeThreshold)
-		if r.options.ChargeBatteryTestPollOpt != nil {
-			// If the capacity is below the discharge threshold, the battery is allowed to charge
-			// for 3 mins.
-			err = r.chargeBatteryCapacityBeforePowerTest(ctx, dischargeThreshold, r.options.ChargeBatteryTestPollOpt)
-			if (err != nil) && r.options.FailOnDischargeErr &&
-				!errors.Is(err, power.ErrNoBattery) {
-				return nil, errors.Wrap(err, "battery failed to be charged to minimum level")
-			}
-		}
 
+		var err error
 		r.powerSetupCleanup, err = setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
 		batteryDischargeErr := batteryDischarge.Err()
 		if batteryDischargeErr != nil {
