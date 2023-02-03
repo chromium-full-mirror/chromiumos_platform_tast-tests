@@ -19,6 +19,7 @@ import (
 // IgtTest is used to describe the config used to run each test.
 type IgtTest struct {
 	Exe              string // The test executable name.
+	Subtest          string // The subtest to run.
 	DisableHangCheck bool   // If true, disable the gpu hang check as the test produces hangs intentionally.
 }
 
@@ -31,10 +32,17 @@ type igtResultSummary struct {
 
 var igtSubtestResultRegex = regexp.MustCompile("^Subtest (.*): ([A-Z]+)")
 
-// IgtExecuteTests executes the IGT binary of the test exe.
-func IgtExecuteTests(ctx context.Context, testExe string, f *os.File) (bool, *exec.ExitError, error) {
-	exePath := filepath.Join("/usr/local/libexec/igt-gpu-tools", testExe)
-	cmd := testexec.CommandContext(ctx, exePath)
+// IgtExecuteTests executes the IGT binary of the an IgtTest. If the test has a subtest, it executes it as well. Otherwise, it executes the entire test.
+func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *exec.ExitError, error) {
+	exePath := filepath.Join("/usr/local/libexec/igt-gpu-tools", testOpt.Exe)
+
+	var cmd *testexec.Cmd
+	if testOpt.Subtest != "" {
+		cmd = testexec.CommandContext(ctx, exePath, "--run-subtest", testOpt.Subtest)
+	} else {
+		cmd = testexec.CommandContext(ctx, exePath)
+	}
+
 	cmd.Stdout = f
 	cmd.Stderr = f
 	err := cmd.Run()
@@ -67,7 +75,7 @@ func igtSummarizeLog(f *os.File) (r igtResultSummary, failedSubtests []string) {
 }
 
 // IgtProcessResults reads the results of the test output and outputs a summary of the full test results.
-func IgtProcessResults(testExe string, file *os.File, isExitErr bool, exitErr *exec.ExitError, err error) (bool, string) {
+func IgtProcessResults(testName string, file *os.File, isExitErr bool, exitErr *exec.ExitError, err error) (bool, string) {
 	results, failedSubtests := igtSummarizeLog(file)
 	summary := fmt.Sprintf("Ran %d subtests with %d failures and %d skipped",
 		results.passed+results.failed, results.failed, results.skipped)
@@ -84,7 +92,7 @@ func IgtProcessResults(testExe string, file *os.File, isExitErr bool, exitErr *e
 		outputLog = "Entire test was skipped and this is not expected - No subtests were run\n"
 	} else if len(failedSubtests) > 0 {
 		outputLog = fmt.Sprintf("FAIL: Test:%s - Pass:%d Fail:%d - FailedSubtests:%s - Summary:%s\n",
-			testExe, results.passed, results.failed, failedSubtests, summary)
+			testName, results.passed, results.failed, failedSubtests, summary)
 	} else {
 		outputLog = fmt.Sprintf("%s\n", summary)
 		isError = false

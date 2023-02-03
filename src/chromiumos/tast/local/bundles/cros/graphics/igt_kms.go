@@ -433,7 +433,7 @@ func IgtKms(ctx context.Context, s *testing.State) {
 	}
 	defer f.Close()
 
-	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testOpt.Exe, f)
+	isExitErr, exitErr, err := graphics.IgtExecuteTests(ctx, testOpt, f)
 
 	isError, outputLog := graphics.IgtProcessResults(testOpt.Exe, f, isExitErr, exitErr, err)
 
