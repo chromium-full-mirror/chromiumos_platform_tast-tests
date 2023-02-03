@@ -50,6 +50,11 @@ func init() {
 			Fixture:           "loggedInToCUJUserLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Assign windows to All Desks.
+			Value: "screenplay-ff7bb1e3-d3d8-45b4-b48d-16163633c78d",
+		}},
 	})
 }
 
