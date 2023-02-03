@@ -169,15 +169,24 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				s.Error("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type and open a chrome new tab.
-			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.NewTabURL)
+			// Setup browser based on the chrome type.
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 			if err != nil {
-				s.Error("Failed to open the browser: ", err)
+				s.Fatal("Failed to setup chrome: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
-			defer conn.Close()
 			// The UI tree must be dumped before closing the browser.
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+
+			// Open a new tab. The print dialog fails to open when invoking CTRL+P
+			// directly after calling `browserfixt.SetUp`, likely because the page
+			// isn't fully loaded yet. It also fails to open on about:blank pages, but
+			// works fine on chrome://newtab; see crbug.com/1290797.
+			conn, err := br.NewConn(ctx, chrome.NewTabURL)
+			if err != nil {
+				s.Fatal("Failed to connect to chrome: ", err)
+			}
+			defer conn.Close()
 
 			// Connect to Test API to use it with the UI library.
 			tconn, err := cr.TestAPIConn(ctx)
