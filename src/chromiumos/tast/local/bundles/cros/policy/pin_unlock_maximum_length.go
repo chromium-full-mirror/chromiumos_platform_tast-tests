@@ -30,8 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify the maximum length of the unlock PIN",
 		Contacts: []string{
-			"janagrill@google.com", // Test author
+			"cros-lurs@google.com",
+			"mbid@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedInLockscreen,

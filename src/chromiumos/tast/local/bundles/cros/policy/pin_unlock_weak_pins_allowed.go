@@ -31,8 +31,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify the user cannot set a weak PIN if disallowed by policy",
 		Contacts: []string{
-			"janagrill@google.com", // Test author
+			"cros-lurs@google.com",
+			"mbid@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedInLockscreen,

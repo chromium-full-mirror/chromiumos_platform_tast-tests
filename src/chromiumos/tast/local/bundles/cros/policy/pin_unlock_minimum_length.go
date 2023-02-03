@@ -30,9 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Follows the user flow to set unlock pin",
 		Contacts: []string{
-			"mohamedaomar@google.com", // Test author
-			"gabormagda@google.com",
+			"cros-lurs@google.com",
+			"mbid@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedInLockscreen,
