@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/vp9/Profile_2_10bit/buf/street1_1_1080X512_fr30_bd10_8buf_l3_20210928.ivf",
+  "size": 8185465,
+  "sha256sum": "97df370d9bf4efc5c6a811dabc2ecc7d727b0ae20081ed92d8ce5822712c4913"
+}
