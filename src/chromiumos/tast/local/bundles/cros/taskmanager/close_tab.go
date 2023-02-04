@@ -32,10 +32,8 @@ func init() {
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"afakhry@google.com",
-			"cienet-development@googlegroups.com",
-			"sun.tsai@cienet.com",
 		},
-		BugComponent: "b:1238037", // ChromeOS > Software > Task Manager
+		BugComponent: "crbug:UI>TaskManager",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
