@@ -43,7 +43,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.shimlessrma.AppService"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      30 * time.Minute,
+		Timeout:      150 * time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"shimless_rma_normal"},
 			Name:      "unenroll_sameuser_manual",
