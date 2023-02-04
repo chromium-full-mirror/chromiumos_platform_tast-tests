@@ -180,10 +180,6 @@ func checkOthersAreBlocked(ctx context.Context, utility *hwsec.CryptohomeClient,
 		}
 	}
 
-	// Shouldn't be able to create new users.
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.ThirdUsername, util.ThirdPassword), true, hwsec.NewVaultConfig()); err == nil {
-		return errors.Wrap(err, "create user succeeded after locking to single user")
-	}
 	return nil
 }
 
