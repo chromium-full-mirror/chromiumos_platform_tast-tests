@@ -46,8 +46,6 @@ type ZoomConference struct {
 
 const zoomTitle = "Zoom"
 
-var zoomWebArea = nodewith.NameContaining("Zoom Meeting").Role(role.RootWebArea)
-
 // Join joins a new conference room.
 func (conf *ZoomConference) Join(ctx context.Context, room string, toBlur bool) (err error) {
 	ui := conf.ui
@@ -241,35 +239,16 @@ func (conf *ZoomConference) BackgroundChange(ctx context.Context) error {
 // Presenting creates Google Slides and Google Docs, shares screen and presents
 // the specified application to the conference.
 func (conf *ZoomConference) Presenting(ctx context.Context, application googleApplication) (err error) {
-	tconn := conf.tconn
-	ui := uiauto.New(tconn)
 	appName := string(application)
 
-	// shareScreen shares screen by "Chrome Tab" and selects the tab which is going to present.
-	shareScreen := func(ctx context.Context) error {
-		shareScreenButton := nodewith.Name("Share Screen").Role(role.StaticText)
-		presenMode := nodewith.Name("Chrome Tab").Role(role.Tab)
-		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(appName)
-		shareButton := nodewith.Name("Share").Role(role.Button)
-		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
-		return uiauto.NamedCombine("share Screen",
-			conf.uiHandler.SwitchToChromeTabByName(zoomTitle),
-			conf.zm.ShowInterface,
-			ui.LeftClickUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presenMode)),
-			ui.LeftClick(presenMode),
-			ui.LeftClick(presentTab),
-			ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
-			ui.WithTimeout(mediumUITimeout).WaitUntilExists(stopSharing),
-		)(ctx)
-	}
+	shareScreen := uiauto.Combine("share screen",
+		conf.uiHandler.SwitchToChromeTabByName(zoomTitle),
+		conf.zm.ShareScreen(appName))
+	stopPresenting := conf.zm.StopShareScreen()
 
-	stopPresenting := func(ctx context.Context) error {
-		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
-		return ui.LeftClickUntil(stopSharing, ui.WithTimeout(shortUITimeout).WaitUntilGone(stopSharing))(ctx)
-	}
 	// Present on internal display by default.
 	presentOnExtendedDisplay := false
-	if err := presentApps(ctx, tconn, conf.uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
+	if err := presentApps(ctx, conf.tconn, conf.uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
 		application, conf.outDir, presentOnExtendedDisplay); err != nil {
 		return errors.Wrapf(err, "failed to present %s", appName)
 	}
