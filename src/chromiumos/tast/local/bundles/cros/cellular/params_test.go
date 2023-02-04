@@ -19,6 +19,7 @@ var standardTests = []string{
 	"is_connected.go",
 	"shill_enable_disable.go",
 	"smoke.go",
+	"smoke_ip_connectivity.go",
 }
 
 func TestFixTestParams(t *testing.T) {
