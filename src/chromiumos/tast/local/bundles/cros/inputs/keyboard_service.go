@@ -22,7 +22,7 @@ func init() {
 	var keyboardService KeyboardService
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			keyboardService = KeyboardService{sharedObject: common.SharedObjectsForServiceSingleton}
+			keyboardService = KeyboardService{sharedObject: common.SharedObjectsForServiceSingleton, s: s}
 			pb.RegisterKeyboardServiceServer(srv, &keyboardService)
 		},
 		GuaranteeCompatibility: true,
@@ -32,7 +32,9 @@ func init() {
 // KeyboardService implements tast.cros.inputs.KeyboardService.
 type KeyboardService struct {
 	sharedObject *common.SharedObjectsForService
+	s            *testing.ServiceState
 	mutex        sync.Mutex
+	kb           *input.KeyboardEventWriter
 }
 
 // Type injects key events suitable for generating the string s.
@@ -44,12 +46,11 @@ func (svc *KeyboardService) Type(ctx context.Context, req *pb.TypeRequest) (*emp
 	svc.mutex.Lock()
 	defer svc.mutex.Unlock()
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keyboard handle")
+	if err := svc.initKeyboard(ctx); err != nil {
+		return nil, err
 	}
-	defer kb.Close()
-	if err := kb.Type(ctx, req.Key); err != nil {
+
+	if err := svc.kb.Type(ctx, req.Key); err != nil {
 		return nil, errors.Wrapf(err, "failed to type %v", req.Key)
 	}
 	return &empty.Empty{}, nil
@@ -68,12 +69,11 @@ func (svc *KeyboardService) Accel(ctx context.Context, req *pb.AccelRequest) (*e
 	svc.mutex.Lock()
 	defer svc.mutex.Unlock()
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keyboard handle")
+	if err := svc.initKeyboard(ctx); err != nil {
+		return nil, err
 	}
-	defer kb.Close()
-	if err := kb.Accel(ctx, req.Key); err != nil {
+
+	if err := svc.kb.Accel(ctx, req.Key); err != nil {
 		return nil, errors.Wrapf(err, "failed to call Accel %v", req.Key)
 	}
 	return &empty.Empty{}, nil
@@ -84,12 +84,11 @@ func (svc *KeyboardService) AccelPress(ctx context.Context, req *pb.AccelPressRe
 	svc.mutex.Lock()
 	defer svc.mutex.Unlock()
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keyboard handle")
+	if err := svc.initKeyboard(ctx); err != nil {
+		return nil, err
 	}
-	defer kb.Close()
-	if err := kb.AccelPress(ctx, req.Key); err != nil {
+
+	if err := svc.kb.AccelPress(ctx, req.Key); err != nil {
 		return nil, errors.Wrapf(err, "failed to call AccelPress %v", req.Key)
 	}
 	return &empty.Empty{}, nil
@@ -100,13 +99,41 @@ func (svc *KeyboardService) AccelRelease(ctx context.Context, req *pb.AccelRelea
 	svc.mutex.Lock()
 	defer svc.mutex.Unlock()
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keyboard handle")
+	if err := svc.initKeyboard(ctx); err != nil {
+		return nil, err
 	}
-	defer kb.Close()
-	if err := kb.AccelRelease(ctx, req.Key); err != nil {
+
+	if err := svc.kb.AccelRelease(ctx, req.Key); err != nil {
 		return nil, errors.Wrapf(err, "failed to call AccelRelease %v", req.Key)
 	}
 	return &empty.Empty{}, nil
+}
+
+func (svc *KeyboardService) initKeyboard(ctx context.Context) error {
+	if svc.kb == nil {
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get keyboard handle")
+		}
+		svc.kb = kb
+
+		// Ensure that the keyboard is closed when the service is shut down.
+		go func(ctx context.Context) {
+			select {
+			case <-ctx.Done():
+				svc.closeKeyboard()
+			}
+		}(svc.s.ServiceContext())
+	}
+	return nil
+}
+
+func (svc *KeyboardService) closeKeyboard() error {
+	if svc.kb != nil {
+		if err := svc.kb.Close(); err != nil {
+			return errors.Wrap(err, "failed to close keyboard handle")
+		}
+		svc.kb = nil
+	}
+	return nil
 }
