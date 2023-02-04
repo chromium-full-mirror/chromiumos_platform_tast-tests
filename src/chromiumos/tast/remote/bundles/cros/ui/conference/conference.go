@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	// CPUIdleTimeout is used to wait for the cpu idle.
-	CPUIdleTimeout = 2 * time.Minute
+	// CPUIdleTimeout is used to wait for the cpu idle (2 minutes) and the battery to charge (3 minutes).
+	CPUIdleTimeout = 5 * time.Minute
 	// CameraVideo is a video file used as a fake camera for conference testing.
 	// Video shows a real person talking to the camera. Using this video as the camera input,
 	// the effect of switching the background can be observed on the conference page.

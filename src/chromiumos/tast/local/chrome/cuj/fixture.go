@@ -454,9 +454,9 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 func (f *prepareCUJFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-// chargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
+// chargeBatteryCapacity allows charging of the battery for 3 minutes if battery capacity
 // is lower than a pre-defined level.
-func (f *cpuIdleForCUJFixture) chargeBatteryCapacityBeforePowerTest(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
+func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
 	if err := setup.AllowBatteryCharging(ctx); err != nil {
 		return err
 	}
@@ -480,6 +480,23 @@ func (f *cpuIdleForCUJFixture) chargeBatteryCapacityBeforePowerTest(ctx context.
 	return nil
 }
 
+// ChargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
+// is lower than a pre-defined level when the disableChargeBatteryBeforeTest variable is not true.
+// This is usually added before the case execution.
+func ChargeBatteryCapacityBeforePowerTest(ctx context.Context) error {
+	if strings.ToLower(disableChargeBatteryBeforeTest.Value()) != "true" {
+		// Wait for battery to be charged.
+		err := chargeBatteryCapacity(ctx, minimumBatteryCapacity, chargeBatteryTestPollOpt)
+		if err != nil {
+			if errors.Is(err, power.ErrNoBattery) {
+				return errors.Wrap(err, "battery not found")
+			}
+			return errors.Wrap(err, "battery failed to be charged to minimum level")
+		}
+	}
+	return nil
+}
+
 type cpuIdleForCUJFixture struct{}
 
 func (f *cpuIdleForCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -494,16 +511,8 @@ func (f *cpuIdleForCUJFixture) Reset(ctx context.Context) error {
 }
 
 func (f *cpuIdleForCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if strings.ToLower(disableChargeBatteryBeforeTest.Value()) != "true" {
-		// Wait for battery to be charged.
-		err := f.chargeBatteryCapacityBeforePowerTest(ctx, minimumBatteryCapacity, chargeBatteryTestPollOpt)
-		if err != nil {
-			if errors.Is(err, power.ErrNoBattery) {
-				testing.ContextLog(ctx, "Battery not found: ", err)
-			} else {
-				testing.ContextLog(ctx, "Battery failed to be charged to minimum level: ", err)
-			}
-		}
+	if err := ChargeBatteryCapacityBeforePowerTest(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
 	}
 
 	if strings.ToLower(isLocalVar.Value()) == "true" {

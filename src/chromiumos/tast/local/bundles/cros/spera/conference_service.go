@@ -129,6 +129,13 @@ func newConferenceChrome(ctx context.Context, accountPool, cameraVideoPath strin
 }
 
 func preTest(ctx context.Context) {
+	// ChargeBatteryCapacityBeforePowerTest is common code for all spera tests.
+	// If there is a new spera case, need to confirm that ChargeBatteryCapacityBeforePowerTest
+	// is added to the pretest function.
+	if err := cuj.ChargeBatteryCapacityBeforePowerTest(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
+	}
+
 	// Wait for cpu to idle before test.
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		// Log the cpu idle wait failure instead of make it fatal.
