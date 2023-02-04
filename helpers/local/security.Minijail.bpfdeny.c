@@ -40,9 +40,10 @@ int main(int argc, char *argv[]) {
   saved_errno = errno;
 
   // If Minijail is blocking BPF, we should see EPERM. Otherwise, we should
-  // see either EACCES or EFAULT based on the board being tested.
+  // see either EACCES, EFAULT, or ENOSYS based on the board being tested.
   if ((expect_blocked && saved_errno != EPERM)
-      || (!expect_blocked && saved_errno != EACCES && saved_errno != EFAULT)) {
+      || (!expect_blocked && saved_errno != EACCES && saved_errno != EFAULT
+              && saved_errno != ENOSYS)) {
     fprintf(stderr,
                 "Unexpected BPF errno. bpf_fd: %i errno: %d\n",
                 bpf_fd, saved_errno);
