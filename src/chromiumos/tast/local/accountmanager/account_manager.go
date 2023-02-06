@@ -99,6 +99,19 @@ func RemoveActionButton() *nodewith.Finder {
 	return nodewith.Name("Remove this account").Role(role.MenuItem)
 }
 
+// OGBDialog returns the OGB dialog node.
+func OGBDialog() *nodewith.Finder {
+	return nodewith.Name("Account and settings").Role(role.Dialog)
+}
+
+// AddAnotherAccountButton returns a button in OGB which opens account addition
+// dialog.
+// Note: Don't rely on the type of this element. It may be "link" or "generic container"
+// depending on OGB design.
+func AddAnotherAccountButton() *nodewith.Finder {
+	return nodewith.Name("Add another account").Focusable().First().Ancestor(OGBDialog())
+}
+
 // GetChromeProfileWindow returns a nodewith.Finder to the Chrome window which
 // matches the provided condition.
 func GetChromeProfileWindow(ctx context.Context, tconn *chrome.TestConn, condition func(uiauto.NodeInfo) bool) (*nodewith.Finder, error) {
@@ -346,7 +359,7 @@ func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 func openOGB(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration) error {
 	ui := uiauto.New(tconn).WithTimeout(timeout)
 	ogb := nodewith.NameStartingWith("Google Account").Role(role.Button)
-	addAccount := nodewith.Name("Add another account").Role(role.Link)
+	addAccount := AddAnotherAccountButton()
 	if err := uiauto.Combine("Click OGB",
 		ui.WaitUntilExists(ogb),
 		ui.WithInterval(time.Second).LeftClickUntil(ogb, ui.Exists(addAccount)),

@@ -145,7 +145,7 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 
 // clickAddAccount clicks on 'add another account' button in OGB until account addition dialog is opened.
 func clickAddAccount(ctx context.Context, ui *uiauto.Context) error {
-	addAccount := nodewith.Name("Add another account").Role(role.Link)
+	addAccount := accountmanager.AddAnotherAccountButton()
 	dialog := accountmanager.AddAccountDialog()
 	if err := uiauto.Combine("Click add account",
 		ui.WaitUntilExists(addAccount),
