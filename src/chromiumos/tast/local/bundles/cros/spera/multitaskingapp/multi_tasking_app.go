@@ -7,17 +7,12 @@ package multitaskingapp
 
 import (
 	"context"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
-	"chromiumos/tast/local/arc"
-	"chromiumos/tast/local/arc/apputil"
-	"chromiumos/tast/local/arc/apputil/spotify"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/camera/testutil"
@@ -36,32 +31,22 @@ import (
 )
 
 const (
-	// HelloWorldAppName indicates to test against a "Hello world" ARC app.
-	HelloWorldAppName = "Hello world"
-	// YoutubeMusicAppName indicates to test against YoutubeMusic.
-	YoutubeMusicAppName = "YouTube Music"
-	// SpotifyAppName indicates to test against Spotify.
-	SpotifyAppName = spotify.AppName
-
-	helloworldAPKName      = "ArcAppValidityTest.apk"
-	helloworldPackageName  = "org.chromium.arc.testapp.appvaliditytast"
-	helloworldActivityName = ".MainActivity"
+	youtubeMusicAppName = "YouTube Music"
 
 	initialVolume   = 60
 	mediumUITimeout = 30 * time.Second // Used for situations where UI response are slower.
 )
 
-// RunParams holds the parameters to run the test main logic.
-type RunParams struct {
-	tier            cuj.Tier
-	ccaScriptPaths  []string // ccaSriptPaths is the script paths used by CCA package to do camera testing.
-	outDir          string
-	appName         string
-	account         string // account is the one used by Spotify APP to do login.
-	tabletMode      bool
-	enableBT        bool
-	traceConfigPath string
-	webSource       cuj.WebSourceType
+// TestParams holds the parameters to run the test main logic.
+type TestParams struct {
+	Tier        cuj.Tier
+	BrowserType browser.Type
+	WebSource   cuj.WebSourceType
+	// CCASriptPaths is the script paths used by CCA package to do camera testing.
+	CCAScriptPaths  []string
+	OutDir          string
+	TraceConfigPath string
+	TabletMode      bool
 }
 
 var (
@@ -74,21 +59,6 @@ var (
 	}
 )
 
-// NewRunParams constructs a RunParams struct and returns the pointer to it.
-func NewRunParams(tier cuj.Tier, ccaScriptPaths []string, outDir, appName, account, traceConfigPath string,
-	tabletMode, enableBT bool, webSource cuj.WebSourceType) *RunParams {
-	return &RunParams{tier: tier,
-		ccaScriptPaths:  ccaScriptPaths,
-		outDir:          outDir,
-		appName:         appName,
-		account:         account,
-		traceConfigPath: traceConfigPath,
-		tabletMode:      tabletMode,
-		enableBT:        enableBT,
-		webSource:       webSource,
-	}
-}
-
 type runResources struct {
 	kb         *input.KeyboardEventWriter
 	topRow     *input.TopRowLayout
@@ -99,7 +69,12 @@ type runResources struct {
 }
 
 // Run runs the MultitaskingApp test.
-func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, params *RunParams) (retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
+	bt := params.BrowserType
+	tabletMode := params.TabletMode
+	traceConfigPath := params.TraceConfigPath
+	outDir := params.OutDir
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -120,30 +95,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		return errors.Wrap(err, "failed to obtain the top-row layout")
 	}
 
-	var appHelloWorld *arc.Activity
-	var appSpotify *spotify.Spotify
-	switch params.appName {
-	case HelloWorldAppName:
-		testing.ContextLog(ctx, "Install ", helloworldPackageName)
-		if err := a.Install(ctx, arc.APKPath(helloworldAPKName)); err != nil {
-			return errors.Wrap(err, "failed to install \"Hello world\" ARC app")
-		}
-
-		if appHelloWorld, err = arc.NewActivity(a, helloworldPackageName, helloworldActivityName); err != nil {
-			return errors.Wrap(err, "failed to create activity for \"Hello world\" ARC app")
-		}
-		defer appHelloWorld.Close()
-	case SpotifyAppName:
-		if appSpotify, err = spotify.New(ctx, kb, a, tconn, params.account); err != nil {
-			return errors.Wrap(err, "failed to create Spotify instance")
-		}
-		defer appSpotify.Close(cleanupCtx, cr, func() bool { return retErr != nil }, filepath.Join(params.outDir, "arc"))
-
-		if err := appSpotify.Install(ctx); err != nil {
-			return errors.Wrap(err, "failed to install Spotify")
-		}
-	}
-
 	vh, err := audio.NewVolumeHelper(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create the volumeHelper")
@@ -153,7 +104,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 
 	// uiHandler will be assigned with different instances for clamshell and tablet mode.
 	var uiHandler cuj.UIActionHandler
-	if params.tabletMode {
+	if tabletMode {
 		if uiHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to create tablet action handler")
 		}
@@ -165,7 +116,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	defer uiHandler.Close()
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, params.tabletMode, bt)
+	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, bt)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
@@ -208,8 +159,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	defer cancel()
 
 	options := cujrecorder.NewPerformanceCUJOptions()
-	options.DoNotChangeBluetooth = params.enableBT
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
@@ -217,43 +167,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	var appStartTime int64
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-		if params.traceConfigPath != "" {
+		if traceConfigPath != "" {
 			// Start tracing now.
-			if err := recorder.StartTracing(ctx, params.outDir, params.traceConfigPath); err != nil {
+			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
 			defer recorder.StopTracing(ctx)
-		}
-
-		switch params.appName {
-		case HelloWorldAppName:
-			testing.ContextLog(ctx, "Launch \"Hello world\" ARC app")
-			startTime := time.Now()
-			// Use arc.WithWaitForLaunch() because we are measuring how long the launch takes.
-			if err := appHelloWorld.Start(ctx, tconn, arc.WithWaitForLaunch()); err != nil {
-				return errors.Wrap(err, "failed to launch \"Hello world\" ARC app")
-			}
-			appStartTime = time.Since(startTime).Milliseconds()
-
-		case SpotifyAppName:
-			testing.ContextLog(ctx, "Launch \"Spotify\" ARC app")
-			t, err := appSpotify.Launch(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to Launch Spotify")
-			}
-			appStartTime = t.Milliseconds()
-
-			testing.ContextLog(ctx, "Start to play Spotify")
-			if err = appSpotify.Play(ctx, apputil.NewMedia("Photograph", "Song • Ed Sheeran")); err != nil {
-				return errors.Wrap(err, "failed to play Spotify")
-			}
-			// Let spotify continue to play for some time.
-			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-				return errors.Wrap(err, "failed to sleep")
-			}
 		}
 
 		resources := &runResources{
@@ -275,13 +196,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		defer cancel()
 
 		defer func(ctx context.Context) {
-			faillog.DumpUITreeWithScreenshotOnError(ctx, params.outDir, func() bool { return retErr != nil }, cr, "ui_tree")
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_tree")
 
-			shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-			defer cancel()
 			closeFunc := func(ctx context.Context) error {
 				// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
-				if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
+				if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 					// When closing the "Youtube Music" website, the popup "Leave site?" might appear.
 					leaveWindow := nodewith.Name("Leave site?").Role(role.Window).First()
@@ -300,19 +219,19 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 			}
 		}(cleanupCtx)
 
-		if err := switchWindows(ctx, tconn, params, resources); err != nil {
+		if err := switchWindows(ctx, tconn, resources, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to switch windows")
 		}
-		if err := takePhotoAndVideo(ctx, cr, params.ccaScriptPaths, params.outDir); err != nil {
+		if err := takePhotoAndVideo(ctx, cr, params.CCAScriptPaths, outDir); err != nil {
 			return errors.Wrap(err, "failed to take photo and video")
 		}
 
-		if err := cuj.GenerateADF(ctx, tconn, params.tabletMode); err != nil {
+		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to generate ADF")
 		}
 		return nil
 	}); err != nil {
-		return errors.Wrap(err, "failed to run the camera scenario")
+		return errors.Wrap(err, "failed to run the multi tasking app")
 	}
 
 	pv := perf.NewValues()
@@ -323,14 +242,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		Direction: perf.SmallerIsBetter,
 	}, float64(browserStartTime.Milliseconds()))
 
-	if appStartTime > 0 {
-		pv.Set(perf.Metric{
-			Name:      "Apps.StartTime",
-			Unit:      "ms",
-			Direction: perf.SmallerIsBetter,
-		}, float64(appStartTime))
-	}
-
 	// Use a short timeout value so it can return fast in case of failure.
 	recordCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
@@ -340,22 +251,29 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	if err := recorder.SaveTraceFiles(recordCtx); err != nil {
 		testing.ContextLog(recordCtx, "Failed to save trace files: ", err)
 	}
-	if err = pv.Save(params.outDir); err != nil {
+	if err = pv.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to store values")
 	}
-	if err := recorder.SaveHistograms(params.outDir); err != nil {
+	if err := recorder.SaveHistograms(outDir); err != nil {
 		return errors.Wrap(err, "failed to save histogram raw data")
 	}
 
 	return nil
 }
 
-func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, params *RunParams, resources *runResources) error {
-	if _, ok := urlListMap[params.webSource]; !ok {
-		return errors.Errorf("unknown web source: %v", params.webSource)
+func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, params *TestParams, resources *runResources) error {
+	uiHandler := resources.uiHandler
+	browserApp := resources.browserApp
+	vh := resources.vh
+	kb := resources.kb
+	topRow := resources.topRow
+
+	webSource := params.WebSource
+	if _, ok := urlListMap[webSource]; !ok {
+		return errors.Errorf("unknown web source: %v", webSource)
 	}
 
-	urlList := urlListMap[params.webSource]
+	urlList := urlListMap[webSource]
 	// Essential tier test scenario: 2 browser windows open with 5 tabs each.
 	// Advanced tier test scenario: Same as essential but click through 20 tabs (4 windows x 5 tabs):
 	// 1. The first and second window URL lists are the same as essential.
@@ -366,13 +284,13 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 	fourthWindowURLList := thirdWindowURLList
 
 	pageList := [][]string{firstWindowURLList, secondWindowURLList}
-	if params.tier == cuj.Advanced {
+	if params.Tier == cuj.Advanced {
 		pageList = append(pageList, thirdWindowURLList, fourthWindowURLList)
 	}
 
 	openBrowserWithTabs := func(urlList []string) error {
 		for idx, url := range urlList {
-			conn, err := resources.uiHandler.NewChromeTab(ctx, br, url, idx == 0)
+			conn, err := uiHandler.NewChromeTab(ctx, br, url, idx == 0)
 			if err != nil {
 				return errors.Wrapf(err, "failed to open %s", url)
 			}
@@ -393,14 +311,14 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 				return errors.Wrapf(err, "failed to wait for page to finish loading within %v [%s]", timeout, url)
 			}
 
-			if params.appName == YoutubeMusicAppName && url == cuj.YoutubeMusicURL {
-				if err := cuj.MaximizeBrowserWindow(ctx, tconn, params.tabletMode, YoutubeMusicAppName); err != nil {
+			if url == cuj.YoutubeMusicURL {
+				if err := cuj.MaximizeBrowserWindow(ctx, tconn, params.TabletMode, youtubeMusicAppName); err != nil {
 					return errors.Wrap(err, "failed to maximize the YouTube Music window")
 				}
-				if err := playYoutubeMusic(ctx, resources); err != nil {
+				if err := playYoutubeMusic(ctx, tconn); err != nil {
 					return errors.Wrap(err, "failed to play Youtube Music")
 				}
-				if err := cuj.GenerateEventLatency(ctx, tconn, YoutubeMusicAppName); err != nil {
+				if err := cuj.GenerateEventLatency(ctx, tconn, youtubeMusicAppName); err != nil {
 					return errors.Wrap(err, "failed to generate event latency histograms")
 				}
 			}
@@ -410,25 +328,18 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 
 	// switchTabsAndChangeVolume changes the volume after switching tabs.
 	switchTabsAndChangeVolume := func(ctx context.Context, browserWinIdx int, pages []string) error {
-		if err := resources.vh.SetVolume(ctx, initialVolume); err != nil {
+		if err := vh.SetVolume(ctx, initialVolume); err != nil {
 			return errors.Wrapf(err, "failed to set volume to %d percent", initialVolume)
 		}
 
 		for tabIdx := range pages {
 			testing.ContextLog(ctx, "Switching Chrome tab")
-			if err := resources.uiHandler.SwitchToChromeTabByIndex(tabIdx)(ctx); err != nil {
-				// Sometimes, Spotify may pop up ads as active window.
-				// It should switch back to the browser window and try again.
-				if err := uiauto.Combine("switch back to browser and switch tab again",
-					resources.uiHandler.SwitchToAppWindowByIndex(resources.browserApp.Name, browserWinIdx),
-					resources.uiHandler.SwitchToChromeTabByIndex(tabIdx),
-				)(ctx); err != nil {
-					return err
-				}
+			if err := uiHandler.SwitchToChromeTabByIndex(tabIdx)(ctx); err != nil {
+				return err
 			}
 			testing.ContextLog(ctx, "Volume up")
-			if err := resources.vh.VerifyVolumeChanged(ctx, func() error {
-				return resources.kb.Accel(ctx, resources.topRow.VolumeUp)
+			if err := vh.VerifyVolumeChanged(ctx, func() error {
+				return kb.Accel(ctx, topRow.VolumeUp)
 			}); err != nil {
 				return errors.Wrap(err, `volume not changed after press "VolumeUp"`)
 			}
@@ -454,7 +365,7 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 
 			// Switch to the least recent window to start from the window we opened first.
 			testing.ContextLog(ctx, "Switching window by overview")
-			if err := resources.uiHandler.SwitchToLRUWindow(cuj.SwitchWindowThroughOverview)(ctx); err != nil {
+			if err := uiHandler.SwitchToLRUWindow(cuj.SwitchWindowThroughOverview)(ctx); err != nil {
 				return errors.Wrap(err, "failed to switch windows through overview")
 			}
 
@@ -473,13 +384,13 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 		return nil
 	}
 
-	if resources.browserApp.ID == apps.LacrosID {
+	if browserApp.ID == apps.LacrosID {
 		activeWindow, err := ash.GetActiveWindow(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the active window")
 		}
 		if activeWindow.WindowType != ash.WindowTypeLacros {
-			if err := resources.uiHandler.SwitchToAppWindow(resources.browserApp.Name)(ctx); err != nil {
+			if err := uiHandler.SwitchToAppWindow(browserApp.Name)(ctx); err != nil {
 				return errors.Wrap(err, "failed to switch to lacros window")
 			}
 		}
@@ -496,7 +407,12 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 	return nil
 }
 
-func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParams, resources *runResources) error {
+func switchWindows(ctx context.Context, tconn *chrome.TestConn, resources *runResources, tabletMode bool) error {
+	uiHandler := resources.uiHandler
+	vh := resources.vh
+	kb := resources.kb
+	topRow := resources.topRow
+	browserApp := resources.browserApp
 	// subtest defines the detail of the window switch test procedure. It could be different for clamshell and tablet mode.
 	type subtest struct {
 		name string
@@ -512,12 +428,12 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 		"Switching the focused window through the overview mode",
 		func(ctx context.Context, ws []*ash.Window, i int) error {
 			testing.ContextLog(ctx, "Switching window by overview")
-			return resources.uiHandler.SwitchToLRUWindow(cuj.SwitchWindowThroughOverview)(ctx)
+			return uiHandler.SwitchToLRUWindow(cuj.SwitchWindowThroughOverview)(ctx)
 		},
 	}
 	// switchWindowTests holds a serial of window switch tests. It has different subtest for clamshell and tablet mode.
 	switchWindowTests := []subtest{switchWindowByOverviewTest}
-	if params.tabletMode {
+	if tabletMode {
 		switchWindowByHotseatTest := subtest{
 			"hotseat",
 			"Switching the focused window through clicking the hotseat",
@@ -529,17 +445,10 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 						wIdx++
 					}
 				}
-				winName := resources.browserApp.Name
-				switchFunc := resources.uiHandler.SwitchToAppWindowByIndex(winName, wIdx)
-				for _, appName := range []string{HelloWorldAppName, SpotifyAppName} {
-					if strings.Contains(ws[i].Title, appName) {
-						winName = appName
-						// Use SwitchToAppWindow() because the app has only one window.
-						switchFunc = resources.uiHandler.SwitchToAppWindow(appName)
-					}
-				}
+				winName := browserApp.Name
+
 				testing.ContextLogf(ctx, "Switching window to %q", ws[i].Title)
-				return switchFunc(ctx)
+				return uiHandler.SwitchToAppWindowByIndex(winName, wIdx)(ctx)
 			},
 		}
 		switchWindowTests = append(switchWindowTests, switchWindowByHotseatTest)
@@ -548,7 +457,7 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 			"alt-tab",
 			"Switching the focused window through Alt-Tab",
 			func(ctx context.Context, ws []*ash.Window, i int) error {
-				return resources.uiHandler.SwitchToLRUWindow(cuj.SwitchWindowThroughKeyEvent)(ctx)
+				return uiHandler.SwitchToLRUWindow(cuj.SwitchWindowThroughKeyEvent)(ctx)
 			},
 		}
 		switchWindowTests = append(switchWindowTests, switchWindowByKeyboardTest)
@@ -561,12 +470,12 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 
 	for _, subtest := range switchWindowTests {
 		testing.ContextLog(ctx, subtest.desc)
-		if err := resources.vh.SetVolume(ctx, initialVolume); err != nil {
+		if err := vh.SetVolume(ctx, initialVolume); err != nil {
 			return errors.Wrapf(err, "failed to set volume to %v percents", initialVolume)
 		}
 		testing.ContextLog(ctx, "Volume up")
-		if err := resources.vh.VerifyVolumeChanged(ctx, func() error {
-			return resources.kb.Accel(ctx, resources.topRow.VolumeUp)
+		if err := vh.VerifyVolumeChanged(ctx, func() error {
+			return kb.Accel(ctx, topRow.VolumeUp)
 		}); err != nil {
 			return errors.Wrap(err, `volume not changed after press "VolumeUp"`)
 		}
@@ -623,16 +532,15 @@ func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, scriptPaths []str
 	return nil
 }
 
-func playYoutubeMusic(ctx context.Context, resources *runResources) error {
-	ui := resources.ui
-	uiHdl := resources.uiHandler
+func playYoutubeMusic(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
 	shuffleButton := nodewith.Name("Shuffle").Role(role.Button)
 	pauseButton := nodewith.Name("Pause").Role(role.Button).First()
 	reviewIconUpdateWindow := nodewith.Name("Review icon update").Role(role.Window)
 	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(reviewIconUpdateWindow)
 	dismissReviewIconUpdateIfPresent := uiauto.IfSuccessThen(
 		ui.WithTimeout(3*time.Second).WaitUntilExists(reviewIconUpdateWindow),
-		uiauto.NamedAction("close 'Review icon update' dialog", uiHdl.Click(okButton)))
+		uiauto.NamedAction("close 'Review icon update' dialog", ui.LeftClick(okButton)))
 	waitPauseButton := uiauto.NamedCombine("wait pause button",
 		dismissReviewIconUpdateIfPresent,
 		ui.WaitUntilExists(pauseButton),
