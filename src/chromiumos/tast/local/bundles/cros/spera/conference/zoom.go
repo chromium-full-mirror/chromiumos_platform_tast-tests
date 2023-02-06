@@ -7,7 +7,6 @@ package conference
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps/zoom"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -183,33 +181,13 @@ func (conf *ZoomConference) SwitchTabs(url string) action.Action {
 	}
 }
 
-// TypingInChat opens chat window and type.
+// TypingInChat opens chat window, type in chat room and close chat window.
 func (conf *ZoomConference) TypingInChat(ctx context.Context) error {
 	const message = "Hello! How are you?"
-	// Close all notifications to prevent them from covering the chat text field.
-	if err := ash.CloseNotifications(ctx, conf.tconn); err != nil {
-		return errors.Wrap(err, "failed to close otifications")
-	}
-	chatButton := nodewith.Name("open the chat pane").Role(role.Button)
-	chatTextRe := regexp.MustCompile("(Type message here ...|chat message)")
-	chatTextField := nodewith.NameRegex(chatTextRe).Role(role.TextField)
-	messageText := nodewith.Name(message).Role(role.StaticText).First()
-	manageChatPanel := nodewith.Name("Manage Chat Panel").Role(role.PopUpButton)
-	manageChatPanelMenu := nodewith.Name("Manage Chat Panel").Role(role.Menu)
-	closeButton := nodewith.Name("Close").Role(role.MenuItem).Ancestor(manageChatPanelMenu)
-	typeMessage := uiauto.NamedCombine("type message : "+message,
-		conf.ui.LeftClickUntil(chatTextField, conf.ui.WithTimeout(shortUITimeout).WaitUntilExists(chatTextField.Focused())),
-		conf.kb.AccelAction("Ctrl+A"),
-		conf.kb.TypeAction(message),
-		conf.kb.AccelAction("enter"),
-		conf.ui.WaitUntilExists(messageText))
-	return uiauto.NamedCombine("open chat window and type",
-		conf.ui.DoDefault(chatButton),
-		conf.ui.WaitUntilExists(chatTextField),
-		conf.ui.Retry(retryTimes, typeMessage),
+	return uiauto.Combine("typing in chat",
+		conf.zm.TypingInChat(conf.kb, message),
 		uiauto.Sleep(viewingTime), // After typing, wait 5 seconds for viewing.
-		conf.ui.LeftClick(manageChatPanel),
-		conf.ui.LeftClick(closeButton),
+		conf.zm.CloseChatPanel(),
 	)(ctx)
 }
 
