@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -24,6 +25,9 @@ import (
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -115,6 +119,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+
 			if err := cr.ResetState(ctx); err != nil {
 				s.Fatal("Failed to reset the Chrome: ", err)
 			}
@@ -191,7 +196,9 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 			}
 
 			s.Log("Draging and dropping content")
-			if err := dragdrop.DragDrop(ctx, tconn, param.content); err != nil {
+			browserRoot := nodewith.ClassName("BrowserFrame").NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
+			dstNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
+			if err := dragdrop.DragDrop(ctx, tconn, param.content, dstNode); err != nil {
 				s.Error("Failed to drag drop content: ", err)
 			}
 
@@ -215,7 +222,8 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 			}
 
 			// Check dropped content.
-			dropError := dragdrop.CheckDraggedContent(ctx, ui, param.content)
+			contentNode := nodewith.NameContaining(param.content).Role(role.InlineTextBox).State(state.Editable, true).First()
+			dropError := ui.WaitUntilExists(contentNode)(ctx)
 
 			if param.wantAllowed && dropError != nil {
 				s.Error("Checked pasted content but found an error: ", dropError)

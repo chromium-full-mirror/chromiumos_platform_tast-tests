@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/common/policy/fakedms"
@@ -24,6 +25,10 @@ import (
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -53,11 +58,10 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	allowedServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer allowedServer.Close()
+	srcServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer srcServer.Close()
 
-	blockedServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer blockedServer.Close()
+	srcURL := srcServer.URL + "/text_1.html"
 
 	dstServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer dstServer.Close()
@@ -96,53 +100,58 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 	defer keyboard.Close()
 
 	for _, param := range []struct {
-		name           string
-		dropAllowed    bool
-		srcURL         string
-		srcContent     string
-		srcBrowserType browser.Type
-		dstBrowserType browser.Type
+		name        string
+		dropAllowed bool
+		src         dragdrop.AppName
+		srcContent  string
 	}{
 		{
-			name:           "blockedAshToLacros",
-			dropAllowed:    false,
-			srcURL:         blockedServer.URL + "/text_1.html",
-			srcContent:     "Sample text about random things.",
-			srcBrowserType: browser.TypeAsh,
-			dstBrowserType: browser.TypeLacros,
+			name:        "blockedAshToLacros",
+			dropAllowed: false,
+			src:         dragdrop.Settings,
+			srcContent:  "Sample text about random things.",
 		},
 		{
-			name:           "blockedLacrosToAsh",
-			dropAllowed:    false,
-			srcURL:         blockedServer.URL + "/text_1.html",
-			srcContent:     "Sample text about random things.",
-			srcBrowserType: browser.TypeLacros,
-			dstBrowserType: browser.TypeAsh,
+			name:        "blockedLacrosToAsh",
+			dropAllowed: false,
+			src:         dragdrop.Chrome,
+			srcContent:  "Sample text about random things.",
 		},
 		{
-			name:           "allowedAshToLacros",
-			dropAllowed:    true,
-			srcURL:         allowedServer.URL + "/text_2.html",
-			srcContent:     "Here is a random piece of text for testing things.",
-			srcBrowserType: browser.TypeAsh,
-			dstBrowserType: browser.TypeLacros,
+			name:        "allowedAshToLacros",
+			dropAllowed: true,
+			src:         dragdrop.Settings,
+			srcContent:  "Sample text about random things.",
 		},
 		{
-			name:           "allowedLacrosToAsh",
-			dropAllowed:    true,
-			srcURL:         allowedServer.URL + "/text_2.html",
-			srcContent:     "Here is a random piece of text for testing things.",
-			srcBrowserType: browser.TypeLacros,
-			dstBrowserType: browser.TypeAsh,
+			name:        "allowedLacrosToAsh",
+			dropAllowed: true,
+			src:         dragdrop.Chrome,
+			srcContent:  "Sample text about random things.",
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			// The strings to match in rules is either the app name or the page url.
+			dstMatch := dstServer.URL
+			if param.src == dragdrop.Chrome {
+				dstMatch = dragdrop.Settings.String()
+			}
+
+			srcMatch := srcServer.URL
+			if param.src == dragdrop.Settings {
+				srcMatch = dragdrop.Settings.String()
+			}
+
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, policy.PopulateDLPPolicyForClipboard(blockedServer.URL, dstServer.URL)); err != nil {
+			if param.dropAllowed {
+				dstMatch = dstMatch + "/not_match"
+			}
+
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, policy.PopulateDLPPolicyForClipboard(srcMatch, dstMatch)); err != nil {
 				s.Fatal("Failed to serve and verify the DLP policy: ", err)
 			}
 
@@ -151,21 +160,37 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 				s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
 			}
 
-			// Setup destination browser.
-			closeDstBr, dstConn, err := openWebsite(ctx, cr, param.dstBrowserType, dstURL)
-			if err != nil {
-				s.Fatalf("Failed to open %q: %v", dstURL, err)
-			}
-			defer closeDstBr(cleanupCtx)
-			defer dstConn.Close()
+			ui := uiauto.New(tconn)
 
-			// Setup source browser.
-			closeSrcBr, srcConn, err := openWebsite(ctx, cr, param.srcBrowserType, param.srcURL)
-			if err != nil {
-				s.Fatalf("Failed to open %q: %v", param.srcURL, err)
+			if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "osLanguages/languages", ui.Exists(nodewith.Name("Add languages").Role(role.Button))); err != nil {
+				s.Fatal("Failed to launch Settings page: ", err)
 			}
-			defer closeSrcBr(cleanupCtx)
-			defer srcConn.Close()
+
+			if err := uiauto.Combine("open languages list",
+				ui.LeftClick(ossettings.AddLanguagesButton),
+				ui.WaitUntilExists(ossettings.SearchLanguages),
+			)(ctx); err != nil {
+				s.Fatal("Cannot open search language: ", err)
+			}
+
+			settingsWin, err := ash.GetActiveWindow(ctx, tconn)
+
+			// Setup browser.
+			var closeBr uiauto.Action
+			var conn *chrome.Conn
+			if param.src == dragdrop.Chrome {
+				closeBr, conn, err = openWebsite(ctx, cr, browser.TypeLacros, srcURL)
+				if err != nil {
+					s.Fatalf("Failed to open %q: %v", srcURL, err)
+				}
+			} else {
+				closeBr, conn, err = openWebsite(ctx, cr, browser.TypeLacros, dstURL)
+				if err != nil {
+					s.Fatalf("Failed to open %q: %v", dstURL, err)
+				}
+			}
+			defer closeBr(cleanupCtx)
+			defer conn.Close()
 
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
@@ -174,48 +199,74 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 			}
 
 			// Snap the param.srcURL window to the right.
-			w1, err := snapFirstWindowInOverview(ctx, tconn, ash.WindowStateRightSnapped)
+			browserWin, err := snapFirstWindowInOverview(ctx, tconn, ash.WindowStateRightSnapped)
 			if err != nil {
-				s.Fatalf("Failed to snap the %s window to the right: %s", param.srcURL, err)
+				s.Fatalf("Failed to snap the %s window to the right: %s", srcURL, err)
 			}
 
 			// Snap the destination window to the left.
-			w2, err := snapFirstWindowInOverview(ctx, tconn, ash.WindowStateLeftSnapped)
+			_, err = snapFirstWindowInOverview(ctx, tconn, ash.WindowStateLeftSnapped)
 			if err != nil {
 				s.Fatalf("Failed to snap the %s window to the left: %s", dstURL, err)
 			}
 
+			if err := ash.SetWindowStateAndWait(ctx, tconn, browserWin.ID, ash.WindowStateRightSnapped); err != nil {
+				s.Fatal("Failed to move the browser window to the right: ", err)
+			}
+
 			// Activate the drag destination window so coordinates get updates.
-			if err := w2.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatalf("Failed to activate the %s window: %v", param.srcURL, err)
+			if err := browserWin.ActivateWindow(ctx, tconn); err != nil {
+				s.Fatalf("Failed to activate the %s window: %v", srcURL, err)
 			}
 
-			if err := dragdrop.WaitForStableCoordinates(ctx, tconn); err != nil {
-				s.Fatal("Failed to wait for the coordinates for the drop textfield gets stable: ", err)
+			if param.src == dragdrop.Settings {
+				if err := dragdrop.WaitForStableCoordinates(ctx, tconn); err != nil {
+					s.Fatal("Failed to wait for the coordinates for the drop textfield gets stable: ", err)
+				}
 			}
 
-			// Activate the drag source (param.srcURL) window.
-			if err := w1.ActivateWindow(ctx, tconn); err != nil {
-				s.Fatalf("Failed to activate the %s window: %s", param.srcURL, err)
-			}
+			var dstNode *nodewith.Finder
 
-			if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
-				s.Fatal("Failed to press Ctrl+A to select all content: ", err)
+			if param.src == dragdrop.Chrome {
+				// Activate the drag source (param.srcURL) window.
+				if err := browserWin.ActivateWindow(ctx, tconn); err != nil {
+					s.Fatalf("Failed to activate the %s window: %s", srcURL, err)
+				}
+
+				if err = keyboard.Accel(ctx, "Ctrl+A"); err != nil {
+					s.Fatal("Failed to press Ctrl+A to select all content: ", err)
+				}
+
+				dstNode = ossettings.SearchLanguages
+			} else {
+				if err := settingsWin.ActivateWindow(ctx, tconn); err != nil {
+					s.Fatal("Failed to activate the settings window: ", err)
+				}
+
+				if err := uiauto.Combine("Type text and copy it",
+					keyboard.TypeAction(param.srcContent),
+					keyboard.AccelAction("Ctrl+A"),
+				)(ctx); err != nil {
+					s.Fatal("Failed to type and copy text: ", err)
+				}
+
+				browserRoot := nodewith.ClassNameRegex(regexp.MustCompile("ExoShellSurface-.*")).NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
+				dstNode = nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
 			}
 
 			s.Log("Draging and dropping content")
-			if err := dragdrop.DragDrop(ctx, tconn, param.srcContent); err != nil {
+			if err := dragdrop.DragDrop(ctx, tconn, param.srcContent, dstNode); err != nil {
 				s.Fatal("Failed to drag and drop content: ", err)
 			}
 
 			s.Log("Checking notification")
-			ui := uiauto.New(tconn)
-			parsedSrcURL, err := url.Parse(blockedServer.URL)
-			if err != nil {
-				s.Fatalf("Failed to parse blocked server URL %s: %s", blockedServer.URL, err)
-			}
 
-			err = clipboard.CheckClipboardBubble(ctx, ui, parsedSrcURL.Hostname())
+			srcName := srcMatch
+			if param.src == dragdrop.Chrome {
+				parsedSrcURL, _ := url.Parse(srcServer.URL)
+				srcName = parsedSrcURL.Hostname()
+			}
+			err = clipboard.CheckClipboardBubble(ctx, ui, srcName)
 
 			if !param.dropAllowed && err != nil {
 				s.Error("Couldn't check for notification: ", err)
@@ -226,7 +277,9 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 			}
 
 			// Check dropped content.
-			dropError := dragdrop.CheckDraggedContent(ctx, ui, param.srcContent)
+			contentNode := nodewith.NameContaining(param.srcContent).Role(role.InlineTextBox).State(state.Editable, true).Ancestor(dstNode)
+
+			dropError := ui.WaitUntilExists(contentNode)(ctx)
 
 			if param.dropAllowed && dropError != nil {
 				s.Error("Checked pasted content but found an error: ", dropError)

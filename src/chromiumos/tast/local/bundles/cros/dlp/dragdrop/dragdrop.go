@@ -19,20 +19,34 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 )
 
+// AppName is used to identify source and target apps for drag and drop.
+type AppName string
+
+const (
+	// Chrome to be used as source or destination.
+	Chrome AppName = "chrome"
+	// Settings to be used as source or destination.
+	Settings AppName = "os-settings"
+	//FileManager to be used as source or destination.
+	FileManager AppName = "file-manager"
+)
+
+func (app AppName) String() string {
+	return string(app)
+}
+
 // DragDrop drags the content specified from a source website to a text box.
-func DragDrop(ctx context.Context, tconn *chrome.TestConn, content string) error {
+func DragDrop(ctx context.Context, tconn *chrome.TestConn, content string, dstNode *nodewith.Finder) error {
 	ui := uiauto.New(tconn)
+	endLocation, err := ui.Location(ctx, dstNode)
+	if err != nil {
+		return errors.Wrap(err, "destination textbox not found")
+	}
 
 	contentNode := nodewith.Name(content).First()
 	start, err := ui.Location(ctx, contentNode)
 	if err != nil {
-		return errors.Wrap(err, "failed to get locaton for content")
-	}
-
-	textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
-	endLocation, err := ui.Location(ctx, textBoxNode)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the location of destination text box")
+		return errors.Wrap(err, "failed to get location for content")
 	}
 
 	if err := uiauto.Combine("Drag and Drop",
@@ -52,17 +66,6 @@ func WaitForStableCoordinates(ctx context.Context, tconn *chrome.TestConn) error
 	_, err := ui.Location(ctx, textBoxNode)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the location of destination text box")
-	}
-
-	return nil
-}
-
-// CheckDraggedContent checks if a certain |content| appears in the search box.
-func CheckDraggedContent(ctx context.Context, ui *uiauto.Context, content string) error {
-	contentNode := nodewith.NameContaining(content).Role(role.InlineTextBox).State(state.Editable, true).First()
-
-	if err := ui.WaitUntilExists(contentNode)(ctx); err != nil {
-		return errors.Wrap(err, "failed to check for dragged content")
 	}
 
 	return nil
