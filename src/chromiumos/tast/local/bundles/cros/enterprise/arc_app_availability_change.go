@@ -157,6 +157,10 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			return rl.Exit("update policies", err)
 		}
 
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
+			return s.HasError() || retErr != nil
+		})
+
 		playEmptyCtx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 		// Since the only app in the policy is now blocked, the Play Store catalog should be empty.
