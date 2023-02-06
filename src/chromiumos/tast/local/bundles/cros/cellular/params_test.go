@@ -9,8 +9,10 @@ package cellular
 
 import (
 	"testing"
+	"time"
 
 	"chromiumos/tast/common/genparams"
+	"chromiumos/tast/local/crostini"
 )
 
 var standardTests = []string{
@@ -68,6 +70,21 @@ func TestFixTestParams(t *testing.T) {
 			ExtraAttr: []string{"cellular_carrier_verizon"},
 		},`
 	for _, filename := range standardTests {
+		genparams.Ensure(t, filename, params)
+	}
+}
+
+var crostiniTests = map[string]time.Duration{
+	"crostini_cellular_network_connectivity.go": 10 * time.Minute,
+}
+
+func TestFixCrostiniTestParams(t *testing.T) {
+	for filename, duration := range crostiniTests {
+		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
+			Timeout:       duration,
+			IsNotMainline: true,
+			UseFixture:    true,
+		}})
 		genparams.Ensure(t, filename, params)
 	}
 }
