@@ -191,9 +191,12 @@ func (i *Instance) appendVerbosityArg(cmdArgs []string) []string {
 	return cmdArgs
 }
 
-// appendRegionNamesArgs appends command line arguments for region names to the array of given command line
-// arguments.
-func appendRegionNamesArgs(cmdArgs, regionNames []string) []string {
+// appendFileAndRegionNamesArgs appends command line arguments for fullSizeFilePath and/or region names
+// to the array of given command line arguments.
+func appendFileAndRegionNamesArgs(cmdArgs []string, fullSizeFilePath string, regionNames []string) []string {
+	if fullSizeFilePath != "" {
+		cmdArgs = append(cmdArgs, fullSizeFilePath)
+	}
 	for _, regionName := range regionNames {
 		cmdArgs = append(cmdArgs, "-i", regionName)
 	}
@@ -352,16 +355,19 @@ func (i *Instance) SoftwareWriteProtectStatus(ctx context.Context) (bool, []byte
 // If optional parameter regionNames is provided, only given regions are read.
 // nil as regionNames indicates entire chip.
 //
+// At least one of fullSizeFilePath or regionNames argument must be provided non-empty.
+// Both fullSizeFilePath and regionNames can be provided non-empty.
+//
 // If an error happened during read operation, a non-nil error is returned.
 // Returns the output from command line execution, so that the caller can handle it if needed,
 // for example store in log file.
-func (i *Instance) Read(ctx context.Context, filePath string, regionNames []string) ([]byte, error) {
-	if filePath == "" {
-		return nil, errors.New("Flashrom cannot do read: empty filePath argument")
+func (i *Instance) Read(ctx context.Context, fullSizeFilePath string, regionNames []string) ([]byte, error) {
+	if fullSizeFilePath == "" && len(regionNames) == 0 {
+		return nil, errors.New("Flashrom cannot do read: both filePath and regionNames arguments are empty")
 	}
 
-	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-r", filePath}
-	cmdArgs = appendRegionNamesArgs(cmdArgs, regionNames)
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-r"}
+	cmdArgs = appendFileAndRegionNamesArgs(cmdArgs, fullSizeFilePath, regionNames)
 	cmdArgs = i.appendVerbosityArg(cmdArgs)
 
 	out, err := i.runCommandLine(ctx, cmdArgs)
@@ -424,15 +430,19 @@ func (i *Instance) SoftwareWriteProtectDisable(ctx context.Context) ([]byte, err
 // Providing flashcontentsImage path adds `--flash-contents flashcontentsImage` to command line.
 // Note that flashcontentsImage is a path on the DUT, which will not be local in case of remote test.
 //
+// At least one of fullSizeFilePath or regionNames argument must be provided non-empty.
+// Both fullSizeFilePath and regionNames can be provided non-empty.
+//
 // If an error happened during write operation, a non-nil error is returned.
 // Returns the output from command line execution, so that the caller can handle it if needed,
 // for example store in log file.
-func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, noverify bool, flashcontentsImage string, regionNames []string) ([]byte, error) {
-	if filePath == "" {
-		return nil, errors.New("Flashrom cannot do write: empty filePath argument")
+func (i *Instance) Write(ctx context.Context, fullSizeFilePath string, noverifyAll, noverify bool, flashcontentsImage string, regionNames []string) ([]byte, error) {
+	if fullSizeFilePath == "" && len(regionNames) == 0 {
+		return nil, errors.New("Flashrom cannot do write: both fullSizeFilePath and regionNames are empty")
 	}
 
-	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-w", filePath}
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-w"}
+	cmdArgs = appendFileAndRegionNamesArgs(cmdArgs, fullSizeFilePath, regionNames)
 	if flashcontentsImage != "" {
 		cmdArgs = append(cmdArgs, "--flash-contents", flashcontentsImage)
 	}
@@ -442,7 +452,6 @@ func (i *Instance) Write(ctx context.Context, filePath string, noverifyAll, nove
 	if noverify {
 		cmdArgs = append(cmdArgs, "--noverify")
 	}
-	cmdArgs = appendRegionNamesArgs(cmdArgs, regionNames)
 	cmdArgs = i.appendVerbosityArg(cmdArgs)
 
 	out, err := i.runCommandLine(ctx, cmdArgs)
