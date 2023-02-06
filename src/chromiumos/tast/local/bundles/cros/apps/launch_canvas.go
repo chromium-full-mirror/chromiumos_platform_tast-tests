@@ -27,7 +27,7 @@ func init() {
 		Func:         LaunchCanvas,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Launches Chrome Canvas APP through the launcher after user login",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline" /* TODO(b/266507106): fix the test for L1 betty. "group:hw_agnostic" */},
 		Contacts: []string{
 			"blick-swe@google.com",
 			"shengjun@chromium.org",
