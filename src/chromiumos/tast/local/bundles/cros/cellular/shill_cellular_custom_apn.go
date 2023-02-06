@@ -126,7 +126,11 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Cannot find known APNs: ", err)
 	}
-
+	// For SetApn, if any connection succeeds, the APN will be set as the last good APN,
+	// and it will be added to the end of the try list. In this case, any other APNs might
+	// fail to connect, but they will fallback to the last good APN and succeed. Take this
+	// into consideration when comparing the test APN to the last connected APN.
+	lastMatchingGoodAPN := ""
 	optionalAPNExist := false
 	optionalAPNSucceeded := false
 	for _, knownAPN := range knownAPNs {
@@ -220,8 +224,17 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 
 		apn = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 		if apn != expectedAPN {
+			// We reach this point when shill connected to cellular, but with a different APN.
+			// This is considered a failure to connect, unless the APN is optional.
+			// This usually happens with SetApn if an early APN succeeds, but latter connections use a wrong APN.
+			// SetApn still adds the LastGoodApn in the try list.
+			if !testNewAPNUIRevamp && knownAPN.Optional && lastMatchingGoodAPN != "" && apn == lastMatchingGoodAPN {
+				continue
+			}
 			s.Fatalf("Last good APN doesn't match: got %q, want %q", apn, expectedAPN)
 		}
+		lastMatchingGoodAPN = apn
+
 		if knownAPN.Optional {
 			optionalAPNSucceeded = true
 		}
