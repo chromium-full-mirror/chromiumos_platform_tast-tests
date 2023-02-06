@@ -35,10 +35,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DefaultSearchProviderSuggestURL policy: check if provided search provider is being used for suggestions",
 		Contacts: []string{
+			"chromeos-commercial-identity@google.com",
 			"fabiansommer@chromium.org", // Test author
 		},
+		BugComponent: "b:1027806", // ChromeOS > Software > Commercial (Enterprise) > Identity
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
@@ -49,6 +51,7 @@ func init() {
 			Val:               browser.TypeLacros,
 		}},
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DefaultSearchProviderSearchURL{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DefaultSearchProviderSuggestURL{}, pci.VerifiedFunctionalityUI),
 		},
