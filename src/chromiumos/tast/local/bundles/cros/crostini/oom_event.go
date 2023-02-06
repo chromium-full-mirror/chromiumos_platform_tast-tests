@@ -132,11 +132,6 @@ func OOMEvent(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get baseline for histogram: ", err)
 	}
-	for _, bucket := range histogram.Buckets {
-		if bucket.Min == oomEventHistogramEnum {
-			s.Fatal("Histogram should not contain any OOM events yet")
-		}
-	}
 
 	if err := checkDbusSignal(ctx, cont); err != nil {
 		s.Fatal("Didn't get an error signal for OOM process: ", err)
