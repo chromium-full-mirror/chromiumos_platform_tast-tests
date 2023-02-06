@@ -36,7 +36,8 @@ func init() {
 			"pmarko@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		BugComponent: "b:1111593",
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
