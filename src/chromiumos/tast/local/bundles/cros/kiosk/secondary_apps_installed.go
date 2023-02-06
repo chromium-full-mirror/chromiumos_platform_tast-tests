@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
@@ -58,6 +59,9 @@ func init() {
 					autoLaunch: false,
 				},
 				Fixture: fixture.FakeDMSEnrolled,
+				ExtraSearchFlags: []*testing.StringPair{
+					pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
+				},
 			},
 		},
 	})
@@ -67,6 +71,7 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(secondaryAppsInstalledParam)
 
+	// Prepare Kiosk account configuration.
 	accountID := "kiosk_account@managedchrome.com"
 	accountType := policy.AccountTypeKioskApp
 	appID := "bkledbfligfdnfkmccllbllealecompm"
@@ -83,8 +88,11 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			},
 		},
 	}
+	// Below variables will be initialized depending on the Kiosk launch mode.
 	var kiosk *kioskmode.Kiosk = nil
 	var cr *chrome.Chrome = nil
+	var testConn *chrome.TestConn = nil
+	var ui *uiauto.Context = nil
 	var err error = nil
 	if param.autoLaunch {
 		kiosk, cr, err = kioskmode.New(
@@ -92,10 +100,20 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			fdms,
 			kioskmode.CustomLocalAccounts(account),
 			kioskmode.AutoLaunch(accountID),
-			kioskmode.ExtraChromeOptions(
-				chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-			),
 		)
+		if err != nil {
+			s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
+		}
+		defer kiosk.Close(ctx)
+
+		testConn, err = cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get Test API connection: ", err)
+		}
+		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
+
+		ui = uiauto.New(testConn)
+
 	} else {
 		kiosk, cr, err = kioskmode.New(
 			ctx,
@@ -105,21 +123,19 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 				chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 			),
 		)
-	}
-	if err != nil {
-		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
-	}
-	defer kiosk.Close(ctx)
+		if err != nil {
+			s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
+		}
+		defer kiosk.Close(ctx)
 
-	testConn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Test API connection: ", err)
-	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
+		testConn, err = cr.SigninProfileTestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get Test API connection: ", err)
+		}
+		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
 
-	ui := uiauto.New(testConn)
+		ui = uiauto.New(testConn)
 
-	if !param.autoLaunch {
 		reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
 		if err != nil {
 			s.Fatal("Failed to start log reader: ", err)
