@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -144,7 +145,7 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 			const table = document.getElementById("deep-scan-list");
 			if (table.rows.length == 0) {
 				// If there is no entry, scanning is not yet complete.
-				throw "Scanning is not yet complete";
+				throw "Scanning not yet complete, table empty";
 			}
 			// We check if the last entry is not empty to check whether there is an actual answer.
 			innerHTML = table.rows[table.rows.length - 1].cells[1].innerHTML;
@@ -160,7 +161,12 @@ func checkDMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *
 			}
 			throw "Scanning not yet complete";
 			})()`, &failedToGetToken); err != nil {
-			testing.ContextLog(ctx, "Polling: ", err)
+			if err.Error() != "Scanning not yet complete" {
+				testing.ContextLog(ctx, "Polling: ", err)
+			}
+			if strings.Contains(err.Error(), "rpcc: the connection is closing") {
+				return testing.PollBreak(errors.Wrap(err, "Chrome has likely crashed"))
+			}
 			return err
 		}
 		return nil
@@ -184,7 +190,7 @@ func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.
 			const table = document.getElementById("deep-scan-list");
 			if (table.rows.length == 0) {
 				// If there is no entry, scanning is not yet complete.
-				throw "Scanning is not yet complete";
+				throw "Scanning not yet complete, table empty";
 			}
 			// We check if the last entry is not empty to check whether there is an actual answer.
 			innerHTML = table.rows[table.rows.length - 1].cells[1].innerHTML;
@@ -205,6 +211,12 @@ func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.
 			}
 			throw "Scanning not yet complete";
 			})()`, &failureReason); err != nil {
+			if err.Error() != "Scanning not yet complete" {
+				testing.ContextLog(ctx, "Polling: ", err)
+			}
+			if strings.Contains(err.Error(), "rpcc: the connection is closing") {
+				return testing.PollBreak(errors.Wrap(err, "Chrome has likely crashed"))
+			}
 			return err
 		}
 		if failureReason != "" {
