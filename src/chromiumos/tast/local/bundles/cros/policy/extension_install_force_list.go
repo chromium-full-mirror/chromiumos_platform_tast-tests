@@ -23,9 +23,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Behavior of ExtensionForceList policy",
 		Contacts: []string{
-			"swapnilgupta@google.com", // Test author
+			"cros-commercial-chromeapps-eng@google.com",
+			"giovax@google.com", // Test owner
 		},
-		Attr:         []string{"group:commercial_limited"},
+		BugComponent: "TBA",
+		Attr:         []string{"group:commercial_limited", "group:hw_agnostic"},
 		VarDeps:      []string{"policy.ExtensionInstallForceList.username", "policy.ExtensionInstallForceList.password"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
