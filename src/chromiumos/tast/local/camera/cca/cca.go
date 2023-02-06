@@ -1165,33 +1165,7 @@ func (a *App) DisableQRCodeDetection(ctx context.Context) error {
 
 // SetTimerOption sets the timer option to on/off.
 func (a *App) SetTimerOption(ctx context.Context, state TimerState) error {
-	// TODO(b/215484798): Removed the logic for old UI once the new UI applied.
-	useOldUI, err := a.OptionExist(ctx, TimerOption)
-	if err != nil {
-		return errors.Wrap(err, "failed to check the existence of the timer toggle")
-	}
-
 	active := state == TimerOn
-	if useOldUI {
-		if cur, err := a.State(ctx, "timer"); err != nil {
-			return err
-		} else if cur != active {
-			if _, err := a.ToggleOption(ctx, TimerOption); err != nil {
-				return err
-			}
-		}
-		// Fix timer to 3 seconds for saving test time.
-		if active {
-			if delay3, err := a.State(ctx, "timer-3s"); err != nil {
-				return err
-			} else if !delay3 {
-				return errors.New("default timer is not set to 3 seconds")
-			}
-		}
-		return nil
-	}
-
-	// New UI
 	if timerOn, err := a.State(ctx, "timer"); err != nil {
 		return errors.Wrap(err, "failed to get state timer")
 	} else if timerOn != active {

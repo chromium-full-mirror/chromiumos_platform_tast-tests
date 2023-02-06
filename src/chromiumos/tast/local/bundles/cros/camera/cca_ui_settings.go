@@ -55,12 +55,6 @@ func CCAUISettings(ctx context.Context, s *testing.State) {
 	}, {
 		"testHelp",
 		testHelp,
-	}, {
-		"testGrid",
-		testGrid,
-	}, {
-		"testTimer",
-		testTimer,
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
@@ -135,65 +129,5 @@ func testHelp(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app *cca.
 			testing.ContextLog(ctx, "Failed to close the help page")
 		}
 	}(cleanupCtx)
-	return nil
-}
-
-// testGrid checks that changing grid type in settings is effective.
-func testGrid(ctx context.Context, cr *chrome.Chrome, _ browser.Type, app *cca.App) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// TODO(b/215484798): Removed the logic for old UI once the new UI applied.
-	useOldUI, err := app.OptionExist(ctx, cca.GridOption)
-	if err != nil {
-		return errors.Wrap(err, "failed to check existence of the grid toggle")
-	}
-	if !useOldUI {
-		// The grid test for the new UI is moved to CCAUIPreviewOptions.
-		return nil
-	}
-
-	if err := cca.GridTypeMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer cca.GridTypeMenu.Close(cleanupCtx, app)
-
-	if err := app.Click(ctx, cca.GoldenGridButton); err != nil {
-		return errors.Wrap(err, "failed to click golden-grid button")
-	}
-	if err := app.WaitForState(ctx, "grid-golden", true); err != nil {
-		return errors.Wrap(err, "failed to wait for golden-grid type being active")
-	}
-	return nil
-}
-
-// testTimer checks that changing timer duration in settings is effective.
-func testTimer(ctx context.Context, cr *chrome.Chrome, _ browser.Type, app *cca.App) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// TODO(b/215484798): Removed the logic for old UI once the new UI applied.
-	useOldUI, err := app.OptionExist(ctx, cca.TimerOption)
-	if err != nil {
-		return errors.Wrap(err, "failed to check the existence of the timer toggle")
-	}
-	if !useOldUI {
-		// The timer test for the new UI is moved to CCAUIPreviewOptions.
-		return nil
-	}
-
-	if err := cca.TimerMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer cca.TimerMenu.Close(cleanupCtx, app)
-
-	if err := app.Click(ctx, cca.Timer10sButton); err != nil {
-		return errors.Wrap(err, "failed to click 10s-timer button")
-	}
-	if err := app.WaitForState(ctx, "timer-10s", true); err != nil {
-		return errors.Wrap(err, "failed to wait for 10s-timer being active")
-	}
 	return nil
 }

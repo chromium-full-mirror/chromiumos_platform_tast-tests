@@ -57,18 +57,8 @@ func CCAUIPreviewOptions(ctx context.Context, s *testing.State) {
 // testMirrorOption tests the default mirror button state is expected on all
 // cameras according to their facing, and also ensures the mirror state is
 // preserved after switching cameras.
-// TODO(b/215484798): Removed the logic for old UI once the new UI applied.
 func testMirrorOption(ctx context.Context, app *cca.App) error {
-	useOldUI, err := app.Exist(ctx, cca.MirrorButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to check existence of the mirror toggle")
-	}
-
-	mirrorButton := cca.OpenMirrorPanelButton
-	if useOldUI {
-		mirrorButton = cca.MirrorButton
-	}
-	if err := app.CheckVisible(ctx, mirrorButton, true); err != nil {
+	if err := app.CheckVisible(ctx, cca.OpenMirrorPanelButton, true); err != nil {
 		return errors.Wrap(err, "failed to check mirroring button visibility state")
 	}
 	// Check mirror for default camera.
@@ -86,7 +76,7 @@ func testMirrorOption(ctx context.Context, app *cca.App) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to get mirror state")
 		}
-		if err := toggleMirrorState(ctx, app, useOldUI); err != nil {
+		if err := toggleMirrorState(ctx, app); err != nil {
 			return errors.Wrap(err, "failed to toggle mirror state")
 		}
 		for i := 1; i < numCameras; i++ {
@@ -120,15 +110,6 @@ func testMirrorOption(ctx context.Context, app *cca.App) error {
 
 // testGridOption checks the grid option can be successfully set and the state will be preserved after switching cameras.
 func testGridOption(ctx context.Context, app *cca.App) error {
-	useOldUI, err := app.OptionExist(ctx, cca.GridOption)
-	if err != nil {
-		return errors.Wrap(err, "failed to check existence of the grid toggle")
-	}
-	if useOldUI {
-		// The grid test for the old UI is still in camera.CCAUISettings.
-		return nil
-	}
-
 	if err := app.Click(ctx, cca.OpenGridPanelButton); err != nil {
 		return errors.Wrap(err, "failed to open grid option panel")
 	}
@@ -159,15 +140,6 @@ func testGridOption(ctx context.Context, app *cca.App) error {
 
 // testTimerOption checks the timer option can be successfully set and the state will be preserved after switching cameras.
 func testTimerOption(ctx context.Context, app *cca.App) error {
-	useOldUI, err := app.OptionExist(ctx, cca.TimerOption)
-	if err != nil {
-		return errors.Wrap(err, "failed to check existence of the timer toggle")
-	}
-	if useOldUI {
-		// The timer test for the old UI is still in camera.CCAUISettings.
-		return nil
-	}
-
 	if err := app.Click(ctx, cca.OpenTimerPanelButton); err != nil {
 		return errors.Wrap(err, "failed to open timer option panel")
 	}
@@ -213,24 +185,18 @@ func checkMirror(ctx context.Context, app *cca.App) error {
 }
 
 // toggleMirrorState toggles the mirror state for the current camera.
-func toggleMirrorState(ctx context.Context, app *cca.App, useOldUI bool) error {
-	if useOldUI {
-		if _, err := app.ToggleOption(ctx, cca.MirrorOption); err != nil {
-			return errors.Wrap(err, "toggling mirror option failed")
-		}
-	} else {
-		if err := app.Click(ctx, cca.OpenMirrorPanelButton); err != nil {
-			return errors.Wrap(err, "failed to open mirror panel")
-		}
-		targetStateText := "On"
-		if mirrored, err := app.Mirrored(ctx); err != nil {
-			return errors.Wrap(err, "failed to get mirrored state")
-		} else if mirrored {
-			targetStateText = "Off"
-		}
-		if err := app.ClickChildIfContain(ctx, cca.OptionsContainer, targetStateText); err != nil {
-			return errors.Wrap(err, "failed to toggle mirror state")
-		}
+func toggleMirrorState(ctx context.Context, app *cca.App) error {
+	if err := app.Click(ctx, cca.OpenMirrorPanelButton); err != nil {
+		return errors.Wrap(err, "failed to open mirror panel")
+	}
+	targetStateText := "On"
+	if mirrored, err := app.Mirrored(ctx); err != nil {
+		return errors.Wrap(err, "failed to get mirrored state")
+	} else if mirrored {
+		targetStateText = "Off"
+	}
+	if err := app.ClickChildIfContain(ctx, cca.OptionsContainer, targetStateText); err != nil {
+		return errors.Wrap(err, "failed to toggle mirror state")
 	}
 	return nil
 }

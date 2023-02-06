@@ -26,8 +26,6 @@ var (
 	CancelResultButton = UIComponent{"cancel result button", []string{"#cancel-result", "button[i18n-label=cancel_review_button]"}}
 	// ConfirmResultButton is button for confirming intent review result.
 	ConfirmResultButton = UIComponent{"confirm result button", []string{"#confirm-result", "button[i18n-label=confirm_review_button]"}}
-	// MirrorButton is button used for toggling preview mirroring option.
-	MirrorButton = UIComponent{"mirror button", []string{"#toggle-mirror"}}
 	// ModeSelector is selection bar for different capture modes.
 	ModeSelector = UIComponent{"mode selector", []string{"#modes-group"}}
 	// SettingsButton is button for opening primary setting menu.
@@ -193,10 +191,6 @@ var (
 	CustomVideoParametersOption = newOption("custom-video-parameters", "#custom-video-parameters")
 	// ExpertModeOption is the option to enable expert mode.
 	ExpertModeOption = newOption("expert", "#expert-enable-expert-mode")
-	// GridOption is the option to show grid lines on preview.
-	GridOption = newOption("grid", "#toggle-grid")
-	// MirrorOption is the option to flip preview horizontally.
-	MirrorOption = newOption("mirror", "#toggle-mirror")
 	// SaveMetadataOption is the option to save metadata of capture result.
 	SaveMetadataOption = newOption("save-metadata", "#expert-save-metadata")
 	// ShowMetadataOption is the option to show preview metadata.
@@ -209,8 +203,6 @@ var (
 	ScanBarcodeOptionInPhotoMode = newOption("enable-scan-barcode", "#toggle-barcode")
 	// ShowGifRecordingOption is the option to enable gif recording.
 	ShowGifRecordingOption = newOption("show-gif-recording-option", "#expert-enable-gif-recording")
-	// TimerOption is the option to enable countdown timer.
-	TimerOption = newOption("timer", "#toggle-timer")
 )
 
 type errorUINotExist struct {
@@ -271,23 +263,6 @@ func (a *App) Style(ctx context.Context, ui UIComponent, attribute string) (stri
 		return "", errors.Wrapf(err, "failed to get the style of attribute: %v of UI: %v", attribute, ui.Name)
 	}
 	return style, nil
-}
-
-// Exist returns whether a UI component exists.
-func (a *App) Exist(ctx context.Context, ui UIComponent) (bool, error) {
-	_, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		if IsUINotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
-}
-
-// OptionExist returns if the option exists.
-func (a *App) OptionExist(ctx context.Context, option Option) (bool, error) {
-	return a.Exist(ctx, option.ui)
 }
 
 // Visible returns whether a UI component is visible on the screen.
