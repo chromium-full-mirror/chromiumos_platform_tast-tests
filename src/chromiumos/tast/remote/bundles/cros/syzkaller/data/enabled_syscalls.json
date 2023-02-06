@@ -66,7 +66,7 @@
 	},
 	{
 		"driver": "bluetooth(CONFIG_BT)",
-		"exclude_boards": ["herobrine"],
+		"boards": ["NONE"],
 		"syscalls": [
 			"accept4$bt_l2cap",
 			"bind$bt_hci",
@@ -137,7 +137,7 @@
 	},
 	{
 		"driver": "v4l(CONFIG_VIDEO_V4L2)",
-		"exclude_boards": ["herobrine"],
+		"boards": ["kukui"],
 		"syscalls": [
 			"ioctl$MEDIA_IOC_REQUEST_ALLOC",
 			"ioctl$MEDIA_REQUEST_IOC_QUEUE",
@@ -257,6 +257,7 @@
 	},
 	{
 		"driver": "audio(CONFIG_SOUND)",
+		"boards": ["herobrine"],
 		"syscalls": [
 			"ioctl$SNDRV_CTL_IOCTL_CARD_INFO",
 			"ioctl$SNDRV_CTL_IOCTL_ELEM_ADD",
@@ -401,10 +402,10 @@
 	},
 	{
 		"driver": "bifrost(CONFIG_MALI_MIDGARD)",
-		"boards": ["elm"],
+		"boards": ["kukui"],
 		"startup_cmds": ["if [ -f /dev/mali0 ]; then ln -s /dev/mali0 /dev/bifrost; fi"],
 		"syscalls": [
-			"openat$bifrost",
+			"openat$mali",
 			"mmap$bifrost",
 			"ioctl$KBASE_IOCTL_JOB_SUBMIT",
 			"ioctl$KBASE_IOCTL_POST_TERM",
@@ -661,7 +662,7 @@
 	},
 	{
 		"driver": "drm(CONFIG_DRM)",
-		"exclude_boards": ["herobrine"],
+		"exclude_boards": ["herobrine", "kukui"],
 		"syscalls": [
 			"syz_open_dev$dri",
 			"syz_open_dev$dricontrol",
