@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -89,6 +90,11 @@ func VCMeetEffects(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
+	}
+
 	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
 
 	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
@@ -114,17 +120,27 @@ func VCMeetEffects(ctx context.Context, s *testing.State) {
 	}
 	defer gm.Close(cleanupCtx)
 
-	sendResolutionName := "High definition (720p)"
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
 
 	if err := uiauto.Combine("configure Meet",
-		gm.EnterFullScreen,
 		gm.MuteIfMicAvailable,
-		gm.ChangeSettings(
-			gm.SetAdjustVideoLighting(true),
-			gm.SetSendResolution(sendResolutionName),
-		),
-		gm.ApplyVideoEffects(gm.SetEffectBlur(true)),
+		gm.SwitchVideo(true),
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
+	}
+
+	vcTray, err := vctray.New(ctx, tconn)
+
+	if err := uiauto.Combine("configure effects via mcpanel",
+		vcTray.ExpandPanel,
+		vcTray.SetBackgroundBlur(vctray.BackgroundBlurFull),
+		vcTray.SwitchPortraitRelighting(),
+		vcTray.CollapsePanel,
+	)(ctx); err != nil {
+		s.Fatal("Failed to configure effects: ", err)
+	}
+
+	if err := gm.EnterFullScreen(ctx); err != nil {
+		s.Fatal("Failed to enter full screen: ", err)
 	}
 }

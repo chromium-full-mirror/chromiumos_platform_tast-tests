@@ -245,7 +245,11 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	}
 
 	// keep-alive for lacros extension apps. A no-op for ash extensions.
-	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)), opts...)
+	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(
+		lacrosfixt.KeepAlive(true),
+		// Avoid the need to grant camera/microphone permissions in Lacros.
+		lacrosfixt.ChromeOptions(chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream")),
+	), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -87,7 +88,11 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
+	}
 
 	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
 
@@ -109,11 +114,24 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 	}
 	defer zm.Close(cleanupCtx)
 
-	if err := uiauto.NamedCombine("configure meeting",
-		zm.SwitchVideo(true),
-		zm.ChangeSettings(zm.SetBackgroundBlur),
-		zm.EnterFullScreen,
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+
+	if err := zm.SwitchVideo(true)(ctx); err != nil {
+		s.Fatal("Failed to switch on camera: ", err)
+	}
+
+	vcTray, err := vctray.New(ctx, tconn)
+
+	if err := uiauto.Combine("configure effects via mcpanel",
+		vcTray.ExpandPanel,
+		vcTray.SetBackgroundBlur(vctray.BackgroundBlurFull),
+		vcTray.SwitchPortraitRelighting(),
+		vcTray.CollapsePanel,
 	)(ctx); err != nil {
-		s.Fatal("Failed to configure meeting: ", err)
+		s.Fatal("Failed to configure effects: ", err)
+	}
+
+	if err := zm.EnterFullScreen(ctx); err != nil {
+		s.Fatal("Failed to enter full screen: ", err)
 	}
 }

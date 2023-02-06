@@ -57,9 +57,9 @@ var (
 	endMeetingForAllButton = nodewith.Name("End Meeting for All").Role(role.MenuItem).Ancestor(zoomMainWebArea)
 	leaveButton            = nodewith.Name("Leave").Role(role.Button).Ancestor(zoomMainWebArea)
 
-	// Toggle video buttons.
-	startVideoButton = nodewith.NameRegex(regexp.MustCompile("Start Video|start sending my video|start my video")).Role(role.Button).Ancestor(zoomMainWebArea)
-	stopVideoButton  = nodewith.NameRegex(regexp.MustCompile("Stop Video|stop sending my video|stop my video")).Role(role.Button).Ancestor(zoomMainWebArea)
+	// Video toggle buttons.
+	startVideoButton = nodewith.NameRegex(regexp.MustCompile("(Start Video|start sending my video|start my video)")).Role(role.Button).Ancestor(zoomMainWebArea)
+	stopVideoButton  = nodewith.NameRegex(regexp.MustCompile("(Stop Video|stop sending my video|stop my video)")).Role(role.Button).Ancestor(zoomMainWebArea)
 )
 
 // Zoom represents a type of Zoom meeting instance.

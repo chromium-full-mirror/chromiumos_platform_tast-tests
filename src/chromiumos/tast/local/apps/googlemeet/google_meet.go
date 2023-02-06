@@ -241,12 +241,12 @@ func (gm *GoogleMeet) EnterFullScreen(ctx context.Context) error {
 	)(ctx)
 }
 
-// SwitchMicrophone turns on / off the microphone on main screen.
+// SwitchMicrophone turns on/off the microphone on main screen.
 // It assumes the microphone is turned off if not available.
-func (gm *GoogleMeet) SwitchMicrophone(value bool) action.Action {
+func (gm *GoogleMeet) SwitchMicrophone(expectedOn bool) action.Action {
 	microphoneButton := nodewith.NameRegex(regexp.MustCompile("Turn (on|off) microphone.*")).Role(role.Button)
 	actionDesc := "switch off microphone"
-	if value {
+	if expectedOn {
 		actionDesc = "switch on microphone"
 	}
 
@@ -256,7 +256,7 @@ func (gm *GoogleMeet) SwitchMicrophone(value bool) action.Action {
 			return errors.Wrap(err, "failed to wait for the meet microphone switch button to show")
 		}
 		// Skip action if the microphone is already as expected.
-		if (strings.HasPrefix(info.Name, "Turn on") && value) || (strings.HasPrefix(info.Name, "Turn off") && !value) {
+		if (strings.HasPrefix(info.Name, "Turn on") && expectedOn) || (strings.HasPrefix(info.Name, "Turn off") && !expectedOn) {
 			microphoneButton = nodewith.Name(info.Name).Role(role.Button)
 			if err := gm.ui.DoDefaultUntil(
 				microphoneButton,
@@ -265,7 +265,36 @@ func (gm *GoogleMeet) SwitchMicrophone(value bool) action.Action {
 				return errors.Wrapf(err, "failed to %q", actionDesc)
 			}
 		}
+		return nil
+	}
+}
 
+// SwitchVideo turns on/off the camera on main screen.
+// It assumes the camera is turned off if not available.
+func (gm *GoogleMeet) SwitchVideo(expectedOn bool) action.Action {
+	cameraButton := nodewith.NameRegex(regexp.MustCompile("Turn (on|off) camera.*")).Role(role.Button)
+	actionDesc := "switch off camera"
+	if expectedOn {
+		actionDesc = "switch on camera"
+	}
+
+	return func(ctx context.Context) error {
+		info, err := gm.ui.WithTimeout(shortUITimeout).Info(ctx, cameraButton)
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for the camera switch button to show")
+		}
+		// Skip action if the camera is already as expected.
+		if (strings.HasPrefix(info.Name, "Turn on") && !expectedOn) || (strings.HasPrefix(info.Name, "Turn off") && expectedOn) {
+			return nil
+		}
+
+		cameraButton = nodewith.Name(info.Name).Role(role.Button)
+		if err := gm.ui.DoDefaultUntil(
+			cameraButton,
+			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(cameraButton),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to %s", actionDesc)
+		}
 		return nil
 	}
 }
