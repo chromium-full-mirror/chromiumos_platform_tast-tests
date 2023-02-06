@@ -254,7 +254,12 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		s.prevStats[time.CPU] = time
 		freq, err := cpuFreq(time.CPU, "cur")
 		if err != nil {
-			return err
+			// `cpuinfo_cur_freq` is expected to be the frequency the hardware actually
+			// runs at. If that frequency cannot be determined, this attribute should
+			// not be present. In this case we use scaling_cur_freq instead.
+			if freq, err = cpuScalingFreq(time.CPU, "cur"); err != nil {
+				return err
+			}
 		}
 		values.Append(perf.Metric{
 			Name:      s.name + "." + time.CPU + ".Frequency",
