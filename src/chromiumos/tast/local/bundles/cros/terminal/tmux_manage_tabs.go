@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/testing"
 )
@@ -31,6 +32,9 @@ func init() {
 		BugComponent: "b:658562",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		// It takes time to WaitForLocation for the last tab.
+		// With the default 2min, it sometimes runs timeout.
+		Timeout: 3 * time.Minute,
 	})
 }
 
@@ -101,13 +105,12 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close tabs: ", err)
 	}
 
+	tabs := nodewith.Role(role.Tab).ClassName("Tab")
+	nodes, _ := ui.NodesInfo(ctx, tabs)
+	last := len(nodes) - 1
 	if err := uiauto.Combine("close the only remaining tmux tab",
-		// The position of the tabs changes a lot as tabs are closed.
-		// LeftClickUntil used by ClickNthTabUntilNodeExists always fail with timeout.
-		// Just sleep here to reduce flakiness.
-		// 5s is the minimu time needed in local test.
-		uiauto.Sleep(5*time.Second),
-		ta.ClickNthTabUntilNodeExists(2, terminalapp.CmdPrompt),
+		ui.WithTimeout(30*time.Second).WaitForLocation(tabs.Nth(last)),
+		ta.ClickNthTabUntilNodeExists(last, terminalapp.CmdPrompt),
 		ta.RunSSHCommand("exit"),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 		// The controlling tab should be in focus now. We want to check that the
