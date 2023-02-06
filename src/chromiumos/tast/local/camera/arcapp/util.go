@@ -1,0 +1,220 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package arcapp provides utilities to interact with ARC Camera Test App.
+package arcapp
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
+	"chromiumos/tast/common/android/adb"
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/testing"
+)
+
+const (
+	// CameraAppApk is the APK name of the ARC Camera Test App.
+	CameraAppApk = "ArcCameraTest.apk"
+
+	cameraAppActivity = ".MainActivity"
+	cameraAppPackage  = "chromeos.camera.app.arccameratest"
+
+	intentSwitchCamera   = "chromeos.camera.app.arccameratest.ACTION_SWITCH_CAMERA"
+	intentSwitchMode     = "chromeos.camera.app.arccameratest.ACTION_SWITCH_MODE"
+	intentTakePhoto      = "chromeos.camera.app.arccameratest.ACTION_TAKE_PHOTO"
+	intentStartRecording = "chromeos.camera.app.arccameratest.ACTION_START_RECORDING"
+	intentStopRecording  = "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING"
+	intentResetCamera    = "chromeos.camera.app.arccameratest.ACTION_RESET_CAMERA"
+	intentGetMetrics     = "chromeos.camera.app.arccameratest.ACTION_GET_METRICS"
+	keyCameraFacing      = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
+	keyCameraMode        = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
+	valuePhoto           = "Photo"
+	valueVideo           = "Video"
+
+	// Snapshots can be really small if the room is dark, but JPEGs and MP4s are never smaller than 100 bytes.
+	minExpectedFileSize = 100
+)
+
+var (
+	// Sometimes it will take long after the broadcast is sent until it is received. As a result,
+	// adding this flag for broadcast is helpful to raise its priority and reduce the waiting time.
+	prioritizingParams = []string{"-f", "0x10000000"}
+)
+
+// ARCCameraAppMetrics represents the metrics collected by the app.
+type ARCCameraAppMetrics struct {
+	OpeningCamera []int64 `json:"METRIC_OPENING_CAMERA"`
+	ClosingCamera []int64 `json:"METRIC_CLOSING_CAMERA"`
+	TakingPhoto   []int64 `json:"METRIC_TAKING_PHOTO"`
+}
+
+// ErrorFacingNotSupported is an error which will be thrown when the targeting facing is not supported on the device.
+type ErrorFacingNotSupported struct {
+	facing string
+}
+
+func (err ErrorFacingNotSupported) Error() string {
+	return fmt.Sprintf("Facing %v is not supported", err.facing)
+}
+
+func broadcastIntent(ctx context.Context, a *arc.ARC, action string, params ...string) (*adb.BroadcastResult, error) {
+	return a.BroadcastIntent(ctx, action, append(prioritizingParams, params...)...)
+}
+
+func broadcastIntentGetData(ctx context.Context, a *arc.ARC, action string, params ...string) (string, error) {
+	return a.BroadcastIntentGetData(ctx, action, append(prioritizingParams, params...)...)
+}
+
+// LaunchARCCameraApp launches the ARC Camera Test App and returns cleanup function and error is there is any.
+func LaunchARCCameraApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn) (cleanupFunc func(context.Context, *chrome.TestConn), retErr error) {
+	cleanupCtx := ctx
+	ctx, cancelCleanup := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancelCleanup()
+
+	activity, err := arc.NewActivity(a, cameraAppPackage, cameraAppActivity)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new activity")
+	}
+	defer func(cleanupCtx context.Context, activity *arc.Activity) {
+		if retErr != nil {
+			activity.Close()
+		}
+	}(cleanupCtx, activity)
+
+	permissions := []string{
+		"android.permission.CAMERA",
+		"android.permission.RECORD_AUDIO",
+		"android.permission.READ_EXTERNAL_STORAGE",
+		"android.permission.WRITE_EXTERNAL_STORAGE"}
+	for _, permission := range permissions {
+		if err := a.Command(ctx, "pm", "grant", cameraAppPackage, permission).Run(testexec.DumpLogOnError); err != nil {
+			return nil, errors.Wrapf(err, "failed to grant permission %v", permission)
+		}
+	}
+
+	if err = activity.StartWithDefaultOptions(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to start app")
+	}
+	cleanupFunc = func(cleanupCtx context.Context, tconn *chrome.TestConn) {
+		defer activity.Close()
+		defer activity.Stop(cleanupCtx, tconn)
+	}
+	return cleanupFunc, nil
+}
+
+// TakePhoto asks ArcCameraFpsTest app to take a photo via intent and ensures
+// that the captured photo is saved successfully.
+func TakePhoto(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
+	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valuePhoto); err != nil {
+		return errors.Wrap(err, "failed to switch to photo mode")
+	}
+
+	outputFile, err := broadcastIntentGetData(ctx, a, intentTakePhoto)
+	if err != nil {
+		return errors.Wrap(err, "could not send intent")
+	}
+
+	// Check if photo file was generated.
+	if fileSize, err := fileSizeInDCIM(ctx, cr.NormalizedUser(), outputFile); err != nil {
+		return errors.Wrap(err, "could not determine size of photo file")
+	} else if fileSize < minExpectedFileSize {
+		return errors.Wrapf(err, "photo file is smaller than expected: got %d, want >= %d", fileSize, minExpectedFileSize)
+	}
+	return nil
+}
+
+// RecordVideo asks ArcCameraFpsTest app to record a video via intent and
+// ensures that the captured video is saved successfully.
+func RecordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
+	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valueVideo); err != nil {
+		return errors.Wrap(err, "failed to switch to video mode")
+	}
+
+	// Start record video
+	if _, err := broadcastIntent(ctx, a, intentStartRecording); err != nil {
+		return errors.Wrap(err, "could not send intent")
+	}
+
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		testing.ContextLog(ctx, "Failed to sleep: ", err)
+	}
+	outputFile, err := broadcastIntentGetData(ctx, a, intentStopRecording)
+	if err != nil {
+		return errors.Wrap(err, "could not send intent")
+	}
+
+	// Check if video file was generated.
+	if fileSize, err := fileSizeInDCIM(ctx, cr.NormalizedUser(), outputFile); err != nil {
+		return errors.Wrap(err, "could not determine size of video file")
+	} else if fileSize < minExpectedFileSize {
+		return errors.Wrapf(err, "video file is smaller than expected: got %d, want >= %d", fileSize, minExpectedFileSize)
+	}
+	return nil
+}
+
+// SwitchCamera switches camera to the given facing. If given facing is not supported, it returns nil.
+func SwitchCamera(ctx context.Context, a *arc.ARC, facing string) error {
+	if success, err := broadcastIntentGetData(ctx, a, intentSwitchCamera, "--ei", keyCameraFacing, facing); err != nil {
+		return err
+	} else if success == "FALSE" {
+		// Continue when there is no camera with such facing.
+		return ErrorFacingNotSupported{facing: facing}
+	}
+	return nil
+}
+
+// ResetCamera resets the camera usage in the app.
+func ResetCamera(ctx context.Context, a *arc.ARC) error {
+	if _, err := broadcastIntent(ctx, a, intentResetCamera); err != nil {
+		return errors.Wrap(err, "could not reset the camera")
+	}
+	return nil
+}
+
+// GetMetrics query the metrics collected by the app.
+func GetMetrics(ctx context.Context, a *arc.ARC) (ARCCameraAppMetrics, error) {
+	metricsRawData, err := broadcastIntentGetData(ctx, a, intentGetMetrics)
+	if err != nil {
+		return ARCCameraAppMetrics{}, errors.Wrap(err, "could not get metrics")
+	}
+
+	// The metrics is in JSON format but the double quotes are escaped since
+	// the string are passed through command line output. Therefore, we can
+	// use unquote to unescape the string.
+	metricsRawData, err = strconv.Unquote(`"` + metricsRawData + `"`)
+	if err != nil {
+		return ARCCameraAppMetrics{}, errors.Wrap(err, "could not unquote metrics data")
+	}
+
+	var metrics ARCCameraAppMetrics
+	if err := json.Unmarshal([]byte(metricsRawData), &metrics); err != nil {
+		return ARCCameraAppMetrics{}, errors.Wrapf(err, "failed to parse metrics: %v", metricsRawData)
+	}
+	return metrics, nil
+}
+
+// fileSizeInDCIM searches the file inside Android DCIM folder and returns its size.
+func fileSizeInDCIM(ctx context.Context, user, filename string) (int64, error) {
+	androidDir, err := arc.AndroidDataDir(ctx, user)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to get Android data dir")
+	}
+	filePathInDCIM := filepath.Join(androidDir, "data/media/0/DCIM/", filename)
+
+	info, err := os.Stat(filePathInDCIM)
+	if err != nil {
+		return -1, errors.Wrapf(err, "unable to access file %q", filePathInDCIM)
+	}
+	return info.Size(), nil
+}

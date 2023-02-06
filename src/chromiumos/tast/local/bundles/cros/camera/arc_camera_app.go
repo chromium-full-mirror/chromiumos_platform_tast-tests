@@ -6,50 +6,22 @@ package camera
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/camera/arcapp"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
-)
-
-const (
-	cameraAppActivity    = ".MainActivity"
-	cameraAppApk         = "ArcCameraTest.apk"
-	cameraAppPackage     = "chromeos.camera.app.arccameratest"
-	intentSwitchCamera   = "chromeos.camera.app.arccameratest.ACTION_SWITCH_CAMERA"
-	intentSwitchMode     = "chromeos.camera.app.arccameratest.ACTION_SWITCH_MODE"
-	intentTakePhoto      = "chromeos.camera.app.arccameratest.ACTION_TAKE_PHOTO"
-	intentStartRecording = "chromeos.camera.app.arccameratest.ACTION_START_RECORDING"
-	intentStopRecording  = "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING"
-	keyCameraFacing      = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
-	keyCameraMode        = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
-	valuePhoto           = "Photo"
-	valueVideo           = "Video"
-
-	// Snapshots can be really small if the room is dark, but JPEGs and MP4s are never smaller than 100 bytes.
-	minExpectedFileSize = 100
-)
-
-var (
-	// Sometimes it will take long after the broadcast is sent until it is received. As a result,
-	// adding this flag for broadcast is helpful to raise its priority and reduce the waiting time.
-	prioritizingParams = []string{"-f", "0x10000000"}
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCCameraApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Data:         []string{cameraAppApk},
+		Data:         []string{arcapp.CameraAppApk},
 		Desc:         "Checks basic Android camera functionalities work under ARC",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
@@ -57,14 +29,6 @@ func init() {
 		Fixture:      "arcBootedRestricted",
 		BugComponent: "b:978428",
 	})
-}
-
-func broadcastIntent(ctx context.Context, a *arc.ARC, action string, params ...string) (*adb.BroadcastResult, error) {
-	return a.BroadcastIntent(ctx, action, append(prioritizingParams, params...)...)
-}
-
-func broadcastIntentGetData(ctx context.Context, a *arc.ARC, action string, params ...string) (string, error) {
-	return a.BroadcastIntentGetData(ctx, action, append(prioritizingParams, params...)...)
 }
 
 func ARCCameraApp(ctx context.Context, s *testing.State) {
@@ -80,7 +44,7 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 	}
 
 	a := s.FixtValue().(*arc.PreData).ARC
-	if err := a.Install(ctx, s.DataPath(cameraAppApk)); err != nil {
+	if err := a.Install(ctx, s.DataPath(arcapp.CameraAppApk)); err != nil {
 		s.Fatal("Failed to install the APK: ", err)
 	}
 
@@ -101,10 +65,10 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 		testFunc func(context.Context, *chrome.Chrome, *arc.ARC) error
 	}{{
 		"take_photo",
-		takePhoto,
+		arcapp.TakePhoto,
 	}, {
 		"record_video",
-		recordVideo,
+		arcapp.RecordVideo,
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
@@ -112,34 +76,17 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 			ctx, cancelCleanup := ctxutil.Shorten(ctx, 3*time.Second)
 			defer cancelCleanup()
 
-			activity, err := arc.NewActivity(a, cameraAppPackage, cameraAppActivity)
+			cleanupFunc, err := arcapp.LaunchARCCameraApp(ctx, a, tconn)
 			if err != nil {
-				s.Fatal("Failed to create new activity: ", err)
+				s.Fatal("Failed to launch ARC camera app: ", err)
 			}
-			defer activity.Close()
-
-			permissions := []string{
-				"android.permission.CAMERA",
-				"android.permission.RECORD_AUDIO",
-				"android.permission.READ_EXTERNAL_STORAGE",
-				"android.permission.WRITE_EXTERNAL_STORAGE"}
-			for _, permission := range permissions {
-				if err := a.Command(ctx, "pm", "grant", cameraAppPackage, permission).Run(testexec.DumpLogOnError); err != nil {
-					s.Fatalf("Failed to grant permission %v: %v", permission, err)
-				}
-			}
-
-			if err = activity.StartWithDefaultOptions(ctx, tconn); err != nil {
-				s.Fatal("Failed to start app: ", err)
-			}
-			defer activity.Stop(cleanupCtx, tconn)
+			defer cleanupFunc(cleanupCtx, tconn)
 
 			for _, facing := range []string{"0", "1"} {
 				testing.ContextLog(ctx, "Switch to camera ", facing)
-				if success, err := broadcastIntentGetData(ctx, a, intentSwitchCamera, "--ei", keyCameraFacing, facing); err != nil {
+				if err := arcapp.SwitchCamera(ctx, a, facing); err != nil {
 					s.Fatalf("Failed to switch to camera %v: %v", facing, err)
-				} else if success == "FALSE" {
-					// Continue when there is no camera with such facing.
+				} else if _, ok := err.(arcapp.ErrorFacingNotSupported); ok {
 					continue
 				}
 
@@ -150,69 +97,4 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 		})
 		cancel()
 	}
-}
-
-// takePhoto asks ArcCameraFpsTest app to take a photo via intent and ensures
-// that the captured photo is saved successfully.
-func takePhoto(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
-	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valuePhoto); err != nil {
-		return errors.Wrap(err, "failed to switch to photo mode")
-	}
-
-	outputFile, err := broadcastIntentGetData(ctx, a, intentTakePhoto)
-	if err != nil {
-		return errors.Wrap(err, "could not send intent")
-	}
-
-	// Check if photo file was generated.
-	if fileSize, err := fileSizeInDCIM(ctx, cr.NormalizedUser(), outputFile); err != nil {
-		return errors.Wrap(err, "could not determine size of photo file")
-	} else if fileSize < minExpectedFileSize {
-		return errors.Wrapf(err, "photo file is smaller than expected: got %d, want >= %d", fileSize, minExpectedFileSize)
-	}
-	return nil
-}
-
-// recordVideo asks ArcCameraFpsTest app to record a video via intent and
-// ensures that the captured video is saved successfully.
-func recordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
-	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valueVideo); err != nil {
-		return errors.Wrap(err, "failed to switch to video mode")
-	}
-
-	// Start record video
-	if _, err := broadcastIntent(ctx, a, intentStartRecording); err != nil {
-		return errors.Wrap(err, "could not send intent")
-	}
-
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		testing.ContextLog(ctx, "Failed to sleep: ", err)
-	}
-	outputFile, err := broadcastIntentGetData(ctx, a, intentStopRecording)
-	if err != nil {
-		return errors.Wrap(err, "could not send intent")
-	}
-
-	// Check if video file was generated.
-	if fileSize, err := fileSizeInDCIM(ctx, cr.NormalizedUser(), outputFile); err != nil {
-		return errors.Wrap(err, "could not determine size of video file")
-	} else if fileSize < minExpectedFileSize {
-		return errors.Wrapf(err, "video file is smaller than expected: got %d, want >= %d", fileSize, minExpectedFileSize)
-	}
-	return nil
-}
-
-// fileSizeInDCIM searches the file inside Android DCIM folder and returns its size.
-func fileSizeInDCIM(ctx context.Context, user, filename string) (int64, error) {
-	androidDir, err := arc.AndroidDataDir(ctx, user)
-	if err != nil {
-		return -1, errors.Wrap(err, "failed to get Android data dir")
-	}
-	filePathInDCIM := filepath.Join(androidDir, "data/media/0/DCIM/", filename)
-
-	info, err := os.Stat(filePathInDCIM)
-	if err != nil {
-		return -1, errors.Wrapf(err, "unable to access file %q", filePathInDCIM)
-	}
-	return info.Size(), nil
 }
