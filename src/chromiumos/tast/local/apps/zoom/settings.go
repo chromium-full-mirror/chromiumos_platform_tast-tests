@@ -7,15 +7,18 @@ package zoom
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
 
@@ -237,6 +240,46 @@ func (zm *Zoom) openSettings(ctx context.Context) error {
 		},
 		ui.WithTimeout(longUITimeout).LeftClickUntil(settingsButton, ui.WaitUntilExists(settingsDialog)),
 	))(ctx)
+}
+
+// TypingInChat opens chat window and types message to chat room.
+func (zm *Zoom) TypingInChat(kb *input.KeyboardEventWriter, message string) action.Action {
+	ui := zm.ui
+	chatButton := nodewith.Name("open the chat pane").Role(role.Button)
+	chatTextRe := regexp.MustCompile("(Type message here ...|chat message)")
+	chatTextField := nodewith.NameRegex(chatTextRe).Role(role.TextField)
+	messageText := nodewith.Name(message).Role(role.StaticText).First()
+	typeMessage := uiauto.NamedCombine("type message: "+message,
+		ui.LeftClickUntil(chatTextField, ui.WithTimeout(shortUITimeout).WaitUntilExists(chatTextField.Focused())),
+		kb.AccelAction("Ctrl+A"),
+		kb.TypeAction(message),
+		kb.AccelAction("enter"),
+		ui.WaitUntilExists(messageText))
+
+	return uiauto.NamedCombine("open chat window and type message",
+		func(ctx context.Context) error {
+			// Close all notifications to prevent them from covering the chat text field.
+			return ash.CloseNotifications(ctx, zm.tconn)
+		},
+		uiauto.IfSuccessThen(ui.Gone(chatTextField), ui.DoDefault(chatButton)),
+		ui.WaitUntilExists(chatTextField),
+		ui.Retry(3, typeMessage),
+	)
+}
+
+// CloseChatPanel closes chat panel.
+func (zm *Zoom) CloseChatPanel() action.Action {
+	ui := zm.ui
+	manageChatPanel := nodewith.Name("Manage Chat Panel")
+	manageChatPanelButton := manageChatPanel.Role(role.PopUpButton)
+	manageChatPanelMenu := manageChatPanel.Role(role.Menu)
+	closeButton := nodewith.Name("Close").Role(role.MenuItem).Ancestor(manageChatPanelMenu)
+
+	return uiauto.NamedCombine("close chat panel",
+		ui.LeftClick(manageChatPanelButton),
+		ui.LeftClick(closeButton),
+		ui.WaitUntilGone(manageChatPanelButton),
+	)
 }
 
 // ShareScreen shares screen via "Chrome Tab" and select the tab to share.
