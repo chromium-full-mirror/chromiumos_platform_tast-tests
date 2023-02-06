@@ -6,6 +6,7 @@
 // testing.
 package kerberos
 
+// Local constants, used to construct the config.
 const (
 	protocol  = "https"
 	subdomain = "dc1"
@@ -49,4 +50,25 @@ type Configuration struct {
 	File string
 	// RealmsConfig is an advanced configuration that helps finding the kdc on the KerberosDomain.
 	RealmsConfig string
+}
+
+// ModelsToSkipOnSmb is a list of device models to be skipped on SMB tests (b/260522053).
+var ModelsToSkipOnSmb = []string{
+	// Board: corsola*
+	"kingler",
+	"krabby",
+	"magneton",
+	"rusty",
+	"steelix",
+	"tentacruel",
+	"tentacool",
+	"voltorb",
+
+	// Board: trogdor*
+	"kingoftown",
+	"lazor",
+	"limozeen",
+	"pazquel",
+	"pazquel360",
+	"pompom",
 }

@@ -40,8 +40,7 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
 		BugComponent: "b:1253670",
 		// TODO(b/260522053): Remove when this bug is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel(
-			[]string{"rusty", "steelix", "tentacruel", "lazor", "pompom", "limozeen", "pazquel", "magneton", "pazquel360"}...)),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel(kerberos.ModelsToSkipOnSmb...)),
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
