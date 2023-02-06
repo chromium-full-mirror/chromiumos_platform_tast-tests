@@ -229,7 +229,7 @@ func AddAccount(ctx context.Context, tconn *chrome.TestConn, email, password str
 		// Enter the User Name.
 		kb.TypeAction(email+"\n"),
 		ui.WaitUntilExists(passwordField),
-		ui.LeftClick(passwordField),
+		ui.LeftClickUntil(passwordField, ui.Exists(passwordField.Focused())),
 		// Enter the Password.
 		kb.TypeAction(password),
 		ui.LeftClick(nextButton),
