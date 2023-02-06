@@ -79,19 +79,46 @@ func checkBatteryFloatProperty(sysfsPath, field string, got float64) error {
 	if err != nil {
 		return err
 	}
+	want := float64(micros) / 1e6
+	if err := compareFloatProperty(&want, got); err != nil {
+		return errors.Wrapf(err, "unexpected value for %v", field)
+	}
+	return nil
+}
 
+func compareFloatProperty(want *float64, got float64) error {
+	if want == nil {
+		return errors.New("unexpected want: nil")
+	}
 	// Because the value of battery varies continuously, so we only check if it's roughly the same.
 	// Checked with hardware team, they recommended that we can check if it's within 5%.
-	want := float64(micros) / 1e6
-	maxWant := want * 1.05
-	minWant := want * 0.95
+	maxWant := *want * 1.05
+	minWant := *want * 0.95
 	if got > maxWant || got < minWant {
-		return errors.Errorf("unexpected value for %v: got %v, want [%v, %v]", field, got, minWant, maxWant)
+		return errors.Errorf("got %v, want [%v, %v]", got, minWant, maxWant)
 	}
 	return nil
 }
 
 func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
+	pm, err := power.NewPowerManager(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get new power manager")
+	}
+	powerSupply, err := pm.GetPowerSupplyProperties(ctx)
+	if err != nil {
+		return err
+	}
+	if err := compareFloatProperty(powerSupply.BatteryCharge, battery.ChargeNow); err != nil {
+		return errors.Wrap(err, "failed to verify ChargeNow field")
+	}
+	if err := compareFloatProperty(powerSupply.BatteryChargeFull, battery.ChargeFull); err != nil {
+		return errors.Wrap(err, "failed to verify ChargeFull field")
+	}
+	if err := compareFloatProperty(powerSupply.BatteryChargeFullDesign, battery.ChargeFullDesign); err != nil {
+		return errors.Wrap(err, "failed to verify ChargeFullDesign field")
+	}
+
 	sysfsPath, err := power.SysfsBatteryPath(ctx)
 	if err != nil {
 		return err
@@ -118,9 +145,6 @@ func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
 	}
 
 	batteryFloatFields := map[string]float64{
-		"charge_full":        battery.ChargeFull,
-		"charge_full_design": battery.ChargeFullDesign,
-		"charge_now":         battery.ChargeNow,
 		"voltage_min_design": battery.VoltageMinDesign,
 		"voltage_now":        battery.VoltageNow,
 		// Skip float64 fields:

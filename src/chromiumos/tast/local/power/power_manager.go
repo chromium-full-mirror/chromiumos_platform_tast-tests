@@ -68,6 +68,13 @@ func (m *PowerManager) GetScreenBrightnessPercent(ctx context.Context) (float64,
 	return brightness, nil
 }
 
+// GetPowerSupplyProperties returns power supply information by calling PowerManager.GetPowerSupplyProperties D-Bus method.
+func (m *PowerManager) GetPowerSupplyProperties(ctx context.Context) (*pmpb.PowerSupplyProperties, error) {
+	ret := &pmpb.PowerSupplyProperties{}
+	err := dbusutil.CallProtoMethod(ctx, m.obj, dbusInterface+".GetPowerSupplyProperties", nil, ret)
+	return ret, err
+}
+
 // SetScreenBrightness updates the screen brightness to the specified percentage by calling
 // PowerManager.SetScreenBrightness D-Bus method.
 func (m *PowerManager) SetScreenBrightness(ctx context.Context, percentage float64) error {
