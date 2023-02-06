@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/firmware"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/firmware"
@@ -25,9 +26,6 @@ import (
 
 // ImageSection is the name of sections supported by this package.
 type ImageSection string
-
-// FlashromProgrammer is the type of programmer being passed to flashrom command line.
-type FlashromProgrammer string
 
 // FirmwareUpdateMode is the type of mode to perform firmware update.
 type FirmwareUpdateMode string
@@ -38,11 +36,6 @@ const (
 
 	// RecoveryMode is the named chromeOS Firmware Updater to perform firmware recovery mode.
 	RecoveryMode FirmwareUpdateMode = "--mode=recovery"
-
-	// HostProgrammer is the flashrom programmer type used to operate with AP firmware chip.
-	HostProgrammer FlashromProgrammer = "host"
-	// ECProgrammer is the flashrom programmer type used to operate with EC chip.
-	ECProgrammer FlashromProgrammer = "ec"
 
 	// EmptyImageSection is the empty string which will result in the whole AP/EC fw backup.
 	EmptyImageSection ImageSection = ""
@@ -253,7 +246,7 @@ func NewImageFromData(data []byte, sections map[ImageSection]SectionInfo) *Image
 }
 
 // NewImage creates an Image object representing the currently loaded BIOS image. If you pass in a section, only that section will be read.
-func NewImage(ctx context.Context, section ImageSection, programmer FlashromProgrammer) (*Image, error) {
+func NewImage(ctx context.Context, section ImageSection, programmer flashrom.Programmer) (*Image, error) {
 	tmpFile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile for image contents")
@@ -297,7 +290,7 @@ func NewImage(ctx context.Context, section ImageSection, programmer FlashromProg
 }
 
 // NewImageToFile creates a file representing the desired section of currently loaded firmware image.
-func NewImageToFile(ctx context.Context, section ImageSection, programmer FlashromProgrammer, dirpath string) (string, error) {
+func NewImageToFile(ctx context.Context, section ImageSection, programmer flashrom.Programmer, dirpath string) (string, error) {
 	fileDir := dirpath
 	if dirpath == "" {
 		fileDir = "/var/tmp"
@@ -374,7 +367,7 @@ func (i *Image) ClearAndSetGBBFlags(clearFlags, setFlags []pb.GBBFlag) error {
 }
 
 // WriteFlashrom writes the current data in the specified section into flashrom.
-func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer FlashromProgrammer) error {
+func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer flashrom.Programmer) error {
 	// dirpath arg is irrelevant here since file gets deleted in the defer call.
 	imgTmp, err := i.WriteImageToFile(ctx, sec, "")
 	if err != nil {
@@ -391,7 +384,7 @@ func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, programmer 
 }
 
 // WriteImageFromSingleSectionFile writes the provided single section file in the specified section.
-func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec ImageSection, programmer FlashromProgrammer) error {
+func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec ImageSection, programmer flashrom.Programmer) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return errors.Wrap(err, "file does not exist")
 	} else if err != nil {
@@ -406,7 +399,7 @@ func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec Image
 }
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
-func WriteImageFromMultiSectionFile(ctx context.Context, path string, sec ImageSection, programmer FlashromProgrammer) error {
+func WriteImageFromMultiSectionFile(ctx context.Context, path string, sec ImageSection, programmer flashrom.Programmer) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return errors.Wrap(err, "file does not exist")
 	} else if err != nil {
@@ -693,7 +686,7 @@ func ChromeosFirmwareUpdate(ctx context.Context, mode FirmwareUpdateMode, option
 }
 
 // ParseFMAP reads FMAP for given programmer then parses it into map.
-func ParseFMAP(ctx context.Context, programmer FlashromProgrammer) ([]*pb.FMAP_FMAPEntry, error) {
+func ParseFMAP(ctx context.Context, programmer flashrom.Programmer) ([]*pb.FMAP_FMAPEntry, error) {
 	tmpFile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile to read FMAP")

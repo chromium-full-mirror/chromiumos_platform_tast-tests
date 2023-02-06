@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/firmware/bios"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/firmware"
 	"chromiumos/tast/testing"
@@ -31,9 +32,9 @@ type BiosService struct {
 }
 
 // programmerEnumToProgrammer maps the enum from FWSectionInfo to a bios FlashromProgramer.
-var programmerEnumToProgrammer = map[pb.Programmer]bios.FlashromProgrammer{
-	pb.Programmer_BIOSProgrammer: bios.HostProgrammer,
-	pb.Programmer_ECProgrammer:   bios.ECProgrammer,
+var programmerEnumToProgrammer = map[pb.Programmer]flashrom.Programmer{
+	pb.Programmer_BIOSProgrammer: flashrom.ProgrammerHost,
+	pb.Programmer_ECProgrammer:   flashrom.ProgrammerEc,
 }
 
 // sectionEnumToSection maps the enum from FWSectionInfo to a bios ImageSection.
@@ -133,7 +134,7 @@ func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectio
 
 // GetGBBFlags gets the flags that are cleared and set.
 func (*BiosService) GetGBBFlags(ctx context.Context, req *empty.Empty) (*pb.GBBFlagsState, error) {
-	img, err := bios.NewImage(ctx, bios.GBBImageSection, bios.HostProgrammer)
+	img, err := bios.NewImage(ctx, bios.GBBImageSection, flashrom.ProgrammerHost)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read firmware")
 	}
@@ -148,14 +149,14 @@ func (*BiosService) GetGBBFlags(ctx context.Context, req *empty.Empty) (*pb.GBBF
 // ClearAndSetGBBFlags clears and sets specified GBB flags, leaving the rest unchanged.
 func (bs *BiosService) ClearAndSetGBBFlags(ctx context.Context, req *pb.GBBFlagsState) (*empty.Empty, error) {
 	bs.s.Logf("Start ClearAndSetGBBFlags: %v", req)
-	img, err := bios.NewImage(ctx, bios.GBBImageSection, bios.HostProgrammer)
+	img, err := bios.NewImage(ctx, bios.GBBImageSection, flashrom.ProgrammerHost)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read firmware")
 	}
 	if err = img.ClearAndSetGBBFlags(req.Clear, req.Set); err != nil {
 		return nil, errors.Wrap(err, "could not clear/set flags")
 	}
-	if err = img.WriteFlashrom(ctx, bios.GBBImageSection, bios.HostProgrammer); err != nil {
+	if err = img.WriteFlashrom(ctx, bios.GBBImageSection, flashrom.ProgrammerHost); err != nil {
 		return nil, errors.Wrap(err, "could not write image")
 	}
 	return &empty.Empty{}, nil

@@ -13,7 +13,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/firmware/bios"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
@@ -126,7 +126,7 @@ func FlashCorebootFlashrom(ctx context.Context, s *testing.State) {
 
 func flashCoreboot(ctx context.Context, dut *dut.DUT, imagePath string) error {
 	testing.ContextLogf(ctx, "Writing image from file %s", imagePath)
-	args := []string{"-p", string(bios.HostProgrammer), "-w", imagePath}
+	args := []string{"-p", string(flashrom.ProgrammerHost), "-w", imagePath}
 	out, err := dut.Conn().CommandContext(ctx, "flashrom", args...).Output(ssh.DumpLogOnError)
 	if err != nil {
 		return errors.Wrap(err, "failed to run flashrom cmd")
