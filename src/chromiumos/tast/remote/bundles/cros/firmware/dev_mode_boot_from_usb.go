@@ -148,7 +148,32 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to press %s: %v", servo.CtrlU, err)
 	}
 
+	/*
+		 Documented below are behaviors seen on DUTs with various boot mode
+		 methods, when ctrl_u was pressed, with an invalid USB and on the dev
+		 firmware screen.
+		 MenuSwitcher:
+			DUT would go to a separate page that prevents boot and
+			doesn't timeout.
+		 TabletDetachableSwitcher:
+			Counter for 30 secs timeout is reset. Connecting usb and
+			pressing ctrlU again within 30 secs would allow the dut to
+			boot from external device.
+		 KeyboardDevSwitcher:
+			 Counter for the 30 secs timeout was not reset, and once reached,
+			the dut would continue to boot from main if no valid usb found.
+	*/
 	if testOpt.validUSB {
+		if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
+			// Pressing space would lead DUT to the confirmation page
+			// for booting to normal mode, which would buy us some time
+			// to connect a valid usb, and bypass the fw screen timeout.
+			s.Log(ctx, "Pressing space key to bypass fw screen timeout")
+			if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+				s.Fatal("Failed to press space: ", err)
+			}
+		}
+
 		s.Log("Connecting USB to the DUT")
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			s.Fatal("Failed to set USBMux: ", err)
@@ -157,6 +182,13 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		// In order to press ctrl_u sucessfully, sleep is required.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to sleep for 5 seconds: ", err)
+		}
+
+		if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
+			s.Log(ctx, "Pressing esc to return to the developer screen")
+			if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+				s.Fatal("Failed to press esc key: ", err)
+			}
 		}
 
 		// Pressing ctrl_u here should boot DUT from the USB.
