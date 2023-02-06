@@ -26,6 +26,10 @@ var (
 
 	backgroundTab   = nodewith.Name("Background").Role(role.Tab).Ancestor(settingsDialog)
 	backgroundPanel = nodewith.Name("Background").Role(role.TabPanel).Ancestor(settingsDialog)
+
+	infobarContainer = nodewith.Name("Infobar Container").Role(role.Group)
+	// There may be multiple "Stop sharing" buttons, so add First() here.
+	stopSharing = nodewith.Name("Stop sharing").Role(role.Button).Ancestor(infobarContainer).First()
 )
 
 // ChangeSettings changes one or more settings from main screen.
@@ -233,6 +237,30 @@ func (zm *Zoom) openSettings(ctx context.Context) error {
 		},
 		ui.WithTimeout(longUITimeout).LeftClickUntil(settingsButton, ui.WaitUntilExists(settingsDialog)),
 	))(ctx)
+}
+
+// ShareScreen shares screen via "Chrome Tab" and select the tab to share.
+func (zm *Zoom) ShareScreen(tabName string) action.Action {
+	ui := zm.ui
+	shareScreenButton := nodewith.Name("Share Screen").Role(role.StaticText)
+	presentMode := nodewith.Name("Chrome Tab").Role(role.Tab)
+	presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(tabName)
+	shareButton := nodewith.Name("Share").Role(role.Button)
+
+	return uiauto.NamedCombine("share screen",
+		zm.ShowInterface,
+		ui.LeftClickUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentMode)),
+		ui.LeftClick(presentMode),
+		ui.LeftClick(presentTab),
+		ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
+		ui.WithTimeout(mediumUITimeout).WaitUntilExists(stopSharing),
+	)
+}
+
+// StopShareScreen stops sharing screen.
+func (zm *Zoom) StopShareScreen() action.Action {
+	ui := zm.ui
+	return ui.LeftClickUntil(stopSharing, ui.WithTimeout(shortUITimeout).WaitUntilGone(stopSharing))
 }
 
 // closeSettings closes the settings page in Zoom.
