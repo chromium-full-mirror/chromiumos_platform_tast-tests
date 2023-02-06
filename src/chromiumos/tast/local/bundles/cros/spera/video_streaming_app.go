@@ -21,6 +21,8 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
+const videoStreamingAppTimeout = 12 * time.Minute
+
 type videoStreamingAppParam struct {
 	tier        cuj.Tier
 	app         string
@@ -48,7 +50,7 @@ func init() {
 			{
 				Name:    "essential",
 				Fixture: "loggedInAndKeepState",
-				Timeout: 10 * time.Minute,
+				Timeout: videoStreamingAppTimeout,
 				Val: videoStreamingAppParam{
 					tier: cuj.Essential,
 					app:  youtube.YoutubeApp,
@@ -56,7 +58,7 @@ func init() {
 			}, {
 				Name:              "essential_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           12 * time.Minute,
+				Timeout:           videoStreamingAppTimeout,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoStreamingAppParam{
 					tier:        cuj.Essential,
@@ -66,7 +68,7 @@ func init() {
 			}, {
 				Name:    "advanced",
 				Fixture: "loggedInAndKeepState",
-				Timeout: 10 * time.Minute,
+				Timeout: videoStreamingAppTimeout,
 				Val: videoStreamingAppParam{
 					tier: cuj.Advanced,
 					app:  youtube.YoutubeApp,
@@ -74,7 +76,7 @@ func init() {
 			}, {
 				Name:              "advanced_lacros",
 				Fixture:           "loggedInAndKeepStateLacros",
-				Timeout:           12 * time.Minute,
+				Timeout:           videoStreamingAppTimeout,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: videoStreamingAppParam{
 					tier:        cuj.Advanced,
