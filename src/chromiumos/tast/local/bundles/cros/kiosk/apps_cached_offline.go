@@ -12,10 +12,13 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/network/firewall"
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/network"
 	local_firewall "chromiumos/tast/local/network/firewall"
@@ -41,32 +44,42 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "ash",
-			Val:  chrome.ExtraArgs(""),
+			Val: kioskmode.TestData{
+				IsLacros: false,
+			},
 		}, {
-			Name:              "lacros",
-			Val:               chrome.ExtraArgs("--enable-features=LacrosSupport,ChromeKioskEnableLacros", "--lacros-availability-ignore"),
+			Name: "lacros",
+			Val: kioskmode.TestData{
+				IsLacros: true,
+				Policies: []policy.Policy{
+					&policy.LacrosAvailability{Val: "lacros_only"},
+				},
+			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Fixture: fixture.KioskAutoLaunchCleanup,
 		Timeout: 5 * time.Minute, // Starting Kiosk twice requires longer timeout.
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Launch Chrome app kiosk offline.
-			Value: "screenplay-79897752-32ad-43e4-826c-7c21f5bef5e8",
-		}}})
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// Launch Chrome app kiosk offline.
+				Value: "screenplay-79897752-32ad-43e4-826c-7c21f5bef5e8",
+			},
+		},
+	})
 }
 
 func AppsCachedOffline(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	chromeOptions := s.Param().(chrome.Option)
+	param := s.Param().(kioskmode.TestData)
+
 	kiosk, _, err := kioskmode.New(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
-		kioskmode.ExtraChromeOptions(
-			chromeOptions,
-		),
+		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
@@ -122,12 +135,11 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 			}
 		}(cleanupCtx)
 
-		_, err = kiosk.RestartChromeWithOptions(
+		cr, err := kiosk.RestartChromeWithOptions(
 			ctx,
 			chrome.DMSPolicy(fdms.URL),
 			chrome.NoLogin(),
 			chrome.KeepState(),
-			chromeOptions,
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to restart Chrome")
@@ -137,6 +149,14 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "kiosk is not started after restarting Chrome")
 		}
 
+		if param.IsLacros {
+			testing.ContextLog(ctx, "Checking if Kiosk started in Lacros mode")
+			testConn, err := cr.TestAPIConn(ctx)
+			_, err = lacrosproc.Root(ctx, testConn)
+			if err != nil {
+				return errors.Wrap(err, "failed to get lacros proc")
+			}
+		}
 		return nil
 	}
 

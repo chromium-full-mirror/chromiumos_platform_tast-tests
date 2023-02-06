@@ -16,11 +16,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type testData struct {
-	policies []policy.Policy
-	isLacros bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchWithDeviceEphemeralUsersEnabled,
@@ -45,15 +40,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "ash",
-				Val: testData{
-					isLacros: false,
+				Val: kioskmode.TestData{
+					IsLacros: false,
 				},
 			},
 			{
 				Name: "lacros",
-				Val: testData{
-					isLacros: true,
-					policies: []policy.Policy{
+				Val: kioskmode.TestData{
+					IsLacros: true,
+					Policies: []policy.Policy{
 						&policy.LacrosAvailability{Val: "lacros_only"},
 					},
 				},
@@ -64,7 +59,7 @@ func init() {
 
 func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(testData)
+	param := s.Param().(kioskmode.TestData)
 	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
@@ -72,7 +67,7 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 		// https://crbug.com/1202902 combining DeviceEphemeralUsersEnabled
 		// with Kiosk autolaunch caused Kiosk not starting successfully.
 		kioskmode.ExtraPolicies([]policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: true}}),
-		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.policies),
+		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
 	)
 	if err != nil {
@@ -81,7 +76,7 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 
 	defer kiosk.Close(ctx)
 
-	if param.isLacros {
+	if param.IsLacros {
 		testing.ContextLog(ctx, "Checking if Kiosk started in Lacros mode")
 		testConn, err := cr.TestAPIConn(ctx)
 		_, err = lacrosproc.Root(ctx, testConn)
