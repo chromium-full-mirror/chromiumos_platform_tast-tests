@@ -26,11 +26,12 @@ import (
 )
 
 type testParamForGoo struct {
-	leftOn  bool
-	rightOn bool
-	backOn  bool
-	persons int
-	power   int
+	leftOn    bool // Enable/disable the lighting panel to the left of the subject.
+	rightOn   bool // Enable/disable the lighting panel to the right of the subject.
+	backOn    bool // Enable/disable the lighting panel to the rear of the subject.
+	main      bool // Show/hide the main subject.
+	secondary bool // Show/hide the secondary subject
+	power     int  // Percentage strength of the light sources surrounding the subject.
 }
 
 type hpsResult struct {
@@ -52,58 +53,15 @@ func init() {
 			"mblsha@google.com",
 		},
 		BugComponent: "b:1140302",
-		Timeout:      5 * time.Minute,
+		Timeout:      45 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.HPS()),
 		Data:         []string{"gooigi_mansion.py", "gooigi_dmatrix.py", "gooigi_PWM_PCA9685.py"},
 		SoftwareDeps: []string{"hps", "chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.hps.HpsService"},
-		Params: []testing.Param{
-			{
-				Name: "side_50",
-				Val: testParamForGoo{
-					leftOn:  true,
-					rightOn: true,
-					backOn:  false,
-					persons: 2,
-					power:   50,
-				},
-			},
-			{
-				Name: "back_50",
-				Val: testParamForGoo{
-					leftOn:  false,
-					rightOn: false,
-					backOn:  true,
-					persons: 2,
-					power:   50,
-				},
-			},
-			{
-				Name: "side_100",
-				Val: testParamForGoo{
-					leftOn:  true,
-					rightOn: true,
-					backOn:  false,
-					persons: 2,
-					power:   100,
-				},
-			},
-			{
-				Name: "back_100",
-				Val: testParamForGoo{
-					leftOn:  false,
-					rightOn: false,
-					backOn:  true,
-					persons: 2,
-					power:   100,
-				},
-			},
-		},
 	})
 }
 
 func Gooigi(ctx context.Context, s *testing.State) {
-	param := s.Param().(testParamForGoo)
 	dut := s.DUT()
 
 	// Creating hps context.
@@ -157,6 +115,7 @@ func Gooigi(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for HPS to be ready: ", err)
 	}
 
+	// Copy enclosure control files to the DUT.
 	files := [3]string{"gooigi_mansion.py", "gooigi_dmatrix.py", "gooigi_PWM_PCA9685.py"}
 	filesMap := map[string]string{}
 
@@ -168,70 +127,118 @@ func Gooigi(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to copy files: ", err)
 	}
 
-	args := make([]string, 1)
-	args[0] = "/tmp/" + files[0]
+	// Create slice of possible combinations of parameters for sub tests.
+	parameters := make([]testParamForGoo, 0)
 
-	if param.backOn {
-		args = append(args, "-b")
-	}
-	if param.leftOn {
-		args = append(args, "-l")
-	}
-	if param.rightOn {
-		args = append(args, "-r")
-	}
-
-	args = append(args, fmt.Sprintf("-d %d", duration+5))
-	args = append(args, fmt.Sprintf("-p %d", param.power))
-
-	pyCom := dut.Conn().CommandContext(ctx, "python", args...)
-
-	logFilename := "gooigi_logs.txt"
-	logFile, err := os.OpenFile(filepath.Join(s.OutDir(), logFilename),
-		os.O_WRONLY|os.O_CREATE|os.O_APPEND,
-		0644)
-	if err != nil {
-		s.Fatal(err, "cannot open logfile %s for the ml_benchmark to write to", logFilename)
+	for _, secondary := range []bool{true, false} {
+		for _, back := range []bool{true, false} {
+			for _, right := range []bool{true, false} {
+				for _, left := range []bool{true, false} {
+					for power := 20; power <= 100; power = power + 20 {
+						parameters = append(parameters, testParamForGoo{
+							leftOn:    left,
+							rightOn:   right,
+							backOn:    back,
+							main:      true,
+							secondary: secondary,
+							power:     power,
+						})
+					}
+				}
+			}
+		}
 	}
 
-	pyCom.Stderr = logFile
-	pyCom.Stdout = logFile
+	// Run every combination of testing environment.
+	for _, tc := range parameters {
+		s.Run(ctx, fmt.Sprintf("Left:%t Right:%t Back:%t Secondary:%t Power:%d", tc.leftOn, tc.rightOn, tc.backOn, tc.secondary, tc.power), func(ctx context.Context, s *testing.State) {
 
-	testing.ContextLog(ctx, "Launching lighting control script with parameters: ", args)
+			// Define arguments for python script.
+			args := make([]string, 1)
+			args[0] = "/tmp/" + files[0]
 
-	if err := pyCom.Start(); err != nil {
-		s.Fatal("Failed to start python script: ", err)
+			// Add arguments to enable the different lighting panels.
+			if tc.backOn {
+				args = append(args, "-b")
+			}
+			if tc.leftOn {
+				args = append(args, "-l")
+			}
+			if tc.rightOn {
+				args = append(args, "-r")
+			}
+
+			// Add arguments for which subjects should be visible to HPS.
+			if tc.main {
+				args = append(args, "-m")
+			}
+			if tc.secondary {
+				args = append(args, "-s")
+			}
+
+			// Add arguments for the duration of the test and intensity of light panels.
+			args = append(args, fmt.Sprintf("-d %d", duration))
+			args = append(args, fmt.Sprintf("-p %d", tc.power))
+
+			// Define, configure, and execute python script to control enclosure.
+			pyCom := dut.Conn().CommandContext(ctx, "python", args...)
+
+			logFilename := "gooigi_logs.txt"
+			logFile, err := os.OpenFile(filepath.Join(s.OutDir(), logFilename),
+				os.O_WRONLY|os.O_CREATE|os.O_APPEND,
+				0644)
+			if err != nil {
+				s.Fatal(err, "cannot open logfile %s for the ml_benchmark to write to", logFilename)
+			}
+
+			pyCom.Stderr = logFile
+			pyCom.Stdout = logFile
+
+			testing.ContextLog(ctx, "Launching lighting control script with parameters: ", args)
+
+			if err := pyCom.Start(); err != nil {
+				s.Fatal("Failed to start python script: ", err)
+			}
+
+			defer func() {
+				pyCom.Abort()
+				pyCom.Wait()
+			}()
+
+			// Allow time for hardware to configure and start as well as HPS auto exposure to react to light conditions.
+			if err := testing.Sleep(ctx, duration*time.Second); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+
+			// Record results from HPS unit.
+			result, err := utils.RetrieveHpsSenseSignal(ctx, client)
+			testing.ContextLog(ctx, "sense: ", result)
+
+			status.sense = result
+
+			result, err = utils.RetrieveHpsNotifySignal(ctx, client)
+			testing.ContextLog(ctx, "notify: ", result)
+
+			status.notify = result
+
+			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+
+			// Compare sense and notify signals with enclosure configuration.
+			if status.sense != true && (tc.main || tc.secondary) {
+				s.Fatal("Failed to detect person")
+			}
+
+			if status.notify != false && (tc.main || tc.secondary) && !(tc.main && tc.secondary) {
+				s.Fatal("Incorrectly identified extra people")
+			}
+
+			if status.notify != true && (tc.main && tc.secondary) {
+				s.Fatal("Failed to detect both people")
+			}
+
+		})
 	}
 
-	defer func() {
-		pyCom.Abort()
-		pyCom.Wait()
-	}()
-
-	// Allow time for hardware to configure and start as well as HPS auto exposure to react to light conditions.
-	if err := testing.Sleep(ctx, duration*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-
-	result, err := utils.RetrieveHpsSenseSignal(ctx, client)
-	testing.ContextLog(ctx, "sense: ", result)
-
-	status.sense = result
-
-	result, err = utils.RetrieveHpsNotifySignal(ctx, client)
-	testing.ContextLog(ctx, "notify: ", result)
-
-	status.notify = result
-
-	if status.sense != true && param.persons > 0 {
-		s.Fatal("Failed to detect person")
-	}
-
-	if status.notify != false && param.persons < 2 {
-		s.Fatal("Incorrectly identified extra people")
-	}
-
-	if status.notify != true && param.persons >= 2 {
-		s.Fatal("Failed to detect both people")
-	}
 }

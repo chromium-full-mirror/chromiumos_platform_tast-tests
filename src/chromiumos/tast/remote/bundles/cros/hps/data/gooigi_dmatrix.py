@@ -163,6 +163,7 @@ class DotMatrixDisplay(object):
         assert panel < self._displays_total and panel >= 0
         for x in range(self._DMD_PIXELS_ACROSS):
             for y in range(
-                panel * self._DMD_PIXELS_DOWN, (panel + 1) * self._DMD_PIXELS_DOWN
+                panel * self._DMD_PIXELS_DOWN,
+                (panel + 1) * self._DMD_PIXELS_DOWN,
             ):
                 self._update_pixel(x, y, status)

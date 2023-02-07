@@ -4,6 +4,8 @@
 
 from adafruit_pca9685 import PCA9685
 
+MAX_DUTY_CYCLE = 0xFFFF
+
 
 class Gooigi_PCA9685(object):
     """PCA9685 class handles creating different PWM signals from PCA9685 chip.
@@ -38,9 +40,7 @@ class Gooigi_PCA9685(object):
 
         return self._channels[channel]
 
-    def initialise_servo(
-        self, channel, lower=0xFFFF * 0.05, upper=0xFFFF * 0.1
-    ):
+    def initialise_servo(self, channel, lower=0.05, upper=0.1):
         """Initiate servo motor control class connected to specific channel.
 
         Args:
@@ -83,7 +83,7 @@ class LED(object):
             percentage: integer between 0 and 100 representing the desired brightness level.
         """
         assert percentage >= 0 and percentage <= 100
-        self._channel.duty_cycle = 0xFFFF * percentage // 100
+        self._channel.duty_cycle = MAX_DUTY_CYCLE * percentage // 100
 
     def set_off(self):
         """Set brightness of LED signal to minimum which is off."""
@@ -91,7 +91,7 @@ class LED(object):
 
     def set_max(self):
         """Set brightness of LED signal to maximum."""
-        self._channel.duty_cycle = 0xFFFF
+        self._channel.duty_cycle = MAX_DUTY_CYCLE
 
 
 class Servo(object):
@@ -105,8 +105,8 @@ class Servo(object):
 
     def __init__(self, channel, lower, upper):
         self._channel = channel
-        self._lower = lower
-        self._upper = upper
+        self._lower = lower * MAX_DUTY_CYCLE
+        self._upper = upper * MAX_DUTY_CYCLE
 
     def set_angle(self, angle):
         """Set angle of servo motor.
@@ -118,3 +118,7 @@ class Servo(object):
         self._channel.duty_cycle = int(
             self._lower + (self._upper - self._lower) * angle // 180
         )
+
+    def set_off(self):
+        """Disable servo by setting input signal to constant low."""
+        self._channel.duty_cycle = 0
