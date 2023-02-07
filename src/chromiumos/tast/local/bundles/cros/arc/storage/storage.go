@@ -12,6 +12,8 @@ import (
 	"time"
 
 	androidui "chromiumos/tast/common/android/ui"
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
@@ -28,6 +30,10 @@ const (
 	uiTimeout = 10 * time.Second
 	// Test app's name displayed in the context menu of the Files app.
 	testAppName = "ARC File Reader Test"
+	// Test app's id.
+	testAppID = "org.chromium.arc.testapp.filereader"
+	// Test app's path.
+	testAppPath = "ArcFileReaderTest.apk"
 
 	// Labels to appear in the test app and their expected values.
 
@@ -82,10 +88,14 @@ type TestConfig struct {
 // the respective Action, URI and FileContent on its UI, to be validated against our
 // expected values.
 func TestOpenWithAndroidApp(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig, expectations []Expectation) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	testing.ContextLogf(ctx, "Performing TestOpenWithAndroidApp on: %s", config.DirName)
 
 	testing.ContextLog(ctx, "Installing ArcFileReaderTest app")
-	if err := a.Install(ctx, arc.APKPath("ArcFileReaderTest.apk")); err != nil {
+	if err := a.Install(ctx, arc.APKPath(testAppPath)); err != nil {
 		s.Fatal("Failed to install ArcFileReaderTest app: ", err)
 	}
 
@@ -113,11 +123,12 @@ func TestOpenWithAndroidApp(ctx context.Context, s *testing.State, a *arc.ARC, c
 	if err != nil {
 		s.Fatal("Failed to open Files App: ", err)
 	}
-	defer files.Close(ctx)
+	defer files.Close(cleanupCtx)
 
 	if err := openWithReaderApp(ctx, files, config); err != nil {
 		s.Fatal("Could not open file with ArcFileReaderTest: ", err)
 	}
+	defer a.Command(cleanupCtx, "am", "force-stop", testAppID).Run(testexec.DumpLogOnError)
 
 	if err := validateResult(ctx, d, expectations); err != nil {
 		s.Fatal("ArcFileReaderTest's data is invalid: ", err)

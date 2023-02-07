@@ -6,13 +6,19 @@ package arc
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/android"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome/mtp"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/testing"
 )
 
@@ -55,24 +61,46 @@ func init() {
 func MTP(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*mtp.FixtData).Chrome
 	tconn := s.FixtValue().(*mtp.FixtData).TestConn
+	adb := s.FixtValue().(*mtp.FixtData).AdbDevice
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	a, err := arc.New(ctx, s.OutDir())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
-	//TODO(b/187740535): Investigate and reserve time for cleanup.
-	defer a.Close(ctx)
+	defer a.Close(cleanupCtx)
 
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
-	defer d.Close(ctx)
+	defer d.Close(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to retrieve user's Downloads path: ", err)
+	}
+
+	// Set up the test file.
+	const textFile = "storage.txt"
+	testFileLocation := filepath.Join(downloadsPath, textFile)
+	if err := ioutil.WriteFile(testFileLocation, []byte("this is a test"), 0777); err != nil {
+		s.Fatalf("Creating file %s failed: %s", testFileLocation, err)
+	}
+	defer os.Remove(testFileLocation)
+
+	if err := adb.PushFile(ctx, testFileLocation, android.DownloadDir); err != nil {
+		s.Fatal("Failed to push file to MTP: ", err)
+	}
+	defer adb.RemoveContents(cleanupCtx, android.DownloadDir)
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	config := storage.TestConfig{DirName: "Nexus/Pixel (MTP+ADB)", DirTitle: "Files - Nexus/Pixel (MTP+ADB)",
-		SubDirectories: []string{"Download"}, FileName: "storage.txt"}
+		SubDirectories: []string{"Download"}, FileName: textFile}
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: func(actual string) bool {

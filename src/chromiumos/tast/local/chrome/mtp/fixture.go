@@ -7,9 +7,6 @@ package mtp
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -19,7 +16,6 @@ import (
 	localadb "chromiumos/tast/local/android/adb"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/testing"
 )
 
@@ -62,8 +58,9 @@ type mtpFixture struct {
 
 // FixtData holds information made available to tests that specify this Fixture.
 type FixtData struct {
-	Chrome   *chrome.Chrome
-	TestConn *chrome.TestConn
+	Chrome    *chrome.Chrome
+	TestConn  *chrome.TestConn
+	AdbDevice *adb.Device
 }
 
 func (f *mtpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -85,16 +82,17 @@ func (f *mtpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	f.cr = cr
-	fixtData := &FixtData{
-		Chrome:   cr,
-		TestConn: tconn,
-	}
-
 	// Setup adb and connect to the Android phone.
 	adbDevice, err := ADBSetUp(ctx)
 	if err != nil {
 		s.Fatal("Failed to setup an adb device: ", err)
+	}
+
+	f.cr = cr
+	fixtData := &FixtData{
+		Chrome:    cr,
+		TestConn:  tconn,
+		AdbDevice: adbDevice,
 	}
 
 	testing.ContextLog(ctx, "Set to MTP Mode")
@@ -116,22 +114,6 @@ func (f *mtpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		if err != nil {
 			s.Fatal("Failed to restart adb as root: ", err)
 		}
-	}
-
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to retrieve user's Downloads path: ", err)
-	}
-	// Set up the test file.
-	const textFile = "storage.txt"
-	testFileLocation := filepath.Join(downloadsPath, textFile)
-	if err := ioutil.WriteFile(testFileLocation, []byte("this is a test"), 0777); err != nil {
-		s.Fatalf("Creating file %s failed: %s", testFileLocation, err)
-	}
-	defer os.Remove(testFileLocation)
-
-	if err := adbDevice.PushFile(ctx, testFileLocation, "/mnt/sdcard/Download/"); err != nil {
-		s.Fatal("Failed to push file to MTP: ", err)
 	}
 
 	chrome.Lock()
