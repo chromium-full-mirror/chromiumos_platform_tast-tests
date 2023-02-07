@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/camera/arcapp"
 	"chromiumos/tast/local/chrome"
@@ -68,7 +69,7 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 		arcapp.TakePhoto,
 	}, {
 		"record_video",
-		arcapp.RecordVideo,
+		recordVideo,
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
@@ -97,4 +98,17 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 		})
 		cancel()
 	}
+}
+
+// recordVideo test if the video recording works via ARC camera test app.
+func recordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
+	if err := arcapp.StartRecording(ctx, cr, a); err != nil {
+		return errors.Wrap(err, "failed to start recording")
+	}
+
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
+	return arcapp.StopRecording(ctx, cr, a)
 }

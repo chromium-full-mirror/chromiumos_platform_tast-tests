@@ -20,7 +20,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
 )
 
 const (
@@ -30,17 +29,20 @@ const (
 	cameraAppActivity = ".MainActivity"
 	cameraAppPackage  = "chromeos.camera.app.arccameratest"
 
-	intentSwitchCamera   = "chromeos.camera.app.arccameratest.ACTION_SWITCH_CAMERA"
-	intentSwitchMode     = "chromeos.camera.app.arccameratest.ACTION_SWITCH_MODE"
-	intentTakePhoto      = "chromeos.camera.app.arccameratest.ACTION_TAKE_PHOTO"
-	intentStartRecording = "chromeos.camera.app.arccameratest.ACTION_START_RECORDING"
-	intentStopRecording  = "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING"
-	intentResetCamera    = "chromeos.camera.app.arccameratest.ACTION_RESET_CAMERA"
-	intentGetMetrics     = "chromeos.camera.app.arccameratest.ACTION_GET_METRICS"
-	keyCameraFacing      = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
-	keyCameraMode        = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
-	valuePhoto           = "Photo"
-	valueVideo           = "Video"
+	intentSwitchCamera      = "chromeos.camera.app.arccameratest.ACTION_SWITCH_CAMERA"
+	intentSwitchMode        = "chromeos.camera.app.arccameratest.ACTION_SWITCH_MODE"
+	intentTakePhoto         = "chromeos.camera.app.arccameratest.ACTION_TAKE_PHOTO"
+	intentStartRecording    = "chromeos.camera.app.arccameratest.ACTION_START_RECORDING"
+	intentStopRecording     = "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING"
+	intentResetCamera       = "chromeos.camera.app.arccameratest.ACTION_RESET_CAMERA"
+	intentGetMetrics        = "chromeos.camera.app.arccameratest.ACTION_GET_METRICS"
+	intentSetFps            = "chromeos.camera.app.arccameratest.ACTION_SET_FPS"
+	intentGetFrameDropRatio = "chromeos.camera.app.arccameratest.ACTION_GET_FRAME_DROP_RATIO"
+	intentResetMetrics      = "chromeos.camera.app.arccameratest.ACTION_RESET_METRICS"
+	keyCameraFacing         = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
+	keyCameraMode           = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
+	valuePhoto              = "Photo"
+	valueVideo              = "Video"
 
 	// Snapshots can be really small if the room is dark, but JPEGs and MP4s are never smaller than 100 bytes.
 	minExpectedFileSize = 100
@@ -134,9 +136,8 @@ func TakePhoto(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	return nil
 }
 
-// RecordVideo asks ArcCameraFpsTest app to record a video via intent and
-// ensures that the captured video is saved successfully.
-func RecordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
+// StartRecording switches to the video mode and starts the recording.
+func StartRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valueVideo); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
@@ -146,9 +147,11 @@ func RecordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 		return errors.Wrap(err, "could not send intent")
 	}
 
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		testing.ContextLog(ctx, "Failed to sleep: ", err)
-	}
+	return nil
+}
+
+// StopRecording stops the current recording and verify the video size is reasonable.
+func StopRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	outputFile, err := broadcastIntentGetData(ctx, a, intentStopRecording)
 	if err != nil {
 		return errors.Wrap(err, "could not send intent")
@@ -202,6 +205,35 @@ func GetMetrics(ctx context.Context, a *arc.ARC) (ARCCameraAppMetrics, error) {
 		return ARCCameraAppMetrics{}, errors.Wrapf(err, "failed to parse metrics: %v", metricsRawData)
 	}
 	return metrics, nil
+}
+
+// SetFPS specifies the target frame rate to be used in the app.
+func SetFPS(ctx context.Context, a *arc.ARC, fps string) error {
+	if _, err := broadcastIntent(ctx, a, intentSetFps, "--ei", "fps", fps); err != nil {
+		return errors.Wrap(err, "could not send intent")
+	}
+	return nil
+}
+
+// GetFrameDropRatio gets the frame drop ratio calculated by the app.
+func GetFrameDropRatio(ctx context.Context, a *arc.ARC) (float64, error) {
+	rawData, err := broadcastIntentGetData(ctx, a, intentGetFrameDropRatio)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get frame drop ratio")
+	}
+	frameDropRatio, err := strconv.ParseFloat(rawData, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse frame drop ratio to float")
+	}
+	return frameDropRatio, nil
+}
+
+// ResetMetrics resets the collected metrics by the app.
+func ResetMetrics(ctx context.Context, a *arc.ARC) error {
+	if _, err := broadcastIntent(ctx, a, intentResetMetrics); err != nil {
+		return errors.Wrap(err, "failed to reset metrics")
+	}
+	return nil
 }
 
 // fileSizeInDCIM searches the file inside Android DCIM folder and returns its size.
