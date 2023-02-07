@@ -17,6 +17,9 @@ var (
 	// NetworkDetailedView is the detailed Network view within Quick Settings.
 	NetworkDetailedView = nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(RootFinder)
 
+	// NetworkListItemView is the network item list on the network view in Quick Settings.
+	NetworkListItemView = nodewith.HasClass("NetworkListNetworkItemView").Ancestor(RootFinder)
+
 	// NetworkFeaturePodLabelButton is the label child of the Network feature pod button.
 	NetworkFeaturePodLabelButton = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(RootFinder)
 

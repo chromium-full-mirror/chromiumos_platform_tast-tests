@@ -154,15 +154,15 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 			defer cr.Close(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "verify_proxy_ui_dump")
 
-			ps, err := proxysettings.Collect(ctx, resources.tconn)
+			ps, err := proxysettings.CollectEthernet(ctx, resources.tconn, true /*isLoggedIn*/)
 			if err != nil {
 				s.Fatal("Failed to launch proxy settings instance: ", err)
 			}
-			defer ps.Close(cleanupCtx, kb)
+			defer ps.Close(cleanupCtx, resources.tconn, kb)
 
 			// Verify proxy values.
 			for _, pv := range proxyValues {
-				if resultPv, err := ps.Content(ctx, pv); err != nil {
+				if resultPv, err := ps.ManualConfigContent(ctx, resources.tconn, pv.Protocol); err != nil {
 					s.Fatalf("Failed to get proxy value for %q: %v", pv.HostName(), err)
 				} else if !reflect.DeepEqual(resultPv, pv) {
 					s.Fatalf("Failed to verify proxy value for %q: got %q, want %q", pv.HostName(), resultPv, pv)
@@ -243,16 +243,14 @@ func (t *retainAfterLoginTest) preparationAtLoginScreen(ctx context.Context, cr 
 	defer cr.Close(cleanupCtx)
 	defer faillog.DumpUITreeOnErrorToFile(cleanupCtx, res.outDir, func() bool { return retErr != nil }, res.tconn, "before_login_ui_dump")
 
-	ps, err := proxysettings.CollectFromSigninScreen(ctx, res.tconn)
+	ps, err := proxysettings.CollectEthernet(ctx, res.tconn, false /*isLoggedIn*/)
 	if err != nil {
 		return errors.Wrap(err, "failed to create proxy settings instance")
 	}
-	defer ps.Close(cleanupCtx, res.kb)
+	defer ps.Close(cleanupCtx, res.tconn, res.kb)
 
-	for _, pv := range pvs {
-		if err := ps.Setup(ctx, cr, res.kb, pv); err != nil {
-			return errors.Wrapf(err, "failed to set proxy fields for %s", pv.HostName())
-		}
+	if err := ps.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
+		return errors.Wrap(err, "failed to set proxy fields")
 	}
 
 	return nil
@@ -283,16 +281,14 @@ func (t *retainAcrossUsersTest) preparationAfterLoggedIn(ctx context.Context, cr
 	defer cr.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, cr, "after_login_ui_dump")
 
-	ps, err := proxysettings.Collect(ctx, res.tconn)
+	ps, err := proxysettings.CollectEthernet(ctx, res.tconn, true /*isLoggedIn*/)
 	if err != nil {
 		return errors.Wrap(err, "failed to create proxy settings instance")
 	}
-	defer ps.Close(cleanupCtx, res.kb)
+	defer ps.Close(cleanupCtx, res.tconn, res.kb)
 
-	for _, pv := range pvs {
-		if err := ps.Setup(ctx, cr, res.kb, pv); err != nil {
-			return errors.Wrapf(err, "failed to set proxy fields for %s", pv.HostName())
-		}
+	if err := ps.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
+		return errors.Wrap(err, "failed to set proxy fields")
 	}
 
 	return nil

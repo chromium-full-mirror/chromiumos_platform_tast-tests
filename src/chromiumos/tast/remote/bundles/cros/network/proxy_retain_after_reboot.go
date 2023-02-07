@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/services/cros/network"
+	pb "chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 )
 
@@ -33,6 +34,7 @@ func init() {
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:network", "network_e2e_unstable"},
 		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
 			"tast.cros.network.ProxySettingService",
 			wificell.TFServiceName,
 		},
@@ -48,12 +50,14 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	manifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	proxyConfigs := &network.ProxyConfigs{
-		HttpHost:  "localhost",
-		HttpPort:  "123",
-		HttpsHost: "localhost",
-		HttpsPort: "456",
-		SocksHost: "socks5://localhost",
-		SocksPort: "8080",
+		NetworkInfo:         &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},
+		ProxyConnectionType: network.ProxyConnectionType_ManualProxyConfiguration,
+		HttpHost:            "localhost",
+		HttpPort:            "123",
+		HttpsHost:           "localhost",
+		HttpsPort:           "456",
+		SocksHost:           "socks5://localhost",
+		SocksPort:           "8080",
 	}
 
 	setUpBeforeReboot := func(ctx context.Context) error {
@@ -62,11 +66,29 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 		defer cancel()
 
 		rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+		crSvc := pb.NewChromeServiceClient(rpcClient.Conn)
+		if _, err := crSvc.New(ctx, &pb.NewRequest{
+			LoginMode:                    pb.LoginMode_LOGIN_MODE_NO_LOGIN,
+			SigninProfileTestExtensionId: manifestKey,
+		}); err != nil {
+			return errors.Wrap(err, "failed to start Chrome")
+		}
+		defer crSvc.Close(cleanupCtx, &empty.Empty{})
+
 		proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
-		if _, err := proxySettingSvc.New(ctx, &network.NewRequest{ManifestKey: manifestKey}); err != nil {
+		if _, err := proxySettingSvc.Initialize(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to create a new proxy setting service")
 		}
-		defer proxySettingSvc.Close(cleanupCtx, &empty.Empty{})
+		defer func(ctx context.Context) {
+			if s.HasError() {
+				proxySettingSvc.ResetConnectionType(ctx, &network.ResetConnectionTypeRequest{
+					NetworkInfo: &network.NetworkInfo{
+						Value: &network.NetworkInfo_Ethernet{},
+					},
+				})
+				proxySettingSvc.Close(ctx, &empty.Empty{})
+			}
+		}(cleanupCtx)
 
 		if _, err := proxySettingSvc.Setup(ctx, proxyConfigs); err != nil {
 			return errors.Wrap(err, "failed to setup proxy")
@@ -87,13 +109,30 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	crSvc := pb.NewChromeServiceClient(rpcClient.Conn)
+	if _, err := crSvc.New(ctx, &pb.NewRequest{
+		LoginMode:                    pb.LoginMode_LOGIN_MODE_NO_LOGIN,
+		KeepState:                    true,
+		SigninProfileTestExtensionId: manifestKey,
+	}); err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer crSvc.Close(cleanupCtx, &empty.Empty{})
+
 	proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
-	if _, err := proxySettingSvc.New(ctx, &network.NewRequest{ManifestKey: manifestKey}); err != nil {
+	if _, err := proxySettingSvc.Initialize(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to create a new proxy setting service: ", err)
 	}
 	defer proxySettingSvc.Close(cleanupCtx, &empty.Empty{})
+	defer proxySettingSvc.ResetConnectionType(cleanupCtx, &network.ResetConnectionTypeRequest{
+		NetworkInfo: &network.NetworkInfo{
+			Value: &network.NetworkInfo_Ethernet{},
+		},
+	})
 
-	returnedConfigs, err := proxySettingSvc.FetchConfigurations(ctx, &empty.Empty{})
+	returnedConfigs, err := proxySettingSvc.FetchProxySettings(ctx, &network.FetchProxySettingsRequest{
+		NetworkInfo: &network.NetworkInfo{Value: &network.NetworkInfo_Ethernet{}},
+	})
 	if err != nil {
 		s.Fatal("Failed to fetch proxy configurations: ", err)
 	}
