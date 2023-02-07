@@ -263,8 +263,15 @@ func (c *cryptohomeBinary) authenticateKioskAuthFactor(ctx context.Context, auth
 }
 
 // authenticateRecoveryAuthFactor calls "cryptohome --action=authenticate_auth_factor --recovery_epoch_response=<epochResponseHex> --recovery_response=<recoveryResponseHex>".
-func (c *cryptohomeBinary) authenticateRecoveryAuthFactor(ctx context.Context, authSessionID, label, epochResponseHex, recoveryResponseHex string) ([]byte, error) {
-	args := []string{"--action=authenticate_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--recovery_epoch_response=" + epochResponseHex, "--recovery_response=" + recoveryResponseHex}
+func (c *cryptohomeBinary) authenticateRecoveryAuthFactor(ctx context.Context, authSessionID, label, epochResponseHex, recoveryResponseHex, ledgerName, ledgerPubKeyHash, ledgerPubKey string) ([]byte, error) {
+	args := []string{"--action=authenticate_auth_factor",
+		"--auth_session_id=" + authSessionID,
+		"--key_label=" + label,
+		"--recovery_epoch_response=" + epochResponseHex,
+		"--recovery_response=" + recoveryResponseHex,
+		"--recovery_ledger_name=" + ledgerName,
+		"--recovery_ledger_pub_key_hash=" + ledgerPubKeyHash,
+		"--recovery_ledger_pub_key=" + ledgerPubKey}
 	return c.call(ctx, args...)
 }
 
