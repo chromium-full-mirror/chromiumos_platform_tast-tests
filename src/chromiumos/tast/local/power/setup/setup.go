@@ -309,12 +309,23 @@ const (
 	DoNotChangeBluetooth
 )
 
+// UIMode indicates whether upstart ui job should be on or off for a test.
+type UIMode int
+
+const (
+	// DoNotChangeUI indicates that the test should not make changes to upstart ui job.
+	DoNotChangeUI UIMode = iota
+	// DisableUI indicates that upstart ui job should be disabled.
+	DisableUI
+)
+
 // PowerTestOptions describes how to set up a power test.
 type PowerTestOptions struct {
 	// The default value of the following options is not to perform any changes.
 	Wifi       WifiInterfacesMode
 	NightLight NightLightMode
 	DarkTheme  DarkThemeMode
+	UI         UIMode
 
 	// The default value of the following options is to perform the actions.
 	Powerd             PowerdMode
@@ -384,6 +395,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.DarkTheme == EnableLightTheme {
 			s.Add(TurnOnLightTheme(ctx, c))
+		}
+		if options.UI == DisableUI {
+			s.Add(DisableServiceIfExists(ctx, "ui"))
 		}
 		return nil
 	})
