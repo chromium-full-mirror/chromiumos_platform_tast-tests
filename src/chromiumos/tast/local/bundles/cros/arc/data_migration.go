@@ -26,6 +26,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/retry"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -144,14 +145,29 @@ func init() {
 //
 // b/190293594 GMSCore for Pi is picked up on ARC R after P->R upgrade.
 func DataMigration(ctx context.Context, s *testing.State) {
+	params := s.Param().(dataMigrationTestParams)
+	homeDataPath := s.DataPath(params.dataFileName)
+
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		return tryDataMigration(ctx, s.RequiredVar(tape.ServiceAccountVar), params, homeDataPath, rl, s.OutDir())
+	}, nil); err != nil {
+		s.Fatal("Failed to verify data migration flow: ", err)
+	}
+}
+
+// tryDataMigration attempts a migration or returns a retirable error.
+func tryDataMigration(ctx context.Context, serviceAccount string, params dataMigrationTestParams, homeDataPath string, rl *retry.Loop, outDir string) error {
 	const (
 		// One of the apps reported by b/173835269.
 		appToInstall        = "com.roblox.client"
 		provisioningTimeout = 5 * time.Minute
 	)
-
-	params := s.Param().(dataMigrationTestParams)
-	homeDataPath := s.DataPath(params.dataFileName)
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -159,20 +175,20 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create an account manager and lease a test account for the duration of the test.
-	accHelper, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), false, tape.WithTimeout(int32(dataMigrationTestTimeout.Seconds())), tape.WithPoolID(params.poolID))
+	accHelper, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(serviceAccount), false, tape.WithTimeout(int32(dataMigrationTestTimeout.Seconds())), tape.WithPoolID(params.poolID))
 	if err != nil {
-		s.Fatal("Failed to create an account manager and lease an account: ", err)
+		return rl.Exit("create an account manager and lease an account", err)
 	}
 	defer accHelper.CleanUp(cleanupCtx)
 
 	// Ensure to sign out before executing mountVaultWithArchivedHomeData().
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to sign out: ", err)
+		return rl.Exit("sign out", err)
 	}
 
 	// Unarchive the home data under vault before signing in.
 	if err := mountVaultWithArchivedHomeData(ctx, homeDataPath, acc.Username, acc.Password); err != nil {
-		s.Fatal("Failed to mount home with archived data: ", err)
+		return rl.Exit("mount home with archived data", err)
 	}
 	defer func() {
 		cryptohome.UnmountVault(cleanupCtx, acc.Username)
@@ -195,9 +211,9 @@ func DataMigration(ctx context.Context, s *testing.State) {
 		arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		fdms, err := policyutil.SetUpFakePolicyServer(ctx, outDir, creds.User, policies)
 		if err != nil {
-			s.Fatal("Failed to setup fake policy server: ", err)
+			return rl.Retry("setup fake policy server", err)
 		}
 		defer fdms.Stop(cleanupCtx)
 		opts = append(opts, chrome.DMSPolicy(fdms.URL))
@@ -205,52 +221,49 @@ func DataMigration(ctx context.Context, s *testing.State) {
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		return rl.Retry("start Chrome", err)
 	}
 	defer cr.Close(cleanupCtx)
 
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.New(ctx, outDir)
 	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
+		return rl.Retry("start ARC", err)
 	}
 	defer a.Close(ctx)
 
 	systemSdkVersion, err := checkSdkVersionsInPackagesXML(ctx, a, acc.Username)
 	if err != nil {
-		s.Fatal("Failed to check SDK version in packages.xml: ", err)
+		return rl.Exit("check SDK version in packages.xml", err)
 	}
 
 	if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
-		s.Fatal("Failed to wait for ARC provisioning: ", err)
+		return rl.Retry("wait for ARC provisioning", err)
 	}
 
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
+		return rl.Exit("initializing UI Automator", err)
 	}
 	defer d.Close(cleanupCtx)
 
 	// Connect to Test API.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
+		return rl.Retry("connect to test API", err)
 	}
 
 	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to create ScreenRecorder: ", err)
-	}
-	if screenRecorder == nil {
-		s.Fatal("Screen recorder was not found")
+	if err != nil || screenRecorder == nil {
+		return rl.Exit("create screen recorder", err)
 	}
 	if err := screenRecorder.Start(ctx, tconn); err != nil {
-		s.Fatal("Failed to start screen recorder: ", err)
+		return rl.Exit("start screen recorder", err)
 	}
 
-	defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
+	defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(outDir, "recording.mp4"))
 
 	// Regression check for b/173835269.
-	s.Log("Installing app " + appToInstall)
+	testing.ContextLog(ctx, "Installing app ", appToInstall)
 	var playOpt playstore.Options
 	playOpt.TryLimit = -1
 	playOpt.DefaultUITimeout = 5 * time.Second
@@ -259,20 +272,21 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	installCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	if err := playstore.InstallApp(installCtx, a, d, appToInstall, &playOpt); err != nil {
-		s.Error("Failed to install app: ", err)
-
-		s.Log("Taking a screenshot as install-failed.png")
-		path := filepath.Join(s.OutDir(), "install-failed.png")
+		testing.ContextLog(ctx, "Taking a screenshot as install-failed.png")
+		path := filepath.Join(outDir, "install-failed.png")
 		if err := screenshot.Capture(cleanupCtx, path); err != nil {
-			s.Log("Failed to take a screenshot: ", err)
+			testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
 		}
+
+		return rl.Retry("install app", err)
 	}
 
 	// Regression check for b/190293594.
 	if err := checkGmsCoreVersion(ctx, a, systemSdkVersion); err != nil {
-		// Log error and continue testing.
-		s.Error("Failed to check GMSCore version: ", err)
+		return rl.Exit("verify GMS Core version", err)
 	}
+
+	return nil
 }
 
 func mountVaultWithArchivedHomeData(ctx context.Context, homeDataPath, username, password string) error {
