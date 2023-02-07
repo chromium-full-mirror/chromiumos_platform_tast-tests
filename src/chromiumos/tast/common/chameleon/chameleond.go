@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"chromiumos/tast/common/chameleon/devices"
 	"chromiumos/tast/common/chameleon/devices/common/bluetooth"
@@ -1095,16 +1094,21 @@ func (c *CommonChameleond) SetVgaMode(ctx context.Context, portID PortID, mode s
 
 // WaitVideoInputStable calls the Chameleond RPC method of the same name.
 // This implements Chameleond.WaitVideoInputStable, see that for more details.
+// Notice the RPC.WaitVideoInputStable method does not guarantee a full wait. Our Chameleond function uses a poll to assure a
+// timeout of at least |timeoutSeconds| and hence is very slow in case of failures.
 func (c *CommonChameleond) WaitVideoInputStable(ctx context.Context, portID PortID, timeoutSeconds float64) (isVideoStable bool, err error) {
-	err = testing.Poll(ctx, func(ctx context.Context) error {
-		isVideoStable, err = c.RPC("WaitVideoInputStable").Args(portID.Int(), timeoutSeconds).CallForBool(ctx)
-		if err != nil {
-			testing.ContextLog(ctx, "Waited on WaitVideoInputStable but it returned an error: ", err)
+	timeoutRPC := 5.0 // should be shorter than default xmlrpc timeout
+	for timeoutSeconds > 0 {
+		timeoutSeconds -= timeoutRPC
+		isVideoStable, err = c.RPC("WaitVideoInputStable").Args(portID.Int(), timeoutRPC).CallForBool(ctx)
+		if isVideoStable {
+			return isVideoStable, err
+		} else if err != nil {
+			testing.ContextLog(ctx, "WaitVideoInputStable error: ", err)
+		} else if !isVideoStable {
+			testing.ContextLogf(ctx, "Waited on WaitVideoInputStable for %f & isVideoStable=false", timeoutRPC)
 		}
-		return err
-	}, &testing.PollOptions{
-		Timeout: time.Duration(timeoutSeconds) * time.Second,
-	})
+	}
 
 	return isVideoStable, err
 }

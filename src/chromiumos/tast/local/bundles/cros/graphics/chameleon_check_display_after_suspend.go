@@ -116,12 +116,12 @@ func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to get stable video input from a physically plugged port %d: %s", port, err)
 	}
-	defer func(ctx context.Context) {
+	defer func(ctx context.Context, port chameleon.PortID) {
 		err = cham.Unplug(ctx, port)
 		if err != nil {
 			s.Fatalf("Failed to unplug a physically plugged port %d: %s ", port, err)
 		}
-	}(ctx)
+	}(ctx, port)
 
 	// Log in to Chrome.
 	cleanupCtx := ctx

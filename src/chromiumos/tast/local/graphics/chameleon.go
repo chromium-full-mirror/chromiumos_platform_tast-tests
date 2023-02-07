@@ -194,9 +194,11 @@ func ChameleonPlug(ctx context.Context, cham chameleon.Chameleond, port chameleo
 
 	isVideoStable, err := cham.WaitVideoInputStable(ctx, port, stableVideoTimeout)
 	if err != nil {
+		cham.Unplug(ctx, port)
 		return errors.Errorf("failed to wait for stable video input: %s", err)
 	}
 	if !isVideoStable {
+		cham.Unplug(ctx, port)
 		return errors.Errorf("video not stable after %.2f seconds", stableVideoTimeout)
 	}
 
@@ -264,31 +266,11 @@ func ChameleonShouldUsePort(ctx context.Context, cham chameleon.Chameleond, port
 	if err != nil {
 		return false, port, errors.Errorf("failed to plug the port %d : %s", port, err)
 	}
-	defer func(ctx context.Context) {
-		cham.Unplug(ctx, port)
-	}(ctx)
 
-	isPhysPlug, err := cham.IsPhysicalPlugged(ctx, port)
-	if err != nil {
-		return false, port, errors.Errorf("failed to check if port %d is physically plugged: %s", port, err)
-	}
+	isVideoStable, err := cham.WaitVideoInputStable(ctx, port, stableVideoTimeout)
+	cham.Unplug(ctx, port)
 
-	hasVideoSupport, err := cham.HasVideoSupport(ctx, port)
-	if err != nil {
-		return false, port, errors.Errorf("failed to check if port %d has video support: %s", port, err)
-	}
-
-	err = cham.Unplug(ctx, port)
-	if err != nil {
-		return false, port, errors.Errorf("failed to unplug the port %d : %s", port, err)
-	}
-
-	willUseConnector := isPhysPlug && hasVideoSupport
-	if !willUseConnector {
-		testing.ContextLogf(ctx, "IsPhysicalPlugged: %t, HasVideoSupport: %t", isPhysPlug, hasVideoSupport)
-	}
-
-	return willUseConnector, port, nil
+	return isVideoStable, port, err
 }
 
 // ChameleonResizePng resizes a png to the proper format for ChameleonPerceptualDiff
