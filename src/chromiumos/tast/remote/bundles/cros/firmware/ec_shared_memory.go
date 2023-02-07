@@ -8,6 +8,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
@@ -103,13 +104,21 @@ func checkSharedMemory(ctx context.Context, h *firmware.Helper) error {
 		errorLevel = 0
 	)
 
-	ecShmemOut, err := h.Servo.RunECCommandGetOutput(ctx, "shmem", []string{`Size:\s*([0-9-]+)`})
-	if err != nil {
-		return errors.Wrap(err, "failed to read EC shared memory size")
+	var ecShmemStr string
+	// After crash unaligned cmd, sometimes ec console needs some time to respond.
+	testing.ContextLog(ctx, "Poll for ec shmem size")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ecShmemOut, err := h.Servo.RunECCommandGetOutput(ctx, "shmem", []string{`Size:\s*(\d+)`})
+		if err != nil {
+			return errors.Wrap(err, "failed to read EC shared memory size")
+		}
+		ecShmemStr = ecShmemOut[0][1]
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "not all usb ports disabled")
 	}
 
-	testing.ContextLogf(ctx, "EC shared memory size is %s bytes", ecShmemOut[0][1])
-	ecShmemStr := ecShmemOut[0][1]
+	testing.ContextLogf(ctx, "EC shared memory size is %s bytes", ecShmemStr)
 	ecShmem, err := strconv.ParseInt(ecShmemStr, 10, 64)
 	if err != nil {
 		return errors.Wrapf(err, "failed to parse EC shared memory (%s) as int",
