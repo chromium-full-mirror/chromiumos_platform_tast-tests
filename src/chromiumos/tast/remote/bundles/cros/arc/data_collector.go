@@ -56,6 +56,9 @@ const (
 
 	// TTS cache bucket
 	ttsCache = "tts_cache"
+
+	// DexOpt cache bucket
+	dexOptCache = "dex_opt_cache"
 )
 
 type dataUploader struct {
@@ -135,7 +138,7 @@ func init() {
 		BugComponent: "b:168382",
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "chrome_internal"},
 		ServiceDeps: []string{"tast.cros.arc.UreadaheadPackService",
-			"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},
+			"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService", "tast.cros.arc.DexOptCacheService"},
 		Timeout: 40 * time.Minute,
 		// Note that arc.DataCollector is not a simple test. It collects data used to
 		// produce test and release images. Not collecting this data leads to performance
@@ -601,6 +604,21 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		s.Log("Retrying generating TTS cache, previous attempt failed: ", err)
 	}
 
+	attempts = 0
+	for {
+		err = genDexOptCache(ctx, s, cl, filepath.Join(dataDir, dexOptCache), v, &du)
+		if err == nil {
+			break
+		}
+
+		attempts = attempts + 1
+		dumpLogcat("dex_opt", attempts)
+		if attempts > retryCount {
+			s.Fatal("Failed to generate DexOpt cache. No more retries left: ", err)
+		}
+		s.Log("Retrying generating DexOpt cache, previous attempt failed: ", err)
+	}
+
 	if param.uprevBranch {
 		if err = maybeUprevBranch(ctx, desc, du.androidPackage, s.OutDir(), param.requiredCPUAbisForBranchUprev); err != nil {
 			s.Fatal("Failed to uprev branch: ", err)
@@ -710,5 +728,35 @@ func maybeUprevBranch(ctx context.Context, desc *version.BuildDescriptor, androi
 	}
 
 	testing.ContextLogf(ctx, "Branch %d is pinned to %d. Pin URL: %q", desc.Milestone, desc.BuildVersion, pinURL)
+	return nil
+}
+
+func genDexOptCache(ctx context.Context, s *testing.State, cl *rpc.Client, targetDir, androidVersion string, du *dataUploader) (retErr error) {
+	service := arc.NewDexOptCacheServiceClient(cl.Conn)
+
+	// Shorten the total context by 5 seconds to allow for cleanup.
+	shortCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	response, err := service.Generate(shortCtx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to generate DexOpt cache")
+	}
+	d := s.DUT()
+	defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
+
+	if err = os.Mkdir(targetDir, 0744); err != nil {
+		s.Fatalf("Failed to create %q: %v", targetDir, err)
+	}
+
+	targetFile := filepath.Join(targetDir, response.DexOptCacheName)
+	if err = linuxssh.GetFile(shortCtx, d.Conn(), filepath.Join(response.TargetDir, response.DexOptCacheName), targetFile, linuxssh.PreserveSymlinks); err != nil {
+		s.Fatalf("Failed to get %q from the device: %v", response.DexOptCacheName, err)
+	}
+
+	if err := du.uploadIfNeeded(targetFile, dexOptCache); err != nil {
+		s.Fatalf("Failed to upload %q: %v", targetFile, err)
+	}
+
 	return nil
 }

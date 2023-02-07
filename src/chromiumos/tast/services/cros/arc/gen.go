@@ -9,6 +9,7 @@
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. ureadahead_pack_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. adb_over_usb_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. tts_cache_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../.. dex_opt_cache_service.proto
 
 package arc
 

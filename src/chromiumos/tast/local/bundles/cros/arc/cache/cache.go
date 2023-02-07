@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/testing"
 )
 
@@ -79,6 +80,8 @@ const (
 	PregeneratedTTSStateCache = "pregen_tts_state_cache.dat"
 	// Timeout to wait GMS Core resources.
 	gmsCoreWaitTimeout = 2 * time.Minute
+	// DexOptCacheArchive is the name of the tar file that includes DexOpt artifacts.
+	DexOptCacheArchive = "dex_opt_cache.tar"
 )
 
 // OpenSession starts Chrome and ARC with extra arguments.
@@ -328,6 +331,47 @@ func CopyTTSCache(ctx context.Context, a *arc.ARC, outputDir string) error {
 	dst := filepath.Join(outputDir, TTSStateCache)
 	if err := fsutil.CopyFile(ttsCachePath, dst); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// CopyDexOptCache waits for the CPU to be idle and compress the DEX code
+// compilation artifacts into a tar file in the specified output directory.
+func CopyDexOptCache(ctx context.Context, a *arc.ARC, outputDir string) error {
+	const (
+		androidDataPath      = "/data"
+		dexOptCacheDirectory = "dalvik-cache"
+	)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	// OpenSession signs in as chrome.DefaultUser.
+	androidDataDir, err := arc.AndroidDataDir(ctx, chrome.DefaultUser)
+	if err != nil {
+		return errors.Wrap(err, "failed to get android-data path")
+	}
+
+	testing.ContextLog(ctx, "Waiting for CPU idle")
+	if err := cpu.WaitUntilIdle(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait CPU is idle")
+	}
+
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a, chrome.DefaultUser)
+	if err != nil {
+		return errors.Wrap(err, "failed to make Android /data directory available on host")
+	}
+	defer cleanupFunc(cleanupCtx)
+
+	targetTar := filepath.Join(outputDir, DexOptCacheArchive)
+	testing.ContextLogf(ctx, "Compressing DexOpt caches to %q", targetTar)
+	// PlayAutoInstall config is ignored because the apk is board-specific and will be ignored on boot.
+	tarExcludeOption := "--exclude=vendor@app@PlayAutoInstallConfig@*"
+	dataPath := filepath.Join(androidDataDir, androidDataPath)
+	if err := testexec.CommandContext(ctx, "tar", tarExcludeOption, "-cvpf", targetTar, "-C", dataPath, dexOptCacheDirectory).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to compress DexOpt caches")
 	}
 
 	return nil
