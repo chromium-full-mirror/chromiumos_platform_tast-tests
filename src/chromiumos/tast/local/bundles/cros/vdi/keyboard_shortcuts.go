@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
@@ -212,18 +211,5 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	// Close Windows Start menu.
 	if err := kb.AccelAction("ESC")(ctx); err != nil {
 		s.Fatal("Failed to close the Windows Start menu: ", err)
-	}
-
-	// Cleanup is to close the desktop window.
-	w, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to obtain the active window: ", err)
-	}
-	if err := w.CloseWindow(ctx, tconn); err != nil {
-		s.Fatal("Failed to close the active window: ", err)
-	}
-
-	if err := vdi.ResetSearch(ctx); err != nil {
-		s.Fatal("Was not able to reset search results: ", err)
 	}
 }

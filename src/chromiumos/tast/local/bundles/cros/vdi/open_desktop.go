@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
@@ -137,19 +136,5 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 		uidetector.WithTimeout(30*time.Second).WaitUntilExists(uidetection.Word("Run").First()),
 	)(ctx); err != nil {
 		s.Error("Failed to invoke opening the run dialog box: ", err)
-	}
-
-	// Cleanup is to close the desktop window.
-
-	w, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to obtain the active window: ", err)
-	}
-	if err := w.CloseWindow(ctx, tconn); err != nil {
-		s.Fatal("Failed to close the active window: ", err)
-	}
-
-	if err := vdi.ResetSearch(ctx); err != nil {
-		s.Fatal("Was not able to reset search results: ", err)
 	}
 }
