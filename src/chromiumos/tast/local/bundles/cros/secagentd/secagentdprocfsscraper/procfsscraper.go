@@ -30,6 +30,9 @@ import (
 
 const cmdLineRetryTimes = 5
 
+// https://man7.org/linux/man-pages/man5/proc.5.html
+const statSize = 52
+
 var (
 	procNsRe     = regexp.MustCompile("(?m)^[a-z]+:\\[(?P<nsId>[[:digit:]]+)\\]")
 	procStatusRe = regexp.MustCompile(
@@ -196,6 +199,10 @@ func FillProc(pid uint64, p *xdr.Process) (uint64, error) {
 		return 0, err
 	}
 	statParts := strings.Split(string(buff), " ")
+
+	if len(statParts) != statSize {
+		return 0, errors.Errorf("stat file did not match expected length; got: %d, want: %d", len(statParts), statSize)
+	}
 	// 22nd entry in stat corresponds to start time which is the time the process
 	// is started after system boot. It is expressed in clock ticks.
 	startTimeTicks, err := strconv.ParseInt(statParts[21], 10, 64)
