@@ -46,14 +46,6 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to require BiosServiceClient: ", err)
 	}
 
-	s.Log("Checking for RECOVERY_MRC_CACHE region in AP firmware")
-
-	// If flashrom can read the section, that means it exists.
-	err := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "host", "-r", "-i", "RECOVERY_MRC_CACHE:/dev/null").Run()
-	if err != nil {
-		s.Fatal("Cannot find RECOVERY_MRC_CACHE section in AP firmware: ", err)
-	}
-
 	s.Log("Backing up current RECOVERY_MRC_CACHE section for safety")
 	rmcPath, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
 		Programmer: pb.Programmer_BIOSProgrammer,
