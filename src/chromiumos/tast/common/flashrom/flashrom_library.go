@@ -404,13 +404,13 @@ func (i *Instance) SoftwareWriteProtectEnableWithRange(ctx context.Context, wpRa
 	return 0, nil
 }
 
-// SoftwareWriteProtectDisable disables software write-protect.
+// SoftwareWriteProtectDisable disables software write-protect and sets the range to 0,0.
 //
 // Returns
 // output from command line execution, so that the caller can handle it if needed
 // error if it happened or nil
 func (i *Instance) SoftwareWriteProtectDisable(ctx context.Context) ([]byte, error) {
-	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--wp-disable"}
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "--wp-disable", "--wp-range=0,0"}
 	cmdArgs = i.appendVerbosityArg(cmdArgs)
 
 	out, err := i.runCommandLine(ctx, cmdArgs)
