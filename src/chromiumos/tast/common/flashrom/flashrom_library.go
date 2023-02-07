@@ -60,6 +60,9 @@ const (
 
 	// Error message for software WP status.
 	wpStatusErrorMessage = `Failed to get WP status: (.*)\n`
+
+	// Success message for non-WP operations.
+	nonwpSuccessMessage = `SUCCESS`
 )
 
 // runCommandLineRemote creates command context from given connection and runs command line with given arguments.
@@ -380,6 +383,10 @@ func (i *Instance) Read(ctx context.Context, fullSizeFilePath string, regionName
 		return out, errors.Wrapf(err, "error while reading flashrom with arguments %v", cmdArgs)
 	}
 
+	if !strings.Contains(string(out), nonwpSuccessMessage) {
+		return out, errors.Errorf("Flashrom read operation did not produce success message, cmdArgs=%v", cmdArgs)
+	}
+
 	testing.ContextLog(ctx, "Flashrom read successful: ", cmdArgs)
 
 	return out, nil
@@ -495,6 +502,10 @@ func (i *Instance) Write(ctx context.Context, fullSizeFilePath string, noverifyA
 
 	if err != nil {
 		return out, errors.Wrapf(err, "error while writing flashrom with arguments %v", cmdArgs)
+	}
+
+	if !strings.Contains(string(out), nonwpSuccessMessage) {
+		return out, errors.Errorf("Flashrom write operation did not produce success message, cmdArgs=%v", cmdArgs)
 	}
 
 	testing.ContextLog(ctx, "Flashrom write successful: ", cmdArgs)

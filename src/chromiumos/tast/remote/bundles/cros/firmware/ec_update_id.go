@@ -13,6 +13,7 @@ import (
 	"time"
 
 	common "chromiumos/tast/common/firmware"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
@@ -240,10 +241,20 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) err
 	// Temp file to hold current and later corrupted image section.
 	sectionPath := filepath.Join(tmpUpdateIDDir, fmt.Sprintf("img_%d", time.Now().Unix()))
 	testing.ContextLog(ctx, "Read WP_RO section to file ", sectionPath)
-	if out, err := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-r", "-i", fmt.Sprintf("WP_RO:%s", sectionPath)).Output(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to run flashrom cmd")
-	} else if match := regexp.MustCompile(`SUCCESS`).FindSubmatch(out); match == nil {
-		return errors.Errorf("flashrom did not produce sucess message: %s", string(out))
+
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerEc, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	if out, err := flashromInstance.Read(ctx, "", []string{fmt.Sprintf("WP_RO:%s", sectionPath)}); err != nil {
+		return errors.Wrapf(err, "failed to run flashrom cmd: %s", string(out))
 	}
 
 	testing.ContextLog(ctx, "Checking fmap")
@@ -274,10 +285,9 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) err
 	}
 
 	testing.ContextLog(ctx, "Write random file to section")
-	if out, err := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-w", "-i", fmt.Sprintf("%s:%s", section, sectionPath)).Output(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to run flashrom cmd")
-	} else if match := regexp.MustCompile(`SUCCESS`).FindSubmatch(out); match == nil {
-		return errors.Errorf("flashrom did not produce sucess message: %s", string(out))
+
+	if out, err := flashromInstance.Write(ctx, "", false, false, "", []string{fmt.Sprintf("%s:%s", section, sectionPath)}); err != nil {
+		return errors.Wrapf(err, "failed to run flashrom cmd: %s", string(out))
 	}
 
 	testing.ContextLog(ctx, "Delete temp file at path ", sectionPath)
