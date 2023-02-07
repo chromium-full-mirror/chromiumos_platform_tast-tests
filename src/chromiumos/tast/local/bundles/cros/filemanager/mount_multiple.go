@@ -198,7 +198,7 @@ func checkAndUnmountZipFile(ctx context.Context, s *testing.State, files *filesa
 	var zipContentDirectoryLabel = "Texts"
 
 	// The eject button within the appropriate tree item.
-	ejectButton := nodewith.Name("Eject device").Role(role.Button).Ancestor(zipFileNode)
+	ejectButton := nodewith.Name("Eject " + zipFile).Role(role.Button).Ancestor(zipFileNode)
 
 	// Ensure that the ZIP file has been mounted correctly,
 	if err := uiauto.Combine("check and unmount ZIP file",

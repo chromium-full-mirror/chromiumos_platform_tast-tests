@@ -227,7 +227,7 @@ func testArchive(ctx context.Context, app *filesapp.FilesApp, archive string, wa
 	}
 
 	// Find the Eject button within the appropriate tree item.
-	ejectButton := nodewith.Name("Eject device").Role(role.Button).Ancestor(archiveNode)
+	ejectButton := nodewith.Name("Eject " + archive).Role(role.Button).Ancestor(archiveNode)
 	if err := uiauto.Combine("find and click eject button - "+archive,
 		app.WithTimeout(5*time.Second).WaitUntilExists(ejectButton),
 		app.LeftClick(ejectButton),
