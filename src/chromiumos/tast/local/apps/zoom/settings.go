@@ -242,7 +242,45 @@ func (zm *Zoom) openSettings(ctx context.Context) error {
 	))(ctx)
 }
 
-// TypingInChat opens chat window and types message to chat room.
+// LayoutMode indicates the mode name of the layout that can be selected.
+type LayoutMode string
+
+const (
+	// SpeakerView is the speaker view layout mode.
+	SpeakerView LayoutMode = "Speaker View"
+	// GalleryView is the gallery view layout mode.
+	GalleryView LayoutMode = "Gallery View"
+)
+
+// ChangeLayout changes the layout to a specific mode.
+func (zm *Zoom) ChangeLayout(layoutMode LayoutMode) action.Action {
+	return func(ctx context.Context) error {
+		ui := zm.ui
+		mode := string(layoutMode)
+		viewButton := nodewith.Name("View").Role(role.Button)
+		viewMenu := nodewith.Role(role.Menu).HasClass("dropdown-menu")
+		modeNode := nodewith.Name(mode).Role(role.MenuItem)
+		// Sometimes the zoom's menu disappears too fast, add retry to show view menu.
+		showViewMenu := uiauto.Combine("show view menu",
+			zm.ShowInterface,
+			ui.LeftClickUntil(viewButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(viewMenu)))
+
+		if err := uiauto.Combine("check view menu",
+			showViewMenu,
+			ui.WithTimeout(shortUITimeout).WaitUntilExists(modeNode),
+		)(ctx); err != nil {
+			// Some DUTs don't support layout changes. ('Speacker View' and 'Gallery View')
+			testing.ContextLogf(ctx, "%q is not supported on this device, ignore changing the layout", mode)
+			return nil
+		}
+
+		return ui.Retry(3, uiauto.NamedCombine("change layout to "+mode,
+			uiauto.IfSuccessThen(ui.Gone(modeNode), showViewMenu),
+			ui.LeftClick(modeNode)))(ctx)
+	}
+}
+
+// TypingInChat opens chat panel and types message to chat box.
 func (zm *Zoom) TypingInChat(kb *input.KeyboardEventWriter, message string) action.Action {
 	ui := zm.ui
 	chatButton := nodewith.Name("open the chat pane").Role(role.Button)
