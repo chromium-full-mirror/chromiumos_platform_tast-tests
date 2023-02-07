@@ -55,7 +55,7 @@ func init() {
 			}, {
 				Name:              "lacros",
 				Fixture:           fixture.LacrosLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 			},
