@@ -9,11 +9,11 @@ type FormFactorStrap string
 
 const (
 	// FfTablet puts ti50 image into Tablet form factor mode via strapping resistors
-	FfTablet FormFactorStrap = "FF_TABLET"
+	FfTablet FormFactorStrap = "TI50_FF_TABLET"
 	// FfClamshell puts ti50 image into Clamshell form factor mode via strapping resistors
-	FfClamshell FormFactorStrap = "FF_CLAMSHELL"
+	FfClamshell FormFactorStrap = "TI50_FF_CLAMSHELL"
 	// FfBox puts ti50 image into Box form factor mode via strapping resistors
-	FfBox FormFactorStrap = "FF_BOX"
+	FfBox FormFactorStrap = "TI50_FF_BOX"
 )
 
 // StrapName returns the string the Open Titan Tool uses to interact with the gpio strap
