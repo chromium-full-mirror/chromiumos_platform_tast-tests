@@ -123,6 +123,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := cellular.EnsureUptime(ctx, uptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
 	}
+	if err := cellular.EnsureDaemonUptime(ctx, modemfwd.JobName, uptimeBeforeTest); err != nil {
+		s.Fatalf("Failed to wait for %q uptime: %s", modemfwd.JobName, err)
+	}
 	if err := cellular.SetShillVerboseLogging(ctx); err != nil {
 		s.Fatal("Failed to set shill's logging config to verbose: ", err)
 	}

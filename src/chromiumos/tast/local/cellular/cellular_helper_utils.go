@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tklauser/go-sysconf"
+
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/modemmanager"
@@ -228,6 +230,55 @@ func EnsureUptime(ctx context.Context, duration time.Duration) error {
 	if uptime < duration {
 		testing.ContextLogf(ctx, "waiting %s uptime before starting test, current uptime: %s", duration, uptime)
 		if err := testing.Sleep(ctx, duration-uptime); err != nil {
+			return errors.Wrap(err, "failed to wait for system uptime")
+		}
+	}
+	return nil
+}
+
+// EnsureDaemonUptime ensures that daemon has been up for at least the specified amount of time before returning.
+func EnsureDaemonUptime(ctx context.Context, job string, duration time.Duration) error {
+	if !upstart.JobExists(ctx, job) {
+		return nil
+	}
+	_, _, pid, err := upstart.JobStatus(ctx, job)
+	if err != nil {
+		return errors.Wrapf(err, "failed to run upstart.JobStatus for %q", job)
+	}
+	if pid == 0 {
+		return nil
+	}
+	ticksPerSecond, err := sysconf.Sysconf(sysconf.SC_CLK_TCK)
+	if err != nil {
+		return err
+	}
+	// Start time relative to boot time is found in the stat file.
+	statFilename := fmt.Sprintf("/proc/%d/stat", pid)
+	buff, err := ioutil.ReadFile(statFilename)
+	if err != nil {
+		return err
+	}
+	statParts := strings.Split(string(buff), " ")
+	// 22nd entry in stat corresponds to start time which is the time the process
+	// is started after system boot. It is expressed in clock ticks.
+	startTimeTicks, err := strconv.ParseInt(statParts[21], 10, 64)
+	if err != nil {
+		return err
+	}
+	startTimeSeconds := startTimeTicks / ticksPerSecond
+	endTime := time.Duration(startTimeSeconds)*time.Second + duration
+	uptimeStr, err := ioutil.ReadFile("/proc/uptime")
+	if err != nil {
+		return errors.Wrap(err, "failed to read system uptime")
+	}
+	uptimeFloat, err := strconv.ParseFloat(strings.Fields(string(uptimeStr))[0], 64)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse system uptime %q", string(uptimeStr))
+	}
+	uptime := time.Duration(uptimeFloat) * time.Second
+	if uptime < endTime {
+		testing.ContextLogf(ctx, "waiting for %s before starting test, current uptime: %s", (endTime - uptime), uptime)
+		if err := testing.Sleep(ctx, endTime-uptime); err != nil {
 			return errors.Wrap(err, "failed to wait for system uptime")
 		}
 	}
