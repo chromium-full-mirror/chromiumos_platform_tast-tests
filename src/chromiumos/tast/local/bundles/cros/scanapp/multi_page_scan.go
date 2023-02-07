@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/bundles/cros/scanapp/scanning"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -185,6 +186,10 @@ func MultiPageScan(ctx context.Context, s *testing.State) {
 			diffPath := filepath.Join(s.OutDir(), "multi_page_scan_diff.txt")
 			if err := document.CompareFiles(ctx, scan, s.DataPath(test.goldenFile), diffPath); err != nil {
 				s.Error("Scan differs from golden file: ", err)
+				saveScanPath := filepath.Join(s.OutDir(), test.name+filepath.Ext(scan))
+				if err := fsutil.MoveFile(scan, saveScanPath); err != nil {
+					s.Error("Unable to preserve scanned file output: ", err)
+				}
 			}
 		})
 	}
