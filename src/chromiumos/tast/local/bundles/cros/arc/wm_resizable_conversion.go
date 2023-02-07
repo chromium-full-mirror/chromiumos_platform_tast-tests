@@ -538,8 +538,8 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 			return testing.PollBreak(errors.Wrap(err, "failed to get arc app window info for over activity"))
 		}
 
-		if overActivityWInfo.State != ash.WindowStateLeftSnapped {
-			return errors.Errorf("invalid window state: got %+v; want LeftSnapped", overActivityWInfo.State)
+		if overActivityWInfo.State != ash.WindowStatePrimarySnapped {
+			return errors.Errorf("invalid window state: got %+v; want PrimarySnapped", overActivityWInfo.State)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
@@ -557,8 +557,8 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 			return testing.PollBreak(errors.Wrap(err, "failed to get arc app window info for under activity"))
 		}
 
-		if underActivityWInfo.State != ash.WindowStateRightSnapped {
-			return errors.Errorf("invalid window state: got %+v; want RightSnapped", underActivityWInfo.State)
+		if underActivityWInfo.State != ash.WindowStateSecondarySnapped {
+			return errors.Errorf("invalid window state: got %+v; want SecondarySnapped", underActivityWInfo.State)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
@@ -650,8 +650,8 @@ func checkClamshellSplit(ctx context.Context, tconn *chrome.TestConn) error {
 			return errors.Wrap(err, "failed to get arc app window info for left activity")
 		}
 
-		if leftWInfo.State != ash.WindowStateLeftSnapped {
-			return errors.Errorf("invlaid window state: got %+v; want LeftSnapped", leftWInfo.State)
+		if leftWInfo.State != ash.WindowStatePrimarySnapped {
+			return errors.Errorf("invlaid window state: got %+v; want PrimarySnapped", leftWInfo.State)
 		}
 
 		rightWInfo, err := ash.GetARCAppWindowInfo(ctx, tconn, wm.Pkg24)
@@ -659,8 +659,8 @@ func checkClamshellSplit(ctx context.Context, tconn *chrome.TestConn) error {
 			return errors.Wrap(err, "failed to get arc app window info for right activity")
 		}
 
-		if rightWInfo.State != ash.WindowStateRightSnapped {
-			return errors.Errorf("invalid window state: got %+v; want RightSnapped", rightWInfo.State)
+		if rightWInfo.State != ash.WindowStateSecondarySnapped {
+			return errors.Errorf("invalid window state: got %+v; want SecondarySnapped", rightWInfo.State)
 		}
 
 		displayWorkArea := pdInfo.WorkArea

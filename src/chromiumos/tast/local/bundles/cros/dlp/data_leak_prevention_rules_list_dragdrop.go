@@ -175,7 +175,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 				s.Fatalf("Failed to find the %s window in the overview mode: %v", param.srcURL, err)
 			}
 
-			if err := ash.SetWindowStateAndWait(ctx, tconn, w1.ID, ash.WindowStateRightSnapped); err != nil {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, w1.ID, ash.WindowStateSecondarySnapped); err != nil {
 				s.Fatalf("Failed to snap the %s window to the right: %v", param.srcURL, err)
 			}
 
@@ -185,7 +185,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 				s.Fatalf("Failed to find the %s window in the overview mode: %v", dstURL, err)
 			}
 
-			if err := ash.SetWindowStateAndWait(ctx, tconn, w2.ID, ash.WindowStateLeftSnapped); err != nil {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, w2.ID, ash.WindowStatePrimarySnapped); err != nil {
 				s.Fatalf("Failed to snap the %s window to the left: %v", dstURL, err)
 			}
 

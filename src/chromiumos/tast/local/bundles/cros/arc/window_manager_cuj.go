@@ -886,8 +886,8 @@ func wmSnapping(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.D
 		if window.BoundsInRoot.Left != 0 {
 			return errors.Errorf("invalid window origin: got %d, want 0", window.BoundsInRoot.Left)
 		}
-		if window.State != ash.WindowStateLeftSnapped {
-			return errors.Errorf("invalid window state: got %s, want WindowStateLeftSnapped", window.State)
+		if window.State != ash.WindowStatePrimarySnapped {
+			return errors.Errorf("invalid window state: got %s, want WindowStatePrimarySnapped", window.State)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})

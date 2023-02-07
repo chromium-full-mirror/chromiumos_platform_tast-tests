@@ -195,8 +195,7 @@ func WindowSnapAndRotate(ctx context.Context, s *testing.State) {
 		if err = dragWindowTo(ctx, tconn, windows[0].ID, topSnappedPoint, 0); err != nil {
 			s.Fatal("Failed to drag to snap top: ", err)
 		}
-		// TODO(crbug/1264617): Rename left and right snapped to primary and secondary snapped.
-		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStateLeftSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStatePrimarySnapped); err != nil {
 			s.Fatal("Failed to snap top: ", err)
 		}
 
@@ -211,11 +210,11 @@ func WindowSnapAndRotate(ctx context.Context, s *testing.State) {
 		}
 
 		// After snap both windows, tests their state.
-		if err = verifyState(ctx, tconn, windows[1].ID, ash.WindowStateRightSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[1].ID, ash.WindowStateSecondarySnapped); err != nil {
 			s.Fatal("The first window lost top-snapped state after snapping the second window to the bottom: ", err)
 		}
 		// Make sure the first window still remains primary snapped.
-		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStateLeftSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStatePrimarySnapped); err != nil {
 			s.Fatal("Failed to snap bottom: ", err)
 		}
 	} else {
@@ -235,10 +234,10 @@ func WindowSnapAndRotate(ctx context.Context, s *testing.State) {
 		}
 
 		// Test states of windows after being snapped.
-		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStateLeftSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStatePrimarySnapped); err != nil {
 			s.Fatal("Failed to snap left: ", err)
 		}
-		if err = verifyState(ctx, tconn, windows[1].ID, ash.WindowStateRightSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[1].ID, ash.WindowStateSecondarySnapped); err != nil {
 			s.Fatal("Failed to snap right: ", err)
 		}
 	}
@@ -251,10 +250,10 @@ func WindowSnapAndRotate(ctx context.Context, s *testing.State) {
 		if err = display.SetDisplayRotationSync(ctx, tconn, info.ID, rot); err != nil {
 			s.Fatal("Failed to rotate display: ", err)
 		}
-		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStateLeftSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[0].ID, ash.WindowStatePrimarySnapped); err != nil {
 			s.Fatalf("The first window lost primary snapped state after rotating %d times to rotation = %v: %v", i, rot, err)
 		}
-		if err = verifyState(ctx, tconn, windows[1].ID, ash.WindowStateRightSnapped); err != nil {
+		if err = verifyState(ctx, tconn, windows[1].ID, ash.WindowStateSecondarySnapped); err != nil {
 			s.Fatalf("The second window lost primary snapped state after rotating %d times to rotation = %v: %v", i, rot, err)
 		}
 	}

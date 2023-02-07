@@ -54,7 +54,7 @@ func InputCheckDefocusing(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find diagnostics window: ", err)
 	}
-	ash.SetWindowStateAndWait(ctx, tconn, diagnosticsWindow.ID, ash.WindowStateLeftSnapped)
+	ash.SetWindowStateAndWait(ctx, tconn, diagnosticsWindow.ID, ash.WindowStatePrimarySnapped)
 
 	conn, err := cr.NewConn(ctx, "https://www.google.com")
 	if err != nil {
@@ -67,7 +67,7 @@ func InputCheckDefocusing(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find browser window: ", err)
 	}
-	ash.SetWindowStateAndWait(ctx, tconn, chromeWindow.ID, ash.WindowStateRightSnapped)
+	ash.SetWindowStateAndWait(ctx, tconn, chromeWindow.ID, ash.WindowStateSecondarySnapped)
 
 	// Finds the browser window and shifts focus to it
 	focusBrowserWindow := func(ctx context.Context) error {

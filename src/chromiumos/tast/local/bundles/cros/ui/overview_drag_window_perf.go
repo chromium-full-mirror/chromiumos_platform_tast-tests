@@ -216,7 +216,7 @@ func dragToSnap(ctx context.Context, tsw *input.TouchscreenEventWriter,
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get snapped windows"))
 		}
-		if len(snapped) != 1 || snapped[0].State != ash.WindowStateLeftSnapped {
+		if len(snapped) != 1 || snapped[0].State != ash.WindowStatePrimarySnapped {
 			return errors.New("left snapped window not found")
 		}
 		return nil

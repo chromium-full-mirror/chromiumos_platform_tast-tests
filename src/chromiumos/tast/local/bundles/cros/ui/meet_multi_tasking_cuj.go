@@ -256,7 +256,7 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 
 	rightSnapAllWindows := func() error {
 		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateRightSnapped)
+			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateSecondarySnapped)
 		}); err != nil {
 			return errors.Wrap(err, "failed to turn all windows into right snapped state")
 		}
@@ -265,8 +265,8 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 
 	leftSnapNonRightSnappedWindows := func() error {
 		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			if w.State != ash.WindowStateRightSnapped {
-				return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateLeftSnapped)
+			if w.State != ash.WindowStateSecondarySnapped {
+				return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStatePrimarySnapped)
 			}
 			return nil
 		}); err != nil {

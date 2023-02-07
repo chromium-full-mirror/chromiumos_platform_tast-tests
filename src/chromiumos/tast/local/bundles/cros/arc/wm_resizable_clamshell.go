@@ -723,8 +723,8 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 			return testing.PollBreak(errors.Wrap(err, "failed to get arc app window info for left activity"))
 		}
 
-		if leftWInfo.State != ash.WindowStateLeftSnapped {
-			return errors.Errorf("invalid window state: got %q; want LeftSnapped", leftWInfo.State)
+		if leftWInfo.State != ash.WindowStatePrimarySnapped {
+			return errors.Errorf("invalid window state: got %q; want PrimarySnapped", leftWInfo.State)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
@@ -792,8 +792,8 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 			return testing.PollBreak(errors.Wrap(err, "failed to get arc app window info for right activity"))
 		}
 
-		if rightWInfo.State != ash.WindowStateRightSnapped {
-			return errors.Errorf("invalid window state: got %q; want RightSnapped", rightWInfo.State)
+		if rightWInfo.State != ash.WindowStateSecondarySnapped {
+			return errors.Errorf("invalid window state: got %q; want SecondarySnapped", rightWInfo.State)
 		}
 
 		pdInfo, err := display.GetPrimaryInfo(ctx, tconn)

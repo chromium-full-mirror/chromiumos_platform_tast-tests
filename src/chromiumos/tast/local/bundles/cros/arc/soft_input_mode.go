@@ -138,11 +138,11 @@ func SoftInputMode(ctx context.Context, s *testing.State) {
 		}
 		defer secondAct.Stop(ctx, tconn)
 
-		if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, secondAct.PackageName(), ash.WindowStateRightSnapped); err != nil {
+		if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, secondAct.PackageName(), ash.WindowStateSecondarySnapped); err != nil {
 			s.Fatal("Failed to snap app in split view: ", err)
 		}
 
-		if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, firstAct.PackageName(), ash.WindowStateLeftSnapped); err != nil {
+		if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, firstAct.PackageName(), ash.WindowStatePrimarySnapped); err != nil {
 			s.Fatal("Failed to snap app in split view: ", err)
 		}
 

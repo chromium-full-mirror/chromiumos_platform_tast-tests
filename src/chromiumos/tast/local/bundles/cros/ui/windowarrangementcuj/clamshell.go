@@ -193,7 +193,7 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 		return errors.Wrap(err, "failed to snap the browser window to the left")
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == browserWinID && w.State == ash.WindowStateLeftSnapped && !w.IsAnimating
+		return w.ID == browserWinID && w.State == ash.WindowStatePrimarySnapped && !w.IsAnimating
 	}, &testing.PollOptions{Timeout: timeout}); err != nil {
 		return errors.Wrap(err, "failed to wait for browser window to be left snapped")
 	}
@@ -226,8 +226,8 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 		if len(ws) != 2 {
 			return errors.Errorf("should be 2 windows, got %v", len(ws))
 		}
-		if (ws[1].State == ash.WindowStateLeftSnapped && ws[0].State == ash.WindowStateRightSnapped) ||
-			(ws[0].State == ash.WindowStateLeftSnapped && ws[1].State == ash.WindowStateRightSnapped) {
+		if (ws[1].State == ash.WindowStatePrimarySnapped && ws[0].State == ash.WindowStateSecondarySnapped) ||
+			(ws[0].State == ash.WindowStatePrimarySnapped && ws[1].State == ash.WindowStateSecondarySnapped) {
 			return nil
 		}
 		return errors.New("browser windows are not snapped yet")

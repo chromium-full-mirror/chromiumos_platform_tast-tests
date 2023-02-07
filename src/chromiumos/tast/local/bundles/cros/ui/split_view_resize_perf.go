@@ -226,7 +226,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 					return errors.Wrapf(err, "failed to tap the center of %d", id1)
 				}
 				if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-					return w.ID == id1 && !w.IsAnimating && w.State == ash.WindowStateRightSnapped
+					return w.ID == id1 && !w.IsAnimating && w.State == ash.WindowStateSecondarySnapped
 				}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 					return errors.Wrap(err, "failed to wait for the condition")
 				}
@@ -336,7 +336,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 
 				// id0 supposed to have the window id which is left-snapped.
 				id0 = w.ID
-				if err := ash.SetWindowStateAndWait(ctx, tconn, id0, ash.WindowStateLeftSnapped); err != nil {
+				if err := ash.SetWindowStateAndWait(ctx, tconn, id0, ash.WindowStatePrimarySnapped); err != nil {
 					s.Fatal("Failed to snap window: ", err)
 				}
 			}
@@ -378,7 +378,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 						pc.Drag(dragPoints[0], gestures...),
 						func(ctx context.Context) error {
 							return ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-								return w.ID == id0 && !w.IsAnimating && w.State == ash.WindowStateLeftSnapped
+								return w.ID == id0 && !w.IsAnimating && w.State == ash.WindowStatePrimarySnapped
 							}, &testing.PollOptions{Timeout: 2 * time.Second})
 						},
 					),

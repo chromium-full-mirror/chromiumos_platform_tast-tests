@@ -1144,9 +1144,9 @@ func (s WindowState) ToAshWindowState() (ash.WindowStateType, error) {
 	case WindowStateMinimized:
 		return ash.WindowStateMinimized, nil
 	case WindowStatePrimarySnapped:
-		return ash.WindowStateLeftSnapped, nil
+		return ash.WindowStatePrimarySnapped, nil
 	case WindowStateSecondarySnapped:
-		return ash.WindowStateRightSnapped, nil
+		return ash.WindowStateSecondarySnapped, nil
 	case WindowStatePIP:
 		return ash.WindowStatePIP, nil
 	default:

@@ -104,11 +104,11 @@ func SplitChromeTabsTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	expectedNumWindows := 2
-	if err := dragToSnap(ctx, tconn, pc, expectedNumWindows, ash.WindowStateRightSnapped); err != nil {
+	if err := dragToSnap(ctx, tconn, pc, expectedNumWindows, ash.WindowStateSecondarySnapped); err != nil {
 		s.Fatal("Failed to drag to snap right: ", err)
 	}
 
-	if err := dragToSnap(ctx, tconn, pc, expectedNumWindows+1, ash.WindowStateLeftSnapped); err != nil {
+	if err := dragToSnap(ctx, tconn, pc, expectedNumWindows+1, ash.WindowStatePrimarySnapped); err != nil {
 		s.Fatal("Failed to drag to snap left: ", err)
 	}
 }
@@ -125,7 +125,7 @@ func dragToSnap(ctx context.Context, tconn *chrome.TestConn, pc pointer.Context,
 		return errors.Wrap(err, "failed to get the primary display info")
 	}
 	snapPoint := coords.NewPoint(info.WorkArea.Right()-1, info.WorkArea.CenterY())
-	if snappedState == ash.WindowStateLeftSnapped {
+	if snappedState == ash.WindowStatePrimarySnapped {
 		snapPoint = coords.NewPoint(info.WorkArea.Left, info.WorkArea.CenterY())
 	}
 

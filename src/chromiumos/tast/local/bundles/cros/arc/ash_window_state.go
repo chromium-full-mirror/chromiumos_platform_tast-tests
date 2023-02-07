@@ -88,8 +88,8 @@ func AshWindowState(ctx context.Context, s *testing.State) {
 
 		// Remaining tests
 		{ash.WMEventMaximize, ash.WindowStateMaximized},
-		{ash.WMEventSnapLeft, ash.WindowStateLeftSnapped},
-		{ash.WMEventSnapRight, ash.WindowStateRightSnapped},
+		{ash.WMEventSnapLeft, ash.WindowStatePrimarySnapped},
+		{ash.WMEventSnapRight, ash.WindowStateSecondarySnapped},
 		{ash.WMEventMinimize, ash.WindowStateMinimized},
 	} {
 		s.Logf("Sending event %s to Settings app", test.wmEvent)

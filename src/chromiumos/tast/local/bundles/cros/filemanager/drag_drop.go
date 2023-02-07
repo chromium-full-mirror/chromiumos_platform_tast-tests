@@ -111,7 +111,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to wait for PWA window to appear: ", err)
 	}
-	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateRightSnapped); err != nil {
+	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateSecondarySnapped); err != nil {
 		s.Fatal("Failed to snap Test PWA to the right: ", err)
 	}
 	// After the window has been snapped to the right the bounds change. However,
@@ -147,7 +147,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to wait for Files app window to appear: ", err)
 	}
-	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateLeftSnapped); err != nil {
+	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStatePrimarySnapped); err != nil {
 		s.Fatal("Failed to snap Files app to the left: ", err)
 	}
 

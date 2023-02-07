@@ -232,10 +232,10 @@ func putWindowSideBySide(tconn *chrome.TestConn) action.Action {
 		if len(windows) != 2 {
 			return errors.Errorf("expect 2 windows but got %d", len(windows))
 		}
-		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[0].ID, ash.WindowStateRightSnapped); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[0].ID, ash.WindowStateSecondarySnapped); err != nil {
 			return errors.Wrap(err, "failed to snap first window to the right")
 		}
-		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[1].ID, ash.WindowStateLeftSnapped); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[1].ID, ash.WindowStatePrimarySnapped); err != nil {
 			return errors.Wrap(err, "failed to snap second window to the left")
 		}
 

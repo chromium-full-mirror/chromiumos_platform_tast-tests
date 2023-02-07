@@ -245,7 +245,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
-		return !window.IsAnimating && window.State == ash.WindowStateLeftSnapped && window1.ID == window.ID
+		return !window.IsAnimating && window.State == ash.WindowStatePrimarySnapped && window1.ID == window.ID
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for primary-snapped window: ", err)
 	}
@@ -268,7 +268,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
-		return !window.IsAnimating && window.State == ash.WindowStateRightSnapped && window.ID == window2.ID
+		return !window.IsAnimating && window.State == ash.WindowStateSecondarySnapped && window.ID == window2.ID
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for secondary-snapped window: ", err)
 	}
@@ -294,7 +294,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
-		return !window.IsAnimating && window.State == ash.WindowStateRightSnapped && window.ID == window2.ID
+		return !window.IsAnimating && window.State == ash.WindowStateSecondarySnapped && window.ID == window2.ID
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for secondary-snapped window: ", err)
 	}
@@ -317,7 +317,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
-		return !window.IsAnimating && window.State == ash.WindowStateRightSnapped && window.ID == fileWindow2ID
+		return !window.IsAnimating && window.State == ash.WindowStateSecondarySnapped && window.ID == fileWindow2ID
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for a new window to replace the secondary-snapped window: ", err)
 	}

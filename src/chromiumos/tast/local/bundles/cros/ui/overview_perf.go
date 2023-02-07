@@ -221,7 +221,7 @@ func doTestCase(
 			return errors.Wrap(err, "found no windows")
 		}
 
-		if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStateLeftSnapped); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStatePrimarySnapped); err != nil {
 			return errors.Wrap(err, "failed to snap window")
 		}
 

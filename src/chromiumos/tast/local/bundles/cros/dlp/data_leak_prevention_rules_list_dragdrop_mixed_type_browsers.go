@@ -210,18 +210,18 @@ func DataLeakPreventionRulesListDragdropMixedTypeBrowsers(ctx context.Context, s
 			}
 
 			// Snap the param.srcURL window to the right.
-			browserWin, err := snapFirstWindowInOverview(ctx, tconn, ash.WindowStateRightSnapped)
+			browserWin, err := snapFirstWindowInOverview(ctx, tconn, ash.WindowStateSecondarySnapped)
 			if err != nil {
 				s.Fatalf("Failed to snap the %s window to the right: %s", srcURL, err)
 			}
 
 			// Snap the destination window to the left.
-			_, err = snapFirstWindowInOverview(ctx, tconn, ash.WindowStateLeftSnapped)
+			_, err = snapFirstWindowInOverview(ctx, tconn, ash.WindowStatePrimarySnapped)
 			if err != nil {
 				s.Fatalf("Failed to snap the %s window to the left: %s", dstURL, err)
 			}
 
-			if err := ash.SetWindowStateAndWait(ctx, tconn, browserWin.ID, ash.WindowStateRightSnapped); err != nil {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, browserWin.ID, ash.WindowStateSecondarySnapped); err != nil {
 				s.Fatal("Failed to move the browser window to the right: ", err)
 			}
 

@@ -30,16 +30,20 @@ type WindowStateType string
 // As defined in chromeos::WindowStateType here:
 // https://cs.chromium.org/chromium/src/chromeos/ui/base/window_state_type.h
 const (
-	WindowStateDefault      WindowStateType = "Default"
-	WindowStateNormal       WindowStateType = "Normal"
-	WindowStateMinimized    WindowStateType = "Minimized"
-	WindowStateMaximized    WindowStateType = "Maximized"
-	WindowStateFullscreen   WindowStateType = "Fullscreen"
-	WindowStateLeftSnapped  WindowStateType = "LeftSnapped"
-	WindowStateRightSnapped WindowStateType = "RightSnapped"
-	WindowStatePIP          WindowStateType = "PIP"
-	WindowStateFloated      WindowStateType = "Floated"
+	WindowStateDefault          WindowStateType = "Default"
+	WindowStateNormal           WindowStateType = "Normal"
+	WindowStateMinimized        WindowStateType = "Minimized"
+	WindowStateMaximized        WindowStateType = "Maximized"
+	WindowStateFullscreen       WindowStateType = "Fullscreen"
+	WindowStatePrimarySnapped   WindowStateType = "PrimarySnapped"
+	WindowStateSecondarySnapped WindowStateType = "SecondarySnapped"
+	WindowStatePIP              WindowStateType = "PIP"
+	WindowStateFloated          WindowStateType = "Floated"
 )
+
+// WindowStateLeftSnapped is a temporaily alternative to WindowStatePrimarySnapped.
+// TODO(b/252512988): Tast test private repo still uses left snapped. Remove this once it has been updated.
+const WindowStateLeftSnapped = WindowStatePrimarySnapped
 
 // WMEventType represents the different WM Event type in Ash.
 type WMEventType string
@@ -202,13 +206,13 @@ type Window struct {
 var defaultPollOptions = &testing.PollOptions{Timeout: 30 * time.Second}
 
 var stateToWmTypes = map[WindowStateType]WMEventType{
-	WindowStateNormal:       WMEventNormal,
-	WindowStateMinimized:    WMEventMinimize,
-	WindowStateMaximized:    WMEventMaximize,
-	WindowStateFullscreen:   WMEventFullscreen,
-	WindowStateLeftSnapped:  WMEventSnapLeft,
-	WindowStateRightSnapped: WMEventSnapRight,
-	WindowStateFloated:      WMEventFloat,
+	WindowStateNormal:           WMEventNormal,
+	WindowStateMinimized:        WMEventMinimize,
+	WindowStateMaximized:        WMEventMaximize,
+	WindowStateFullscreen:       WMEventFullscreen,
+	WindowStatePrimarySnapped:   WMEventSnapLeft,
+	WindowStateSecondarySnapped: WMEventSnapRight,
+	WindowStateFloated:          WMEventFloat,
 }
 
 // WMEventTypeForState returns the WMEventType to turn a window into the given
@@ -253,8 +257,19 @@ func SetWindowStateAndWait(ctx context.Context, tconn *chrome.TestConn, id int, 
 		return errors.Wrap(err, "failed to set the window state")
 	}
 	if gotState != targetState {
-		return errors.Errorf("failed to set the window state: got %v want %v", gotState, targetState)
+		// TODO(b/252512988): Autotest API currently still uses left and right for primary and secondary. The gotState
+		// may not match targetState only because autotest API has not been updated yet.
+		const (
+			primarySnapAlternateName   = "LeftSnapped"
+			secondarySnapAlternateName = "RightSnapped"
+		)
+		var primaryCorrect = (targetState == WindowStatePrimarySnapped && gotState == primarySnapAlternateName)
+		var secondaryCorrect = (targetState == WindowStateSecondarySnapped && gotState == secondarySnapAlternateName)
+		if !primaryCorrect && !secondaryCorrect {
+			return errors.Errorf("failed to set the window state: got %v want %v", gotState, targetState)
+		}
 	}
+
 	if err = WaitWindowFinishAnimating(ctx, tconn, id); err != nil {
 		return errors.Wrap(err, "failed to wait for the window animation")
 	}
@@ -806,7 +821,7 @@ func SnappedWindows(ctx context.Context, tconn *chrome.TestConn) ([]*Window, err
 
 	var snapped []*Window
 	for _, w := range windows {
-		if w.State == WindowStateLeftSnapped || w.State == WindowStateRightSnapped {
+		if w.State == WindowStatePrimarySnapped || w.State == WindowStateSecondarySnapped {
 			snapped = append(snapped, w)
 		}
 	}

@@ -1137,10 +1137,10 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if collaborationRE == nil {
 				return errors.New("need a collaboration window for split view")
 			}
-			if err := ash.SetWindowStateAndWait(ctx, tconn, collaborationWindow.ID, ash.WindowStateLeftSnapped); err != nil {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, collaborationWindow.ID, ash.WindowStatePrimarySnapped); err != nil {
 				return errors.Wrap(err, "failed to snap the collaboration window to the left")
 			}
-			if err := ash.SetWindowStateAndWait(ctx, tconn, meetWindow.ID, ash.WindowStateRightSnapped); err != nil {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, meetWindow.ID, ash.WindowStateSecondarySnapped); err != nil {
 				return errors.Wrap(err, "failed to snap the Meet window to the right")
 			}
 		} else {

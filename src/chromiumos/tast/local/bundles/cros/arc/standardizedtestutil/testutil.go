@@ -136,8 +136,8 @@ func GetClamshellTest(fn TestFunc) Test {
 		WindowStates: []WindowState{
 			{Name: "Full Screen", WindowStateType: ash.WindowStateFullscreen},
 			{Name: "Normal", WindowStateType: ash.WindowStateNormal},
-			{Name: "Snapped left", WindowStateType: ash.WindowStateLeftSnapped},
-			{Name: "Snapped right", WindowStateType: ash.WindowStateRightSnapped},
+			{Name: "Snapped primary", WindowStateType: ash.WindowStatePrimarySnapped},
+			{Name: "Snapped secondary", WindowStateType: ash.WindowStateSecondarySnapped},
 		},
 		InTabletMode: false,
 	}

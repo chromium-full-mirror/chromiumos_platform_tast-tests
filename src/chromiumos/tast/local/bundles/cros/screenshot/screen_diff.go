@@ -131,7 +131,7 @@ func ScreenDiff(ctx context.Context, s *testing.State) {
 	}
 	defer revert(cleanupCtx)
 
-	if err := d.DiffWindow(ctx, "filesAppSplit", screenshot.WindowState(ash.WindowStateLeftSnapped), screenshot.Retries(4))(ctx); err != nil {
+	if err := d.DiffWindow(ctx, "filesAppSplit", screenshot.WindowState(ash.WindowStatePrimarySnapped), screenshot.Retries(4))(ctx); err != nil {
 		s.Fatal("Failed to diff tablet window: ", err)
 	}
 }

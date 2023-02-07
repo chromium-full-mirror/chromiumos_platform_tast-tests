@@ -133,9 +133,9 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Left Half button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStateLeftSnapped && !w.IsAnimating
+		return w.ID == bw.ID && w.State == ash.WindowStatePrimarySnapped && !w.IsAnimating
 	}, &pollOpts); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateLeftSnapped, err)
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStatePrimarySnapped, err)
 	}
 
 	// Test that the right "Half" button snaps the window to the right.
@@ -147,9 +147,9 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Right Half button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == bw.ID && w.State == ash.WindowStateRightSnapped && !w.IsAnimating
+		return w.ID == bw.ID && w.State == ash.WindowStateSecondarySnapped && !w.IsAnimating
 	}, &pollOpts); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateRightSnapped, err)
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateSecondarySnapped, err)
 	}
 }
 

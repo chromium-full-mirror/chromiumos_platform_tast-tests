@@ -158,7 +158,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		s.Fatal("Launching the Files App failed: ", err)
 	}
 	defer files.Close(cleanupCtx)
-	filesWindow, err := setWindowState(ctx, tconn, "Files - My files", ash.WindowStateLeftSnapped)
+	filesWindow, err := setWindowState(ctx, tconn, "Files - My files", ash.WindowStatePrimarySnapped)
 	if err != nil {
 		s.Fatal("Failed to set Files App left-snapped: ", err)
 	}
@@ -212,7 +212,7 @@ func dragFromFilesApp(ctx context.Context, pre crostini.FixtureData, files *file
 	if err := cmd.Start(); err != nil {
 		return errors.Wrapf(err, "command %v", cmdArgs)
 	}
-	dropAppletWindow, err := setWindowState(ctx, tconn, dropAppletTitle, ash.WindowStateRightSnapped)
+	dropAppletWindow, err := setWindowState(ctx, tconn, dropAppletTitle, ash.WindowStateSecondarySnapped)
 	if err != nil {
 		return errors.Wrap(err, "set drop app right-snapped")
 	}
@@ -251,7 +251,7 @@ func dragFromCrostini(ctx context.Context, pre crostini.FixtureData, files *file
 		return errors.Wrapf(err, "command %v", cmdArgs)
 	}
 	defer cmd.Wait(testexec.DumpLogOnError)
-	dragAppletWindow, err := setWindowState(ctx, tconn, dragAppletTitle, ash.WindowStateRightSnapped)
+	dragAppletWindow, err := setWindowState(ctx, tconn, dragAppletTitle, ash.WindowStateSecondarySnapped)
 	if err != nil {
 		return errors.Wrap(err, "set drag app right-snapped")
 	}

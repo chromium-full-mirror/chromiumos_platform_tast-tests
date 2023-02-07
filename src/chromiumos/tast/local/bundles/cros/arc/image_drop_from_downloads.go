@@ -102,7 +102,7 @@ func ImageDropFromDownloads(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to start the activity %q", activityName)
 	}
 
-	if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, pkg, ash.WindowStateRightSnapped); err != nil {
+	if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, pkg, ash.WindowStateSecondarySnapped); err != nil {
 		s.Fatal("Failed to snap the activity: ", err)
 	}
 

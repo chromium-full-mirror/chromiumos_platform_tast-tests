@@ -128,12 +128,12 @@ func WindowResizePerf(ctx context.Context, s *testing.State) {
 			continue
 		}
 		id0 := ws[0].ID
-		if err := ash.SetWindowStateAndWait(ctx, tconn, id0, ash.WindowStateLeftSnapped); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, id0, ash.WindowStatePrimarySnapped); err != nil {
 			s.Fatalf("Failed to set the state of window (%d): %v", id0, err)
 		}
 		if len(ws) > 1 {
 			id1 := ws[1].ID
-			if err := ash.SetWindowStateAndWait(ctx, tconn, id1, ash.WindowStateRightSnapped); err != nil {
+			if err := ash.SetWindowStateAndWait(ctx, tconn, id1, ash.WindowStateSecondarySnapped); err != nil {
 				s.Fatalf("Failed to set the state of window (%d): %v", id1, err)
 			}
 		}

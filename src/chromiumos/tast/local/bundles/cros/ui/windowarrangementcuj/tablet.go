@@ -201,8 +201,8 @@ func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome
 		if len(ws) != 2 {
 			return errors.Errorf("should be 2 windows, got %v", len(ws))
 		}
-		if (ws[1].State == ash.WindowStateLeftSnapped && ws[0].State == ash.WindowStateRightSnapped) ||
-			(ws[0].State == ash.WindowStateLeftSnapped && ws[1].State == ash.WindowStateRightSnapped) {
+		if (ws[1].State == ash.WindowStatePrimarySnapped && ws[0].State == ash.WindowStateSecondarySnapped) ||
+			(ws[0].State == ash.WindowStatePrimarySnapped && ws[1].State == ash.WindowStateSecondarySnapped) {
 			return nil
 		}
 		return errors.New("browser windows are not snapped yet")

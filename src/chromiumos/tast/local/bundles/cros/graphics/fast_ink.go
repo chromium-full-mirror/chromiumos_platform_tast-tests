@@ -167,8 +167,8 @@ func init() {
 				},
 				wStates: []ash.WindowStateType{
 					ash.WindowStateNormal,
-					ash.WindowStateLeftSnapped,
-					ash.WindowStateRightSnapped,
+					ash.WindowStatePrimarySnapped,
+					ash.WindowStateSecondarySnapped,
 					ash.WindowStateMaximized,
 					ash.WindowStateFullscreen,
 				}},
@@ -186,8 +186,8 @@ func init() {
 				},
 				wStates: []ash.WindowStateType{
 					ash.WindowStateMaximized,
-					ash.WindowStateLeftSnapped,
-					ash.WindowStateRightSnapped,
+					ash.WindowStatePrimarySnapped,
+					ash.WindowStateSecondarySnapped,
 					ash.WindowStateFullscreen,
 				}},
 		}, {
@@ -206,9 +206,9 @@ func init() {
 				},
 				wStates: []ash.WindowStateType{
 					ash.WindowStateNormal,
-					ash.WindowStateLeftSnapped,
+					ash.WindowStatePrimarySnapped,
 					ash.WindowStateMaximized,
-					ash.WindowStateRightSnapped,
+					ash.WindowStateSecondarySnapped,
 					ash.WindowStateFullscreen,
 				}},
 		}, {
@@ -226,9 +226,9 @@ func init() {
 					display.Rotate180,
 				},
 				wStates: []ash.WindowStateType{
-					ash.WindowStateLeftSnapped,
+					ash.WindowStatePrimarySnapped,
 					ash.WindowStateMaximized,
-					ash.WindowStateRightSnapped,
+					ash.WindowStateSecondarySnapped,
 					ash.WindowStateFullscreen,
 				}},
 		}, {
@@ -332,9 +332,9 @@ func init() {
 				},
 				wStates: []ash.WindowStateType{
 					ash.WindowStateNormal,
-					ash.WindowStateLeftSnapped,
+					ash.WindowStatePrimarySnapped,
 					ash.WindowStateMaximized,
-					ash.WindowStateRightSnapped,
+					ash.WindowStateSecondarySnapped,
 					ash.WindowStateFullscreen,
 				}},
 		}, {
@@ -352,9 +352,9 @@ func init() {
 					display.Rotate180,
 				},
 				wStates: []ash.WindowStateType{
-					ash.WindowStateLeftSnapped,
+					ash.WindowStatePrimarySnapped,
 					ash.WindowStateMaximized,
-					ash.WindowStateRightSnapped,
+					ash.WindowStateSecondarySnapped,
 					ash.WindowStateFullscreen,
 				}},
 		}},

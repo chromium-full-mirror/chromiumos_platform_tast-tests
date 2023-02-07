@@ -135,7 +135,7 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find video window: ", err)
 	}
 
-	if err := ash.SetWindowStateAndWait(ctx, tconn, videoWin.ID, ash.WindowStateRightSnapped); err != nil {
+	if err := ash.SetWindowStateAndWait(ctx, tconn, videoWin.ID, ash.WindowStateSecondarySnapped); err != nil {
 		s.Error("Failed to snap first blank window to the right: ", err)
 	}
 
@@ -172,7 +172,7 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find docs window: ", err)
 	}
 
-	if err := ash.SetWindowStateAndWait(ctx, tconn, docsWin.ID, ash.WindowStateLeftSnapped); err != nil {
+	if err := ash.SetWindowStateAndWait(ctx, tconn, docsWin.ID, ash.WindowStatePrimarySnapped); err != nil {
 		s.Error("Failed to snap second blank window to the left: ", err)
 	}
 

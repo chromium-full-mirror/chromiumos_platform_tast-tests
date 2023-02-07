@@ -82,7 +82,7 @@ func SnapPerf(ctx context.Context, s *testing.State) {
 
 	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		// Snap the window to the left.
-		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateLeftSnapped); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStatePrimarySnapped); err != nil {
 			return err
 		}
 
@@ -92,7 +92,7 @@ func SnapPerf(ctx context.Context, s *testing.State) {
 		}
 
 		// Snap the window to the right.
-		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateRightSnapped); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateSecondarySnapped); err != nil {
 			return err
 		}
 
