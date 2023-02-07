@@ -275,6 +275,23 @@ func loadScripts(ctx context.Context, conn *chrome.Conn, scriptPaths []string) e
 			return err
 		}
 	}
+	if err := loadNewScripts(ctx, conn); err != nil {
+		return err
+	}
+	return nil
+}
+
+// loadNewScripts loads the necessary scripts for running tests in CCA.
+// TODO(b/242800694): Rename this function to "loadScripts" and remove the
+// existing one once the migration completed.
+func loadNewScripts(ctx context.Context, conn *chrome.Conn) error {
+	code := `(async function() {
+		const {CCATest} = await import('/js/test/cca_test.js');
+		window.CCATest = CCATest;
+	})()`
+	if err := conn.Eval(ctx, code, nil); err != nil {
+		return errors.Wrap(err, "failed to load scripts from CCA")
+	}
 	return nil
 }
 
@@ -405,7 +422,7 @@ func (a *App) CloseWithDebugParams(ctx context.Context, params DebugParams) (ret
 		a.appWindow = nil
 	}(cleanupCtx)
 
-	if err := a.conn.Eval(ctx, "Tast.removeCacheData()", nil); err != nil {
+	if err := a.conn.Eval(ctx, "CCATest.removeCacheData()", nil); err != nil {
 		return errors.Wrap(err, "failed to clear cached data in local storage")
 	}
 
@@ -436,7 +453,7 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	code := fmt.Sprintf("Tast.isVideoActive() === %t", active)
+	code := fmt.Sprintf("CCATest.isVideoActive() === %t", active)
 	if err := a.conn.WaitForExpr(ctx, code); err != nil {
 		if a.cameraType != testutil.UseFakeVCDCamera {
 			if jobErr := upstart.CheckJob(cleanupCtx, "cros-camera"); jobErr != nil {
@@ -538,47 +555,38 @@ func (a *App) CheckVideoInactive(ctx context.Context) error {
 
 // RestoreWindow restores the window, exiting a maximized, minimized, or fullscreen state.
 func (a *App) RestoreWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "Tast.restoreWindow()", nil)
+	return a.conn.Eval(ctx, "CCATest.restoreWindow()", nil)
 }
 
 // MinimizeWindow minimizes the window.
 func (a *App) MinimizeWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "Tast.minimizeWindow()", nil)
+	return a.conn.Eval(ctx, "CCATest.minimizeWindow()", nil)
 }
 
 // MaximizeWindow maximizes the window.
 func (a *App) MaximizeWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "Tast.maximizeWindow()", nil)
+	return a.conn.Eval(ctx, "CCATest.maximizeWindow()", nil)
 }
 
 // FullscreenWindow fullscreens the window.
 func (a *App) FullscreenWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "Tast.fullscreenWindow()", nil)
+	return a.conn.Eval(ctx, "CCATest.fullscreenWindow()", nil)
 }
 
 // GetNumOfCameras returns number of camera devices.
 func (a *App) GetNumOfCameras(ctx context.Context) (int, error) {
 	var numCameras int
-	err := a.conn.Eval(ctx, "Tast.getNumOfCameras()", &numCameras)
+	err := a.conn.Eval(ctx, "CCATest.getNumOfCameras()", &numCameras)
 	return numCameras, err
 }
 
 // GetFacing returns the active camera facing.
 func (a *App) GetFacing(ctx context.Context) (Facing, error) {
 	var facing Facing
-	if err := a.conn.Eval(ctx, "Tast.getFacing()", &facing); err != nil {
+	if err := a.conn.Eval(ctx, "CCATest.getFacing()", &facing); err != nil {
 		return "", err
 	}
 	return facing, nil
-}
-
-// GetPreviewResolution returns resolution of preview video.
-func (a *App) GetPreviewResolution(ctx context.Context) (Resolution, error) {
-	r := Resolution{-1, -1}
-	if err := a.conn.Eval(ctx, "Tast.getPreviewResolution()", &r); err != nil {
-		return r, errors.Wrap(err, "failed to get preview resolution")
-	}
-	return r, nil
 }
 
 // GetPreviewViewportSize returns resolution of the preview view port.
@@ -593,34 +601,16 @@ func (a *App) GetPreviewViewportSize(ctx context.Context) (Resolution, error) {
 // GetScreenOrientation returns screen orientation.
 func (a *App) GetScreenOrientation(ctx context.Context) (Orientation, error) {
 	var orientation Orientation
-	if err := a.conn.Eval(ctx, "Tast.getScreenOrientation()", &orientation); err != nil {
+	if err := a.conn.Eval(ctx, "CCATest.getScreenOrientation()", &orientation); err != nil {
 		return "", errors.Wrap(err, "failed to get screen orientation")
 	}
 	return orientation, nil
 }
 
-// GetPhotoResolutions returns available photo resolutions of active camera on HALv3 device.
-func (a *App) GetPhotoResolutions(ctx context.Context) ([]Resolution, error) {
-	var rs []Resolution
-	if err := a.conn.Eval(ctx, "Tast.getPhotoResolutions()", &rs); err != nil {
-		return nil, errors.Wrap(err, "failed to get photo resolution")
-	}
-	return rs, nil
-}
-
-// GetVideoResolutions returns available video resolutions of active camera on HALv3 device.
-func (a *App) GetVideoResolutions(ctx context.Context) ([]Resolution, error) {
-	var rs []Resolution
-	if err := a.conn.Eval(ctx, "Tast.getVideoResolutions()", &rs); err != nil {
-		return nil, errors.Wrap(err, "failed to get video resolution")
-	}
-	return rs, nil
-}
-
 // GetDeviceID returns the active camera device id.
 func (a *App) GetDeviceID(ctx context.Context) (DeviceID, error) {
 	var id DeviceID
-	if err := a.conn.Eval(ctx, "Tast.getDeviceId()", &id); err != nil {
+	if err := a.conn.Eval(ctx, "CCATest.getDeviceId()", &id); err != nil {
 		return "", err
 	}
 	return id, nil
@@ -641,7 +631,7 @@ func (a *App) PreviewFrame(ctx context.Context) (*Frame, error) {
 		return nil, errors.Wrap(err, "failed to wait for preview active")
 	}
 	var f chrome.JSObject
-	if err := a.conn.Call(ctx, &f, "Tast.getPreviewFrame"); err != nil {
+	if err := a.conn.Call(ctx, &f, "CCATest.getPreviewFrame"); err != nil {
 		return nil, errors.Wrap(err, "failed to get preview frame")
 	}
 	return &Frame{&f}, nil
@@ -989,7 +979,12 @@ func (a *App) SaveCameraFolder(ctx context.Context) error {
 
 // CheckFacing returns an error if the active camera facing is not expected.
 func (a *App) CheckFacing(ctx context.Context, expected Facing) error {
-	return a.conn.Call(ctx, nil, "Tast.checkFacing", expected)
+	if facing, err := a.GetFacing(ctx); err != nil {
+		return err
+	} else if facing != expected {
+		return errors.Errorf("expected facing: %v; actual: %v", expected, facing)
+	}
+	return nil
 }
 
 // Mirrored returns whether mirroring is on.
@@ -1578,7 +1573,7 @@ func (a *App) ReturnFocusedElementAriaLabel(ctx context.Context) (string, error)
 
 // Focus sets focus on CCA App window.
 func (a *App) Focus(ctx context.Context) error {
-	return a.conn.Eval(ctx, "Tast.focusWindow()", nil)
+	return a.conn.Eval(ctx, "CCATest.focusWindow()", nil)
 }
 
 // Refresh refreshes CCA.

@@ -57,35 +57,6 @@ window.Tast = class Tast {
     return state.get(s);
   }
 
-  static isVideoActive() {
-    const video = Tast.previewVideo;
-    return video && video.srcObject && video.srcObject.active;
-  }
-
-  static isMinimized() {
-    return windowController.isMinimized();
-  }
-
-  static restoreWindow() {
-    return windowController.restore();
-  }
-
-  static minimizeWindow() {
-    return windowController.minimize();
-  }
-
-  static maximizeWindow() {
-    return windowController.maximize();
-  }
-
-  static fullscreenWindow() {
-    return windowController.fullscreen();
-  }
-
-  static focusWindow() {
-    return windowController.focus();
-  }
-
   /**
    * @param {number} ms
    * @return {!Promise}
@@ -94,13 +65,6 @@ window.Tast = class Tast {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
     });
-  }
-
-  /**
-   * @return {string}
-   */
-  static getScreenOrientation() {
-    return window.screen.orientation.type;
   }
 
   /**
@@ -285,14 +249,6 @@ window.Tast = class Tast {
   }
 
   /**
-   * Removes all the cached data in chrome.storage.local.
-   * @return {Promise}
-   */
-  static removeCacheData() {
-    return localStorage.clear();
-  }
-
-  /**
    * Gets whether portrait mode is supported by current active video stream.
    * @return {Promise<boolean>}
    */
@@ -306,142 +262,12 @@ window.Tast = class Tast {
   }
 
   /**
-   * Gets number of cameras.
-   * @return {number}
-   */
-  static async getNumOfCameras() {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices
-        .filter((d) => d.kind === 'videoinput' &&
-                       !d.label.startsWith('Virtual Camera'))
-        .length;
-  }
-
-  /**
-   * Checks whether facing is as expected.
-   * @param {string} expected Expected facing
-   * @return {Promise} The promise resolves successfully if the check passes.
-   */
-  static async checkFacing(expected) {
-    const actual = await Tast.getFacing();
-    if (actual === expected) {
-      return;
-    }
-    throw new Error(`Expected facing: ${expected}; actual: ${actual};`);
-  }
-
-  /**
-   * Gets facing of current active camera device.
-   * @return {string} The facing string 'user', 'environment', 'external'.
-   *     Returns 'unknown' if current device does not support device operator.
-   */
-  static async getFacing() {
-    const track = Tast.previewVideo.srcObject.getVideoTracks()[0];
-    const deviceOperator = await DeviceOperator.getInstance();
-    if (!deviceOperator) {
-      const facing = track.getSettings().facingMode;
-      return facing ? facing : 'unknown';
-    }
-    const facing =
-        await deviceOperator.getCameraFacing(track.getSettings().deviceId);
-    switch (facing) {
-      case Facing.USER:
-      case Facing.ENVIRONMENT:
-      case Facing.EXTERNAL:
-        return facing;
-      default:
-        throw new Error('Unexpected CameraFacing value: ' + facing);
-    }
-  }
-
-  /**
-   * Gets device id of current active camera device.
-   * @return {string} Device id of current active camera.
-   * @throws {Error} Failed to get device id from video stream.
-   */
-  static getDeviceId() {
-    const video = Tast.previewVideo;
-    if (!video) {
-      throw new Error('Cannot find video element.');
-    }
-    const stream = video.srcObject;
-    if (!stream) {
-      throw new Error('No MediaStream associate to video.');
-    }
-    const track = stream.getVideoTracks()[0];
-    if (!track) {
-      throw new Error('No video track associate to MediaStream.');
-    }
-    return track.getSettings().deviceId;
-  }
-
-  /**
-   * @return {Promise<!DeviceOperator>}
-   * @throws {LegacyVCDError}
-   */
-  static async getDeviceOperator() {
-    if (!await DeviceOperator.isSupported()) {
-      throw new LegacyVCDError();
-    }
-    return await DeviceOperator.getInstance();
-  }
-
-  /**
-   * Gets resolution of preview video.
-   * @throws {LegacyVCDError}
-   * @return {!Promise<!Array<Resolution>>}
-   */
-  static getPreviewResolution() {
-    const video = Tast.previewVideo;
-    return {width: video.videoWidth, height: video.videoHeight};
-  }
-
-  /**
    * Gets resolution of the preview view port.
    * @throws {LegacyVCDError}
    * @return {!Resolution}
    */
    static getPreviewViewportSize() {
     return Tast.getSize('#preview-viewport');
-  }
-
-  /**
-   * Gets resolution of preview video.
-   * @throws {LegacyVCDError}
-   * @return {!Promise<!CanvasRenderingContext2D>}
-   */
-  static getPreviewFrame() {
-    const video = Tast.previewVideo;
-    const canvas =
-        new OffscreenCanvas(video.videoWidth, video.videoHeight);
-    const ctx =
-        /** @type {!CanvasRenderingContext2D} */ (canvas.getContext('2d'));
-    ctx.drawImage(video, 0, 0);
-    return ctx;
-  }
-
-  /**
-   * Gets supported photo resolution of current active camera device.
-   * @throws {LegacyVCDError}
-   * @return {!Promise<!Array<Resolution>>}
-   */
-  static async getPhotoResolutions() {
-    const deviceOperator = await Tast.getDeviceOperator();
-    const deviceId = Tast.getDeviceId();
-    return await deviceOperator.getPhotoResolutions(deviceId);
-  }
-
-  /**
-   * Gets supported video resolution of current active camera device.
-   * @throws {LegacyVCDError}
-   * @return {!Promise<!Array<Resolution>>}
-   */
-  static async getVideoResolutions() {
-    const deviceOperator = await Tast.getDeviceOperator();
-    const deviceId = Tast.getDeviceId();
-    return (await deviceOperator.getVideoConfigs(deviceId))
-        .filter(({maxFps}) => maxFps >= 24)
-        .map(({width, height}) => ({width, height}));
   }
 
   /**
