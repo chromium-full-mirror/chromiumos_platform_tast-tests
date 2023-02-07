@@ -80,15 +80,13 @@ func FreezeFUSE(ctx context.Context, s *testing.State) {
 	// Without the freeze ordering patches, suspend is more likely to fail than
 	// not, so attempt 5 times to balance reproducing the bug with test runtime
 	// (about 1 minute 15 seconds per attempt).
-	const suspendAttempts = 5
-	for i := 0; i < suspendAttempts; i++ {
-		if _, err := fc.TestMountZipAndSuspend(ctx, &fmpb.TestMountZipAndSuspendRequest{
-			User:        s.RequiredVar("filemanager.user"),
-			Password:    s.RequiredVar("filemanager.password"),
-			ZipDataPath: remoteZipPath,
-		}); err != nil {
-			s.Fatal("Failed to TestMountZipAndSuspend: ", err)
-		}
+	if _, err := fc.TestMountZipAndSuspend(ctx, &fmpb.TestMountZipAndSuspendRequest{
+		User:        s.RequiredVar("filemanager.user"),
+		Password:    s.RequiredVar("filemanager.password"),
+		ZipDataPath: remoteZipPath,
+		Iterations:  5,
+	}); err != nil {
+		s.Fatal("Failed to TestMountZipAndSuspend: ", err)
 	}
 
 	// Reboot the device to prevent the double extend PCR0 issue. See b/179548408.

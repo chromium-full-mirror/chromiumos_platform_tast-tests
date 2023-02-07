@@ -14,6 +14,7 @@ message TestMountZipAndSuspendRequest {
     string user = 1;
     string password = 2;
     string zip_data_path = 3;
+    int32 iterations = 4;
 }
 
 // FreezeFUSEService is the service for FreezeFUSE

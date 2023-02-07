@@ -25,6 +25,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/shill"
 	fmpb "chromiumos/tast/services/cros/filemanager"
 	"chromiumos/tast/testing"
 )
@@ -47,8 +48,6 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	// Create a new Chrome instance since |tconn| doesn't survive suspend/resume.
-	// TODO(crbug.com/1168360): Don't restart Chrome after tconn survives suspend/resume.
 	cr, err := chrome.New(
 		ctx,
 		chrome.GAIALogin(chrome.Creds{User: request.GetUser(), Pass: request.GetPassword()}),
@@ -135,22 +134,32 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 		return nil, errors.Wrap(err, "Unable to start archive stress script")
 	}
 
-	// Read wakeup count here to prevent suspend retries, which happen without user input.
-	wakeupCount, err := ioutil.ReadFile("/sys/power/wakeup_count")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read wakeup count before suspend")
+	for i := int32(1); i <= request.Iterations; i++ {
+		// Read wakeup count here to prevent suspend retries, which happen without user input.
+		wakeupCount, err := ioutil.ReadFile("/sys/power/wakeup_count")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read wakeup count before suspend")
+		}
+
+		// Suspend for 45 seconds since the stress script slows us down.
+		// This gives freeze during suspend enough time to timeout in 20s.
+		testing.ContextLogf(ctx, "Attempting suspend iteration %d", i)
+		if err := testexec.CommandContext(
+			ctx,
+			"powerd_dbus_suspend",
+			fmt.Sprintf("--wakeup_count=%s", strings.Trim(string(wakeupCount), "\n")),
+			"--timeout=30",
+			"--suspend_for_sec=45").Run(); err != nil {
+			return nil, errors.Wrap(err, "powerd_dbus_suspend failed to properly suspend")
+		}
+
+		if err := shill.WaitForOnline(ctx); err != nil {
+			return nil, errors.Wrap(err, "timed out waiting for the network to connect after resume")
+		}
+
+		// Allow some time for the server to connect to the DUT.
+		testing.Sleep(ctx, 5*time.Second)
 	}
 
-	// Suspend for 45 seconds since the stress script slows us down.
-	// This gives freeze during suspend enough time to timeout in 20s.
-	testing.ContextLog(ctx, "Attempting suspend")
-	if err := testexec.CommandContext(
-		ctx,
-		"powerd_dbus_suspend",
-		fmt.Sprintf("--wakeup_count=%s", strings.Trim(string(wakeupCount), "\n")),
-		"--timeout=30",
-		"--suspend_for_sec=45").Run(); err != nil {
-		return nil, errors.Wrap(err, "powerd_dbus_suspend failed to properly suspend")
-	}
 	return &empty.Empty{}, lastErr
 }
