@@ -236,7 +236,13 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 	} else {
 		f.postFunc = append(f.postFunc, func(ctx context.Context) error {
 			defer sysLogReader.Close()
-			return checkHangs(ctx, sysLogReader)
+			if err := checkHangs(ctx, sysLogReader); err != nil {
+				if sErr := DumpGraphicsDebugFiles(ctx, s.OutDir()); sErr != nil {
+					return errors.Wrap(err, sErr.Error())
+				}
+				return err
+			}
+			return nil
 		})
 	}
 }

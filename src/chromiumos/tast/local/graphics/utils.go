@@ -18,6 +18,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/testing"
 )
 
@@ -517,4 +518,31 @@ func GetHangCheckTimer(ctx context.Context) (time.Duration, error) {
 		return -1, errors.Wrapf(err, "malformed content in %s: %s", p, s)
 	}
 	return time.Duration(d) * time.Millisecond, nil
+}
+
+// DumpGraphicsDebugFiles saves graphics related debug files to outDir.
+func DumpGraphicsDebugFiles(ctx context.Context, outDir string) error {
+	// Save files under /sys/kernel/debug/dri
+	for _, opt := range []struct {
+		name     string
+		optional bool
+	}{{
+		name:     "i915_error_state",
+		optional: true,
+	}} {
+		file, err := GetValidKernelDriverDebugFile(ctx, []string{opt.name})
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to find %v: %v", opt.name, err)
+			if !opt.optional {
+				return errors.Wrapf(err, "failed to find %v", opt.name)
+			}
+			continue
+		}
+		destName := filepath.Join(outDir, opt.name)
+		testing.ContextLogf(ctx, "from %v to %v", file, destName)
+		if err = fsutil.CopyFile(file, destName); err != nil {
+			return err
+		}
+	}
+	return nil
 }
