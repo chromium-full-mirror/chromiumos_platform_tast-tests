@@ -94,9 +94,7 @@ func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 	cham, err := graphics.ChameleonGetConnection(ctx)
 
 	defer func(ctx context.Context, s *testing.State, cham chameleon.Chameleond) {
-		if s.HasError() {
-			graphics.ChameleonPrintLogs(ctx, cham)
-		}
+		graphics.ChameleonSaveLogsAndOutputOnError(ctx, cham, s.HasError(), s.OutDir())
 	}(ctx, s, cham)
 
 	if err != nil {

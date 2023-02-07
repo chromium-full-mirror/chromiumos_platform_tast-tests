@@ -11,6 +11,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -322,12 +323,20 @@ func ChameleonPerceptualDiff(ctx context.Context, imagePath1, imagePath2, outDir
 	return true, nil
 }
 
-// ChameleonPrintLogs gets the Chameleond logs since the last time it was called.
-func ChameleonPrintLogs(ctx context.Context, cham chameleon.Chameleond) {
+// ChameleonSaveLogsAndOutputOnError get the logs from Chameleon and saves to chameleon_logs.txt file. If there is an error, it prints the logs to stdout as well.
+func ChameleonSaveLogsAndOutputOnError(ctx context.Context, cham chameleon.Chameleond, isError bool, outDir string) {
 	logs, err := cham.GetChameleondLogs(ctx, chameleonLogsCursorName)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get and print Chameleon logs: ", err)
-	} else {
+		logs = "Failed to get and print Chameleon logs" + err.Error()
+	}
+
+	if isError {
 		testing.ContextLog(ctx, "Chameleon logs: ", logs)
 	}
+	if err := ioutil.WriteFile(filepath.Join(outDir, "chameleon_logs.txt"),
+		[]byte(logs), 0644); err != nil {
+		testing.ContextLog(ctx, "Failed to write Chameleon logs: ", err)
+	}
+
 }
