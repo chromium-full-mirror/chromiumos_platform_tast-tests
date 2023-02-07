@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
@@ -115,6 +116,10 @@ func CCAUIVolumeShutter(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second*5)
+	defer cancel()
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
@@ -129,16 +134,16 @@ func CCAUIVolumeShutter(ctx context.Context, s *testing.State) {
 
 	vh, err := newVolumeHelper(ctx)
 	if err != nil {
+		if err := crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir()); err != nil {
+			s.Error("Failed to dump audio diagnostics: ", err)
+		}
 		s.Fatal("Failed to create the volumeHelper: ", err)
 	}
+
 	originalVolume, err := vh.refreshVolume(ctx)
 	if err := vh.setVolume(ctx, 50); err != nil {
 		s.Fatal("Failed to set volume to 50 percents: ", err)
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second*5)
-	defer cancel()
 
 	defer func(ctx context.Context) {
 		if err := vh.setVolume(ctx, originalVolume); err != nil {

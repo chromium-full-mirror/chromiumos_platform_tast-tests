@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/audionode"
 	"chromiumos/tast/local/audio/crastestclient"
@@ -80,6 +81,11 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 	param := s.Param().(volumeControlParam)
 	cr := s.PreValue().(*chrome.Chrome)
 
+	// Give 10 seconds to cleanup other resources.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	kb, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
@@ -120,12 +126,12 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create test API connection: ", err)
 		}
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 		files, err := filesapp.Launch(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to launch the Files App: ", err)
 		}
-		defer files.Close(ctx)
+		defer files.Close(cleanupCtx)
 		if err := files.OpenDownloads()(ctx); err != nil {
 			s.Fatal("Failed to open Downloads folder in files app: ", err)
 		}
@@ -134,7 +140,7 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 		}
 		// Closing the audio player.
 		defer func() {
-			if kb.Accel(ctx, "Ctrl+W"); err != nil {
+			if kb.Accel(cleanupCtx, "Ctrl+W"); err != nil {
 				s.Error("Failed to close Audio player: ", err)
 			}
 		}()
@@ -163,6 +169,9 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 
 	vh, err := audionode.NewVolumeHelper(ctx)
 	if err != nil {
+		if err := crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir()); err != nil {
+			s.Error("Failed to dump audio diagnostics: ", err)
+		}
 		s.Fatal("Failed to create the volumeHelper: ", err)
 	}
 	originalVolume, err := vh.ActiveNodeVolume(ctx)

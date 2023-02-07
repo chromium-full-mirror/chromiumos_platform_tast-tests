@@ -86,6 +86,9 @@ func YoutubeStreamCUJ(ctx context.Context, s *testing.State) {
 
 	vh, err := audio.NewVolumeHelper(ctx)
 	if err != nil {
+		if err := crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir()); err != nil {
+			s.Error("Failed to dump audio diagnostics: ", err)
+		}
 		s.Error("Failed to create the volumeHelper: ", err)
 	}
 	originalVolume, err := vh.GetVolume(ctx)

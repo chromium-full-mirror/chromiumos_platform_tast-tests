@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/spera/videoconfproxy"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -146,6 +147,9 @@ func VideoConfProxy(ctx context.Context, s *testing.State) {
 		p.TraceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
 	if err := videoconfproxy.Run(ctx, cr, p); err != nil {
+		if err := crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir()); err != nil {
+			s.Error("Failed to dump audio diagnostics: ", err)
+		}
 		s.Fatal("Failed to run video conference proxy cuj: ", err)
 	}
 }
