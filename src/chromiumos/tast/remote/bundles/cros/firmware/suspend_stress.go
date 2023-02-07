@@ -47,7 +47,7 @@ func init() {
 const (
 	minResuspendResumeTime = 2
 	maxResuspendResumeTime = 8 // Sets time range between [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime).
-	suspendDuration        = 10
+	suspendDuration        = 15
 	powerdDelayDur         = 3
 )
 
@@ -55,6 +55,10 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
+	}
+
+	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 
 	// Number of iterations to run stress test for.
@@ -120,8 +124,10 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			logFailure("Failed to initiate suspend on DUT", err, i)
 		}
 
+		h.DisconnectDUT(ctx)
+
 		s.Log("Checking for S0ix or S3 powerstate")
-		if err := h.WaitForPowerStates(ctx, 500*time.Millisecond, time.Duration(suspendDuration+powerdDelayDur)*time.Second, "S0ix", "S3"); err != nil {
+		if err := h.WaitForPowerStates(ctx, 250*time.Millisecond, time.Duration(suspendDuration+powerdDelayDur)*time.Second, "S0ix", "S3"); err != nil {
 			logFailure("Failed to get S0ix or S3 powerstate after suspend", err, i)
 		}
 
@@ -129,6 +135,10 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Log("Checking for S0 powerstate")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 			logFailure("Failed to get S0 powerstate after waking from suspend", err, i)
+		}
+
+		if err := h.WaitConnect(ctx); err != nil {
+			logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
 		}
 
 		// Note the original autotest for power_SuspendStress only ran these at the end of the test, but here it runs every iteration.
