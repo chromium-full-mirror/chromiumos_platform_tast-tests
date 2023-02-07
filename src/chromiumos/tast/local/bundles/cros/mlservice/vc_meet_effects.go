@@ -129,7 +129,7 @@ func VCMeetEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
-	vcTray, err := vctray.New(ctx, tconn)
+	vcTray := vctray.New(ctx, tconn)
 
 	if err := uiauto.Combine("configure effects via mcpanel",
 		vcTray.ExpandPanel,

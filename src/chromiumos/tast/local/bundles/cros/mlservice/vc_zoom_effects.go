@@ -120,7 +120,7 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch on camera: ", err)
 	}
 
-	vcTray, err := vctray.New(ctx, tconn)
+	vcTray := vctray.New(ctx, tconn)
 
 	if err := uiauto.Combine("configure effects via mcpanel",
 		vcTray.ExpandPanel,

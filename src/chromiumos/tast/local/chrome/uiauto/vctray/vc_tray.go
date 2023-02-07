@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -42,11 +43,8 @@ type VCTray struct {
 
 // New creates a new instance of VC tray.
 // It returns error if the VC tray is not present.
-func New(ctx context.Context, tconn *chrome.TestConn) (*VCTray, error) {
-	if err := uiauto.New(tconn).WithTimeout(3 * time.Second).WaitUntilExists(vcTraySection)(ctx); err != nil {
-		return nil, errors.Wrap(err, "vcTray is not present")
-	}
-	return &VCTray{tconn, uiauto.New(tconn)}, nil
+func New(ctx context.Context, tconn *chrome.TestConn) *VCTray {
+	return &VCTray{tconn, uiauto.New(tconn)}
 }
 
 // ExpandPanel clicks the up-arrow button in VC tray section to expand the panel.
@@ -59,6 +57,10 @@ func (vcTray VCTray) ExpandPanel(ctx context.Context) error {
 		return nil
 	}
 
+	// ShowHotseat makes sure hotseat is shown in tablet mode.
+	if err := ash.ShowHotseat(ctx, vcTray.tconn); err != nil {
+		return errors.Wrap(err, "failed to show hotseat")
+	}
 	return vcTray.ui.DoDefaultUntil(expandButton, vcTray.ui.WithTimeout(3*time.Second).WaitUntilExists(panelSection))(ctx)
 }
 
