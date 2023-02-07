@@ -941,20 +941,22 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 		return errors.Wrap(err, "requiring servo")
 	}
 
-	// Stainless reported thermal shutdown on some dedede duts while they
-	// were booting into recovery mode. Check for the temperature information
-	// before power-off for debugging purposes.
-	out, err := h.DUT.Conn().CommandContext(ctx, "ectool", "temps", "all").Output()
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to run ectool: ", err)
-	}
-	temps := strings.Split(strings.TrimSpace(string(out)), "\n")
-	if len(temps) < 2 {
-		testing.ContextLog(ctx, "Did not find temperature data")
-	} else {
-		testing.ContextLog(ctx, "Found temperature data")
-		for _, val := range temps {
-			testing.ContextLog(ctx, val)
+	if h.DUT.Connected(ctx) {
+		// Stainless reported thermal shutdown on some dedede duts while they
+		// were booting into recovery mode. Check for the temperature information
+		// before power-off for debugging purposes.
+		out, err := h.DUT.Conn().CommandContext(ctx, "ectool", "temps", "all").Output()
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to run ectool: ", err)
+		}
+		temps := strings.Split(strings.TrimSpace(string(out)), "\n")
+		if len(temps) < 2 {
+			testing.ContextLog(ctx, "Did not find temperature data")
+		} else {
+			testing.ContextLog(ctx, "Found temperature data")
+			for _, val := range temps {
+				testing.ContextLog(ctx, val)
+			}
 		}
 	}
 
@@ -1050,17 +1052,19 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 	if err := h.CloseRPCConnection(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to close rpc connection: ", err)
 	}
-	// Since the DUT will power off, deadline exceeded is expected here.
-	if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		return errors.Wrap(err, "DUT poweroff")
-	}
+	if h.DUT.Connected(ctx) {
+		// Since the DUT will power off, deadline exceeded is expected here.
+		if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			return errors.Wrap(err, "DUT poweroff")
+		}
 
-	// Try reading the power state from the EC.
-	err := h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3", "S5")
-	if err == nil {
-		return nil
+		// Try reading the power state from the EC.
+		err := h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3", "S5")
+		if err == nil {
+			return nil
+		}
+		testing.ContextLogf(ctx, "Failed to get G3 or S5 power state: %s", err)
 	}
-	testing.ContextLogf(ctx, "Failed to get G3 or S5 power state: %s", err)
 
 	// We didn't reach G3/S5 so try having servo power off instead.
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
