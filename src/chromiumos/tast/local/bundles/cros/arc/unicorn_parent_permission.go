@@ -6,18 +6,20 @@ package arc
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
+	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/familylink"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/testing"
 )
 
@@ -49,17 +51,22 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		askinPersonButtonText  = "Ask in person"
 		installButtonText      = "install"
 		playStoreSearchText    = "Search for apps & games"
-		appName                = "Instagram"
+		appPkgName             = "com.instagram.android"
 	)
 	parentUser := s.RequiredVar("arc.parentUser")
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 
+	// Use a shortened context for test operations to reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
+	defer cancel()
+
 	st, err := arc.GetState(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get ARC state: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	if st.Provisioned {
 		s.Log("ARC is already provisioned. Skipping the Play Store setup")
 		if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
@@ -72,43 +79,41 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to optin to Play Store and Close: ", err)
 		}
 	}
-	if err := launcher.LaunchApp(tconn, apps.PlayStore.Name)(ctx); err != nil {
-		s.Fatal("Failed to launch Play Store")
-	}
-	defer apps.Close(ctx, tconn, apps.PlayStore.ID)
 
 	// Setup ARC.
 	a, err := arc.New(ctx, s.OutDir())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
-	defer a.Close(ctx)
+	defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), s.HasError)
+	defer a.Close(cleanupCtx)
 
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
-	defer d.Close(ctx)
+	defer d.Close(cleanupCtx)
 
-	// Try on Install Some Games App.
-	searchText := d.Object(ui.ClassName("android.widget.TextView"), ui.Text(playStoreSearchText))
-	if err := searchText.WaitForExists(ctx, 90*time.Second); err != nil {
-		s.Fatal("searchText doesn't exist: ", err)
+	// Start screen recording for easier to debug failures.
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create ScreenRecorder: ", err)
 	}
-	if err := searchText.Click(ctx); err != nil {
-		s.Fatal("Failed to click on searchText: ", err)
+	if screenRecorder == nil {
+		s.Fatal("Screen recorder was not found")
+	}
+	if err := screenRecorder.Start(ctx, tconn); err != nil {
+		s.Fatal("Failed to start screen recorder: ", err)
 	}
 
-	searchTextEdit := d.Object(ui.ClassName("android.widget.EditText"), ui.Text(playStoreSearchText))
-	if err := searchTextEdit.SetText(ctx, appName); err != nil {
-		s.Fatal("Failed to set text to search: ", err)
-	}
-	if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
-		s.Fatal("Failed to click on KEYCODE_ENTER button: ", err)
+	defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
+
+	if err := playstore.OpenAppPage(ctx, a, appPkgName); err != nil {
+		s.Fatal("Failed to open the app page in Play Store: ", err)
 	}
 
 	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText), ui.Enabled(true))
-	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
+	if err := installButton.WaitForExists(ctx, 30*time.Second); err != nil {
 		s.Fatal("Install Button Exisits: ", err)
 	}
 
