@@ -96,7 +96,15 @@ func TabletModePowerOffMenu(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Long press the power button.
-	emitter := &power.PowerManagerEmitter{}
+	emitter, err := power.NewPowerManagerEmitter(ctx)
+	if err != nil {
+		s.Fatal("Unable to create power manager emitter: ", err)
+	}
+	defer func(cleanupCtx context.Context) {
+		if err := emitter.Stop(cleanupCtx); err != nil {
+			s.Log("Unable to stop emitter: ", err)
+		}
+	}(cleanupCtx)
 	eventType := pmpb.InputEvent_POWER_BUTTON_DOWN
 	if err := emitter.EmitInputEvent(ctx, &pmpb.InputEvent{Type: &eventType}); err != nil {
 		s.Fatal("Send POWER_BUTTON_DOWN failed: ", err)
