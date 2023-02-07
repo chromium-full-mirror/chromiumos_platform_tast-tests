@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/playstore"
+	"chromiumos/tast/local/bundles/cros/arc/datamigration"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/cryptohome"
@@ -175,19 +176,17 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	}
 	defer accHelper.CleanUp(cleanupCtx)
 
-	// Ensure to sign out before executing mountVaultWithArchivedHomeData().
+	// Ensure to sign out before executing MountVaultWithArchivedHomeData().
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		return rl.Exit("sign out", err)
 	}
 
 	// Unarchive the home data under vault before signing in.
-	if err := mountVaultWithArchivedHomeData(ctx, homeDataPath, acc.Username, acc.Password); err != nil {
+	cleanupFunc, err := datamigration.MountVaultWithArchivedHomeData(ctx, homeDataPath, acc.Username, acc.Password)
+	if err != nil {
 		return rl.Exit("mount home with archived data", err)
 	}
-	defer func() {
-		cryptohome.UnmountVault(cleanupCtx, acc.Username)
-		cryptohome.RemoveVault(cleanupCtx, acc.Username)
-	}()
+	defer cleanupFunc(cleanupCtx)
 
 	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
 
@@ -281,40 +280,6 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 		return rl.Exit("verify GMS Core version", err)
 	}
 
-	return nil
-}
-
-func mountVaultWithArchivedHomeData(ctx context.Context, homeDataPath, username, password string) error {
-	// Unmount and mount vault for the user.
-	if err := cryptohome.UnmountVault(ctx, username); err != nil {
-		return err
-	}
-	if err := cryptohome.RemoveVault(ctx, username); err != nil {
-		return err
-	}
-	if err := cryptohome.CreateVault(ctx, username, password); err != nil {
-		return err
-	}
-	success := false
-	defer func() {
-		if !success {
-			cryptohome.UnmountVault(ctx, username)
-			cryptohome.RemoveVault(ctx, username)
-		}
-	}()
-
-	vaultPath, err := cryptohome.MountedVaultPath(ctx, username)
-	if err != nil {
-		return err
-	}
-
-	testing.ContextLogf(ctx, "Unarchiving home data %q under %q", homeDataPath, vaultPath)
-	if err := testexec.CommandContext(
-		ctx, "tar", "--xattrs", "--selinux", "-C", vaultPath, "-xjf", homeDataPath).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to unarchive home data under vault")
-	}
-
-	success = true
 	return nil
 }
 
