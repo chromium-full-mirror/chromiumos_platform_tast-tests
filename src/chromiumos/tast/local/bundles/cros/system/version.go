@@ -20,10 +20,11 @@ func init() {
 		Func: Version,
 		Desc: "Reports various component versions from the system image",
 		Contacts: []string{
-			"pwang@chromium.org",
+			"chromeos-performance-eng+bugs@google.com",
+			"pwang@chromium.org", // test author
 		},
-		// b/267781987: Disable unclaimed Tast tests
-		// Attr: []string{"group:mainline", "group:graphics", "graphics_perbuild"},
+		BugComponent: "b:497108", // ChromeOS > Platform > System > Health Monitoring > Bisector
+		Attr:         []string{"group:mainline", "group:graphics", "graphics_perbuild"},
 	})
 }
 
