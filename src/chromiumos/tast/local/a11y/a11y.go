@@ -193,7 +193,7 @@ func (cv *ChromeVoxConn) SetVoice(ctx context.Context, vd VoiceData) error {
 	}
 	for _, voice := range voices {
 		if voice.ExtID == vd.ExtID && voice.Locale == vd.Locale {
-			expr := fmt.Sprintf(`chrome.storage.local.set({'voiceName': '%s'});`, voice.Name)
+			expr := fmt.Sprintf(`chrome.settingsPrivate.setPref('settings.a11y.chromevox.voice_name', %q);`, voice.Name)
 			if err := cv.Eval(ctx, expr, nil); err != nil {
 				return err
 			}
