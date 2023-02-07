@@ -105,46 +105,19 @@ func (conf *ZoomConference) GetParticipants(ctx context.Context) (int, error) {
 // SetLayoutMax sets the conference UI layout to max tiled grid.
 func (conf *ZoomConference) SetLayoutMax(ctx context.Context) error {
 	return uiauto.Combine("set layout to max",
-		conf.changeLayout("Gallery View"),
-		uiauto.Sleep(viewingTime), // After applying new layout, give it 5 seconds for viewing before applying next one.
+		conf.zm.ChangeLayout(zoom.GalleryView),
+		// After applying new layout, give it 5 seconds for viewing before applying next one.
+		uiauto.Sleep(viewingTime),
 	)(ctx)
 }
 
 // SetLayoutMin sets the conference UI layout to minimal tiled grid.
 func (conf *ZoomConference) SetLayoutMin(ctx context.Context) error {
 	return uiauto.Combine("set layout to minimal",
-		conf.changeLayout("Speaker View"),
-		uiauto.Sleep(viewingTime), // After applying new layout, give it 5 seconds for viewing before applying next one.
+		conf.zm.ChangeLayout(zoom.SpeakerView),
+		// After applying new layout, give it 5 seconds for viewing before applying next one.
+		uiauto.Sleep(viewingTime),
 	)(ctx)
-}
-
-// changeLayout changes the conference UI layout.
-func (conf *ZoomConference) changeLayout(mode string) action.Action {
-	return func(ctx context.Context) error {
-		ui := conf.ui
-		viewButton := nodewith.Name("View").Role(role.Button)
-		viewMenu := nodewith.Role(role.Menu).HasClass("dropdown-menu")
-		speakerNode := nodewith.Name("Speaker View").Role(role.MenuItem)
-		// Sometimes the zoom's menu disappears too fast. Add retry to check whether the device supports
-		// speaker and gallery view.
-		if err := uiauto.Combine("check view button",
-			conf.zm.ShowInterface,
-			ui.LeftClickUntil(viewButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(viewMenu)),
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(speakerNode),
-		)(ctx); err != nil {
-			// Some DUTs don't support 'Speacker View' and 'Gallery View'.
-			testing.ContextLog(ctx, "Speaker and Gallery View is not supported on this device, ignore changing the layout")
-			return nil
-		}
-
-		modeNode := nodewith.Name(mode).Role(role.MenuItem)
-		actionName := "Change layout to " + mode
-		return ui.Retry(retryTimes, uiauto.NamedCombine(actionName,
-			conf.zm.ShowInterface,
-			uiauto.IfSuccessThen(ui.Gone(modeNode), ui.LeftClick(viewButton)),
-			ui.LeftClick(modeNode),
-		))(ctx)
-	}
 }
 
 // VideoAudioControl controls the video and audio during conference.
