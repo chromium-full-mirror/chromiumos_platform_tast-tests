@@ -73,13 +73,16 @@ var isLocalVar = testing.RegisterVarString(
 )
 
 // disableChargeBatteryBeforeTest is a runtime variable that specifies
-// whether to disable battery charging when battery capacity is below
-// minimumBatteryCapacity
+// whether to disable battery charging when battery capacity is not
+// higher than minimumBatteryCapacity+lowBatteryShutdownPercent.
 var disableChargeBatteryBeforeTest = testing.RegisterVarString(
 	"cuj.disableChargeBatteryBeforeTest",
 	"",
 	"A boolean string (true/false) signifying whether to charge battery before running a test",
 )
+
+// minimumBatteryCapacity is the minimum battery capacity on top of the
+// low battery shutdown percentage.
 var minimumBatteryCapacity = 25.0
 var chargeBatteryTestPollOpt = &testing.PollOptions{Interval: 60 * time.Second, Timeout: 3 * time.Minute}
 
@@ -455,12 +458,16 @@ func (f *prepareCUJFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 // chargeBatteryCapacity allows charging of the battery for 3 minutes if battery capacity
-// is lower than a pre-defined level.
+// is not higher than a pre-defined level (minimumBatteryCapacity+lowBatteryShutdownPercent).
 func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
 	if err := setup.AllowBatteryCharging(ctx); err != nil {
 		return err
 	}
 	devPath, err := power.SysfsBatteryPath(ctx)
+	if err != nil {
+		return err
+	}
+	lowBatteryShutdownPercent, err := power.LowBatteryShutdownPercent(ctx)
 	if err != nil {
 		return err
 	}
@@ -470,8 +477,8 @@ func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, 
 			return errors.Wrap(err, "failed to get battery capacity")
 		}
 		testing.ContextLogf(ctx, "Current battery capacity: %.1f%%", capacity)
-		if capacity < minimumBatteryCapacity {
-			return errors.New("current battery capacity is less than minimum")
+		if capacity <= minimumBatteryCapacity+lowBatteryShutdownPercent {
+			return errors.New("current battery capacity is not higher than minimum")
 		}
 		return nil
 	}, chargeBatteryTestPollOpt); err != nil {
