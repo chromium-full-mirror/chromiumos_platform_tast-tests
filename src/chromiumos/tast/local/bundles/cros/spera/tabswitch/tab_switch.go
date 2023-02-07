@@ -37,7 +37,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
@@ -655,84 +654,4 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 		}
 	}
 	return nil
-}
-
-// closeAlertDialog checks and closes the alert dialog by clicking the "Allow" button.
-func closeAlertDialog(ui *uiauto.Context, tsAction cuj.UIActionHandler) uiauto.Action {
-	notificationsDialog := nodewith.NameContaining("Show notifications").Role(role.AlertDialog).HasClass("RootView")
-	allowButton := nodewith.Name("Allow").Role(role.Button).Ancestor(notificationsDialog)
-	return uiauto.IfSuccessThen(
-		ui.WithTimeout(shortUITimeout).WaitUntilExists(notificationsDialog),
-		tsAction.ClickUntil(
-			allowButton,
-			ui.WithTimeout(shortUITimeout).WaitUntilGone(notificationsDialog)),
-	)
-}
-
-// clickButtonsAndTypeText clicks buttons and type the text on specified websites to generate EventLatency metrics.
-func clickButtonsAndTypeText(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, kb *input.KeyboardEventWriter, webName website) error {
-	// Specify nodes with the active window to avoid finding nodes from the inactive windows.
-	window, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get active window")
-	}
-	windowClass := "BrowserFrame"
-	if window.WindowType == ash.WindowTypeLacros {
-		windowClass = "ExoShellSurface"
-	}
-	activeWindow := nodewith.Name(window.Title).Role(role.Window).HasClass(windowClass)
-	activeWindowDescendant := nodewith.Ancestor(activeWindow)
-
-	makeVisibleThenClick := func(node *nodewith.Finder) uiauto.Action {
-		return uiauto.Combine("make the node visible then click",
-			ui.MakeVisible(node),
-			ui.LeftClick(node),
-		)
-	}
-
-	var clickActions uiauto.Action
-	var textField *nodewith.Finder
-	switch webName {
-	case wikipedia:
-		textField = activeWindowDescendant.Name("Search Wikipedia").Role(role.SearchBox)
-		languageSettingsButton := activeWindowDescendant.Name("Language settings").Role(role.Button)
-		languageSettingsHeading := activeWindowDescendant.Name("Language settings").Role(role.Heading)
-		clickActions = uiauto.Combine("click language settings button",
-			makeVisibleThenClick(languageSettingsButton),
-			ui.WaitUntilExists(languageSettingsHeading),
-			ui.LeftClick(languageSettingsButton),
-			ui.WaitUntilGone(languageSettingsHeading),
-		)
-	case googleHelp:
-		textField = activeWindowDescendant.NameStartingWith("Describe your issue").Role(role.TextFieldWithComboBox)
-		mainMenuButton := activeWindowDescendant.Name("Main menu").Role(role.Button)
-		closeMenuButton := activeWindowDescendant.Name("Close menu").Role(role.Button)
-		clickActions = uiauto.Combine("click menu buttons",
-			ui.LeftClick(mainMenuButton),
-			ui.LeftClick(closeMenuButton),
-			ui.WaitUntilExists(mainMenuButton.Collapsed()),
-		)
-	case localWebsite:
-		textField = activeWindowDescendant.Name("Input your text:").Role(role.TextField)
-		hideTextButton := activeWindowDescendant.Name("Hide text").Role(role.Button)
-		showTextButton := activeWindowDescendant.Name("Show text").Role(role.Button)
-		clickActions = uiauto.Combine("click text buttons",
-			ui.LeftClick(hideTextButton),
-			ui.LeftClick(showTextButton),
-			ui.WaitUntilExists(hideTextButton),
-		)
-	}
-
-	typeTextActions := uiauto.Combine("type the text",
-		makeVisibleThenClick(textField),
-		ui.WaitUntilExists(textField.Focused()),
-		kb.TypeAction("Chromebook"),
-		kb.AccelAction("Ctrl+A"),
-		kb.AccelAction("Backspace"),
-	)
-
-	return uiauto.NamedCombine("click buttons and type the text on "+string(webName),
-		clickActions,
-		typeTextActions,
-	)(ctx)
 }

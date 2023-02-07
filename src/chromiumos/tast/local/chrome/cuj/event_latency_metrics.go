@@ -34,16 +34,20 @@ func makeVisibleThenClick(ui *uiauto.Context, node *nodewith.Finder) uiauto.Acti
 
 // wikiClickActions returns click actions that can be applied on the Wikipedia.
 func wikiClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
-	languageSettingsButton := nodewith.Name("Language settings").Role(role.Button).Ancestor(activeWindow)
-	languageSettingsHeading := nodewith.Name("Language settings").Role(role.Heading).Ancestor(activeWindow)
+	toggleSidebarButton := nodewith.Name("Toggle sidebar").Role(role.Button).Ancestor(activeWindow)
+	siteNavigation := nodewith.Name("Site").Role(role.Navigation).Ancestor(activeWindow)
+	contributeText := nodewith.Name("Contribute").Role(role.StaticText).Ancestor(siteNavigation)
 	searchBox := nodewith.Name("Search Wikipedia").Role(role.SearchBox).Ancestor(activeWindow)
-	return uiauto.NamedCombine("click language settings button and the search box",
-		makeVisibleThenClick(ui, languageSettingsButton),
-		ui.WaitUntilExists(languageSettingsHeading),
-		ui.LeftClick(languageSettingsButton),
-		ui.WaitUntilGone(languageSettingsHeading),
+	searchButton := nodewith.Name("Search").Role(role.Button).Ancestor(activeWindow)
+	searchButtonTextOffscreen := nodewith.Name("Search").Role(role.StaticText).Offscreen().Ancestor(searchButton)
+	return uiauto.NamedCombine("click toggle sidebar button and the search box",
+		makeVisibleThenClick(ui, toggleSidebarButton),
+		ui.WaitUntilExists(contributeText),
+		ui.LeftClick(toggleSidebarButton),
+		ui.WaitUntilGone(contributeText),
 		makeVisibleThenClick(ui, searchBox),
-		ui.WaitUntilExists(searchBox.Focused()),
+		// After clicking the search box, the search button will be displayed on the screen.
+		ui.WaitUntilGone(searchButtonTextOffscreen),
 	)
 }
 
