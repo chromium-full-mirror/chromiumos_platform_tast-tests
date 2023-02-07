@@ -64,7 +64,7 @@ func init() {
 			// Test eventlog upon normal->normal reboot.
 			{
 				Name:      "normal",
-				ExtraAttr: []string{"firmware_ec"},
+				ExtraAttr: []string{"firmware_bios", "firmware_level4"},
 				// Disable on rammus (b/184778308) and coral (b/250684696)
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana", "astronaut", "babymega", "babytiger", "blacktiplte", "nasher", "robo360")),
 				Fixture:           fixture.NormalMode,
@@ -77,7 +77,7 @@ func init() {
 			{
 				// Allow some normally disallowed events on rammus. b/184778308
 				Name:              "rammus_normal",
-				ExtraAttr:         []string{"firmware_ec"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.NormalMode,
 				Val: eventLogParams{
@@ -90,7 +90,7 @@ func init() {
 			// Test eventlog upon dev->dev reboot.
 			{
 				Name:              "dev",
-				ExtraAttr:         []string{"firmware_ec"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana")),
 				Fixture:           fixture.DevModeGBB,
 				Val: eventLogParams{
@@ -102,7 +102,7 @@ func init() {
 			// Allow some normally disallowed events on rammus. b/184778308
 			{
 				Name:              "rammus_dev",
-				ExtraAttr:         []string{"firmware_ec"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.DevModeGBB,
 				Val: eventLogParams{
@@ -197,7 +197,7 @@ func init() {
 			// Test eventlog with hardware watchdog.
 			{
 				Name:              "watchdog",
-				ExtraAttr:         []string{"firmware_ec"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level4"},
 				Fixture:           fixture.NormalMode,
 				ExtraSoftwareDeps: []string{"watchdog"},
 				Val: eventLogParams{
