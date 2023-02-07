@@ -33,7 +33,8 @@ func init() {
 			"pf@semihalf.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		// TODO(b/194907749): This test doesn't work, so don't run it in the lab.
+		Attr:         []string{"group:firmware", "firmware_usb"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      60 * time.Minute,
 		Vars:         []string{"firmware.skipFlashUSB"},
