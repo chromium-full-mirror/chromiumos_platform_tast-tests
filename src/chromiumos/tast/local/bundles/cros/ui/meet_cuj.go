@@ -839,14 +839,23 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
 		return uiauto.Combine(
 			fmt.Sprintf("set effect with node %v", effect),
-			pc.Click(moreOptions),
+			// Open the "More options" popup, and wait until we see
+			// "Apply visual effects".
+			ui.DoDefault(moreOptions),
 			uiLongWait.WaitUntilExists(applyEffects),
-			pc.Click(applyEffects),
-			pc.Click(effect),
+
+			// Open the visual effects section.
+			ui.DoDefault(applyEffects),
+			uiLongWait.WaitUntilExists(effect),
+
+			// Toggle the effect.
+			ui.DoDefault(effect),
+			uiLongWait.WaitUntilExists(effect.Focused()),
+
 			// Use the keyboard to exit from the effects page, since there
 			// are many possible "Close" buttons visible within the UI tree.
-			uiLongWait.WaitUntilExists(effect.Focused()),
 			kw.AccelAction("Esc"),
+			uiLongWait.WaitUntilGone(effect.Focused()),
 		)(ctx)
 	}
 	if meet.effects {
