@@ -124,9 +124,9 @@ func PhysicalKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) 
 				{
 					TestName:    "number key 8 and 9",
 					Description: "test type number key 8 and 9",
-					Steps: uiauto.Combine("user type text h_hç",
-						kb.TypeAction("h8h9"),
-						util.VerifyTextToBe(tconn, nil, `h_hç`, util.VerifyInScreenshot),
+					Steps: uiauto.Combine("user type text h_hçh",
+						kb.TypeAction("h8h9h"),
+						util.VerifyTextToBe(tconn, nil, `h_hçh`, util.VerifyInScreenshot),
 					),
 				},
 				{

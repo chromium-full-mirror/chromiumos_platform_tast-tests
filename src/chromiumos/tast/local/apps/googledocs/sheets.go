@@ -58,3 +58,18 @@ func DeleteCellValue(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	return nil
 }
+
+// ChangeSheetFontSize returns an action to change sheet font size to specific font size.
+func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
+	ui := uiauto.New(tconn)
+	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(sheetsWebArea)
+	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(sheetsWebArea)
+	fontSizeOption := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(sheetsWebArea)
+	return uiauto.Retry(retryTimes, uiauto.NamedCombine("change sheet font size to "+size,
+		uiauto.IfSuccessThen(ui.Gone(fontSizeTextField),
+			ui.LeftClickUntil(moreButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeTextField))),
+		ui.LeftClickUntil(fontSizeTextField, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeOption)),
+		ui.LeftClick(fontSizeOption),
+		waitForDocsSaved(tconn),
+	))
+}
