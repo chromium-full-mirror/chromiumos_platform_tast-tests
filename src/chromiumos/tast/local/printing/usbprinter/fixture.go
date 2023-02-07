@@ -52,6 +52,24 @@ func init() {
 		SetUpTimeout:    moduleLoadTimeout,
 		TearDownTimeout: moduleLoadTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
+		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromePolicyLoggedIn` fixture)",
+		Contacts:        []string{"project-bolton@google.com"},
+		Impl:            &loadModuleFixture{},
+		Parent:          "chromePolicyLoggedIn",
+		SetUpTimeout:    moduleLoadTimeout,
+		TearDownTimeout: moduleLoadTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "virtualUsbPrinterModulesLoadedWithLacrosPolicyLoggedIn",
+		Desc:            "Kernel modules necessary for `virtual-usb-printer` loaded (with `lacrosPolicyLoggedIn` fixture)",
+		Contacts:        []string{"project-bolton@google.com"},
+		Impl:            &loadModuleFixture{},
+		Parent:          "lacrosPolicyLoggedIn",
+		SetUpTimeout:    moduleLoadTimeout,
+		TearDownTimeout: moduleLoadTimeout,
+	})
 }
 
 // Implements `testing.FixtureImpl` without any members.
