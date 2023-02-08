@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
@@ -22,6 +23,11 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
+type batteryStatusTestParam struct {
+	iter       int
+	tabletMode bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BatteryStatusOnACRemoval,
@@ -30,17 +36,33 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.power.BatteryService"},
+		ServiceDeps:  []string{"tast.cros.power.BatteryService", "tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      time.Hour,
-	})
+		Params: []testing.Param{{
+			Name: "clamshell",
+			Val: batteryStatusTestParam{
+				iter:       5,
+				tabletMode: false,
+			},
+			Timeout: time.Hour,
+		}, {
+			Name: "tabletmode",
+			Val: batteryStatusTestParam{
+				iter:       1,
+				tabletMode: true,
+			},
+			Timeout: 20 * time.Minute,
+		},
+		}})
 }
 
 func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	dut := s.DUT()
 
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
@@ -55,6 +77,37 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 		Interval: 250 * time.Millisecond,
 	}
 
+	testOpts := s.Param().(batteryStatusTestParam)
+
+	if testOpts.tabletMode {
+		// Get the initial tablet_mode_angle settings to restore at the end of test.
+		re := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
+		out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output()
+		if err != nil {
+			s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
+		}
+		m := re.FindSubmatch(out)
+		if len(m) != 3 {
+			s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
+		}
+		tabletModeAngle := m[1]
+		hys := m[2]
+		// Set tabletModeAngle to 0 to force the DUT into tablet mode.
+		testing.ContextLog(ctx, "Put DUT into tablet mode")
+		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
+			s.Fatal("Failed to set DUT into tablet mode: ", err)
+		}
+		defer func(ctx context.Context) {
+			if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(tabletModeAngle), string(hys)).Run(); err != nil {
+				s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
+			}
+		}(cleanupCtx)
+	} else {
+		if err := ensureClamshellMode(ctx, h, dut); err != nil {
+			s.Fatal("Failed to enusre that the DUT is in clamshell mode: ", err)
+		}
+
+	}
 	cl, err := rpc.Dial(ctx, h.DUT, s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
@@ -74,7 +127,7 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	iterations := 5
+	iterations := testOpts.iter
 	for i := 1; i <= iterations; i++ {
 		s.Logf("Iteration: %d/%d", i, iterations)
 		//Checking initial battery charge.
@@ -217,4 +270,45 @@ func getChargePercentage(ctx context.Context, h *firmware.Helper) (int, error) {
 	}
 
 	return int(100 * float32(currentMAH) / float32(maxMAH)), nil
+}
+
+// ensureClamshellMode checks whether DUT is in tablet mode.
+func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT) error {
+	inTabletMode, err := checkTabletModeStatus(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "unable to check for DUT's tablet mode status")
+	}
+	if inTabletMode {
+		testing.ContextLog(ctx, "DUT is in tablet mode. Attempting to turn tablet mode off")
+		_, err := h.Servo.CheckAndRunTabletModeCommand(ctx, "tabletmode off")
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to run tabletmode_off: %v. Attempting to set rotation angles with ectool instead", err)
+			ecToolCmd := firmware.NewECTool(dut, firmware.ECToolNameMain)
+			// Setting tabletModeAngle to 360 will force DUT into clamshell mode.
+			if err := ecToolCmd.ForceTabletModeAngle(ctx, "360", "0"); err != nil {
+				return errors.Wrap(err, "failed to set DUT in clamshell mode")
+			}
+		}
+	}
+	return nil
+}
+
+// checkTabletModeStatus checks whether DUT is in tablet mode through the utils service.
+func checkTabletModeStatus(ctx context.Context, h *firmware.Helper) (bool, error) {
+	if err := h.RequireRPCUtils(ctx); err != nil {
+		return false, errors.Wrap(err, "requiring RPC utils")
+	}
+	testing.ContextLog(ctx, "Sleeping for a few seconds before starting a new Chrome")
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return false, errors.Wrap(err, "failed to wait for a few seconds")
+	}
+	if _, err := h.RPCUtils.NewChrome(ctx, &empty.Empty{}); err != nil {
+		return false, errors.Wrap(err, "failed to create instance of chrome")
+	}
+	defer h.RPCUtils.CloseChrome(ctx, &empty.Empty{})
+	res, err := h.RPCUtils.EvalTabletMode(ctx, &empty.Empty{})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to evaluate tablet mode")
+	}
+	return res.TabletModeEnabled, nil
 }
