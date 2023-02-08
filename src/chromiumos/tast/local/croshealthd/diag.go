@@ -52,6 +52,8 @@ const (
 	RoutineFingerprintAlive               = "fingerprint_alive"
 	RoutineEMMCLifetime                   = "emmc_lifetime"
 	RoutineLedLitUp                       = "led_lit_up"
+	RoutineAudioSetVolume                 = "audio_set_volume"
+	RoutineAudioSetGain                   = "audio_set_gain"
 )
 
 // List of possible routine statuses
@@ -117,7 +119,16 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 			diagParams = append(diagParams, fmt.Sprintf("--led_name=%s", ledName), fmt.Sprintf("--led_color=%s", ledColors[0]))
 			break
 		}
+	} else if params.Routine == RoutineAudioSetVolume {
+		// Any node id is fine. What we need to test is audio dbus works.
+		diagParams = append(diagParams, "--node_id=0")
+		diagParams = append(diagParams, "--volume=10")
+	} else if params.Routine == RoutineAudioSetGain {
+		// Any node id is fine. What we need to test is audio dbus works.
+		diagParams = append(diagParams, "--node_id=0")
+		diagParams = append(diagParams, "--gain=10")
 	}
+
 	var output string
 	var err error
 	if params.Routine == RoutineLedLitUp {

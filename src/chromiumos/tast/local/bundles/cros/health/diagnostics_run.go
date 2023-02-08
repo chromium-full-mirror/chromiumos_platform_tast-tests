@@ -139,6 +139,14 @@ func init() {
 			Name:              "led_lit_up",
 			Val:               newRoutineParams(croshealthd.RoutineLedLitUp),
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		}, {
+			Name:      "audio_set_volume",
+			Val:       newRoutineParams(croshealthd.RoutineAudioSetVolume),
+			ExtraAttr: []string{"informational"},
+		}, {
+			Name:      "audio_set_gain",
+			Val:       newRoutineParams(croshealthd.RoutineAudioSetGain),
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
