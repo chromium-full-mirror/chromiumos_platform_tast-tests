@@ -6,6 +6,7 @@ package network
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -141,6 +142,11 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		vpn.WithIPsecAuthType(tc.ipsecAuthType),
 		vpn.WithOpenVPNUseUserPassword(),
 		vpn.WithWGUsePSK(),
+		// Enable dual-stack VPN so that 1) we can verify Chrome does not crash with
+		// a dual-stack VPN connection; 2) for WireGuard, both IPv4 and IPv6 config
+		// can be input properly. Note that not all VPN supports IPv6, IPv4-only VPN
+		// will be set up when IPv6 is not supported.
+		vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
 	)
 	vpnServer, err := vpn.StartServerWithConfig(ctx, networkEnv.Server1, config)
 	if err != nil {
@@ -184,8 +190,14 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	// Pings server gateway to make sure VPN is connected. This is required since
 	// some VPN services (e.g., WireGuard) will show connected even if we have a
 	// wrong configuration.
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, vpnServer.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-		s.Fatalf("Failed to ping %s: %v", vpnServer.OverlayIPv4, err)
+	reachableIPs := []string{vpnServer.OverlayIPv4}
+	if len(vpnServer.OverlayIPv6) > 0 {
+		reachableIPs = append(reachableIPs, vpnServer.OverlayIPv6)
+	}
+	for _, ip := range reachableIPs {
+		if err := routing.ExpectPingSuccessWithTimeout(ctx, ip, "chronos", 10*time.Second); err != nil {
+			s.Errorf("Failed to ping %s: %v", ip, err)
+		}
 	}
 
 	// Clicks Disconnect and checks the "Not Connected" text on the page.
@@ -362,9 +374,9 @@ func (v *vpnDialogConfigger) configWireGuard(ctx context.Context) error {
 		return errors.Wrap(err, "failed to select VPN type")
 	}
 
-	staticIPConfig := v.props["StaticIPConfig"].(map[string]interface{})
+	addrs := v.props["WireGuard.IPAddress"].([]string)
 	peer := v.props["WireGuard.Peers"].([]map[string]string)[0]
-	if err := v.inputTextField(ctx, "Client IP address", staticIPConfig["Address"].(string)); err != nil {
+	if err := v.inputTextField(ctx, "Client IP address", strings.Join(addrs, ",")); err != nil {
 		return err
 	}
 	if err := v.selectListOption(ctx, "Key", "I have a keypair"); err != nil {
