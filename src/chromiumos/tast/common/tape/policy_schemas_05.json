@@ -1,0 +1,5030 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "stickyKeysEnabled",
+                "number": 1
+              }
+            ],
+            "name": "StickyKeysEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.StickyKeysEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#sticky_keys_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "stickyKeysEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable sticky keys.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable sticky keys.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.StickyKeysEnabled",
+      "policyDescription": "Sticky keys."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "virtualKeyboardEnabled",
+                "number": 1
+              }
+            ],
+            "name": "VirtualKeyboardEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VirtualKeyboardEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#virtual_keyboard_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "virtualKeyboardEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable on-screen keyboard.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable on-screen keyboard.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VirtualKeyboardEnabled",
+      "policyDescription": "On-screen keyboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "touchVirtualKeyboardEnabled",
+                "number": 1
+              }
+            ],
+            "name": "TouchVirtualKeyboardEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.TouchVirtualKeyboardEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#touch_virtual_keyboard_enabled",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "touchVirtualKeyboardEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Enable on-screen keyboard in tablet mode.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable on-screen keyboard in both tablet and laptop modes.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Don\u2019t enable on-screen keyboard in tablet mode.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "Tablet mode behavior in cases when on-screen keyboard is otherwise disabled.",
+          "name": "Tablet mode behavior in cases when on-screen keyboard is otherwise disabled."
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "notices": [
+        {
+          "field": "touchVirtualKeyboardEnabled",
+          "noticeMessage": "This setting will force show on-screen keyboard even when a physical keyboard is present. End users won't be able to disable it, so this might impair user experience.",
+          "noticeValue": "TRUE"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.TouchVirtualKeyboardEnabled",
+      "policyDescription": "On-screen keyboard in tablet mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "dictationEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DictationEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DictationEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#dictation_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "dictationEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable dictation.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable dictation.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DictationEnabled",
+      "policyDescription": "Dictation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "keyboardFocusHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "KeyboardFocusHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.KeyboardFocusHighlightEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#keyboard_focus_highlight_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "keyboardFocusHighlightEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable keyboard focus highlighting.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable keyboard focus highlighting.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.KeyboardFocusHighlightEnabled",
+      "policyDescription": "Keyboard focus highlighting."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "caretHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "CaretHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CaretHighlightEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#caret_highlight_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "caretHighlightEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable caret highlight.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable caret highlight.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CaretHighlightEnabled",
+      "policyDescription": "Caret highlight."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "autoclickEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AutoclickEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AutoclickEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#autoclick_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "autoclickEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable auto-click.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable auto-click.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AutoclickEnabled",
+      "policyDescription": "Auto-click enabled."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "largeCursorEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LargeCursorEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LargeCursorEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#large_cursor_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "largeCursorEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable large cursor.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable large cursor.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LargeCursorEnabled",
+      "policyDescription": "Large cursor."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "cursorHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "CursorHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CursorHighlightEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#cursor_highlight_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "cursorHighlightEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable cursor highlight.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable cursor highlight.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CursorHighlightEnabled",
+      "policyDescription": "Cursor highlight."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "primaryMouseButtonSwitch",
+                "number": 1
+              }
+            ],
+            "name": "PrimaryMouseButtonSwitch"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrimaryMouseButtonSwitch",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#primary_mouse_button_switch",
+      "fieldDescriptions": [
+        {
+          "field": "primaryMouseButtonSwitch",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Right button is primary.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Left button is primary.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrimaryMouseButtonSwitch",
+      "policyDescription": "Primary mouse button."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "monoAudioEnabled",
+                "number": 1
+              }
+            ],
+            "name": "MonoAudioEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.MonoAudioEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#mono_audio_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "monoAudioEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable mono audio.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable mono audio.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.MonoAudioEnabled",
+      "policyDescription": "Mono audio."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "accessibilityShortcutsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AccessibilityShortcutsEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AccessibilityShortcutsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#accessibility_shortcuts_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "accessibilityShortcutsEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable accessibility shortcuts.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable accessibility shortcuts.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AccessibilityShortcutsEnabled",
+      "policyDescription": "Accessibility shortcuts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "showAccessibilityOptionsInSystemTrayMenu",
+                "number": 1
+              }
+            ],
+            "name": "ShowAccessibilityOptionsInSystemTrayMenu"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ShowAccessibilityOptionsInSystemTrayMenu",
+      "fieldDescriptions": [
+        {
+          "field": "showAccessibilityOptionsInSystemTrayMenu",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Show accessibility options in the system tray menu.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Hide accessibility options in the system tray menu.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ShowAccessibilityOptionsInSystemTrayMenu",
+      "policyDescription": "Accessibility options in the system tray menu."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "accessibilityImageLabelsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AccessibilityImageLabelsEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AccessibilityImageLabelsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#accessibility_image_labels_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "accessibilityImageLabelsEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Let users choose to use an anonymous Google service to provide automatic descriptions for unlabeled images.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Use an anonymous Google service to provide automatic descriptions for unlabeled images.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not use Google services to provide automatic image descriptions.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AccessibilityImageLabelsEnabled",
+      "policyDescription": "Image descriptions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowScreenWakeLocks",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowWakeLocks",
+                "number": 2
+              }
+            ],
+            "name": "AllowWakeLocks"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowWakeLocks",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#allow_wake_locks",
+      "fieldDescriptions": [
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "allowWakeLocks"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow screen wake locks for power management.",
+              "value": "true"
+            },
+            {
+              "description": "Demote screen wake lock requests to system wake lock requests.",
+              "value": "false"
+            }
+          ],
+          "description": "Screen wake locks.",
+          "defaultValue": true,
+          "field": "allowScreenWakeLocks",
+          "name": "Screen wake locks."
+        },
+        {
+          "field": "allowWakeLocks",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow wake locks.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow wake locks.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AllowWakeLocks",
+      "policyDescription": "Wake locks."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "fetchKeepaliveDurationSecondsOnShutdown",
+                "number": 1
+              }
+            ],
+            "name": "FetchKeepaliveDurationSecondsOnShutdown"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.FetchKeepaliveDurationSecondsOnShutdown",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#fetch_keepalive_duration_seconds_on_shutdown",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Browser shutdown can be blocked up to 5 seconds. The default value (0) means this feature is disabled.",
+          "name": "Fetch keepalive duration on Shutdown (in seconds).",
+          "inputConstraint": "Duration policy field value is in the range [0, 5] seconds. The input duration policy field value should be converted to seconds. Multiply the desired value in seconds by 1 and append an 's'.",
+          "field": "fetchKeepaliveDurationSecondsOnShutdown",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Fetch keepalive duration on Shutdown (in seconds). Browser shutdown can be blocked up to 5 seconds. The default value (0) means this feature is disabled."
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.FetchKeepaliveDurationSecondsOnShutdown",
+      "policyDescription": "Keepalive duration."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "devicePowerAdaptiveChargingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DevicePowerAdaptiveChargingEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DevicePowerAdaptiveChargingEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#device_power_adaptive_charging_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "devicePowerAdaptiveChargingEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable adaptive charging model.",
+              "value": "true"
+            },
+            {
+              "description": "Disable adaptive charging model.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DevicePowerAdaptiveChargingEnabled",
+      "policyDescription": "Adaptive charging model."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "searchSuggestEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SearchSuggest"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SearchSuggest",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#search_suggest_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "searchSuggestEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always allow users to use Search Suggest.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Never allow users to use Search Suggest.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Omnibox search provider",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SearchSuggest",
+      "policyDescription": "Search suggest."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "sideSearchEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SideSearchEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SideSearchEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#side_search_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "sideSearchEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable showing the most recent Google Search results in a Browser side panel.",
+              "value": "true"
+            },
+            {
+              "description": "Disable showing the most recent Google Search results in a Browser side panel.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Omnibox search provider",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SideSearchEnabled",
+      "policyDescription": "Side panel search history."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ExternalStorageEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "externalStorageDevices",
+                "number": 1
+              }
+            ],
+            "name": "ExternalStorage"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ExternalStorageEnum",
+            "value": [
+              {
+                "name": "EXTERNAL_STORAGE_ENUM_READ_WRITE",
+                "number": 1
+              },
+              {
+                "name": "EXTERNAL_STORAGE_ENUM_READ_ONLY",
+                "number": 2
+              },
+              {
+                "name": "EXTERNAL_STORAGE_ENUM_DISALLOW",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ExternalStorage",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#external_storage_devices",
+      "fieldDescriptions": [
+        {
+          "field": "externalStorageDevices",
+          "defaultValue": "EXTERNAL_STORAGE_ENUM_READ_WRITE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow external storage devices.",
+              "value": "EXTERNAL_STORAGE_ENUM_READ_WRITE"
+            },
+            {
+              "description": "Allow external storage devices (read only).",
+              "value": "EXTERNAL_STORAGE_ENUM_READ_ONLY"
+            },
+            {
+              "description": "Disallow external storage devices.",
+              "value": "EXTERNAL_STORAGE_ENUM_DISALLOW"
+            }
+          ],
+          "description": "Secure Digital (SD) cards, USB flash drive devices, and MTP devices.",
+          "name": "Secure Digital (SD) cards, USB flash drive devices, and MTP devices."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ExternalStorage",
+      "policyDescription": "External storage devices."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultWebUsbGuardSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultWebUsbGuardSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "webUsbAskForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "webUsbBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "WebUsbPortAccess"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultWebUsbGuardSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_BLOCK_WEB_USB",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_ASK_WEB_USB",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_UNSET",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebUsbPortAccess",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_web_usb_guard_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultWebUsbGuardSetting",
+          "defaultValue": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow any site to request access.",
+              "value": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_BLOCK_WEB_USB"
+            },
+            {
+              "description": "Allow sites to ask the user for access.",
+              "value": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_ASK_WEB_USB"
+            },
+            {
+              "description": "Allow the user to decide if sites can ask.",
+              "value": "DEFAULT_WEB_USB_GUARD_SETTING_ENUM_UNSET"
+            }
+          ],
+          "description": "Can web sites ask for access to connected USB devices.",
+          "name": "Can web sites ask for access to connected USB devices."
+        },
+        {
+          "field": "webUsbAskForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Allow these sites to ask for USB access. For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Allow these sites to ask for USB access."
+        },
+        {
+          "field": "webUsbBlockedForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Block these sites from asking for USB access. For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Block these sites from asking for USB access."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WebUsbPortAccess",
+      "policyDescription": "Controls which websites can ask for USB access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "WebUsbAllowDevicesForUrlsType",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "webUsbAllowDevicesForUrls",
+                "number": 1
+              }
+            ],
+            "name": "WebUsbAllowDevicesForUrls"
+          },
+          {
+            "field": [
+              {
+                "typeName": "WebApplication",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "webApplications",
+                "number": 1
+              }
+            ],
+            "name": "WebUsbAllowDevicesForUrlsType"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "url",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "devices",
+                "number": 2
+              }
+            ],
+            "name": "WebApplication"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebUsbAllowDevicesForUrls",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#web_usb_allow_devices_for_urls",
+      "fieldDescriptions": [
+        {
+          "field": "webUsbAllowDevicesForUrls",
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "webApplications",
+              "description": "A list of web applications, each with its allowed USB devices.",
+              "name": "A list of web applications, each with its allowed USB devices.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "url",
+                  "description": "Web application origin URL. Access to the devices applies to the entire web origin. Any path will be truncated. For detailed information on valid URL patterns, see https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note that using the \"*\" wildcard is not valid. The maximum size is 1000 characters.",
+                  "name": "Web application origin URL. Access to the devices applies to the entire web origin. Any path will be truncated. For detailed information on valid URL patterns, see https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note that using the \"*\" wildcard is not valid. The maximum size is 1000 characters."
+                },
+                {
+                  "field": "devices",
+                  "description": "A list of USB devices allowed for this web application. Each device has format 'vendor_id:product_id' where each of the IDs is a hexadecimal 4-char string. An example of a device ID: '1234:ab12'. The maximum size is 500000 characters (for all entries combined).",
+                  "name": "A list of USB devices allowed for this web application. Each device has format 'vendor_id:product_id' where each of the IDs is a hexadecimal 4-char string. An example of a device ID: '1234:ab12'. The maximum size is 500000 characters (for all entries combined)."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WebUsbAllowDevicesForUrls",
+      "policyDescription": "WebUSB API allowed devices."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "audioCaptureAllowed",
+                "number": 1
+              }
+            ],
+            "name": "AudioInput"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AudioInput",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#audio_capture_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "audioCaptureAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Prompt user to allow each time.",
+              "value": "true"
+            },
+            {
+              "description": "Disable audio input.",
+              "value": "false"
+            }
+          ],
+          "description": "Microphone and audio input.",
+          "name": "Microphone and audio input."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AudioInput",
+      "policyDescription": "Audio input (microphone)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "audioCaptureAllowedUrls",
+                "number": 1
+              }
+            ],
+            "name": "AudioCaptureAllowedUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AudioCaptureAllowedUrls",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#audio_capture_allowed_urls",
+      "fieldDescriptions": [
+        {
+          "field": "audioCaptureAllowedUrls",
+          "fieldDescription": "URLs that will be granted access to the audio input device without a prompt. Prefix domain with [*.] to include subdomains.",
+          "description": "URL patterns to allow. URLs that will be granted access to the audio input device without a prompt. Prefix domain with [*.] to include subdomains.",
+          "name": "URL patterns to allow."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AudioCaptureAllowedUrls",
+      "policyDescription": "Audio input allowed URLs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "audioOutputAllowed",
+                "number": 1
+              }
+            ],
+            "name": "AudioOutput"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AudioOutput",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#audio_output_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "audioOutputAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable audio output.",
+              "value": "true"
+            },
+            {
+              "description": "Disable audio output.",
+              "value": "false"
+            }
+          ],
+          "description": "Speakers and audio output.",
+          "name": "Speakers and audio output."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AudioOutput",
+      "policyDescription": "Audio output."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "audioProcessHighPriorityEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AudioProcessHighPriorityEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AudioProcessHighPriorityEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#audio_process_high_priority_enabled",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "This policy is temporary and only supported on Windows.",
+          "knownValueDescriptions": [
+            {
+              "description": "Use the system default priority for the Chrome audio process.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Use high priority for the Chrome audio process.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Use normal priority for the Chrome audio process.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "Adjust the priority for the Chrome audio process. This policy is temporary and only supported on Windows.",
+          "defaultValue": "UNSET",
+          "field": "audioProcessHighPriorityEnabled",
+          "name": "Adjust the priority for the Chrome audio process."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AudioProcessHighPriorityEnabled",
+      "policyDescription": "Audio process priority."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "videoCaptureAllowed",
+                "number": 1
+              }
+            ],
+            "name": "VideoInput"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VideoInput",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#video_capture_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "videoCaptureAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable camera input for websites and apps.",
+              "value": "true"
+            },
+            {
+              "description": "Disable camera input for websites and apps.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VideoInput",
+      "policyDescription": "Built-in camera access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "videoCaptureAllowedUrls",
+                "number": 1
+              }
+            ],
+            "name": "VideoCaptureAllowedUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VideoCaptureAllowedUrls",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#video_capture_allowed_urls",
+      "fieldDescriptions": [
+        {
+          "field": "videoCaptureAllowedUrls",
+          "fieldDescription": "URLs that will be granted access to the video input device without a prompt. Prefix domain with [*.] to include subdomains.",
+          "description": "URL patterns to allow. URLs that will be granted access to the video input device without a prompt. Prefix domain with [*.] to include subdomains.",
+          "name": "URL patterns to allow."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VideoCaptureAllowedUrls",
+      "policyDescription": "Video input allowed URLs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "hardwareAccelerationModeEnabled",
+                "number": 1
+              }
+            ],
+            "name": "HardwareAccelerationModeEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.HardwareAccelerationModeEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#hardware_acceleration_mode_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "hardwareAccelerationModeEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable hardware acceleration.",
+              "value": "true"
+            },
+            {
+              "description": "Disable hardware acceleration.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.HardwareAccelerationModeEnabled",
+      "policyDescription": "GPU."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "keyboardDefaultToFunctionKeys",
+                "number": 1
+              }
+            ],
+            "name": "KeyboardFunctionKeys"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.KeyboardFunctionKeys",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#keyboard_default_to_function_keys",
+      "fieldDescriptions": [
+        {
+          "field": "keyboardDefaultToFunctionKeys",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Treat top-row keys as function keys, but allow user to change.",
+              "value": "true"
+            },
+            {
+              "description": "Treat top-row keys as media keys, but allow user to change.",
+              "value": "false"
+            }
+          ],
+          "description": "Top-row key behavior.",
+          "name": "Top-row key behavior."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.KeyboardFunctionKeys",
+      "policyDescription": "Keyboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultSerialGuardSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultSerialGuardSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "serialAskForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "serialBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "WebSerialPortAccess"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultSerialGuardSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_BLOCK_SERIAL",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_ALLOW_ASK_SERIAL",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_UNSET",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebSerialPortAccess",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#serial_ask_for_urls_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultSerialGuardSetting",
+          "defaultValue": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow any site to request access to serial ports via the Serial Port API.",
+              "value": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_BLOCK_SERIAL"
+            },
+            {
+              "description": "Allow sites to ask the user to grant access to a serial ports via the Serial Port API.",
+              "value": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_ALLOW_ASK_SERIAL"
+            },
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_SERIAL_GUARD_SETTING_ENUM_UNSET"
+            }
+          ],
+          "description": "Control use of the Serial Port API.",
+          "name": "Control use of the Serial Port API."
+        },
+        {
+          "field": "serialAskForUrls",
+          "fieldDescription": "List of URLs that specify websites that will be allowed to ask users to grant them access to the serial ports. Prefix domain with [*.] to include subdomains.",
+          "description": "Allow the Serial API on these sites. List of URLs that specify websites that will be allowed to ask users to grant them access to the serial ports. Prefix domain with [*.] to include subdomains.",
+          "name": "Allow the Serial API on these sites."
+        },
+        {
+          "field": "serialBlockedForUrls",
+          "fieldDescription": "List of URLs patterns that specify which websites can't ask users to grant them access to a serial port. Prefix domain with [*.] to include subdomains.",
+          "description": "Block the Serial API on these sites. List of URLs patterns that specify which websites can't ask users to grant them access to a serial port. Prefix domain with [*.] to include subdomains.",
+          "name": "Block the Serial API on these sites."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WebSerialPortAccess",
+      "policyDescription": "Serial Port API."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "privacyScreenEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PrivacyScreenEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrivacyScreenEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "privacyScreenEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always enable the privacy screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Always disable the privacy screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrivacyScreenEnabled",
+      "policyDescription": "Privacy screen."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultFileSystemReadGuardSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultFileSystemReadGuardSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "fileSystemReadAskForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "fileSystemReadBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "FileSystemRead"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultFileSystemReadGuardSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_UNSET",
+                "number": 3
+              },
+              {
+                "name": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_ASK_FILE_SYSTEM_READ",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_BLOCK_FILE_SYSTEM_READ",
+                "number": 1
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.FileSystemRead",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#file_system_read",
+      "fieldDescriptions": [
+        {
+          "field": "defaultFileSystemReadGuardSetting",
+          "defaultValue": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow sites to ask the user to grant read access to files and directories.",
+              "value": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_ASK_FILE_SYSTEM_READ"
+            },
+            {
+              "description": "Do not allow sites to request read access to files and directories.",
+              "value": "DEFAULT_FILE_SYSTEM_READ_GUARD_SETTING_ENUM_BLOCK_FILE_SYSTEM_READ"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "fileSystemReadAskForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Allow file system read access on these sites. For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Allow file system read access on these sites."
+        },
+        {
+          "field": "fileSystemReadBlockedForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Block read access on these sites. For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Block read access on these sites."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.FileSystemRead",
+      "policyDescription": "File system read access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultFileSystemWriteGuardSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultFileSystemWriteGuardSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "fileSystemWriteAskForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "fileSystemWriteBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "FileSystemWrite"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultFileSystemWriteGuardSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_UNSET",
+                "number": 3
+              },
+              {
+                "name": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_ASK_FILE_SYSTEM_WRITE",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_BLOCK_FILE_SYSTEM_WRITE",
+                "number": 1
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.FileSystemWrite",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#file_system_write",
+      "fieldDescriptions": [
+        {
+          "field": "defaultFileSystemWriteGuardSetting",
+          "defaultValue": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow sites to ask the user to grant write access to files and directories.",
+              "value": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_ASK_FILE_SYSTEM_WRITE"
+            },
+            {
+              "description": "Do not allow sites to request write access to files and directories.",
+              "value": "DEFAULT_FILE_SYSTEM_WRITE_GUARD_SETTING_ENUM_BLOCK_FILE_SYSTEM_WRITE"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "fileSystemWriteAskForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Allow write access to files and directories on these sites. For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Allow write access to files and directories on these sites."
+        },
+        {
+          "field": "fileSystemWriteBlockedForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Block write access to files and directories on these sites. For detailed information on valid url patterns, please see URL patterns at https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Block write access to files and directories on these sites."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.FileSystemWrite",
+      "policyDescription": "File system write access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultSensorsSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultSensorsSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "sensorsAllowedForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "sensorsBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "DefaultSensorsSetting"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultSensorsSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_SENSORS_SETTING_ENUM_ALLOW_SENSORS",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_SENSORS_SETTING_ENUM_BLOCK_SENSORS",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_SENSORS_SETTING_ENUM_UNSET",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DefaultSensorsSetting",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_sensors_setting",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "This default access applies for sites that don't match a URL defined in 'sensorsAllowedForUrls' or 'sensorsBlockedForUrls'. Sensors may include motion and light.",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow sites to access sensors.",
+              "value": "DEFAULT_SENSORS_SETTING_ENUM_ALLOW_SENSORS"
+            },
+            {
+              "description": "Do not allow any site to access sensors.",
+              "value": "DEFAULT_SENSORS_SETTING_ENUM_BLOCK_SENSORS"
+            },
+            {
+              "description": "Allow the user to decide if a site may access sensors.",
+              "value": "DEFAULT_SENSORS_SETTING_ENUM_UNSET"
+            }
+          ],
+          "description": "Default access. This default access applies for sites that don't match a URL defined in 'sensorsAllowedForUrls' or 'sensorsBlockedForUrls'. Sensors may include motion and light.",
+          "defaultValue": "DEFAULT_SENSORS_SETTING_ENUM_UNSET",
+          "field": "defaultSensorsSetting",
+          "name": "Default access."
+        },
+        {
+          "field": "sensorsAllowedForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "description": "Allow access to sensors on these sites. For detailed information on valid url patterns, please see https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns. Note: using only the \"*\" wildcard is not valid.",
+          "name": "Allow access to sensors on these sites."
+        },
+        {
+          "field": "sensorsBlockedForUrls",
+          "fieldDescription": "For detailed information on valid url patterns, please see https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns Note: using only the \"*\" wildcard is not valid.",
+          "description": "Block access to sensors on these sites. For detailed information on valid url patterns, please see https://cloud.google.com/docs/chrome-enterprise/policies/url-patterns Note: using only the \"*\" wildcard is not valid.",
+          "name": "Block access to sensors on these sites."
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DefaultSensorsSetting",
+      "policyDescription": "Sensors."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "enterpriseHardwarePlatformApiEnabled",
+                "number": 1
+              }
+            ],
+            "name": "EnterpriseHardwarePlatformApiEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.EnterpriseHardwarePlatformApiEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#enterprise_hardware_platform_api_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "enterpriseHardwarePlatformApiEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow managed extensions to use the Enterprise Hardware Platform API.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow managed extensions to use the Enterprise Hardware Platform API.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Hardware",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.EnterpriseHardwarePlatformApiEnabled",
+      "policyDescription": "Enterprise Hardware Platform API."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "userVerifiedModeRequired",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "servicesWithFullAccess",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "servicesWithLimitedAccess",
+                "number": 3
+              }
+            ],
+            "name": "VerifiedMode"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VerifiedMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#user_verified_mode_required",
+      "fieldDescriptions": [
+        {
+          "field": "userVerifiedModeRequired",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Require verified mode boot for Verified Access.",
+              "value": "true"
+            },
+            {
+              "description": "Skip boot mode check for Verified Access.",
+              "value": "false"
+            }
+          ],
+          "description": "Verified Mode boot check.",
+          "name": "Verified Mode boot check."
+        },
+        {
+          "field": "servicesWithFullAccess",
+          "fieldDescription": "Service accounts allowed to receive user data.",
+          "description": "Service accounts which are allowed to receive user data. Service accounts allowed to receive user data.",
+          "name": "Service accounts which are allowed to receive user data."
+        },
+        {
+          "field": "servicesWithLimitedAccess",
+          "fieldDescription": "Service accounts which can verify users but do not receive user data.",
+          "description": "Service accounts which can verify users but do not receive user data. Service accounts which can verify users but do not receive user data.",
+          "name": "Service accounts which can verify users but do not receive user data."
+        }
+      ],
+      "categoryTitle": "User verification",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VerifiedMode",
+      "policyDescription": "Verified Mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "cloudReportingUploadFrequency",
+                "number": 1
+              }
+            ],
+            "name": "CloudReportingUploadFrequency"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CloudReportingUploadFrequency",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "How often Chrome status reports enabled by CloudReportingEnabled policy are uploaded. This setting does not apply to events reporting. Events are reported at their time of occurrence.",
+          "name": "Upload frequency in hours.",
+          "defaultValue": "86400s",
+          "inputConstraint": "Duration policy field value is in the range [3, 24] hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "field": "cloudReportingUploadFrequency",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Upload frequency in hours. How often Chrome status reports enabled by CloudReportingEnabled policy are uploaded. This setting does not apply to events reporting. Events are reported at their time of occurrence."
+        }
+      ],
+      "categoryTitle": "Browser reporting",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CloudReportingUploadFrequency",
+      "policyDescription": "Managed browser reporting upload frequency."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SafeBrowsingProtectionLevelEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "safeBrowsingProtectionLevel",
+                "number": 1
+              }
+            ],
+            "name": "SafeBrowsingProtectionLevel"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "SafeBrowsingProtectionLevelEnum",
+            "value": [
+              {
+                "name": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_USER_CHOICE",
+                "number": 4
+              },
+              {
+                "name": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_NO_PROTECTION",
+                "number": 1
+              },
+              {
+                "name": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_STANDARD_PROTECTION",
+                "number": 2
+              },
+              {
+                "name": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_ENHANCED_PROTECTION",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SafeBrowsingProtectionLevel",
+      "fieldDescriptions": [
+        {
+          "field": "safeBrowsingProtectionLevel",
+          "defaultValue": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_USER_CHOICE"
+            },
+            {
+              "description": "Safe Browsing is never active.",
+              "value": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_NO_PROTECTION"
+            },
+            {
+              "description": "Safe Browsing is active in the standard mode.",
+              "value": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_STANDARD_PROTECTION"
+            },
+            {
+              "description": "Safe Browsing is active in the enhanced mode. This mode provides better security, but requires sharing more browsing information with Google.",
+              "value": "SAFE_BROWSING_PROTECTION_LEVEL_ENUM_ENHANCED_PROTECTION"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.SafeBrowsingProtectionLevel",
+      "policyDescription": "Safe Browsing Protection Level."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "safeBrowsingExtendedReportingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SafeBrowsingExtendedReporting"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SafeBrowsingExtendedReporting",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#safe_browsing_extended_reporting_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "safeBrowsingExtendedReportingEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable sending extra information to help improve Safe Browsing.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable sending extra information to help improve Safe Browsing.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SafeBrowsingExtendedReporting",
+      "policyDescription": "Help improve Safe Browsing."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "safeBrowsingAllowlistDomains",
+                "number": 1
+              }
+            ],
+            "name": "SafeBrowsingAllowlistDomain"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SafeBrowsingAllowlistDomain",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#safe_browsing_allowlist_domain",
+      "fieldDescriptions": [
+        {
+          "field": "safeBrowsingAllowlistDomains",
+          "fieldDescription": "Enter the list of domains that you want to be excluded from Safe Browsing checks.",
+          "description": "Allowed domains. Enter the list of domains that you want to be excluded from Safe Browsing checks.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'domain name'.",
+          "name": "Allowed domains."
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SafeBrowsingAllowlistDomain",
+      "policyDescription": "Safe Browsing allowed domains."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "safeBrowsingForTrustedSourcesEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SafeBrowsingForTrustedSourcesEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SafeBrowsingForTrustedSourcesEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "safeBrowsingForTrustedSourcesEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Perform Safe Browsing checks on all downloaded files.",
+              "value": "true"
+            },
+            {
+              "description": "Skip Safe Browsing checks for files downloaded from trusted sources.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SafeBrowsingForTrustedSourcesEnabled",
+      "policyDescription": "Safe Browsing for trusted sources."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DownloadRestrictionEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "safeBrowsingDownloadRestrictions",
+                "number": 1
+              }
+            ],
+            "name": "DownloadRestrictions"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DownloadRestrictionEnum",
+            "value": [
+              {
+                "name": "DOWNLOAD_RESTRICTION_ENUM_NO_SPECIAL_RESTRICTIONS",
+                "number": 1
+              },
+              {
+                "name": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_ALL_MALICIOUS_DOWNLOAD",
+                "number": 5
+              },
+              {
+                "name": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_DANGEROUS_DOWNLOAD",
+                "number": 2
+              },
+              {
+                "name": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_POTENTIALLY_DANGEROUS_DOWNLOAD",
+                "number": 3
+              },
+              {
+                "name": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_ALL_DOWNLOAD",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DownloadRestrictions",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#safe_browsing_download_restrictions",
+      "fieldDescriptions": [
+        {
+          "field": "safeBrowsingDownloadRestrictions",
+          "defaultValue": "DOWNLOAD_RESTRICTION_ENUM_NO_SPECIAL_RESTRICTIONS",
+          "knownValueDescriptions": [
+            {
+              "description": "No special restrictions.",
+              "value": "DOWNLOAD_RESTRICTION_ENUM_NO_SPECIAL_RESTRICTIONS"
+            },
+            {
+              "description": "Block all malicious downloads.",
+              "value": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_ALL_MALICIOUS_DOWNLOAD"
+            },
+            {
+              "description": "Block dangerous downloads.",
+              "value": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_DANGEROUS_DOWNLOAD"
+            },
+            {
+              "description": "Block potentially dangerous downloads.",
+              "value": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_POTENTIALLY_DANGEROUS_DOWNLOAD"
+            },
+            {
+              "description": "Block all downloads.",
+              "value": "DOWNLOAD_RESTRICTION_ENUM_BLOCK_ALL_DOWNLOAD"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DownloadRestrictions",
+      "policyDescription": "Download restrictions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "disableSafeBrowsingProceedAnyway",
+                "number": 1
+              }
+            ],
+            "name": "DisableSafeBrowsingProceedAnyway"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DisableSafeBrowsingProceedAnyway",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#disable_safe_browsing_proceed_anyway",
+      "fieldDescriptions": [
+        {
+          "field": "disableSafeBrowsingProceedAnyway",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow user to bypass Safe Browsing warning.",
+              "value": "true"
+            },
+            {
+              "description": "Allow user to bypass Safe Browsing warning.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DisableSafeBrowsingProceedAnyway",
+      "policyDescription": "Disable bypassing Safe Browsing warnings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PasswordProtectionWarningTriggerEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "passwordProtectionWarningTrigger",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "passwordProtectionChangePasswordUrl",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "passwordProtectionLoginUrls",
+                "number": 3
+              }
+            ],
+            "name": "PasswordAlert"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PasswordProtectionWarningTriggerEnum",
+            "value": [
+              {
+                "name": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_NO_WARNING",
+                "number": 1
+              },
+              {
+                "name": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_WARN_ON_PASSWORD_REUSE",
+                "number": 2
+              },
+              {
+                "name": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_WARN_ON_PHISHING_REUSE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PasswordAlert",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#password_protection_warning_trigger",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Control the triggering of password protection warnings. Learn more at https://support.google.com/chrome/a/answer/9102482.",
+          "knownValueDescriptions": [
+            {
+              "description": "No password protection warning.",
+              "value": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_NO_WARNING"
+            },
+            {
+              "description": "Trigger on password reuse.",
+              "value": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_WARN_ON_PASSWORD_REUSE"
+            },
+            {
+              "description": "Trigger on password reuse on phishing page.",
+              "value": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_WARN_ON_PHISHING_REUSE"
+            }
+          ],
+          "description": "Set password protection warning. Control the triggering of password protection warnings. Learn more at https://support.google.com/chrome/a/answer/9102482.",
+          "defaultValue": "PASSWORD_PROTECTION_WARNING_TRIGGER_ENUM_WARN_ON_PHISHING_REUSE",
+          "field": "passwordProtectionWarningTrigger",
+          "name": "Set password protection warning."
+        },
+        {
+          "field": "passwordProtectionChangePasswordUrl",
+          "fieldDescription": "Enter the URL of the webpage where users can change their password.",
+          "description": "URL for password change. Enter the URL of the webpage where users can change their password.",
+          "name": "URL for password change."
+        },
+        {
+          "field": "passwordProtectionLoginUrls",
+          "fieldDescription": "Enter list of enterprise login URLs where password protection service should capture fingerprint of password.",
+          "description": "Login URLs. Enter list of enterprise login URLs where password protection service should capture fingerprint of password.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url'.",
+          "name": "Login URLs."
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PasswordAlert",
+      "policyDescription": "Password alert."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SafeSitesFilterBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "safeSitesFilterBehavior",
+                "number": 1
+              }
+            ],
+            "name": "SafeSitesFilterBehavior"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "SafeSitesFilterBehaviorEnum",
+            "value": [
+              {
+                "name": "SAFE_SITES_FILTER_BEHAVIOR_ENUM_SAFE_SITES_FILTER_DISABLED",
+                "number": 1
+              },
+              {
+                "name": "SAFE_SITES_FILTER_BEHAVIOR_ENUM_SAFE_SITES_FILTER_ENABLED",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SafeSitesFilterBehavior",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#safe_sites_filter_behavior",
+      "fieldDescriptions": [
+        {
+          "field": "safeSitesFilterBehavior",
+          "defaultValue": "SAFE_SITES_FILTER_BEHAVIOR_ENUM_SAFE_SITES_FILTER_DISABLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not filter sites for adult content.",
+              "value": "SAFE_SITES_FILTER_BEHAVIOR_ENUM_SAFE_SITES_FILTER_DISABLED"
+            },
+            {
+              "description": "Filter top level sites (but not embedded iframes) for adult content.",
+              "value": "SAFE_SITES_FILTER_BEHAVIOR_ENUM_SAFE_SITES_FILTER_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SafeSitesFilterBehavior",
+      "policyDescription": "SafeSites URL filter."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "lookalikeWarningAllowlistDomains",
+                "number": 1
+              }
+            ],
+            "name": "LookalikeWarningAllowlistDomains"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LookalikeWarningAllowlistDomains",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#lookalike_warning_allowlist_domains",
+      "fieldDescriptions": [
+        {
+          "field": "lookalikeWarningAllowlistDomains",
+          "fieldDescription": "Enter list of domains where Chrome should prevent the display of lookalike URL warnings.",
+          "description": "Allowlisted Domains. Enter list of domains where Chrome should prevent the display of lookalike URL warnings.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'domain name'.",
+          "name": "Allowlisted Domains."
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LookalikeWarningAllowlistDomains",
+      "policyDescription": "Suppress lookalike domain warnings on domains."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "AdsSettingForIntrusiveAdsSitesEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "adsSettingForIntrusiveAdsSites",
+                "number": 1
+              }
+            ],
+            "name": "AdsSettingForIntrusiveAdsSites"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AdsSettingForIntrusiveAdsSitesEnum",
+            "value": [
+              {
+                "name": "ADS_SETTING_FOR_INTRUSIVE_ADS_SITES_ENUM_ALLOW_ADS",
+                "number": 1
+              },
+              {
+                "name": "ADS_SETTING_FOR_INTRUSIVE_ADS_SITES_ENUM_BLOCK_ADS",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AdsSettingForIntrusiveAdsSites",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#ads_setting_for_intrusive_ads_sites",
+      "fieldDescriptions": [
+        {
+          "field": "adsSettingForIntrusiveAdsSites",
+          "defaultValue": "ADS_SETTING_FOR_INTRUSIVE_ADS_SITES_ENUM_ALLOW_ADS",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow ads on all sites.",
+              "value": "ADS_SETTING_FOR_INTRUSIVE_ADS_SITES_ENUM_ALLOW_ADS"
+            },
+            {
+              "description": "Block ads on sites with intrusive ads.",
+              "value": "ADS_SETTING_FOR_INTRUSIVE_ADS_SITES_ENUM_BLOCK_ADS"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AdsSettingForIntrusiveAdsSites",
+      "policyDescription": "Sites with intrusive ads."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "abusiveExperienceInterventionEnforce",
+                "number": 1
+              }
+            ],
+            "name": "AbusiveExperienceInterventionEnforce"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AbusiveExperienceInterventionEnforce",
+      "fieldDescriptions": [
+        {
+          "field": "abusiveExperienceInterventionEnforce",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Prevent sites with abusive experiences from opening new windows or tabs.",
+              "value": "true"
+            },
+            {
+              "description": "Allow sites with abusive experiences to open new windows or tabs.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome Safe Browsing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AbusiveExperienceInterventionEnforce",
+      "policyDescription": "Abusive Experience Intervention."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "onByDefault",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "urlPatterns",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "minimumDataSize",
+                "number": 3
+              }
+            ],
+            "name": "CopyPrevention"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CopyPrevention",
+      "fieldDescriptions": [
+        {
+          "field": "onByDefault",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable copy prevention, except for these URLs.",
+              "value": "true"
+            },
+            {
+              "description": "Disable copy prevention, except for these URLs.",
+              "value": "false"
+            }
+          ],
+          "description": "Mode.",
+          "name": "Mode."
+        },
+        {
+          "field": "urlPatterns",
+          "description": "URL patterns.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "URL patterns."
+        },
+        {
+          "field": "minimumDataSize",
+          "defaultValue": 10,
+          "description": "Minimum data size.",
+          "inputConstraint": "The long field should have value greater than or equal to 0.",
+          "name": "Minimum data size."
+        }
+      ],
+      "categoryTitle": "Data Restrictions",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.CopyPrevention",
+      "policyDescription": "Copy Prevention."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "componentUpdatesEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ComponentUpdates"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ComponentUpdates",
+      "fieldDescriptions": [
+        {
+          "field": "componentUpdatesEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable updates for all components.",
+              "value": "true"
+            },
+            {
+              "description": "Disable updates for components.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ComponentUpdates",
+      "policyDescription": "Component updates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "RelaunchNotificationEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "relaunchNotificationEnum",
+                "number": 1
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "relaunchNotificationPeriodDuration",
+                "number": 2
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "relaunchInitialQuietPeriodDuration",
+                "number": 3
+              },
+              {
+                "typeName": "NullableTimeOfDay",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "relaunchWindowStartTime",
+                "number": 4
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "relaunchWindowDurationMin",
+                "number": 5
+              }
+            ],
+            "name": "RelaunchNotificationWithDuration"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          },
+          {
+            "field": [
+              {
+                "typeName": "TimeOfDay",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "timeOfDay",
+                "number": 1
+              }
+            ],
+            "name": "NullableTimeOfDay"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "hours",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "minutes",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "seconds",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "nanos",
+                "number": 4
+              }
+            ],
+            "name": "TimeOfDay"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "RelaunchNotificationEnum",
+            "value": [
+              {
+                "name": "RELAUNCH_NOTIFICATION_ENUM_NO_NOTIFICATION",
+                "number": 1
+              },
+              {
+                "name": "RELAUNCH_NOTIFICATION_ENUM_RECOMMENDED",
+                "number": 2
+              },
+              {
+                "name": "RELAUNCH_NOTIFICATION_ENUM_REQUIRED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RelaunchNotificationWithDuration",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#relaunch_notification",
+      "fieldDescriptions": [
+        {
+          "field": "relaunchNotificationEnum",
+          "defaultValue": "RELAUNCH_NOTIFICATION_ENUM_NO_NOTIFICATION",
+          "knownValueDescriptions": [
+            {
+              "description": "No relaunch notification.",
+              "value": "RELAUNCH_NOTIFICATION_ENUM_NO_NOTIFICATION"
+            },
+            {
+              "description": "Show notification recommending relaunch.",
+              "value": "RELAUNCH_NOTIFICATION_ENUM_RECOMMENDED"
+            },
+            {
+              "description": "Force relaunch after a period.",
+              "value": "RELAUNCH_NOTIFICATION_ENUM_REQUIRED"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_RECOMMENDED",
+              "sourceField": "relaunchNotificationEnum"
+            },
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_REQUIRED",
+              "sourceField": "relaunchNotificationEnum"
+            }
+          ],
+          "description": "Time period (hours). Allows you to set the time period over which users are notified that Google Chrome must be relaunched to apply a pending update. Over this time period, the user will be repeatedly informed of the need for an update.",
+          "defaultValue": "604800s",
+          "fieldDescription": "Allows you to set the time period over which users are notified that Google Chrome must be relaunched to apply a pending update. Over this time period, the user will be repeatedly informed of the need for an update.",
+          "inputConstraint": "Duration policy field value is in the range [1, 168] hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "field": "relaunchNotificationPeriodDuration",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "name": "Time period (hours)."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_RECOMMENDED",
+              "sourceField": "relaunchNotificationEnum"
+            },
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_REQUIRED",
+              "sourceField": "relaunchNotificationEnum"
+            }
+          ],
+          "description": "Initial quiet period (hours). To reduce user notifications, you might specify an initial quiet period on ChromeOS. Users who reboot their devices within the quiet period will not get notified of a required reboot. The quiet period should be set to a number less than the total time period. Note: This policy only affects ChromeOS devices.",
+          "defaultValue": "345600s",
+          "fieldDescription": "To reduce user notifications, you might specify an initial quiet period on ChromeOS. Users who reboot their devices within the quiet period will not get notified of a required reboot. The quiet period should be set to a number less than the total time period. Note: This policy only affects ChromeOS devices.",
+          "inputConstraint": "Duration policy field value has minimum value of 0 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "field": "relaunchInitialQuietPeriodDuration",
+          "name": "Initial quiet period (hours)."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_RECOMMENDED",
+              "sourceField": "relaunchNotificationEnum"
+            },
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_REQUIRED",
+              "sourceField": "relaunchNotificationEnum"
+            }
+          ],
+          "description": "Relaunch window start time. The time of day, in 24-hour format (hh:mm), representing the start of the time interval within which the relaunch would be scheduled.",
+          "fieldDescription": "The time of day, in 24-hour format (hh:mm), representing the start of the time interval within which the relaunch would be scheduled.",
+          "field": "relaunchWindowStartTime",
+          "nestedFieldDescriptions": [
+            {
+              "field": "timeOfDay",
+              "description": "N/A",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "hours",
+                  "description": "N/A"
+                },
+                {
+                  "field": "minutes",
+                  "description": "N/A"
+                },
+                {
+                  "field": "seconds",
+                  "description": "N/A"
+                },
+                {
+                  "field": "nanos",
+                  "description": "N/A"
+                }
+              ]
+            }
+          ],
+          "name": "Relaunch window start time."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_RECOMMENDED",
+              "sourceField": "relaunchNotificationEnum"
+            },
+            {
+              "sourceFieldValue": "RELAUNCH_NOTIFICATION_ENUM_REQUIRED",
+              "sourceField": "relaunchNotificationEnum"
+            }
+          ],
+          "description": "Relaunch window duration (minutes). Relaunch would be scheduled within the time interval beginning at the previously specified start time, for the duration specified here, in minutes. This duration does take into account daylight savings time. The time period over which users are notified of a relaunch is extended to fall within this time interval.",
+          "fieldDescription": "Relaunch would be scheduled within the time interval beginning at the previously specified start time, for the duration specified here, in minutes. This duration does take into account daylight savings time. The time period over which users are notified of a relaunch is extended to fall within this time interval.",
+          "inputConstraint": "Duration policy field value is in the range [1, 1440] minutes. The input duration policy field value should be converted to seconds. Multiply the desired value in minutes by 60 and append an 's'.",
+          "field": "relaunchWindowDurationMin",
+          "name": "Relaunch window duration (minutes)."
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RelaunchNotificationWithDuration",
+      "policyDescription": "Relaunch notification."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "updatesSuppressedDurationMin",
+                "number": 1
+              },
+              {
+                "typeName": "NullableTimeOfDay",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "updatesSuppressedStartTime",
+                "number": 2
+              }
+            ],
+            "name": "UpdatesSuppressed"
+          },
+          {
+            "field": [
+              {
+                "typeName": "TimeOfDay",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "timeOfDay",
+                "number": 1
+              }
+            ],
+            "name": "NullableTimeOfDay"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "hours",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "minutes",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "seconds",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "nanos",
+                "number": 4
+              }
+            ],
+            "name": "TimeOfDay"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UpdatesSuppressed",
+      "supportUri": "https://support.google.com/chrome/a/answer/9838774?hl=en#schedule_autoupdates",
+      "fieldDescriptions": [
+        {
+          "field": "updatesSuppressedDurationMin",
+          "fieldDescription": "Auto-update checks will begin to be suppressed at the start time specified in 'updatesSuppressedStartTime', for the duration specified here, in minutes. This duration does not take into account daylight savings time.",
+          "description": "Duration (minutes). Auto-update checks will begin to be suppressed at the start time specified in 'updatesSuppressedStartTime', for the duration specified here, in minutes. This duration does not take into account daylight savings time.",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "name": "Duration (minutes)."
+        },
+        {
+          "field": "updatesSuppressedStartTime",
+          "fieldDescription": "The time of day, in 24-hour format (hh:mm), when auto-update checks begin to be suppressed.",
+          "description": "Start time. The time of day, in 24-hour format (hh:mm), when auto-update checks begin to be suppressed.",
+          "name": "Start time.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "timeOfDay",
+              "description": "N/A",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "hours",
+                  "description": "N/A"
+                },
+                {
+                  "field": "minutes",
+                  "description": "N/A"
+                },
+                {
+                  "field": "seconds",
+                  "description": "N/A"
+                },
+                {
+                  "field": "nanos",
+                  "description": "N/A"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UpdatesSuppressed",
+      "policyDescription": "Suppress auto-update check."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "autoUpdateCheckPeriodMinutesNew",
+                "number": 1
+              }
+            ],
+            "name": "AutoUpdateCheckPeriodNew"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AutoUpdateCheckPeriodNew",
+      "supportUri": "https://support.google.com/chrome/a/answer/9838774?hl=en",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Set the value to 0 to disable all auto-update checks. Leave empty for a default of 295 minutes.",
+          "name": "Auto update check period (minutes).",
+          "inputConstraint": "Duration policy field value is in the range [0, 43200] minutes. The input duration policy field value should be converted to seconds. Multiply the desired value in minutes by 60 and append an 's'.",
+          "field": "autoUpdateCheckPeriodMinutesNew",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Auto update check period (minutes). Set the value to 0 to disable all auto-update checks. Leave empty for a default of 295 minutes."
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AutoUpdateCheckPeriodNew",
+      "policyDescription": "Auto-update check period."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DownloadPreferenceEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "downloadPreference",
+                "number": 1
+              }
+            ],
+            "name": "DownloadPreference"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DownloadPreferenceEnum",
+            "value": [
+              {
+                "name": "DOWNLOAD_PREFERENCE_ENUM_NO_PREFERENCE",
+                "number": 1
+              },
+              {
+                "name": "DOWNLOAD_PREFERENCE_ENUM_CACHEABLE",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DownloadPreference",
+      "supportUri": "https://support.google.com/chrome/a/answer/6350036?hl=en#defaultpolicies",
+      "fieldDescriptions": [
+        {
+          "field": "downloadPreference",
+          "defaultValue": "DOWNLOAD_PREFERENCE_ENUM_NO_PREFERENCE",
+          "knownValueDescriptions": [
+            {
+              "description": "No preference.",
+              "value": "DOWNLOAD_PREFERENCE_ENUM_NO_PREFERENCE"
+            },
+            {
+              "description": "Attempt to provide cache-friendly download URLs.",
+              "value": "DOWNLOAD_PREFERENCE_ENUM_CACHEABLE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DownloadPreference",
+      "policyDescription": "Cacheable URLs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "OmahaRollbackToTargetVersionValueEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "rollbackToTargetVersionEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "targetVersionPrefixSetting",
+                "number": 2
+              },
+              {
+                "typeName": "OmahaUpdateValueEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "updateSetting",
+                "number": 3
+              },
+              {
+                "typeName": "ChromeChannelEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "targetChannelSetting",
+                "number": 4
+              }
+            ],
+            "name": "ChromeBrowserUpdates"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "OmahaRollbackToTargetVersionValueEnum",
+            "value": [
+              {
+                "name": "OMAHA_ROLLBACK_TO_TARGET_VERSION_VALUE_ENUM_ROLLBACK_TO_TARGET_VERSION_DISABLED",
+                "number": 1
+              },
+              {
+                "name": "OMAHA_ROLLBACK_TO_TARGET_VERSION_VALUE_ENUM_ROLLBACK_TO_TARGET_VERSION_ENABLED",
+                "number": 2
+              }
+            ]
+          },
+          {
+            "name": "OmahaUpdateValueEnum",
+            "value": [
+              {
+                "name": "OMAHA_UPDATE_VALUE_ENUM_UPDATES_ENABLED",
+                "number": 2
+              },
+              {
+                "name": "OMAHA_UPDATE_VALUE_ENUM_AUTOMATIC_UPDATES_ONLY",
+                "number": 4
+              },
+              {
+                "name": "OMAHA_UPDATE_VALUE_ENUM_MANUAL_UPDATES_ONLY",
+                "number": 3
+              },
+              {
+                "name": "OMAHA_UPDATE_VALUE_ENUM_UPDATES_DISABLED",
+                "number": 1
+              }
+            ]
+          },
+          {
+            "name": "ChromeChannelEnum",
+            "value": [
+              {
+                "name": "CHROME_CHANNEL_ENUM_STABLE",
+                "number": 1
+              },
+              {
+                "name": "CHROME_CHANNEL_ENUM_DEV",
+                "number": 2
+              },
+              {
+                "name": "CHROME_CHANNEL_ENUM_BETA",
+                "number": 3
+              },
+              {
+                "name": "CHROME_CHANNEL_ENUM_EXTENDED_STABLE",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ChromeBrowserUpdates",
+      "supportUri": "https://support.google.com/chrome/a/answer/6350036?hl=en#apppol",
+      "fieldDescriptions": [
+        {
+          "field": "rollbackToTargetVersionEnabled",
+          "defaultValue": "OMAHA_ROLLBACK_TO_TARGET_VERSION_VALUE_ENUM_ROLLBACK_TO_TARGET_VERSION_DISABLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not rollback to target version.",
+              "value": "OMAHA_ROLLBACK_TO_TARGET_VERSION_VALUE_ENUM_ROLLBACK_TO_TARGET_VERSION_DISABLED"
+            },
+            {
+              "description": "Rollback to target version.",
+              "value": "OMAHA_ROLLBACK_TO_TARGET_VERSION_VALUE_ENUM_ROLLBACK_TO_TARGET_VERSION_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "targetVersionPrefixSetting",
+          "fieldDescription": "Specifies which version the Chrome browser should be updated to. When a value is set, Chrome will be updated to the version prefixed with this value. For example, if the value is '55.', Chrome will be updated to any minor version of 55 (e.g. 55.24.34.0 or 55.60.2.10). If the value is '55.2.', Chrome will be updated to any minor version of 55.2 (e.g. 55.2.34.100 or 55.2.2.1). If the value is '55.24.34.1', Chrome will be updated to that specific version only. Chrome may stop updating or not rollback if the specified version is more than three major milestones old.",
+          "description": "Target version prefix. Specifies which version the Chrome browser should be updated to. When a value is set, Chrome will be updated to the version prefixed with this value. For example, if the value is '55.', Chrome will be updated to any minor version of 55 (e.g. 55.24.34.0 or 55.60.2.10). If the value is '55.2.', Chrome will be updated to any minor version of 55.2 (e.g. 55.2.34.100 or 55.2.2.1). If the value is '55.24.34.1', Chrome will be updated to that specific version only. Chrome may stop updating or not rollback if the specified version is more than three major milestones old.",
+          "name": "Target version prefix."
+        },
+        {
+          "field": "updateSetting",
+          "defaultValue": "OMAHA_UPDATE_VALUE_ENUM_UPDATES_ENABLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow updates.",
+              "value": "OMAHA_UPDATE_VALUE_ENUM_UPDATES_ENABLED"
+            },
+            {
+              "description": "Allow updates when Chrome checks for them automatically.",
+              "value": "OMAHA_UPDATE_VALUE_ENUM_AUTOMATIC_UPDATES_ONLY"
+            },
+            {
+              "description": "Allow updates when the user checks for them manually.",
+              "value": "OMAHA_UPDATE_VALUE_ENUM_MANUAL_UPDATES_ONLY"
+            },
+            {
+              "description": "Disable updates.",
+              "value": "OMAHA_UPDATE_VALUE_ENUM_UPDATES_DISABLED"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "targetChannelSetting",
+          "defaultValue": "CHROME_CHANNEL_ENUM_STABLE",
+          "knownValueDescriptions": [
+            {
+              "description": "Stable channel.",
+              "value": "CHROME_CHANNEL_ENUM_STABLE"
+            },
+            {
+              "description": "Dev channel.",
+              "value": "CHROME_CHANNEL_ENUM_DEV"
+            },
+            {
+              "description": "Beta channel.",
+              "value": "CHROME_CHANNEL_ENUM_BETA"
+            },
+            {
+              "description": "Extended stable channel.",
+              "value": "CHROME_CHANNEL_ENUM_EXTENDED_STABLE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ChromeBrowserUpdates",
+      "policyDescription": "Chrome browser updates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "userDataSnapshotRetentionLimit",
+                "number": 1
+              }
+            ],
+            "name": "UserDataSnapshotRetentionLimit"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UserDataSnapshotRetentionLimit",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#user_data_snapshot_retention_limit",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Set to 0 to disable taking snapshots.",
+          "description": "The maximum number of user data snapshots retained. Set to 0 to disable taking snapshots.",
+          "defaultValue": 3,
+          "inputConstraint": "The long field should have value greater than or equal to 0.",
+          "field": "userDataSnapshotRetentionLimit",
+          "name": "The maximum number of user data snapshots retained."
+        }
+      ],
+      "categoryTitle": "Chrome updates",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UserDataSnapshotRetentionLimit",
+      "policyDescription": "User data snapshot limits."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "VariationsLevelEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "variationsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "Variations"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "VariationsLevelEnum",
+            "value": [
+              {
+                "name": "VARIATIONS_LEVEL_ENUM_ENABLED",
+                "number": 1
+              },
+              {
+                "name": "VARIATIONS_LEVEL_ENUM_CRITICAL_FIXES_ONLY",
+                "number": 2
+              },
+              {
+                "name": "VARIATIONS_LEVEL_ENUM_DISABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Variations",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "variationsEnabled",
+          "defaultValue": "VARIATIONS_LEVEL_ENUM_ENABLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Chrome variations.",
+              "value": "VARIATIONS_LEVEL_ENUM_ENABLED"
+            },
+            {
+              "description": "Enable variations for critical fixes only.",
+              "value": "VARIATIONS_LEVEL_ENUM_CRITICAL_FIXES_ONLY"
+            },
+            {
+              "description": "Disable variations.",
+              "value": "VARIATIONS_LEVEL_ENUM_DISABLED"
+            }
+          ],
+          "description": "Chrome Variations.",
+          "name": "Chrome Variations."
+        }
+      ],
+      "categoryTitle": "Chrome variations",
+      "notices": [
+        {
+          "field": "variationsEnabled",
+          "noticeMessage": "Disabling variations significantly increases the risk of future security and compatibility issues and is not recommended.",
+          "noticeValue": "VARIATIONS_LEVEL_ENUM_DISABLED"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Variations",
+      "policyDescription": "Variations."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserSwitcherEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcher"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcher",
+      "supportUri": "https://support.google.com/chrome/a/answer/9270076?hl=en",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Legacy Browser Support.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Legacy Browser Support.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcher",
+      "policyDescription": "Legacy Browser Support."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "browserSwitcherDelayDuration",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherDelayDuration"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherDelayDuration",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_delay",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "If this is set to a value between 0 and 30, Chrome will show a message for that many seconds before opening the alternative browser.",
+          "name": "Delay (seconds).",
+          "inputConstraint": "Duration policy field value is in the range [0, 30] seconds. The input duration policy field value should be converted to seconds. Multiply the desired value in seconds by 1 and append an 's'.",
+          "field": "browserSwitcherDelayDuration",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Delay (seconds). If this is set to a value between 0 and 30, Chrome will show a message for that many seconds before opening the alternative browser."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherDelayDuration",
+      "policyDescription": "Delay before launching alternative browser."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "BrowserSwitcherParsingModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "browserSwitcherParsingMode",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherParsingMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "BrowserSwitcherParsingModeEnum",
+            "value": [
+              {
+                "name": "BROWSER_SWITCHER_PARSING_MODE_ENUM_DEFAULT",
+                "number": 1
+              },
+              {
+                "name": "BROWSER_SWITCHER_PARSING_MODE_ENUM_IE_SITE_LIST_MODE",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherParsingMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_parsing_mode",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherParsingMode",
+          "defaultValue": "BROWSER_SWITCHER_PARSING_MODE_ENUM_DEFAULT",
+          "knownValueDescriptions": [
+            {
+              "description": "Default.",
+              "value": "BROWSER_SWITCHER_PARSING_MODE_ENUM_DEFAULT"
+            },
+            {
+              "description": "Enterprise Mode IE/Edge compatible.",
+              "value": "BROWSER_SWITCHER_PARSING_MODE_ENUM_IE_SITE_LIST_MODE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherParsingMode",
+      "policyDescription": "Sitelist parsing mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserSwitcherUseIeSitelist",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherUseIeSitelist"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherUseIeSitelist",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_use_ie_sitelist",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherUseIeSitelist",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Use Internet Explorer's SiteList policy as a source of rules.",
+              "value": "true"
+            },
+            {
+              "description": "Do not use Internet Explorer's SiteList policy as a source of rules.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherUseIeSitelist",
+      "policyDescription": "Use Internet Explorer site list."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "browserSwitcherExternalSitelistUrl",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherExternalSitelistUrl"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherExternalSitelistUrl",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_external_sitelist_url",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherExternalSitelistUrl",
+          "description": "URL to site list XML file.",
+          "name": "URL to site list XML file."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherExternalSitelistUrl",
+      "policyDescription": "Legacy Browser Support site list."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "browserSwitcherExternalGreylistUrl",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherExternalGreylistUrl"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherExternalGreylistUrl",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_external_greylist_url",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherExternalGreylistUrl",
+          "description": "URL to site list XML file.",
+          "name": "URL to site list XML file."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherExternalGreylistUrl",
+      "policyDescription": "URL to list of websites to open in either browser."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "browserSwitcherUrlList",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherUrlList"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherUrlList",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_url_list",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherUrlList",
+          "description": "URLs to websites to open in alternative browser.",
+          "name": "URLs to websites to open in alternative browser."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherUrlList",
+      "policyDescription": "Websites to open in alternative browser."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "browserSwitcherUrlGreylist",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherUrlGreylist"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherUrlGreylist",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_url_greylist",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherUrlGreylist",
+          "description": "URLs to websites to open in either browser.",
+          "name": "URLs to websites to open in either browser."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherUrlGreylist",
+      "policyDescription": "Websites to open in either browser."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "alternativeBrowserParameters",
+                "number": 1
+              }
+            ],
+            "name": "AlternativeBrowserParameters"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AlternativeBrowserParameters",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#alternative_browser_parameters",
+      "fieldDescriptions": [
+        {
+          "field": "alternativeBrowserParameters",
+          "fieldDescription": "Parameters for the alternative browser. If a parameter contains {\"${url}\"}, it gets replaced with the URL. Otherwise, the URL is appended at the end of the command line.",
+          "description": "Command-line parameters. Parameters for the alternative browser. If a parameter contains {\"${url}\"}, it gets replaced with the URL. Otherwise, the URL is appended at the end of the command line.",
+          "name": "Command-line parameters."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AlternativeBrowserParameters",
+      "policyDescription": "Alternative browser parameters."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "alternativeBrowserPath",
+                "number": 1
+              }
+            ],
+            "name": "AlternativeBrowserPath"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AlternativeBrowserPath",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#alternative_browser_path",
+      "fieldDescriptions": [
+        {
+          "field": "alternativeBrowserPath",
+          "fieldDescription": "If this policy is unset, a platform-specific default is used. Only some values are supported, such as: {\"${ie}\"}, {\"${edge}\"}, and the path to iexplore.exe.",
+          "description": "Path to the alternative browser. If this policy is unset, a platform-specific default is used. Only some values are supported, such as: {\"${ie}\"}, {\"${edge}\"}, and the path to iexplore.exe.",
+          "name": "Path to the alternative browser."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AlternativeBrowserPath",
+      "policyDescription": "Alternative browser path."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "browserSwitcherChromeParameters",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherChromeParameters"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherChromeParameters",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_chrome_parameters",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherChromeParameters",
+          "fieldDescription": "Windows-only. Parameters for launching Chrome from the alternative browser. If a parameter contains {\"${url}\"}, it gets replaced with the URL. Otherwise, the URL is appended at the end of the command line.",
+          "description": "Command-line parameters. Windows-only. Parameters for launching Chrome from the alternative browser. If a parameter contains {\"${url}\"}, it gets replaced with the URL. Otherwise, the URL is appended at the end of the command line.",
+          "name": "Command-line parameters."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherChromeParameters",
+      "policyDescription": "Chrome parameters."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "browserSwitcherChromePath",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherChromePath"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherChromePath",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_chrome_path",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherChromePath",
+          "fieldDescription": "Windows-only. Path to the Chrome executable to launch when switching from the alternative browser to Chrome. If unset, the alternative browser will auto-detect the path to Chrome.",
+          "description": "Path to the Chrome executable. Windows-only. Path to the Chrome executable to launch when switching from the alternative browser to Chrome. If unset, the alternative browser will auto-detect the path to Chrome.",
+          "name": "Path to the Chrome executable."
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherChromePath",
+      "policyDescription": "Chrome path."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserSwitcherKeepLastChromeTab",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSwitcherKeepLastChromeTab"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSwitcherKeepLastChromeTab",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_switcher_keep_last_chrome_tab",
+      "fieldDescriptions": [
+        {
+          "field": "browserSwitcherKeepLastChromeTab",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Keep at least one Chrome tab open.",
+              "value": "true"
+            },
+            {
+              "description": "Close Chrome completely.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Legacy Browser Support",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSwitcherKeepLastChromeTab",
+      "policyDescription": "Keep last Chrome tab."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "virtualMachinesCommandLineAccessAllowed",
+                "number": 1
+              }
+            ],
+            "name": "VirtualMachinesCommandLineAccessAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VirtualMachinesCommandLineAccessAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#command_line_access_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "virtualMachinesCommandLineAccessAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable VM command line access.",
+              "value": "true"
+            },
+            {
+              "description": "Disable VM command line access.",
+              "value": "false"
+            }
+          ],
+          "description": "Allow users to access the command line to manage virtual machines.",
+          "name": "Allow users to access the command line to manage virtual machines."
+        }
+      ],
+      "categoryTitle": "Virtual machines (VMs) and developers",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VirtualMachinesCommandLineAccessAllowed",
+      "policyDescription": "Command line access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "virtualMachinesAllowed",
+                "number": 1
+              }
+            ],
+            "name": "VirtualMachinesAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VirtualMachinesAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#crostini_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "virtualMachinesAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow usage for virtual machines needed to support Linux apps for users.",
+              "value": "true"
+            },
+            {
+              "description": "Block usage for virtual machines needed to support Linux apps for users.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Virtual machines (VMs) and developers",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VirtualMachinesAllowed",
+      "policyDescription": "Linux virtual machines (BETA)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "virtualMachinesPortForwardingAllowed",
+                "number": 1
+              }
+            ],
+            "name": "VirtualMachinesPortForwardingAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VirtualMachinesPortForwardingAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#crostini_port_forwarding_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "virtualMachinesPortForwardingAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to enable and configure port forwarding into the VM container.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to enable and configure port forwarding into the VM container.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Virtual machines (VMs) and developers",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VirtualMachinesPortForwardingAllowed",
+      "policyDescription": "Port forwarding."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "VirtualMachinesAndroidAdbSideloadingAllowedEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "virtualMachinesAndroidAdbSideloadingAllowed",
+                "number": 1
+              }
+            ],
+            "name": "VirtualMachinesAndroidAdbSideloadingAllowed"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "VirtualMachinesAndroidAdbSideloadingAllowedEnum",
+            "value": [
+              {
+                "name": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW",
+                "number": 1
+              },
+              {
+                "name": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_ALLOW",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.VirtualMachinesAndroidAdbSideloadingAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#crostini_arc_adb_sideloading_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "virtualMachinesAndroidAdbSideloadingAllowed",
+          "defaultValue": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW",
+          "knownValueDescriptions": [
+            {
+              "description": "Prevent the user from using Android apps from untrusted sources.",
+              "value": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW"
+            },
+            {
+              "description": "Allow the user to use Android apps from untrusted sources.",
+              "value": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_ALLOW"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Virtual machines (VMs) and developers",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.VirtualMachinesAndroidAdbSideloadingAllowed",
+      "policyDescription": "Android apps from untrusted sources."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "systemTerminalSshAllowed",
+                "number": 1
+              }
+            ],
+            "name": "SystemTerminalSshAllowed"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SystemTerminalSshAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#system_terminal_ssh_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "systemTerminalSshAllowed",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Enable SSH in Terminal System App, but not on enrolled Chrome OS devices.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable SSH in Terminal System App.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable SSH in Terminal System App.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Virtual machines (VMs) and developers",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.SystemTerminalSshAllowed",
+      "policyDescription": "SSH in terminal system app."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "pluginVmAllowed",
+                "number": 1
+              },
+              {
+                "type": "TYPE_BOOL",
+                "name": "ackNoticeForPluginVmAllowedSetToTrue",
+                "number": 10001
+              }
+            ],
+            "name": "PluginVmAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PluginVmAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#user_plugin_vm_allowed",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "pluginVmAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to use Parallels Desktop.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to use Parallels Desktop.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "ackNoticeForPluginVmAllowedSetToTrue",
+          "fieldDescription": "This field must be set to true to acknowledge the notice message associated with the field 'plugin_vm_allowed' set to value 'true'. Please sse the notices listed with this policy for more information.",
+          "description": "This field must be set to true to acknowledge the notice message associated with the field 'plugin_vm_allowed' set to value 'true'. Please sse the notices listed with this policy for more information."
+        }
+      ],
+      "categoryTitle": "Parallels\u00ae Desktop",
+      "notices": [
+        {
+          "field": "pluginVmAllowed",
+          "noticeMessage": "By enabling Parallels Desktop, you agree to the Corel Business User License Agreement specified at https://www.corel.com/bula/. Warning: Device identifiers may be shared with Parallels. Please see privacy policy for more details at https://www.parallels.com/about/legal/privacy/. Make sure Chrome devices meet recommended configuration: https://www.parallels.com/products/desktop/chrome/resources/#section-requirements.",
+          "noticeValue": "true",
+          "acknowledgementRequired": true
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PluginVmAllowed",
+      "policyDescription": "Parallels Desktop."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "pluginVmImageUrl",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "pluginVmImageHash",
+                "number": 2
+              }
+            ],
+            "name": "PluginVmImage"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PluginVmImage",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#plugin_vm_image_url",
+      "fieldDescriptions": [
+        {
+          "field": "pluginVmImageUrl",
+          "description": "N/A"
+        },
+        {
+          "field": "pluginVmImageHash",
+          "fieldDescription": "Enter the SHA-256 hash of the Windows image for Parallels Desktop.",
+          "description": "SHA-256 hash. Enter the SHA-256 hash of the Windows image for Parallels Desktop.",
+          "name": "SHA-256 hash."
+        }
+      ],
+      "categoryTitle": "Parallels\u00ae Desktop",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PluginVmImage",
+      "policyDescription": "Parallels Desktop Windows image."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "pluginVmRequiredFreeDiskSpace",
+                "number": 1
+              }
+            ],
+            "name": "PluginVmRequiredDiskSpace"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PluginVmRequiredDiskSpace",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#plugin_vm_required_free_disk_space",
+      "fieldDescriptions": [
+        {
+          "field": "pluginVmRequiredFreeDiskSpace",
+          "defaultValue": 20,
+          "description": "Required free disk space (GB).",
+          "inputConstraint": "The long field should have value greater than or equal to 0.",
+          "name": "Required free disk space (GB)."
+        }
+      ],
+      "categoryTitle": "Parallels\u00ae Desktop",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PluginVmRequiredDiskSpace",
+      "policyDescription": "Required disk space."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "pluginVmDataCollectionAllowed",
+                "number": 1
+              }
+            ],
+            "name": "PluginVmDataCollection"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PluginVmDataCollection",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#plugin_vm_data_collection_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "pluginVmDataCollectionAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable sharing diagnostics data to Parallels.",
+              "value": "true"
+            },
+            {
+              "description": "Disable sharing diagnostics data to Parallels.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Parallels\u00ae Desktop",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PluginVmDataCollection",
+      "policyDescription": "Diagnostic information."
+    }
+]

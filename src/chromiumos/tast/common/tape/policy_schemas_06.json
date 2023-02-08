@@ -1,0 +1,5063 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PolicyPrecedenceOrderEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "policyPrecedence",
+                "number": 1
+              }
+            ],
+            "name": "PolicyPrecedence"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PolicyPrecedenceOrderEnum",
+            "value": [
+              {
+                "name": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_DEFAULT",
+                "number": 1
+              },
+              {
+                "name": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_CLOUD_MACHINE",
+                "number": 2
+              },
+              {
+                "name": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_CLOUD_USER",
+                "number": 3
+              },
+              {
+                "name": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_BOTH",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PolicyPrecedence",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#policy_precedence",
+      "fieldDescriptions": [
+        {
+          "field": "policyPrecedence",
+          "defaultValue": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_DEFAULT",
+          "knownValueDescriptions": [
+            {
+              "description": "Machine > Machine cloud > OS user > Chrome profile.",
+              "value": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_DEFAULT"
+            },
+            {
+              "description": "Machine cloud > Machine > OS user > Chrome profile.",
+              "value": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_CLOUD_MACHINE"
+            },
+            {
+              "description": "Machine > Chrome profile > Machine cloud > OS user.",
+              "value": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_CLOUD_USER"
+            },
+            {
+              "description": "Chrome profile > Machine cloud > Machine > OS user.",
+              "value": "POLICY_PRECEDENCE_ORDER_ENUM_PRECEDENCE_BOTH"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Setting sources",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PolicyPrecedence",
+      "policyDescription": "Policy precedence."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "policyMergelist",
+                "number": 1
+              }
+            ],
+            "name": "PolicyMergelist"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PolicyMergelist",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#policy_mergelist",
+      "fieldDescriptions": [
+        {
+          "field": "policyMergelist",
+          "fieldDescription": "The values of each policy will be merged when set from different sources.",
+          "description": "On-device policy names. The values of each policy will be merged when set from different sources.",
+          "name": "On-device policy names."
+        }
+      ],
+      "categoryTitle": "Setting sources",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PolicyMergelist",
+      "policyDescription": "Policy mergelist."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "cloudUserPolicyMerge",
+                "number": 1
+              }
+            ],
+            "name": "CloudUserPolicyMerge"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CloudUserPolicyMerge",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#cloud_user_policy_merge",
+      "fieldDescriptions": [
+        {
+          "field": "cloudUserPolicyMerge",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Merge user cloud policies with machine policies.",
+              "value": "true"
+            },
+            {
+              "description": "Do not merge user cloud policies with machine policies.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Setting sources",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CloudUserPolicyMerge",
+      "policyDescription": "User cloud policy merge."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "metricsReportingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "MetricsReportingEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.MetricsReportingEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#metrics_reporting_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "metricsReportingEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Send anonymous reports of usage and crash-related data to Google.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not send anonymous reports of usage and crash-related data to Google.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.MetricsReportingEnabled",
+      "policyDescription": "Metrics reporting."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "totalMemoryLimitMb",
+                "number": 1
+              }
+            ],
+            "name": "TotalMemoryLimitMb"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.TotalMemoryLimitMb",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#chrome_browser_memory_limit",
+      "fieldDescriptions": [
+        {
+          "field": "totalMemoryLimitMb",
+          "description": "Memory consumption limit in MB (minimum 1024).",
+          "inputConstraint": "The long field should have value greater than or equal to 1024.",
+          "name": "Memory consumption limit in MB (minimum 1024)."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.TotalMemoryLimitMb",
+      "policyDescription": "Chrome browser memory limit."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "diskCacheDir",
+                "number": 1
+              }
+            ],
+            "name": "DiskCacheDir"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DiskCacheDir",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#disk_cache_dir",
+      "fieldDescriptions": [
+        {
+          "field": "diskCacheDir",
+          "description": "Disk cache directory.",
+          "name": "Disk cache directory."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DiskCacheDir",
+      "policyDescription": "Disk cache directory."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "diskCacheSize",
+                "number": 1
+              }
+            ],
+            "name": "DiskCacheSize"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DiskCacheSize",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#disk_cache_size",
+      "fieldDescriptions": [
+        {
+          "field": "diskCacheSize",
+          "description": "Disk cache size in bytes.",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "name": "Disk cache size in bytes."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DiskCacheSize",
+      "policyDescription": "Disk cache size."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "backgroundModeEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BackgroundModeEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BackgroundModeEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#background_mode_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "backgroundModeEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable background mode.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable background mode.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BackgroundModeEnabled",
+      "policyDescription": "Background mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserNetworkTimeQueriesEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BrowserNetworkTimeQueriesEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserNetworkTimeQueriesEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_network_time_queries_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "browserNetworkTimeQueriesEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow queries to a Google server to retrieve an accurate timestamp.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow queries to Google servers to retrieve timestamps.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserNetworkTimeQueriesEnabled",
+      "policyDescription": "Google time service."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "maxInvalidationFetchDelay",
+                "number": 1
+              }
+            ],
+            "name": "MaxInvalidationFetchDelay"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.MaxInvalidationFetchDelay",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#max_invalidation_fetch_delay",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "1 second - 300 seconds; leave empty for a default of 10 seconds.",
+          "name": "Maximum fetch delay after a policy invalidation.",
+          "inputConstraint": "Duration policy field value is in the range [1, 300] seconds. The input duration policy field value should be converted to seconds. Multiply the desired value in seconds by 1 and append an 's'.",
+          "field": "maxInvalidationFetchDelay",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Maximum fetch delay after a policy invalidation. 1 second - 300 seconds; leave empty for a default of 10 seconds."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.MaxInvalidationFetchDelay",
+      "policyDescription": "Policy fetch delay."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "webXrImmersiveArEnabled",
+                "number": 1
+              }
+            ],
+            "name": "WebXrImmersiveArEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebXrImmersiveArEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "webXrImmersiveArEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow creating WebXR immersive-ar sessions.",
+              "value": "true"
+            },
+            {
+              "description": "Prevent creating WebXR immersive-ar sessions.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WebXrImmersiveArEnabled",
+      "policyDescription": "WebXR immersive-ar sessions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "syncDisabledCros",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "syncTypesListDisabledCros",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "clearBrowsingDataOnExitListCros",
+                "number": 3
+              }
+            ],
+            "name": "SyncSettingsCros"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SyncSettingsCros",
+      "fieldDescriptions": [
+        {
+          "field": "syncDisabledCros",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Disable Chrome Sync.",
+              "value": "true"
+            },
+            {
+              "description": "Allow Chrome Sync.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "syncDisabledCros"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Apps.",
+              "value": "apps"
+            },
+            {
+              "description": "Autofill.",
+              "value": "autofill"
+            },
+            {
+              "description": "Bookmarks.",
+              "value": "bookmarks"
+            },
+            {
+              "description": "Extensions.",
+              "value": "extensions"
+            },
+            {
+              "description": "History.",
+              "value": "typedUrls"
+            },
+            {
+              "description": "Passwords.",
+              "value": "passwords"
+            },
+            {
+              "description": "Reading list.",
+              "value": "readingList"
+            },
+            {
+              "description": "Settings.",
+              "value": "preferences"
+            },
+            {
+              "description": "Themes & Wallpapers.",
+              "value": "themes"
+            },
+            {
+              "description": "Open tabs.",
+              "value": "tabs"
+            },
+            {
+              "description": "WiFi configurations.",
+              "value": "wifiConfiguration"
+            }
+          ],
+          "description": "List of types that should be excluded from synchronization.",
+          "defaultValue": null,
+          "field": "syncTypesListDisabledCros",
+          "name": "List of types that should be excluded from synchronization."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "syncDisabledCros"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Browsing history.",
+              "value": "browsing_history"
+            },
+            {
+              "description": "Download history.",
+              "value": "download_history"
+            },
+            {
+              "description": "Cookies and other site data.",
+              "value": "cookies_and_other_site_data"
+            },
+            {
+              "description": "Cached images and files.",
+              "value": "cached_images_and_files"
+            },
+            {
+              "description": "Passwords.",
+              "value": "password_signin"
+            },
+            {
+              "description": "Autofill.",
+              "value": "autofill"
+            },
+            {
+              "description": "Site settings.",
+              "value": "site_settings"
+            },
+            {
+              "description": "Hosted app data.",
+              "value": "hosted_app_data"
+            }
+          ],
+          "description": "Configures a list of browsing data types that should be deleted when the browser is closed.",
+          "defaultValue": null,
+          "field": "clearBrowsingDataOnExitListCros",
+          "name": "Configures a list of browsing data types that should be deleted when the browser is closed."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.SyncSettingsCros",
+      "policyDescription": "Chrome Sync (ChromeOS)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SyncTypeProtoEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "syncTypeCbcm",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "syncTypesListDisabledCbcm",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "clearBrowsingDataOnExitListCbcm",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "roamingProfileLocationCbcm",
+                "number": 4
+              }
+            ],
+            "name": "SyncSettingsCbcm"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "SyncTypeProtoEnum",
+            "value": [
+              {
+                "name": "SYNC_TYPE_PROTO_ENUM_SYNC_CLOUD_DEFAULT_VALUE",
+                "number": 1
+              },
+              {
+                "name": "SYNC_TYPE_PROTO_ENUM_SYNC_ROAMING_PROFILES",
+                "number": 2
+              },
+              {
+                "name": "SYNC_TYPE_PROTO_ENUM_SYNC_DISABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SyncSettingsCbcm",
+      "fieldDescriptions": [
+        {
+          "field": "syncTypeCbcm",
+          "defaultValue": "SYNC_TYPE_PROTO_ENUM_SYNC_CLOUD_DEFAULT_VALUE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow Chrome Sync.",
+              "value": "SYNC_TYPE_PROTO_ENUM_SYNC_CLOUD_DEFAULT_VALUE"
+            },
+            {
+              "description": "Allow Roaming Profiles.",
+              "value": "SYNC_TYPE_PROTO_ENUM_SYNC_ROAMING_PROFILES"
+            },
+            {
+              "description": "Disallow Sync.",
+              "value": "SYNC_TYPE_PROTO_ENUM_SYNC_DISABLED"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "SYNC_TYPE_PROTO_ENUM_SYNC_CLOUD_DEFAULT_VALUE",
+              "sourceField": "syncTypeCbcm"
+            },
+            {
+              "sourceFieldValue": "SYNC_TYPE_PROTO_ENUM_SYNC_ROAMING_PROFILES",
+              "sourceField": "syncTypeCbcm"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Apps.",
+              "value": "apps"
+            },
+            {
+              "description": "Autofill.",
+              "value": "autofill"
+            },
+            {
+              "description": "Bookmarks.",
+              "value": "bookmarks"
+            },
+            {
+              "description": "Extensions.",
+              "value": "extensions"
+            },
+            {
+              "description": "History.",
+              "value": "typedUrls"
+            },
+            {
+              "description": "Passwords.",
+              "value": "passwords"
+            },
+            {
+              "description": "Reading list.",
+              "value": "readingList"
+            },
+            {
+              "description": "Settings.",
+              "value": "preferences"
+            },
+            {
+              "description": "Themes & Wallpapers.",
+              "value": "themes"
+            },
+            {
+              "description": "Open tabs.",
+              "value": "tabs"
+            },
+            {
+              "description": "WiFi configurations.",
+              "value": "wifiConfiguration"
+            }
+          ],
+          "description": "List of types that should be excluded from synchronization.",
+          "defaultValue": null,
+          "field": "syncTypesListDisabledCbcm",
+          "name": "List of types that should be excluded from synchronization."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "SYNC_TYPE_PROTO_ENUM_SYNC_DISABLED",
+              "sourceField": "syncTypeCbcm"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Browsing history.",
+              "value": "browsing_history"
+            },
+            {
+              "description": "Download history.",
+              "value": "download_history"
+            },
+            {
+              "description": "Cookies and other site data.",
+              "value": "cookies_and_other_site_data"
+            },
+            {
+              "description": "Cached images and files.",
+              "value": "cached_images_and_files"
+            },
+            {
+              "description": "Passwords.",
+              "value": "password_signin"
+            },
+            {
+              "description": "Autofill.",
+              "value": "autofill"
+            },
+            {
+              "description": "Site settings.",
+              "value": "site_settings"
+            },
+            {
+              "description": "Hosted app data.",
+              "value": "hosted_app_data"
+            }
+          ],
+          "description": "Configures a list of browsing data types that should be deleted when the browser is closed.",
+          "defaultValue": null,
+          "field": "clearBrowsingDataOnExitListCbcm",
+          "name": "Configures a list of browsing data types that should be deleted when the browser is closed."
+        },
+        {
+          "field": "roamingProfileLocationCbcm",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "SYNC_TYPE_PROTO_ENUM_SYNC_ROAMING_PROFILES",
+              "sourceField": "syncTypeCbcm"
+            }
+          ],
+          "description": "Roaming profile directory.",
+          "name": "Roaming profile directory."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.SyncSettingsCbcm",
+      "policyDescription": "Chrome Sync and Roaming Profiles (Chrome Browser - Cloud Managed)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "chromeBrowserDmtokenDeletionEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ChromeBrowserDmtokenDeletionEnabled"
+          }
+        ]
+      },
+      "policyDescription": "Device Token Management.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ChromeBrowserDmtokenDeletionEnabled",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "When a browser is deleted from the \"Managed browsers\" list, this policy determines what happens to its device token. Learn more at https://support.google.com/chrome/a/answer/12654705?hl={$languageCode}.",
+          "knownValueDescriptions": [
+            {
+              "description": "Delete Token.",
+              "value": "true"
+            },
+            {
+              "description": "Invalidate Token.",
+              "value": "false"
+            }
+          ],
+          "description": "Device Token Management. When a browser is deleted from the \"Managed browsers\" list, this policy determines what happens to its device token. Learn more at https://support.google.com/chrome/a/answer/12654705?hl={$languageCode}.",
+          "defaultValue": false,
+          "field": "chromeBrowserDmtokenDeletionEnabled",
+          "name": "Device Token Management."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ChromeBrowserDmtokenDeletionEnabled",
+      "accessRestrictions": [
+        "This policy is only modifiable on root organization unit."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "wifiSyncAndroidAllowed",
+                "number": 1
+              }
+            ],
+            "name": "WifiSyncAndroidAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WifiSyncAndroidAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#wifi_sync_android_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "wifiSyncAndroidAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow Wi-Fi network configurations to be synced across Google ChromeOS devices and a connected Android phone.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow Wi-Fi network configurations to be synced across Google ChromeOS devices and a connected Android phone.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WifiSyncAndroidAllowed",
+      "policyDescription": "Wi-Fi network configurations sync."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "fastPairEnabled",
+                "number": 1
+              }
+            ],
+            "name": "FastPairEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.FastPairEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#fast_pair_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "fastPairEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Disable Fast Pair (fast Bluetooth pairing) by default.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Allow Fast Pair (fast Bluetooth pairing) to be enabled by the user.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Force Fast Pair (fast Bluetooth pairing) to be disabled.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.FastPairEnabled",
+      "policyDescription": "Fast Pair (fast Bluetooth pairing)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "promptOnMultipleMatchingCertificates",
+                "number": 1
+              }
+            ],
+            "name": "PromptOnMultipleMatchingCertificates"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PromptOnMultipleMatchingCertificates",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#prompt_on_multiple_matching_certificates",
+      "fieldDescriptions": [
+        {
+          "field": "promptOnMultipleMatchingCertificates",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Prompt the user to select the client certificate whenever the auto-selection policy matches multiple certificates.",
+              "value": "true"
+            },
+            {
+              "description": "Only prompt the user when no certificate matches the auto-selection.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PromptOnMultipleMatchingCertificates",
+      "policyDescription": "Prompt when multiple certificates match."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "persistentQuotaEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PersistentQuotaEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PersistentQuotaEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "persistentQuotaEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable persistent quota.",
+              "value": "true"
+            },
+            {
+              "description": "Disable persistent quota.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.PersistentQuotaEnabled",
+      "policyDescription": "Persistent quota for webkitRequestFileSystem."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ReenrollmentModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "reenrollmentMode",
+                "number": 1
+              }
+            ],
+            "name": "ForcedReenrollment"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ReenrollmentModeEnum",
+            "value": [
+              {
+                "name": "REENROLLMENT_MODE_ENUM_AUTO_REENROLLMENT",
+                "number": 1
+              },
+              {
+                "name": "REENROLLMENT_MODE_ENUM_MANUAL_REENROLLMENT",
+                "number": 4
+              },
+              {
+                "name": "REENROLLMENT_MODE_ENUM_NO_REENROLLMENT",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.ForcedReenrollment",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#reenrollment_mode",
+      "fieldDescriptions": [
+        {
+          "field": "reenrollmentMode",
+          "defaultValue": "REENROLLMENT_MODE_ENUM_AUTO_REENROLLMENT",
+          "knownValueDescriptions": [
+            {
+              "description": "Force device to automatically re-enroll after wiping.",
+              "value": "REENROLLMENT_MODE_ENUM_AUTO_REENROLLMENT"
+            },
+            {
+              "description": "Force device to re-enroll with user credentials after wiping.",
+              "value": "REENROLLMENT_MODE_ENUM_MANUAL_REENROLLMENT"
+            },
+            {
+              "description": "Device is not forced to re-enroll after wiping.",
+              "value": "REENROLLMENT_MODE_ENUM_NO_REENROLLMENT"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Enrollment and access",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.ForcedReenrollment",
+      "policyDescription": "Forced re-enrollment."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "devicePowerwashAllowed",
+                "number": 1
+              }
+            ],
+            "name": "DevicePowerwashAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DevicePowerwashAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_powerwash_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "devicePowerwashAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow powerwash to be triggered.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow powerwash to be triggered.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Enrollment and access",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DevicePowerwashAllowed",
+      "policyDescription": "Powerwash."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "contentProtectionEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ContentProtection"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.ContentProtection",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#content_protection_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "contentProtectionEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Ensures ChromeOS devices in your organization will verify their identity to content providers.",
+              "value": "true"
+            },
+            {
+              "description": "Does not ensure ChromeOS devices in your organization will verify their identity to content providers. Some premium content may be unavailable to your users.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Enrollment and access",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.ContentProtection",
+      "policyDescription": "Allow web services to request proof that the device is running an unmodified version of ChromeOS that is policy compliant."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "deviceVerifiedModeRequired",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "servicesWithFullAccess",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "servicesWithLimitedAccess",
+                "number": 3
+              }
+            ],
+            "name": "DeviceVerifiedMode"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceVerifiedMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_verified_mode_required",
+      "fieldDescriptions": [
+        {
+          "field": "deviceVerifiedModeRequired",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Require verified mode boot for verified access.",
+              "value": "true"
+            },
+            {
+              "description": "Skip boot mode check for verified access.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "servicesWithFullAccess",
+          "fieldDescription": "Service accounts which are allowed to receive device ID.",
+          "description": "Services with full access. Service accounts which are allowed to receive device ID.",
+          "name": "Services with full access."
+        },
+        {
+          "field": "servicesWithLimitedAccess",
+          "fieldDescription": "Service accounts which can verify devices but do not receive device ID.",
+          "description": "Services with limited access. Service accounts which can verify devices but do not receive device ID.",
+          "name": "Services with limited access."
+        }
+      ],
+      "categoryTitle": "Enrollment and access",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceVerifiedMode",
+      "policyDescription": "Verified mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "deviceDisabledMessage",
+                "number": 1
+              }
+            ],
+            "name": "DisabledDeviceReturnInstructions"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DisabledDeviceReturnInstructions",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_disabled_message",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Custom text to display under the device locked message. We recommend including a return address and contact phone number in your message.",
+          "description": "Disabled device return instructions. Custom text to display under the device locked message. We recommend including a return address and contact phone number in your message.",
+          "defaultValue": "Please return it.",
+          "inputConstraint": "The string field should have maximum length of 512.",
+          "field": "deviceDisabledMessage",
+          "name": "Disabled device return instructions."
+        }
+      ],
+      "categoryTitle": "Enrollment and access",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DisabledDeviceReturnInstructions",
+      "policyDescription": "Disabled device return instructions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SecondFactorAuthenticationModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "secondFactorAuthentication",
+                "number": 1
+              }
+            ],
+            "name": "DeviceSecondFactorAuthentication"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "SecondFactorAuthenticationModeEnum",
+            "value": [
+              {
+                "name": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_U2F",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceSecondFactorAuthentication",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#second_factor_authentication",
+      "fieldDescriptions": [
+        {
+          "field": "secondFactorAuthentication",
+          "defaultValue": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_UNSET"
+            },
+            {
+              "description": "Disable integrated second factor.",
+              "value": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_DISABLED"
+            },
+            {
+              "description": "Enable integrated second factor.",
+              "value": "SECOND_FACTOR_AUTHENTICATION_MODE_ENUM_U2F"
+            }
+          ],
+          "description": "Enable Titan M integrated second factor on compatible devices (FIDO compatible).",
+          "name": "Enable Titan M integrated second factor on compatible devices (FIDO compatible)."
+        }
+      ],
+      "categoryTitle": "Enrollment and access",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceSecondFactorAuthentication",
+      "policyDescription": "Integrated FIDO second factor."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "guestModeEnabled",
+                "number": 1
+              }
+            ],
+            "name": "GuestMode"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.GuestMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#guest_mode_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "guestModeEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow guest mode.",
+              "value": "true"
+            },
+            {
+              "description": "Disable guest mode.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.GuestMode",
+      "policyDescription": "Guest mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "AllowNewUsersEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceAllowNewUsers",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "userAllowlist",
+                "number": 2
+              }
+            ],
+            "name": "SignInRestriction"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AllowNewUsersEnum",
+            "value": [
+              {
+                "name": "ALLOW_NEW_USERS_ENUM_RESTRICTED_LIST",
+                "number": 1
+              },
+              {
+                "name": "ALLOW_NEW_USERS_ENUM_ANY_USER",
+                "number": 2
+              },
+              {
+                "name": "ALLOW_NEW_USERS_ENUM_NO_USERS",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SignInRestriction",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#allow_new_users",
+      "fieldDescriptions": [
+        {
+          "field": "deviceAllowNewUsers",
+          "defaultValue": "ALLOW_NEW_USERS_ENUM_ANY_USER",
+          "knownValueDescriptions": [
+            {
+              "description": "Restrict sign-in to a list of users.",
+              "value": "ALLOW_NEW_USERS_ENUM_RESTRICTED_LIST"
+            },
+            {
+              "description": "Allow any user to sign in.",
+              "value": "ALLOW_NEW_USERS_ENUM_ANY_USER"
+            },
+            {
+              "description": "Do not allow any user to sign in.",
+              "value": "ALLOW_NEW_USERS_ENUM_NO_USERS"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "ALLOW_NEW_USERS_ENUM_RESTRICTED_LIST",
+              "sourceField": "deviceAllowNewUsers"
+            }
+          ],
+          "description": "Allowed users. Enter a list of usernames who can sign in to the device. You can also allow all email addresses in a domain with the wildcard symbol (e.g. *@example.com).",
+          "fieldDescription": "Enter a list of usernames who can sign in to the device. You can also allow all email addresses in a domain with the wildcard symbol (e.g. *@example.com).",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'email'.",
+          "field": "userAllowlist",
+          "name": "Allowed users."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SignInRestriction",
+      "policyDescription": "Sign-in restriction."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "loginScreenDomainAutoComplete",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "loginScreenDomainAutoCompletePrefix",
+                "number": 2
+              }
+            ],
+            "name": "DeviceLoginScreenAutocompleteDomainGroup"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceLoginScreenAutocompleteDomainGroup",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_domain_auto_complete_prefix",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenDomainAutoComplete",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Use the domain name set in the field 'loginScreenDomainAutoCompletePrefix' for autocomplete at sign-in.",
+              "value": "true"
+            },
+            {
+              "description": "Do not display an autocomplete domain on the sign-in screen.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "loginScreenDomainAutoCompletePrefix",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "loginScreenDomainAutoComplete"
+            }
+          ],
+          "description": "Autocomplete domain prefix.",
+          "inputConstraint": "The string field should be formatted in the format 'domain name'.",
+          "name": "Autocomplete domain prefix."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceLoginScreenAutocompleteDomainGroup",
+      "policyDescription": "Autocomplete domain."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "showUserNames",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenNamesAndPhotos"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenNamesAndPhotos",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#show_user_names",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "showUserNames",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Always show user names and photos.",
+              "value": "true"
+            },
+            {
+              "description": "Never show user names and photos.",
+              "value": "false"
+            }
+          ],
+          "description": "Show user names and photos on the sign-in screen.",
+          "name": "Show user names and photos on the sign-in screen."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "notices": [
+        {
+          "field": "showUserNames",
+          "noticeMessage": "Warning: Use of this setting is not recommended for most deployments. See the sign-in screen help center article to learn more: https://support.google.com/chrome/a/answer/1375678#show_user_names.",
+          "noticeValue": "false"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenNamesAndPhotos",
+      "policyDescription": "Show user names and photos on the sign-in screen."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DeviceOffHours",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "deviceOffHours",
+                "number": 1
+              }
+            ],
+            "name": "SignInRestrictionsOffHours"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "timezone",
+                "number": 1
+              },
+              {
+                "typeName": "TimeWindow",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "timeWindows",
+                "number": 2
+              }
+            ],
+            "name": "DeviceOffHours"
+          },
+          {
+            "field": [
+              {
+                "typeName": "DayTime",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "start",
+                "number": 1
+              },
+              {
+                "typeName": "DayTime",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "end",
+                "number": 2
+              }
+            ],
+            "name": "TimeWindow"
+          },
+          {
+            "field": [
+              {
+                "typeName": "DayOfWeek",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "dayOfWeek",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "hours",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "minutes",
+                "number": 3
+              }
+            ],
+            "name": "DayTime"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DayOfWeek",
+            "value": [
+              {
+                "name": "MONDAY",
+                "number": 1
+              },
+              {
+                "name": "TUESDAY",
+                "number": 2
+              },
+              {
+                "name": "WEDNESDAY",
+                "number": 3
+              },
+              {
+                "name": "THURSDAY",
+                "number": 4
+              },
+              {
+                "name": "FRIDAY",
+                "number": 5
+              },
+              {
+                "name": "SATURDAY",
+                "number": 6
+              },
+              {
+                "name": "SUNDAY",
+                "number": 7
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SignInRestrictionsOffHours",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#offhours",
+      "fieldDescriptions": [
+        {
+          "field": "deviceOffHours",
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "timezone",
+              "knownValueDescriptions": [
+                {
+                  "description": "Niue Time, GMT-11:00.",
+                  "value": "Pacific/Niue"
+                },
+                {
+                  "description": "Samoa Standard Time, GMT-11:00.",
+                  "value": "Pacific/Midway"
+                },
+                {
+                  "description": "Hawaii-Aleutian Time, GMT-10:00.",
+                  "value": "America/Adak"
+                },
+                {
+                  "description": "Hawaii-Aleutian Standard Time, GMT-10:00.",
+                  "value": "Pacific/Honolulu"
+                },
+                {
+                  "description": "Cook Islands Standard Time, GMT-10:00.",
+                  "value": "Pacific/Rarotonga"
+                },
+                {
+                  "description": "Tahiti Time, GMT-10:00.",
+                  "value": "Pacific/Tahiti"
+                },
+                {
+                  "description": "Marquesas Time, GMT-09:-30.",
+                  "value": "Pacific/Marquesas"
+                },
+                {
+                  "description": "Alaska Time, GMT-09:00.",
+                  "value": "America/Anchorage"
+                },
+                {
+                  "description": "Alaska Time, GMT-09:00.",
+                  "value": "America/Metlakatla"
+                },
+                {
+                  "description": "Gambier Time, GMT-09:00.",
+                  "value": "Pacific/Gambier"
+                },
+                {
+                  "description": "Pacific Time, GMT-08:00.",
+                  "value": "America/Los_Angeles"
+                },
+                {
+                  "description": "Pacific Time, GMT-08:00.",
+                  "value": "America/Tijuana"
+                },
+                {
+                  "description": "Pacific Time, GMT-08:00.",
+                  "value": "America/Vancouver"
+                },
+                {
+                  "description": "Pitcairn Time, GMT-08:00.",
+                  "value": "Pacific/Pitcairn"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Boise"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Cambridge_Bay"
+                },
+                {
+                  "description": "Mountain Standard Time, GMT-07:00.",
+                  "value": "America/Phoenix"
+                },
+                {
+                  "description": "Yukon Time, GMT-07:00.",
+                  "value": "America/Dawson"
+                },
+                {
+                  "description": "Mountain Standard Time, GMT-07:00.",
+                  "value": "America/Dawson_Creek"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Denver"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Edmonton"
+                },
+                {
+                  "description": "Mountain Standard Time, GMT-07:00.",
+                  "value": "America/Fort_Nelson"
+                },
+                {
+                  "description": "Mexican Pacific Standard Time, GMT-07:00.",
+                  "value": "America/Hermosillo"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Inuvik"
+                },
+                {
+                  "description": "Mexican Pacific Time, GMT-07:00.",
+                  "value": "America/Mazatlan"
+                },
+                {
+                  "description": "Yukon Time, GMT-07:00.",
+                  "value": "America/Whitehorse"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Yellowknife"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Bahia_Banderas"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Belize"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Chicago"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Chihuahua"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Costa_Rica"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/El_Salvador"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Guatemala"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Indiana/Knox"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Indiana/Tell_City"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Managua"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Matamoros"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Menominee"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Merida"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Mexico_City"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Monterrey"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/North_Dakota/Beulah"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/North_Dakota/Center"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/North_Dakota/New_Salem"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Ojinaga"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Winnipeg"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Rankin_Inlet"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Regina"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Resolute"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Swift_Current"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Tegucigalpa"
+                },
+                {
+                  "description": "Easter Island Time, GMT-06:00.",
+                  "value": "Pacific/Easter"
+                },
+                {
+                  "description": "Galapagos Time, GMT-06:00.",
+                  "value": "Pacific/Galapagos"
+                },
+                {
+                  "description": "Colombia Standard Time, GMT-05:00.",
+                  "value": "America/Bogota"
+                },
+                {
+                  "description": "Eastern Standard Time, GMT-05:00.",
+                  "value": "America/Cancun"
+                },
+                {
+                  "description": "Eastern Standard Time, GMT-05:00.",
+                  "value": "America/Panama"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Detroit"
+                },
+                {
+                  "description": "Acre Standard Time, GMT-05:00.",
+                  "value": "America/Eirunepe"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Grand_Turk"
+                },
+                {
+                  "description": "Ecuador Time, GMT-05:00.",
+                  "value": "America/Guayaquil"
+                },
+                {
+                  "description": "Cuba Time, GMT-05:00.",
+                  "value": "America/Havana"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Marengo"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Petersburg"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Vevay"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Vincennes"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Winamac"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Indianapolis"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Iqaluit"
+                },
+                {
+                  "description": "Eastern Standard Time, GMT-05:00.",
+                  "value": "America/Jamaica"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Kentucky/Monticello"
+                },
+                {
+                  "description": "Peru Standard Time, GMT-05:00.",
+                  "value": "America/Lima"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Kentucky/Louisville"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Toronto"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/New_York"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Pangnirtung"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Port-au-Prince"
+                },
+                {
+                  "description": "Acre Standard Time, GMT-05:00.",
+                  "value": "America/Rio_Branco"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Puerto_Rico"
+                },
+                {
+                  "description": "Paraguay Time, GMT-04:00.",
+                  "value": "America/Asuncion"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Barbados"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Boa_Vista"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Campo_Grande"
+                },
+                {
+                  "description": "Venezuela Time, GMT-04:00.",
+                  "value": "America/Caracas"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Cuiaba"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Glace_Bay"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Goose_Bay"
+                },
+                {
+                  "description": "Guyana Time, GMT-04:00.",
+                  "value": "America/Guyana"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Halifax"
+                },
+                {
+                  "description": "Bolivia Time, GMT-04:00.",
+                  "value": "America/La_Paz"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Manaus"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Martinique"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Moncton"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Porto_Velho"
+                },
+                {
+                  "description": "Chile Time, GMT-04:00.",
+                  "value": "America/Santiago"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Santo_Domingo"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Thule"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "Atlantic/Bermuda"
+                },
+                {
+                  "description": "Newfoundland Time, GMT-03:-30.",
+                  "value": "America/St_Johns"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Araguaina"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/La_Rioja"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Rio_Gallegos"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Salta"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/San_Juan"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/San_Luis"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Tucuman"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Ushuaia"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Bahia"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Belem"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Buenos_Aires"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Catamarca"
+                },
+                {
+                  "description": "French Guiana Time, GMT-03:00.",
+                  "value": "America/Cayenne"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Cordoba"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Fortaleza"
+                },
+                {
+                  "description": "West Greenland Time, GMT-03:00.",
+                  "value": "America/Nuuk"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Jujuy"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Maceio"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Mendoza"
+                },
+                {
+                  "description": "St. Pierre & Miquelon Time, GMT-03:00.",
+                  "value": "America/Miquelon"
+                },
+                {
+                  "description": "Uruguay Standard Time, GMT-03:00.",
+                  "value": "America/Montevideo"
+                },
+                {
+                  "description": "Suriname Time, GMT-03:00.",
+                  "value": "America/Paramaribo"
+                },
+                {
+                  "description": "Punta Arenas Time, GMT-03:00.",
+                  "value": "America/Punta_Arenas"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Recife"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Santarem"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Sao_Paulo"
+                },
+                {
+                  "description": "Palmer Time, GMT-03:00.",
+                  "value": "Antarctica/Palmer"
+                },
+                {
+                  "description": "Rothera Time, GMT-03:00.",
+                  "value": "Antarctica/Rothera"
+                },
+                {
+                  "description": "Falkland Islands Standard Time, GMT-03:00.",
+                  "value": "Atlantic/Stanley"
+                },
+                {
+                  "description": "Fernando de Noronha Standard Time, GMT-02:00.",
+                  "value": "America/Noronha"
+                },
+                {
+                  "description": "South Georgia Time, GMT-02:00.",
+                  "value": "Atlantic/South_Georgia"
+                },
+                {
+                  "description": "East Greenland Time, GMT-01:00.",
+                  "value": "America/Scoresbysund"
+                },
+                {
+                  "description": "Azores Time, GMT-01:00.",
+                  "value": "Atlantic/Azores"
+                },
+                {
+                  "description": "Cape Verde Standard Time, GMT-01:00.",
+                  "value": "Atlantic/Cape_Verde"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Abidjan"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Bissau"
+                },
+                {
+                  "description": "Morocco Time, GMT+00:00.",
+                  "value": "Africa/Casablanca"
+                },
+                {
+                  "description": "Western Sahara Time, GMT+00:00.",
+                  "value": "Africa/El_Aaiun"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Monrovia"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Sao_Tome"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "America/Danmarkshavn"
+                },
+                {
+                  "description": "Troll Time, GMT+00:00.",
+                  "value": "Antarctica/Troll"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Atlantic/Canary"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Atlantic/Faroe"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Atlantic/Madeira"
+                },
+                {
+                  "description": "Ireland Time, GMT+00:00.",
+                  "value": "Europe/Dublin"
+                },
+                {
+                  "description": "United Kingdom Time, GMT+00:00.",
+                  "value": "Europe/London"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Europe/Lisbon"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Atlantic/St_Helena"
+                },
+                {
+                  "description": "Central European Standard Time, GMT+01:00.",
+                  "value": "Africa/Algiers"
+                },
+                {
+                  "description": "West Africa Standard Time, GMT+01:00.",
+                  "value": "Africa/Lagos"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Africa/Ceuta"
+                },
+                {
+                  "description": "West Africa Standard Time, GMT+01:00.",
+                  "value": "Africa/Ndjamena"
+                },
+                {
+                  "description": "Central European Standard Time, GMT+01:00.",
+                  "value": "Africa/Tunis"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Berlin"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Brussels"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Andorra"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Belgrade"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Prague"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Budapest"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Zurich"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Gibraltar"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Madrid"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Malta"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Paris"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Rome"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Tirane"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Vienna"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Warsaw"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Bratislava"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Ljubljana"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Zagreb"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Maputo"
+                },
+                {
+                  "description": "Eastern European Standard Time, GMT+02:00.",
+                  "value": "Africa/Cairo"
+                },
+                {
+                  "description": "South Africa Standard Time, GMT+02:00.",
+                  "value": "Africa/Johannesburg"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Juba"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Khartoum"
+                },
+                {
+                  "description": "Eastern European Standard Time, GMT+02:00.",
+                  "value": "Africa/Tripoli"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Windhoek"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Beirut"
+                },
+                {
+                  "description": "Famagusta Time, GMT+02:00.",
+                  "value": "Asia/Famagusta"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Gaza"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Hebron"
+                },
+                {
+                  "description": "Israel Time, GMT+02:00.",
+                  "value": "Asia/Jerusalem"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Nicosia"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Athens"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Bucharest"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Chisinau"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Helsinki"
+                },
+                {
+                  "description": "Eastern European Standard Time, GMT+02:00.",
+                  "value": "Europe/Kaliningrad"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Kyiv"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Riga"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Sofia"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Tallinn"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Vilnius"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Harare"
+                },
+                {
+                  "description": "East Africa Time, GMT+03:00.",
+                  "value": "Africa/Nairobi"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Riyadh"
+                },
+                {
+                  "description": "Jordan Time, GMT+03:00.",
+                  "value": "Asia/Amman"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Baghdad"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Qatar"
+                },
+                {
+                  "description": "Syria Time, GMT+03:00.",
+                  "value": "Asia/Damascus"
+                },
+                {
+                  "description": "Turkey Time, GMT+03:00.",
+                  "value": "Europe/Istanbul"
+                },
+                {
+                  "description": "Kirov Time, GMT+03:00.",
+                  "value": "Europe/Kirov"
+                },
+                {
+                  "description": "Moscow Standard Time, GMT+03:00.",
+                  "value": "Europe/Minsk"
+                },
+                {
+                  "description": "Moscow Standard Time, GMT+03:00.",
+                  "value": "Europe/Moscow"
+                },
+                {
+                  "description": "Moscow Standard Time, GMT+03:00.",
+                  "value": "Europe/Simferopol"
+                },
+                {
+                  "description": "Volgograd Standard Time, GMT+03:00.",
+                  "value": "Europe/Volgograd"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Kuwait"
+                },
+                {
+                  "description": "Iran Time, GMT+03:30.",
+                  "value": "Asia/Tehran"
+                },
+                {
+                  "description": "Azerbaijan Standard Time, GMT+04:00.",
+                  "value": "Asia/Baku"
+                },
+                {
+                  "description": "Gulf Standard Time, GMT+04:00.",
+                  "value": "Asia/Dubai"
+                },
+                {
+                  "description": "Georgia Standard Time, GMT+04:00.",
+                  "value": "Asia/Tbilisi"
+                },
+                {
+                  "description": "Armenia Standard Time, GMT+04:00.",
+                  "value": "Asia/Yerevan"
+                },
+                {
+                  "description": "Astrakhan Time, GMT+04:00.",
+                  "value": "Europe/Astrakhan"
+                },
+                {
+                  "description": "Samara Standard Time, GMT+04:00.",
+                  "value": "Europe/Samara"
+                },
+                {
+                  "description": "Saratov Time, GMT+04:00.",
+                  "value": "Europe/Saratov"
+                },
+                {
+                  "description": "Ulyanovsk Time, GMT+04:00.",
+                  "value": "Europe/Ulyanovsk"
+                },
+                {
+                  "description": "Mauritius Standard Time, GMT+04:00.",
+                  "value": "Indian/Mauritius"
+                },
+                {
+                  "description": "Afghanistan Time, GMT+04:30.",
+                  "value": "Asia/Kabul"
+                },
+                {
+                  "description": "Mawson Time, GMT+05:00.",
+                  "value": "Antarctica/Mawson"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Aqtau"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Aqtobe"
+                },
+                {
+                  "description": "Turkmenistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Ashgabat"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Atyrau"
+                },
+                {
+                  "description": "Tajikistan Time, GMT+05:00.",
+                  "value": "Asia/Dushanbe"
+                },
+                {
+                  "description": "Pakistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Karachi"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Oral"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Qyzylorda"
+                },
+                {
+                  "description": "Uzbekistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Samarkand"
+                },
+                {
+                  "description": "Uzbekistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Tashkent"
+                },
+                {
+                  "description": "Yekaterinburg Standard Time, GMT+05:00.",
+                  "value": "Asia/Yekaterinburg"
+                },
+                {
+                  "description": "Maldives Time, GMT+05:00.",
+                  "value": "Indian/Maldives"
+                },
+                {
+                  "description": "India Standard Time, GMT+05:30.",
+                  "value": "Asia/Colombo"
+                },
+                {
+                  "description": "India Standard Time, GMT+05:30.",
+                  "value": "Asia/Calcutta"
+                },
+                {
+                  "description": "Nepal Time, GMT+05:45.",
+                  "value": "Asia/Katmandu"
+                },
+                {
+                  "description": "Urumqi Time, GMT+06:00.",
+                  "value": "Asia/Urumqi"
+                },
+                {
+                  "description": "East Kazakhstan Time, GMT+06:00.",
+                  "value": "Asia/Almaty"
+                },
+                {
+                  "description": "Kyrgyzstan Time, GMT+06:00.",
+                  "value": "Asia/Bishkek"
+                },
+                {
+                  "description": "Bangladesh Standard Time, GMT+06:00.",
+                  "value": "Asia/Dhaka"
+                },
+                {
+                  "description": "Omsk Standard Time, GMT+06:00.",
+                  "value": "Asia/Omsk"
+                },
+                {
+                  "description": "East Kazakhstan Time, GMT+06:00.",
+                  "value": "Asia/Qostanay"
+                },
+                {
+                  "description": "Bhutan Time, GMT+06:00.",
+                  "value": "Asia/Thimphu"
+                },
+                {
+                  "description": "Indian Ocean Time, GMT+06:00.",
+                  "value": "Indian/Chagos"
+                },
+                {
+                  "description": "Myanmar Time, GMT+06:30.",
+                  "value": "Asia/Rangoon"
+                },
+                {
+                  "description": "Davis Time, GMT+07:00.",
+                  "value": "Antarctica/Davis"
+                },
+                {
+                  "description": "Indochina Time, GMT+07:00.",
+                  "value": "Asia/Bangkok"
+                },
+                {
+                  "description": "Barnaul Time, GMT+07:00.",
+                  "value": "Asia/Barnaul"
+                },
+                {
+                  "description": "Hovd Standard Time, GMT+07:00.",
+                  "value": "Asia/Hovd"
+                },
+                {
+                  "description": "Western Indonesia Time, GMT+07:00.",
+                  "value": "Asia/Jakarta"
+                },
+                {
+                  "description": "Krasnoyarsk Standard Time, GMT+07:00.",
+                  "value": "Asia/Krasnoyarsk"
+                },
+                {
+                  "description": "Krasnoyarsk Standard Time, GMT+07:00.",
+                  "value": "Asia/Novokuznetsk"
+                },
+                {
+                  "description": "Novosibirsk Standard Time, GMT+07:00.",
+                  "value": "Asia/Novosibirsk"
+                },
+                {
+                  "description": "Western Indonesia Time, GMT+07:00.",
+                  "value": "Asia/Pontianak"
+                },
+                {
+                  "description": "Indochina Time, GMT+07:00.",
+                  "value": "Asia/Ho_Chi_Minh"
+                },
+                {
+                  "description": "Tomsk Time, GMT+07:00.",
+                  "value": "Asia/Tomsk"
+                },
+                {
+                  "description": "Indochina Time, GMT+07:00.",
+                  "value": "Asia/Phnom_Penh"
+                },
+                {
+                  "description": "Malaysia Time, GMT+08:00.",
+                  "value": "Asia/Kuching"
+                },
+                {
+                  "description": "Ulaanbaatar Standard Time, GMT+08:00.",
+                  "value": "Asia/Choibalsan"
+                },
+                {
+                  "description": "Hong Kong Standard Time, GMT+08:00.",
+                  "value": "Asia/Hong_Kong"
+                },
+                {
+                  "description": "Irkutsk Standard Time, GMT+08:00.",
+                  "value": "Asia/Irkutsk"
+                },
+                {
+                  "description": "Singapore Standard Time, GMT+08:00.",
+                  "value": "Asia/Singapore"
+                },
+                {
+                  "description": "China Standard Time, GMT+08:00.",
+                  "value": "Asia/Macau"
+                },
+                {
+                  "description": "Central Indonesia Time, GMT+08:00.",
+                  "value": "Asia/Makassar"
+                },
+                {
+                  "description": "Philippine Standard Time, GMT+08:00.",
+                  "value": "Asia/Manila"
+                },
+                {
+                  "description": "China Standard Time, GMT+08:00.",
+                  "value": "Asia/Shanghai"
+                },
+                {
+                  "description": "Taipei Standard Time, GMT+08:00.",
+                  "value": "Asia/Taipei"
+                },
+                {
+                  "description": "Ulaanbaatar Standard Time, GMT+08:00.",
+                  "value": "Asia/Ulaanbaatar"
+                },
+                {
+                  "description": "Australian Western Standard Time, GMT+08:00.",
+                  "value": "Australia/Perth"
+                },
+                {
+                  "description": "Australian Central Western Standard Time, GMT+08:45.",
+                  "value": "Australia/Eucla"
+                },
+                {
+                  "description": "Yakutsk Standard Time, GMT+09:00.",
+                  "value": "Asia/Chita"
+                },
+                {
+                  "description": "East Timor Time, GMT+09:00.",
+                  "value": "Asia/Dili"
+                },
+                {
+                  "description": "Eastern Indonesia Time, GMT+09:00.",
+                  "value": "Asia/Jayapura"
+                },
+                {
+                  "description": "Yakutsk Standard Time, GMT+09:00.",
+                  "value": "Asia/Khandyga"
+                },
+                {
+                  "description": "Korean Standard Time, GMT+09:00.",
+                  "value": "Asia/Pyongyang"
+                },
+                {
+                  "description": "Korean Standard Time, GMT+09:00.",
+                  "value": "Asia/Seoul"
+                },
+                {
+                  "description": "Japan Standard Time, GMT+09:00.",
+                  "value": "Asia/Tokyo"
+                },
+                {
+                  "description": "Yakutsk Standard Time, GMT+09:00.",
+                  "value": "Asia/Yakutsk"
+                },
+                {
+                  "description": "Palau Time, GMT+09:00.",
+                  "value": "Pacific/Palau"
+                },
+                {
+                  "description": "Central Australia Time, GMT+09:30.",
+                  "value": "Australia/Adelaide"
+                },
+                {
+                  "description": "Central Australia Time, GMT+09:30.",
+                  "value": "Australia/Broken_Hill"
+                },
+                {
+                  "description": "Australian Central Standard Time, GMT+09:30.",
+                  "value": "Australia/Darwin"
+                },
+                {
+                  "description": "Papua New Guinea Time, GMT+10:00.",
+                  "value": "Pacific/Port_Moresby"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Antarctica/Macquarie"
+                },
+                {
+                  "description": "Vladivostok Standard Time, GMT+10:00.",
+                  "value": "Asia/Ust-Nera"
+                },
+                {
+                  "description": "Vladivostok Standard Time, GMT+10:00.",
+                  "value": "Asia/Vladivostok"
+                },
+                {
+                  "description": "Australian Eastern Standard Time, GMT+10:00.",
+                  "value": "Australia/Brisbane"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Australia/Hobart"
+                },
+                {
+                  "description": "Australian Eastern Standard Time, GMT+10:00.",
+                  "value": "Australia/Lindeman"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Australia/Melbourne"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Australia/Sydney"
+                },
+                {
+                  "description": "Chamorro Standard Time, GMT+10:00.",
+                  "value": "Pacific/Guam"
+                },
+                {
+                  "description": "Chuuk Time, GMT+10:00.",
+                  "value": "Pacific/Chuuk"
+                },
+                {
+                  "description": "Lord Howe Time, GMT+10:30.",
+                  "value": "Australia/Lord_Howe"
+                },
+                {
+                  "description": "Casey Time, GMT+11:00.",
+                  "value": "Antarctica/Casey"
+                },
+                {
+                  "description": "Magadan Standard Time, GMT+11:00.",
+                  "value": "Asia/Magadan"
+                },
+                {
+                  "description": "Sakhalin Standard Time, GMT+11:00.",
+                  "value": "Asia/Sakhalin"
+                },
+                {
+                  "description": "Srednekolymsk Time, GMT+11:00.",
+                  "value": "Asia/Srednekolymsk"
+                },
+                {
+                  "description": "Bougainville Time, GMT+11:00.",
+                  "value": "Pacific/Bougainville"
+                },
+                {
+                  "description": "Vanuatu Standard Time, GMT+11:00.",
+                  "value": "Pacific/Efate"
+                },
+                {
+                  "description": "Solomon Islands Time, GMT+11:00.",
+                  "value": "Pacific/Guadalcanal"
+                },
+                {
+                  "description": "Kosrae Time, GMT+11:00.",
+                  "value": "Pacific/Kosrae"
+                },
+                {
+                  "description": "Norfolk Island Time, GMT+11:00.",
+                  "value": "Pacific/Norfolk"
+                },
+                {
+                  "description": "New Caledonia Standard Time, GMT+11:00.",
+                  "value": "Pacific/Noumea"
+                },
+                {
+                  "description": "Ponape Time, GMT+11:00.",
+                  "value": "Pacific/Pohnpei"
+                },
+                {
+                  "description": "New Zealand Time, GMT+12:00.",
+                  "value": "Pacific/Auckland"
+                },
+                {
+                  "description": "Anadyr Standard Time, GMT+12:00.",
+                  "value": "Asia/Anadyr"
+                },
+                {
+                  "description": "Petropavlovsk-Kamchatski Standard Time, GMT+12:00.",
+                  "value": "Asia/Kamchatka"
+                },
+                {
+                  "description": "Fiji Standard Time, GMT+12:00.",
+                  "value": "Pacific/Fiji"
+                },
+                {
+                  "description": "Gilbert Islands Time, GMT+12:00.",
+                  "value": "Pacific/Tarawa"
+                },
+                {
+                  "description": "Marshall Islands Time, GMT+12:00.",
+                  "value": "Pacific/Kwajalein"
+                },
+                {
+                  "description": "Nauru Time, GMT+12:00.",
+                  "value": "Pacific/Nauru"
+                },
+                {
+                  "description": "Chatham Time, GMT+12:45.",
+                  "value": "Pacific/Chatham"
+                },
+                {
+                  "description": "Apia Standard Time, GMT+13:00.",
+                  "value": "Pacific/Apia"
+                },
+                {
+                  "description": "Phoenix Islands Time, GMT+13:00.",
+                  "value": "Pacific/Kanton"
+                },
+                {
+                  "description": "Tokelau Time, GMT+13:00.",
+                  "value": "Pacific/Fakaofo"
+                },
+                {
+                  "description": "Tonga Standard Time, GMT+13:00.",
+                  "value": "Pacific/Tongatapu"
+                },
+                {
+                  "description": "Line Islands Time, GMT+14:00.",
+                  "value": "Pacific/Kiritimati"
+                }
+              ],
+              "description": "The timezone in which the time_windows apply. Omit for the timezone the device is currently in.",
+              "name": "The timezone in which the time_windows apply. Omit for the timezone the device is currently in."
+            },
+            {
+              "field": "timeWindows",
+              "description": "The windows in which the device sign-in restrictions do not apply.",
+              "name": "The windows in which the device sign-in restrictions do not apply.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "start",
+                  "description": "N/A",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "dayOfWeek",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "Monday.",
+                          "value": "MONDAY"
+                        },
+                        {
+                          "description": "Tuesday.",
+                          "value": "TUESDAY"
+                        },
+                        {
+                          "description": "Wednesday.",
+                          "value": "WEDNESDAY"
+                        },
+                        {
+                          "description": "Thursday.",
+                          "value": "THURSDAY"
+                        },
+                        {
+                          "description": "Friday.",
+                          "value": "FRIDAY"
+                        },
+                        {
+                          "description": "Saturday.",
+                          "value": "SATURDAY"
+                        },
+                        {
+                          "description": "Sunday.",
+                          "value": "SUNDAY"
+                        }
+                      ],
+                      "description": "N/A"
+                    },
+                    {
+                      "field": "hours",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "0h.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "1h.",
+                          "value": "1"
+                        },
+                        {
+                          "description": "2h.",
+                          "value": "2"
+                        },
+                        {
+                          "description": "3h.",
+                          "value": "3"
+                        },
+                        {
+                          "description": "4h.",
+                          "value": "4"
+                        },
+                        {
+                          "description": "5h.",
+                          "value": "5"
+                        },
+                        {
+                          "description": "6h.",
+                          "value": "6"
+                        },
+                        {
+                          "description": "7h.",
+                          "value": "7"
+                        },
+                        {
+                          "description": "8h.",
+                          "value": "8"
+                        },
+                        {
+                          "description": "9h.",
+                          "value": "9"
+                        },
+                        {
+                          "description": "10h.",
+                          "value": "10"
+                        },
+                        {
+                          "description": "11h.",
+                          "value": "11"
+                        },
+                        {
+                          "description": "12h.",
+                          "value": "12"
+                        },
+                        {
+                          "description": "13h.",
+                          "value": "13"
+                        },
+                        {
+                          "description": "14h.",
+                          "value": "14"
+                        },
+                        {
+                          "description": "15h.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "16h.",
+                          "value": "16"
+                        },
+                        {
+                          "description": "17h.",
+                          "value": "17"
+                        },
+                        {
+                          "description": "18h.",
+                          "value": "18"
+                        },
+                        {
+                          "description": "19h.",
+                          "value": "19"
+                        },
+                        {
+                          "description": "20h.",
+                          "value": "20"
+                        },
+                        {
+                          "description": "21h.",
+                          "value": "21"
+                        },
+                        {
+                          "description": "22h.",
+                          "value": "22"
+                        },
+                        {
+                          "description": "23h.",
+                          "value": "23"
+                        }
+                      ],
+                      "description": "N/A"
+                    },
+                    {
+                      "field": "minutes",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "0m.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "15m.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "30m.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "45m.",
+                          "value": "45"
+                        }
+                      ],
+                      "description": "N/A"
+                    }
+                  ]
+                },
+                {
+                  "field": "end",
+                  "description": "N/A"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SignInRestrictionsOffHours",
+      "policyDescription": "Device off hours."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "UploadedFile",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "deviceWallpaperImage",
+                "number": 1
+              }
+            ],
+            "name": "SignInWallpaperImage"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "downloadUri",
+                "number": 1
+              }
+            ],
+            "name": "UploadedFile"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SignInWallpaperImage",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_wallpaper_image",
+      "fieldDescriptions": [
+        {
+          "field": "deviceWallpaperImage",
+          "description": "Uploaded file can be one of the MIME types: [image/jpeg], and file size cannot exceed 16384kb.",
+          "name": "Uploaded file can be one of the MIME types: [image/jpeg], and file size cannot exceed 16384kb.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "downloadUri",
+              "description": "The URI can be obtained by uploading your file via the upload service.",
+              "name": "The URI can be obtained by uploading your file via the upload service."
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SignInWallpaperImage",
+      "policyDescription": "Device wallpaper image."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "ephemeralUsersEnabled",
+                "number": 1
+              }
+            ],
+            "name": "WipeUserData"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.WipeUserData",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#ephemeral_users_enabled",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "ephemeralUsersEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Erase all local user data.",
+              "value": "true"
+            },
+            {
+              "description": "Do not erase local user data.",
+              "value": "false"
+            }
+          ],
+          "description": "Erase all local user info, settings, and state after each sign-out.",
+          "name": "Erase all local user info, settings, and state after each sign-out."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "notices": [
+        {
+          "field": "ephemeralUsersEnabled",
+          "noticeMessage": "Warning: Use of this setting is not recommended for most deployments. See the help center article for user data to learn more: https://support.google.com/chrome/a/answer/1375678#ephemeral_users_enabled.",
+          "noticeValue": "true"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.WipeUserData",
+      "policyDescription": "Allows admins to make managed ChromeOS devices wipe user data after sign-out."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "LoginBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginAuthenticationBehavior",
+                "number": 1
+              }
+            ],
+            "name": "SsoIdpRedirection"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "LoginBehaviorEnum",
+            "value": [
+              {
+                "name": "LOGIN_BEHAVIOR_ENUM_GAIA",
+                "number": 1
+              },
+              {
+                "name": "LOGIN_BEHAVIOR_ENUM_SAML_INTERSTITIAL",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SsoIdpRedirection",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_authentication_behavior",
+      "fieldDescriptions": [
+        {
+          "field": "loginAuthenticationBehavior",
+          "defaultValue": "LOGIN_BEHAVIOR_ENUM_GAIA",
+          "knownValueDescriptions": [
+            {
+              "description": "Take users to the default Google sign-in screen.",
+              "value": "LOGIN_BEHAVIOR_ENUM_GAIA"
+            },
+            {
+              "description": "Allow users to go directly to SAML SSO IdP page.",
+              "value": "LOGIN_BEHAVIOR_ENUM_SAML_INTERSTITIAL"
+            }
+          ],
+          "description": "Redirect users to SAML SSO IdP.",
+          "name": "Redirect users to SAML SSO IdP."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SsoIdpRedirection",
+      "policyDescription": "Single sign-on IdP redirection."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "transferSamlCookies",
+                "number": 1
+              }
+            ],
+            "name": "SsoCookieBehavior"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SsoCookieBehavior",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#transfer_saml_cookies",
+      "fieldDescriptions": [
+        {
+          "field": "transferSamlCookies",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable transfer of SAML SSO Cookies into user session during sign-in.",
+              "value": "true"
+            },
+            {
+              "description": "Disable transfer of SAML SSO Cookies into user session during sign-in.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SsoCookieBehavior",
+      "policyDescription": "Single sign-on cookie behavior."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "loginVideoCaptureAllowedUrls",
+                "number": 1
+              }
+            ],
+            "name": "SsoCameraPermissions"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SsoCameraPermissions",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_video_capture_allowed_urls",
+      "fieldDescriptions": [
+        {
+          "field": "loginVideoCaptureAllowedUrls",
+          "fieldDescription": "By enabling this policy, you are granting third parties access to your users' cameras on your users' behalf. Please ensure you read the help center articles for more clarifications around single sign-on and camera permissions.",
+          "description": "Allowed single sign-on camera permissions. By enabling this policy, you are granting third parties access to your users' cameras on your users' behalf. Please ensure you read the help center articles for more clarifications around single sign-on and camera permissions.",
+          "name": "Allowed single sign-on camera permissions."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SsoCameraPermissions",
+      "policyDescription": "Single sign-on camera permissions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "deviceAutofillSamlUsername",
+                "number": 1
+              }
+            ],
+            "name": "DeviceAutofillSamlUsername"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceAutofillSamlUsername",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_autofill_saml_username",
+      "fieldDescriptions": [
+        {
+          "field": "deviceAutofillSamlUsername",
+          "fieldDescription": "Specify the URL parameter name which will be used on IdP login page to autofill the username field. See the help center article for some examples of fitting URL parameters. Warning: ChromeOS user's email will be used to autofill the username field, so do not use this policy if a different username should be used on IdP login page. This policy is only relevant if SAML SSO has been configured for Chrome Devices.",
+          "description": "URL parameter name. Specify the URL parameter name which will be used on IdP login page to autofill the username field. See the help center article for some examples of fitting URL parameters. Warning: ChromeOS user's email will be used to autofill the username field, so do not use this policy if a different username should be used on IdP login page. This policy is only relevant if SAML SSO has been configured for Chrome Devices.",
+          "name": "URL parameter name."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.devices.DeviceAutofillSamlUsername",
+      "policyDescription": "Autofill username on SAML IdP login page."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "deviceLoginScreenAutoSelectCertificateForUrls",
+                "number": 1
+              }
+            ],
+            "name": "DeviceLoginScreenAutoSelectCertificateForUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceLoginScreenAutoSelectCertificateForUrls",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_login_screen_auto_select_certificate_for_urls",
+      "fieldDescriptions": [
+        {
+          "field": "deviceLoginScreenAutoSelectCertificateForUrls",
+          "fieldDescription": "Please refer to the support url for the format of this setting.",
+          "description": "Automatically select client certificate for these single sign-on sites. Please refer to the support url for the format of this setting.",
+          "name": "Automatically select client certificate for these single sign-on sites."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceLoginScreenAutoSelectCertificateForUrls",
+      "policyDescription": "Single sign-on client certificates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "signInLanguageString",
+                "number": 1
+              }
+            ],
+            "name": "SignInLanguage"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SignInLanguage",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_language",
+      "fieldDescriptions": [
+        {
+          "field": "signInLanguageString",
+          "knownValueDescriptions": [
+            {
+              "description": "Arabic - \u202b\u0627\u0644\u0639\u0631\u0628\u064a\u0629\u202c.",
+              "value": "ar"
+            },
+            {
+              "description": "Bangla - \u202a\u09ac\u09be\u0982\u09b2\u09be\u202c.",
+              "value": "bn"
+            },
+            {
+              "description": "Bulgarian - \u202a\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438\u202c.",
+              "value": "bg"
+            },
+            {
+              "description": "Catalan - \u202acatal\u00e0\u202c.",
+              "value": "ca"
+            },
+            {
+              "description": "Chinese (Simplified) - \u202a\u7b80\u4f53\u4e2d\u6587\u202c.",
+              "value": "zh-CN"
+            },
+            {
+              "description": "Chinese (Traditional) - \u202a\u7e41\u9ad4\u4e2d\u6587\u202c.",
+              "value": "zh-TW"
+            },
+            {
+              "description": "Croatian - \u202aHrvatski\u202c.",
+              "value": "hr"
+            },
+            {
+              "description": "Czech - \u202a\u010ce\u0161tina\u202c.",
+              "value": "cs"
+            },
+            {
+              "description": "Danish - \u202aDansk\u202c.",
+              "value": "da"
+            },
+            {
+              "description": "Dutch - \u202aNederlands\u202c.",
+              "value": "nl"
+            },
+            {
+              "description": "English (Australia).",
+              "value": "en-AU"
+            },
+            {
+              "description": "English (Canada).",
+              "value": "en-CA"
+            },
+            {
+              "description": "English (New Zealand).",
+              "value": "en-NZ"
+            },
+            {
+              "description": "English (United Kingdom).",
+              "value": "en-GB"
+            },
+            {
+              "description": "English (United States).",
+              "value": "en-US"
+            },
+            {
+              "description": "Estonian - \u202aeesti\u202c.",
+              "value": "et"
+            },
+            {
+              "description": "Filipino.",
+              "value": "fil"
+            },
+            {
+              "description": "Finnish - \u202aSuomi\u202c.",
+              "value": "fi"
+            },
+            {
+              "description": "French (Canada) - \u202aFran\u00e7ais (Canada)\u202c.",
+              "value": "fr-CA"
+            },
+            {
+              "description": "French (France) - \u202aFran\u00e7ais (France)\u202c.",
+              "value": "fr"
+            },
+            {
+              "description": "French (Switzerland) - \u202aFran\u00e7ais (Suisse)\u202c.",
+              "value": "fr-CH"
+            },
+            {
+              "description": "German (Germany) - \u202aDeutsch (Deutschland)\u202c.",
+              "value": "de"
+            },
+            {
+              "description": "German (Switzerland) - \u202aDeutsch (Schweiz)\u202c.",
+              "value": "de-CH"
+            },
+            {
+              "description": "Greek - \u202a\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac\u202c.",
+              "value": "el"
+            },
+            {
+              "description": "Gujarati - \u202a\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0\u202c.",
+              "value": "gu"
+            },
+            {
+              "description": "Hebrew - \u202b\u05e2\u05d1\u05e8\u05d9\u05ea\u202c.",
+              "value": "iw"
+            },
+            {
+              "description": "Hindi - \u202a\u0939\u093f\u0928\u094d\u0926\u0940\u202c.",
+              "value": "hi"
+            },
+            {
+              "description": "Hungarian - \u202amagyar\u202c.",
+              "value": "hu"
+            },
+            {
+              "description": "Indonesian - \u202aIndonesia\u202c.",
+              "value": "id"
+            },
+            {
+              "description": "Italian - \u202aItaliano\u202c.",
+              "value": "it"
+            },
+            {
+              "description": "Japanese - \u202a\u65e5\u672c\u8a9e\u202c.",
+              "value": "ja"
+            },
+            {
+              "description": "Kannada - \u202a\u0c95\u0ca8\u0ccd\u0ca8\u0ca1\u202c.",
+              "value": "kn"
+            },
+            {
+              "description": "Korean - \u202a\ud55c\uad6d\uc5b4\u202c.",
+              "value": "ko"
+            },
+            {
+              "description": "Latvian - \u202alatvie\u0161u\u202c.",
+              "value": "lv"
+            },
+            {
+              "description": "Lithuanian - \u202alietuvi\u0173\u202c.",
+              "value": "lt"
+            },
+            {
+              "description": "Malay - \u202aMelayu\u202c.",
+              "value": "ms"
+            },
+            {
+              "description": "Malayalam - \u202a\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02\u202c.",
+              "value": "ml"
+            },
+            {
+              "description": "Marathi - \u202a\u092e\u0930\u093e\u0920\u0940\u202c.",
+              "value": "mr"
+            },
+            {
+              "description": "Norwegian - \u202anorsk\u202c.",
+              "value": "no"
+            },
+            {
+              "description": "Persian - \u202b\u0641\u0627\u0631\u0633\u06cc\u202c.",
+              "value": "fa"
+            },
+            {
+              "description": "Polish - \u202apolski\u202c.",
+              "value": "pl"
+            },
+            {
+              "description": "Portuguese (Brazil) - \u202aPortugu\u00eas (Brasil)\u202c.",
+              "value": "pt-BR"
+            },
+            {
+              "description": "Portuguese (Portugal) - \u202aPortugu\u00eas (Portugal)\u202c.",
+              "value": "pt-PT"
+            },
+            {
+              "description": "Romanian - \u202arom\u00e2n\u0103\u202c.",
+              "value": "ro"
+            },
+            {
+              "description": "Russian - \u202a\u0420\u0443\u0441\u0441\u043a\u0438\u0439\u202c.",
+              "value": "ru"
+            },
+            {
+              "description": "Serbian - \u202a\u0441\u0440\u043f\u0441\u043a\u0438\u202c.",
+              "value": "sr"
+            },
+            {
+              "description": "Slovak - \u202aSloven\u010dina\u202c.",
+              "value": "sk"
+            },
+            {
+              "description": "Slovenian - \u202asloven\u0161\u010dina\u202c.",
+              "value": "sl"
+            },
+            {
+              "description": "Spanish (Latin America) - \u202aEspa\u00f1ol (Latinoam\u00e9rica)\u202c.",
+              "value": "es-419"
+            },
+            {
+              "description": "Spanish (Spain) - \u202aEspa\u00f1ol (Espa\u00f1a)\u202c.",
+              "value": "es"
+            },
+            {
+              "description": "Swedish - \u202aSvenska\u202c.",
+              "value": "sv"
+            },
+            {
+              "description": "Tamil - \u202a\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u202c.",
+              "value": "ta"
+            },
+            {
+              "description": "Telugu - \u202a\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41\u202c.",
+              "value": "te"
+            },
+            {
+              "description": "Thai - \u202a\u0e44\u0e17\u0e22\u202c.",
+              "value": "th"
+            },
+            {
+              "description": "Turkish - \u202aT\u00fcrk\u00e7e\u202c.",
+              "value": "tr"
+            },
+            {
+              "description": "Ukrainian - \u202a\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430\u202c.",
+              "value": "uk"
+            },
+            {
+              "description": "Vietnamese - \u202aTi\u1ebfng Vi\u1ec7t\u202c.",
+              "value": "vi"
+            },
+            {
+              "description": "Welsh - \u202aCymraeg\u202c.",
+              "value": "cy"
+            },
+            {
+              "description": "Use the language of the last user session.",
+              "value": ""
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SignInLanguage",
+      "policyDescription": "Sign-in language."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SignInKeyboards",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "loginScreenKeyboardSelections",
+                "number": 1
+              }
+            ],
+            "name": "SignInKeyboard"
+          },
+          {
+            "field": [
+              {
+                "typeName": "KeyboardSelections",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "selections",
+                "number": 1
+              }
+            ],
+            "name": "SignInKeyboards"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "keyboardIds",
+                "number": 1
+              }
+            ],
+            "name": "KeyboardSelections"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.SignInKeyboard",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_input_methods",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenKeyboardSelections",
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "selections",
+              "description": "N/A",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "keyboardIds",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "Belgian keyboard [French (France) - \u202aFran\u00e7ais (France)\u202c].",
+                      "value": "xkb:be::fra"
+                    },
+                    {
+                      "description": "Belgian keyboard [German (Germany) - \u202aDeutsch (Deutschland)\u202c].",
+                      "value": "xkb:be::ger"
+                    },
+                    {
+                      "description": "Belgian keyboard [Dutch - \u202aNederlands\u202c].",
+                      "value": "xkb:be::nld"
+                    },
+                    {
+                      "description": "Brazilian keyboard.",
+                      "value": "xkb:br::por"
+                    },
+                    {
+                      "description": "Canadian French keyboard.",
+                      "value": "xkb:ca::fra"
+                    },
+                    {
+                      "description": "Canadian English keyboard.",
+                      "value": "xkb:ca:eng:eng"
+                    },
+                    {
+                      "description": "Canadian Multilingual keyboard [French (Canada) - \u202aFran\u00e7ais (Canada)\u202c].",
+                      "value": "xkb:ca:multix:fra"
+                    },
+                    {
+                      "description": "Swiss keyboard [German (Switzerland) - \u202aDeutsch (Schweiz)\u202c].",
+                      "value": "xkb:ch::ger"
+                    },
+                    {
+                      "description": "Swiss keyboard [French (Switzerland) - \u202aFran\u00e7ais (Suisse)\u202c].",
+                      "value": "xkb:ch:fr:fra"
+                    },
+                    {
+                      "description": "Czech keyboard.",
+                      "value": "xkb:cz::cze"
+                    },
+                    {
+                      "description": "Czech QWERTY keyboard.",
+                      "value": "xkb:cz:qwerty:cze"
+                    },
+                    {
+                      "description": "German keyboard.",
+                      "value": "xkb:de::ger"
+                    },
+                    {
+                      "description": "German NEO 2 keyboard.",
+                      "value": "xkb:de:neo:ger"
+                    },
+                    {
+                      "description": "Danish keyboard.",
+                      "value": "xkb:dk::dan"
+                    },
+                    {
+                      "description": "Estonian keyboard.",
+                      "value": "xkb:ee::est"
+                    },
+                    {
+                      "description": "Spanish keyboard.",
+                      "value": "xkb:es::spa"
+                    },
+                    {
+                      "description": "Catalan keyboard.",
+                      "value": "xkb:es:cat:cat"
+                    },
+                    {
+                      "description": "Finnish keyboard.",
+                      "value": "xkb:fi::fin"
+                    },
+                    {
+                      "description": "French keyboard.",
+                      "value": "xkb:fr::fra"
+                    },
+                    {
+                      "description": "UK Dvorak keyboard.",
+                      "value": "xkb:gb:dvorak:eng"
+                    },
+                    {
+                      "description": "UK keyboard.",
+                      "value": "xkb:gb:extd:eng"
+                    },
+                    {
+                      "description": "Croatian keyboard.",
+                      "value": "xkb:hr::scr"
+                    },
+                    {
+                      "description": "Hungarian keyboard.",
+                      "value": "xkb:hu::hun"
+                    },
+                    {
+                      "description": "Irish keyboard.",
+                      "value": "xkb:ie::ga"
+                    },
+                    {
+                      "description": "Icelandic keyboard.",
+                      "value": "xkb:is::ice"
+                    },
+                    {
+                      "description": "Italian keyboard.",
+                      "value": "xkb:it::ita"
+                    },
+                    {
+                      "description": "Japanese keyboard.",
+                      "value": "xkb:jp::jpn"
+                    },
+                    {
+                      "description": "Latin American keyboard.",
+                      "value": "xkb:latam::spa"
+                    },
+                    {
+                      "description": "Lithuanian keyboard.",
+                      "value": "xkb:lt::lit"
+                    },
+                    {
+                      "description": "Latvian keyboard.",
+                      "value": "xkb:lv:apostrophe:lav"
+                    },
+                    {
+                      "description": "Maltese keyboard.",
+                      "value": "xkb:mt::mlt"
+                    },
+                    {
+                      "description": "Norwegian keyboard.",
+                      "value": "xkb:no::nob"
+                    },
+                    {
+                      "description": "Polish keyboard.",
+                      "value": "xkb:pl::pol"
+                    },
+                    {
+                      "description": "Portuguese keyboard.",
+                      "value": "xkb:pt::por"
+                    },
+                    {
+                      "description": "Romanian keyboard.",
+                      "value": "xkb:ro::rum"
+                    },
+                    {
+                      "description": "Swedish keyboard.",
+                      "value": "xkb:se::swe"
+                    },
+                    {
+                      "description": "Slovenian keyboard.",
+                      "value": "xkb:si::slv"
+                    },
+                    {
+                      "description": "Turkish keyboard.",
+                      "value": "xkb:tr::tur"
+                    },
+                    {
+                      "description": "US keyboard.",
+                      "value": "xkb:us::eng"
+                    },
+                    {
+                      "description": "US keyboard [Filipino].",
+                      "value": "xkb:us::fil"
+                    },
+                    {
+                      "description": "US keyboard [Indonesian - \u202aIndonesia\u202c].",
+                      "value": "xkb:us::ind"
+                    },
+                    {
+                      "description": "US keyboard [Malay - \u202aMelayu\u202c].",
+                      "value": "xkb:us::msa"
+                    },
+                    {
+                      "description": "US Extended keyboard.",
+                      "value": "xkb:us:altgr-intl:eng"
+                    },
+                    {
+                      "description": "US Colemak keyboard.",
+                      "value": "xkb:us:colemak:eng"
+                    },
+                    {
+                      "description": "US Dvorak keyboard.",
+                      "value": "xkb:us:dvorak:eng"
+                    },
+                    {
+                      "description": "US Programmer Dvorak keyboard.",
+                      "value": "xkb:us:dvp:eng"
+                    },
+                    {
+                      "description": "US International keyboard.",
+                      "value": "xkb:us:intl:eng"
+                    },
+                    {
+                      "description": "Netherlands keyboard.",
+                      "value": "xkb:us:intl:nld"
+                    },
+                    {
+                      "description": "US International keyboard [Portuguese (Brazil) - \u202aPortugu\u00eas (Brasil)\u202c].",
+                      "value": "xkb:us:intl:por"
+                    },
+                    {
+                      "description": "US Workman international keyboard.",
+                      "value": "xkb:us:workman-intl:eng"
+                    },
+                    {
+                      "description": "US Workman keyboard.",
+                      "value": "xkb:us:workman:eng"
+                    }
+                  ],
+                  "description": "The list of ids for the available keyboard types the user can select at the login screen. The keyboards will appear in the same order as this list.",
+                  "name": "The list of ids for the available keyboard types the user can select at the login screen. The keyboards will appear in the same order as this list."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.SignInKeyboard",
+      "policyDescription": "Login screen keyboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "deviceWebBasedAttestationAllowedUrls",
+                "number": 1
+              }
+            ],
+            "name": "DeviceWebBasedAttestationAllowedUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceWebBasedAttestationAllowedUrls",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_web_based_attestation_allowed_urls",
+      "fieldDescriptions": [
+        {
+          "field": "deviceWebBasedAttestationAllowedUrls",
+          "fieldDescription": "Enter the list of URLs that you want to be able to perform a verified access check during SAML authentication.",
+          "description": "Allowed IdP redirect URLs. Enter the list of URLs that you want to be able to perform a verified access check during SAML authentication.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url'.",
+          "name": "Allowed IdP redirect URLs."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceWebBasedAttestationAllowedUrls",
+      "policyDescription": "Single sign-on verified access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceLoginScreenSystemInfoEnforced",
+                "number": 1
+              }
+            ],
+            "name": "DeviceLoginScreenSystemInfoEnforced"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceLoginScreenSystemInfoEnforced",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_login_screen_system_info_enforced",
+      "fieldDescriptions": [
+        {
+          "field": "deviceLoginScreenSystemInfoEnforced",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to display system information on the sign-in screen by pressing Alt+V.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always display system information on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not allow users to display system information on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceLoginScreenSystemInfoEnforced",
+      "policyDescription": "System info on sign-in screen."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceLoginScreenPrivacyScreenEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DeviceLoginScreenPrivacyScreenEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceLoginScreenPrivacyScreenEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_login_screen_privacy_screen_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "deviceLoginScreenPrivacyScreenEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always enable the privacy screen on sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Always disable the privacy screen on sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceLoginScreenPrivacyScreenEnabled",
+      "policyDescription": "Privacy screen on sign-in screen."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "deviceShowNumericKeyboardForPassword",
+                "number": 1
+              }
+            ],
+            "name": "DeviceShowNumericKeyboardForPassword"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceShowNumericKeyboardForPassword",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_show_numeric_keyboard_for_password",
+      "fieldDescriptions": [
+        {
+          "field": "deviceShowNumericKeyboardForPassword",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Default to a numeric keyboard for password input.",
+              "value": "true"
+            },
+            {
+              "description": "Default to a standard keyboard for password input.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceShowNumericKeyboardForPassword",
+      "policyDescription": "Show numeric keyboard for password."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenSpokenFeedbackEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenSpokenFeedbackEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenSpokenFeedbackEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_spoken_feedback_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenSpokenFeedbackEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable spoken feedback on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable spoken feedback on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenSpokenFeedbackEnabled",
+      "policyDescription": "Spoken feedback."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenSelectToSpeakEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenSelectToSpeakEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenSelectToSpeakEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_select_to_speak_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenSelectToSpeakEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable select to speak on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable select to speak on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenSelectToSpeakEnabled",
+      "policyDescription": "Select to speak."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenHighContrastEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenHighContrastEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenHighContrastEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_high_contrast_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenHighContrastEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable high contrast on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable high contrast on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenHighContrastEnabled",
+      "policyDescription": "High contrast."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DeviceLoginScreenScreenMagnifierTypeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenScreenMagnifierType",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenScreenMagnifierType"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DeviceLoginScreenScreenMagnifierTypeEnum",
+            "value": [
+              {
+                "name": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_FULL_SCREEN",
+                "number": 3
+              },
+              {
+                "name": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_DOCKED",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenScreenMagnifierType",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_screen_magnifier_type",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenScreenMagnifierType",
+          "defaultValue": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_UNSET"
+            },
+            {
+              "description": "Disable screen magnifier on the sign-in screen.",
+              "value": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_DISABLED"
+            },
+            {
+              "description": "Enable full-screen magnifier on the sign-in screen.",
+              "value": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_FULL_SCREEN"
+            },
+            {
+              "description": "Enable docked magnifier on the sign-in screen.",
+              "value": "DEVICE_LOGIN_SCREEN_SCREEN_MAGNIFIER_TYPE_ENUM_DOCKED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenScreenMagnifierType",
+      "policyDescription": "Screen magnifier."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenStickyKeysEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenStickyKeysEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenStickyKeysEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_sticky_keys_enabled",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Enable sticky keys on the sign-in screen.",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable sticky keys on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable sticky keys on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "Login Screen Sticky Keys Enabled. Enable sticky keys on the sign-in screen.",
+          "defaultValue": "UNSET",
+          "field": "loginScreenStickyKeysEnabled",
+          "name": "Login Screen Sticky Keys Enabled."
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenStickyKeysEnabled",
+      "policyDescription": "Sticky keys."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenVirtualKeyboardEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenVirtualKeyboardEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenVirtualKeyboardEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_virtual_keyboard_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenVirtualKeyboardEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable on-screen keyboard on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable on-screen keyboard on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenVirtualKeyboardEnabled",
+      "policyDescription": "On-screen keyboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenDictationEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenDictationEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenDictationEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_dictation_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenDictationEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable dictation on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable dictation on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenDictationEnabled",
+      "policyDescription": "Dictation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenKeyboardFocusHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenKeyboardFocusHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenKeyboardFocusHighlightEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_keyboard_focus_highlight_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenKeyboardFocusHighlightEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable keyboard focus highlighting on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable keyboard focus highlighting on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenKeyboardFocusHighlightEnabled",
+      "policyDescription": "Keyboard focus highlighting."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenCaretHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenCaretHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenCaretHighlightEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_caret_highlight_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenCaretHighlightEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable caret highlight on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable caret highlight on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenCaretHighlightEnabled",
+      "policyDescription": "Caret highlight."
+    }
+]

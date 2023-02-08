@@ -1,0 +1,5038 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ShelfAlignmentEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "shelfAlignment",
+                "number": 1
+              }
+            ],
+            "name": "ShelfAlign"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ShelfAlignmentEnum",
+            "value": [
+              {
+                "name": "SHELF_ALIGNMENT_ENUM_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "SHELF_ALIGNMENT_ENUM_BOTTOM",
+                "number": 2
+              },
+              {
+                "name": "SHELF_ALIGNMENT_ENUM_LEFT",
+                "number": 3
+              },
+              {
+                "name": "SHELF_ALIGNMENT_ENUM_RIGHT",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ShelfAlign",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#shelf_position",
+      "fieldDescriptions": [
+        {
+          "field": "shelfAlignment",
+          "defaultValue": "SHELF_ALIGNMENT_ENUM_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SHELF_ALIGNMENT_ENUM_USER_CHOICE"
+            },
+            {
+              "description": "Bottom.",
+              "value": "SHELF_ALIGNMENT_ENUM_BOTTOM"
+            },
+            {
+              "description": "Left.",
+              "value": "SHELF_ALIGNMENT_ENUM_LEFT"
+            },
+            {
+              "description": "Right.",
+              "value": "SHELF_ALIGNMENT_ENUM_RIGHT"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ShelfAlign",
+      "policyDescription": "Shelf position."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ShelfAutoHideBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "shelfAutoHideBehavior",
+                "number": 1
+              }
+            ],
+            "name": "ShelfAutoHideBehavior"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ShelfAutoHideBehaviorEnum",
+            "value": [
+              {
+                "name": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_ALWAYS_AUTO_HIDE_SHELF",
+                "number": 2
+              },
+              {
+                "name": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_NEVER_AUTO_HIDE_SHELF",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ShelfAutoHideBehavior",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#shelf_auto_hide_behavior",
+      "fieldDescriptions": [
+        {
+          "field": "shelfAutoHideBehavior",
+          "defaultValue": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_USER_CHOICE"
+            },
+            {
+              "description": "Always auto-hide the shelf.",
+              "value": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_ALWAYS_AUTO_HIDE_SHELF"
+            },
+            {
+              "description": "Never auto-hide the shelf.",
+              "value": "SHELF_AUTO_HIDE_BEHAVIOR_ENUM_NEVER_AUTO_HIDE_SHELF"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ShelfAutoHideBehavior",
+      "policyDescription": "Shelf auto-hiding."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "editBookmarksEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BookmarkEditing"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BookmarkEditing",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#edit_bookmarks_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "editBookmarksEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable bookmark editing.",
+              "value": "true"
+            },
+            {
+              "description": "Disable bookmark editing.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BookmarkEditing",
+      "policyDescription": "Bookmark editing."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "showAppsShortcutInBookmarkBar",
+                "number": 1
+              }
+            ],
+            "name": "ShowAppsShortcutInBookmarkBar"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ShowAppsShortcutInBookmarkBar",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#show_apps_shortcut_in_bookmark_bar",
+      "fieldDescriptions": [
+        {
+          "field": "showAppsShortcutInBookmarkBar",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Show the apps shortcut in the bookmark bar.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Hide the apps shortcut from the bookmark bar.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ShowAppsShortcutInBookmarkBar",
+      "policyDescription": "Apps shortcut in the bookmark bar."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DownloadDirectoryLocationEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "downloadDirectory",
+                "number": 1
+              }
+            ],
+            "name": "UserDownloadDirectory"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DownloadDirectoryLocationEnum",
+            "value": [
+              {
+                "name": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_LOCAL_FOLDER_DEFAULT",
+                "number": 1
+              },
+              {
+                "name": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_GOOGLE_DRIVE_DEFAULT",
+                "number": 2
+              },
+              {
+                "name": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_GOOGLE_DRIVE_FORCED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UserDownloadDirectory",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#download_directory",
+      "fieldDescriptions": [
+        {
+          "field": "downloadDirectory",
+          "defaultValue": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_LOCAL_FOLDER_DEFAULT",
+          "knownValueDescriptions": [
+            {
+              "description": "Set local Downloads folder as default, but allow user to change.",
+              "value": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_LOCAL_FOLDER_DEFAULT"
+            },
+            {
+              "description": "Set Google Drive as default, but allow user to change.",
+              "value": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_GOOGLE_DRIVE_DEFAULT"
+            },
+            {
+              "description": "Force Google Drive.",
+              "value": "DOWNLOAD_DIRECTORY_LOCATION_ENUM_GOOGLE_DRIVE_FORCED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UserDownloadDirectory",
+      "policyDescription": "Download location."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "promptForDownloadLocation",
+                "number": 1
+              }
+            ],
+            "name": "PromptForDownloadLocation"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PromptForDownloadLocation",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#prompt_for_download_location",
+      "fieldDescriptions": [
+        {
+          "field": "promptForDownloadLocation",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Ask the user where to save the file before downloading.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not ask the user (downloads start immediately).",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PromptForDownloadLocation",
+      "policyDescription": "Download location prompt."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "downloadBubbleEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DownloadBubbleEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DownloadBubbleEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#download_bubble_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "downloadBubbleEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable download bubble.",
+              "value": "true"
+            },
+            {
+              "description": "Disable download bubble.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.DownloadBubbleEnabled",
+      "policyDescription": "Download bubble."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "spellcheckEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "spellcheckLanguage",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "spellcheckLanguageBlocklist",
+                "number": 3
+              }
+            ],
+            "name": "SpellcheckEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SpellcheckEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#spellcheck_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "spellcheckEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable spell check.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable spell check.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "spellcheckLanguage",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "TRUE",
+              "sourceField": "spellcheckEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Afrikaans.",
+              "value": "af"
+            },
+            {
+              "description": "Albanian - \u202ashqip\u202c.",
+              "value": "sq"
+            },
+            {
+              "description": "Armenian - \u202a\u0570\u0561\u0575\u0565\u0580\u0565\u0576\u202c.",
+              "value": "hy"
+            },
+            {
+              "description": "Bulgarian - \u202a\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438\u202c.",
+              "value": "bg"
+            },
+            {
+              "description": "Catalan - \u202acatal\u00e0\u202c.",
+              "value": "ca"
+            },
+            {
+              "description": "Croatian - \u202aHrvatski\u202c.",
+              "value": "hr"
+            },
+            {
+              "description": "Czech - \u202a\u010ce\u0161tina\u202c.",
+              "value": "cs"
+            },
+            {
+              "description": "Danish - \u202aDansk\u202c.",
+              "value": "da"
+            },
+            {
+              "description": "Dutch - \u202aNederlands\u202c.",
+              "value": "nl"
+            },
+            {
+              "description": "English (Australia).",
+              "value": "en-AU"
+            },
+            {
+              "description": "English (Canada).",
+              "value": "en-CA"
+            },
+            {
+              "description": "English (United Kingdom).",
+              "value": "en-GB"
+            },
+            {
+              "description": "English (United States).",
+              "value": "en-US"
+            },
+            {
+              "description": "Estonian - \u202aeesti\u202c.",
+              "value": "et"
+            },
+            {
+              "description": "Faroese - \u202af\u00f8royskt\u202c.",
+              "value": "fo"
+            },
+            {
+              "description": "French - \u202aFran\u00e7ais\u202c.",
+              "value": "fr"
+            },
+            {
+              "description": "French (France) - \u202aFran\u00e7ais (France)\u202c.",
+              "value": "fr-FR"
+            },
+            {
+              "description": "German - \u202aDeutsch\u202c.",
+              "value": "de"
+            },
+            {
+              "description": "German (Germany) - \u202aDeutsch (Deutschland)\u202c.",
+              "value": "de-DE"
+            },
+            {
+              "description": "Greek - \u202a\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac\u202c.",
+              "value": "el"
+            },
+            {
+              "description": "Hebrew - \u202b\u05e2\u05d1\u05e8\u05d9\u05ea\u202c.",
+              "value": "he"
+            },
+            {
+              "description": "Hindi - \u202a\u0939\u093f\u0928\u094d\u0926\u0940\u202c.",
+              "value": "hi"
+            },
+            {
+              "description": "Hungarian - \u202amagyar\u202c.",
+              "value": "hu"
+            },
+            {
+              "description": "Indonesian - \u202aIndonesia\u202c.",
+              "value": "id"
+            },
+            {
+              "description": "Italian - \u202aItaliano\u202c.",
+              "value": "it"
+            },
+            {
+              "description": "Italian (Italy) - \u202aItaliano (Italia)\u202c.",
+              "value": "it-IT"
+            },
+            {
+              "description": "Korean - \u202a\ud55c\uad6d\uc5b4\u202c.",
+              "value": "ko"
+            },
+            {
+              "description": "Latvian - \u202alatvie\u0161u\u202c.",
+              "value": "lv"
+            },
+            {
+              "description": "Lithuanian - \u202alietuvi\u0173\u202c.",
+              "value": "lt"
+            },
+            {
+              "description": "Norwegian Bokm\u00e5l - \u202anorsk bokm\u00e5l\u202c.",
+              "value": "nb"
+            },
+            {
+              "description": "Persian - \u202b\u0641\u0627\u0631\u0633\u06cc\u202c.",
+              "value": "fa"
+            },
+            {
+              "description": "Polish - \u202apolski\u202c.",
+              "value": "pl"
+            },
+            {
+              "description": "Portuguese - \u202aPortugu\u00eas\u202c.",
+              "value": "pt"
+            },
+            {
+              "description": "Portuguese (Brazil) - \u202aPortugu\u00eas (Brasil)\u202c.",
+              "value": "pt-BR"
+            },
+            {
+              "description": "Portuguese (Portugal) - \u202aPortugu\u00eas (Portugal)\u202c.",
+              "value": "pt-PT"
+            },
+            {
+              "description": "Romanian - \u202arom\u00e2n\u0103\u202c.",
+              "value": "ro"
+            },
+            {
+              "description": "Russian - \u202a\u0420\u0443\u0441\u0441\u043a\u0438\u0439\u202c.",
+              "value": "ru"
+            },
+            {
+              "description": "Serbian - \u202a\u0441\u0440\u043f\u0441\u043a\u0438\u202c.",
+              "value": "sr"
+            },
+            {
+              "description": "Serbo-Croatian - \u202asrpskohrvatski\u202c.",
+              "value": "sh"
+            },
+            {
+              "description": "Slovak - \u202aSloven\u010dina\u202c.",
+              "value": "sk"
+            },
+            {
+              "description": "Slovenian - \u202asloven\u0161\u010dina\u202c.",
+              "value": "sl"
+            },
+            {
+              "description": "Spanish - \u202aEspa\u00f1ol\u202c.",
+              "value": "es"
+            },
+            {
+              "description": "Spanish (Argentina) - \u202aEspa\u00f1ol (Argentina)\u202c.",
+              "value": "es-AR"
+            },
+            {
+              "description": "Spanish (Latin America) - \u202aEspa\u00f1ol (Latinoam\u00e9rica)\u202c.",
+              "value": "es-419"
+            },
+            {
+              "description": "Spanish (Mexico) - \u202aEspa\u00f1ol (M\u00e9xico)\u202c.",
+              "value": "es-MX"
+            },
+            {
+              "description": "Spanish (Spain) - \u202aEspa\u00f1ol (Espa\u00f1a)\u202c.",
+              "value": "es-ES"
+            },
+            {
+              "description": "Spanish (United States) - \u202aEspa\u00f1ol (Estados Unidos)\u202c.",
+              "value": "es-US"
+            },
+            {
+              "description": "Swedish - \u202aSvenska\u202c.",
+              "value": "sv"
+            },
+            {
+              "description": "Tajik - \u202a\u0442\u043e\u04b7\u0438\u043a\u04e3\u202c.",
+              "value": "tg"
+            },
+            {
+              "description": "Tamil - \u202a\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u202c.",
+              "value": "ta"
+            },
+            {
+              "description": "Turkish - \u202aT\u00fcrk\u00e7e\u202c.",
+              "value": "tr"
+            },
+            {
+              "description": "Ukrainian - \u202a\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430\u202c.",
+              "value": "uk"
+            },
+            {
+              "description": "Vietnamese - \u202aTi\u1ebfng Vi\u1ec7t\u202c.",
+              "value": "vi"
+            },
+            {
+              "description": "Welsh - \u202aCymraeg\u202c.",
+              "value": "cy"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "spellcheckLanguageBlocklist",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "TRUE",
+              "sourceField": "spellcheckEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Afrikaans.",
+              "value": "af"
+            },
+            {
+              "description": "Albanian - \u202ashqip\u202c.",
+              "value": "sq"
+            },
+            {
+              "description": "Armenian - \u202a\u0570\u0561\u0575\u0565\u0580\u0565\u0576\u202c.",
+              "value": "hy"
+            },
+            {
+              "description": "Bulgarian - \u202a\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438\u202c.",
+              "value": "bg"
+            },
+            {
+              "description": "Catalan - \u202acatal\u00e0\u202c.",
+              "value": "ca"
+            },
+            {
+              "description": "Croatian - \u202aHrvatski\u202c.",
+              "value": "hr"
+            },
+            {
+              "description": "Czech - \u202a\u010ce\u0161tina\u202c.",
+              "value": "cs"
+            },
+            {
+              "description": "Danish - \u202aDansk\u202c.",
+              "value": "da"
+            },
+            {
+              "description": "Dutch - \u202aNederlands\u202c.",
+              "value": "nl"
+            },
+            {
+              "description": "English (Australia).",
+              "value": "en-AU"
+            },
+            {
+              "description": "English (Canada).",
+              "value": "en-CA"
+            },
+            {
+              "description": "English (United Kingdom).",
+              "value": "en-GB"
+            },
+            {
+              "description": "English (United States).",
+              "value": "en-US"
+            },
+            {
+              "description": "Estonian - \u202aeesti\u202c.",
+              "value": "et"
+            },
+            {
+              "description": "Faroese - \u202af\u00f8royskt\u202c.",
+              "value": "fo"
+            },
+            {
+              "description": "French - \u202aFran\u00e7ais\u202c.",
+              "value": "fr"
+            },
+            {
+              "description": "French (France) - \u202aFran\u00e7ais (France)\u202c.",
+              "value": "fr-FR"
+            },
+            {
+              "description": "German - \u202aDeutsch\u202c.",
+              "value": "de"
+            },
+            {
+              "description": "German (Germany) - \u202aDeutsch (Deutschland)\u202c.",
+              "value": "de-DE"
+            },
+            {
+              "description": "Greek - \u202a\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac\u202c.",
+              "value": "el"
+            },
+            {
+              "description": "Hebrew - \u202b\u05e2\u05d1\u05e8\u05d9\u05ea\u202c.",
+              "value": "he"
+            },
+            {
+              "description": "Hindi - \u202a\u0939\u093f\u0928\u094d\u0926\u0940\u202c.",
+              "value": "hi"
+            },
+            {
+              "description": "Hungarian - \u202amagyar\u202c.",
+              "value": "hu"
+            },
+            {
+              "description": "Indonesian - \u202aIndonesia\u202c.",
+              "value": "id"
+            },
+            {
+              "description": "Italian - \u202aItaliano\u202c.",
+              "value": "it"
+            },
+            {
+              "description": "Italian (Italy) - \u202aItaliano (Italia)\u202c.",
+              "value": "it-IT"
+            },
+            {
+              "description": "Korean - \u202a\ud55c\uad6d\uc5b4\u202c.",
+              "value": "ko"
+            },
+            {
+              "description": "Latvian - \u202alatvie\u0161u\u202c.",
+              "value": "lv"
+            },
+            {
+              "description": "Lithuanian - \u202alietuvi\u0173\u202c.",
+              "value": "lt"
+            },
+            {
+              "description": "Norwegian Bokm\u00e5l - \u202anorsk bokm\u00e5l\u202c.",
+              "value": "nb"
+            },
+            {
+              "description": "Persian - \u202b\u0641\u0627\u0631\u0633\u06cc\u202c.",
+              "value": "fa"
+            },
+            {
+              "description": "Polish - \u202apolski\u202c.",
+              "value": "pl"
+            },
+            {
+              "description": "Portuguese - \u202aPortugu\u00eas\u202c.",
+              "value": "pt"
+            },
+            {
+              "description": "Portuguese (Brazil) - \u202aPortugu\u00eas (Brasil)\u202c.",
+              "value": "pt-BR"
+            },
+            {
+              "description": "Portuguese (Portugal) - \u202aPortugu\u00eas (Portugal)\u202c.",
+              "value": "pt-PT"
+            },
+            {
+              "description": "Romanian - \u202arom\u00e2n\u0103\u202c.",
+              "value": "ro"
+            },
+            {
+              "description": "Russian - \u202a\u0420\u0443\u0441\u0441\u043a\u0438\u0439\u202c.",
+              "value": "ru"
+            },
+            {
+              "description": "Serbian - \u202a\u0441\u0440\u043f\u0441\u043a\u0438\u202c.",
+              "value": "sr"
+            },
+            {
+              "description": "Serbo-Croatian - \u202asrpskohrvatski\u202c.",
+              "value": "sh"
+            },
+            {
+              "description": "Slovak - \u202aSloven\u010dina\u202c.",
+              "value": "sk"
+            },
+            {
+              "description": "Slovenian - \u202asloven\u0161\u010dina\u202c.",
+              "value": "sl"
+            },
+            {
+              "description": "Spanish - \u202aEspa\u00f1ol\u202c.",
+              "value": "es"
+            },
+            {
+              "description": "Spanish (Argentina) - \u202aEspa\u00f1ol (Argentina)\u202c.",
+              "value": "es-AR"
+            },
+            {
+              "description": "Spanish (Latin America) - \u202aEspa\u00f1ol (Latinoam\u00e9rica)\u202c.",
+              "value": "es-419"
+            },
+            {
+              "description": "Spanish (Mexico) - \u202aEspa\u00f1ol (M\u00e9xico)\u202c.",
+              "value": "es-MX"
+            },
+            {
+              "description": "Spanish (Spain) - \u202aEspa\u00f1ol (Espa\u00f1a)\u202c.",
+              "value": "es-ES"
+            },
+            {
+              "description": "Spanish (United States) - \u202aEspa\u00f1ol (Estados Unidos)\u202c.",
+              "value": "es-US"
+            },
+            {
+              "description": "Swedish - \u202aSvenska\u202c.",
+              "value": "sv"
+            },
+            {
+              "description": "Tajik - \u202a\u0442\u043e\u04b7\u0438\u043a\u04e3\u202c.",
+              "value": "tg"
+            },
+            {
+              "description": "Tamil - \u202a\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u202c.",
+              "value": "ta"
+            },
+            {
+              "description": "Turkish - \u202aT\u00fcrk\u00e7e\u202c.",
+              "value": "tr"
+            },
+            {
+              "description": "Ukrainian - \u202a\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430\u202c.",
+              "value": "uk"
+            },
+            {
+              "description": "Vietnamese - \u202aTi\u1ebfng Vi\u1ec7t\u202c.",
+              "value": "vi"
+            },
+            {
+              "description": "Welsh - \u202aCymraeg\u202c.",
+              "value": "cy"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SpellcheckEnabled",
+      "policyDescription": "Spell check."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "spellCheckServiceEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SpellCheckService"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SpellCheckService",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#spell_check_service_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "spellCheckServiceEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable the spell checking web service.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable the spell checking web service.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SpellCheckService",
+      "policyDescription": "Spell check service."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "applicationLocaleValue",
+                "number": 1
+              }
+            ],
+            "name": "ApplicationLocaleValue"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ApplicationLocaleValue",
+      "fieldDescriptions": [
+        {
+          "field": "applicationLocaleValue",
+          "knownValueDescriptions": [
+            {
+              "description": "Arabic - \u202b\u0627\u0644\u0639\u0631\u0628\u064a\u0629\u202c.",
+              "value": "ar"
+            },
+            {
+              "description": "Bangla - \u202a\u09ac\u09be\u0982\u09b2\u09be\u202c.",
+              "value": "bn"
+            },
+            {
+              "description": "Bulgarian - \u202a\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438\u202c.",
+              "value": "bg"
+            },
+            {
+              "description": "Catalan - \u202acatal\u00e0\u202c.",
+              "value": "ca"
+            },
+            {
+              "description": "Chinese (Simplified) - \u202a\u7b80\u4f53\u4e2d\u6587\u202c.",
+              "value": "zh-CN"
+            },
+            {
+              "description": "Chinese (Traditional) - \u202a\u7e41\u9ad4\u4e2d\u6587\u202c.",
+              "value": "zh-TW"
+            },
+            {
+              "description": "Croatian - \u202aHrvatski\u202c.",
+              "value": "hr"
+            },
+            {
+              "description": "Czech - \u202a\u010ce\u0161tina\u202c.",
+              "value": "cs"
+            },
+            {
+              "description": "Danish - \u202aDansk\u202c.",
+              "value": "da"
+            },
+            {
+              "description": "Dutch - \u202aNederlands\u202c.",
+              "value": "nl"
+            },
+            {
+              "description": "English (Australia).",
+              "value": "en-AU"
+            },
+            {
+              "description": "English (Canada).",
+              "value": "en-CA"
+            },
+            {
+              "description": "English (New Zealand).",
+              "value": "en-NZ"
+            },
+            {
+              "description": "English (United Kingdom).",
+              "value": "en-GB"
+            },
+            {
+              "description": "English (United States).",
+              "value": "en-US"
+            },
+            {
+              "description": "Estonian - \u202aeesti\u202c.",
+              "value": "et"
+            },
+            {
+              "description": "Filipino.",
+              "value": "fil"
+            },
+            {
+              "description": "Finnish - \u202aSuomi\u202c.",
+              "value": "fi"
+            },
+            {
+              "description": "French (Canada) - \u202aFran\u00e7ais (Canada)\u202c.",
+              "value": "fr-CA"
+            },
+            {
+              "description": "French (France) - \u202aFran\u00e7ais (France)\u202c.",
+              "value": "fr"
+            },
+            {
+              "description": "French (Switzerland) - \u202aFran\u00e7ais (Suisse)\u202c.",
+              "value": "fr-CH"
+            },
+            {
+              "description": "German (Germany) - \u202aDeutsch (Deutschland)\u202c.",
+              "value": "de"
+            },
+            {
+              "description": "German (Switzerland) - \u202aDeutsch (Schweiz)\u202c.",
+              "value": "de-CH"
+            },
+            {
+              "description": "Greek - \u202a\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac\u202c.",
+              "value": "el"
+            },
+            {
+              "description": "Gujarati - \u202a\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0\u202c.",
+              "value": "gu"
+            },
+            {
+              "description": "Hebrew - \u202b\u05e2\u05d1\u05e8\u05d9\u05ea\u202c.",
+              "value": "iw"
+            },
+            {
+              "description": "Hindi - \u202a\u0939\u093f\u0928\u094d\u0926\u0940\u202c.",
+              "value": "hi"
+            },
+            {
+              "description": "Hungarian - \u202amagyar\u202c.",
+              "value": "hu"
+            },
+            {
+              "description": "Indonesian - \u202aIndonesia\u202c.",
+              "value": "id"
+            },
+            {
+              "description": "Italian - \u202aItaliano\u202c.",
+              "value": "it"
+            },
+            {
+              "description": "Japanese - \u202a\u65e5\u672c\u8a9e\u202c.",
+              "value": "ja"
+            },
+            {
+              "description": "Kannada - \u202a\u0c95\u0ca8\u0ccd\u0ca8\u0ca1\u202c.",
+              "value": "kn"
+            },
+            {
+              "description": "Korean - \u202a\ud55c\uad6d\uc5b4\u202c.",
+              "value": "ko"
+            },
+            {
+              "description": "Latvian - \u202alatvie\u0161u\u202c.",
+              "value": "lv"
+            },
+            {
+              "description": "Lithuanian - \u202alietuvi\u0173\u202c.",
+              "value": "lt"
+            },
+            {
+              "description": "Malay - \u202aMelayu\u202c.",
+              "value": "ms"
+            },
+            {
+              "description": "Malayalam - \u202a\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02\u202c.",
+              "value": "ml"
+            },
+            {
+              "description": "Marathi - \u202a\u092e\u0930\u093e\u0920\u0940\u202c.",
+              "value": "mr"
+            },
+            {
+              "description": "Norwegian - \u202anorsk\u202c.",
+              "value": "no"
+            },
+            {
+              "description": "Persian - \u202b\u0641\u0627\u0631\u0633\u06cc\u202c.",
+              "value": "fa"
+            },
+            {
+              "description": "Polish - \u202apolski\u202c.",
+              "value": "pl"
+            },
+            {
+              "description": "Portuguese (Brazil) - \u202aPortugu\u00eas (Brasil)\u202c.",
+              "value": "pt-BR"
+            },
+            {
+              "description": "Portuguese (Portugal) - \u202aPortugu\u00eas (Portugal)\u202c.",
+              "value": "pt-PT"
+            },
+            {
+              "description": "Romanian - \u202arom\u00e2n\u0103\u202c.",
+              "value": "ro"
+            },
+            {
+              "description": "Russian - \u202a\u0420\u0443\u0441\u0441\u043a\u0438\u0439\u202c.",
+              "value": "ru"
+            },
+            {
+              "description": "Serbian - \u202a\u0441\u0440\u043f\u0441\u043a\u0438\u202c.",
+              "value": "sr"
+            },
+            {
+              "description": "Slovak - \u202aSloven\u010dina\u202c.",
+              "value": "sk"
+            },
+            {
+              "description": "Slovenian - \u202asloven\u0161\u010dina\u202c.",
+              "value": "sl"
+            },
+            {
+              "description": "Spanish (Latin America) - \u202aEspa\u00f1ol (Latinoam\u00e9rica)\u202c.",
+              "value": "es-419"
+            },
+            {
+              "description": "Spanish (Spain) - \u202aEspa\u00f1ol (Espa\u00f1a)\u202c.",
+              "value": "es"
+            },
+            {
+              "description": "Swedish - \u202aSvenska\u202c.",
+              "value": "sv"
+            },
+            {
+              "description": "Tamil - \u202a\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u202c.",
+              "value": "ta"
+            },
+            {
+              "description": "Telugu - \u202a\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41\u202c.",
+              "value": "te"
+            },
+            {
+              "description": "Thai - \u202a\u0e44\u0e17\u0e22\u202c.",
+              "value": "th"
+            },
+            {
+              "description": "Turkish - \u202aT\u00fcrk\u00e7e\u202c.",
+              "value": "tr"
+            },
+            {
+              "description": "Ukrainian - \u202a\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430\u202c.",
+              "value": "uk"
+            },
+            {
+              "description": "Vietnamese - \u202aTi\u1ebfng Vi\u1ec7t\u202c.",
+              "value": "vi"
+            },
+            {
+              "description": "Welsh - \u202aCymraeg\u202c.",
+              "value": "cy"
+            },
+            {
+              "description": "Use the language specified by user or system.",
+              "value": ""
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ApplicationLocaleValue",
+      "policyDescription": "Browser locale."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "forcedLanguages",
+                "number": 1
+              }
+            ],
+            "name": "ForcedLanguages"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ForcedLanguages",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#forced_languages",
+      "fieldDescriptions": [
+        {
+          "field": "forcedLanguages",
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ForcedLanguages",
+      "policyDescription": "Preferred languages."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "allowedLanguages",
+                "number": 1
+              }
+            ],
+            "name": "AllowedLanguages"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowedLanguages",
+      "fieldDescriptions": [
+        {
+          "field": "allowedLanguages",
+          "knownValueDescriptions": [
+            {
+              "description": "Arabic - \u202b\u0627\u0644\u0639\u0631\u0628\u064a\u0629\u202c.",
+              "value": "ar"
+            },
+            {
+              "description": "Bangla - \u202a\u09ac\u09be\u0982\u09b2\u09be\u202c.",
+              "value": "bn"
+            },
+            {
+              "description": "Bulgarian - \u202a\u0431\u044a\u043b\u0433\u0430\u0440\u0441\u043a\u0438\u202c.",
+              "value": "bg"
+            },
+            {
+              "description": "Catalan - \u202acatal\u00e0\u202c.",
+              "value": "ca"
+            },
+            {
+              "description": "Chinese (Simplified) - \u202a\u7b80\u4f53\u4e2d\u6587\u202c.",
+              "value": "zh-CN"
+            },
+            {
+              "description": "Chinese (Traditional) - \u202a\u7e41\u9ad4\u4e2d\u6587\u202c.",
+              "value": "zh-TW"
+            },
+            {
+              "description": "Croatian - \u202aHrvatski\u202c.",
+              "value": "hr"
+            },
+            {
+              "description": "Czech - \u202a\u010ce\u0161tina\u202c.",
+              "value": "cs"
+            },
+            {
+              "description": "Danish - \u202aDansk\u202c.",
+              "value": "da"
+            },
+            {
+              "description": "Dutch - \u202aNederlands\u202c.",
+              "value": "nl"
+            },
+            {
+              "description": "English (Australia).",
+              "value": "en-AU"
+            },
+            {
+              "description": "English (Canada).",
+              "value": "en-CA"
+            },
+            {
+              "description": "English (New Zealand).",
+              "value": "en-NZ"
+            },
+            {
+              "description": "English (United Kingdom).",
+              "value": "en-GB"
+            },
+            {
+              "description": "English (United States).",
+              "value": "en-US"
+            },
+            {
+              "description": "Estonian - \u202aeesti\u202c.",
+              "value": "et"
+            },
+            {
+              "description": "Filipino.",
+              "value": "fil"
+            },
+            {
+              "description": "Finnish - \u202aSuomi\u202c.",
+              "value": "fi"
+            },
+            {
+              "description": "French (Canada) - \u202aFran\u00e7ais (Canada)\u202c.",
+              "value": "fr-CA"
+            },
+            {
+              "description": "French (France) - \u202aFran\u00e7ais (France)\u202c.",
+              "value": "fr"
+            },
+            {
+              "description": "French (Switzerland) - \u202aFran\u00e7ais (Suisse)\u202c.",
+              "value": "fr-CH"
+            },
+            {
+              "description": "German (Germany) - \u202aDeutsch (Deutschland)\u202c.",
+              "value": "de"
+            },
+            {
+              "description": "German (Switzerland) - \u202aDeutsch (Schweiz)\u202c.",
+              "value": "de-CH"
+            },
+            {
+              "description": "Greek - \u202a\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac\u202c.",
+              "value": "el"
+            },
+            {
+              "description": "Gujarati - \u202a\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0\u202c.",
+              "value": "gu"
+            },
+            {
+              "description": "Hebrew - \u202b\u05e2\u05d1\u05e8\u05d9\u05ea\u202c.",
+              "value": "iw"
+            },
+            {
+              "description": "Hindi - \u202a\u0939\u093f\u0928\u094d\u0926\u0940\u202c.",
+              "value": "hi"
+            },
+            {
+              "description": "Hungarian - \u202amagyar\u202c.",
+              "value": "hu"
+            },
+            {
+              "description": "Indonesian - \u202aIndonesia\u202c.",
+              "value": "id"
+            },
+            {
+              "description": "Italian - \u202aItaliano\u202c.",
+              "value": "it"
+            },
+            {
+              "description": "Japanese - \u202a\u65e5\u672c\u8a9e\u202c.",
+              "value": "ja"
+            },
+            {
+              "description": "Kannada - \u202a\u0c95\u0ca8\u0ccd\u0ca8\u0ca1\u202c.",
+              "value": "kn"
+            },
+            {
+              "description": "Korean - \u202a\ud55c\uad6d\uc5b4\u202c.",
+              "value": "ko"
+            },
+            {
+              "description": "Latvian - \u202alatvie\u0161u\u202c.",
+              "value": "lv"
+            },
+            {
+              "description": "Lithuanian - \u202alietuvi\u0173\u202c.",
+              "value": "lt"
+            },
+            {
+              "description": "Malay - \u202aMelayu\u202c.",
+              "value": "ms"
+            },
+            {
+              "description": "Malayalam - \u202a\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02\u202c.",
+              "value": "ml"
+            },
+            {
+              "description": "Marathi - \u202a\u092e\u0930\u093e\u0920\u0940\u202c.",
+              "value": "mr"
+            },
+            {
+              "description": "Norwegian - \u202anorsk\u202c.",
+              "value": "no"
+            },
+            {
+              "description": "Persian - \u202b\u0641\u0627\u0631\u0633\u06cc\u202c.",
+              "value": "fa"
+            },
+            {
+              "description": "Polish - \u202apolski\u202c.",
+              "value": "pl"
+            },
+            {
+              "description": "Portuguese (Brazil) - \u202aPortugu\u00eas (Brasil)\u202c.",
+              "value": "pt-BR"
+            },
+            {
+              "description": "Portuguese (Portugal) - \u202aPortugu\u00eas (Portugal)\u202c.",
+              "value": "pt-PT"
+            },
+            {
+              "description": "Romanian - \u202arom\u00e2n\u0103\u202c.",
+              "value": "ro"
+            },
+            {
+              "description": "Russian - \u202a\u0420\u0443\u0441\u0441\u043a\u0438\u0439\u202c.",
+              "value": "ru"
+            },
+            {
+              "description": "Serbian - \u202a\u0441\u0440\u043f\u0441\u043a\u0438\u202c.",
+              "value": "sr"
+            },
+            {
+              "description": "Slovak - \u202aSloven\u010dina\u202c.",
+              "value": "sk"
+            },
+            {
+              "description": "Slovenian - \u202asloven\u0161\u010dina\u202c.",
+              "value": "sl"
+            },
+            {
+              "description": "Spanish (Latin America) - \u202aEspa\u00f1ol (Latinoam\u00e9rica)\u202c.",
+              "value": "es-419"
+            },
+            {
+              "description": "Spanish (Spain) - \u202aEspa\u00f1ol (Espa\u00f1a)\u202c.",
+              "value": "es"
+            },
+            {
+              "description": "Swedish - \u202aSvenska\u202c.",
+              "value": "sv"
+            },
+            {
+              "description": "Tamil - \u202a\u0ba4\u0bae\u0bbf\u0bb4\u0bcd\u202c.",
+              "value": "ta"
+            },
+            {
+              "description": "Telugu - \u202a\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41\u202c.",
+              "value": "te"
+            },
+            {
+              "description": "Thai - \u202a\u0e44\u0e17\u0e22\u202c.",
+              "value": "th"
+            },
+            {
+              "description": "Turkish - \u202aT\u00fcrk\u00e7e\u202c.",
+              "value": "tr"
+            },
+            {
+              "description": "Ukrainian - \u202a\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430\u202c.",
+              "value": "uk"
+            },
+            {
+              "description": "Vietnamese - \u202aTi\u1ebfng Vi\u1ec7t\u202c.",
+              "value": "vi"
+            },
+            {
+              "description": "Welsh - \u202aCymraeg\u202c.",
+              "value": "cy"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.AllowedLanguages",
+      "policyDescription": "Allowed ChromeOS languages."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "allowedInputMethods",
+                "number": 1
+              }
+            ],
+            "name": "AllowedInputMethods"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowedInputMethods",
+      "fieldDescriptions": [
+        {
+          "field": "allowedInputMethods",
+          "knownValueDescriptions": [
+            {
+              "description": "Alphanumeric with Japanese keyboard.",
+              "value": "xkb:jp::jpn"
+            },
+            {
+              "description": "Amharic Transliteration.",
+              "value": "am-t-i0-und"
+            },
+            {
+              "description": "Arabic.",
+              "value": "vkd_ar"
+            },
+            {
+              "description": "Arabic Transliteration.",
+              "value": "ar-t-i0-und"
+            },
+            {
+              "description": "Armenian.",
+              "value": "xkb:am:phonetic:arm"
+            },
+            {
+              "description": "Bangla Phonetic.",
+              "value": "vkd_bn_phone"
+            },
+            {
+              "description": "Bangla Transliteration.",
+              "value": "bn-t-i0-und"
+            },
+            {
+              "description": "Belarusian.",
+              "value": "xkb:by::bel"
+            },
+            {
+              "description": "Braille Keyboard.",
+              "value": "_comp_ime_jddehjeebkoimngcbdkaahpobgicbffpbraille"
+            },
+            {
+              "description": "Bulgarian.",
+              "value": "xkb:bg::bul"
+            },
+            {
+              "description": "Bulgarian with Phonetic keyboard.",
+              "value": "xkb:bg:phonetic:bul"
+            },
+            {
+              "description": "Burmese/Myanmar.",
+              "value": "vkd_my"
+            },
+            {
+              "description": "Burmese/Myanmar with Myansan keyboard.",
+              "value": "vkd_my_myansan"
+            },
+            {
+              "description": "Cantonese.",
+              "value": "yue-hant-t-i0-und"
+            },
+            {
+              "description": "Catalan.",
+              "value": "xkb:es:cat:cat"
+            },
+            {
+              "description": "Chinese (Traditional) Pinyin.",
+              "value": "zh-hant-t-i0-pinyin"
+            },
+            {
+              "description": "Chinese Array.",
+              "value": "zh-hant-t-i0-array-1992"
+            },
+            {
+              "description": "Chinese Cangjie.",
+              "value": "zh-hant-t-i0-cangjie-1987"
+            },
+            {
+              "description": "Chinese Dayi.",
+              "value": "zh-hant-t-i0-dayi-1988"
+            },
+            {
+              "description": "Chinese Pinyin.",
+              "value": "zh-t-i0-pinyin"
+            },
+            {
+              "description": "Chinese Quick.",
+              "value": "zh-hant-t-i0-cangjie-1987-x-m0-simplified"
+            },
+            {
+              "description": "Chinese Wubi.",
+              "value": "zh-t-i0-wubi-1986"
+            },
+            {
+              "description": "Chinese Zhuyin.",
+              "value": "zh-hant-t-i0-und"
+            },
+            {
+              "description": "Croatian.",
+              "value": "xkb:hr::scr"
+            },
+            {
+              "description": "Czech.",
+              "value": "xkb:cz::cze"
+            },
+            {
+              "description": "Czech with Qwerty keyboard.",
+              "value": "xkb:cz:qwerty:cze"
+            },
+            {
+              "description": "Danish.",
+              "value": "xkb:dk::dan"
+            },
+            {
+              "description": "Devanagari keyboard (Phonetic).",
+              "value": "vkd_deva_phone"
+            },
+            {
+              "description": "Dutch (Belgium).",
+              "value": "xkb:be::nld"
+            },
+            {
+              "description": "Dutch (Netherlands).",
+              "value": "xkb:us:intl:nld"
+            },
+            {
+              "description": "Dutch (Netherlands) with US International PC keyboard.",
+              "value": "xkb:us:intl_pc:nld"
+            },
+            {
+              "description": "English (Canada).",
+              "value": "xkb:ca:eng:eng"
+            },
+            {
+              "description": "English (Pakistan).",
+              "value": "xkb:pk::eng"
+            },
+            {
+              "description": "English (South Africa).",
+              "value": "xkb:za:gb:eng"
+            },
+            {
+              "description": "English (UK).",
+              "value": "xkb:gb:extd:eng"
+            },
+            {
+              "description": "English (UK) with Dvorak keyboard.",
+              "value": "xkb:gb:dvorak:eng"
+            },
+            {
+              "description": "English (US).",
+              "value": "xkb:us::eng"
+            },
+            {
+              "description": "English (US) with Colemak keyboard.",
+              "value": "xkb:us:colemak:eng"
+            },
+            {
+              "description": "English (US) with Dvorak keyboard.",
+              "value": "xkb:us:dvorak:eng"
+            },
+            {
+              "description": "English (US) with Extended keyboard.",
+              "value": "xkb:us:altgr-intl:eng"
+            },
+            {
+              "description": "English (US) with International PC keyboard.",
+              "value": "xkb:us:intl_pc:eng"
+            },
+            {
+              "description": "English (US) with International keyboard.",
+              "value": "xkb:us:intl:eng"
+            },
+            {
+              "description": "English (US) with Programmer Dvorak keyboard.",
+              "value": "xkb:us:dvp:eng"
+            },
+            {
+              "description": "English (US) with Workman International keyboard.",
+              "value": "xkb:us:workman-intl:eng"
+            },
+            {
+              "description": "English (US) with Workman keyboard.",
+              "value": "xkb:us:workman:eng"
+            },
+            {
+              "description": "Estonian.",
+              "value": "xkb:ee::est"
+            },
+            {
+              "description": "Ethiopic keyboard.",
+              "value": "vkd_ethi"
+            },
+            {
+              "description": "Faroese.",
+              "value": "xkb:fo::fao"
+            },
+            {
+              "description": "Filipino.",
+              "value": "xkb:us::fil"
+            },
+            {
+              "description": "Finnish.",
+              "value": "xkb:fi::fin"
+            },
+            {
+              "description": "French (Belgium).",
+              "value": "xkb:be::fra"
+            },
+            {
+              "description": "French (Canada).",
+              "value": "xkb:ca::fra"
+            },
+            {
+              "description": "French (Canada) with Multilingual keyboard.",
+              "value": "xkb:ca:multix:fra"
+            },
+            {
+              "description": "French (France).",
+              "value": "xkb:fr::fra"
+            },
+            {
+              "description": "French (France) with B\u00e9po keyboard.",
+              "value": "xkb:fr:bepo:fra"
+            },
+            {
+              "description": "French (Switzerland).",
+              "value": "xkb:ch:fr:fra"
+            },
+            {
+              "description": "Georgian.",
+              "value": "xkb:ge::geo"
+            },
+            {
+              "description": "German (Belgium).",
+              "value": "xkb:be::ger"
+            },
+            {
+              "description": "German (Germany).",
+              "value": "xkb:de::ger"
+            },
+            {
+              "description": "German (Germany) with Neo 2 keyboard.",
+              "value": "xkb:de:neo:ger"
+            },
+            {
+              "description": "German (Switzerland).",
+              "value": "xkb:ch::ger"
+            },
+            {
+              "description": "Greek.",
+              "value": "xkb:gr::gre"
+            },
+            {
+              "description": "Greek Transliteration.",
+              "value": "el-t-i0-und"
+            },
+            {
+              "description": "Gujarati Phonetic.",
+              "value": "vkd_gu_phone"
+            },
+            {
+              "description": "Gujarati Transliteration.",
+              "value": "gu-t-i0-und"
+            },
+            {
+              "description": "Hebrew.",
+              "value": "xkb:il::heb"
+            },
+            {
+              "description": "Hebrew Transliteration.",
+              "value": "he-t-i0-und"
+            },
+            {
+              "description": "Hindi.",
+              "value": "hi-t-i0-und"
+            },
+            {
+              "description": "Hindi with InScript keyboard.",
+              "value": "vkd_hi_inscript"
+            },
+            {
+              "description": "Hungarian.",
+              "value": "xkb:hu::hun"
+            },
+            {
+              "description": "Hungarian with Qwerty keyboard.",
+              "value": "xkb:hu:qwerty:hun"
+            },
+            {
+              "description": "Icelandic.",
+              "value": "xkb:is::ice"
+            },
+            {
+              "description": "Indonesian.",
+              "value": "xkb:us::ind"
+            },
+            {
+              "description": "Irish.",
+              "value": "xkb:ie::ga"
+            },
+            {
+              "description": "Italian.",
+              "value": "xkb:it::ita"
+            },
+            {
+              "description": "Japanese.",
+              "value": "nacl_mozc_jp"
+            },
+            {
+              "description": "Japanese with US keyboard.",
+              "value": "nacl_mozc_us"
+            },
+            {
+              "description": "Kannada Phonetic.",
+              "value": "vkd_kn_phone"
+            },
+            {
+              "description": "Kannada Transliteration.",
+              "value": "kn-t-i0-und"
+            },
+            {
+              "description": "Kazakh.",
+              "value": "xkb:kz::kaz"
+            },
+            {
+              "description": "Khmer.",
+              "value": "vkd_km"
+            },
+            {
+              "description": "Korean.",
+              "value": "ko-t-i0-und"
+            },
+            {
+              "description": "Lao.",
+              "value": "vkd_lo"
+            },
+            {
+              "description": "Latvian.",
+              "value": "xkb:lv:apostrophe:lav"
+            },
+            {
+              "description": "Lithuanian.",
+              "value": "xkb:lt::lit"
+            },
+            {
+              "description": "Macedonian.",
+              "value": "xkb:mk::mkd"
+            },
+            {
+              "description": "Malay.",
+              "value": "xkb:us::msa"
+            },
+            {
+              "description": "Malayalam Phonetic.",
+              "value": "vkd_ml_phone"
+            },
+            {
+              "description": "Malayalam Transliteration.",
+              "value": "ml-t-i0-und"
+            },
+            {
+              "description": "Maltese.",
+              "value": "xkb:mt::mlt"
+            },
+            {
+              "description": "Marathi.",
+              "value": "mr-t-i0-und"
+            },
+            {
+              "description": "Mongolian.",
+              "value": "xkb:mn::mon"
+            },
+            {
+              "description": "Nepali Transliteration.",
+              "value": "ne-t-i0-und"
+            },
+            {
+              "description": "Nepali with InScript keyboard.",
+              "value": "vkd_ne_inscript"
+            },
+            {
+              "description": "Nepali with Phonetic keyboard.",
+              "value": "vkd_ne_phone"
+            },
+            {
+              "description": "Norwegian.",
+              "value": "xkb:no::nob"
+            },
+            {
+              "description": "Odia.",
+              "value": "or-t-i0-und"
+            },
+            {
+              "description": "Persian.",
+              "value": "vkd_fa"
+            },
+            {
+              "description": "Persian Transliteration.",
+              "value": "fa-t-i0-und"
+            },
+            {
+              "description": "Polish.",
+              "value": "xkb:pl::pol"
+            },
+            {
+              "description": "Portuguese (Brazil).",
+              "value": "xkb:br::por"
+            },
+            {
+              "description": "Portuguese (Portugal).",
+              "value": "xkb:pt::por"
+            },
+            {
+              "description": "Portuguese with US International PC keyboard.",
+              "value": "xkb:us:intl_pc:por"
+            },
+            {
+              "description": "Portuguese with US International keyboard.",
+              "value": "xkb:us:intl:por"
+            },
+            {
+              "description": "Punjabi.",
+              "value": "pa-t-i0-und"
+            },
+            {
+              "description": "Romanian.",
+              "value": "xkb:ro::rum"
+            },
+            {
+              "description": "Romanian with Standard keyboard.",
+              "value": "xkb:ro:std:rum"
+            },
+            {
+              "description": "Russian.",
+              "value": "xkb:ru::rus"
+            },
+            {
+              "description": "Russian with Phonetic AATSEEL keyboard.",
+              "value": "vkd_ru_phone_aatseel"
+            },
+            {
+              "description": "Russian with Phonetic YaZHert keyboard.",
+              "value": "vkd_ru_phone_yazhert"
+            },
+            {
+              "description": "Russian with Phonetic keyboard.",
+              "value": "xkb:ru:phonetic:rus"
+            },
+            {
+              "description": "Sanskrit.",
+              "value": "sa-t-i0-und"
+            },
+            {
+              "description": "Serbian.",
+              "value": "xkb:rs::srp"
+            },
+            {
+              "description": "Serbian Transliteration.",
+              "value": "sr-t-i0-und"
+            },
+            {
+              "description": "Sinhala.",
+              "value": "vkd_si"
+            },
+            {
+              "description": "Slovak.",
+              "value": "xkb:sk::slo"
+            },
+            {
+              "description": "Slovenian.",
+              "value": "xkb:si::slv"
+            },
+            {
+              "description": "Sorani Kurdish with Arabic-based keyboard.",
+              "value": "vkd_ckb_ar"
+            },
+            {
+              "description": "Sorani Kurdish with English-based keyboard.",
+              "value": "vkd_ckb_en"
+            },
+            {
+              "description": "Spanish (Latin America).",
+              "value": "xkb:latam::spa"
+            },
+            {
+              "description": "Spanish (Spain).",
+              "value": "xkb:es::spa"
+            },
+            {
+              "description": "Swedish.",
+              "value": "xkb:se::swe"
+            },
+            {
+              "description": "Tamil ITRANS.",
+              "value": "vkd_ta_itrans"
+            },
+            {
+              "description": "Tamil Phonetic.",
+              "value": "vkd_ta_phone"
+            },
+            {
+              "description": "Tamil Transliteration.",
+              "value": "ta-t-i0-und"
+            },
+            {
+              "description": "Tamil with InScript keyboard.",
+              "value": "vkd_ta_inscript"
+            },
+            {
+              "description": "Tamil with Tamil99 keyboard.",
+              "value": "vkd_ta_tamil99"
+            },
+            {
+              "description": "Tamil with Typewriter keyboard.",
+              "value": "vkd_ta_typewriter"
+            },
+            {
+              "description": "Telugu Phonetic.",
+              "value": "vkd_te_phone"
+            },
+            {
+              "description": "Telugu Transliteration.",
+              "value": "te-t-i0-und"
+            },
+            {
+              "description": "Thai with Kedmanee keyboard.",
+              "value": "vkd_th"
+            },
+            {
+              "description": "Thai with Pattachote keyboard.",
+              "value": "vkd_th_pattajoti"
+            },
+            {
+              "description": "Thai with TIS 820-2531 keyboard.",
+              "value": "vkd_th_tis"
+            },
+            {
+              "description": "Tigrinya.",
+              "value": "ti-t-i0-und"
+            },
+            {
+              "description": "Turkish.",
+              "value": "xkb:tr::tur"
+            },
+            {
+              "description": "Turkish with F-keyboard.",
+              "value": "xkb:tr:f:tur"
+            },
+            {
+              "description": "Ukrainian.",
+              "value": "xkb:ua::ukr"
+            },
+            {
+              "description": "Urdu.",
+              "value": "ur-t-i0-und"
+            },
+            {
+              "description": "Vietnamese Telex.",
+              "value": "vkd_vi_telex"
+            },
+            {
+              "description": "Vietnamese VIQR.",
+              "value": "vkd_vi_viqr"
+            },
+            {
+              "description": "Vietnamese VNI.",
+              "value": "vkd_vi_vni"
+            },
+            {
+              "description": "Vietnamese with TCVN keyboard.",
+              "value": "vkd_vi_tcvn"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.AllowedInputMethods",
+      "policyDescription": "Allowed input methods."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "translateEnabled",
+                "number": 1
+              }
+            ],
+            "name": "Translate"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Translate",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#translate_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "translateEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always offer translation.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Never offer translation.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Translate",
+      "policyDescription": "Google Translate."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "alternateErrorPagesEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AlternateErrorPages"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AlternateErrorPages",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#alternate_error_pages_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "alternateErrorPagesEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always use alternate error pages.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Never use alternate error pages.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AlternateErrorPages",
+      "policyDescription": "Alternate error pages."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DeveloperToolsAvailabilityEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "developerToolsAvailability",
+                "number": 1
+              }
+            ],
+            "name": "DeveloperTools"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DeveloperToolsAvailabilityEnum",
+            "value": [
+              {
+                "name": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_ALWAYS_ALLOW_DEVELOPER_TOOLS",
+                "number": 2
+              },
+              {
+                "name": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_ALLOW_DEVELOPER_TOOLS_EXCEPT_FORCE_INSTALLED",
+                "number": 1
+              },
+              {
+                "name": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_NEVER_ALLOW_DEVELOPER_TOOLS",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DeveloperTools",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#developer_tools_availability",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "developerToolsAvailability",
+          "defaultValue": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_ALLOW_DEVELOPER_TOOLS_EXCEPT_FORCE_INSTALLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Always allow use of built-in developer tools.",
+              "value": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_ALWAYS_ALLOW_DEVELOPER_TOOLS"
+            },
+            {
+              "description": "Allow use of built-in developer tools except for force-installed extensions.",
+              "value": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_ALLOW_DEVELOPER_TOOLS_EXCEPT_FORCE_INSTALLED"
+            },
+            {
+              "description": "Never allow use of built-in developer tools.",
+              "value": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_NEVER_ALLOW_DEVELOPER_TOOLS"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "notices": [
+        {
+          "field": "developerToolsAvailability",
+          "noticeMessage": "Note: to prevent end-users from tampering with force-installed extensions, developer tools should be blocked.",
+          "noticeValue": "DEVELOPER_TOOLS_AVAILABILITY_ENUM_ALWAYS_ALLOW_DEVELOPER_TOOLS"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DeveloperTools",
+      "policyDescription": "Developer tools."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "paymentMethodQueryEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PaymentMethodQueryEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PaymentMethodQueryEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#payment_method_query_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "paymentMethodQueryEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow websites to check if the user has payment methods saved.",
+              "value": "true"
+            },
+            {
+              "description": "Always tell websites that no payment methods are saved.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PaymentMethodQueryEnabled",
+      "policyDescription": "Payment methods."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "emojiSuggestionEnabled",
+                "number": 1
+              }
+            ],
+            "name": "EmojiSuggestionEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.EmojiSuggestionEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#emoji_suggestion_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "emojiSuggestionEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable emoji suggestions when users type.",
+              "value": "true"
+            },
+            {
+              "description": "Disable emoji suggestions when users type.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.EmojiSuggestionEnabled",
+      "policyDescription": "Emoji suggestions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserAddPersonEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BrowserAddPersonEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserAddPersonEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_add_person_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "browserAddPersonEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable adding new profiles.",
+              "value": "true"
+            },
+            {
+              "description": "Disable adding new profiles.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserAddPersonEnabled",
+      "policyDescription": "Add profiles."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ChromeOsMultiProfileUserBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "newChromeOsMultiProfileUserBehavior",
+                "number": 1
+              }
+            ],
+            "name": "MultipleSignInAccess"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ChromeOsMultiProfileUserBehaviorEnum",
+            "value": [
+              {
+                "name": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_PRIMARY_ONLY",
+                "number": 1
+              },
+              {
+                "name": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_UNRESTRICTED",
+                "number": 2
+              },
+              {
+                "name": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_NOT_ALLOWED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.MultipleSignInAccess",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "This setting allows users to switch between multiple accounts on a Chrome device without having to sign out of their account and sign back in to another. When either of the first two options are selected, not all settings in the Admin console may apply to users. To ensure that all policies always apply to your users, you need to Block multiple sign-in access.",
+          "knownValueDescriptions": [
+            {
+              "description": "Managed user must be the primary user (secondary users are allowed).",
+              "value": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_PRIMARY_ONLY"
+            },
+            {
+              "description": "Unrestricted user access (allow any user to be added to any other user's session).",
+              "value": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_UNRESTRICTED"
+            },
+            {
+              "description": "Block multiple sign-in access for users in this organization.",
+              "value": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_NOT_ALLOWED"
+            }
+          ],
+          "description": "Multiple sign-in access. This setting allows users to switch between multiple accounts on a Chrome device without having to sign out of their account and sign back in to another. When either of the first two options are selected, not all settings in the Admin console may apply to users. To ensure that all policies always apply to your users, you need to Block multiple sign-in access.",
+          "defaultValue": "CHROME_OS_MULTI_PROFILE_USER_BEHAVIOR_ENUM_PRIMARY_ONLY",
+          "field": "newChromeOsMultiProfileUserBehavior",
+          "name": "Multiple sign-in access."
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.MultipleSignInAccess",
+      "policyDescription": "Multiple sign-in access."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "secondaryGoogleAccountSigninAllowed",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "allowedDomainsForApps",
+                "number": 2
+              }
+            ],
+            "name": "SecondaryGoogleAccountSignin"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SecondaryGoogleAccountSignin",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#secondary_google_account_signin_allowed",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "secondaryGoogleAccountSigninAllowed",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to sign in to any secondary Google Accounts.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Allow users to only sign in to the Google Workspace domains set in 'allowedDomainsForApps'.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Block users from signing in to or out of secondary Google Accounts.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "allowedDomainsForApps",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "TRUE",
+              "sourceField": "secondaryGoogleAccountSigninAllowed"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "notices": [
+        {
+          "field": "secondaryGoogleAccountSigninAllowed",
+          "noticeMessage": "Note: This option only applies to ChromeOS.  Users will still be able to sign in to secondary Google Accounts on Chrome on Windows, Mac, and Linux.",
+          "noticeValue": "FALSE"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SecondaryGoogleAccountSignin",
+      "policyDescription": "Sign-in to secondary accounts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "restrictAccountsToPatterns",
+                "number": 1
+              }
+            ],
+            "name": "RestrictAccountsToPatterns"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RestrictAccountsToPatterns",
+      "fieldDescriptions": [
+        {
+          "field": "restrictAccountsToPatterns",
+          "fieldDescription": "Use the wildcard character '*' to match zero or more arbitrary characters. The escape character is '', so to match actual '*' or '' characters, put a '' in front of them.",
+          "description": "Restrict accounts that are visible in Chrome to those matching one of the patterns specified. Use the wildcard character '*' to match zero or more arbitrary characters. The escape character is '', so to match actual '*' or '' characters, put a '' in front of them.",
+          "name": "Restrict accounts that are visible in Chrome to those matching one of the patterns specified."
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RestrictAccountsToPatterns",
+      "policyDescription": "Visible Accounts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserGuestModeEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserGuestModeEnforced",
+                "number": 2
+              }
+            ],
+            "name": "BrowserGuestModeEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserGuestModeEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_guest_mode_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "browserGuestModeEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow guest browser logins.",
+              "value": "true"
+            },
+            {
+              "description": "Prevent guest browser logins.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": false,
+          "field": "browserGuestModeEnforced",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "browserGuestModeEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Only allow guest browser logins.",
+              "value": "true"
+            },
+            {
+              "description": "Allow guest browser logins and profile logins.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserGuestModeEnabled",
+      "policyDescription": "Browser guest mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "unifiedDesktopEnabledByDefault",
+                "number": 1
+              }
+            ],
+            "name": "UnifiedDesktop"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UnifiedDesktop",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#unified_desktop_enabled_by_default",
+      "fieldDescriptions": [
+        {
+          "field": "unifiedDesktopEnabledByDefault",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Make Unified Desktop mode available to user.",
+              "value": "true"
+            },
+            {
+              "description": "Do not make Unified Desktop mode available to user.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UnifiedDesktop",
+      "policyDescription": "Unified Desktop (BETA)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "webRtcEventLogCollectionAllowed",
+                "number": 1
+              }
+            ],
+            "name": "WebrtcEventLogCollectionAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebrtcEventLogCollectionAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#webrtceventlog",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "This settings allows Google services to call the Chrome API to collect the WebRTC events for customers who have opted in. The initial value is inherited from Hangouts Meet log upload settings. .",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow WebRTC event log collection.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow WebRTC event log collection.",
+              "value": "false"
+            }
+          ],
+          "description": "WebRTC event log collection. This settings allows Google services to call the Chrome API to collect the WebRTC events for customers who have opted in. The initial value is inherited from Hangouts Meet log upload settings. .",
+          "defaultValue": true,
+          "field": "webRtcEventLogCollectionAllowed",
+          "name": "WebRTC event log collection."
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WebrtcEventLogCollectionAllowed",
+      "policyDescription": "WebRTC event log collection."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "assistantHotwordEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AssistantHotword"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AssistantHotword",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#assistant_hotword_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "assistantHotwordEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable the Google Assistant hotword.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable the Google Assistant hotword.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.AssistantHotword",
+      "policyDescription": "Google Assistant hotword."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "quickAnswersEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "quickAnswersDefinitionEnabled",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "quickAnswersTranslationEnabled",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "quickAnswersUnitConversionEnabled",
+                "number": 4
+              }
+            ],
+            "name": "QuickAnswersEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.QuickAnswersEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "quickAnswersEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Quick Answers.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Quick Answers.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": true,
+          "field": "quickAnswersDefinitionEnabled",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "quickAnswersEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Quick Answers definition.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Quick Answers definition.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": true,
+          "field": "quickAnswersTranslationEnabled",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "quickAnswersEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Quick Answers translation.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Quick Answers translation.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": true,
+          "field": "quickAnswersUnitConversionEnabled",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "quickAnswersEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Quick Answers unit conversion.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Quick Answers unit conversion.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.QuickAnswersEnabled",
+      "policyDescription": "Quick Answers."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "assistantScreenContextEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AssistantScreenContext"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AssistantScreenContext",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#assistant_screen_context_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "assistantScreenContextEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Allow Google Assistant to access screen context.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Block Google Assistant from accessing screen context during interactions.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.AssistantScreenContext",
+      "policyDescription": "Google Assistant screen context."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "systemFeaturesDisableList",
+                "number": 1
+              }
+            ],
+            "name": "SystemFeaturesDisableList"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SystemFeaturesDisableList",
+      "fieldDescriptions": [
+        {
+          "field": "systemFeaturesDisableList",
+          "defaultValue": null,
+          "knownValueDescriptions": [
+            {
+              "description": "Camera.",
+              "value": "camera"
+            },
+            {
+              "description": "OS settings.",
+              "value": "os_settings"
+            },
+            {
+              "description": "Browser settings.",
+              "value": "browser_settings"
+            },
+            {
+              "description": "Scanning.",
+              "value": "scanning"
+            },
+            {
+              "description": "Crosh.",
+              "value": "crosh"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SystemFeaturesDisableList",
+      "policyDescription": "Disabled system features."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "allowDinosaurEasterEgg",
+                "number": 1
+              }
+            ],
+            "name": "AllowDinosaurEasterEgg"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowDinosaurEasterEgg",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#allow_dinosaur_easter_egg",
+      "fieldDescriptions": [
+        {
+          "field": "allowDinosaurEasterEgg",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to play the dinosaur game when the device is offline on Chrome browser, but not on enrolled ChromeOS devices.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Allow users to play the dinosaur game when the device is offline.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not allow users to play the dinosaur game when the device is offline.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AllowDinosaurEasterEgg",
+      "policyDescription": "Dinosaur game."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "appRecommendationZeroStateEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AppRecommendationZeroStateEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AppRecommendationZeroStateEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#app_recommendation_zero_state_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "appRecommendationZeroStateEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Show app recommendations in the ChromeOS launcher.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show app recommendations in the ChromeOS launcher.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AppRecommendationZeroStateEnabled",
+      "policyDescription": "Previously installed app recommendations."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "suggestedContentEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SuggestedContentEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SuggestedContentEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#suggested_content_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "suggestedContentEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable suggested content.",
+              "value": "true"
+            },
+            {
+              "description": "Disable suggested content.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SuggestedContentEnabled",
+      "policyDescription": "Suggested content."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "showFullUrlsInAddressBar",
+                "number": 1
+              }
+            ],
+            "name": "ShowFullUrlsInAddressBar"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ShowFullUrlsInAddressBar",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#show_full_urls_in_address_bar",
+      "fieldDescriptions": [
+        {
+          "field": "showFullUrlsInAddressBar",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Display the default URL. Users may switch to the full URL unless on a managed ChromeOS device.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Display the full URL.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Display the default URL.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ShowFullUrlsInAddressBar",
+      "policyDescription": "URLs in the address bar."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "sharedClipboardEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SharedClipboardEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SharedClipboardEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#shared_clipboard_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "sharedClipboardEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable the shared clipboard feature.",
+              "value": "true"
+            },
+            {
+              "description": "Disable the shared clipboard feature.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SharedClipboardEnabled",
+      "policyDescription": "Shared clipboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "fullscreenAllowed",
+                "number": 1
+              }
+            ],
+            "name": "FullscreenAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.FullscreenAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#fullscreen_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "fullscreenAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow fullscreen mode.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow fullscreen mode.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.FullscreenAllowed",
+      "policyDescription": "Fullscreen mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "fullscreenAlertEnabled",
+                "number": 1
+              }
+            ],
+            "name": "FullscreenAlertEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.FullscreenAlertEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#fullscreen_alert_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "fullscreenAlertEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable fullscreen alert when waking the device.",
+              "value": "true"
+            },
+            {
+              "description": "Disable fullscreen alert when waking the device.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.FullscreenAlertEnabled",
+      "policyDescription": "Fullscreen alert."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "keepFullscreenWithoutNotificationUrlAllowList",
+                "number": 1
+              }
+            ],
+            "name": "KeepFullscreenWithoutNotificationUrlAllowList"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.KeepFullscreenWithoutNotificationUrlAllowList",
+      "fieldDescriptions": [
+        {
+          "field": "keepFullscreenWithoutNotificationUrlAllowList",
+          "fieldDescription": "Enter a list of URL patterns, one per line.",
+          "description": "Keep full screen after unlock without warning for the following URLs. Enter a list of URL patterns, one per line.",
+          "inputConstraint": "The list should have 100 or less entries. Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "Keep full screen after unlock without warning for the following URLs."
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.KeepFullscreenWithoutNotificationUrlAllowList",
+      "policyDescription": "Fullscreen after unlock."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "promotionalTabsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PromotionalTabsEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PromotionalTabsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#promotional_tabs_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "promotionalTabsEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable showing full-tab promotional content.",
+              "value": "true"
+            },
+            {
+              "description": "Disable showing full-tab promotional content.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PromotionalTabsEnabled",
+      "policyDescription": "Promotional content."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "ntpCardsVisible",
+                "number": 1
+              }
+            ],
+            "name": "NtpCardsVisible"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NtpCardsVisible",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#ntp_cards_visible",
+      "fieldDescriptions": [
+        {
+          "field": "ntpCardsVisible",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Show cards on the New Tab Page if content is available.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not show cards on the New Tab Page.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.NtpCardsVisible",
+      "policyDescription": "Show cards on the New Tab Page."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "forceMaximizeOnFirstRun",
+                "number": 1
+              }
+            ],
+            "name": "ForceMaximizeOnFirstRun"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ForceMaximizeOnFirstRun",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#force_maximize_on_first_run",
+      "fieldDescriptions": [
+        {
+          "field": "forceMaximizeOnFirstRun",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Maximize the first browser window on first run.",
+              "value": "true"
+            },
+            {
+              "description": "Default system behavior (depends on screen size).",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ForceMaximizeOnFirstRun",
+      "policyDescription": "Maximize window on first run."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "nativeMessagingUserLevelHosts",
+                "number": 1
+              }
+            ],
+            "name": "NativeMessagingUserHosts"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NativeMessagingUserHosts",
+      "fieldDescriptions": [
+        {
+          "field": "nativeMessagingUserLevelHosts",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow usage of Native Messaging hosts installed at the user level.",
+              "value": "true"
+            },
+            {
+              "description": "Only allow usage of Native Messaging hosts installed at the system level.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.NativeMessagingUserHosts",
+      "policyDescription": "Native Messaging user-level hosts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "nativeMessagingAllowlist",
+                "number": 1
+              }
+            ],
+            "name": "NativeMessagingAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NativeMessagingAllowed",
+      "fieldDescriptions": [
+        {
+          "field": "nativeMessagingAllowlist",
+          "fieldDescription": "Domains to allow native messaging.",
+          "description": "Native Messaging hosts not subject to the blocklist. Domains to allow native messaging.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'domain name'.",
+          "name": "Native Messaging hosts not subject to the blocklist."
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.NativeMessagingAllowed",
+      "policyDescription": "Native Messaging allowed hosts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "nativeMessagingBlocklist",
+                "number": 1
+              }
+            ],
+            "name": "NativeMessagingBlocked"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NativeMessagingBlocked",
+      "fieldDescriptions": [
+        {
+          "field": "nativeMessagingBlocklist",
+          "fieldDescription": "Domains to block native messaging. A pattern of \"*\" will block all hosts not specified in the allowlist.",
+          "description": "Prohibited Native Messaging hosts. Domains to block native messaging. A pattern of \"*\" will block all hosts not specified in the allowlist.",
+          "name": "Prohibited Native Messaging hosts."
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.NativeMessagingBlocked",
+      "policyDescription": "Native Messaging blocked hosts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "userFeedbackAllowed",
+                "number": 1
+              }
+            ],
+            "name": "UserFeedbackAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UserFeedbackAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#user_feedback_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "userFeedbackAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow user feedback.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow user feedback.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UserFeedbackAllowed",
+      "policyDescription": "Allow user feedback."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "mediaRecommendationsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "MediaRecommendationsEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.MediaRecommendationsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#media_recommendations_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "mediaRecommendationsEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Show personalized media recommendations.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show personalized media recommendations.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.MediaRecommendationsEnabled",
+      "policyDescription": "Media Recommendations."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowFileSelectionDialogs",
+                "number": 1
+              }
+            ],
+            "name": "AllowFileSelectionDialogs"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowFileSelectionDialogs",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#allow_file_selection_dialogs",
+      "fieldDescriptions": [
+        {
+          "field": "allowFileSelectionDialogs",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to open file selection dialogs.",
+              "value": "true"
+            },
+            {
+              "description": "Block file selection dialogs. The user is assumed to have clicked Cancel on the dialog.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AllowFileSelectionDialogs",
+      "policyDescription": "File selection dialogs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "contextualSearchEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ContextualSearchEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ContextualSearchEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#contextual_search_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "contextualSearchEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to use touch to search.",
+              "value": "true"
+            },
+            {
+              "description": "Disable touch to search.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ContextualSearchEnabled",
+      "policyDescription": "Touch to search."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "browserLabsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BrowserLabsEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserLabsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_labs_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "browserLabsEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to access browser experimental features through an icon in the toolbar.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show browser experimental features icon in the toolbar.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserLabsEnabled",
+      "policyDescription": "Browser experiments icon in toolbar."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "lensCameraAssistedSearchEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LensCameraAssistedSearchEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LensCameraAssistedSearchEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#lens_camera_assisted_search_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "lensCameraAssistedSearchEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow enterprise user to use Google Lens camera assisted search.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow enterprise user to use Google Lens camera assisted search.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LensCameraAssistedSearchEnabled",
+      "policyDescription": "Google Lens camera assisted search."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "lensRegionSearchEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LensRegionSearchEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LensRegionSearchEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "lensRegionSearchEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Google Lens region search.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Google Lens region search.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LensRegionSearchEnabled",
+      "policyDescription": "Google Lens region search."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "lockIconInAddressBarEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LockIconInAddressBarEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LockIconInAddressBarEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "lockIconInAddressBarEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Use the lock icon for secure connections.",
+              "value": "true"
+            },
+            {
+              "description": "Use default icons for secure connections.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LockIconInAddressBarEnabled",
+      "policyDescription": "Lock icon in the omnibox for secure connections."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "ntpMiddleSlotAnnouncementVisible",
+                "number": 1
+              }
+            ],
+            "name": "NtpMiddleSlotAnnouncementVisible"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NtpMiddleSlotAnnouncementVisible",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#ntp_middle_slot_announcement_visible",
+      "fieldDescriptions": [
+        {
+          "field": "ntpMiddleSlotAnnouncementVisible",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Show the middle slot announcement on the New Tab Page if it is available.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show the middle slot announcement on the New Tab Page even if it is available.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.NtpMiddleSlotAnnouncementVisible",
+      "policyDescription": "Middle slot announcement on the New Tab Page."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "warnBeforeQuittingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "WarnBeforeQuittingEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WarnBeforeQuittingEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#warn_before_quitting_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "warnBeforeQuittingEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Show a warning dialog when the user is attempting to quit.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show a warning dialog when the user is attempting to quit.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.WarnBeforeQuittingEnabled",
+      "policyDescription": "Warn before quitting."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "urlParamFilterEnabled",
+                "number": 1
+              }
+            ],
+            "name": "UrlParamFilterEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UrlParamFilterEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#url_param_filter_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "urlParamFilterEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the browser to filter URL parameters.",
+              "value": "true"
+            },
+            {
+              "description": "Disallow any filtering of URL parameters.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.UrlParamFilterEnabled",
+      "policyDescription": "URL parameter filtering."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "OsColorModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "osColorMode",
+                "number": 1
+              }
+            ],
+            "name": "OsColorMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "OsColorModeEnum",
+            "value": [
+              {
+                "name": "OS_COLOR_MODE_ENUM_LIGHT",
+                "number": 1
+              },
+              {
+                "name": "OS_COLOR_MODE_ENUM_DARK",
+                "number": 2
+              },
+              {
+                "name": "OS_COLOR_MODE_ENUM_AUTO",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.OsColorMode",
+      "fieldDescriptions": [
+        {
+          "field": "osColorMode",
+          "defaultValue": "OS_COLOR_MODE_ENUM_LIGHT",
+          "knownValueDescriptions": [
+            {
+              "description": "Recommend the light theme.",
+              "value": "OS_COLOR_MODE_ENUM_LIGHT"
+            },
+            {
+              "description": "Recommend the dark theme.",
+              "value": "OS_COLOR_MODE_ENUM_DARK"
+            },
+            {
+              "description": "Recommend auto mode.",
+              "value": "OS_COLOR_MODE_ENUM_AUTO"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.OsColorMode",
+      "policyDescription": "ChromeOS color mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "smartLockAllowed",
+                "number": 1
+              }
+            ],
+            "name": "SmartLockAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SmartLockAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#easy_unlock_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "smartLockAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow Smart Lock.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow Smart Lock.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Connected devices",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SmartLockAllowed",
+      "policyDescription": "Smart Lock."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "clickToCallEnabledTristate",
+                "number": 1
+              }
+            ],
+            "name": "ClickToCall"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ClickToCall",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#click_to_call_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "clickToCallEnabledTristate",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Allow users to send phone numbers from Chrome to their phone.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not allow users to send phone numbers from Chrome to their phone.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Connected devices",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ClickToCall",
+      "policyDescription": "Click to Call."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "nearbyShareAllowed",
+                "number": 1
+              }
+            ],
+            "name": "NearbyShareAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NearbyShareAllowed",
+      "fieldDescriptions": [
+        {
+          "field": "nearbyShareAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to enable nearby share.",
+              "value": "true"
+            },
+            {
+              "description": "Prevent users from enabling nearby share.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Connected devices",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.NearbyShareAllowed",
+      "policyDescription": "Nearby share."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "phoneHubAllowed",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "phoneHubNotificationsAllowed",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "phoneHubTaskContinuationAllowed",
+                "number": 3
+              }
+            ],
+            "name": "PhoneHub"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PhoneHub",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#phone_hub_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "phoneHubAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow Phone Hub to be enabled.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow Phone Hub to be enabled.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": true,
+          "field": "phoneHubNotificationsAllowed",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "phoneHubAllowed"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow Phone Hub notifications to be enabled. .",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow Phone Hub notifications to be enabled. .",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": true,
+          "field": "phoneHubTaskContinuationAllowed",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "phoneHubAllowed"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow Phone Hub task continuation to be enabled.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow Phone Hub task continuation to be enabled.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Connected devices",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PhoneHub",
+      "policyDescription": "Phone Hub."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "spokenFeedbackEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SpokenFeedbackEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SpokenFeedbackEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#spoken_feedback_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "spokenFeedbackEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable spoken feedback.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable spoken feedback.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SpokenFeedbackEnabled",
+      "policyDescription": "Spoken feedback."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "selectToSpeakEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SelectToSpeakEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SelectToSpeakEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#select_to_speak_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "selectToSpeakEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable select to speak.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable select to speak.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SelectToSpeakEnabled",
+      "policyDescription": "Select to speak."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "highContrastEnabled",
+                "number": 1
+              }
+            ],
+            "name": "HighContrastEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.HighContrastEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#high_contrast_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "highContrastEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable high contrast.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable high contrast.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.HighContrastEnabled",
+      "policyDescription": "High contrast."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ScreenMagnifierTypeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "screenMagnifierType",
+                "number": 1
+              }
+            ],
+            "name": "ScreenMagnifierType"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ScreenMagnifierTypeEnum",
+            "value": [
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_FULL_SCREEN",
+                "number": 3
+              },
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_DOCKED",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ScreenMagnifierType",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#screen_magnifier_type",
+      "fieldDescriptions": [
+        {
+          "field": "screenMagnifierType",
+          "defaultValue": "SCREEN_MAGNIFIER_TYPE_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_UNSET"
+            },
+            {
+              "description": "Disable screen magnifier.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_DISABLED"
+            },
+            {
+              "description": "Enable full-screen magnifier.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_FULL_SCREEN"
+            },
+            {
+              "description": "Enable docked magnifier.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_DOCKED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ScreenMagnifierType",
+      "policyDescription": "Screen magnifier."
+    }
+]

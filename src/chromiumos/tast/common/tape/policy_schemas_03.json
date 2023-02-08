@@ -1,0 +1,5062 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "importSavedPasswords",
+                "number": 1
+              }
+            ],
+            "name": "ImportSavedPasswords"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ImportSavedPasswords",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#import_saved_passwords",
+      "fieldDescriptions": [
+        {
+          "field": "importSavedPasswords",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable imports of saved passwords.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable imports of saved passwords.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Import settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ImportSavedPasswords",
+      "policyDescription": "Import saved passwords."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "importSearchEngine",
+                "number": 1
+              }
+            ],
+            "name": "ImportSearchEngine"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ImportSearchEngine",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#import_search_engine",
+      "fieldDescriptions": [
+        {
+          "field": "importSearchEngine",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable imports of search engines.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable imports of search engines.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Import settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ImportSearchEngine",
+      "policyDescription": "Import search engines."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "forceGoogleSafeSearch",
+                "number": 1
+              },
+              {
+                "typeName": "YouTubeRestrictionEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "forceYoutubeRestrictedMode",
+                "number": 2
+              }
+            ],
+            "name": "SafeSearchRestrictedMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "YouTubeRestrictionEnum",
+            "value": [
+              {
+                "name": "YOU_TUBE_RESTRICTION_ENUM_OFF",
+                "number": 1
+              },
+              {
+                "name": "YOU_TUBE_RESTRICTION_ENUM_MODERATE",
+                "number": 2
+              },
+              {
+                "name": "YOU_TUBE_RESTRICTION_ENUM_STRICT",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SafeSearchRestrictedMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#force_google_safe_search",
+      "fieldDescriptions": [
+        {
+          "field": "forceGoogleSafeSearch",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Always use SafeSearch for Google Search queries.",
+              "value": "true"
+            },
+            {
+              "description": "Do not enforce SafeSearch for Google Search queries.",
+              "value": "false"
+            }
+          ],
+          "description": "SafeSearch for Google Search queries.",
+          "name": "SafeSearch for Google Search queries."
+        },
+        {
+          "field": "forceYoutubeRestrictedMode",
+          "defaultValue": "YOU_TUBE_RESTRICTION_ENUM_OFF",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not enforce Restricted Mode on YouTube.",
+              "value": "YOU_TUBE_RESTRICTION_ENUM_OFF"
+            },
+            {
+              "description": "Enforce at least Moderate Restricted Mode on YouTube.",
+              "value": "YOU_TUBE_RESTRICTION_ENUM_MODERATE"
+            },
+            {
+              "description": "Enforce Strict Restricted Mode on YouTube.",
+              "value": "YOU_TUBE_RESTRICTION_ENUM_STRICT"
+            }
+          ],
+          "description": "Restricted Mode for YouTube.",
+          "name": "Restricted Mode for YouTube."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SafeSearchRestrictedMode",
+      "policyDescription": "SafeSearch and Restricted Mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "disableScreenshots",
+                "number": 1
+              }
+            ],
+            "name": "Screenshot"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Screenshot",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#disable_screenshots",
+      "fieldDescriptions": [
+        {
+          "field": "disableScreenshots",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow users to take screenshots or video recordings.",
+              "value": "true"
+            },
+            {
+              "description": "Allow users to take screenshots and video recordings.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Screenshot",
+      "policyDescription": "Screenshot."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "projectorEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ProjectorEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ProjectorEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#projector_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "projectorEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to create and view screencasts.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to create and view screencasts.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.ProjectorEnabled",
+      "policyDescription": "Screencast."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "screenCaptureAllowedByOrigins",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "windowCaptureAllowedByOrigins",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "tabCaptureAllowedByOrigins",
+                "number": 3
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "sameOriginTabCaptureAllowedByOrigins",
+                "number": 4
+              }
+            ],
+            "name": "EnableCaptureAllowedSettings"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.EnableCaptureAllowedSettings",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#screen_capture_allowed_by_origins",
+      "fieldDescriptions": [
+        {
+          "field": "screenCaptureAllowedByOrigins",
+          "fieldDescription": "Sites set in this list will be ignored in the 'screenCaptureAllowed' field.",
+          "description": "Allow tab, window, and desktop video capture by these sites. Sites set in this list will be ignored in the 'screenCaptureAllowed' field.",
+          "name": "Allow tab, window, and desktop video capture by these sites."
+        },
+        {
+          "field": "windowCaptureAllowedByOrigins",
+          "fieldDescription": "Sites set in this list will be ignored in the 'screenCaptureAllowedByOrigins' and 'screenCaptureAllowed' fields.",
+          "description": "Allow tab and window video capture by these sites. Sites set in this list will be ignored in the 'screenCaptureAllowedByOrigins' and 'screenCaptureAllowed' fields.",
+          "name": "Allow tab and window video capture by these sites."
+        },
+        {
+          "field": "tabCaptureAllowedByOrigins",
+          "fieldDescription": "Sites set in this list will be ignored in the 'windowCaptureAllowedByOrigins', 'screenCaptureAllowedByOrigins', and 'screenCaptureAllowed' fields.",
+          "description": "Allow tab video capture by these sites. Sites set in this list will be ignored in the 'windowCaptureAllowedByOrigins', 'screenCaptureAllowedByOrigins', and 'screenCaptureAllowed' fields.",
+          "name": "Allow tab video capture by these sites."
+        },
+        {
+          "field": "sameOriginTabCaptureAllowedByOrigins",
+          "fieldDescription": "Sites set in this list will be ignored in the 'tabCaptureAllowedByOrigins', 'windowCaptureAllowedByOrigins', 'screenCaptureAllowedByOrigins', and 'screenCaptureAllowed' fields.",
+          "description": "Allow tab video capture (same site only) by these sites. Sites set in this list will be ignored in the 'tabCaptureAllowedByOrigins', 'windowCaptureAllowedByOrigins', 'screenCaptureAllowedByOrigins', and 'screenCaptureAllowed' fields.",
+          "name": "Allow tab video capture (same site only) by these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.EnableCaptureAllowedSettings",
+      "policyDescription": "Screen video capture allowed by sites."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "screenCaptureAllowed",
+                "number": 1
+              }
+            ],
+            "name": "ScreenCaptureAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ScreenCaptureAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#screen_capture_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "screenCaptureAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow sites to prompt the user to share a video stream of their screen.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow sites to prompt the user to share a video stream of their screen.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ScreenCaptureAllowed",
+      "policyDescription": "Screen video capture."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "desktopSharingHubEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DesktopSharingHubEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DesktopSharingHubEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#desktop_sharing_hub_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "desktopSharingHubEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable desktop sharing hub.",
+              "value": "true"
+            },
+            {
+              "description": "Disable desktop sharing hub.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DesktopSharingHubEnabled",
+      "policyDescription": "Desktop sharing in the omnibox and 3-dot menu."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "autoSelectCertificateForUrls",
+                "number": 1
+              }
+            ],
+            "name": "ClientCertificates"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ClientCertificates",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#auto_select_certificate_for_urls",
+      "fieldDescriptions": [
+        {
+          "field": "autoSelectCertificateForUrls",
+          "fieldDescription": "If a site matching a pattern specified here requests a client certificate, Chrome will automatically select one for it. More information and example values can be found in https://support.google.com/chrome/a/answer/2657289#AutoSelectCertificateForUrls.",
+          "description": "Automatically select for these sites. If a site matching a pattern specified here requests a client certificate, Chrome will automatically select one for it. More information and example values can be found in https://support.google.com/chrome/a/answer/2657289#AutoSelectCertificateForUrls.",
+          "name": "Automatically select for these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ClientCertificates",
+      "policyDescription": "Client certificates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "securityKeyPermitAttestation",
+                "number": 1
+              }
+            ],
+            "name": "SecurityKeyAttestation"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SecurityKeyAttestation",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#security_key_permit_attestation",
+      "fieldDescriptions": [
+        {
+          "field": "securityKeyPermitAttestation",
+          "fieldDescription": "Specifies URLs and domains for which no prompt will be shown when attestation certificates from security keys are requested. Additionally, a signal will be sent to the security key indicating that individual attestation may be used. Without this, users will be prompted in Chrome 65+ when sites request attestation of security keys. URLs (like \"https://example.com/some/path\") will only match as U2F AppIDs. Domains (like \"example.com\") only match as WebAuthn RP IDs. Thus, to cover both U2F and WebAuthn APIs for a given site, both the AppID URL and domain would need to be listed.",
+          "description": "Enter URL or domain. Specifies URLs and domains for which no prompt will be shown when attestation certificates from security keys are requested. Additionally, a signal will be sent to the security key indicating that individual attestation may be used. Without this, users will be prompted in Chrome 65+ when sites request attestation of security keys. URLs (like \"https://example.com/some/path\") will only match as U2F AppIDs. Domains (like \"example.com\") only match as WebAuthn RP IDs. Thus, to cover both U2F and WebAuthn APIs for a given site, both the AppID URL and domain would need to be listed.",
+          "name": "Enter URL or domain."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SecurityKeyAttestation",
+      "policyDescription": "Security key attestation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "disableThreeDApis",
+                "number": 1
+              }
+            ],
+            "name": "ThreeDContent"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ThreeDContent",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#disable_3d_apis",
+      "fieldDescriptions": [
+        {
+          "field": "disableThreeDApis",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Never allow display of 3D content.",
+              "value": "true"
+            },
+            {
+              "description": "Always allow display of 3D content.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ThreeDContent",
+      "policyDescription": "3D content."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "cookiesAllowedForUrls",
+                "number": 1
+              },
+              {
+                "typeName": "DefaultCookiesSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultCookiesSetting",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "cookiesBlockedForUrls",
+                "number": 3
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "cookiesSessionOnlyForUrls",
+                "number": 4
+              }
+            ],
+            "name": "Cookies"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultCookiesSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_COOKIES_SETTING_ENUM_UNSET",
+                "number": 3
+              },
+              {
+                "name": "DEFAULT_COOKIES_SETTING_ENUM_ALLOW_COOKIES",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_COOKIES_SETTING_ENUM_BLOCK_COOKIES",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_COOKIES_SETTING_ENUM_SESSION_ONLY",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Cookies",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_cookies_setting",
+      "fieldDescriptions": [
+        {
+          "field": "cookiesAllowedForUrls",
+          "fieldDescription": "Urls to allow cookies.",
+          "description": "Allow cookies for URL patterns. Urls to allow cookies.",
+          "name": "Allow cookies for URL patterns."
+        },
+        {
+          "fieldDescription": "Allows you to set whether websites are allowed to set local data.",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_COOKIES_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow cookies.",
+              "value": "DEFAULT_COOKIES_SETTING_ENUM_ALLOW_COOKIES"
+            },
+            {
+              "description": "Block cookies.",
+              "value": "DEFAULT_COOKIES_SETTING_ENUM_BLOCK_COOKIES"
+            },
+            {
+              "description": "Session only.",
+              "value": "DEFAULT_COOKIES_SETTING_ENUM_SESSION_ONLY"
+            }
+          ],
+          "description": "Default cookie setting. Allows you to set whether websites are allowed to set local data.",
+          "defaultValue": "DEFAULT_COOKIES_SETTING_ENUM_UNSET",
+          "field": "defaultCookiesSetting",
+          "name": "Default cookie setting."
+        },
+        {
+          "field": "cookiesBlockedForUrls",
+          "fieldDescription": "Urls to block cookies.",
+          "description": "Block Cookies for URL Patterns. Urls to block cookies.",
+          "name": "Block Cookies for URL Patterns."
+        },
+        {
+          "field": "cookiesSessionOnlyForUrls",
+          "fieldDescription": "Urls to allow session-only cookies.",
+          "description": "Allow session-only cookies for URL patterns. Urls to allow session-only cookies.",
+          "name": "Allow session-only cookies for URL patterns."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Cookies",
+      "policyDescription": "Cookies."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "blockThirdPartyCookies",
+                "number": 1
+              }
+            ],
+            "name": "ThirdPartyCookieBlocking"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ThirdPartyCookieBlocking",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#block_third_party_cookies",
+      "fieldDescriptions": [
+        {
+          "field": "blockThirdPartyCookies",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Disallow third-party cookies.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Allow third-party cookies.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ThirdPartyCookieBlocking",
+      "policyDescription": "Third-party cookie blocking."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "LegacySameSiteCookieBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "legacySameSiteCookieBehaviorEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LegacySameSiteCookieBehaviorEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "LegacySameSiteCookieBehaviorEnum",
+            "value": [
+              {
+                "name": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_LEGACY_SAME_SITE_COOKIE_BEHAVIOR",
+                "number": 1
+              },
+              {
+                "name": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_SAME_SITE_BY_DEFAULT_COOKIE_BEHAVIOR",
+                "number": 2
+              },
+              {
+                "name": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_USER_PERSONAL_CONFIGURATION",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LegacySameSiteCookieBehaviorEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#legacy_same_site_cookie_behavior_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "legacySameSiteCookieBehaviorEnabled",
+          "defaultValue": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_USER_PERSONAL_CONFIGURATION",
+          "knownValueDescriptions": [
+            {
+              "description": "Revert to legacy SameSite behavior for cookies on all sites.",
+              "value": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_LEGACY_SAME_SITE_COOKIE_BEHAVIOR"
+            },
+            {
+              "description": "Use SameSite-by-default behavior for cookies on all sites.",
+              "value": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_SAME_SITE_BY_DEFAULT_COOKIE_BEHAVIOR"
+            },
+            {
+              "description": "Use the user's personal configuration for SameSite features.",
+              "value": "LEGACY_SAME_SITE_COOKIE_BEHAVIOR_ENUM_DEFAULT_TO_USER_PERSONAL_CONFIGURATION"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LegacySameSiteCookieBehaviorEnabled",
+      "policyDescription": "Default legacy SameSite cookie behavior."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "legacySameSiteCookieBehaviorEnabledForDomainList",
+                "number": 1
+              }
+            ],
+            "name": "LegacySameSiteCookieBehaviorEnabledForDomainList"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LegacySameSiteCookieBehaviorEnabledForDomainList",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#legacy_same_site_cookie_behavior_enabled_for_domain_list",
+      "fieldDescriptions": [
+        {
+          "field": "legacySameSiteCookieBehaviorEnabledForDomainList",
+          "fieldDescription": "Prefix domain with [*.] to include all subdomains.",
+          "description": "Revert to legacy SameSite cookie behavior on these sites. Prefix domain with [*.] to include all subdomains.",
+          "name": "Revert to legacy SameSite cookie behavior on these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LegacySameSiteCookieBehaviorEnabledForDomainList",
+      "policyDescription": "Per-site legacy SameSite cookie behavior."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultImagesSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultImagesSettings",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "imagesAllowedForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "imagesBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "Images"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultImagesSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_IMAGES_SETTING_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_IMAGES_SETTING_ENUM_ALLOW_IMAGES",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_IMAGES_SETTING_ENUM_BLOCK_IMAGES",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Images",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_images_settings",
+      "fieldDescriptions": [
+        {
+          "field": "defaultImagesSettings",
+          "defaultValue": "DEFAULT_IMAGES_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_IMAGES_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow all sites to show all images.",
+              "value": "DEFAULT_IMAGES_SETTING_ENUM_ALLOW_IMAGES"
+            },
+            {
+              "description": "Do not allow any site to show images.",
+              "value": "DEFAULT_IMAGES_SETTING_ENUM_BLOCK_IMAGES"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "imagesAllowedForUrls",
+          "fieldDescription": "Urls to allow images.",
+          "description": "Show images on these sites. Urls to allow images.",
+          "name": "Show images on these sites."
+        },
+        {
+          "field": "imagesBlockedForUrls",
+          "fieldDescription": "Urls to block images.",
+          "description": "Block images on these sites. Urls to block images.",
+          "name": "Block images on these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Images",
+      "policyDescription": "Images."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultJavascriptSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultJavascriptSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "javascriptAllowedForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "javascriptBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "Javascript"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultJavascriptSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_JAVASCRIPT_SETTING_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_JAVASCRIPT_SETTING_ENUM_ALLOW_JAVASCRIPT",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_JAVASCRIPT_SETTING_ENUM_BLOCK_JAVASCRIPT",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Javascript",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_javascript_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultJavascriptSetting",
+          "defaultValue": "DEFAULT_JAVASCRIPT_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_JAVASCRIPT_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow sites to run JavaScript.",
+              "value": "DEFAULT_JAVASCRIPT_SETTING_ENUM_ALLOW_JAVASCRIPT"
+            },
+            {
+              "description": "Do not allow any site to run JavaScript.",
+              "value": "DEFAULT_JAVASCRIPT_SETTING_ENUM_BLOCK_JAVASCRIPT"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "javascriptAllowedForUrls",
+          "fieldDescription": "Urls to allow JavaScript.",
+          "description": "Allow these sites to run JavaScript. Urls to allow JavaScript.",
+          "name": "Allow these sites to run JavaScript."
+        },
+        {
+          "field": "javascriptBlockedForUrls",
+          "fieldDescription": "Urls to block JavaScript.",
+          "description": "Block JavaScript on these sites. Urls to block JavaScript.",
+          "name": "Block JavaScript on these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Javascript",
+      "policyDescription": "JavaScript."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "intensiveWakeUpThrottlingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "IntensiveWakeUpThrottlingEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.IntensiveWakeUpThrottlingEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#intensive_wake_up_throttling_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "intensiveWakeUpThrottlingEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow throttling of background JavaScript timers to be controlled by Chrome's logic and configurable by users.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Force throttling of background JavaScript timers.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Force no throttling of background JavaScript timers.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.IntensiveWakeUpThrottlingEnabled",
+      "policyDescription": "Javascript IntensiveWakeUpThrottling."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "unthrottledNestedTimeoutEnabled",
+                "number": 1
+              }
+            ],
+            "name": "UnthrottledNestedTimeoutEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UnthrottledNestedTimeoutEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "unthrottledNestedTimeoutEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Default behavior for setTimeout() function nested clamp.",
+              "value": "UNSET"
+            },
+            {
+              "description": "JavaScript setTimeout() will not be clamped as aggressively.",
+              "value": "TRUE"
+            },
+            {
+              "description": "JavaScript setTimeout() will be clamped after a normal nesting threshold.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.UnthrottledNestedTimeoutEnabled",
+      "policyDescription": "JavaScript setTimeout() clamping."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultJavaScriptJitSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultJavaScriptJitSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "javaScriptJitAllowedForSites",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "javaScriptJitBlockedForSites",
+                "number": 3
+              }
+            ],
+            "name": "JavaScriptJitSettings"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultJavaScriptJitSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_JAVA_SCRIPT_JIT_SETTING_ENUM_ALLOW_JAVA_SCRIPT_JIT",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_JAVA_SCRIPT_JIT_SETTING_ENUM_BLOCK_JAVA_SCRIPT_JIT",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.JavaScriptJitSettings",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_java_script_jit_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultJavaScriptJitSetting",
+          "defaultValue": "DEFAULT_JAVA_SCRIPT_JIT_SETTING_ENUM_ALLOW_JAVA_SCRIPT_JIT",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow sites to run JavaScript JIT.",
+              "value": "DEFAULT_JAVA_SCRIPT_JIT_SETTING_ENUM_ALLOW_JAVA_SCRIPT_JIT"
+            },
+            {
+              "description": "Do not allow sites to run JavaScript JIT.",
+              "value": "DEFAULT_JAVA_SCRIPT_JIT_SETTING_ENUM_BLOCK_JAVA_SCRIPT_JIT"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "javaScriptJitAllowedForSites",
+          "description": "Allow JavaScript to use JIT on these sites.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "Allow JavaScript to use JIT on these sites."
+        },
+        {
+          "field": "javaScriptJitBlockedForSites",
+          "description": "Block JavaScript from using JIT on these sites.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "Block JavaScript from using JIT on these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.JavaScriptJitSettings",
+      "policyDescription": "JavaScript JIT."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultClipboardSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultClipboardSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "clipboardAllowedForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "clipboardBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "ClipboardSettings"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultClipboardSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_CLIPBOARD_SETTING_ENUM_BLOCK_CLIPBOARD",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_CLIPBOARD_SETTING_ENUM_ASK_CLIPBOARD",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_CLIPBOARD_SETTING_ENUM_UNSET",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ClipboardSettings",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#clipboard_settings",
+      "fieldDescriptions": [
+        {
+          "field": "defaultClipboardSetting",
+          "defaultValue": "DEFAULT_CLIPBOARD_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow any site to use the clipboard site permission.",
+              "value": "DEFAULT_CLIPBOARD_SETTING_ENUM_BLOCK_CLIPBOARD"
+            },
+            {
+              "description": "Allow sites to ask the user to grant the clipboard site permission.",
+              "value": "DEFAULT_CLIPBOARD_SETTING_ENUM_ASK_CLIPBOARD"
+            },
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_CLIPBOARD_SETTING_ENUM_UNSET"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "clipboardAllowedForUrls",
+          "fieldDescription": "Urls to allow clipboard access. Prefix domain with [*.] to include all subdomains.",
+          "description": "Allow these sites to access the clipboard. Urls to allow clipboard access. Prefix domain with [*.] to include all subdomains.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'origin url'.",
+          "name": "Allow these sites to access the clipboard."
+        },
+        {
+          "field": "clipboardBlockedForUrls",
+          "fieldDescription": "Urls to block clipboard access. Prefix domain with [*.] to include all subdomains.",
+          "description": "Block these sites from accessing the clipboard. Urls to block clipboard access. Prefix domain with [*.] to include all subdomains.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'origin url'.",
+          "name": "Block these sites from accessing the clipboard."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.ClipboardSettings",
+      "policyDescription": "Clipboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultNotificationsSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultNotificationsSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "notificationsAllowedForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "notificationsBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "Notifications"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultNotificationsSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_ALLOW_NOTIFICATIONS",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_BLOCK_NOTIFICATIONS",
+                "number": 3
+              },
+              {
+                "name": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_ASK_NOTIFICATIONS",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Notifications",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_notifications_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultNotificationsSetting",
+          "defaultValue": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow sites to show desktop notifications.",
+              "value": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_ALLOW_NOTIFICATIONS"
+            },
+            {
+              "description": "Do not allow sites to show desktop notifications.",
+              "value": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_BLOCK_NOTIFICATIONS"
+            },
+            {
+              "description": "Always ask the user if a site can show desktop notifications.",
+              "value": "DEFAULT_NOTIFICATIONS_SETTING_ENUM_ASK_NOTIFICATIONS"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "notificationsAllowedForUrls",
+          "fieldDescription": "Urls to allow notifications. Prefix domain with [*.] to include all subdomains.Maximum of 1000 URLs. .",
+          "description": "Allow these sites to show notifications. Urls to allow notifications. Prefix domain with [*.] to include all subdomains.Maximum of 1000 URLs. .",
+          "inputConstraint": "The list should have 1000 or less entries.",
+          "name": "Allow these sites to show notifications."
+        },
+        {
+          "field": "notificationsBlockedForUrls",
+          "fieldDescription": "Urls to block notifications. Prefix domain with [*.] to include all subdomains.Maximum of 1000 URLs. .",
+          "description": "Block notifications on these sites. Urls to block notifications. Prefix domain with [*.] to include all subdomains.Maximum of 1000 URLs. .",
+          "inputConstraint": "The list should have 1000 or less entries.",
+          "name": "Block notifications on these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Notifications",
+      "policyDescription": "Notifications."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "autoplayAllowlist",
+                "number": 1
+              }
+            ],
+            "name": "AutoplayAllowlist"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AutoplayAllowlist",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#autoplay_allowlist",
+      "fieldDescriptions": [
+        {
+          "field": "autoplayAllowlist",
+          "fieldDescription": "URL patterns allowed to autoplay. Prefix domain with [*.] to include all subdomains. Use * to allow all domains.",
+          "description": "Allowed URLs. URL patterns allowed to autoplay. Prefix domain with [*.] to include all subdomains. Use * to allow all domains.",
+          "name": "Allowed URLs."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AutoplayAllowlist",
+      "policyDescription": "Autoplay video."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "RegisteredProtocolHandlers",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "registeredProtocolHandlers",
+                "number": 1
+              }
+            ],
+            "name": "RegisteredProtocolHandlersSetting"
+          },
+          {
+            "field": [
+              {
+                "typeName": "Protocol",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "protocols",
+                "number": 2
+              }
+            ],
+            "name": "RegisteredProtocolHandlers"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "scheme",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "handler",
+                "number": 2
+              }
+            ],
+            "name": "Protocol"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RegisteredProtocolHandlersSetting",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#registered_protocol_handlers",
+      "fieldDescriptions": [
+        {
+          "field": "registeredProtocolHandlers",
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "protocols",
+              "description": "A list of protocol handlers.",
+              "name": "A list of protocol handlers.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "scheme",
+                  "description": "Protocol scheme, for example mailto, without the colon.",
+                  "name": "Protocol scheme, for example mailto, without the colon."
+                },
+                {
+                  "field": "handler",
+                  "description": "The handlers URL. The handler must contain the string '%s' which will be replaced by the handled URL.",
+                  "name": "The handlers URL. The handler must contain the string '%s' which will be replaced by the handled URL."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RegisteredProtocolHandlersSetting",
+      "policyDescription": "Custom Protocol Handlers."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "alwaysOpenPdfExternally",
+                "number": 1
+              }
+            ],
+            "name": "AlwaysOpenPdfExternally"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AlwaysOpenPdfExternally",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#always_open_pdf_externally",
+      "fieldDescriptions": [
+        {
+          "field": "alwaysOpenPdfExternally",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Chrome downloads PDF files and lets users open them with the system default application.",
+              "value": "true"
+            },
+            {
+              "description": "Chrome opens PDF files, unless the PDF plugin is turned off.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AlwaysOpenPdfExternally",
+      "policyDescription": "PDF files."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "autoOpenAllowedForUrls",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "autoOpenFileTypes",
+                "number": 2
+              }
+            ],
+            "name": "AutoOpen"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AutoOpen",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#auto_open_file_types",
+      "fieldDescriptions": [
+        {
+          "field": "autoOpenAllowedForUrls",
+          "fieldDescription": "If this policy is set, only downloads that match these URLs and have an auto open type will be auto opened. If this policy is left unset, all downloads matching an auto open type will be auto opened. Wildcards (\"*\") are allowed when appended to a URL, but cannot be entered alone.",
+          "description": "Auto open URLs. If this policy is set, only downloads that match these URLs and have an auto open type will be auto opened. If this policy is left unset, all downloads matching an auto open type will be auto opened. Wildcards (\"*\") are allowed when appended to a URL, but cannot be entered alone.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "Auto open URLs."
+        },
+        {
+          "field": "autoOpenFileTypes",
+          "fieldDescription": "Do not include the leading separator when listing the type. For example, use \"txt\", not \".txt\".",
+          "description": "Auto open files types. Do not include the leading separator when listing the type. For example, use \"txt\", not \".txt\".",
+          "name": "Auto open files types."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AutoOpen",
+      "policyDescription": "Auto open downloaded files."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultPopupsSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultPopupsSetting",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "popupsAllowedForUrls",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "popupsBlockedForUrls",
+                "number": 3
+              }
+            ],
+            "name": "Popups"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultPopupsSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_POPUPS_SETTING_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_POPUPS_SETTING_ENUM_ALLOW_POPUPS",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_POPUPS_SETTING_ENUM_BLOCK_POPUPS",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Popups",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_popups_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultPopupsSetting",
+          "defaultValue": "DEFAULT_POPUPS_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_POPUPS_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Allow all pop-ups.",
+              "value": "DEFAULT_POPUPS_SETTING_ENUM_ALLOW_POPUPS"
+            },
+            {
+              "description": "Block all pop-ups.",
+              "value": "DEFAULT_POPUPS_SETTING_ENUM_BLOCK_POPUPS"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "popupsAllowedForUrls",
+          "fieldDescription": "Urls to allow pop-ups.",
+          "description": "Allow pop-ups on these sites. Urls to allow pop-ups.",
+          "name": "Allow pop-ups on these sites."
+        },
+        {
+          "field": "popupsBlockedForUrls",
+          "fieldDescription": "Urls to block pop-ups.",
+          "description": "Block pop-ups on these sites. Urls to block pop-ups.",
+          "name": "Block pop-ups on these sites."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Popups",
+      "policyDescription": "Pop-ups."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "suppressCrossOriginIframeDialogs",
+                "number": 1
+              }
+            ],
+            "name": "SuppressCrossOriginIframeDialogs"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SuppressCrossOriginIframeDialogs",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#suppress_cross_origin_iframe_dialogs",
+      "fieldDescriptions": [
+        {
+          "field": "suppressCrossOriginIframeDialogs",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Block JavaScript dialogs triggered from a cross-origin iframe.",
+              "value": "true"
+            },
+            {
+              "description": "Allow JavaScript dialogs triggered from a cross-origin iframe.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SuppressCrossOriginIframeDialogs",
+      "policyDescription": "Cross-origin JavaScript dialogs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "sandboxExternalProtocolBlocked",
+                "number": 1
+              }
+            ],
+            "name": "SandboxExternalProtocolBlocked"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SandboxExternalProtocolBlocked",
+      "fieldDescriptions": [
+        {
+          "field": "sandboxExternalProtocolBlocked",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow navigation to external protocols inside a sandboxed iframe.",
+              "value": "true"
+            },
+            {
+              "description": "Allow navigation to external protocols inside a sandboxed iframe.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SandboxExternalProtocolBlocked",
+      "policyDescription": "iframe navigation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "urlBlocklist",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "urlAllowlist",
+                "number": 2
+              }
+            ],
+            "name": "UrlBlocking"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UrlBlocking",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#url_blocklist",
+      "fieldDescriptions": [
+        {
+          "field": "urlBlocklist",
+          "fieldDescription": "Any URL in this list will be blocked, unless it also appears in the list of exceptions specified in 'urlAllowlist'. Maximum of 1000 URLs. Note: to block OS and browser settings set the 'chrome.users.SystemFeaturesDisableList' policy instead of blocking 'chrome://' URLs.",
+          "description": "Blocked URLs. Any URL in this list will be blocked, unless it also appears in the list of exceptions specified in 'urlAllowlist'. Maximum of 1000 URLs. Note: to block OS and browser settings set the 'chrome.users.SystemFeaturesDisableList' policy instead of blocking 'chrome://' URLs.",
+          "inputConstraint": "The list should have 1000 or less entries.",
+          "name": "Blocked URLs."
+        },
+        {
+          "field": "urlAllowlist",
+          "fieldDescription": "Any URL that matches an entry in this exception list will be allowed, even if it matches an entry in the blocked URLs. Wildcards (\"*\") are allowed when appended to a URL, but cannot be entered alone. Maximum of 1000 URLs. .",
+          "description": "Blocked URL exceptions. Any URL that matches an entry in this exception list will be allowed, even if it matches an entry in the blocked URLs. Wildcards (\"*\") are allowed when appended to a URL, but cannot be entered alone. Maximum of 1000 URLs. .",
+          "inputConstraint": "The list should have 1000 or less entries. Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "Blocked URL exceptions."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UrlBlocking",
+      "policyDescription": "URL blocking."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "driveDisabledBool",
+                "number": 1
+              }
+            ],
+            "name": "GoogleDriveSyncing"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.GoogleDriveSyncing",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#drive_disabled",
+      "fieldDescriptions": [
+        {
+          "field": "driveDisabledBool",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Disable Google Drive syncing.",
+              "value": "true"
+            },
+            {
+              "description": "Enable Google Drive syncing.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.GoogleDriveSyncing",
+      "policyDescription": "Google Drive syncing."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "driveDisabledOverCellular",
+                "number": 1
+              }
+            ],
+            "name": "GoogleDriveSyncingOverCellular"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.GoogleDriveSyncingOverCellular",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#drive_disabled_over_cellular",
+      "fieldDescriptions": [
+        {
+          "field": "driveDisabledOverCellular",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Disable Google Drive syncing over cellular connections.",
+              "value": "true"
+            },
+            {
+              "description": "Enable Google Drive syncing over cellular connections.",
+              "value": "false"
+            }
+          ],
+          "description": "Syncing data with Google Drive over cellular connections.",
+          "name": "Syncing data with Google Drive over cellular connections."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.GoogleDriveSyncingOverCellular",
+      "policyDescription": "Google Drive syncing over cellular."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "showCastIconInToolbar",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "enableMediaRouter",
+                "number": 2
+              }
+            ],
+            "name": "GoogleCast"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.GoogleCast",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#enable_media_router",
+      "fieldDescriptions": [
+        {
+          "defaultValue": false,
+          "field": "showCastIconInToolbar",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "enableMediaRouter"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Always show the Cast icon in the toolbar.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show the Cast icon in the toolbar by default, but let users choose.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "enableMediaRouter",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to Cast.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to Cast.",
+              "value": "false"
+            }
+          ],
+          "description": "Allow users to Cast from Chrome.",
+          "name": "Allow users to Cast from Chrome."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.GoogleCast",
+      "policyDescription": "Cast."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultInsecureContentSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultInsecureContentSetting",
+                "number": 1
+              }
+            ],
+            "name": "DefaultInsecureContentSetting"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultInsecureContentSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_INSECURE_CONTENT_SETTING_ENUM_BLOCK_INSECURE_CONTENT",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_INSECURE_CONTENT_SETTING_ENUM_ALLOW_EXCEPTIONS_INSECURE_CONTENT",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DefaultInsecureContentSetting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultInsecureContentSetting",
+          "defaultValue": "DEFAULT_INSECURE_CONTENT_SETTING_ENUM_BLOCK_INSECURE_CONTENT",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow any site to load blockable mixed content.",
+              "value": "DEFAULT_INSECURE_CONTENT_SETTING_ENUM_BLOCK_INSECURE_CONTENT"
+            },
+            {
+              "description": "Allow users to add exceptions to allow blockable mixed content.",
+              "value": "DEFAULT_INSECURE_CONTENT_SETTING_ENUM_ALLOW_EXCEPTIONS_INSECURE_CONTENT"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DefaultInsecureContentSetting",
+      "policyDescription": "Control use of insecure content exceptions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "insecureContentAllowedForUrls",
+                "number": 1
+              }
+            ],
+            "name": "InsecureContentAllowedForUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.InsecureContentAllowedForUrls",
+      "fieldDescriptions": [
+        {
+          "field": "insecureContentAllowedForUrls",
+          "description": "URL patterns to allow.",
+          "name": "URL patterns to allow."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.InsecureContentAllowedForUrls",
+      "policyDescription": "Allow insecure content on these sites."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "insecureContentBlockedForUrls",
+                "number": 1
+              }
+            ],
+            "name": "InsecureContentBlockedForUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.InsecureContentBlockedForUrls",
+      "fieldDescriptions": [
+        {
+          "field": "insecureContentBlockedForUrls",
+          "description": "URL patterns to block.",
+          "name": "URL patterns to block."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.InsecureContentBlockedForUrls",
+      "policyDescription": "Block insecure content on these sites."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "insecurePrivateNetworkRequestsAllowed",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "insecurePrivateNetworkRequestsAllowedForUrls",
+                "number": 2
+              }
+            ],
+            "name": "InsecurePrivateNetworkRequestsAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.InsecurePrivateNetworkRequestsAllowed",
+      "fieldDescriptions": [
+        {
+          "field": "insecurePrivateNetworkRequestsAllowed",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Insecure websites are allowed to make requests to any network endpoint.",
+              "value": "true"
+            },
+            {
+              "description": "Allow the user to decide.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "insecurePrivateNetworkRequestsAllowedForUrls",
+          "fieldDescription": "Network requests to more-private endpoints, from insecure origins not covered by the patterns specified here, will use the global default value.",
+          "description": "URL patterns to allow. Network requests to more-private endpoints, from insecure origins not covered by the patterns specified here, will use the global default value.",
+          "name": "URL patterns to allow."
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.InsecurePrivateNetworkRequestsAllowed",
+      "policyDescription": "Requests from insecure websites to more-private network endpoints."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "insecureFormsWarningsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "InsecureFormsWarningsEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.InsecureFormsWarningsEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "insecureFormsWarningsEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Show warnings and disable autofill on insecure forms.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show warnings or disable autofill on insecure forms.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.InsecureFormsWarningsEnabled",
+      "policyDescription": "Insecure forms."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "prefixedStorageInfoEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PrefixedStorageInfoEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrefixedStorageInfoEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "prefixedStorageInfoEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable window.webkitStorageInfo.",
+              "value": "true"
+            },
+            {
+              "description": "Disable window.webkitStorageInfo.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.PrefixedStorageInfoEnabled",
+      "policyDescription": "Re-enable window.webkitStorageInfo API."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "eventPathEnabled",
+                "number": 1
+              }
+            ],
+            "name": "EventPathEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.EventPathEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "eventPathEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Event.path API until Chrome 108.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable Event.path API until Chrome 115.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable Event.path API.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.EventPathEnabled",
+      "policyDescription": "Re-enable the Event.path API until Chrome 115."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "loadCryptoTokenExtension",
+                "number": 1
+              }
+            ],
+            "name": "LoadCryptoTokenExtension"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LoadCryptoTokenExtension",
+      "fieldDescriptions": [
+        {
+          "field": "loadCryptoTokenExtension",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable the CryptoToken component extension until Chrome 107.",
+              "value": "true"
+            },
+            {
+              "description": "Enable the CryptoToken component extension until Chrome 105.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.LoadCryptoTokenExtension",
+      "policyDescription": "Re-enable CryptoToken component extension until Chrome 107."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "windowOcclusionEnabled",
+                "number": 1
+              }
+            ],
+            "name": "WindowOcclusionEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WindowOcclusionEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "windowOcclusionEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow detection of window occlusion.",
+              "value": "true"
+            },
+            {
+              "description": "Disable detection of window occlusion.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WindowOcclusionEnabled",
+      "policyDescription": "Occluded window rendering."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "networkFileSharesAllowed",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "netBiosShareDiscoveryEnabled",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "ntlmShareAuthenticationEnabled",
+                "number": 3
+              },
+              {
+                "typeName": "NetworkFilePreconfiguredShares",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "networkFileSharesPreconfiguredShares",
+                "number": 4
+              }
+            ],
+            "name": "NetworkFileShares"
+          },
+          {
+            "field": [
+              {
+                "typeName": "PreconfiguredFile",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "preconfiguredFiles",
+                "number": 1
+              }
+            ],
+            "name": "NetworkFilePreconfiguredShares"
+          },
+          {
+            "field": [
+              {
+                "typeName": "PreconfiguredShareMode",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "mode",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "shareUrl",
+                "number": 2
+              }
+            ],
+            "name": "PreconfiguredFile"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PreconfiguredShareMode",
+            "value": [
+              {
+                "name": "DROP_DOWN",
+                "number": 1
+              },
+              {
+                "name": "PRE_MOUNT",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.NetworkFileShares",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#NTLM_authentication",
+      "fieldDescriptions": [
+        {
+          "field": "networkFileSharesAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow network file shares.",
+              "value": "true"
+            },
+            {
+              "description": "Block network file shares.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "networkFileSharesAllowed"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Use NetBIOS discovery.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow NetBIOS discovery.",
+              "value": "false"
+            }
+          ],
+          "description": "Use the NetBIOS name query request protocol to discover shares on the network.",
+          "defaultValue": false,
+          "field": "netBiosShareDiscoveryEnabled",
+          "name": "Use the NetBIOS name query request protocol to discover shares on the network."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "networkFileSharesAllowed"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Use NTLM authentication.",
+              "value": "true"
+            },
+            {
+              "description": "Do not use NTLM authentication.",
+              "value": "false"
+            }
+          ],
+          "description": "Use NTLM as an authentication protocol for SMB mounts.",
+          "defaultValue": false,
+          "field": "ntlmShareAuthenticationEnabled",
+          "name": "Use NTLM as an authentication protocol for SMB mounts."
+        },
+        {
+          "field": "networkFileSharesPreconfiguredShares",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "networkFileSharesAllowed"
+            }
+          ],
+          "description": "Preconfigured network file shares.",
+          "name": "Preconfigured network file shares.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "preconfiguredFiles",
+              "description": "A list of configurations for Network file shares.",
+              "name": "A list of configurations for Network file shares.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "mode",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "The shared URL will be added to the share discovery dropdown.",
+                      "value": "DROP_DOWN"
+                    },
+                    {
+                      "description": "The shared URL will be mounted.",
+                      "value": "PRE_MOUNT"
+                    }
+                  ],
+                  "description": "N/A"
+                },
+                {
+                  "field": "shareUrl",
+                  "description": "The URL of the file or resource to be shared. .",
+                  "name": "The URL of the file or resource to be shared. ."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.NetworkFileShares",
+      "policyDescription": "Network file shares."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "scrollToTextFragmentEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ScrollToTextFragmentEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ScrollToTextFragmentEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "scrollToTextFragmentEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow sites to scroll to specific text fragments via URL.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow sites to scroll to specific text fragments via URL.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ScrollToTextFragmentEnabled",
+      "policyDescription": "Scroll to text fragment."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "urlKeyedAnonymizedDataCollectionEnabled",
+                "number": 1
+              }
+            ],
+            "name": "UrlKeyedAnonymizedDataCollectionEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UrlKeyedAnonymizedDataCollectionEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#Enable_URL-keyed_anonymized_data_collection",
+      "fieldDescriptions": [
+        {
+          "field": "urlKeyedAnonymizedDataCollectionEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Data collection is always active.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Data collection is never active.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UrlKeyedAnonymizedDataCollectionEnabled",
+      "policyDescription": "Enable URL-keyed anonymized data collection."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "optimizationGuideFetchingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "OptimizationGuideFetchingEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.OptimizationGuideFetchingEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#optimization_guide_fetching_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "optimizationGuideFetchingEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable fetching of page load metadata and machine learning models to enhance the browsing experience.",
+              "value": "true"
+            },
+            {
+              "description": "Disable fetching of page load metadata and machine learning models that enhance the browsing experience.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.OptimizationGuideFetchingEnabled",
+      "policyDescription": "Optimization Guide Fetching."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "appCacheForceEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AppCacheForceEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AppCacheForceEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "appCacheForceEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow websites to use the deprecated AppCache feature.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow websites to use the deprecated AppCache feature.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AppCacheForceEnabled",
+      "policyDescription": "AppCache."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultWebBluetoothGuardSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultWebBluetoothGuardSetting",
+                "number": 1
+              }
+            ],
+            "name": "WebBluetoothAccess"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultWebBluetoothGuardSettingEnum",
+            "value": [
+              {
+                "name": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_BLOCK_WEB_BLUETOOTH",
+                "number": 2
+              },
+              {
+                "name": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_ASK_WEB_BLUETOOTH",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebBluetoothAccess",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_web_bluetooth_guard_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultWebBluetoothGuardSetting",
+          "defaultValue": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_UNSET"
+            },
+            {
+              "description": "Do not allow sites to request access to Bluetooth devices via the Web Bluetooth API.",
+              "value": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_BLOCK_WEB_BLUETOOTH"
+            },
+            {
+              "description": "Allow sites to request access to Bluetooth devices via the Web Bluetooth API.",
+              "value": "DEFAULT_WEB_BLUETOOTH_GUARD_SETTING_ENUM_ASK_WEB_BLUETOOTH"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.WebBluetoothAccess",
+      "policyDescription": "Web Bluetooth API."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "externalProtocolDialogShowAlwaysOpenCheckbox",
+                "number": 1
+              }
+            ],
+            "name": "ExternalProtocolDialogShowAlwaysOpenCheckbox"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ExternalProtocolDialogShowAlwaysOpenCheckbox",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#external_protocol_dialog_show_always_open_checkbox",
+      "fieldDescriptions": [
+        {
+          "field": "externalProtocolDialogShowAlwaysOpenCheckbox",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "User may select \"Always allow\" to skip all future confirmation prompts.",
+              "value": "true"
+            },
+            {
+              "description": "User may not select \"Always allow\" and will be prompted each time.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ExternalProtocolDialogShowAlwaysOpenCheckbox",
+      "policyDescription": "Show \"Always open\" checkbox in external protocol dialog."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "backForwardCacheEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BackForwardCacheEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BackForwardCacheEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#back_forward_cache_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "backForwardCacheEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable the back-forward cache.",
+              "value": "true"
+            },
+            {
+              "description": "Disable the back-forward cache.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BackForwardCacheEnabled",
+      "policyDescription": "Back-forward cache."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "pdfAnnotationsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PdfAnnotationsEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PdfAnnotationsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#pdf_annotations_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "pdfAnnotationsEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the PDF viewer to annotate PDFs.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow the PDF viewer to annotate PDFs.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PdfAnnotationsEnabled",
+      "policyDescription": "PDF Annotations."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "crossOriginWebAssemblyModuleSharingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "CrossOriginWebAssemblyModuleSharingEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CrossOriginWebAssemblyModuleSharingEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#cross_origin_web_assembly_module_sharing_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "crossOriginWebAssemblyModuleSharingEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow WebAssembly modules to be sent cross-origin.",
+              "value": "true"
+            },
+            {
+              "description": "Prevent WebAssembly modules to be sent cross-origin.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CrossOriginWebAssemblyModuleSharingEnabled",
+      "policyDescription": "Allow WebAssembly cross-origin."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "calendarIntegrationEnabled",
+                "number": 1
+              }
+            ],
+            "name": "CalendarIntegrationEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CalendarIntegrationEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "calendarIntegrationEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Google Calendar Integration.",
+              "value": "true"
+            },
+            {
+              "description": "Disable Google Calendar Integration.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Content",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.CalendarIntegrationEnabled",
+      "policyDescription": "Google Calendar Integration."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "printingEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AllowPrinting"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowPrinting",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "printingEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable printing.",
+              "value": "true"
+            },
+            {
+              "description": "Disable printing.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AllowPrinting",
+      "policyDescription": "Printing."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "disablePrintPreview",
+                "number": 1
+              }
+            ],
+            "name": "PrintPreview"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintPreview",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#disable_print_preview",
+      "fieldDescriptions": [
+        {
+          "field": "disablePrintPreview",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Always use the system print dialog instead of print preview.",
+              "value": "true"
+            },
+            {
+              "description": "Allow using print preview.",
+              "value": "false"
+            }
+          ],
+          "description": "Allow print preview.",
+          "name": "Allow print preview."
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintPreview",
+      "policyDescription": "Print preview."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "enableDeprecatedPrivetPrinting",
+                "number": 1
+              }
+            ],
+            "name": "EnableDeprecatedPrivetPrinting"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.EnableDeprecatedPrivetPrinting",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#enable_deprecated_privet_printing",
+      "fieldDescriptions": [
+        {
+          "field": "enableDeprecatedPrivetPrinting",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable deprecated privet printing.",
+              "value": "true"
+            },
+            {
+              "description": "Disable deprecated privet printing.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.EnableDeprecatedPrivetPrinting",
+      "policyDescription": "Deprecated privet printing."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "specifyDefaultPrinter",
+                "number": 1
+              },
+              {
+                "typeName": "PrinterSourceEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printerTypes",
+                "number": 2
+              },
+              {
+                "typeName": "PrinterMatchEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printerMatching",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "defaultPrinterPattern",
+                "number": 4
+              }
+            ],
+            "name": "DefaultPrinters"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrinterSourceEnum",
+            "value": [
+              {
+                "name": "PRINTER_SOURCE_ENUM_CLOUD_AND_LOCAL",
+                "number": 1
+              },
+              {
+                "name": "PRINTER_SOURCE_ENUM_CLOUD",
+                "number": 2
+              },
+              {
+                "name": "PRINTER_SOURCE_ENUM_LOCAL",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "PrinterMatchEnum",
+            "value": [
+              {
+                "name": "PRINTER_MATCH_ENUM_MATCH_BY_NAME",
+                "number": 1
+              },
+              {
+                "name": "PRINTER_MATCH_ENUM_MATCH_BY_ID",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DefaultPrinters",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_printer_pattern",
+      "fieldDescriptions": [
+        {
+          "field": "specifyDefaultPrinter",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Define the default printer.",
+              "value": "true"
+            },
+            {
+              "description": "Use default print behavior.",
+              "value": "false"
+            }
+          ],
+          "description": "Default printer selection.",
+          "name": "Default printer selection."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "specifyDefaultPrinter"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Cloud and local.",
+              "value": "PRINTER_SOURCE_ENUM_CLOUD_AND_LOCAL"
+            },
+            {
+              "description": "Cloud only.",
+              "value": "PRINTER_SOURCE_ENUM_CLOUD"
+            },
+            {
+              "description": "Local only.",
+              "value": "PRINTER_SOURCE_ENUM_LOCAL"
+            }
+          ],
+          "description": "Printer types.",
+          "defaultValue": "PRINTER_SOURCE_ENUM_CLOUD_AND_LOCAL",
+          "field": "printerTypes",
+          "name": "Printer types."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "specifyDefaultPrinter"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Match by name.",
+              "value": "PRINTER_MATCH_ENUM_MATCH_BY_NAME"
+            },
+            {
+              "description": "Match by ID.",
+              "value": "PRINTER_MATCH_ENUM_MATCH_BY_ID"
+            }
+          ],
+          "description": "Printer matching.",
+          "defaultValue": "PRINTER_MATCH_ENUM_MATCH_BY_NAME",
+          "field": "printerMatching",
+          "name": "Printer matching."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "specifyDefaultPrinter"
+            }
+          ],
+          "description": "Default printer. Enter a regular expression that matches the desired default printer selection. The print preview will default to the first printer to match the regular expression. For example, to match a printer named \"Initech Lobby\", use \"Initech Lobby\". To match any of {print \"initech-lobby-1\"}, {print \"initech-lobby-2\"}, etc. you could use {print \"initech-lobby-.$\"}. To match {print \"initech-lobby-guest\"} or {print \"initech-partner-guest\"}, you could use {print \"initech-.*-guest\"}.",
+          "fieldDescription": "Enter a regular expression that matches the desired default printer selection. The print preview will default to the first printer to match the regular expression. For example, to match a printer named \"Initech Lobby\", use \"Initech Lobby\". To match any of {print \"initech-lobby-1\"}, {print \"initech-lobby-2\"}, etc. you could use {print \"initech-lobby-.$\"}. To match {print \"initech-lobby-guest\"} or {print \"initech-partner-guest\"}, you could use {print \"initech-.*-guest\"}.",
+          "inputConstraint": "The string field should have minimum length of 1.",
+          "field": "defaultPrinterPattern",
+          "name": "Default printer."
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DefaultPrinters",
+      "policyDescription": "Print preview default."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "userPrintersAllowed",
+                "number": 1
+              }
+            ],
+            "name": "UserPrintersAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.UserPrintersAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#user_native_printers_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "userPrintersAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to add new printers.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to add new printers.",
+              "value": "false"
+            }
+          ],
+          "description": "Add new CUPS printers on the device.",
+          "name": "Add new CUPS printers on the device."
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.UserPrintersAllowed",
+      "policyDescription": "Printer management."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DefaultPrintColorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingColorDefault",
+                "number": 1
+              }
+            ],
+            "name": "DefaultPrintColor"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DefaultPrintColorEnum",
+            "value": [
+              {
+                "name": "DEFAULT_PRINT_COLOR_ENUM_COLOR",
+                "number": 1
+              },
+              {
+                "name": "DEFAULT_PRINT_COLOR_ENUM_MONOCHROME",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DefaultPrintColor",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_color_default",
+      "fieldDescriptions": [
+        {
+          "field": "printingColorDefault",
+          "defaultValue": "DEFAULT_PRINT_COLOR_ENUM_COLOR",
+          "knownValueDescriptions": [
+            {
+              "description": "Color.",
+              "value": "DEFAULT_PRINT_COLOR_ENUM_COLOR"
+            },
+            {
+              "description": "Black and white.",
+              "value": "DEFAULT_PRINT_COLOR_ENUM_MONOCHROME"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DefaultPrintColor",
+      "policyDescription": "Default color printing mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "AllowedPrintColorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingAllowedColorModes",
+                "number": 1
+              }
+            ],
+            "name": "RestrictPrintColor"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AllowedPrintColorEnum",
+            "value": [
+              {
+                "name": "ALLOWED_PRINT_COLOR_ENUM_ANY_COLOR_MODE",
+                "number": 1
+              },
+              {
+                "name": "ALLOWED_PRINT_COLOR_ENUM_COLOR_ONLY",
+                "number": 2
+              },
+              {
+                "name": "ALLOWED_PRINT_COLOR_ENUM_MONOCHROME_ONLY",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RestrictPrintColor",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_allowed_color_modes",
+      "fieldDescriptions": [
+        {
+          "field": "printingAllowedColorModes",
+          "defaultValue": "ALLOWED_PRINT_COLOR_ENUM_ANY_COLOR_MODE",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not restrict color printing mode.",
+              "value": "ALLOWED_PRINT_COLOR_ENUM_ANY_COLOR_MODE"
+            },
+            {
+              "description": "Color only.",
+              "value": "ALLOWED_PRINT_COLOR_ENUM_COLOR_ONLY"
+            },
+            {
+              "description": "Black and white only.",
+              "value": "ALLOWED_PRINT_COLOR_ENUM_MONOCHROME_ONLY"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RestrictPrintColor",
+      "policyDescription": "Restrict color printing mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintingDuplexDefaultEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingDuplexDefault",
+                "number": 1
+              }
+            ],
+            "name": "DefaultPrintDuplexMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintingDuplexDefaultEnum",
+            "value": [
+              {
+                "name": "PRINTING_DUPLEX_DEFAULT_ENUM_SIMPLEX",
+                "number": 1
+              },
+              {
+                "name": "PRINTING_DUPLEX_DEFAULT_ENUM_SHORT_EDGE_DUPLEX",
+                "number": 2
+              },
+              {
+                "name": "PRINTING_DUPLEX_DEFAULT_ENUM_LONG_EDGE_DUPLEX",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DefaultPrintDuplexMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_duplex_default",
+      "fieldDescriptions": [
+        {
+          "field": "printingDuplexDefault",
+          "defaultValue": "PRINTING_DUPLEX_DEFAULT_ENUM_SIMPLEX",
+          "knownValueDescriptions": [
+            {
+              "description": "One-sided.",
+              "value": "PRINTING_DUPLEX_DEFAULT_ENUM_SIMPLEX"
+            },
+            {
+              "description": "Short-edge two-sided printing.",
+              "value": "PRINTING_DUPLEX_DEFAULT_ENUM_SHORT_EDGE_DUPLEX"
+            },
+            {
+              "description": "Long-edge two-sided printing.",
+              "value": "PRINTING_DUPLEX_DEFAULT_ENUM_LONG_EDGE_DUPLEX"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DefaultPrintDuplexMode",
+      "policyDescription": "Default page sides."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "AllowedPrintDuplexModesEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingAllowedDuplexModes",
+                "number": 1
+              }
+            ],
+            "name": "RestrictPrintDuplexMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AllowedPrintDuplexModesEnum",
+            "value": [
+              {
+                "name": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_ANY_DUPLEX_MODE",
+                "number": 1
+              },
+              {
+                "name": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_SIMPLEX_ONLY",
+                "number": 2
+              },
+              {
+                "name": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_DUPLEX_ONLY",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RestrictPrintDuplexMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_allowed_duplex_modes",
+      "fieldDescriptions": [
+        {
+          "field": "printingAllowedDuplexModes",
+          "defaultValue": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_ANY_DUPLEX_MODE",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not restrict duplex printing mode.",
+              "value": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_ANY_DUPLEX_MODE"
+            },
+            {
+              "description": "One-sided only.",
+              "value": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_SIMPLEX_ONLY"
+            },
+            {
+              "description": "Two-sided only.",
+              "value": "ALLOWED_PRINT_DUPLEX_MODES_ENUM_DUPLEX_ONLY"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RestrictPrintDuplexMode",
+      "policyDescription": "Restrict page sides."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintingBackgroundGraphicsDefaultEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingBackgroundGraphicsDefault",
+                "number": 1
+              }
+            ],
+            "name": "PrintingBackgroundGraphicsDefault"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintingBackgroundGraphicsDefaultEnum",
+            "value": [
+              {
+                "name": "PRINTING_BACKGROUND_GRAPHICS_DEFAULT_ENUM_DISABLED",
+                "number": 1
+              },
+              {
+                "name": "PRINTING_BACKGROUND_GRAPHICS_DEFAULT_ENUM_ENABLED",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingBackgroundGraphicsDefault",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_background_graphics_default",
+      "fieldDescriptions": [
+        {
+          "field": "printingBackgroundGraphicsDefault",
+          "defaultValue": "PRINTING_BACKGROUND_GRAPHICS_DEFAULT_ENUM_DISABLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Disable background graphics printing mode by default.",
+              "value": "PRINTING_BACKGROUND_GRAPHICS_DEFAULT_ENUM_DISABLED"
+            },
+            {
+              "description": "Enable background graphics printing mode by default.",
+              "value": "PRINTING_BACKGROUND_GRAPHICS_DEFAULT_ENUM_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingBackgroundGraphicsDefault",
+      "policyDescription": "Background graphics printing default."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintingAllowedBackgroundGraphicsModesEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingAllowedBackgroundGraphicsModes",
+                "number": 1
+              }
+            ],
+            "name": "PrintingAllowedBackgroundGraphicsModes"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintingAllowedBackgroundGraphicsModesEnum",
+            "value": [
+              {
+                "name": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_ANY",
+                "number": 1
+              },
+              {
+                "name": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_ENABLED",
+                "number": 2
+              },
+              {
+                "name": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_DISABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingAllowedBackgroundGraphicsModes",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_allowed_background_graphics_modes",
+      "fieldDescriptions": [
+        {
+          "field": "printingAllowedBackgroundGraphicsModes",
+          "defaultValue": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_ANY",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_ANY"
+            },
+            {
+              "description": "Always require printing of background images.",
+              "value": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_ENABLED"
+            },
+            {
+              "description": "Do not allow printing of background images.",
+              "value": "PRINTING_ALLOWED_BACKGROUND_GRAPHICS_MODES_ENUM_DISABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingAllowedBackgroundGraphicsModes",
+      "policyDescription": "Background graphics printing restriction."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "printingSendUsernameAndFilenameEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PrintingSendUsernameAndFilenameEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingSendUsernameAndFilenameEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_send_username_and_filename_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "printingSendUsernameAndFilenameEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Include user account and filename in print job.",
+              "value": "true"
+            },
+            {
+              "description": "Do not include user account and filename in print job.",
+              "value": "false"
+            }
+          ],
+          "description": "Share user account and filename in print job.",
+          "name": "Share user account and filename in print job."
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingSendUsernameAndFilenameEnabled",
+      "policyDescription": "CUPS Print job information."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "printJobHistoryExpirationPeriodDaysNew",
+                "number": 1
+              }
+            ],
+            "name": "PrintJobHistoryExpirationPeriodNew"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintJobHistoryExpirationPeriodNew",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#print_job_history_expiration_period",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "The number of days that print job history will be stored locally on the device. Use -1 to store indefinitely or 0 to disable storage. The default value is 90 days.",
+          "name": "Days to store print job history on device.",
+          "inputConstraint": "Duration policy field value has minimum value of -1 days. The input duration policy field value should be converted to seconds. Multiply the desired value in days by 86400 and append an 's'.",
+          "field": "printJobHistoryExpirationPeriodDaysNew",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Days to store print job history on device. The number of days that print job history will be stored locally on the device. Use -1 to store indefinitely or 0 to disable storage. The default value is 90 days."
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintJobHistoryExpirationPeriodNew",
+      "policyDescription": "Print job history retention period."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "deletePrintJobHistoryAllowed",
+                "number": 1
+              }
+            ],
+            "name": "DeletePrintJobHistoryAllowed"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DeletePrintJobHistoryAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#delete_print_job_history_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "deletePrintJobHistoryAllowed",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow print job history to be deleted.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow print job history to be deleted.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DeletePrintJobHistoryAllowed",
+      "policyDescription": "Print job history deletion."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintingAllowedPinModesEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingAllowedPinModes",
+                "number": 1
+              }
+            ],
+            "name": "PrintingAllowedPinModes"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintingAllowedPinModesEnum",
+            "value": [
+              {
+                "name": "PRINTING_ALLOWED_PIN_MODES_ENUM_ANY_PIN_PRINTING_MODE",
+                "number": 1
+              },
+              {
+                "name": "PRINTING_ALLOWED_PIN_MODES_ENUM_PIN_PRINTING_ONLY",
+                "number": 2
+              },
+              {
+                "name": "PRINTING_ALLOWED_PIN_MODES_ENUM_NON_PIN_PRINTING_ONLY",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingAllowedPinModes",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_allowed_pin_modes",
+      "fieldDescriptions": [
+        {
+          "field": "printingAllowedPinModes",
+          "defaultValue": "PRINTING_ALLOWED_PIN_MODES_ENUM_ANY_PIN_PRINTING_MODE",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not restrict PIN printing mode.",
+              "value": "PRINTING_ALLOWED_PIN_MODES_ENUM_ANY_PIN_PRINTING_MODE"
+            },
+            {
+              "description": "Always require PIN printing.",
+              "value": "PRINTING_ALLOWED_PIN_MODES_ENUM_PIN_PRINTING_ONLY"
+            },
+            {
+              "description": "Do not allow PIN printing.",
+              "value": "PRINTING_ALLOWED_PIN_MODES_ENUM_NON_PIN_PRINTING_ONLY"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingAllowedPinModes",
+      "policyDescription": "Restrict PIN printing mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintingPinDefaultEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingPinDefault",
+                "number": 1
+              }
+            ],
+            "name": "PrintingPinDefault"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintingPinDefaultEnum",
+            "value": [
+              {
+                "name": "PRINTING_PIN_DEFAULT_ENUM_DEFAULT_TO_PIN_PRINTING",
+                "number": 1
+              },
+              {
+                "name": "PRINTING_PIN_DEFAULT_ENUM_DEFAULT_TO_NOT_PIN_PRINTING",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingPinDefault",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_pin_default",
+      "fieldDescriptions": [
+        {
+          "field": "printingPinDefault",
+          "defaultValue": "PRINTING_PIN_DEFAULT_ENUM_DEFAULT_TO_PIN_PRINTING",
+          "knownValueDescriptions": [
+            {
+              "description": "With PIN.",
+              "value": "PRINTING_PIN_DEFAULT_ENUM_DEFAULT_TO_PIN_PRINTING"
+            },
+            {
+              "description": "Without PIN.",
+              "value": "PRINTING_PIN_DEFAULT_ENUM_DEFAULT_TO_NOT_PIN_PRINTING"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingPinDefault",
+      "policyDescription": "Default PIN printing mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableLong",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "printingMaxSheetsAllowedNullable",
+                "number": 1
+              }
+            ],
+            "name": "PrintingMaxSheetsAllowed"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "value",
+                "number": 1
+              }
+            ],
+            "name": "NullableLong"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingMaxSheetsAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_max_sheets_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "printingMaxSheetsAllowedNullable",
+          "name": "Maximum number of sheets allowed for a single print job.",
+          "description": "Maximum number of sheets allowed for a single print job.",
+          "inputConstraint": "The long field should have value greater than or equal to 1.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "value",
+              "description": "N/A"
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingMaxSheetsAllowed",
+      "policyDescription": "Maximum sheets."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintingPaperSizeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printingPaperSizeEnum",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "printingPaperSizeWidth",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "printingPaperSizeHeight",
+                "number": 3
+              }
+            ],
+            "name": "PrintingPaperSizeDefault"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintingPaperSizeEnum",
+            "value": [
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_NA_LETTER_8_5X11IN",
+                "number": 2
+              },
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_NA_LEGAL_8_5X14IN",
+                "number": 3
+              },
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_ISO_A4_210X297MM",
+                "number": 4
+              },
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_NA_LEDGER_11X17IN",
+                "number": 5
+              },
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_ISO_A3_297X420MM",
+                "number": 6
+              },
+              {
+                "name": "PRINTING_PAPER_SIZE_ENUM_CUSTOM",
+                "number": 7
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintingPaperSizeDefault",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printing_paper_size_enum",
+      "fieldDescriptions": [
+        {
+          "field": "printingPaperSizeEnum",
+          "defaultValue": "PRINTING_PAPER_SIZE_ENUM_UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "No policy set.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_UNSET"
+            },
+            {
+              "description": "Letter.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_NA_LETTER_8_5X11IN"
+            },
+            {
+              "description": "Legal.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_NA_LEGAL_8_5X14IN"
+            },
+            {
+              "description": "A4.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_ISO_A4_210X297MM"
+            },
+            {
+              "description": "Tabloid.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_NA_LEDGER_11X17IN"
+            },
+            {
+              "description": "A3.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_ISO_A3_297X420MM"
+            },
+            {
+              "description": "Custom.",
+              "value": "PRINTING_PAPER_SIZE_ENUM_CUSTOM"
+            }
+          ],
+          "description": "Page size.",
+          "name": "Page size."
+        },
+        {
+          "field": "printingPaperSizeWidth",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "PRINTING_PAPER_SIZE_ENUM_CUSTOM",
+              "sourceField": "printingPaperSizeEnum"
+            }
+          ],
+          "description": "Page width (in millimeters).",
+          "name": "Page width (in millimeters)."
+        },
+        {
+          "field": "printingPaperSizeHeight",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "PRINTING_PAPER_SIZE_ENUM_CUSTOM",
+              "sourceField": "printingPaperSizeEnum"
+            }
+          ],
+          "description": "Page height (in millimeters).",
+          "name": "Page height (in millimeters)."
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintingPaperSizeDefault",
+      "policyDescription": "Default printing page size."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printHeaderFooter",
+                "number": 1
+              }
+            ],
+            "name": "PrintHeaderFooter"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintHeaderFooter",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#print_header_footer",
+      "fieldDescriptions": [
+        {
+          "field": "printHeaderFooter",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always print headers and footers.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Never print headers and footers.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintHeaderFooter",
+      "policyDescription": "Print headers and footers."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "printerTypeDenyList",
+                "number": 1
+              }
+            ],
+            "name": "PrinterTypeDenyList"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrinterTypeDenyList",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#printer_type_deny_list",
+      "fieldDescriptions": [
+        {
+          "field": "printerTypeDenyList",
+          "defaultValue": null,
+          "knownValueDescriptions": [
+            {
+              "description": "Zeroconf-based (mDNS + DNS-SD) protocol.",
+              "value": "privet"
+            },
+            {
+              "description": "Extension-based.",
+              "value": "extension"
+            },
+            {
+              "description": "Save as PDF.",
+              "value": "pdf"
+            },
+            {
+              "description": "Local printer.",
+              "value": "local"
+            },
+            {
+              "description": "Google Cloud Print and 'Save to Google Drive'.",
+              "value": "cloud"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrinterTypeDenyList",
+      "policyDescription": "Blocked printer types."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintRasterizationModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printRasterizationMode",
+                "number": 1
+              }
+            ],
+            "name": "PrintRasterizationMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintRasterizationModeEnum",
+            "value": [
+              {
+                "name": "PRINT_RASTERIZATION_MODE_ENUM_FULL",
+                "number": 1
+              },
+              {
+                "name": "PRINT_RASTERIZATION_MODE_ENUM_FAST",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintRasterizationMode",
+      "fieldDescriptions": [
+        {
+          "field": "printRasterizationMode",
+          "defaultValue": "PRINT_RASTERIZATION_MODE_ENUM_FULL",
+          "knownValueDescriptions": [
+            {
+              "description": "Full.",
+              "value": "PRINT_RASTERIZATION_MODE_ENUM_FULL"
+            },
+            {
+              "description": "Fast.",
+              "value": "PRINT_RASTERIZATION_MODE_ENUM_FAST"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintRasterizationMode",
+      "policyDescription": "Print rasterization mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "printPreviewUseSystemDefaultPrinter",
+                "number": 1
+              }
+            ],
+            "name": "PrintPreviewUseSystemDefaultPrinter"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintPreviewUseSystemDefaultPrinter",
+      "fieldDescriptions": [
+        {
+          "field": "printPreviewUseSystemDefaultPrinter",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Use the system default printer as the default choice in Print Preview.",
+              "value": "true"
+            },
+            {
+              "description": "Use the most recently used printer as the default choice in Print Preview.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintPreviewUseSystemDefaultPrinter",
+      "policyDescription": "System Default Printer."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "PrintPostScriptModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "printPostScriptMode",
+                "number": 1
+              }
+            ],
+            "name": "PrintPostScriptMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "PrintPostScriptModeEnum",
+            "value": [
+              {
+                "name": "PRINT_POST_SCRIPT_MODE_ENUM_DEFAULT",
+                "number": 1
+              },
+              {
+                "name": "PRINT_POST_SCRIPT_MODE_ENUM_TYPE_42",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintPostScriptMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#print_post_script_mode",
+      "fieldDescriptions": [
+        {
+          "field": "printPostScriptMode",
+          "defaultValue": "PRINT_POST_SCRIPT_MODE_ENUM_DEFAULT",
+          "knownValueDescriptions": [
+            {
+              "description": "Default.",
+              "value": "PRINT_POST_SCRIPT_MODE_ENUM_DEFAULT"
+            },
+            {
+              "description": "Type 42.",
+              "value": "PRINT_POST_SCRIPT_MODE_ENUM_TYPE_42"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintPostScriptMode",
+      "policyDescription": "PostScript printer mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "printPdfAsImageAvailability",
+                "number": 1
+              },
+              {
+                "typeName": "NullableLong",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "printRasterizePdfDpi",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "printPdfAsImageDefault",
+                "number": 3
+              }
+            ],
+            "name": "PrintPdfAsImage"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "value",
+                "number": 1
+              }
+            ],
+            "name": "NullableLong"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PrintPdfAsImage",
+      "fieldDescriptions": [
+        {
+          "field": "printPdfAsImageAvailability",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to print PDF documents as images.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to print PDF documents as images.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "printPdfAsImageAvailability"
+            }
+          ],
+          "name": "DPI used to rasterize PDFs when printed as an image.  Set to 0 to use the system default resolution.",
+          "inputConstraint": "The long field should have value greater than or equal to 0.",
+          "field": "printRasterizePdfDpi",
+          "nestedFieldDescriptions": [
+            {
+              "field": "value",
+              "description": "N/A"
+            }
+          ],
+          "description": "DPI used to rasterize PDFs when printed as an image.  Set to 0 to use the system default resolution."
+        },
+        {
+          "defaultValue": false,
+          "field": "printPdfAsImageDefault",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "printPdfAsImageAvailability"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Default to printing PDFs as images when available.",
+              "value": "true"
+            },
+            {
+              "description": "Default to printing PDFs without being rasterized.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Printing",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PrintPdfAsImage",
+      "policyDescription": "Print PDF as image."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ManagedBookmarks",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "managedBookmarks",
+                "number": 1
+              }
+            ],
+            "name": "ManagedBookmarksSetting"
+          },
+          {
+            "field": [
+              {
+                "typeName": "ManagedBookmarkOption",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "bookmarks",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "toplevelName",
+                "number": 2
+              }
+            ],
+            "name": "ManagedBookmarks"
+          },
+          {
+            "field": [
+              {
+                "oneofIndex": 0,
+                "name": "folder",
+                "number": 1,
+                "label": "LABEL_OPTIONAL",
+                "typeName": "ManagedBookmarkFolder",
+                "type": "TYPE_MESSAGE"
+              },
+              {
+                "oneofIndex": 0,
+                "name": "link",
+                "number": 2,
+                "label": "LABEL_OPTIONAL",
+                "typeName": "ManagedBookmarkLink",
+                "type": "TYPE_MESSAGE"
+              }
+            ],
+            "name": "ManagedBookmarkOption",
+            "oneofDecl": [
+              {
+                "name": "value"
+              }
+            ]
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "name",
+                "number": 1
+              },
+              {
+                "typeName": "ManagedBookmarkOption",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "entries",
+                "number": 2
+              }
+            ],
+            "name": "ManagedBookmarkFolder"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "name",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "url",
+                "number": 2
+              }
+            ],
+            "name": "ManagedBookmarkLink"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ManagedBookmarksSetting",
+      "supportUri": "https://support.google.com/chrome/a/answer/10265060?hl=en",
+      "fieldDescriptions": [
+        {
+          "field": "managedBookmarks",
+          "description": "Managed bookmarks setting.",
+          "name": "Managed bookmarks setting.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "bookmarks",
+              "description": "Top level configuration of the bookmark folder.",
+              "name": "Top level configuration of the bookmark folder.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "folder",
+                  "description": "N/A",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "name",
+                      "description": "Name of the current bookmark folder.",
+                      "name": "Name of the current bookmark folder."
+                    },
+                    {
+                      "field": "entries",
+                      "description": "Configuration of child level bookmark folders.",
+                      "name": "Configuration of child level bookmark folders."
+                    }
+                  ]
+                },
+                {
+                  "field": "link",
+                  "description": "N/A",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "name",
+                      "description": "Name of the bookmark.",
+                      "name": "Name of the bookmark."
+                    },
+                    {
+                      "field": "url",
+                      "description": "URL of the bookmark.",
+                      "name": "URL of the bookmark."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "field": "toplevelName",
+              "description": "The name of the folder in which Managed Bookmarks live. Defaults to \"Managed Bookmarks\".",
+              "name": "The name of the folder in which Managed Bookmarks live. Defaults to \"Managed Bookmarks\"."
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ManagedBookmarksSetting",
+      "policyDescription": "Managed bookmarks."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "bookmarkBarEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BookmarkBarEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BookmarkBarEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#bookmark_bar_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "bookmarkBarEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable bookmark bar.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable bookmark bar.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User experience",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BookmarkBarEnabled",
+      "policyDescription": "Bookmark bar."
+    }
+]

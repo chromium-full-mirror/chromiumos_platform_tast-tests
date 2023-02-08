@@ -1,0 +1,5021 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowUserDisplayChanges",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "externalUseNativeResolution",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "externalDisplayWidth",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "externalDisplayHeight",
+                "number": 4
+              },
+              {
+                "typeName": "ExternalDisplayScaleEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "externalDisplayScale",
+                "number": 5
+              },
+              {
+                "typeName": "InternalDisplayScaleEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "internalDisplayScale",
+                "number": 6
+              }
+            ],
+            "name": "DeviceScreenSettings"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ExternalDisplayScaleEnum",
+            "value": [
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_NOT_SET",
+                "number": 1
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_50_PERCENT",
+                "number": 50
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_55_PERCENT",
+                "number": 55
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_60_PERCENT",
+                "number": 60
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_65_PERCENT",
+                "number": 65
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_70_PERCENT",
+                "number": 70
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_75_PERCENT",
+                "number": 75
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_80_PERCENT",
+                "number": 80
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_85_PERCENT",
+                "number": 85
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_90_PERCENT",
+                "number": 90
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_95_PERCENT",
+                "number": 95
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_100_PERCENT",
+                "number": 100
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_105_PERCENT",
+                "number": 105
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_110_PERCENT",
+                "number": 110
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_115_PERCENT",
+                "number": 115
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_120_PERCENT",
+                "number": 120
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_125_PERCENT",
+                "number": 125
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_130_PERCENT",
+                "number": 130
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_135_PERCENT",
+                "number": 135
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_140_PERCENT",
+                "number": 140
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_145_PERCENT",
+                "number": 145
+              },
+              {
+                "name": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_150_PERCENT",
+                "number": 150
+              }
+            ]
+          },
+          {
+            "name": "InternalDisplayScaleEnum",
+            "value": [
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_NOT_SET",
+                "number": 1
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_50_PERCENT",
+                "number": 50
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_55_PERCENT",
+                "number": 55
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_60_PERCENT",
+                "number": 60
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_65_PERCENT",
+                "number": 65
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_70_PERCENT",
+                "number": 70
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_75_PERCENT",
+                "number": 75
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_80_PERCENT",
+                "number": 80
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_85_PERCENT",
+                "number": 85
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_90_PERCENT",
+                "number": 90
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_95_PERCENT",
+                "number": 95
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_100_PERCENT",
+                "number": 100
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_105_PERCENT",
+                "number": 105
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_110_PERCENT",
+                "number": 110
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_115_PERCENT",
+                "number": 115
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_120_PERCENT",
+                "number": 120
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_125_PERCENT",
+                "number": 125
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_130_PERCENT",
+                "number": 130
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_135_PERCENT",
+                "number": 135
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_140_PERCENT",
+                "number": 140
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_145_PERCENT",
+                "number": 145
+              },
+              {
+                "name": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_150_PERCENT",
+                "number": 150
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceScreenSettings",
+      "fieldDescriptions": [
+        {
+          "field": "allowUserDisplayChanges",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to overwrite predefined display settings (recommended).",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow user changes for predefined display settings.",
+              "value": "false"
+            }
+          ],
+          "description": "Allow user changes.",
+          "name": "Allow user changes."
+        },
+        {
+          "fieldDescription": "If use custom resolution is selected, the custom resolution will be applied to all external monitors. If the resolution is not supported, it will revert to the built in resolution.",
+          "knownValueDescriptions": [
+            {
+              "description": "Always use native resolution.",
+              "value": "true"
+            },
+            {
+              "description": "Use custom resolution.",
+              "value": "false"
+            }
+          ],
+          "description": "External resolution. If use custom resolution is selected, the custom resolution will be applied to all external monitors. If the resolution is not supported, it will revert to the built in resolution.",
+          "defaultValue": true,
+          "field": "externalUseNativeResolution",
+          "name": "External resolution."
+        },
+        {
+          "field": "externalDisplayWidth",
+          "defaultValue": 0,
+          "description": "External display width (in pixels).",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "name": "External display width (in pixels)."
+        },
+        {
+          "field": "externalDisplayHeight",
+          "defaultValue": 0,
+          "description": "External display height (in pixels).",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "name": "External display height (in pixels)."
+        },
+        {
+          "field": "externalDisplayScale",
+          "defaultValue": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_NOT_SET",
+          "knownValueDescriptions": [
+            {
+              "description": "Not set.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_NOT_SET"
+            },
+            {
+              "description": "50%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_50_PERCENT"
+            },
+            {
+              "description": "55%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_55_PERCENT"
+            },
+            {
+              "description": "60%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_60_PERCENT"
+            },
+            {
+              "description": "65%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_65_PERCENT"
+            },
+            {
+              "description": "70%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_70_PERCENT"
+            },
+            {
+              "description": "75%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_75_PERCENT"
+            },
+            {
+              "description": "80%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_80_PERCENT"
+            },
+            {
+              "description": "85%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_85_PERCENT"
+            },
+            {
+              "description": "90%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_90_PERCENT"
+            },
+            {
+              "description": "95%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_95_PERCENT"
+            },
+            {
+              "description": "100%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_100_PERCENT"
+            },
+            {
+              "description": "105%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_105_PERCENT"
+            },
+            {
+              "description": "110%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_110_PERCENT"
+            },
+            {
+              "description": "115%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_115_PERCENT"
+            },
+            {
+              "description": "120%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_120_PERCENT"
+            },
+            {
+              "description": "125%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_125_PERCENT"
+            },
+            {
+              "description": "130%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_130_PERCENT"
+            },
+            {
+              "description": "135%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_135_PERCENT"
+            },
+            {
+              "description": "140%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_140_PERCENT"
+            },
+            {
+              "description": "145%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_145_PERCENT"
+            },
+            {
+              "description": "150%.",
+              "value": "EXTERNAL_DISPLAY_SCALE_ENUM_EXTERNAL_SCALE_150_PERCENT"
+            }
+          ],
+          "description": "External display scale (percentage).",
+          "name": "External display scale (percentage)."
+        },
+        {
+          "field": "internalDisplayScale",
+          "defaultValue": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_NOT_SET",
+          "knownValueDescriptions": [
+            {
+              "description": "Not set.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_NOT_SET"
+            },
+            {
+              "description": "50%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_50_PERCENT"
+            },
+            {
+              "description": "55%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_55_PERCENT"
+            },
+            {
+              "description": "60%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_60_PERCENT"
+            },
+            {
+              "description": "65%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_65_PERCENT"
+            },
+            {
+              "description": "70%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_70_PERCENT"
+            },
+            {
+              "description": "75%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_75_PERCENT"
+            },
+            {
+              "description": "80%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_80_PERCENT"
+            },
+            {
+              "description": "85%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_85_PERCENT"
+            },
+            {
+              "description": "90%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_90_PERCENT"
+            },
+            {
+              "description": "95%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_95_PERCENT"
+            },
+            {
+              "description": "100%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_100_PERCENT"
+            },
+            {
+              "description": "105%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_105_PERCENT"
+            },
+            {
+              "description": "110%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_110_PERCENT"
+            },
+            {
+              "description": "115%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_115_PERCENT"
+            },
+            {
+              "description": "120%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_120_PERCENT"
+            },
+            {
+              "description": "125%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_125_PERCENT"
+            },
+            {
+              "description": "130%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_130_PERCENT"
+            },
+            {
+              "description": "135%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_135_PERCENT"
+            },
+            {
+              "description": "140%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_140_PERCENT"
+            },
+            {
+              "description": "145%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_145_PERCENT"
+            },
+            {
+              "description": "150%.",
+              "value": "INTERNAL_DISPLAY_SCALE_ENUM_INTERNAL_SCALE_150_PERCENT"
+            }
+          ],
+          "description": "Internal display scale (percentage).",
+          "name": "Internal display scale (percentage)."
+        }
+      ],
+      "categoryTitle": "Display settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceScreenSettings",
+      "policyDescription": "Screen settings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "loginScreenPowerManagement",
+                "number": 1
+              }
+            ],
+            "name": "PowerManagement"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.PowerManagement",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_power_management",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenPowerManagement",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow device to sleep/shut down when idle on the sign-in screen.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow device to sleep/shut down when idle on the sign-in screen.",
+              "value": "false"
+            }
+          ],
+          "description": "Power management on sign-in screen.",
+          "name": "Power management on sign-in screen."
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.PowerManagement",
+      "policyDescription": "Power management."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "uptimeLimitDuration",
+                "number": 1
+              }
+            ],
+            "name": "ScheduledRebootDuration"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.ScheduledRebootDuration",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#uptime_limit",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Number of days before reboot; leave empty for unset.",
+          "name": "Uptime limit.",
+          "inputConstraint": "Duration policy field value is in the range [1, 365] days. The input duration policy field value should be converted to seconds. Multiply the desired value in days by 86400 and append an 's'.",
+          "field": "uptimeLimitDuration",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Uptime limit. Number of days before reboot; leave empty for unset."
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.ScheduledRebootDuration",
+      "policyDescription": "Reboot after uptime limit."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "rebootOnShutdown",
+                "number": 1
+              }
+            ],
+            "name": "RebootOnShutdown"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.RebootOnShutdown",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#reboot_on_shutdown",
+      "fieldDescriptions": [
+        {
+          "field": "rebootOnShutdown",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Only allow users to turn off the device using the physical power button.",
+              "value": "true"
+            },
+            {
+              "description": "Allow users to turn off the device using either the shut down icon or the physical power button.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.RebootOnShutdown",
+      "policyDescription": "Allow shutdown."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "powerPeakShiftEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "powerPeakShiftBatteryThreshold",
+                "number": 2
+              },
+              {
+                "typeName": "DailyPeakShifts",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "powerPeakShiftTimesOfDay",
+                "number": 3
+              }
+            ],
+            "name": "PowerPeakShift"
+          },
+          {
+            "field": [
+              {
+                "typeName": "DailyPeakShiftsEntry",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "dailyPeakShifts",
+                "number": 1
+              }
+            ],
+            "name": "DailyPeakShifts"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "key",
+                "number": 1
+              },
+              {
+                "typeName": "DailyPeakShift",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "value",
+                "number": 2
+              }
+            ],
+            "name": "DailyPeakShiftsEntry"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "startTime",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "endTime",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "chargeTime",
+                "number": 3
+              }
+            ],
+            "name": "DailyPeakShift"
+          }
+        ]
+      },
+      "policyDescription": "Peak shift power management.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.PowerPeakShift",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#PeakShift",
+      "fieldDescriptions": [
+        {
+          "field": "powerPeakShiftEnabled",
+          "knownValueDescriptions": [
+            {
+              "value": "true"
+            },
+            {
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "powerPeakShiftBatteryThreshold",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "powerPeakShiftEnabled"
+            }
+          ],
+          "description": "N/A",
+          "inputConstraint": "The long field should have value greater than or equal to 15, and should have value less than or equal to 100."
+        },
+        {
+          "field": "powerPeakShiftTimesOfDay",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "powerPeakShiftEnabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "dailyPeakShifts",
+              "description": "N/A",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "key",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "Monday.",
+                      "value": "MONDAY"
+                    },
+                    {
+                      "description": "Tuesday.",
+                      "value": "TUESDAY"
+                    },
+                    {
+                      "description": "Wednesday.",
+                      "value": "WEDNESDAY"
+                    },
+                    {
+                      "description": "Thursday.",
+                      "value": "THURSDAY"
+                    },
+                    {
+                      "description": "Friday.",
+                      "value": "FRIDAY"
+                    },
+                    {
+                      "description": "Saturday.",
+                      "value": "SATURDAY"
+                    },
+                    {
+                      "description": "Sunday.",
+                      "value": "SUNDAY"
+                    }
+                  ],
+                  "description": "N/A"
+                },
+                {
+                  "field": "value",
+                  "description": "N/A",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "startTime",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "12:00 AM.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "12:15 AM.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "12:30 AM.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "12:45 AM.",
+                          "value": "45"
+                        },
+                        {
+                          "description": "1:00 AM.",
+                          "value": "60"
+                        },
+                        {
+                          "description": "1:15 AM.",
+                          "value": "75"
+                        },
+                        {
+                          "description": "1:30 AM.",
+                          "value": "90"
+                        },
+                        {
+                          "description": "1:45 AM.",
+                          "value": "105"
+                        },
+                        {
+                          "description": "2:00 AM.",
+                          "value": "120"
+                        },
+                        {
+                          "description": "2:15 AM.",
+                          "value": "135"
+                        },
+                        {
+                          "description": "2:30 AM.",
+                          "value": "150"
+                        },
+                        {
+                          "description": "2:45 AM.",
+                          "value": "165"
+                        },
+                        {
+                          "description": "3:00 AM.",
+                          "value": "180"
+                        },
+                        {
+                          "description": "3:15 AM.",
+                          "value": "195"
+                        },
+                        {
+                          "description": "3:30 AM.",
+                          "value": "210"
+                        },
+                        {
+                          "description": "3:45 AM.",
+                          "value": "225"
+                        },
+                        {
+                          "description": "4:00 AM.",
+                          "value": "240"
+                        },
+                        {
+                          "description": "4:15 AM.",
+                          "value": "255"
+                        },
+                        {
+                          "description": "4:30 AM.",
+                          "value": "270"
+                        },
+                        {
+                          "description": "4:45 AM.",
+                          "value": "285"
+                        },
+                        {
+                          "description": "5:00 AM.",
+                          "value": "300"
+                        },
+                        {
+                          "description": "5:15 AM.",
+                          "value": "315"
+                        },
+                        {
+                          "description": "5:30 AM.",
+                          "value": "330"
+                        },
+                        {
+                          "description": "5:45 AM.",
+                          "value": "345"
+                        },
+                        {
+                          "description": "6:00 AM.",
+                          "value": "360"
+                        },
+                        {
+                          "description": "6:15 AM.",
+                          "value": "375"
+                        },
+                        {
+                          "description": "6:30 AM.",
+                          "value": "390"
+                        },
+                        {
+                          "description": "6:45 AM.",
+                          "value": "405"
+                        },
+                        {
+                          "description": "7:00 AM.",
+                          "value": "420"
+                        },
+                        {
+                          "description": "7:15 AM.",
+                          "value": "435"
+                        },
+                        {
+                          "description": "7:30 AM.",
+                          "value": "450"
+                        },
+                        {
+                          "description": "7:45 AM.",
+                          "value": "465"
+                        },
+                        {
+                          "description": "8:00 AM.",
+                          "value": "480"
+                        },
+                        {
+                          "description": "8:15 AM.",
+                          "value": "495"
+                        },
+                        {
+                          "description": "8:30 AM.",
+                          "value": "510"
+                        },
+                        {
+                          "description": "8:45 AM.",
+                          "value": "525"
+                        },
+                        {
+                          "description": "9:00 AM.",
+                          "value": "540"
+                        },
+                        {
+                          "description": "9:15 AM.",
+                          "value": "555"
+                        },
+                        {
+                          "description": "9:30 AM.",
+                          "value": "570"
+                        },
+                        {
+                          "description": "9:45 AM.",
+                          "value": "585"
+                        },
+                        {
+                          "description": "10:00 AM.",
+                          "value": "600"
+                        },
+                        {
+                          "description": "10:15 AM.",
+                          "value": "615"
+                        },
+                        {
+                          "description": "10:30 AM.",
+                          "value": "630"
+                        },
+                        {
+                          "description": "10:45 AM.",
+                          "value": "645"
+                        },
+                        {
+                          "description": "11:00 AM.",
+                          "value": "660"
+                        },
+                        {
+                          "description": "11:15 AM.",
+                          "value": "675"
+                        },
+                        {
+                          "description": "11:30 AM.",
+                          "value": "690"
+                        },
+                        {
+                          "description": "11:45 AM.",
+                          "value": "705"
+                        },
+                        {
+                          "description": "12:00 PM.",
+                          "value": "720"
+                        },
+                        {
+                          "description": "12:15 PM.",
+                          "value": "735"
+                        },
+                        {
+                          "description": "12:30 PM.",
+                          "value": "750"
+                        },
+                        {
+                          "description": "12:45 PM.",
+                          "value": "765"
+                        },
+                        {
+                          "description": "1:00 PM.",
+                          "value": "780"
+                        },
+                        {
+                          "description": "1:15 PM.",
+                          "value": "795"
+                        },
+                        {
+                          "description": "1:30 PM.",
+                          "value": "810"
+                        },
+                        {
+                          "description": "1:45 PM.",
+                          "value": "825"
+                        },
+                        {
+                          "description": "2:00 PM.",
+                          "value": "840"
+                        },
+                        {
+                          "description": "2:15 PM.",
+                          "value": "855"
+                        },
+                        {
+                          "description": "2:30 PM.",
+                          "value": "870"
+                        },
+                        {
+                          "description": "2:45 PM.",
+                          "value": "885"
+                        },
+                        {
+                          "description": "3:00 PM.",
+                          "value": "900"
+                        },
+                        {
+                          "description": "3:15 PM.",
+                          "value": "915"
+                        },
+                        {
+                          "description": "3:30 PM.",
+                          "value": "930"
+                        },
+                        {
+                          "description": "3:45 PM.",
+                          "value": "945"
+                        },
+                        {
+                          "description": "4:00 PM.",
+                          "value": "960"
+                        },
+                        {
+                          "description": "4:15 PM.",
+                          "value": "975"
+                        },
+                        {
+                          "description": "4:30 PM.",
+                          "value": "990"
+                        },
+                        {
+                          "description": "4:45 PM.",
+                          "value": "1005"
+                        },
+                        {
+                          "description": "5:00 PM.",
+                          "value": "1020"
+                        },
+                        {
+                          "description": "5:15 PM.",
+                          "value": "1035"
+                        },
+                        {
+                          "description": "5:30 PM.",
+                          "value": "1050"
+                        },
+                        {
+                          "description": "5:45 PM.",
+                          "value": "1065"
+                        },
+                        {
+                          "description": "6:00 PM.",
+                          "value": "1080"
+                        },
+                        {
+                          "description": "6:15 PM.",
+                          "value": "1095"
+                        },
+                        {
+                          "description": "6:30 PM.",
+                          "value": "1110"
+                        },
+                        {
+                          "description": "6:45 PM.",
+                          "value": "1125"
+                        },
+                        {
+                          "description": "7:00 PM.",
+                          "value": "1140"
+                        },
+                        {
+                          "description": "7:15 PM.",
+                          "value": "1155"
+                        },
+                        {
+                          "description": "7:30 PM.",
+                          "value": "1170"
+                        },
+                        {
+                          "description": "7:45 PM.",
+                          "value": "1185"
+                        },
+                        {
+                          "description": "8:00 PM.",
+                          "value": "1200"
+                        },
+                        {
+                          "description": "8:15 PM.",
+                          "value": "1215"
+                        },
+                        {
+                          "description": "8:30 PM.",
+                          "value": "1230"
+                        },
+                        {
+                          "description": "8:45 PM.",
+                          "value": "1245"
+                        },
+                        {
+                          "description": "9:00 PM.",
+                          "value": "1260"
+                        },
+                        {
+                          "description": "9:15 PM.",
+                          "value": "1275"
+                        },
+                        {
+                          "description": "9:30 PM.",
+                          "value": "1290"
+                        },
+                        {
+                          "description": "9:45 PM.",
+                          "value": "1305"
+                        },
+                        {
+                          "description": "10:00 PM.",
+                          "value": "1320"
+                        },
+                        {
+                          "description": "10:15 PM.",
+                          "value": "1335"
+                        },
+                        {
+                          "description": "10:30 PM.",
+                          "value": "1350"
+                        },
+                        {
+                          "description": "10:45 PM.",
+                          "value": "1365"
+                        },
+                        {
+                          "description": "11:00 PM.",
+                          "value": "1380"
+                        },
+                        {
+                          "description": "11:15 PM.",
+                          "value": "1395"
+                        },
+                        {
+                          "description": "11:30 PM.",
+                          "value": "1410"
+                        },
+                        {
+                          "description": "11:45 PM.",
+                          "value": "1425"
+                        }
+                      ],
+                      "description": "N/A"
+                    },
+                    {
+                      "field": "endTime",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "12:00 AM.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "12:15 AM.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "12:30 AM.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "12:45 AM.",
+                          "value": "45"
+                        },
+                        {
+                          "description": "1:00 AM.",
+                          "value": "60"
+                        },
+                        {
+                          "description": "1:15 AM.",
+                          "value": "75"
+                        },
+                        {
+                          "description": "1:30 AM.",
+                          "value": "90"
+                        },
+                        {
+                          "description": "1:45 AM.",
+                          "value": "105"
+                        },
+                        {
+                          "description": "2:00 AM.",
+                          "value": "120"
+                        },
+                        {
+                          "description": "2:15 AM.",
+                          "value": "135"
+                        },
+                        {
+                          "description": "2:30 AM.",
+                          "value": "150"
+                        },
+                        {
+                          "description": "2:45 AM.",
+                          "value": "165"
+                        },
+                        {
+                          "description": "3:00 AM.",
+                          "value": "180"
+                        },
+                        {
+                          "description": "3:15 AM.",
+                          "value": "195"
+                        },
+                        {
+                          "description": "3:30 AM.",
+                          "value": "210"
+                        },
+                        {
+                          "description": "3:45 AM.",
+                          "value": "225"
+                        },
+                        {
+                          "description": "4:00 AM.",
+                          "value": "240"
+                        },
+                        {
+                          "description": "4:15 AM.",
+                          "value": "255"
+                        },
+                        {
+                          "description": "4:30 AM.",
+                          "value": "270"
+                        },
+                        {
+                          "description": "4:45 AM.",
+                          "value": "285"
+                        },
+                        {
+                          "description": "5:00 AM.",
+                          "value": "300"
+                        },
+                        {
+                          "description": "5:15 AM.",
+                          "value": "315"
+                        },
+                        {
+                          "description": "5:30 AM.",
+                          "value": "330"
+                        },
+                        {
+                          "description": "5:45 AM.",
+                          "value": "345"
+                        },
+                        {
+                          "description": "6:00 AM.",
+                          "value": "360"
+                        },
+                        {
+                          "description": "6:15 AM.",
+                          "value": "375"
+                        },
+                        {
+                          "description": "6:30 AM.",
+                          "value": "390"
+                        },
+                        {
+                          "description": "6:45 AM.",
+                          "value": "405"
+                        },
+                        {
+                          "description": "7:00 AM.",
+                          "value": "420"
+                        },
+                        {
+                          "description": "7:15 AM.",
+                          "value": "435"
+                        },
+                        {
+                          "description": "7:30 AM.",
+                          "value": "450"
+                        },
+                        {
+                          "description": "7:45 AM.",
+                          "value": "465"
+                        },
+                        {
+                          "description": "8:00 AM.",
+                          "value": "480"
+                        },
+                        {
+                          "description": "8:15 AM.",
+                          "value": "495"
+                        },
+                        {
+                          "description": "8:30 AM.",
+                          "value": "510"
+                        },
+                        {
+                          "description": "8:45 AM.",
+                          "value": "525"
+                        },
+                        {
+                          "description": "9:00 AM.",
+                          "value": "540"
+                        },
+                        {
+                          "description": "9:15 AM.",
+                          "value": "555"
+                        },
+                        {
+                          "description": "9:30 AM.",
+                          "value": "570"
+                        },
+                        {
+                          "description": "9:45 AM.",
+                          "value": "585"
+                        },
+                        {
+                          "description": "10:00 AM.",
+                          "value": "600"
+                        },
+                        {
+                          "description": "10:15 AM.",
+                          "value": "615"
+                        },
+                        {
+                          "description": "10:30 AM.",
+                          "value": "630"
+                        },
+                        {
+                          "description": "10:45 AM.",
+                          "value": "645"
+                        },
+                        {
+                          "description": "11:00 AM.",
+                          "value": "660"
+                        },
+                        {
+                          "description": "11:15 AM.",
+                          "value": "675"
+                        },
+                        {
+                          "description": "11:30 AM.",
+                          "value": "690"
+                        },
+                        {
+                          "description": "11:45 AM.",
+                          "value": "705"
+                        },
+                        {
+                          "description": "12:00 PM.",
+                          "value": "720"
+                        },
+                        {
+                          "description": "12:15 PM.",
+                          "value": "735"
+                        },
+                        {
+                          "description": "12:30 PM.",
+                          "value": "750"
+                        },
+                        {
+                          "description": "12:45 PM.",
+                          "value": "765"
+                        },
+                        {
+                          "description": "1:00 PM.",
+                          "value": "780"
+                        },
+                        {
+                          "description": "1:15 PM.",
+                          "value": "795"
+                        },
+                        {
+                          "description": "1:30 PM.",
+                          "value": "810"
+                        },
+                        {
+                          "description": "1:45 PM.",
+                          "value": "825"
+                        },
+                        {
+                          "description": "2:00 PM.",
+                          "value": "840"
+                        },
+                        {
+                          "description": "2:15 PM.",
+                          "value": "855"
+                        },
+                        {
+                          "description": "2:30 PM.",
+                          "value": "870"
+                        },
+                        {
+                          "description": "2:45 PM.",
+                          "value": "885"
+                        },
+                        {
+                          "description": "3:00 PM.",
+                          "value": "900"
+                        },
+                        {
+                          "description": "3:15 PM.",
+                          "value": "915"
+                        },
+                        {
+                          "description": "3:30 PM.",
+                          "value": "930"
+                        },
+                        {
+                          "description": "3:45 PM.",
+                          "value": "945"
+                        },
+                        {
+                          "description": "4:00 PM.",
+                          "value": "960"
+                        },
+                        {
+                          "description": "4:15 PM.",
+                          "value": "975"
+                        },
+                        {
+                          "description": "4:30 PM.",
+                          "value": "990"
+                        },
+                        {
+                          "description": "4:45 PM.",
+                          "value": "1005"
+                        },
+                        {
+                          "description": "5:00 PM.",
+                          "value": "1020"
+                        },
+                        {
+                          "description": "5:15 PM.",
+                          "value": "1035"
+                        },
+                        {
+                          "description": "5:30 PM.",
+                          "value": "1050"
+                        },
+                        {
+                          "description": "5:45 PM.",
+                          "value": "1065"
+                        },
+                        {
+                          "description": "6:00 PM.",
+                          "value": "1080"
+                        },
+                        {
+                          "description": "6:15 PM.",
+                          "value": "1095"
+                        },
+                        {
+                          "description": "6:30 PM.",
+                          "value": "1110"
+                        },
+                        {
+                          "description": "6:45 PM.",
+                          "value": "1125"
+                        },
+                        {
+                          "description": "7:00 PM.",
+                          "value": "1140"
+                        },
+                        {
+                          "description": "7:15 PM.",
+                          "value": "1155"
+                        },
+                        {
+                          "description": "7:30 PM.",
+                          "value": "1170"
+                        },
+                        {
+                          "description": "7:45 PM.",
+                          "value": "1185"
+                        },
+                        {
+                          "description": "8:00 PM.",
+                          "value": "1200"
+                        },
+                        {
+                          "description": "8:15 PM.",
+                          "value": "1215"
+                        },
+                        {
+                          "description": "8:30 PM.",
+                          "value": "1230"
+                        },
+                        {
+                          "description": "8:45 PM.",
+                          "value": "1245"
+                        },
+                        {
+                          "description": "9:00 PM.",
+                          "value": "1260"
+                        },
+                        {
+                          "description": "9:15 PM.",
+                          "value": "1275"
+                        },
+                        {
+                          "description": "9:30 PM.",
+                          "value": "1290"
+                        },
+                        {
+                          "description": "9:45 PM.",
+                          "value": "1305"
+                        },
+                        {
+                          "description": "10:00 PM.",
+                          "value": "1320"
+                        },
+                        {
+                          "description": "10:15 PM.",
+                          "value": "1335"
+                        },
+                        {
+                          "description": "10:30 PM.",
+                          "value": "1350"
+                        },
+                        {
+                          "description": "10:45 PM.",
+                          "value": "1365"
+                        },
+                        {
+                          "description": "11:00 PM.",
+                          "value": "1380"
+                        },
+                        {
+                          "description": "11:15 PM.",
+                          "value": "1395"
+                        },
+                        {
+                          "description": "11:30 PM.",
+                          "value": "1410"
+                        },
+                        {
+                          "description": "11:45 PM.",
+                          "value": "1425"
+                        }
+                      ],
+                      "description": "N/A"
+                    },
+                    {
+                      "field": "chargeTime",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "12:00 AM.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "12:15 AM.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "12:30 AM.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "12:45 AM.",
+                          "value": "45"
+                        },
+                        {
+                          "description": "1:00 AM.",
+                          "value": "60"
+                        },
+                        {
+                          "description": "1:15 AM.",
+                          "value": "75"
+                        },
+                        {
+                          "description": "1:30 AM.",
+                          "value": "90"
+                        },
+                        {
+                          "description": "1:45 AM.",
+                          "value": "105"
+                        },
+                        {
+                          "description": "2:00 AM.",
+                          "value": "120"
+                        },
+                        {
+                          "description": "2:15 AM.",
+                          "value": "135"
+                        },
+                        {
+                          "description": "2:30 AM.",
+                          "value": "150"
+                        },
+                        {
+                          "description": "2:45 AM.",
+                          "value": "165"
+                        },
+                        {
+                          "description": "3:00 AM.",
+                          "value": "180"
+                        },
+                        {
+                          "description": "3:15 AM.",
+                          "value": "195"
+                        },
+                        {
+                          "description": "3:30 AM.",
+                          "value": "210"
+                        },
+                        {
+                          "description": "3:45 AM.",
+                          "value": "225"
+                        },
+                        {
+                          "description": "4:00 AM.",
+                          "value": "240"
+                        },
+                        {
+                          "description": "4:15 AM.",
+                          "value": "255"
+                        },
+                        {
+                          "description": "4:30 AM.",
+                          "value": "270"
+                        },
+                        {
+                          "description": "4:45 AM.",
+                          "value": "285"
+                        },
+                        {
+                          "description": "5:00 AM.",
+                          "value": "300"
+                        },
+                        {
+                          "description": "5:15 AM.",
+                          "value": "315"
+                        },
+                        {
+                          "description": "5:30 AM.",
+                          "value": "330"
+                        },
+                        {
+                          "description": "5:45 AM.",
+                          "value": "345"
+                        },
+                        {
+                          "description": "6:00 AM.",
+                          "value": "360"
+                        },
+                        {
+                          "description": "6:15 AM.",
+                          "value": "375"
+                        },
+                        {
+                          "description": "6:30 AM.",
+                          "value": "390"
+                        },
+                        {
+                          "description": "6:45 AM.",
+                          "value": "405"
+                        },
+                        {
+                          "description": "7:00 AM.",
+                          "value": "420"
+                        },
+                        {
+                          "description": "7:15 AM.",
+                          "value": "435"
+                        },
+                        {
+                          "description": "7:30 AM.",
+                          "value": "450"
+                        },
+                        {
+                          "description": "7:45 AM.",
+                          "value": "465"
+                        },
+                        {
+                          "description": "8:00 AM.",
+                          "value": "480"
+                        },
+                        {
+                          "description": "8:15 AM.",
+                          "value": "495"
+                        },
+                        {
+                          "description": "8:30 AM.",
+                          "value": "510"
+                        },
+                        {
+                          "description": "8:45 AM.",
+                          "value": "525"
+                        },
+                        {
+                          "description": "9:00 AM.",
+                          "value": "540"
+                        },
+                        {
+                          "description": "9:15 AM.",
+                          "value": "555"
+                        },
+                        {
+                          "description": "9:30 AM.",
+                          "value": "570"
+                        },
+                        {
+                          "description": "9:45 AM.",
+                          "value": "585"
+                        },
+                        {
+                          "description": "10:00 AM.",
+                          "value": "600"
+                        },
+                        {
+                          "description": "10:15 AM.",
+                          "value": "615"
+                        },
+                        {
+                          "description": "10:30 AM.",
+                          "value": "630"
+                        },
+                        {
+                          "description": "10:45 AM.",
+                          "value": "645"
+                        },
+                        {
+                          "description": "11:00 AM.",
+                          "value": "660"
+                        },
+                        {
+                          "description": "11:15 AM.",
+                          "value": "675"
+                        },
+                        {
+                          "description": "11:30 AM.",
+                          "value": "690"
+                        },
+                        {
+                          "description": "11:45 AM.",
+                          "value": "705"
+                        },
+                        {
+                          "description": "12:00 PM.",
+                          "value": "720"
+                        },
+                        {
+                          "description": "12:15 PM.",
+                          "value": "735"
+                        },
+                        {
+                          "description": "12:30 PM.",
+                          "value": "750"
+                        },
+                        {
+                          "description": "12:45 PM.",
+                          "value": "765"
+                        },
+                        {
+                          "description": "1:00 PM.",
+                          "value": "780"
+                        },
+                        {
+                          "description": "1:15 PM.",
+                          "value": "795"
+                        },
+                        {
+                          "description": "1:30 PM.",
+                          "value": "810"
+                        },
+                        {
+                          "description": "1:45 PM.",
+                          "value": "825"
+                        },
+                        {
+                          "description": "2:00 PM.",
+                          "value": "840"
+                        },
+                        {
+                          "description": "2:15 PM.",
+                          "value": "855"
+                        },
+                        {
+                          "description": "2:30 PM.",
+                          "value": "870"
+                        },
+                        {
+                          "description": "2:45 PM.",
+                          "value": "885"
+                        },
+                        {
+                          "description": "3:00 PM.",
+                          "value": "900"
+                        },
+                        {
+                          "description": "3:15 PM.",
+                          "value": "915"
+                        },
+                        {
+                          "description": "3:30 PM.",
+                          "value": "930"
+                        },
+                        {
+                          "description": "3:45 PM.",
+                          "value": "945"
+                        },
+                        {
+                          "description": "4:00 PM.",
+                          "value": "960"
+                        },
+                        {
+                          "description": "4:15 PM.",
+                          "value": "975"
+                        },
+                        {
+                          "description": "4:30 PM.",
+                          "value": "990"
+                        },
+                        {
+                          "description": "4:45 PM.",
+                          "value": "1005"
+                        },
+                        {
+                          "description": "5:00 PM.",
+                          "value": "1020"
+                        },
+                        {
+                          "description": "5:15 PM.",
+                          "value": "1035"
+                        },
+                        {
+                          "description": "5:30 PM.",
+                          "value": "1050"
+                        },
+                        {
+                          "description": "5:45 PM.",
+                          "value": "1065"
+                        },
+                        {
+                          "description": "6:00 PM.",
+                          "value": "1080"
+                        },
+                        {
+                          "description": "6:15 PM.",
+                          "value": "1095"
+                        },
+                        {
+                          "description": "6:30 PM.",
+                          "value": "1110"
+                        },
+                        {
+                          "description": "6:45 PM.",
+                          "value": "1125"
+                        },
+                        {
+                          "description": "7:00 PM.",
+                          "value": "1140"
+                        },
+                        {
+                          "description": "7:15 PM.",
+                          "value": "1155"
+                        },
+                        {
+                          "description": "7:30 PM.",
+                          "value": "1170"
+                        },
+                        {
+                          "description": "7:45 PM.",
+                          "value": "1185"
+                        },
+                        {
+                          "description": "8:00 PM.",
+                          "value": "1200"
+                        },
+                        {
+                          "description": "8:15 PM.",
+                          "value": "1215"
+                        },
+                        {
+                          "description": "8:30 PM.",
+                          "value": "1230"
+                        },
+                        {
+                          "description": "8:45 PM.",
+                          "value": "1245"
+                        },
+                        {
+                          "description": "9:00 PM.",
+                          "value": "1260"
+                        },
+                        {
+                          "description": "9:15 PM.",
+                          "value": "1275"
+                        },
+                        {
+                          "description": "9:30 PM.",
+                          "value": "1290"
+                        },
+                        {
+                          "description": "9:45 PM.",
+                          "value": "1305"
+                        },
+                        {
+                          "description": "10:00 PM.",
+                          "value": "1320"
+                        },
+                        {
+                          "description": "10:15 PM.",
+                          "value": "1335"
+                        },
+                        {
+                          "description": "10:30 PM.",
+                          "value": "1350"
+                        },
+                        {
+                          "description": "10:45 PM.",
+                          "value": "1365"
+                        },
+                        {
+                          "description": "11:00 PM.",
+                          "value": "1380"
+                        },
+                        {
+                          "description": "11:15 PM.",
+                          "value": "1395"
+                        },
+                        {
+                          "description": "11:30 PM.",
+                          "value": "1410"
+                        },
+                        {
+                          "description": "11:45 PM.",
+                          "value": "1425"
+                        }
+                      ],
+                      "description": "N/A"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.PowerPeakShift",
+      "accessRestrictions": [
+        "This policy only affects device types: Dell Latitude 5400 Chromebook Enterprise, Dell Latitude 5300 2-in-1 Chromebook Enterprise, Dell Latitude 7410 Chromebook Enterprise, Dell Latitude 7410 2-in-1 Chromebook Enterprise."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DeviceBatteryChargeModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "batteryChargeMode",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "customBatteryChargeStart",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "customBatteryChargeStop",
+                "number": 3
+              }
+            ],
+            "name": "DeviceBatteryCharge"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DeviceBatteryChargeModeEnum",
+            "value": [
+              {
+                "name": "DEVICE_BATTERY_CHARGE_MODE_ENUM_STANDARD",
+                "number": 1
+              },
+              {
+                "name": "DEVICE_BATTERY_CHARGE_MODE_ENUM_ADAPTIVE",
+                "number": 4
+              },
+              {
+                "name": "DEVICE_BATTERY_CHARGE_MODE_ENUM_EXPRESS_CHARGE",
+                "number": 2
+              },
+              {
+                "name": "DEVICE_BATTERY_CHARGE_MODE_ENUM_PRIMARILY_AC_USE",
+                "number": 3
+              },
+              {
+                "name": "DEVICE_BATTERY_CHARGE_MODE_ENUM_CUSTOM",
+                "number": 5
+              }
+            ]
+          }
+        ]
+      },
+      "policyDescription": "Primary battery charge configuration.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceBatteryCharge",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#PrimaryBatteryChargeConfig",
+      "fieldDescriptions": [
+        {
+          "field": "batteryChargeMode",
+          "defaultValue": "DEVICE_BATTERY_CHARGE_MODE_ENUM_ADAPTIVE",
+          "knownValueDescriptions": [
+            {
+              "description": "Standard.",
+              "value": "DEVICE_BATTERY_CHARGE_MODE_ENUM_STANDARD"
+            },
+            {
+              "description": "Adaptive.",
+              "value": "DEVICE_BATTERY_CHARGE_MODE_ENUM_ADAPTIVE"
+            },
+            {
+              "description": "Express Charge.",
+              "value": "DEVICE_BATTERY_CHARGE_MODE_ENUM_EXPRESS_CHARGE"
+            },
+            {
+              "description": "Primarily AC.",
+              "value": "DEVICE_BATTERY_CHARGE_MODE_ENUM_PRIMARILY_AC_USE"
+            },
+            {
+              "description": "Custom.",
+              "value": "DEVICE_BATTERY_CHARGE_MODE_ENUM_CUSTOM"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "DEVICE_BATTERY_CHARGE_MODE_ENUM_CUSTOM",
+              "sourceField": "batteryChargeMode"
+            }
+          ],
+          "description": "min 50; max 95. Start charging when the battery drop below (% available charge).",
+          "fieldDescription": "Start charging when the battery drop below (% available charge).",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "field": "customBatteryChargeStart",
+          "name": "min 50; max 95."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "DEVICE_BATTERY_CHARGE_MODE_ENUM_CUSTOM",
+              "sourceField": "batteryChargeMode"
+            }
+          ],
+          "description": "min 55; max 100. Stop charging when the battery goes above (% available charge).",
+          "fieldDescription": "Stop charging when the battery goes above (% available charge).",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "field": "customBatteryChargeStop",
+          "name": "min 55; max 100."
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceBatteryCharge",
+      "accessRestrictions": [
+        "This policy only affects device types: Dell Latitude 5400 Chromebook Enterprise, Dell Latitude 5300 2-in-1 Chromebook Enterprise, Dell Latitude 7410 Chromebook Enterprise, Dell Latitude 7410 2-in-1 Chromebook Enterprise."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "advancedBatteryChargeModeEnabled",
+                "number": 1
+              },
+              {
+                "typeName": "AdvancedBatteryChargeModeConfig",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "advancedBatteryChargeTimesOfDay",
+                "number": 2
+              }
+            ],
+            "name": "AdvancedBatteryChargeMode"
+          },
+          {
+            "field": [
+              {
+                "typeName": "DailyChargePeriodsEntry",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "dailyChargePeriods",
+                "number": 1
+              }
+            ],
+            "name": "AdvancedBatteryChargeModeConfig"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "key",
+                "number": 1
+              },
+              {
+                "typeName": "DailyChargePeriod",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "value",
+                "number": 2
+              }
+            ],
+            "name": "DailyChargePeriodsEntry"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "startTime",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "endTime",
+                "number": 2
+              }
+            ],
+            "name": "DailyChargePeriod"
+          }
+        ]
+      },
+      "policyDescription": "Advanced Charge battery mode.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.AdvancedBatteryChargeMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#EnableAdvancedBatteryCharge",
+      "fieldDescriptions": [
+        {
+          "field": "advancedBatteryChargeModeEnabled",
+          "knownValueDescriptions": [
+            {
+              "value": "true"
+            },
+            {
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "advancedBatteryChargeTimesOfDay",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "advancedBatteryChargeModeEnabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "dailyChargePeriods",
+              "description": "N/A",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "key",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "Monday.",
+                      "value": "MONDAY"
+                    },
+                    {
+                      "description": "Tuesday.",
+                      "value": "TUESDAY"
+                    },
+                    {
+                      "description": "Wednesday.",
+                      "value": "WEDNESDAY"
+                    },
+                    {
+                      "description": "Thursday.",
+                      "value": "THURSDAY"
+                    },
+                    {
+                      "description": "Friday.",
+                      "value": "FRIDAY"
+                    },
+                    {
+                      "description": "Saturday.",
+                      "value": "SATURDAY"
+                    },
+                    {
+                      "description": "Sunday.",
+                      "value": "SUNDAY"
+                    }
+                  ],
+                  "description": "N/A"
+                },
+                {
+                  "field": "value",
+                  "description": "N/A",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "startTime",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "12:00 AM.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "12:15 AM.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "12:30 AM.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "12:45 AM.",
+                          "value": "45"
+                        },
+                        {
+                          "description": "1:00 AM.",
+                          "value": "60"
+                        },
+                        {
+                          "description": "1:15 AM.",
+                          "value": "75"
+                        },
+                        {
+                          "description": "1:30 AM.",
+                          "value": "90"
+                        },
+                        {
+                          "description": "1:45 AM.",
+                          "value": "105"
+                        },
+                        {
+                          "description": "2:00 AM.",
+                          "value": "120"
+                        },
+                        {
+                          "description": "2:15 AM.",
+                          "value": "135"
+                        },
+                        {
+                          "description": "2:30 AM.",
+                          "value": "150"
+                        },
+                        {
+                          "description": "2:45 AM.",
+                          "value": "165"
+                        },
+                        {
+                          "description": "3:00 AM.",
+                          "value": "180"
+                        },
+                        {
+                          "description": "3:15 AM.",
+                          "value": "195"
+                        },
+                        {
+                          "description": "3:30 AM.",
+                          "value": "210"
+                        },
+                        {
+                          "description": "3:45 AM.",
+                          "value": "225"
+                        },
+                        {
+                          "description": "4:00 AM.",
+                          "value": "240"
+                        },
+                        {
+                          "description": "4:15 AM.",
+                          "value": "255"
+                        },
+                        {
+                          "description": "4:30 AM.",
+                          "value": "270"
+                        },
+                        {
+                          "description": "4:45 AM.",
+                          "value": "285"
+                        },
+                        {
+                          "description": "5:00 AM.",
+                          "value": "300"
+                        },
+                        {
+                          "description": "5:15 AM.",
+                          "value": "315"
+                        },
+                        {
+                          "description": "5:30 AM.",
+                          "value": "330"
+                        },
+                        {
+                          "description": "5:45 AM.",
+                          "value": "345"
+                        },
+                        {
+                          "description": "6:00 AM.",
+                          "value": "360"
+                        },
+                        {
+                          "description": "6:15 AM.",
+                          "value": "375"
+                        },
+                        {
+                          "description": "6:30 AM.",
+                          "value": "390"
+                        },
+                        {
+                          "description": "6:45 AM.",
+                          "value": "405"
+                        },
+                        {
+                          "description": "7:00 AM.",
+                          "value": "420"
+                        },
+                        {
+                          "description": "7:15 AM.",
+                          "value": "435"
+                        },
+                        {
+                          "description": "7:30 AM.",
+                          "value": "450"
+                        },
+                        {
+                          "description": "7:45 AM.",
+                          "value": "465"
+                        },
+                        {
+                          "description": "8:00 AM.",
+                          "value": "480"
+                        },
+                        {
+                          "description": "8:15 AM.",
+                          "value": "495"
+                        },
+                        {
+                          "description": "8:30 AM.",
+                          "value": "510"
+                        },
+                        {
+                          "description": "8:45 AM.",
+                          "value": "525"
+                        },
+                        {
+                          "description": "9:00 AM.",
+                          "value": "540"
+                        },
+                        {
+                          "description": "9:15 AM.",
+                          "value": "555"
+                        },
+                        {
+                          "description": "9:30 AM.",
+                          "value": "570"
+                        },
+                        {
+                          "description": "9:45 AM.",
+                          "value": "585"
+                        },
+                        {
+                          "description": "10:00 AM.",
+                          "value": "600"
+                        },
+                        {
+                          "description": "10:15 AM.",
+                          "value": "615"
+                        },
+                        {
+                          "description": "10:30 AM.",
+                          "value": "630"
+                        },
+                        {
+                          "description": "10:45 AM.",
+                          "value": "645"
+                        },
+                        {
+                          "description": "11:00 AM.",
+                          "value": "660"
+                        },
+                        {
+                          "description": "11:15 AM.",
+                          "value": "675"
+                        },
+                        {
+                          "description": "11:30 AM.",
+                          "value": "690"
+                        },
+                        {
+                          "description": "11:45 AM.",
+                          "value": "705"
+                        },
+                        {
+                          "description": "12:00 PM.",
+                          "value": "720"
+                        },
+                        {
+                          "description": "12:15 PM.",
+                          "value": "735"
+                        },
+                        {
+                          "description": "12:30 PM.",
+                          "value": "750"
+                        },
+                        {
+                          "description": "12:45 PM.",
+                          "value": "765"
+                        },
+                        {
+                          "description": "1:00 PM.",
+                          "value": "780"
+                        },
+                        {
+                          "description": "1:15 PM.",
+                          "value": "795"
+                        },
+                        {
+                          "description": "1:30 PM.",
+                          "value": "810"
+                        },
+                        {
+                          "description": "1:45 PM.",
+                          "value": "825"
+                        },
+                        {
+                          "description": "2:00 PM.",
+                          "value": "840"
+                        },
+                        {
+                          "description": "2:15 PM.",
+                          "value": "855"
+                        },
+                        {
+                          "description": "2:30 PM.",
+                          "value": "870"
+                        },
+                        {
+                          "description": "2:45 PM.",
+                          "value": "885"
+                        },
+                        {
+                          "description": "3:00 PM.",
+                          "value": "900"
+                        },
+                        {
+                          "description": "3:15 PM.",
+                          "value": "915"
+                        },
+                        {
+                          "description": "3:30 PM.",
+                          "value": "930"
+                        },
+                        {
+                          "description": "3:45 PM.",
+                          "value": "945"
+                        },
+                        {
+                          "description": "4:00 PM.",
+                          "value": "960"
+                        },
+                        {
+                          "description": "4:15 PM.",
+                          "value": "975"
+                        },
+                        {
+                          "description": "4:30 PM.",
+                          "value": "990"
+                        },
+                        {
+                          "description": "4:45 PM.",
+                          "value": "1005"
+                        },
+                        {
+                          "description": "5:00 PM.",
+                          "value": "1020"
+                        },
+                        {
+                          "description": "5:15 PM.",
+                          "value": "1035"
+                        },
+                        {
+                          "description": "5:30 PM.",
+                          "value": "1050"
+                        },
+                        {
+                          "description": "5:45 PM.",
+                          "value": "1065"
+                        },
+                        {
+                          "description": "6:00 PM.",
+                          "value": "1080"
+                        },
+                        {
+                          "description": "6:15 PM.",
+                          "value": "1095"
+                        },
+                        {
+                          "description": "6:30 PM.",
+                          "value": "1110"
+                        },
+                        {
+                          "description": "6:45 PM.",
+                          "value": "1125"
+                        },
+                        {
+                          "description": "7:00 PM.",
+                          "value": "1140"
+                        },
+                        {
+                          "description": "7:15 PM.",
+                          "value": "1155"
+                        },
+                        {
+                          "description": "7:30 PM.",
+                          "value": "1170"
+                        },
+                        {
+                          "description": "7:45 PM.",
+                          "value": "1185"
+                        },
+                        {
+                          "description": "8:00 PM.",
+                          "value": "1200"
+                        },
+                        {
+                          "description": "8:15 PM.",
+                          "value": "1215"
+                        },
+                        {
+                          "description": "8:30 PM.",
+                          "value": "1230"
+                        },
+                        {
+                          "description": "8:45 PM.",
+                          "value": "1245"
+                        },
+                        {
+                          "description": "9:00 PM.",
+                          "value": "1260"
+                        },
+                        {
+                          "description": "9:15 PM.",
+                          "value": "1275"
+                        },
+                        {
+                          "description": "9:30 PM.",
+                          "value": "1290"
+                        },
+                        {
+                          "description": "9:45 PM.",
+                          "value": "1305"
+                        },
+                        {
+                          "description": "10:00 PM.",
+                          "value": "1320"
+                        },
+                        {
+                          "description": "10:15 PM.",
+                          "value": "1335"
+                        },
+                        {
+                          "description": "10:30 PM.",
+                          "value": "1350"
+                        },
+                        {
+                          "description": "10:45 PM.",
+                          "value": "1365"
+                        },
+                        {
+                          "description": "11:00 PM.",
+                          "value": "1380"
+                        },
+                        {
+                          "description": "11:15 PM.",
+                          "value": "1395"
+                        },
+                        {
+                          "description": "11:30 PM.",
+                          "value": "1410"
+                        },
+                        {
+                          "description": "11:45 PM.",
+                          "value": "1425"
+                        }
+                      ],
+                      "description": "N/A"
+                    },
+                    {
+                      "field": "endTime",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "12:00 AM.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "12:15 AM.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "12:30 AM.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "12:45 AM.",
+                          "value": "45"
+                        },
+                        {
+                          "description": "1:00 AM.",
+                          "value": "60"
+                        },
+                        {
+                          "description": "1:15 AM.",
+                          "value": "75"
+                        },
+                        {
+                          "description": "1:30 AM.",
+                          "value": "90"
+                        },
+                        {
+                          "description": "1:45 AM.",
+                          "value": "105"
+                        },
+                        {
+                          "description": "2:00 AM.",
+                          "value": "120"
+                        },
+                        {
+                          "description": "2:15 AM.",
+                          "value": "135"
+                        },
+                        {
+                          "description": "2:30 AM.",
+                          "value": "150"
+                        },
+                        {
+                          "description": "2:45 AM.",
+                          "value": "165"
+                        },
+                        {
+                          "description": "3:00 AM.",
+                          "value": "180"
+                        },
+                        {
+                          "description": "3:15 AM.",
+                          "value": "195"
+                        },
+                        {
+                          "description": "3:30 AM.",
+                          "value": "210"
+                        },
+                        {
+                          "description": "3:45 AM.",
+                          "value": "225"
+                        },
+                        {
+                          "description": "4:00 AM.",
+                          "value": "240"
+                        },
+                        {
+                          "description": "4:15 AM.",
+                          "value": "255"
+                        },
+                        {
+                          "description": "4:30 AM.",
+                          "value": "270"
+                        },
+                        {
+                          "description": "4:45 AM.",
+                          "value": "285"
+                        },
+                        {
+                          "description": "5:00 AM.",
+                          "value": "300"
+                        },
+                        {
+                          "description": "5:15 AM.",
+                          "value": "315"
+                        },
+                        {
+                          "description": "5:30 AM.",
+                          "value": "330"
+                        },
+                        {
+                          "description": "5:45 AM.",
+                          "value": "345"
+                        },
+                        {
+                          "description": "6:00 AM.",
+                          "value": "360"
+                        },
+                        {
+                          "description": "6:15 AM.",
+                          "value": "375"
+                        },
+                        {
+                          "description": "6:30 AM.",
+                          "value": "390"
+                        },
+                        {
+                          "description": "6:45 AM.",
+                          "value": "405"
+                        },
+                        {
+                          "description": "7:00 AM.",
+                          "value": "420"
+                        },
+                        {
+                          "description": "7:15 AM.",
+                          "value": "435"
+                        },
+                        {
+                          "description": "7:30 AM.",
+                          "value": "450"
+                        },
+                        {
+                          "description": "7:45 AM.",
+                          "value": "465"
+                        },
+                        {
+                          "description": "8:00 AM.",
+                          "value": "480"
+                        },
+                        {
+                          "description": "8:15 AM.",
+                          "value": "495"
+                        },
+                        {
+                          "description": "8:30 AM.",
+                          "value": "510"
+                        },
+                        {
+                          "description": "8:45 AM.",
+                          "value": "525"
+                        },
+                        {
+                          "description": "9:00 AM.",
+                          "value": "540"
+                        },
+                        {
+                          "description": "9:15 AM.",
+                          "value": "555"
+                        },
+                        {
+                          "description": "9:30 AM.",
+                          "value": "570"
+                        },
+                        {
+                          "description": "9:45 AM.",
+                          "value": "585"
+                        },
+                        {
+                          "description": "10:00 AM.",
+                          "value": "600"
+                        },
+                        {
+                          "description": "10:15 AM.",
+                          "value": "615"
+                        },
+                        {
+                          "description": "10:30 AM.",
+                          "value": "630"
+                        },
+                        {
+                          "description": "10:45 AM.",
+                          "value": "645"
+                        },
+                        {
+                          "description": "11:00 AM.",
+                          "value": "660"
+                        },
+                        {
+                          "description": "11:15 AM.",
+                          "value": "675"
+                        },
+                        {
+                          "description": "11:30 AM.",
+                          "value": "690"
+                        },
+                        {
+                          "description": "11:45 AM.",
+                          "value": "705"
+                        },
+                        {
+                          "description": "12:00 PM.",
+                          "value": "720"
+                        },
+                        {
+                          "description": "12:15 PM.",
+                          "value": "735"
+                        },
+                        {
+                          "description": "12:30 PM.",
+                          "value": "750"
+                        },
+                        {
+                          "description": "12:45 PM.",
+                          "value": "765"
+                        },
+                        {
+                          "description": "1:00 PM.",
+                          "value": "780"
+                        },
+                        {
+                          "description": "1:15 PM.",
+                          "value": "795"
+                        },
+                        {
+                          "description": "1:30 PM.",
+                          "value": "810"
+                        },
+                        {
+                          "description": "1:45 PM.",
+                          "value": "825"
+                        },
+                        {
+                          "description": "2:00 PM.",
+                          "value": "840"
+                        },
+                        {
+                          "description": "2:15 PM.",
+                          "value": "855"
+                        },
+                        {
+                          "description": "2:30 PM.",
+                          "value": "870"
+                        },
+                        {
+                          "description": "2:45 PM.",
+                          "value": "885"
+                        },
+                        {
+                          "description": "3:00 PM.",
+                          "value": "900"
+                        },
+                        {
+                          "description": "3:15 PM.",
+                          "value": "915"
+                        },
+                        {
+                          "description": "3:30 PM.",
+                          "value": "930"
+                        },
+                        {
+                          "description": "3:45 PM.",
+                          "value": "945"
+                        },
+                        {
+                          "description": "4:00 PM.",
+                          "value": "960"
+                        },
+                        {
+                          "description": "4:15 PM.",
+                          "value": "975"
+                        },
+                        {
+                          "description": "4:30 PM.",
+                          "value": "990"
+                        },
+                        {
+                          "description": "4:45 PM.",
+                          "value": "1005"
+                        },
+                        {
+                          "description": "5:00 PM.",
+                          "value": "1020"
+                        },
+                        {
+                          "description": "5:15 PM.",
+                          "value": "1035"
+                        },
+                        {
+                          "description": "5:30 PM.",
+                          "value": "1050"
+                        },
+                        {
+                          "description": "5:45 PM.",
+                          "value": "1065"
+                        },
+                        {
+                          "description": "6:00 PM.",
+                          "value": "1080"
+                        },
+                        {
+                          "description": "6:15 PM.",
+                          "value": "1095"
+                        },
+                        {
+                          "description": "6:30 PM.",
+                          "value": "1110"
+                        },
+                        {
+                          "description": "6:45 PM.",
+                          "value": "1125"
+                        },
+                        {
+                          "description": "7:00 PM.",
+                          "value": "1140"
+                        },
+                        {
+                          "description": "7:15 PM.",
+                          "value": "1155"
+                        },
+                        {
+                          "description": "7:30 PM.",
+                          "value": "1170"
+                        },
+                        {
+                          "description": "7:45 PM.",
+                          "value": "1185"
+                        },
+                        {
+                          "description": "8:00 PM.",
+                          "value": "1200"
+                        },
+                        {
+                          "description": "8:15 PM.",
+                          "value": "1215"
+                        },
+                        {
+                          "description": "8:30 PM.",
+                          "value": "1230"
+                        },
+                        {
+                          "description": "8:45 PM.",
+                          "value": "1245"
+                        },
+                        {
+                          "description": "9:00 PM.",
+                          "value": "1260"
+                        },
+                        {
+                          "description": "9:15 PM.",
+                          "value": "1275"
+                        },
+                        {
+                          "description": "9:30 PM.",
+                          "value": "1290"
+                        },
+                        {
+                          "description": "9:45 PM.",
+                          "value": "1305"
+                        },
+                        {
+                          "description": "10:00 PM.",
+                          "value": "1320"
+                        },
+                        {
+                          "description": "10:15 PM.",
+                          "value": "1335"
+                        },
+                        {
+                          "description": "10:30 PM.",
+                          "value": "1350"
+                        },
+                        {
+                          "description": "10:45 PM.",
+                          "value": "1365"
+                        },
+                        {
+                          "description": "11:00 PM.",
+                          "value": "1380"
+                        },
+                        {
+                          "description": "11:15 PM.",
+                          "value": "1395"
+                        },
+                        {
+                          "description": "11:30 PM.",
+                          "value": "1410"
+                        },
+                        {
+                          "description": "11:45 PM.",
+                          "value": "1425"
+                        }
+                      ],
+                      "description": "N/A"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.AdvancedBatteryChargeMode",
+      "accessRestrictions": [
+        "This policy only affects device types: Dell Latitude 5400 Chromebook Enterprise, Dell Latitude 5300 2-in-1 Chromebook Enterprise, Dell Latitude 7410 Chromebook Enterprise, Dell Latitude 7410 2-in-1 Chromebook Enterprise."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "bootOnAcEnabled",
+                "number": 1
+              }
+            ],
+            "name": "BootOnAc"
+          }
+        ]
+      },
+      "policyDescription": "Boot on AC.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.BootOnAc",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#BookonAC",
+      "fieldDescriptions": [
+        {
+          "field": "bootOnAcEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable boot on AC.",
+              "value": "true"
+            },
+            {
+              "description": "Disable boot on AC.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.BootOnAc",
+      "accessRestrictions": [
+        "This policy only affects device types: Dell Latitude 5400 Chromebook Enterprise, Dell Latitude 5300 2-in-1 Chromebook Enterprise, Dell Latitude 7410 Chromebook Enterprise, Dell Latitude 7410 2-in-1 Chromebook Enterprise."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "usbPowerShareEnabled",
+                "number": 1
+              }
+            ],
+            "name": "UsbPowerShare"
+          }
+        ]
+      },
+      "policyDescription": "USB Powershare.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.UsbPowerShare",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#USBpowershare",
+      "fieldDescriptions": [
+        {
+          "field": "usbPowerShareEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable USB Powershare.",
+              "value": "true"
+            },
+            {
+              "description": "Disable USB Powershare.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.UsbPowerShare",
+      "accessRestrictions": [
+        "This policy only affects device types: Dell Latitude 5400 Chromebook Enterprise, Dell Latitude 5300 2-in-1 Chromebook Enterprise, Dell Latitude 7410 Chromebook Enterprise, Dell Latitude 7410 2-in-1 Chromebook Enterprise."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DeviceRebootOnUserSignoutEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceRebootOnUserSignout",
+                "number": 1
+              }
+            ],
+            "name": "DeviceRebootOnUserSignout"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DeviceRebootOnUserSignoutEnum",
+            "value": [
+              {
+                "name": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_NEVER",
+                "number": 1
+              },
+              {
+                "name": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_ARC_SESSION",
+                "number": 2
+              },
+              {
+                "name": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_ALWAYS",
+                "number": 3
+              },
+              {
+                "name": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_VM_STARTED_OR_ARC_SESSION",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceRebootOnUserSignout",
+      "fieldDescriptions": [
+        {
+          "field": "deviceRebootOnUserSignout",
+          "defaultValue": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_NEVER",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not reboot on user sign-out.",
+              "value": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_NEVER"
+            },
+            {
+              "description": "Reboot on user sign-out if Android has started.",
+              "value": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_ARC_SESSION"
+            },
+            {
+              "description": "Always reboot on user sign-out.",
+              "value": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_ALWAYS"
+            },
+            {
+              "description": "Reboot on user sign-out if Android or a VM has started.",
+              "value": "DEVICE_REBOOT_ON_USER_SIGNOUT_ENUM_VM_STARTED_OR_ARC_SESSION"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceRebootOnUserSignout",
+      "policyDescription": "Reboot on sign-out."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "deviceScheduledRebootEnabled",
+                "number": 1
+              },
+              {
+                "typeName": "NullableTimeOfDay",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "deviceScheduledRebootTimeOfDay",
+                "number": 2
+              },
+              {
+                "typeName": "DeviceScheduledRebootFrequencyEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceScheduledRebootFrequency",
+                "number": 3
+              },
+              {
+                "typeName": "DeviceScheduledRebootWeekDayEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceScheduledRebootDayOfWeek",
+                "number": 4
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "deviceScheduledRebootDayOfMonth",
+                "number": 5
+              }
+            ],
+            "name": "DeviceScheduledReboot"
+          },
+          {
+            "field": [
+              {
+                "typeName": "TimeOfDay",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "timeOfDay",
+                "number": 1
+              }
+            ],
+            "name": "NullableTimeOfDay"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "hours",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "minutes",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "seconds",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "nanos",
+                "number": 4
+              }
+            ],
+            "name": "TimeOfDay"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DeviceScheduledRebootFrequencyEnum",
+            "value": [
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_DAILY",
+                "number": 1
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_WEEKLY",
+                "number": 2
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_MONTHLY",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "DeviceScheduledRebootWeekDayEnum",
+            "value": [
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_MONDAY",
+                "number": 1
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_TUESDAY",
+                "number": 2
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_WEDNESDAY",
+                "number": 3
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_THURSDAY",
+                "number": 4
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_FRIDAY",
+                "number": 5
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_SATURDAY",
+                "number": 6
+              },
+              {
+                "name": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_SUNDAY",
+                "number": 7
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.DeviceScheduledReboot",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_scheduled_reboot_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "deviceScheduledRebootEnabled",
+          "knownValueDescriptions": [
+            {
+              "value": "true"
+            },
+            {
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "deviceScheduledRebootTimeOfDay",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "deviceScheduledRebootEnabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "timeOfDay",
+              "description": "N/A",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "hours",
+                  "description": "N/A"
+                },
+                {
+                  "field": "minutes",
+                  "description": "N/A"
+                },
+                {
+                  "field": "seconds",
+                  "description": "N/A"
+                },
+                {
+                  "field": "nanos",
+                  "description": "N/A"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "defaultValue": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_DAILY",
+          "field": "deviceScheduledRebootFrequency",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "deviceScheduledRebootEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_DAILY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_WEEKLY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_FREQUENCY_ENUM_MONTHLY"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_MONDAY",
+          "field": "deviceScheduledRebootDayOfWeek",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "deviceScheduledRebootEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_MONDAY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_TUESDAY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_WEDNESDAY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_THURSDAY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_FRIDAY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_SATURDAY"
+            },
+            {
+              "value": "DEVICE_SCHEDULED_REBOOT_WEEK_DAY_ENUM_SUNDAY"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "deviceScheduledRebootDayOfMonth",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "deviceScheduledRebootEnabled"
+            }
+          ],
+          "defaultValue": 1,
+          "description": "N/A",
+          "inputConstraint": "The long field should have value greater than or equal to 1, and should have value less than or equal to 31."
+        }
+      ],
+      "categoryTitle": "Power and shutdown",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.DeviceScheduledReboot",
+      "policyDescription": "Scheduled reboot."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "virtualMachinesAllowedForUnaffiliatedUser",
+                "number": 1
+              }
+            ],
+            "name": "VirtualMachinesAllowedUnaffiliatedUser"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.VirtualMachinesAllowedUnaffiliatedUser",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_unaffiliated_crostini_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "virtualMachinesAllowedForUnaffiliatedUser",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow usage for virtual machines needed to support Linux apps for unaffiliated users.",
+              "value": "true"
+            },
+            {
+              "description": "Block usage for virtual machines needed to support Linux apps for unaffiliated users.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Virtual machines",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.VirtualMachinesAllowedUnaffiliatedUser",
+      "policyDescription": "Linux virtual machines for unaffiliated users (BETA)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "VirtualMachinesAndroidAdbSideloadingAllowedEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "virtualMachinesAndroidAdbSideloadingAllowed",
+                "number": 1
+              }
+            ],
+            "name": "VirtualMachineAndroidAdbSideloadingAllowed"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "VirtualMachinesAndroidAdbSideloadingAllowedEnum",
+            "value": [
+              {
+                "name": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW",
+                "number": 1
+              },
+              {
+                "name": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW_WITH_POWERWASH",
+                "number": 2
+              },
+              {
+                "name": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_ALLOW_FOR_AFFILIATED_USERS",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.VirtualMachineAndroidAdbSideloadingAllowed",
+      "fieldDescriptions": [
+        {
+          "field": "virtualMachinesAndroidAdbSideloadingAllowed",
+          "defaultValue": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW",
+          "knownValueDescriptions": [
+            {
+              "description": "Prevent users of this device from using ADB sideloading.",
+              "value": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW"
+            },
+            {
+              "description": "Prevent users of this device from using ADB sideloading and force a device powerwash if sideloading was enabled before.",
+              "value": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_DISALLOW_WITH_POWERWASH"
+            },
+            {
+              "description": "Allow affiliated users of this device to use ADB sideloading.",
+              "value": "VIRTUAL_MACHINES_ANDROID_ADB_SIDELOADING_ALLOWED_ENUM_ALLOW_FOR_AFFILIATED_USERS"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Virtual machines",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.VirtualMachineAndroidAdbSideloadingAllowed",
+      "policyDescription": "Android apps from untrusted sources."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "deviceHostnameTemplate",
+                "number": 1
+              }
+            ],
+            "name": "HostnameTemplate"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.HostnameTemplate",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_hostname_template",
+      "fieldDescriptions": [
+        {
+          "field": "deviceHostnameTemplate",
+          "fieldDescription": "Select the hostname that is passed to the DHCP server with the DHCP request. Possible variables are ${ASSET_ID}, ${SERIAL_NUM}, ${MAC_ADDR}, ${MACHINE_NAME}, and ${LOCATION}.",
+          "description": "Device network hostname template. Select the hostname that is passed to the DHCP server with the DHCP request. Possible variables are ${ASSET_ID}, ${SERIAL_NUM}, ${MAC_ADDR}, ${MACHINE_NAME}, and ${LOCATION}.",
+          "name": "Device network hostname template."
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.HostnameTemplate",
+      "policyDescription": "Device network hostname template."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SystemTimezone",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "systemTimezone",
+                "number": 1
+              },
+              {
+                "typeName": "AutomaticTimezoneDetectionTypeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "timezoneDetectionType",
+                "number": 2
+              }
+            ],
+            "name": "Timezone"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "value",
+                "number": 1
+              }
+            ],
+            "name": "SystemTimezone"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AutomaticTimezoneDetectionTypeEnum",
+            "value": [
+              {
+                "name": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_USERS_DECIDE",
+                "number": 1
+              },
+              {
+                "name": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_IP_ONLY",
+                "number": 3
+              },
+              {
+                "name": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_SEND_WIFI_ACCESS_POINTS",
+                "number": 4
+              },
+              {
+                "name": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_SEND_ALL_LOCATION_INFO",
+                "number": 5
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.Timezone",
+      "fieldDescriptions": [
+        {
+          "field": "systemTimezone",
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "value",
+              "knownValueDescriptions": [
+                {
+                  "description": "Niue Time, GMT-11:00.",
+                  "value": "Pacific/Niue"
+                },
+                {
+                  "description": "Samoa Standard Time, GMT-11:00.",
+                  "value": "Pacific/Midway"
+                },
+                {
+                  "description": "Hawaii-Aleutian Time, GMT-10:00.",
+                  "value": "America/Adak"
+                },
+                {
+                  "description": "Hawaii-Aleutian Standard Time, GMT-10:00.",
+                  "value": "Pacific/Honolulu"
+                },
+                {
+                  "description": "Cook Islands Standard Time, GMT-10:00.",
+                  "value": "Pacific/Rarotonga"
+                },
+                {
+                  "description": "Tahiti Time, GMT-10:00.",
+                  "value": "Pacific/Tahiti"
+                },
+                {
+                  "description": "Marquesas Time, GMT-09:-30.",
+                  "value": "Pacific/Marquesas"
+                },
+                {
+                  "description": "Alaska Time, GMT-09:00.",
+                  "value": "America/Anchorage"
+                },
+                {
+                  "description": "Alaska Time, GMT-09:00.",
+                  "value": "America/Metlakatla"
+                },
+                {
+                  "description": "Gambier Time, GMT-09:00.",
+                  "value": "Pacific/Gambier"
+                },
+                {
+                  "description": "Pacific Time, GMT-08:00.",
+                  "value": "America/Los_Angeles"
+                },
+                {
+                  "description": "Pacific Time, GMT-08:00.",
+                  "value": "America/Tijuana"
+                },
+                {
+                  "description": "Pacific Time, GMT-08:00.",
+                  "value": "America/Vancouver"
+                },
+                {
+                  "description": "Pitcairn Time, GMT-08:00.",
+                  "value": "Pacific/Pitcairn"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Boise"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Cambridge_Bay"
+                },
+                {
+                  "description": "Mountain Standard Time, GMT-07:00.",
+                  "value": "America/Phoenix"
+                },
+                {
+                  "description": "Yukon Time, GMT-07:00.",
+                  "value": "America/Dawson"
+                },
+                {
+                  "description": "Mountain Standard Time, GMT-07:00.",
+                  "value": "America/Dawson_Creek"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Denver"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Edmonton"
+                },
+                {
+                  "description": "Mountain Standard Time, GMT-07:00.",
+                  "value": "America/Fort_Nelson"
+                },
+                {
+                  "description": "Mexican Pacific Standard Time, GMT-07:00.",
+                  "value": "America/Hermosillo"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Inuvik"
+                },
+                {
+                  "description": "Mexican Pacific Time, GMT-07:00.",
+                  "value": "America/Mazatlan"
+                },
+                {
+                  "description": "Yukon Time, GMT-07:00.",
+                  "value": "America/Whitehorse"
+                },
+                {
+                  "description": "Mountain Time, GMT-07:00.",
+                  "value": "America/Yellowknife"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Bahia_Banderas"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Belize"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Chicago"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Chihuahua"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Costa_Rica"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/El_Salvador"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Guatemala"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Indiana/Knox"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Indiana/Tell_City"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Managua"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Matamoros"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Menominee"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Merida"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Mexico_City"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Monterrey"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/North_Dakota/Beulah"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/North_Dakota/Center"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/North_Dakota/New_Salem"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Ojinaga"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Winnipeg"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Rankin_Inlet"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Regina"
+                },
+                {
+                  "description": "Central Time, GMT-06:00.",
+                  "value": "America/Resolute"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Swift_Current"
+                },
+                {
+                  "description": "Central Standard Time, GMT-06:00.",
+                  "value": "America/Tegucigalpa"
+                },
+                {
+                  "description": "Easter Island Time, GMT-06:00.",
+                  "value": "Pacific/Easter"
+                },
+                {
+                  "description": "Galapagos Time, GMT-06:00.",
+                  "value": "Pacific/Galapagos"
+                },
+                {
+                  "description": "Colombia Standard Time, GMT-05:00.",
+                  "value": "America/Bogota"
+                },
+                {
+                  "description": "Eastern Standard Time, GMT-05:00.",
+                  "value": "America/Cancun"
+                },
+                {
+                  "description": "Eastern Standard Time, GMT-05:00.",
+                  "value": "America/Panama"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Detroit"
+                },
+                {
+                  "description": "Acre Standard Time, GMT-05:00.",
+                  "value": "America/Eirunepe"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Grand_Turk"
+                },
+                {
+                  "description": "Ecuador Time, GMT-05:00.",
+                  "value": "America/Guayaquil"
+                },
+                {
+                  "description": "Cuba Time, GMT-05:00.",
+                  "value": "America/Havana"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Marengo"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Petersburg"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Vevay"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Vincennes"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Winamac"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Indiana/Indianapolis"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Iqaluit"
+                },
+                {
+                  "description": "Eastern Standard Time, GMT-05:00.",
+                  "value": "America/Jamaica"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Kentucky/Monticello"
+                },
+                {
+                  "description": "Peru Standard Time, GMT-05:00.",
+                  "value": "America/Lima"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Kentucky/Louisville"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Toronto"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/New_York"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Pangnirtung"
+                },
+                {
+                  "description": "Eastern Time, GMT-05:00.",
+                  "value": "America/Port-au-Prince"
+                },
+                {
+                  "description": "Acre Standard Time, GMT-05:00.",
+                  "value": "America/Rio_Branco"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Puerto_Rico"
+                },
+                {
+                  "description": "Paraguay Time, GMT-04:00.",
+                  "value": "America/Asuncion"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Barbados"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Boa_Vista"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Campo_Grande"
+                },
+                {
+                  "description": "Venezuela Time, GMT-04:00.",
+                  "value": "America/Caracas"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Cuiaba"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Glace_Bay"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Goose_Bay"
+                },
+                {
+                  "description": "Guyana Time, GMT-04:00.",
+                  "value": "America/Guyana"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Halifax"
+                },
+                {
+                  "description": "Bolivia Time, GMT-04:00.",
+                  "value": "America/La_Paz"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Manaus"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Martinique"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Moncton"
+                },
+                {
+                  "description": "Amazon Standard Time, GMT-04:00.",
+                  "value": "America/Porto_Velho"
+                },
+                {
+                  "description": "Chile Time, GMT-04:00.",
+                  "value": "America/Santiago"
+                },
+                {
+                  "description": "Atlantic Standard Time, GMT-04:00.",
+                  "value": "America/Santo_Domingo"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "America/Thule"
+                },
+                {
+                  "description": "Atlantic Time, GMT-04:00.",
+                  "value": "Atlantic/Bermuda"
+                },
+                {
+                  "description": "Newfoundland Time, GMT-03:-30.",
+                  "value": "America/St_Johns"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Araguaina"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/La_Rioja"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Rio_Gallegos"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Salta"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/San_Juan"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/San_Luis"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Tucuman"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Ushuaia"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Bahia"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Belem"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Buenos_Aires"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Catamarca"
+                },
+                {
+                  "description": "French Guiana Time, GMT-03:00.",
+                  "value": "America/Cayenne"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Cordoba"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Fortaleza"
+                },
+                {
+                  "description": "West Greenland Time, GMT-03:00.",
+                  "value": "America/Nuuk"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Jujuy"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Maceio"
+                },
+                {
+                  "description": "Argentina Standard Time, GMT-03:00.",
+                  "value": "America/Argentina/Mendoza"
+                },
+                {
+                  "description": "St. Pierre & Miquelon Time, GMT-03:00.",
+                  "value": "America/Miquelon"
+                },
+                {
+                  "description": "Uruguay Standard Time, GMT-03:00.",
+                  "value": "America/Montevideo"
+                },
+                {
+                  "description": "Suriname Time, GMT-03:00.",
+                  "value": "America/Paramaribo"
+                },
+                {
+                  "description": "Punta Arenas Time, GMT-03:00.",
+                  "value": "America/Punta_Arenas"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Recife"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Santarem"
+                },
+                {
+                  "description": "Brasilia Standard Time, GMT-03:00.",
+                  "value": "America/Sao_Paulo"
+                },
+                {
+                  "description": "Palmer Time, GMT-03:00.",
+                  "value": "Antarctica/Palmer"
+                },
+                {
+                  "description": "Rothera Time, GMT-03:00.",
+                  "value": "Antarctica/Rothera"
+                },
+                {
+                  "description": "Falkland Islands Standard Time, GMT-03:00.",
+                  "value": "Atlantic/Stanley"
+                },
+                {
+                  "description": "Fernando de Noronha Standard Time, GMT-02:00.",
+                  "value": "America/Noronha"
+                },
+                {
+                  "description": "South Georgia Time, GMT-02:00.",
+                  "value": "Atlantic/South_Georgia"
+                },
+                {
+                  "description": "East Greenland Time, GMT-01:00.",
+                  "value": "America/Scoresbysund"
+                },
+                {
+                  "description": "Azores Time, GMT-01:00.",
+                  "value": "Atlantic/Azores"
+                },
+                {
+                  "description": "Cape Verde Standard Time, GMT-01:00.",
+                  "value": "Atlantic/Cape_Verde"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Abidjan"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Bissau"
+                },
+                {
+                  "description": "Morocco Time, GMT+00:00.",
+                  "value": "Africa/Casablanca"
+                },
+                {
+                  "description": "Western Sahara Time, GMT+00:00.",
+                  "value": "Africa/El_Aaiun"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Monrovia"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Africa/Sao_Tome"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "America/Danmarkshavn"
+                },
+                {
+                  "description": "Troll Time, GMT+00:00.",
+                  "value": "Antarctica/Troll"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Atlantic/Canary"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Atlantic/Faroe"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Atlantic/Madeira"
+                },
+                {
+                  "description": "Ireland Time, GMT+00:00.",
+                  "value": "Europe/Dublin"
+                },
+                {
+                  "description": "United Kingdom Time, GMT+00:00.",
+                  "value": "Europe/London"
+                },
+                {
+                  "description": "Western European Time, GMT+00:00.",
+                  "value": "Europe/Lisbon"
+                },
+                {
+                  "description": "Greenwich Mean Time, GMT+00:00.",
+                  "value": "Atlantic/St_Helena"
+                },
+                {
+                  "description": "Central European Standard Time, GMT+01:00.",
+                  "value": "Africa/Algiers"
+                },
+                {
+                  "description": "West Africa Standard Time, GMT+01:00.",
+                  "value": "Africa/Lagos"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Africa/Ceuta"
+                },
+                {
+                  "description": "West Africa Standard Time, GMT+01:00.",
+                  "value": "Africa/Ndjamena"
+                },
+                {
+                  "description": "Central European Standard Time, GMT+01:00.",
+                  "value": "Africa/Tunis"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Berlin"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Brussels"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Andorra"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Belgrade"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Prague"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Budapest"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Zurich"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Gibraltar"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Madrid"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Malta"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Paris"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Rome"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Tirane"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Vienna"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Warsaw"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Bratislava"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Ljubljana"
+                },
+                {
+                  "description": "Central European Time, GMT+01:00.",
+                  "value": "Europe/Zagreb"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Maputo"
+                },
+                {
+                  "description": "Eastern European Standard Time, GMT+02:00.",
+                  "value": "Africa/Cairo"
+                },
+                {
+                  "description": "South Africa Standard Time, GMT+02:00.",
+                  "value": "Africa/Johannesburg"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Juba"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Khartoum"
+                },
+                {
+                  "description": "Eastern European Standard Time, GMT+02:00.",
+                  "value": "Africa/Tripoli"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Windhoek"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Beirut"
+                },
+                {
+                  "description": "Famagusta Time, GMT+02:00.",
+                  "value": "Asia/Famagusta"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Gaza"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Hebron"
+                },
+                {
+                  "description": "Israel Time, GMT+02:00.",
+                  "value": "Asia/Jerusalem"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Asia/Nicosia"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Athens"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Bucharest"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Chisinau"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Helsinki"
+                },
+                {
+                  "description": "Eastern European Standard Time, GMT+02:00.",
+                  "value": "Europe/Kaliningrad"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Kyiv"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Riga"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Sofia"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Tallinn"
+                },
+                {
+                  "description": "Eastern European Time, GMT+02:00.",
+                  "value": "Europe/Vilnius"
+                },
+                {
+                  "description": "Central Africa Time, GMT+02:00.",
+                  "value": "Africa/Harare"
+                },
+                {
+                  "description": "East Africa Time, GMT+03:00.",
+                  "value": "Africa/Nairobi"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Riyadh"
+                },
+                {
+                  "description": "Jordan Time, GMT+03:00.",
+                  "value": "Asia/Amman"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Baghdad"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Qatar"
+                },
+                {
+                  "description": "Syria Time, GMT+03:00.",
+                  "value": "Asia/Damascus"
+                },
+                {
+                  "description": "Turkey Time, GMT+03:00.",
+                  "value": "Europe/Istanbul"
+                },
+                {
+                  "description": "Kirov Time, GMT+03:00.",
+                  "value": "Europe/Kirov"
+                },
+                {
+                  "description": "Moscow Standard Time, GMT+03:00.",
+                  "value": "Europe/Minsk"
+                },
+                {
+                  "description": "Moscow Standard Time, GMT+03:00.",
+                  "value": "Europe/Moscow"
+                },
+                {
+                  "description": "Moscow Standard Time, GMT+03:00.",
+                  "value": "Europe/Simferopol"
+                },
+                {
+                  "description": "Volgograd Standard Time, GMT+03:00.",
+                  "value": "Europe/Volgograd"
+                },
+                {
+                  "description": "Arabian Standard Time, GMT+03:00.",
+                  "value": "Asia/Kuwait"
+                },
+                {
+                  "description": "Iran Time, GMT+03:30.",
+                  "value": "Asia/Tehran"
+                },
+                {
+                  "description": "Azerbaijan Standard Time, GMT+04:00.",
+                  "value": "Asia/Baku"
+                },
+                {
+                  "description": "Gulf Standard Time, GMT+04:00.",
+                  "value": "Asia/Dubai"
+                },
+                {
+                  "description": "Georgia Standard Time, GMT+04:00.",
+                  "value": "Asia/Tbilisi"
+                },
+                {
+                  "description": "Armenia Standard Time, GMT+04:00.",
+                  "value": "Asia/Yerevan"
+                },
+                {
+                  "description": "Astrakhan Time, GMT+04:00.",
+                  "value": "Europe/Astrakhan"
+                },
+                {
+                  "description": "Samara Standard Time, GMT+04:00.",
+                  "value": "Europe/Samara"
+                },
+                {
+                  "description": "Saratov Time, GMT+04:00.",
+                  "value": "Europe/Saratov"
+                },
+                {
+                  "description": "Ulyanovsk Time, GMT+04:00.",
+                  "value": "Europe/Ulyanovsk"
+                },
+                {
+                  "description": "Mauritius Standard Time, GMT+04:00.",
+                  "value": "Indian/Mauritius"
+                },
+                {
+                  "description": "Afghanistan Time, GMT+04:30.",
+                  "value": "Asia/Kabul"
+                },
+                {
+                  "description": "Mawson Time, GMT+05:00.",
+                  "value": "Antarctica/Mawson"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Aqtau"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Aqtobe"
+                },
+                {
+                  "description": "Turkmenistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Ashgabat"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Atyrau"
+                },
+                {
+                  "description": "Tajikistan Time, GMT+05:00.",
+                  "value": "Asia/Dushanbe"
+                },
+                {
+                  "description": "Pakistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Karachi"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Oral"
+                },
+                {
+                  "description": "West Kazakhstan Time, GMT+05:00.",
+                  "value": "Asia/Qyzylorda"
+                },
+                {
+                  "description": "Uzbekistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Samarkand"
+                },
+                {
+                  "description": "Uzbekistan Standard Time, GMT+05:00.",
+                  "value": "Asia/Tashkent"
+                },
+                {
+                  "description": "Yekaterinburg Standard Time, GMT+05:00.",
+                  "value": "Asia/Yekaterinburg"
+                },
+                {
+                  "description": "Maldives Time, GMT+05:00.",
+                  "value": "Indian/Maldives"
+                },
+                {
+                  "description": "India Standard Time, GMT+05:30.",
+                  "value": "Asia/Colombo"
+                },
+                {
+                  "description": "India Standard Time, GMT+05:30.",
+                  "value": "Asia/Calcutta"
+                },
+                {
+                  "description": "Nepal Time, GMT+05:45.",
+                  "value": "Asia/Katmandu"
+                },
+                {
+                  "description": "Urumqi Time, GMT+06:00.",
+                  "value": "Asia/Urumqi"
+                },
+                {
+                  "description": "East Kazakhstan Time, GMT+06:00.",
+                  "value": "Asia/Almaty"
+                },
+                {
+                  "description": "Kyrgyzstan Time, GMT+06:00.",
+                  "value": "Asia/Bishkek"
+                },
+                {
+                  "description": "Bangladesh Standard Time, GMT+06:00.",
+                  "value": "Asia/Dhaka"
+                },
+                {
+                  "description": "Omsk Standard Time, GMT+06:00.",
+                  "value": "Asia/Omsk"
+                },
+                {
+                  "description": "East Kazakhstan Time, GMT+06:00.",
+                  "value": "Asia/Qostanay"
+                },
+                {
+                  "description": "Bhutan Time, GMT+06:00.",
+                  "value": "Asia/Thimphu"
+                },
+                {
+                  "description": "Indian Ocean Time, GMT+06:00.",
+                  "value": "Indian/Chagos"
+                },
+                {
+                  "description": "Myanmar Time, GMT+06:30.",
+                  "value": "Asia/Rangoon"
+                },
+                {
+                  "description": "Davis Time, GMT+07:00.",
+                  "value": "Antarctica/Davis"
+                },
+                {
+                  "description": "Indochina Time, GMT+07:00.",
+                  "value": "Asia/Bangkok"
+                },
+                {
+                  "description": "Barnaul Time, GMT+07:00.",
+                  "value": "Asia/Barnaul"
+                },
+                {
+                  "description": "Hovd Standard Time, GMT+07:00.",
+                  "value": "Asia/Hovd"
+                },
+                {
+                  "description": "Western Indonesia Time, GMT+07:00.",
+                  "value": "Asia/Jakarta"
+                },
+                {
+                  "description": "Krasnoyarsk Standard Time, GMT+07:00.",
+                  "value": "Asia/Krasnoyarsk"
+                },
+                {
+                  "description": "Krasnoyarsk Standard Time, GMT+07:00.",
+                  "value": "Asia/Novokuznetsk"
+                },
+                {
+                  "description": "Novosibirsk Standard Time, GMT+07:00.",
+                  "value": "Asia/Novosibirsk"
+                },
+                {
+                  "description": "Western Indonesia Time, GMT+07:00.",
+                  "value": "Asia/Pontianak"
+                },
+                {
+                  "description": "Indochina Time, GMT+07:00.",
+                  "value": "Asia/Ho_Chi_Minh"
+                },
+                {
+                  "description": "Tomsk Time, GMT+07:00.",
+                  "value": "Asia/Tomsk"
+                },
+                {
+                  "description": "Indochina Time, GMT+07:00.",
+                  "value": "Asia/Phnom_Penh"
+                },
+                {
+                  "description": "Malaysia Time, GMT+08:00.",
+                  "value": "Asia/Kuching"
+                },
+                {
+                  "description": "Ulaanbaatar Standard Time, GMT+08:00.",
+                  "value": "Asia/Choibalsan"
+                },
+                {
+                  "description": "Hong Kong Standard Time, GMT+08:00.",
+                  "value": "Asia/Hong_Kong"
+                },
+                {
+                  "description": "Irkutsk Standard Time, GMT+08:00.",
+                  "value": "Asia/Irkutsk"
+                },
+                {
+                  "description": "Singapore Standard Time, GMT+08:00.",
+                  "value": "Asia/Singapore"
+                },
+                {
+                  "description": "China Standard Time, GMT+08:00.",
+                  "value": "Asia/Macau"
+                },
+                {
+                  "description": "Central Indonesia Time, GMT+08:00.",
+                  "value": "Asia/Makassar"
+                },
+                {
+                  "description": "Philippine Standard Time, GMT+08:00.",
+                  "value": "Asia/Manila"
+                },
+                {
+                  "description": "China Standard Time, GMT+08:00.",
+                  "value": "Asia/Shanghai"
+                },
+                {
+                  "description": "Taipei Standard Time, GMT+08:00.",
+                  "value": "Asia/Taipei"
+                },
+                {
+                  "description": "Ulaanbaatar Standard Time, GMT+08:00.",
+                  "value": "Asia/Ulaanbaatar"
+                },
+                {
+                  "description": "Australian Western Standard Time, GMT+08:00.",
+                  "value": "Australia/Perth"
+                },
+                {
+                  "description": "Australian Central Western Standard Time, GMT+08:45.",
+                  "value": "Australia/Eucla"
+                },
+                {
+                  "description": "Yakutsk Standard Time, GMT+09:00.",
+                  "value": "Asia/Chita"
+                },
+                {
+                  "description": "East Timor Time, GMT+09:00.",
+                  "value": "Asia/Dili"
+                },
+                {
+                  "description": "Eastern Indonesia Time, GMT+09:00.",
+                  "value": "Asia/Jayapura"
+                },
+                {
+                  "description": "Yakutsk Standard Time, GMT+09:00.",
+                  "value": "Asia/Khandyga"
+                },
+                {
+                  "description": "Korean Standard Time, GMT+09:00.",
+                  "value": "Asia/Pyongyang"
+                },
+                {
+                  "description": "Korean Standard Time, GMT+09:00.",
+                  "value": "Asia/Seoul"
+                },
+                {
+                  "description": "Japan Standard Time, GMT+09:00.",
+                  "value": "Asia/Tokyo"
+                },
+                {
+                  "description": "Yakutsk Standard Time, GMT+09:00.",
+                  "value": "Asia/Yakutsk"
+                },
+                {
+                  "description": "Palau Time, GMT+09:00.",
+                  "value": "Pacific/Palau"
+                },
+                {
+                  "description": "Central Australia Time, GMT+09:30.",
+                  "value": "Australia/Adelaide"
+                },
+                {
+                  "description": "Central Australia Time, GMT+09:30.",
+                  "value": "Australia/Broken_Hill"
+                },
+                {
+                  "description": "Australian Central Standard Time, GMT+09:30.",
+                  "value": "Australia/Darwin"
+                },
+                {
+                  "description": "Papua New Guinea Time, GMT+10:00.",
+                  "value": "Pacific/Port_Moresby"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Antarctica/Macquarie"
+                },
+                {
+                  "description": "Vladivostok Standard Time, GMT+10:00.",
+                  "value": "Asia/Ust-Nera"
+                },
+                {
+                  "description": "Vladivostok Standard Time, GMT+10:00.",
+                  "value": "Asia/Vladivostok"
+                },
+                {
+                  "description": "Australian Eastern Standard Time, GMT+10:00.",
+                  "value": "Australia/Brisbane"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Australia/Hobart"
+                },
+                {
+                  "description": "Australian Eastern Standard Time, GMT+10:00.",
+                  "value": "Australia/Lindeman"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Australia/Melbourne"
+                },
+                {
+                  "description": "Eastern Australia Time, GMT+10:00.",
+                  "value": "Australia/Sydney"
+                },
+                {
+                  "description": "Chamorro Standard Time, GMT+10:00.",
+                  "value": "Pacific/Guam"
+                },
+                {
+                  "description": "Chuuk Time, GMT+10:00.",
+                  "value": "Pacific/Chuuk"
+                },
+                {
+                  "description": "Lord Howe Time, GMT+10:30.",
+                  "value": "Australia/Lord_Howe"
+                },
+                {
+                  "description": "Casey Time, GMT+11:00.",
+                  "value": "Antarctica/Casey"
+                },
+                {
+                  "description": "Magadan Standard Time, GMT+11:00.",
+                  "value": "Asia/Magadan"
+                },
+                {
+                  "description": "Sakhalin Standard Time, GMT+11:00.",
+                  "value": "Asia/Sakhalin"
+                },
+                {
+                  "description": "Srednekolymsk Time, GMT+11:00.",
+                  "value": "Asia/Srednekolymsk"
+                },
+                {
+                  "description": "Bougainville Time, GMT+11:00.",
+                  "value": "Pacific/Bougainville"
+                },
+                {
+                  "description": "Vanuatu Standard Time, GMT+11:00.",
+                  "value": "Pacific/Efate"
+                },
+                {
+                  "description": "Solomon Islands Time, GMT+11:00.",
+                  "value": "Pacific/Guadalcanal"
+                },
+                {
+                  "description": "Kosrae Time, GMT+11:00.",
+                  "value": "Pacific/Kosrae"
+                },
+                {
+                  "description": "Norfolk Island Time, GMT+11:00.",
+                  "value": "Pacific/Norfolk"
+                },
+                {
+                  "description": "New Caledonia Standard Time, GMT+11:00.",
+                  "value": "Pacific/Noumea"
+                },
+                {
+                  "description": "Ponape Time, GMT+11:00.",
+                  "value": "Pacific/Pohnpei"
+                },
+                {
+                  "description": "New Zealand Time, GMT+12:00.",
+                  "value": "Pacific/Auckland"
+                },
+                {
+                  "description": "Anadyr Standard Time, GMT+12:00.",
+                  "value": "Asia/Anadyr"
+                },
+                {
+                  "description": "Petropavlovsk-Kamchatski Standard Time, GMT+12:00.",
+                  "value": "Asia/Kamchatka"
+                },
+                {
+                  "description": "Fiji Standard Time, GMT+12:00.",
+                  "value": "Pacific/Fiji"
+                },
+                {
+                  "description": "Gilbert Islands Time, GMT+12:00.",
+                  "value": "Pacific/Tarawa"
+                },
+                {
+                  "description": "Marshall Islands Time, GMT+12:00.",
+                  "value": "Pacific/Kwajalein"
+                },
+                {
+                  "description": "Nauru Time, GMT+12:00.",
+                  "value": "Pacific/Nauru"
+                },
+                {
+                  "description": "Chatham Time, GMT+12:45.",
+                  "value": "Pacific/Chatham"
+                },
+                {
+                  "description": "Apia Standard Time, GMT+13:00.",
+                  "value": "Pacific/Apia"
+                },
+                {
+                  "description": "Phoenix Islands Time, GMT+13:00.",
+                  "value": "Pacific/Kanton"
+                },
+                {
+                  "description": "Tokelau Time, GMT+13:00.",
+                  "value": "Pacific/Fakaofo"
+                },
+                {
+                  "description": "Tonga Standard Time, GMT+13:00.",
+                  "value": "Pacific/Tongatapu"
+                },
+                {
+                  "description": "Line Islands Time, GMT+14:00.",
+                  "value": "Pacific/Kiritimati"
+                },
+                {
+                  "description": "Keep timezone as it is on device currently.",
+                  "value": "UNSET"
+                }
+              ],
+              "description": "N/A"
+            }
+          ]
+        },
+        {
+          "field": "timezoneDetectionType",
+          "defaultValue": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_USERS_DECIDE",
+          "knownValueDescriptions": [
+            {
+              "description": "Let users decide.",
+              "value": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_USERS_DECIDE"
+            },
+            {
+              "description": "Never auto-detect timezone.",
+              "value": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_DISABLED"
+            },
+            {
+              "description": "Always use coarse timezone detection.",
+              "value": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_IP_ONLY"
+            },
+            {
+              "description": "Always send wifi access points to server while resolving timezone.",
+              "value": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_SEND_WIFI_ACCESS_POINTS"
+            },
+            {
+              "description": "Send all location information.",
+              "value": "AUTOMATIC_TIMEZONE_DETECTION_TYPE_ENUM_SEND_ALL_LOCATION_INFO"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Other settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.Timezone",
+      "policyDescription": "Timezone."
+    }
+]

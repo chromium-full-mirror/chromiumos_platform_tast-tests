@@ -1,0 +1,5041 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowForChromeDevices",
+                "number": 1
+              }
+            ],
+            "name": "AllowForChromeDevices"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.networks.ethernet.AllowForChromeDevices",
+      "additionalTargetKeyNames": [
+        {
+          "key": "guid",
+          "keyDescription": "The network id of the ethernet network you wish to update.  The network id can be found in the Google Admin interface as well by resolving networks with no additional target key specified."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowForChromeDevices",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow chrome devices to use this network.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow chrome devices to use this network.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Ethernet networks",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.networks.ethernet.AllowForChromeDevices",
+      "policyDescription": "Allow chrome users to use this network."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowForChromeUsers",
+                "number": 1
+              }
+            ],
+            "name": "AllowForChromeUsers"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.networks.ethernet.AllowForChromeUsers",
+      "additionalTargetKeyNames": [
+        {
+          "key": "guid",
+          "keyDescription": "The network id of the ethernet network you wish to update.  The network id can be found in the Google Admin interface as well by resolving networks with no additional target key specified."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowForChromeUsers",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow chrome users to use this network.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow chrome users to use this network.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Ethernet networks",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.networks.ethernet.AllowForChromeUsers",
+      "policyDescription": "Allow this network to be used by chrome users."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "UserAppInstallType",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "appInstallType",
+                "number": 1
+              }
+            ],
+            "name": "InstallType"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "UserAppInstallType",
+            "value": [
+              {
+                "name": "BLOCKED",
+                "number": 1
+              },
+              {
+                "name": "ALLOWED",
+                "number": 2
+              },
+              {
+                "name": "FORCED",
+                "number": 3
+              },
+              {
+                "name": "FORCED_AND_PIN_TO_TOOLBAR",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.InstallType",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with one of \"android:\", \"chrome:\" or \"web:\", depending on the app type. For Android apps, the app id can be found on the Google Play store, example: \"android:com.google.android.apps.translate\". For Chrome apps, the app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\". For Web apps, the app id is simply the URL, example: \"web:https://translate.google.com\"."
+        }
+      ],
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "appInstallType",
+          "knownValueDescriptions": [
+            {
+              "description": "Block installation of the app. Note: Web apps can't be Blocked, which means setting this option for Web Apps is disallowed.",
+              "value": "BLOCKED"
+            },
+            {
+              "description": "Allow installation of the app.",
+              "value": "ALLOWED"
+            },
+            {
+              "description": "Force install the app.",
+              "value": "FORCED"
+            },
+            {
+              "description": "Force install and pin the app to the toolbar.",
+              "value": "FORCED_AND_PIN_TO_TOOLBAR"
+            }
+          ],
+          "description": "Controls how the app is to be installed.",
+          "name": "Controls how the app is to be installed."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "notices": [
+        {
+          "field": "appInstallType",
+          "noticeMessage": "Android apps can only be allowed in the device if policy 'chrome.users.appsconfig.AndroidAppsEnabled' has 'arc_enabled' set to true.",
+          "noticeValue": "ALLOWED"
+        },
+        {
+          "field": "appInstallType",
+          "noticeMessage": "We strongly recommend against force-installing large apps in environments with limited connectivity. Test thoroughly before force-installing apps on users\u2019 devices, or select \u201cAllow install\u201d and tell users how to install the app. For details, read this best practices guide: https://support.google.com/chrome/a/answer/9962839?hl=en",
+          "noticeValue": "FORCED"
+        },
+        {
+          "field": "appInstallType",
+          "noticeMessage": "Android apps can only be installed in the device if policy 'chrome.users.appsconfig.AndroidAppsEnabled' has 'arc_enabled' set to true.",
+          "noticeValue": "FORCED"
+        },
+        {
+          "field": "appInstallType",
+          "noticeMessage": "We strongly recommend against force-installing large apps in environments with limited connectivity. Test thoroughly before force-installing apps on users\u2019 devices, or select \u201cAllow install\u201d and tell users how to install the app. For details, read this best practices guide: https://support.google.com/chrome/a/answer/9962839?hl=en",
+          "noticeValue": "FORCED_AND_PIN_TO_TOOLBAR"
+        },
+        {
+          "field": "appInstallType",
+          "noticeMessage": "Android apps can only be installed in the device if policy 'chrome.users.appsconfig.AndroidAppsEnabled' has 'arc_enabled' set to true.",
+          "noticeValue": "FORCED_AND_PIN_TO_TOOLBAR"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.InstallType",
+      "policyDescription": "Specifies the manner in which the app is to be installed. Note: It's required in order to add an App or Extension to the set of managed apps & extensions of an Organizational Unit."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "includeInCollection",
+                "number": 1
+              }
+            ],
+            "name": "IncludeInChromeWebStoreCollection"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.IncludeInChromeWebStoreCollection",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"chrome:\". The app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "includeInCollection",
+          "description": "Controls whether a Chrome Application should appear in the Chrome Web Store collection.",
+          "name": "Controls whether a Chrome Application should appear in the Chrome Web Store collection."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.IncludeInChromeWebStoreCollection",
+      "policyDescription": "Specifies whether the Chrome Application should appear in the Chrome Web Store collection."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowAccessToKeys",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowEnterpriseChallenge",
+                "number": 2
+              }
+            ],
+            "name": "CertificateManagement"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.CertificateManagement",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with one of \"android:\" or \"chrome:\", depending on the app type. For Android apps, the app id can be found on the Google Play store, example: \"android:com.google.android.apps.translate\". For Chrome apps, the app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowAccessToKeys",
+          "description": "Controls whether the app can access client keys.",
+          "name": "Controls whether the app can access client keys."
+        },
+        {
+          "field": "allowEnterpriseChallenge",
+          "description": "Controls whether the app can challenge enterprise keys.",
+          "name": "Controls whether the app can challenge enterprise keys."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "endSupport": {
+          "month": 8,
+          "day": 9,
+          "year": 2023
+        },
+        "policyApiLifecycleStage": "API_DEPRECATED",
+        "description": "This policy has been deprecated, please use the chrome.users.apps.AccessToKeys and chrome.users.apps.EnterpriseChallenge policies instead."
+      },
+      "schemaName": "chrome.users.apps.CertificateManagement",
+      "policyDescription": "Allows setting of certificate management related permissions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowAccessToKeys",
+                "number": 1
+              }
+            ],
+            "name": "AccessToKeys"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.AccessToKeys",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with one of \"android:\" or \"chrome:\", depending on the app type. For Android apps, the app id can be found on the Google Play store, example: \"android:com.google.android.apps.translate\". For Chrome apps, the app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowAccessToKeys",
+          "description": "Controls whether the app can access client keys.",
+          "name": "Controls whether the app can access client keys."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.AccessToKeys",
+      "policyDescription": "Allows setting of whether the app can access client keys."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowEnterpriseChallenge",
+                "number": 1
+              }
+            ],
+            "name": "EnterpriseChallenge"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.EnterpriseChallenge",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with one of \"android:\" or \"chrome:\", depending on the app type. For Android apps, the app id can be found on the Google Play store, example: \"android:com.google.android.apps.translate\". For Chrome apps, the app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowEnterpriseChallenge",
+          "description": "Controls whether the app can challenge enterprise keys.",
+          "name": "Controls whether the app can challenge enterprise keys."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.EnterpriseChallenge",
+      "policyDescription": "Allows setting of whether the app can challenge enterprise keys."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "blockedPermissions",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "allowedPermissions",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "blockedHosts",
+                "number": 3
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "allowedHosts",
+                "number": 4
+              }
+            ],
+            "name": "PermissionsAndUrlAccess"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.PermissionsAndUrlAccess",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"chrome:\". The app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "blockedPermissions",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow all permissions. If empty string is set, it must be the only value set for the policy.",
+              "value": ""
+            },
+            {
+              "description": "Alarms.",
+              "value": "alarms"
+            },
+            {
+              "description": "Audio capture.",
+              "value": "audioCapture"
+            },
+            {
+              "description": "Certificate provider.",
+              "value": "certificateProvider"
+            },
+            {
+              "description": "Clipboard read.",
+              "value": "clipboardRead"
+            },
+            {
+              "description": "Clipboard write.",
+              "value": "clipboardWrite"
+            },
+            {
+              "description": "Context menus.",
+              "value": "contextMenus"
+            },
+            {
+              "description": "Desktop capture.",
+              "value": "desktopCapture"
+            },
+            {
+              "description": "Document scan.",
+              "value": "documentScan"
+            },
+            {
+              "description": "Enterprise device attributes.",
+              "value": "enterprise.deviceAttributes"
+            },
+            {
+              "description": "Experimental APIs.",
+              "value": "experimental"
+            },
+            {
+              "description": "Fullscreen apps.",
+              "value": "app.window.fullscreen"
+            },
+            {
+              "description": "File browser handler.",
+              "value": "fileBrowserHandler"
+            },
+            {
+              "description": "File system.",
+              "value": "fileSystem"
+            },
+            {
+              "description": "File system provider.",
+              "value": "fileSystemProvider"
+            },
+            {
+              "description": "HID.",
+              "value": "hid"
+            },
+            {
+              "description": "Override fullscreen escape.",
+              "value": "app.window.fullscreen.overrideEsc"
+            },
+            {
+              "description": "Detect idle.",
+              "value": "idle"
+            },
+            {
+              "description": "Identity.",
+              "value": "identity"
+            },
+            {
+              "description": "Google Cloud Messaging.",
+              "value": "gcm"
+            },
+            {
+              "description": "Geo location.",
+              "value": "geolocation"
+            },
+            {
+              "description": "Media galleries.",
+              "value": "mediaGalleries"
+            },
+            {
+              "description": "Native messaging.",
+              "value": "nativeMessaging"
+            },
+            {
+              "description": "Captive portal authenticator.",
+              "value": "networking.config"
+            },
+            {
+              "description": "Power.",
+              "value": "power"
+            },
+            {
+              "description": "Notifications.",
+              "value": "notifications"
+            },
+            {
+              "description": "Printers.",
+              "value": "printerProvider"
+            },
+            {
+              "description": "Serial.",
+              "value": "serial"
+            },
+            {
+              "description": "Set proxy.",
+              "value": "proxy"
+            },
+            {
+              "description": "Platform keys.",
+              "value": "platformKeys"
+            },
+            {
+              "description": "Storage.",
+              "value": "storage"
+            },
+            {
+              "description": "Sync file system.",
+              "value": "syncFileSystem"
+            },
+            {
+              "description": "CPU metadata.",
+              "value": "system.cpu"
+            },
+            {
+              "description": "Memory metadata.",
+              "value": "system.memory"
+            },
+            {
+              "description": "Network metadata.",
+              "value": "system.network"
+            },
+            {
+              "description": "Display metadata.",
+              "value": "system.display"
+            },
+            {
+              "description": "Storage metadata.",
+              "value": "system.storage"
+            },
+            {
+              "description": "Text to speech.",
+              "value": "tts"
+            },
+            {
+              "description": "Unlimited storage.",
+              "value": "unlimitedStorage"
+            },
+            {
+              "description": "USB.",
+              "value": "usb"
+            },
+            {
+              "description": "Video capture.",
+              "value": "videoCapture"
+            },
+            {
+              "description": "VPN provider.",
+              "value": "vpnProvider"
+            },
+            {
+              "description": "Web requests.",
+              "value": "webRequest"
+            },
+            {
+              "description": "Block web requests.",
+              "value": "webRequestBlocking"
+            }
+          ],
+          "description": "Sets extension permissions that should be blocked. If this field is set 'allowedPermissions' must be unset.",
+          "name": "Sets extension permissions that should be blocked. If this field is set 'allowedPermissions' must be unset."
+        },
+        {
+          "field": "allowedPermissions",
+          "knownValueDescriptions": [
+            {
+              "description": "Alarms.",
+              "value": "alarms"
+            },
+            {
+              "description": "Audio capture.",
+              "value": "audioCapture"
+            },
+            {
+              "description": "Certificate provider.",
+              "value": "certificateProvider"
+            },
+            {
+              "description": "Clipboard read.",
+              "value": "clipboardRead"
+            },
+            {
+              "description": "Clipboard write.",
+              "value": "clipboardWrite"
+            },
+            {
+              "description": "Context menus.",
+              "value": "contextMenus"
+            },
+            {
+              "description": "Desktop capture.",
+              "value": "desktopCapture"
+            },
+            {
+              "description": "Document scan.",
+              "value": "documentScan"
+            },
+            {
+              "description": "Enterprise device attributes.",
+              "value": "enterprise.deviceAttributes"
+            },
+            {
+              "description": "Experimental APIs.",
+              "value": "experimental"
+            },
+            {
+              "description": "Fullscreen apps.",
+              "value": "app.window.fullscreen"
+            },
+            {
+              "description": "File browser handler.",
+              "value": "fileBrowserHandler"
+            },
+            {
+              "description": "File system.",
+              "value": "fileSystem"
+            },
+            {
+              "description": "File system provider.",
+              "value": "fileSystemProvider"
+            },
+            {
+              "description": "HID.",
+              "value": "hid"
+            },
+            {
+              "description": "Override fullscreen escape.",
+              "value": "app.window.fullscreen.overrideEsc"
+            },
+            {
+              "description": "Detect idle.",
+              "value": "idle"
+            },
+            {
+              "description": "Identity.",
+              "value": "identity"
+            },
+            {
+              "description": "Google Cloud Messaging.",
+              "value": "gcm"
+            },
+            {
+              "description": "Geo location.",
+              "value": "geolocation"
+            },
+            {
+              "description": "Media galleries.",
+              "value": "mediaGalleries"
+            },
+            {
+              "description": "Native messaging.",
+              "value": "nativeMessaging"
+            },
+            {
+              "description": "Captive portal authenticator.",
+              "value": "networking.config"
+            },
+            {
+              "description": "Power.",
+              "value": "power"
+            },
+            {
+              "description": "Notifications.",
+              "value": "notifications"
+            },
+            {
+              "description": "Printers.",
+              "value": "printerProvider"
+            },
+            {
+              "description": "Serial.",
+              "value": "serial"
+            },
+            {
+              "description": "Set proxy.",
+              "value": "proxy"
+            },
+            {
+              "description": "Platform keys.",
+              "value": "platformKeys"
+            },
+            {
+              "description": "Storage.",
+              "value": "storage"
+            },
+            {
+              "description": "Sync file system.",
+              "value": "syncFileSystem"
+            },
+            {
+              "description": "CPU metadata.",
+              "value": "system.cpu"
+            },
+            {
+              "description": "Memory metadata.",
+              "value": "system.memory"
+            },
+            {
+              "description": "Network metadata.",
+              "value": "system.network"
+            },
+            {
+              "description": "Display metadata.",
+              "value": "system.display"
+            },
+            {
+              "description": "Storage metadata.",
+              "value": "system.storage"
+            },
+            {
+              "description": "Text to speech.",
+              "value": "tts"
+            },
+            {
+              "description": "Unlimited storage.",
+              "value": "unlimitedStorage"
+            },
+            {
+              "description": "USB.",
+              "value": "usb"
+            },
+            {
+              "description": "Video capture.",
+              "value": "videoCapture"
+            },
+            {
+              "description": "VPN provider.",
+              "value": "vpnProvider"
+            },
+            {
+              "description": "Web requests.",
+              "value": "webRequest"
+            },
+            {
+              "description": "Block web requests.",
+              "value": "webRequestBlocking"
+            }
+          ],
+          "description": "Sets extension permissions that should be allowed. If this field is set 'blockedPermissions' must be unset.",
+          "name": "Sets extension permissions that should be allowed. If this field is set 'blockedPermissions' must be unset."
+        },
+        {
+          "field": "blockedHosts",
+          "description": "Sets extension hosts that should be blocked.",
+          "name": "Sets extension hosts that should be blocked."
+        },
+        {
+          "field": "allowedHosts",
+          "description": "Sets extension hosts that should be allowed. Allowed hosts override blocked hosts.",
+          "name": "Sets extension hosts that should be allowed. Allowed hosts override blocked hosts."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.PermissionsAndUrlAccess",
+      "policyDescription": "Allows setting of allowed and blocked hosts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "managedConfiguration",
+                "number": 1
+              }
+            ],
+            "name": "ManagedConfiguration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.ManagedConfiguration",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with one of \"android:\" or \"chrome:\", depending on the app type. For Android apps, the app id can be found on the Google Play store, example: \"android:com.google.android.apps.translate\". For Chrome apps, the app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "managedConfiguration",
+          "description": "Sets the managed configuration JSON format.",
+          "name": "Sets the managed configuration JSON format."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.ManagedConfiguration",
+      "policyDescription": "Allows setting of the managed configuration."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "UserAppDefaultLaunchContainer",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultLaunchContainer",
+                "number": 1
+              }
+            ],
+            "name": "DefaultLaunchContainer"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "UserAppDefaultLaunchContainer",
+            "value": [
+              {
+                "name": "TAB",
+                "number": 1
+              },
+              {
+                "name": "WINDOW",
+                "number": 2
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.DefaultLaunchContainer",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"web:\". The app id is simply the URL, example: \"web:https://translate.google.com\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "defaultLaunchContainer",
+          "knownValueDescriptions": [
+            {
+              "description": "Browser tab.",
+              "value": "TAB"
+            },
+            {
+              "description": "Separate window.",
+              "value": "WINDOW"
+            }
+          ],
+          "description": "Sets the default launch container for web apps.",
+          "name": "Sets the default launch container for web apps."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.DefaultLaunchContainer",
+      "policyDescription": "Allows setting of the default launch container for web apps."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "skipPrintConfirmation",
+                "number": 1
+              }
+            ],
+            "name": "SkipPrintConfirmation"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.SkipPrintConfirmation",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"chrome:\". The app id can be found on the Chrome Web Store, example: \"chrome:aapbdbdomjkkjkaonfhkkikfgjllcleb\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "skipPrintConfirmation",
+          "description": "Controls whether a Chrome Application can skip the confirmation dialog when sending print jobs via the Chrome Printing API.",
+          "name": "Controls whether a Chrome Application can skip the confirmation dialog when sending print jobs via the Chrome Printing API."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.SkipPrintConfirmation",
+      "policyDescription": "Allows the app to skip the confirmation dialog when sending print jobs via the Chrome Printing API."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "installationUrl",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "overrideInstallationUrl",
+                "number": 2
+              }
+            ],
+            "name": "InstallationUrl"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.InstallationUrl",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"chrome:\". The id must consist of only lowercase letters, example: \"chrome:selfhostedextensionid\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "installationUrl",
+          "description": "The url from which to install a self hosted Chrome Extension.",
+          "inputConstraint": "Must be a valid url.",
+          "name": "The url from which to install a self hosted Chrome Extension."
+        },
+        {
+          "field": "overrideInstallationUrl",
+          "description": "Override the URL provided in the extension manifest with the provided installation url.",
+          "name": "Override the URL provided in the extension manifest with the provided installation url."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "endSupport": {
+          "month": 8,
+          "day": 9,
+          "year": 2023
+        },
+        "policyApiLifecycleStage": "API_DEPRECATED",
+        "description": "This policy has been deprecated, please use the chrome.users.apps.AppInstallationUrl and chrome.users.apps.OverrideInstallationUrl policies instead."
+      },
+      "schemaName": "chrome.users.apps.InstallationUrl",
+      "policyDescription": "Specifies the url from which to install a self hosted Chrome Extension."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "installationUrl",
+                "number": 1
+              }
+            ],
+            "name": "AppInstallationUrl"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.AppInstallationUrl",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"chrome:\". The id must consist of only lowercase letters, example: \"chrome:selfhostedextensionid\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "installationUrl",
+          "description": "The url from which to install a self hosted Chrome Extension.",
+          "inputConstraint": "Must be a valid url.",
+          "name": "The url from which to install a self hosted Chrome Extension."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.AppInstallationUrl",
+      "policyDescription": "Specifies the url from which to install a self hosted Chrome Extension."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "overrideInstallationUrl",
+                "number": 1
+              }
+            ],
+            "name": "OverrideInstallationUrl"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.apps.OverrideInstallationUrl",
+      "additionalTargetKeyNames": [
+        {
+          "key": "app_id",
+          "keyDescription": "Id of the app prefixed with \"chrome:\". The id must consist of only lowercase letters, example: \"chrome:selfhostedextensionid\"."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "overrideInstallationUrl",
+          "knownValueDescriptions": [
+            {
+              "description": "Use URL provided by AppInstallationUrl.",
+              "value": "true"
+            },
+            {
+              "description": "Use URL provided in the extension manifest.",
+              "value": "false"
+            }
+          ],
+          "description": "Override the URL provided in the extension manifest with the provided installation url.",
+          "name": "Override the URL provided in the extension manifest with the provided installation url."
+        }
+      ],
+      "categoryTitle": "User apps",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.apps.OverrideInstallationUrl",
+      "policyDescription": "Allows overriding of the url from which to install a self hosted Chrome Extension."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NetworkDetails",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "details",
+                "number": 1
+              }
+            ],
+            "name": "Details"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "ssid",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "hiddenSsid",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "automaticallyConnect",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "security",
+                "number": 4
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "passphrase",
+                "number": 5
+              },
+              {
+                "typeName": "EAPProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "eap",
+                "number": 6
+              },
+              {
+                "typeName": "ProxySettingsProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "proxySettings",
+                "number": 7
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowIpConfiguration",
+                "number": 8
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowNameServersConfiguration",
+                "number": 9
+              },
+              {
+                "typeName": "NameServersEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "nameServerSelection",
+                "number": 10
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "customNameServers",
+                "number": 11
+              }
+            ],
+            "name": "NetworkDetails"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "outerProtocol",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "innerProtocol",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "useSystemCas",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "serverCaRef",
+                "number": 12
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "clientCertRef",
+                "number": 5
+              },
+              {
+                "typeName": "CertificatePatternProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "clientCertPattern",
+                "number": 6
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "identity",
+                "number": 8
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "password",
+                "number": 9
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "anonymousIdentity",
+                "number": 10
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "tlsVersionMax",
+                "number": 11
+              }
+            ],
+            "name": "EAPProto"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "enrollmentUrls",
+                "number": 1
+              },
+              {
+                "typeName": "IssuerSubjectPatternProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "issuer",
+                "number": 2
+              },
+              {
+                "typeName": "IssuerSubjectPatternProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "subject",
+                "number": 3
+              }
+            ],
+            "name": "CertificatePatternProto"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "commonName",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "locality",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "organization",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "organizationalUnit",
+                "number": 4
+              }
+            ],
+            "name": "IssuerSubjectPatternProto"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "type",
+                "number": 1
+              },
+              {
+                "typeName": "ManualProxySettingsProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "manualConfiguration",
+                "number": 2
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "excludeDomains",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "automaticProxyConfigurationUrl",
+                "number": 4
+              }
+            ],
+            "name": "ProxySettingsProto"
+          },
+          {
+            "field": [
+              {
+                "typeName": "ProxyLocationProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "httpProxy",
+                "number": 1
+              },
+              {
+                "typeName": "ProxyLocationProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "secureHttpProxy",
+                "number": 2
+              },
+              {
+                "typeName": "ProxyLocationProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "ftpProxy",
+                "number": 3
+              },
+              {
+                "typeName": "ProxyLocationProto",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "socks",
+                "number": 4
+              }
+            ],
+            "name": "ManualProxySettingsProto"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "host",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "port",
+                "number": 2
+              }
+            ],
+            "name": "ProxyLocationProto"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NameServersEnum",
+            "value": [
+              {
+                "name": "NAME_SERVERS_ENUM_AUTOMATIC",
+                "number": 1
+              },
+              {
+                "name": "NAME_SERVERS_ENUM_GOOGLE",
+                "number": 2
+              },
+              {
+                "name": "NAME_SERVERS_ENUM_CUSTOM",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.networks.wifi.Details",
+      "additionalTargetKeyNames": [
+        {
+          "key": "network_id",
+          "keyDescription": "The network id of the wifi network you wish to update.  The network id can be found in the Google Admin interface as well by resolving networks with no additional target key specified."
+        }
+      ],
+      "supportUri": "https://support.google.com/chrome/a/answer/6342302?hl=en",
+      "fieldDescriptions": [
+        {
+          "field": "details",
+          "defaultValue": {
+            "allowIpConfiguration": false,
+            "ssid": "REQUIRED - Replace with your SSID",
+            "nameServerSelection": "NAME_SERVERS_ENUM_AUTOMATIC",
+            "automaticallyConnect": false,
+            "proxySettings": {
+              "type": "Direct"
+            },
+            "security": "None",
+            "allowNameServersConfiguration": false,
+            "hiddenSsid": false
+          },
+          "description": "Wifi network configuration.",
+          "name": "Wifi network configuration.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "ssid",
+              "description": "The WiFi network's SSID.  This field is case sensitive.",
+              "name": "The WiFi network's SSID.  This field is case sensitive."
+            },
+            {
+              "field": "hiddenSsid",
+              "knownValueDescriptions": [
+                {
+                  "description": "This network doesn't broadcast its SSID.",
+                  "value": "true"
+                },
+                {
+                  "description": "This network does broadcast its SSID.",
+                  "value": "false"
+                }
+              ],
+              "description": "Whether or not this wifi network broadcasts its SSID.",
+              "name": "Whether or not this wifi network broadcasts its SSID."
+            },
+            {
+              "field": "automaticallyConnect",
+              "knownValueDescriptions": [
+                {
+                  "description": "Automatically connect devices to this network.",
+                  "value": "true"
+                },
+                {
+                  "description": "Do not automatically connect devices to this network.",
+                  "value": "false"
+                }
+              ],
+              "description": "Configure if devices will automatically connect to this network.",
+              "name": "Configure if devices will automatically connect to this network."
+            },
+            {
+              "field": "security",
+              "knownValueDescriptions": [
+                {
+                  "description": "None.",
+                  "value": "None"
+                },
+                {
+                  "description": "WEP (Insecure).",
+                  "value": "WEP-PSK"
+                },
+                {
+                  "description": "WPA/WPA2.",
+                  "value": "WPA-PSK"
+                },
+                {
+                  "description": "WPA/WPA2 Enterprise (802.1X).",
+                  "value": "WPA-EAP"
+                },
+                {
+                  "description": "Dynamic WEP (802.1X).",
+                  "value": "WEP-8021X"
+                }
+              ],
+              "requiredItems": [
+                {
+                  "fieldConditions": [
+                    "WEP-PSK",
+                    "WPA-PSK"
+                  ],
+                  "requiredFields": [
+                    "passphrase"
+                  ]
+                },
+                {
+                  "fieldConditions": [
+                    "WPA-EAP",
+                    "WEP-8021X"
+                  ],
+                  "requiredFields": [
+                    "eap.outerProtocol"
+                  ]
+                }
+              ],
+              "description": "The security type of the WiFi network.",
+              "name": "The security type of the WiFi network."
+            },
+            {
+              "field": "passphrase",
+              "fieldDependencies": [
+                {
+                  "sourceFieldValue": "WEP-PSK",
+                  "sourceField": "security"
+                },
+                {
+                  "sourceFieldValue": "WPA-PSK",
+                  "sourceField": "security"
+                }
+              ],
+              "description": "The password of the network.  Only affects WEP and WPA/WPA2 security settings.  Omit to retain current password, set to \"\" to clear the value.",
+              "name": "The password of the network.  Only affects WEP and WPA/WPA2 security settings.  Omit to retain current password, set to \"\" to clear the value."
+            },
+            {
+              "field": "eap",
+              "fieldDependencies": [
+                {
+                  "sourceFieldValue": "WPA-EAP",
+                  "sourceField": "security"
+                },
+                {
+                  "sourceFieldValue": "WEP-8021X",
+                  "sourceField": "security"
+                }
+              ],
+              "description": "Extensible Authentication Protocol. Only affects WPA/WPA2 Enterprise (802.1X) and Dynamic WEP (802.1X) security types.",
+              "name": "Extensible Authentication Protocol. Only affects WPA/WPA2 Enterprise (802.1X) and Dynamic WEP (802.1X) security types.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "outerProtocol",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "PEAP.",
+                      "value": "PEAP"
+                    },
+                    {
+                      "description": "LEAP.",
+                      "value": "LEAP"
+                    },
+                    {
+                      "description": "EAP-TLS.",
+                      "value": "EAP-TLS"
+                    },
+                    {
+                      "description": "EAP-TTLS.",
+                      "value": "EAP-TTLS"
+                    },
+                    {
+                      "description": "EAP-PWD.",
+                      "value": "EAP-PWD"
+                    }
+                  ],
+                  "requiredItems": [
+                    {
+                      "fieldConditions": [
+                        "PEAP"
+                      ],
+                      "requiredFields": [
+                        "innerProtocol",
+                        "useSystemCas"
+                      ]
+                    },
+                    {
+                      "fieldConditions": [
+                        "EAP-TLS"
+                      ],
+                      "requiredFields": [
+                        "tlsVersionMax",
+                        "useSystemCas"
+                      ]
+                    },
+                    {
+                      "fieldConditions": [
+                        "EAP-TTLS"
+                      ],
+                      "requiredFields": [
+                        "innerProtocol",
+                        "useSystemCas"
+                      ]
+                    }
+                  ],
+                  "description": "Outer protocol of EAP.",
+                  "name": "Outer protocol of EAP."
+                },
+                {
+                  "field": "innerProtocol",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "PEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TTLS",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "knownValueDescriptions": [
+                    {
+                      "description": "Automatic.",
+                      "value": "Automatic"
+                    },
+                    {
+                      "description": "MS-CHAP V2.",
+                      "value": "MSCHAPv2"
+                    },
+                    {
+                      "description": "MD5.",
+                      "value": "MD5"
+                    },
+                    {
+                      "description": "PAP.",
+                      "value": "PAP"
+                    },
+                    {
+                      "description": "MS-CHAP.",
+                      "value": "MSCHAP"
+                    },
+                    {
+                      "description": "GTC.",
+                      "value": "GTC"
+                    }
+                  ],
+                  "description": "Inner extensible authentication protocol.",
+                  "name": "Inner extensible authentication protocol."
+                },
+                {
+                  "field": "useSystemCas",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "PEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TLS",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TTLS",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "knownValueDescriptions": [
+                    {
+                      "description": "System default wifi network authorities (default).",
+                      "value": "true"
+                    },
+                    {
+                      "description": "Don't check (insecure).",
+                      "value": "false"
+                    }
+                  ],
+                  "description": "Server Certificate Authority.",
+                  "name": "Server Certificate Authority."
+                },
+                {
+                  "field": "serverCaRef",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "false",
+                      "sourceField": "useSystemCas"
+                    }
+                  ],
+                  "description": "Server certificate authoritiy reference.",
+                  "name": "Server certificate authoritiy reference."
+                },
+                {
+                  "field": "clientCertRef",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "EAP-TLS",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TTLS",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "description": "SCEP Profile.",
+                  "name": "SCEP Profile."
+                },
+                {
+                  "field": "clientCertPattern",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "EAP-TLS",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "description": "N/A",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "enrollmentUrls",
+                      "description": "N/A"
+                    },
+                    {
+                      "field": "issuer",
+                      "description": "N/A",
+                      "nestedFieldDescriptions": [
+                        {
+                          "field": "commonName",
+                          "description": "N/A"
+                        },
+                        {
+                          "field": "locality",
+                          "description": "N/A"
+                        },
+                        {
+                          "field": "organization",
+                          "description": "N/A"
+                        },
+                        {
+                          "field": "organizationalUnit",
+                          "description": "N/A"
+                        }
+                      ]
+                    },
+                    {
+                      "field": "subject",
+                      "description": "N/A"
+                    }
+                  ]
+                },
+                {
+                  "field": "identity",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "PEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "LEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TLS",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TTLS",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-PWD",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "description": "N/A"
+                },
+                {
+                  "field": "password",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "PEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "LEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TTLS",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-PWD",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "description": "EAP password.  Omit from requests to retain current value, set to \"\" to clear the value.",
+                  "name": "EAP password.  Omit from requests to retain current value, set to \"\" to clear the value."
+                },
+                {
+                  "field": "anonymousIdentity",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "PEAP",
+                      "sourceField": "outerProtocol"
+                    },
+                    {
+                      "sourceFieldValue": "EAP-TTLS",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "description": "N/A"
+                },
+                {
+                  "field": "tlsVersionMax",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "EAP-TLS",
+                      "sourceField": "outerProtocol"
+                    }
+                  ],
+                  "knownValueDescriptions": [
+                    {
+                      "description": "1.0.",
+                      "value": "1.0"
+                    },
+                    {
+                      "description": "1.1.",
+                      "value": "1.1"
+                    },
+                    {
+                      "description": "1.2.",
+                      "value": "1.2"
+                    }
+                  ],
+                  "description": "N/A"
+                }
+              ]
+            },
+            {
+              "field": "proxySettings",
+              "description": "Proxy settings for this network.",
+              "name": "Proxy settings for this network.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "type",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "Direct internet connection.",
+                      "value": "Direct"
+                    },
+                    {
+                      "description": "Manual proxy configuration.",
+                      "value": "Manual"
+                    },
+                    {
+                      "description": "Automatic proxy configuration.",
+                      "value": "PAC"
+                    },
+                    {
+                      "description": "Web proxy autodiscovery.",
+                      "value": "WPAD"
+                    }
+                  ],
+                  "requiredItems": [
+                    {
+                      "fieldConditions": [
+                        "Manual"
+                      ],
+                      "requiredFields": [
+                        "manualConfiguration"
+                      ]
+                    },
+                    {
+                      "fieldConditions": [
+                        "PAC"
+                      ],
+                      "requiredFields": [
+                        "automaticProxyConfigurationUrl"
+                      ]
+                    }
+                  ],
+                  "description": "Proxy type.",
+                  "name": "Proxy type."
+                },
+                {
+                  "field": "manualConfiguration",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "Manual",
+                      "sourceField": "type"
+                    }
+                  ],
+                  "description": "Manual proxy configuration.",
+                  "name": "Manual proxy configuration.",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "httpProxy",
+                      "description": "HTTP Proxy.",
+                      "name": "HTTP Proxy.",
+                      "nestedFieldDescriptions": [
+                        {
+                          "field": "host",
+                          "description": "host.",
+                          "name": "host."
+                        },
+                        {
+                          "field": "port",
+                          "description": "port.",
+                          "name": "port."
+                        }
+                      ]
+                    },
+                    {
+                      "field": "secureHttpProxy",
+                      "description": "Secure HTTP Proxy.",
+                      "name": "Secure HTTP Proxy."
+                    },
+                    {
+                      "field": "ftpProxy",
+                      "description": "FTP Proxy.",
+                      "name": "FTP Proxy."
+                    },
+                    {
+                      "field": "socks",
+                      "description": "SOCKS host.",
+                      "name": "SOCKS host."
+                    }
+                  ]
+                },
+                {
+                  "field": "excludeDomains",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "Manual",
+                      "sourceField": "type"
+                    }
+                  ],
+                  "description": "Domains with no proxy.",
+                  "name": "Domains with no proxy."
+                },
+                {
+                  "field": "automaticProxyConfigurationUrl",
+                  "fieldDependencies": [
+                    {
+                      "sourceFieldValue": "PAC",
+                      "sourceField": "type"
+                    }
+                  ],
+                  "description": "Autoconfiguration URL.",
+                  "name": "Autoconfiguration URL."
+                }
+              ]
+            },
+            {
+              "field": "allowIpConfiguration",
+              "description": "Allow IP address to be configured on the device (ChromeOS only).",
+              "name": "Allow IP address to be configured on the device (ChromeOS only)."
+            },
+            {
+              "field": "allowNameServersConfiguration",
+              "description": "Allow name servers to be configured on the device.",
+              "name": "Allow name servers to be configured on the device."
+            },
+            {
+              "field": "nameServerSelection",
+              "knownValueDescriptions": [
+                {
+                  "description": "Automatic name servers.",
+                  "value": "NAME_SERVERS_ENUM_AUTOMATIC"
+                },
+                {
+                  "description": "Google name servers (https://developers.google.com/speed/public-dns).",
+                  "value": "NAME_SERVERS_ENUM_GOOGLE"
+                },
+                {
+                  "description": "Custom name servers.",
+                  "value": "NAME_SERVERS_ENUM_CUSTOM"
+                }
+              ],
+              "requiredItems": [
+                {
+                  "fieldConditions": [
+                    "NAME_SERVERS_ENUM_CUSTOM"
+                  ],
+                  "requiredFields": [
+                    "customNameServers"
+                  ]
+                }
+              ],
+              "description": "Selection to determine where name servers will come from.",
+              "name": "Selection to determine where name servers will come from."
+            },
+            {
+              "field": "customNameServers",
+              "fieldDependencies": [
+                {
+                  "sourceFieldValue": "NAME_SERVERS_ENUM_CUSTOM",
+                  "sourceField": "nameServerSelection"
+                }
+              ],
+              "description": "Custom name servers.",
+              "name": "Custom name servers."
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "Wifi networks",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.networks.wifi.Details",
+      "policyDescription": "Wifi network configuration details."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowForChromeDevices",
+                "number": 1
+              }
+            ],
+            "name": "AllowForChromeDevices"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.networks.wifi.AllowForChromeDevices",
+      "additionalTargetKeyNames": [
+        {
+          "key": "guid",
+          "keyDescription": "The network id of the wifi network you wish to update.  The network id can be found in the Google Admin interface as well by resolving networks with no additional target key specified."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowForChromeDevices",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow chrome devices to use this network.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow chrome devices to use this network.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Wifi networks",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.networks.wifi.AllowForChromeDevices",
+      "policyDescription": "Allow chrome users to use this network."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowForChromeUsers",
+                "number": 1
+              }
+            ],
+            "name": "AllowForChromeUsers"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.networks.wifi.AllowForChromeUsers",
+      "additionalTargetKeyNames": [
+        {
+          "key": "guid",
+          "keyDescription": "The network id of the wifi network you wish to update.  The network id can be found in the Google Admin interface as well by resolving networks with no additional target key specified."
+        }
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowForChromeUsers",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow chrome users to use this network.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow chrome users to use this network.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Wifi networks",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.networks.wifi.AllowForChromeUsers",
+      "policyDescription": "Allow this network to be used by chrome users."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "sessionDurationLimit",
+                "number": 1
+              }
+            ],
+            "name": "SessionLength"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SessionLength",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#session_length_limit",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "1 - 1440 minutes; leave empty for unlimited sessions.",
+          "name": "Maximum session length.",
+          "inputConstraint": "Duration policy field value is in the range [1, 1440] minutes. The input duration policy field value should be converted to seconds. Multiply the desired value in minutes by 60 and append an 's'.",
+          "field": "sessionDurationLimit",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Maximum session length. 1 - 1440 minutes; leave empty for unlimited sessions."
+        }
+      ],
+      "categoryTitle": "General",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SessionLength",
+      "policyDescription": "Maximum user session length."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "UploadedFile",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "userAvatarImage",
+                "number": 1
+              }
+            ],
+            "name": "Avatar"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "downloadUri",
+                "number": 1
+              }
+            ],
+            "name": "UploadedFile"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Avatar",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#user_avatar_image",
+      "fieldDescriptions": [
+        {
+          "field": "userAvatarImage",
+          "description": "Uploaded file can be one of the MIME types: [image/jpeg], and file size cannot exceed 512kb.",
+          "name": "Uploaded file can be one of the MIME types: [image/jpeg], and file size cannot exceed 512kb.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "downloadUri",
+              "description": "The URI can be obtained by uploading your file via the upload service.",
+              "name": "The URI can be obtained by uploading your file via the upload service."
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "General",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Avatar",
+      "policyDescription": "Custom avatar."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "UploadedFile",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "wallpaperImage",
+                "number": 1
+              }
+            ],
+            "name": "Wallpaper"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "downloadUri",
+                "number": 1
+              }
+            ],
+            "name": "UploadedFile"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Wallpaper",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#wallpaper_image",
+      "fieldDescriptions": [
+        {
+          "field": "wallpaperImage",
+          "description": "Uploaded file can be one of the MIME types: [image/jpeg], and file size cannot exceed 16384kb.",
+          "name": "Uploaded file can be one of the MIME types: [image/jpeg], and file size cannot exceed 16384kb.",
+          "nestedFieldDescriptions": [
+            {
+              "field": "downloadUri",
+              "description": "The URI can be obtained by uploading your file via the upload service.",
+              "name": "The URI can be obtained by uploading your file via the upload service."
+            }
+          ]
+        }
+      ],
+      "categoryTitle": "General",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Wallpaper",
+      "policyDescription": "Custom wallpaper."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "browserThemeColor",
+                "number": 1
+              }
+            ],
+            "name": "BrowserThemeColor"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserThemeColor",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browser_theme_color",
+      "fieldDescriptions": [
+        {
+          "field": "browserThemeColor",
+          "fieldDescription": "Enter a valid hex color, for instance #FFFFFF.",
+          "description": "Hex color. Enter a valid hex color, for instance #FFFFFF.",
+          "name": "Hex color."
+        }
+      ],
+      "categoryTitle": "General",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserThemeColor",
+      "policyDescription": "Custom theme color."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "BrowserSigninModeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "browserSignin",
+                "number": 1
+              }
+            ],
+            "name": "BrowserSignin"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "BrowserSigninModeEnum",
+            "value": [
+              {
+                "name": "BROWSER_SIGNIN_MODE_ENUM_DISABLE",
+                "number": 1
+              },
+              {
+                "name": "BROWSER_SIGNIN_MODE_ENUM_ENABLE",
+                "number": 2
+              },
+              {
+                "name": "BROWSER_SIGNIN_MODE_ENUM_FORCE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserSignin",
+      "fieldDescriptions": [
+        {
+          "field": "browserSignin",
+          "defaultValue": "BROWSER_SIGNIN_MODE_ENUM_ENABLE",
+          "knownValueDescriptions": [
+            {
+              "description": "Disable browser sign-in.",
+              "value": "BROWSER_SIGNIN_MODE_ENUM_DISABLE"
+            },
+            {
+              "description": "Enable browser sign-in.",
+              "value": "BROWSER_SIGNIN_MODE_ENUM_ENABLE"
+            },
+            {
+              "description": "Force users to sign-in to use the browser.",
+              "value": "BROWSER_SIGNIN_MODE_ENUM_FORCE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserSignin",
+      "policyDescription": "Browser sign-in settings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "restrictSigninToPattern",
+                "number": 1
+              }
+            ],
+            "name": "RestrictSigninToPattern"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RestrictSigninToPattern",
+      "fieldDescriptions": [
+        {
+          "field": "restrictSigninToPattern",
+          "fieldDescription": "A regular expression which is used to determine which Google accounts can be set as browser primary accounts in Google Chrome (i.e. the account that is chosen during the Sync opt-in flow). For example, the value .*@example.com would restrict sign in to accounts in the example.com domain.",
+          "description": "Pattern. A regular expression which is used to determine which Google accounts can be set as browser primary accounts in Google Chrome (i.e. the account that is chosen during the Sync opt-in flow). For example, the value .*@example.com would restrict sign in to accounts in the example.com domain.",
+          "name": "Pattern."
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RestrictSigninToPattern",
+      "policyDescription": "Restrict sign-in to pattern."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "signinInterceptionEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SigninInterceptionEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SigninInterceptionEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#signin_interception_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "signinInterceptionEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable signin interception.",
+              "value": "true"
+            },
+            {
+              "description": "Disable signin interception.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SigninInterceptionEnabled",
+      "policyDescription": "Signin interception."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ManagedAccountsSigninRestrictionEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "managedAccountsSigninRestriction",
+                "number": 1
+              }
+            ],
+            "name": "ManagedAccountsSigninRestriction"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ManagedAccountsSigninRestrictionEnum",
+            "value": [
+              {
+                "name": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT",
+                "number": 1
+              },
+              {
+                "name": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT_STRICT",
+                "number": 2
+              },
+              {
+                "name": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_NONE",
+                "number": 3
+              },
+              {
+                "name": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT_KEEP_EXISTING_DATA",
+                "number": 4
+              },
+              {
+                "name": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT_STRICT_KEEP_EXISTING_DATA",
+                "number": 5
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ManagedAccountsSigninRestriction",
+      "fieldDescriptions": [
+        {
+          "field": "managedAccountsSigninRestriction",
+          "defaultValue": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_NONE",
+          "knownValueDescriptions": [
+            {
+              "description": "Force separate profile.",
+              "value": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT"
+            },
+            {
+              "description": "Force separate profile and forbid secondary managed accounts.",
+              "value": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT_STRICT"
+            },
+            {
+              "description": "Do not force separate profile.",
+              "value": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_NONE"
+            },
+            {
+              "description": "Let users choose to have a separate profile.",
+              "value": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT_KEEP_EXISTING_DATA"
+            },
+            {
+              "description": "Let users choose to have a separate profile but forbid secondary managed accounts.",
+              "value": "MANAGED_ACCOUNTS_SIGNIN_RESTRICTION_ENUM_PRIMARY_ACCOUNT_STRICT_KEEP_EXISTING_DATA"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ManagedAccountsSigninRestriction",
+      "policyDescription": "Separate profile for managed Google Identity."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "loginDisplayPasswordButtonEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginDisplayPasswordButtonEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LoginDisplayPasswordButtonEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#login_display_password_button_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginDisplayPasswordButtonEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Show the display password button on the login and lock screen.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show the display password button on the login and lock screen.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LoginDisplayPasswordButtonEnabled",
+      "policyDescription": "Display password button."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "enableMobileChromePolicies",
+                "number": 1
+              }
+            ],
+            "name": "MobileManagement"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.MobileManagement",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#enable_mobile_chrome_policies",
+      "fieldDescriptions": [
+        {
+          "field": "enableMobileChromePolicies",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Apply supported user settings to Chrome on Android.",
+              "value": "true"
+            },
+            {
+              "description": "Do not apply supported user settings to Chrome on Android.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Mobile",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.MobileManagement",
+      "policyDescription": "Chrome on Android."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "autoDevicePlacementEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DeviceEnrollment"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.DeviceEnrollment",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#auto_device_placement_enabled",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "autoDevicePlacementEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Place Chrome device in user organization.",
+              "value": "true"
+            },
+            {
+              "description": "Keep Chrome device in current location.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Enrollment controls",
+      "notices": [
+        {
+          "field": "autoDevicePlacementEnabled",
+          "noticeMessage": "Placing a device in a user organization during manual enrollment will give the Chrome device the device-level policies set for that organizational unit, such as settings for Cloud Print, Networks, Kiosk, and Sign-in Restrictions. Learn More About Device Settings at https://support.google.com/chrome/a/answer/1375678. If you choose to not enable this policy, devices will appear in the top-level organization when you enroll them. Devices can later be moved manually in the Admin Console or by changing the orgUnitPath with the API. Learn More About Enrollment at https://support.google.com/chrome/a/answer/1360534.",
+          "noticeValue": "true"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.DeviceEnrollment",
+      "policyDescription": "Device enrollment."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowToUpdateDeviceAttribute",
+                "number": 1
+              }
+            ],
+            "name": "AllowPopulateAssetIdentifier"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.AllowPopulateAssetIdentifier",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#allow_to_update_device_attribute",
+      "fieldDescriptions": [
+        {
+          "field": "allowToUpdateDeviceAttribute",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Users in this organization can provide asset ID and location during enrollment.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow for users in this organization.",
+              "value": "false"
+            }
+          ],
+          "description": "Populate asset ID and location fields during enrollment.",
+          "name": "Populate asset ID and location fields during enrollment."
+        }
+      ],
+      "categoryTitle": "Enrollment controls",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.AllowPopulateAssetIdentifier",
+      "policyDescription": "Asset identifier during enrollment."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "AllowToEnrollDevicesEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceEnrollPermission",
+                "number": 1
+              }
+            ],
+            "name": "EnrollPermission"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AllowToEnrollDevicesEnum",
+            "value": [
+              {
+                "name": "ALLOW_TO_ENROLL_DEVICES_ENUM_ALLOW_ENROLL_RE_ENROLL",
+                "number": 1
+              },
+              {
+                "name": "ALLOW_TO_ENROLL_DEVICES_ENUM_ALLOW_RE_ENROLL",
+                "number": 2
+              },
+              {
+                "name": "ALLOW_TO_ENROLL_DEVICES_ENUM_DISALLOW_ENROLL_RE_ENROLL",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.EnrollPermission",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#device_enroll_permission",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Enrollment permissions will only take effect on devices that have been configured to re-enroll with manual credential entry. Learn more at https://support.google.com/chrome/a/answer/1375678.",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users in this organization to enroll new or re-enroll existing devices.",
+              "value": "ALLOW_TO_ENROLL_DEVICES_ENUM_ALLOW_ENROLL_RE_ENROLL"
+            },
+            {
+              "description": "Only allow users in this organization to re-enroll existing devices (cannot enroll new or deprovisioned devices).",
+              "value": "ALLOW_TO_ENROLL_DEVICES_ENUM_ALLOW_RE_ENROLL"
+            },
+            {
+              "description": "Do not allow users in this organization to enroll new or re-enroll existing devices.",
+              "value": "ALLOW_TO_ENROLL_DEVICES_ENUM_DISALLOW_ENROLL_RE_ENROLL"
+            }
+          ],
+          "description": "Allow users in this OU to enroll existing devices. Enrollment permissions will only take effect on devices that have been configured to re-enroll with manual credential entry. Learn more at https://support.google.com/chrome/a/answer/1375678.",
+          "defaultValue": "ALLOW_TO_ENROLL_DEVICES_ENUM_ALLOW_ENROLL_RE_ENROLL",
+          "field": "deviceEnrollPermission",
+          "name": "Allow users in this OU to enroll existing devices."
+        }
+      ],
+      "categoryTitle": "Enrollment controls",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.EnrollPermission",
+      "policyDescription": "Enrollment permissions."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "taskManagerEndProcessEnabled",
+                "number": 1
+              }
+            ],
+            "name": "TaskManager"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.TaskManager",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#task_manager_end_process_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "taskManagerEndProcessEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to end processes with the Chrome task manager.",
+              "value": "true"
+            },
+            {
+              "description": "Block users from ending processes with the Chrome task manager.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Apps and extensions",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.TaskManager",
+      "policyDescription": "Task manager."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "isolateOrigins",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "sitePerProcess",
+                "number": 2
+              }
+            ],
+            "name": "SiteIsolationBrowser"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SiteIsolationBrowser",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#site_per_process",
+      "fieldDescriptions": [
+        {
+          "field": "isolateOrigins",
+          "fieldDescription": "Enter a list of origins to isolate within a website, for instance https://login.example.com or https://[*.]example.com. .",
+          "description": "Isolated origins. Enter a list of origins to isolate within a website, for instance https://login.example.com or https://[*.]example.com. .",
+          "name": "Isolated origins."
+        },
+        {
+          "field": "sitePerProcess",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Require site isolation for all websites, as well as any origins specified in 'isolateOrigins'.",
+              "value": "true"
+            },
+            {
+              "description": "Turn off site isolation for all websites, except those set in 'isolateOrigins'.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Site isolation",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SiteIsolationBrowser",
+      "policyDescription": "Site isolation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "sitePerProcessAndroid",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "isolateOriginsAndroid",
+                "number": 2
+              }
+            ],
+            "name": "SiteIsolationAndroid"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SiteIsolationAndroid",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#site_per_process_android",
+      "fieldDescriptions": [
+        {
+          "field": "sitePerProcessAndroid",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Turn on site isolation only for login sites, as well as any origins specified in 'isolateOriginsAndroid'.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Turn on site isolation for all websites, as well as any origins specified in 'isolateOriginsAndroid'.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Turn off site isolation for all websites, except those set in 'isolateOriginsAndroid'.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "isolateOriginsAndroid",
+          "fieldDescription": "Enter a list of origins to isolate within a website on Android, for instance https://login.example.com or https://[*.]example.com.",
+          "description": "Isolated origins (Android). Enter a list of origins to isolate within a website on Android, for instance https://login.example.com or https://[*.]example.com.",
+          "name": "Isolated origins (Android)."
+        }
+      ],
+      "categoryTitle": "Site isolation",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SiteIsolationAndroid",
+      "policyDescription": "Site isolation (Chrome on Android)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "passwordManagerEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PasswordManager"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PasswordManager",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#password_manager_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "passwordManagerEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Always allow use of password manager.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Never allow use of password manager.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PasswordManager",
+      "policyDescription": "Password manager."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowScreenLock",
+                "number": 1
+              }
+            ],
+            "name": "LockScreen"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LockScreen",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#allow_screen_lock",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "allowScreenLock",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow locking screen.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow locking screen.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "notices": [
+        {
+          "field": "allowScreenLock",
+          "noticeMessage": "Lock screen is disabled. If any setting under 'chrome.users.IdleSettings' would result in locking the screen, the device will instead log out.",
+          "noticeValue": "false"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LockScreen",
+      "policyDescription": "Lock screen."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "quickUnlockModeAllowlist",
+                "number": 1
+              }
+            ],
+            "name": "QuickUnlockModeAllowlist"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.QuickUnlockModeAllowlist",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#quick_unlock_mode_allowlist",
+      "fieldDescriptions": [
+        {
+          "field": "quickUnlockModeAllowlist",
+          "defaultValue": null,
+          "knownValueDescriptions": [
+            {
+              "description": "PIN.",
+              "value": "PIN"
+            },
+            {
+              "description": "Fingerprint.",
+              "value": "FINGERPRINT"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.QuickUnlockModeAllowlist",
+      "policyDescription": "Quick unlock."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "webAuthnFactors",
+                "number": 1
+              }
+            ],
+            "name": "WebAuthnFactors"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.WebAuthnFactors",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#web_authn_factors",
+      "fieldDescriptions": [
+        {
+          "field": "webAuthnFactors",
+          "defaultValue": null,
+          "knownValueDescriptions": [
+            {
+              "description": "PIN.",
+              "value": "PIN"
+            },
+            {
+              "description": "Fingerprint.",
+              "value": "FINGERPRINT"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.WebAuthnFactors",
+      "policyDescription": "WebAuthn."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "QuickUnlockTimeoutEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "quickUnlockTimeout",
+                "number": 1
+              }
+            ],
+            "name": "QuickUnlockTimeout"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "QuickUnlockTimeoutEnum",
+            "value": [
+              {
+                "name": "QUICK_UNLOCK_TIMEOUT_ENUM_SIX_HOURS",
+                "number": 1
+              },
+              {
+                "name": "QUICK_UNLOCK_TIMEOUT_ENUM_TWELVE_HOURS",
+                "number": 2
+              },
+              {
+                "name": "QUICK_UNLOCK_TIMEOUT_ENUM_ONE_DAY",
+                "number": 5
+              },
+              {
+                "name": "QUICK_UNLOCK_TIMEOUT_ENUM_TWO_DAYS",
+                "number": 3
+              },
+              {
+                "name": "QUICK_UNLOCK_TIMEOUT_ENUM_WEEK",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.QuickUnlockTimeout",
+      "fieldDescriptions": [
+        {
+          "field": "quickUnlockTimeout",
+          "defaultValue": "QUICK_UNLOCK_TIMEOUT_ENUM_ONE_DAY",
+          "knownValueDescriptions": [
+            {
+              "description": "Password entry is required every six hours.",
+              "value": "QUICK_UNLOCK_TIMEOUT_ENUM_SIX_HOURS"
+            },
+            {
+              "description": "Password entry is required every twelve hours.",
+              "value": "QUICK_UNLOCK_TIMEOUT_ENUM_TWELVE_HOURS"
+            },
+            {
+              "description": "Password entry is required every day.",
+              "value": "QUICK_UNLOCK_TIMEOUT_ENUM_ONE_DAY"
+            },
+            {
+              "description": "Password entry is required every two days (48 hours).",
+              "value": "QUICK_UNLOCK_TIMEOUT_ENUM_TWO_DAYS"
+            },
+            {
+              "description": "Password entry is required every week (168 hours).",
+              "value": "QUICK_UNLOCK_TIMEOUT_ENUM_WEEK"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.QuickUnlockTimeout",
+      "policyDescription": "Quick unlock timeout."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "pinUnlockMinimumLength",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "pinUnlockMaximumLength",
+                "number": 2
+              },
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "pinUnlockWeakPinsAllowed",
+                "number": 3
+              }
+            ],
+            "name": "PinSettings"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PinSettings",
+      "fieldDescriptions": [
+        {
+          "field": "pinUnlockMinimumLength",
+          "defaultValue": 6,
+          "description": "Minimum PIN length.",
+          "inputConstraint": "The long field should have value greater than or equal to 1.",
+          "name": "Minimum PIN length."
+        },
+        {
+          "fieldDescription": "If unset or set to zero, the PIN length is unlimited.",
+          "description": "Maximum PIN length. If unset or set to zero, the PIN length is unlimited.",
+          "defaultValue": 0,
+          "inputConstraint": "The long field should have value greater than or equal to 0.",
+          "field": "pinUnlockMaximumLength",
+          "name": "Maximum PIN length."
+        },
+        {
+          "field": "pinUnlockWeakPinsAllowed",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to set a weak PIN, but show a warning.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Allow users to set a weak PIN.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not allow users to set a weak PIN.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.PinSettings",
+      "policyDescription": "Lock screen PIN."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "pinUnlockAutosubmitEnabled",
+                "number": 1
+              }
+            ],
+            "name": "PinUnlockAutosubmitEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.PinUnlockAutosubmitEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#pin_unlock_autosubmit_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "pinUnlockAutosubmitEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable PIN auto-submit on the lock and login screen.",
+              "value": "true"
+            },
+            {
+              "description": "Disable PIN auto-submit on the lock and login screen.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.PinUnlockAutosubmitEnabled",
+      "policyDescription": "PIN auto-submit."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "lockScreenMediaPlaybackEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LockScreenMediaPlaybackEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.LockScreenMediaPlaybackEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#lock_screen_media_playback_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "lockScreenMediaPlaybackEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to play media when the device is locked.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow users to play media when the device is locked .",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.LockScreenMediaPlaybackEnabled",
+      "policyDescription": "Lock screen media playback."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "idleTimeoutMinutes",
+                "number": 1
+              },
+              {
+                "typeName": "ActionOnDeviceIdleEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "actionOnDeviceIdle",
+                "number": 2
+              },
+              {
+                "typeName": "ActionOnLidCloseEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "actionOnLidClose",
+                "number": 3
+              },
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "lockOnSleep",
+                "number": 4
+              }
+            ],
+            "name": "IdleSettings"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ActionOnDeviceIdleEnum",
+            "value": [
+              {
+                "name": "ACTION_ON_DEVICE_IDLE_ENUM_SLEEP",
+                "number": 1
+              },
+              {
+                "name": "ACTION_ON_DEVICE_IDLE_ENUM_LOGOUT",
+                "number": 2
+              },
+              {
+                "name": "ACTION_ON_DEVICE_IDLE_ENUM_LOCK",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "ActionOnLidCloseEnum",
+            "value": [
+              {
+                "name": "ACTION_ON_LID_CLOSE_ENUM_SLEEP",
+                "number": 1
+              },
+              {
+                "name": "ACTION_ON_LID_CLOSE_ENUM_LOGOUT",
+                "number": 2
+              }
+            ]
+          },
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.IdleSettings",
+      "fieldDescriptions": [
+        {
+          "field": "idleTimeoutMinutes",
+          "fieldDescription": "Leave empty for system default.",
+          "description": "Idle time in minutes. Leave empty for system default.",
+          "name": "Idle time in minutes."
+        },
+        {
+          "field": "actionOnDeviceIdle",
+          "defaultValue": "ACTION_ON_DEVICE_IDLE_ENUM_SLEEP",
+          "knownValueDescriptions": [
+            {
+              "description": "Sleep.",
+              "value": "ACTION_ON_DEVICE_IDLE_ENUM_SLEEP"
+            },
+            {
+              "description": "Logout.",
+              "value": "ACTION_ON_DEVICE_IDLE_ENUM_LOGOUT"
+            },
+            {
+              "description": "Lock Screen.",
+              "value": "ACTION_ON_DEVICE_IDLE_ENUM_LOCK"
+            }
+          ],
+          "description": "Action on idle.",
+          "name": "Action on idle."
+        },
+        {
+          "field": "actionOnLidClose",
+          "defaultValue": "ACTION_ON_LID_CLOSE_ENUM_SLEEP",
+          "knownValueDescriptions": [
+            {
+              "description": "Sleep.",
+              "value": "ACTION_ON_LID_CLOSE_ENUM_SLEEP"
+            },
+            {
+              "description": "Logout.",
+              "value": "ACTION_ON_LID_CLOSE_ENUM_LOGOUT"
+            }
+          ],
+          "description": "Action on lid close.",
+          "name": "Action on lid close."
+        },
+        {
+          "field": "lockOnSleep",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow user to configure.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Lock screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Don't lock screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "Lock screen on sleep.",
+          "name": "Lock screen on sleep."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.IdleSettings",
+      "policyDescription": "Idle settings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "IncognitoModeAvailabilityEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "incognitoModeAvailability",
+                "number": 1
+              }
+            ],
+            "name": "IncognitoMode"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "IncognitoModeAvailabilityEnum",
+            "value": [
+              {
+                "name": "INCOGNITO_MODE_AVAILABILITY_ENUM_AVAILABLE",
+                "number": 1
+              },
+              {
+                "name": "INCOGNITO_MODE_AVAILABILITY_ENUM_UNAVAILABLE",
+                "number": 2
+              },
+              {
+                "name": "INCOGNITO_MODE_AVAILABILITY_ENUM_FORCED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.IncognitoMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#incognito_mode_availability",
+      "fieldDescriptions": [
+        {
+          "field": "incognitoModeAvailability",
+          "defaultValue": "INCOGNITO_MODE_AVAILABILITY_ENUM_AVAILABLE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow incognito mode.",
+              "value": "INCOGNITO_MODE_AVAILABILITY_ENUM_AVAILABLE"
+            },
+            {
+              "description": "Disallow incognito mode.",
+              "value": "INCOGNITO_MODE_AVAILABILITY_ENUM_UNAVAILABLE"
+            },
+            {
+              "description": "Force incognito mode.",
+              "value": "INCOGNITO_MODE_AVAILABILITY_ENUM_FORCED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.IncognitoMode",
+      "policyDescription": "Incognito mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "savingBrowserHistoryDisabled",
+                "number": 1
+              }
+            ],
+            "name": "BrowserHistory"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowserHistory",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#saving_browser_history_disabled",
+      "fieldDescriptions": [
+        {
+          "field": "savingBrowserHistoryDisabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Never save browser history.",
+              "value": "true"
+            },
+            {
+              "description": "Always save browser history.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowserHistory",
+      "policyDescription": "Browser history."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowDeletingBrowserHistory",
+                "number": 1
+              }
+            ],
+            "name": "ClearBrowserHistory"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ClearBrowserHistory",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#allow_deleting_browser_history",
+      "fieldDescriptions": [
+        {
+          "field": "allowDeletingBrowserHistory",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Allow clearing history in settings menu.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow clearing history in settings menu.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ClearBrowserHistory",
+      "policyDescription": "Clear browser history."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "forceEphemeralProfiles",
+                "number": 1
+              }
+            ],
+            "name": "ForceEphemeralMode"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ForceEphemeralMode",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#force_ephemeral_profiles",
+      "fieldDescriptions": [
+        {
+          "field": "forceEphemeralProfiles",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Erase all local user data.",
+              "value": "true"
+            },
+            {
+              "description": "Do not erase local user data.",
+              "value": "false"
+            }
+          ],
+          "description": "Erase local data when the browser is closed.",
+          "name": "Erase local data when the browser is closed."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ForceEphemeralMode",
+      "policyDescription": "Force ephemeral mode."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "browsingHistoryTtl",
+                "number": 1
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "downloadHistoryTtl",
+                "number": 2
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "cookiesAndOtherSiteDataTtl",
+                "number": 3
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "cachedImagesAndFilesTtl",
+                "number": 4
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "passwordSigninTtl",
+                "number": 5
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "autofillTtl",
+                "number": 6
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "siteSettingsTtl",
+                "number": 7
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "hostedAppDataTtl",
+                "number": 8
+              }
+            ],
+            "name": "BrowsingDataLifetime"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.BrowsingDataLifetime",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#browsing_data_lifetime",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Leave empty to never automatically remove browsing history.",
+          "name": "Browsing history time to live (hours).",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "field": "browsingHistoryTtl",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Browsing history time to live (hours). Leave empty to never automatically remove browsing history."
+        },
+        {
+          "field": "downloadHistoryTtl",
+          "fieldDescription": "Leave empty to never automatically remove download history.",
+          "description": "Download history time to live (hours). Leave empty to never automatically remove download history.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Download history time to live (hours)."
+        },
+        {
+          "field": "cookiesAndOtherSiteDataTtl",
+          "fieldDescription": "Leave empty to never automatically remove cookies and other site data.",
+          "description": "Cookies and other site data time to live (hours). Leave empty to never automatically remove cookies and other site data.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Cookies and other site data time to live (hours)."
+        },
+        {
+          "field": "cachedImagesAndFilesTtl",
+          "fieldDescription": "Leave empty to never automatically remove cached images and files.",
+          "description": "Cached images and files time to live (hours). Leave empty to never automatically remove cached images and files.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Cached images and files time to live (hours)."
+        },
+        {
+          "field": "passwordSigninTtl",
+          "fieldDescription": "Leave empty to never automatically remove passwords and other sign-in data.",
+          "description": "Passwords and other sign-in data time to live (hours). Leave empty to never automatically remove passwords and other sign-in data.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Passwords and other sign-in data time to live (hours)."
+        },
+        {
+          "field": "autofillTtl",
+          "fieldDescription": "Leave empty to never automatically remove autofill form data.",
+          "description": "Autofill form data time to live (hours). Leave empty to never automatically remove autofill form data.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Autofill form data time to live (hours)."
+        },
+        {
+          "field": "siteSettingsTtl",
+          "fieldDescription": "Leave empty to never automatically remove site settings.",
+          "description": "Site settings time to live (hours). Leave empty to never automatically remove site settings.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Site settings time to live (hours)."
+        },
+        {
+          "field": "hostedAppDataTtl",
+          "fieldDescription": "Leave empty to never automatically remove hosted app data.",
+          "description": "Hosted app data time to live (hours). Leave empty to never automatically remove hosted app data.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 hours. The input duration policy field value should be converted to seconds. Multiply the desired value in hours by 3600 and append an 's'.",
+          "name": "Hosted app data time to live (hours)."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.BrowsingDataLifetime",
+      "policyDescription": "Browsing Data Lifetime."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "enableOnlineRevocationChecks",
+                "number": 1
+              }
+            ],
+            "name": "OnlineRevocationChecks"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.OnlineRevocationChecks",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#enable_online_revocation_checks",
+      "fieldDescriptions": [
+        {
+          "field": "enableOnlineRevocationChecks",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Perform online OCSP/CRL checks.",
+              "value": "true"
+            },
+            {
+              "description": "Do not perform online OCSP/CRL checks.",
+              "value": "false"
+            }
+          ],
+          "description": "Online OCSP/CRL checks.",
+          "name": "Online OCSP/CRL checks."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.OnlineRevocationChecks",
+      "policyDescription": "Online revocation checks."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "GeolocationSettingEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "defaultGeolocationSetting",
+                "number": 1
+              }
+            ],
+            "name": "Geolocation"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "GeolocationSettingEnum",
+            "value": [
+              {
+                "name": "GEOLOCATION_SETTING_ENUM_ALLOW_GEOLOCATION",
+                "number": 1
+              },
+              {
+                "name": "GEOLOCATION_SETTING_ENUM_BLOCK_GEOLOCATION",
+                "number": 2
+              },
+              {
+                "name": "GEOLOCATION_SETTING_ENUM_ASK_GEOLOCATION",
+                "number": 3
+              },
+              {
+                "name": "GEOLOCATION_SETTING_ENUM_USER_CHOICE",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.Geolocation",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#default_geolocation_setting",
+      "fieldDescriptions": [
+        {
+          "field": "defaultGeolocationSetting",
+          "defaultValue": "GEOLOCATION_SETTING_ENUM_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow sites to detect users' geolocation.",
+              "value": "GEOLOCATION_SETTING_ENUM_ALLOW_GEOLOCATION"
+            },
+            {
+              "description": "Do not allow sites to detect users' geolocation.",
+              "value": "GEOLOCATION_SETTING_ENUM_BLOCK_GEOLOCATION"
+            },
+            {
+              "description": "Always ask the user if a site wants to detect their geolocation.",
+              "value": "GEOLOCATION_SETTING_ENUM_ASK_GEOLOCATION"
+            },
+            {
+              "description": "Allow the user to decide.",
+              "value": "GEOLOCATION_SETTING_ENUM_USER_CHOICE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.Geolocation",
+      "policyDescription": "Geolocation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableLong",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "gaiaOfflineSigninTimeLimitDays",
+                "number": 1
+              }
+            ],
+            "name": "GaiaOfflineSigninTimeLimitDays"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "value",
+                "number": 1
+              }
+            ],
+            "name": "NullableLong"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.GaiaOfflineSigninTimeLimitDays",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "0\u2013365 days. A value of 0 means that online login will always be required. Leave empty to not require regular online logins. Note: This setting does not afford any additional at-rest protection of user data stored on the Chrome device.",
+          "name": "Force online login flow for Google accounts.",
+          "inputConstraint": "The long field should have value greater than or equal to 0, and should have value less than or equal to 365.",
+          "field": "gaiaOfflineSigninTimeLimitDays",
+          "nestedFieldDescriptions": [
+            {
+              "field": "value",
+              "description": "N/A"
+            }
+          ],
+          "description": "Force online login flow for Google accounts. 0\u2013365 days. A value of 0 means that online login will always be required. Leave empty to not require regular online logins. Note: This setting does not afford any additional at-rest protection of user data stored on the Chrome device."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.GaiaOfflineSigninTimeLimitDays",
+      "policyDescription": "Google online login frequency."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableLong",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "gaiaLockScreenOfflineSigninTimeLimitDays",
+                "number": 1
+              }
+            ],
+            "name": "GaiaLockScreenOfflineSigninTimeLimitDays"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "value",
+                "number": 1
+              }
+            ],
+            "name": "NullableLong"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.GaiaLockScreenOfflineSigninTimeLimitDays",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "0\u2013365 days. A value of 0 means that online login will always be required. Leave empty to not require regular online logins. Note: This setting does not afford any additional at-rest protection of user data stored on the Chrome device. Recommendation: Please make sure that online unlocks are required equally or less often than online logins.",
+          "name": "Force online unlock flow for Google accounts.",
+          "inputConstraint": "The long field should have value greater than or equal to -2, and should have value less than or equal to 365.",
+          "field": "gaiaLockScreenOfflineSigninTimeLimitDays",
+          "nestedFieldDescriptions": [
+            {
+              "field": "value",
+              "description": "N/A"
+            }
+          ],
+          "description": "Force online unlock flow for Google accounts. 0\u2013365 days. A value of 0 means that online login will always be required. Leave empty to not require regular online logins. Note: This setting does not afford any additional at-rest protection of user data stored on the Chrome device. Recommendation: Please make sure that online unlocks are required equally or less often than online logins."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.GaiaLockScreenOfflineSigninTimeLimitDays",
+      "policyDescription": "Google online unlock frequency."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "idpRedirectEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SingleSignOn"
+          }
+        ]
+      },
+      "policyDescription": "Single sign-on.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SingleSignOn",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#idp_redirect_enabled",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Please set up SSO for Google Workspace before using this policy: https://support.google.com/a/answer/60224.",
+          "knownValueDescriptions": [
+            {
+              "description": "Enable SAML-based single sign-on for Chrome devices.",
+              "value": "true"
+            },
+            {
+              "description": "Disable SAML-based single sign-on for Chrome devices.",
+              "value": "false"
+            }
+          ],
+          "description": "SAML-based single sign-on for ChromeOS devices. Please set up SSO for Google Workspace before using this policy: https://support.google.com/a/answer/60224.",
+          "defaultValue": true,
+          "field": "idpRedirectEnabled",
+          "name": "SAML-based single sign-on for ChromeOS devices."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SingleSignOn",
+      "accessRestrictions": [
+        "You must have Google Workspace SSO enabled for your domain in order to control this policy."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SamlSigninTimeLimitEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "samlOfflineSigninTimeLimit",
+                "number": 1
+              }
+            ],
+            "name": "SingleSignOnLoginFrequency"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "SamlSigninTimeLimitEnum",
+            "value": [
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_ONE_DAY",
+                "number": 1
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_THREE_DAYS",
+                "number": 2
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_ONE_WEEK",
+                "number": 3
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_TWO_WEEKS",
+                "number": 4
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_THREE_WEEKS",
+                "number": 5
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_FOUR_WEEKS",
+                "number": 6
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_EVERY_TIME",
+                "number": 8
+              },
+              {
+                "name": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_NEVER",
+                "number": 7
+              }
+            ]
+          }
+        ]
+      },
+      "policyDescription": "SAML single sign-on login frequency.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SingleSignOnLoginFrequency",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#saml_offline_signin_time_limit",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Please set up SSO for Google Workspace and activate single sign-on for Chrome device users before using this policy: https://support.google.com/a/answer/60224.",
+          "knownValueDescriptions": [
+            {
+              "description": "Every day.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_ONE_DAY"
+            },
+            {
+              "description": "Every 3 days.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_THREE_DAYS"
+            },
+            {
+              "description": "Every week.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_ONE_WEEK"
+            },
+            {
+              "description": "Every 2 weeks.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_TWO_WEEKS"
+            },
+            {
+              "description": "Every 3 weeks.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_THREE_WEEKS"
+            },
+            {
+              "description": "Every 4 weeks.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_FOUR_WEEKS"
+            },
+            {
+              "description": "Every Time.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_EVERY_TIME"
+            },
+            {
+              "description": "Never.",
+              "value": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_NEVER"
+            }
+          ],
+          "description": "Force online login flow for SAML-based single sign-on accounts. Please set up SSO for Google Workspace and activate single sign-on for Chrome device users before using this policy: https://support.google.com/a/answer/60224.",
+          "defaultValue": "SAML_SIGNIN_TIME_LIMIT_ENUM_SAML_TWO_WEEKS",
+          "field": "samlOfflineSigninTimeLimit",
+          "name": "Force online login flow for SAML-based single sign-on accounts."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SingleSignOnLoginFrequency",
+      "accessRestrictions": [
+        "You must have Google Workspace SSO enabled for your domain in order to control this policy."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableLong",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "samlLockScreenOfflineSigninTimeLimitDays",
+                "number": 1
+              }
+            ],
+            "name": "SamlLockScreenOfflineSigninTimeLimitDays"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "value",
+                "number": 1
+              }
+            ],
+            "name": "NullableLong"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SamlLockScreenOfflineSigninTimeLimitDays",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#saml_lock_screen_offline_signin_time_limit_days",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "0\u2013365 days. A value of 0 means that online login will always be required. Leave empty to not require regular online logins. Note: Please set up SSO for Google Workspace (https://support.google.com/a/answer/60224?hl={$languageCode}) and activate single sign-on for Chrome device users before using this policy. Recommendation: Please make sure that online unlocks are required equally or less often than online logins.",
+          "name": "Force online unlock for SAML based Single Sign-On accounts.",
+          "inputConstraint": "The long field should have value greater than or equal to -2, and should have value less than or equal to 365.",
+          "field": "samlLockScreenOfflineSigninTimeLimitDays",
+          "nestedFieldDescriptions": [
+            {
+              "field": "value",
+              "description": "N/A"
+            }
+          ],
+          "description": "Force online unlock for SAML based Single Sign-On accounts. 0\u2013365 days. A value of 0 means that online login will always be required. Leave empty to not require regular online logins. Note: Please set up SSO for Google Workspace (https://support.google.com/a/answer/60224?hl={$languageCode}) and activate single sign-on for Chrome device users before using this policy. Recommendation: Please make sure that online unlocks are required equally or less often than online logins."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SamlLockScreenOfflineSigninTimeLimitDays",
+      "policyDescription": "SAML single sign-on unlock frequency."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "samlLockScreenReauthenticationEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SamlLockScreenReauthenticationEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SamlLockScreenReauthenticationEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#saml_lock_screen_reauthentication_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "samlLockScreenReauthenticationEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enforce online logins on the login and lock screen.",
+              "value": "true"
+            },
+            {
+              "description": "Only enforce online logins on the login screen.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SamlLockScreenReauthenticationEnabled",
+      "policyDescription": "SAML single sign-on password synchronization flows."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "samlInSessionPasswordChangeEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "samlPasswordExpirationAdvanceWarningDays",
+                "number": 2
+              }
+            ],
+            "name": "SingleSignOnPasswordSynchronization"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.SingleSignOnPasswordSynchronization",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#saml_in_session_password_change_enabled",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "Please set up SSO for Google Workspace and activate single sign-on for Chrome device users before using this policy: https://support.google.com/a/answer/60224. In addition, make sure to configure your SSO provider correctly to allow for automatic password invalidation flows.",
+          "knownValueDescriptions": [
+            {
+              "description": "Trigger authentication flows to synchronize passwords with SSO providers.",
+              "value": "true"
+            },
+            {
+              "description": "Do not trigger authentication flows for password synchronization.",
+              "value": "false"
+            }
+          ],
+          "description": "Password synchronization between third-party SSO providers and Chrome devices. Please set up SSO for Google Workspace and activate single sign-on for Chrome device users before using this policy: https://support.google.com/a/answer/60224. In addition, make sure to configure your SSO provider correctly to allow for automatic password invalidation flows.",
+          "defaultValue": false,
+          "field": "samlInSessionPasswordChangeEnabled",
+          "name": "Password synchronization between third-party SSO providers and Chrome devices."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "samlInSessionPasswordChangeEnabled"
+            }
+          ],
+          "description": "How many days in advance to notify SAML users when their password is due to expire. 0\u201390 days. A value of 0 means users will not be notified in advance, but will only be notified once the password has already expired.",
+          "defaultValue": 0,
+          "fieldDescription": "0\u201390 days. A value of 0 means users will not be notified in advance, but will only be notified once the password has already expired.",
+          "inputConstraint": "The long field should have value greater than or equal to 0, and should have value less than or equal to 90.",
+          "field": "samlPasswordExpirationAdvanceWarningDays",
+          "name": "How many days in advance to notify SAML users when their password is due to expire."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.SingleSignOnPasswordSynchronization",
+      "policyDescription": "SAML single sign-on password synchronization."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "certificateTransparencyEnforcementDisabledForUrls",
+                "number": 1
+              }
+            ],
+            "name": "CertificateTransparencyEnforcementDisabledForUrls"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CertificateTransparencyEnforcementDisabledForUrls",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#certificate_transparency_enforcement_disabled_for_urls",
+      "fieldDescriptions": [
+        {
+          "field": "certificateTransparencyEnforcementDisabledForUrls",
+          "fieldDescription": "Any URL listed will be exempt from Certificate Transparency enforcement. Learn more at https://cloud.google.com/docs/chrome-enterprise/policies/?policy=CertificateTransparencyEnforcementDisabledForUrls.",
+          "description": "Allowed certificate transparency URLs. Any URL listed will be exempt from Certificate Transparency enforcement. Learn more at https://cloud.google.com/docs/chrome-enterprise/policies/?policy=CertificateTransparencyEnforcementDisabledForUrls.",
+          "name": "Allowed certificate transparency URLs."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CertificateTransparencyEnforcementDisabledForUrls",
+      "policyDescription": "Allowed certificate transparency URLs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "certificateTransparencyEnforcementDisabledForCas",
+                "number": 1
+              }
+            ],
+            "name": "CertTransparencyCas"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CertTransparencyCas",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#certificate_transparency_enforcement_disabled_for_cas",
+      "fieldDescriptions": [
+        {
+          "field": "certificateTransparencyEnforcementDisabledForCas",
+          "fieldDescription": "Any subjectPublicKeyInfo hashes listed will be exempt from Certificate Transparency enforcement. These hashes must be listed in a particular format. Learn more at https://cloud.google.com/docs/chrome-enterprise/policies/?policy=CertificateTransparencyEnforcementDisabledForCas.",
+          "description": "Certificate transparency CA allowlist. Any subjectPublicKeyInfo hashes listed will be exempt from Certificate Transparency enforcement. These hashes must be listed in a particular format. Learn more at https://cloud.google.com/docs/chrome-enterprise/policies/?policy=CertificateTransparencyEnforcementDisabledForCas.",
+          "inputConstraint": "Each string field in the list should be prefixed with \"sha256/\".",
+          "name": "Certificate transparency CA allowlist."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CertTransparencyCas",
+      "policyDescription": "Certificate transparency CA allowlist."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "certificateTransparencyEnforcementDisabledForLegacyCas",
+                "number": 1
+              }
+            ],
+            "name": "CertTransparencyLegacyCas"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CertTransparencyLegacyCas",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#certificate_transparency_enforcement_disabled_for_legacy_cas",
+      "fieldDescriptions": [
+        {
+          "field": "certificateTransparencyEnforcementDisabledForLegacyCas",
+          "fieldDescription": "Any subjectPublicKeyInfo hashes listed will be exempt from Certificate Transparency enforcement. These hashes must be listed in a particular format and must match a recognized Legacy Certificate Authority. Enter Learn more at https://cloud.google.com/docs/chrome-enterprise/policies/?policy=CertificateTransparencyEnforcementDisabledForLegacyCas.",
+          "description": "Certificate transparency legacy CA allowlist. Any subjectPublicKeyInfo hashes listed will be exempt from Certificate Transparency enforcement. These hashes must be listed in a particular format and must match a recognized Legacy Certificate Authority. Enter Learn more at https://cloud.google.com/docs/chrome-enterprise/policies/?policy=CertificateTransparencyEnforcementDisabledForLegacyCas.",
+          "inputConstraint": "Each string field in the list should be prefixed with \"sha256/\".",
+          "name": "Certificate transparency legacy CA allowlist."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CertTransparencyLegacyCas",
+      "policyDescription": "Certificate transparency legacy CA allowlist."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "CACertificateManagementAllowedEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "caCertificateManagementAllowed",
+                "number": 1
+              }
+            ],
+            "name": "CaCertificateManagementAllowed"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "CACertificateManagementAllowedEnum",
+            "value": [
+              {
+                "name": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_ALL",
+                "number": 1
+              },
+              {
+                "name": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_USER_ONLY",
+                "number": 2
+              },
+              {
+                "name": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_NONE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CaCertificateManagementAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#ca_certificate_management_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "caCertificateManagementAllowed",
+          "defaultValue": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_ALL",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to manage all certificates.",
+              "value": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_ALL"
+            },
+            {
+              "description": "Allow users to manage user certificates.",
+              "value": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_USER_ONLY"
+            },
+            {
+              "description": "Disallow users from managing certificates.",
+              "value": "CA_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_NONE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CaCertificateManagementAllowed",
+      "policyDescription": "User management of installed CA certificates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ClientCertificateManagementAllowedEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "clientCertificateManagementAllowed",
+                "number": 1
+              }
+            ],
+            "name": "ClientCertificateManagementAllowed"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ClientCertificateManagementAllowedEnum",
+            "value": [
+              {
+                "name": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_ALL",
+                "number": 1
+              },
+              {
+                "name": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_USER_ONLY",
+                "number": 2
+              },
+              {
+                "name": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_NONE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ClientCertificateManagementAllowed",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#client_certificate_management_allowed",
+      "fieldDescriptions": [
+        {
+          "field": "clientCertificateManagementAllowed",
+          "defaultValue": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_ALL",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow users to manage all certificates.",
+              "value": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_ALL"
+            },
+            {
+              "description": "Allow users to manage user certificates.",
+              "value": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_USER_ONLY"
+            },
+            {
+              "description": "Disallow users from managing certificates.",
+              "value": "CLIENT_CERTIFICATE_MANAGEMENT_ALLOWED_ENUM_NONE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.ClientCertificateManagementAllowed",
+      "policyDescription": "User management of installed client certificates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "chromeRootStoreEnabled",
+                "number": 1
+              }
+            ],
+            "name": "ChromeRootStoreEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.ChromeRootStoreEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "chromeRootStoreEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Chrome Root Store may be used.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Use the Chrome Root Store.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Do not use the Chrome Root Store.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.ChromeRootStoreEnabled",
+      "policyDescription": "Chrome Root Store and certificate verifier."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "SchedulerConfigurationEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "schedulerConfiguration",
+                "number": 1
+              }
+            ],
+            "name": "CpuTaskScheduler"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "SchedulerConfigurationEnum",
+            "value": [
+              {
+                "name": "SCHEDULER_CONFIGURATION_ENUM_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "SCHEDULER_CONFIGURATION_ENUM_CONSERVATIVE",
+                "number": 2
+              },
+              {
+                "name": "SCHEDULER_CONFIGURATION_ENUM_PERFORMANCE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.CpuTaskScheduler",
+      "supportUri": "https://support.google.com/chrome/a/answer/2657289?hl=en#scheduler_configuration",
+      "fieldDescriptions": [
+        {
+          "field": "schedulerConfiguration",
+          "defaultValue": "SCHEDULER_CONFIGURATION_ENUM_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SCHEDULER_CONFIGURATION_ENUM_USER_CHOICE"
+            },
+            {
+              "description": "Optimize for stability.",
+              "value": "SCHEDULER_CONFIGURATION_ENUM_CONSERVATIVE"
+            },
+            {
+              "description": "Optimize for performance.",
+              "value": "SCHEDULER_CONFIGURATION_ENUM_PERFORMANCE"
+            }
+          ],
+          "description": "Controls whether Intel Hyper-Threading technology is disabled, or if all cores can be used without restrictions.",
+          "name": "Controls whether Intel Hyper-Threading technology is disabled, or if all cores can be used without restrictions."
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.CpuTaskScheduler",
+      "policyDescription": "CPU task scheduler."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "rendererAppContainerEnabled",
+                "number": 1
+              }
+            ],
+            "name": "RendererAppContainerEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RendererAppContainerEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "rendererAppContainerEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable the Renderer App Container sandbox.",
+              "value": "true"
+            },
+            {
+              "description": "Disable the Renderer App Container sandbox.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT",
+        "GROUP"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      },
+      "schemaName": "chrome.users.RendererAppContainerEnabled",
+      "policyDescription": "Renderer App Container."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "rendererCodeIntegrityEnabled",
+                "number": 1
+              }
+            ],
+            "name": "RendererCodeIntegrityEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.users.RendererCodeIntegrityEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "rendererCodeIntegrityEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Renderer code integrity enabled.",
+              "value": "true"
+            },
+            {
+              "description": "Renderer code integrity disabled.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Security",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.users.RendererCodeIntegrityEnabled",
+      "policyDescription": "Enable renderer code integrity."
+    }
+]

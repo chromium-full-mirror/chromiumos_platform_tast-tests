@@ -1,0 +1,5034 @@
+[
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenAutoclickEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenAutoclickEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenAutoclickEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_autoclick_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenAutoclickEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable auto-click on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable auto-click on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenAutoclickEnabled",
+      "policyDescription": "Auto-click enabled."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenLargeCursorEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenLargeCursorEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenLargeCursorEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_large_cursor_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenLargeCursorEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable large cursor on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable large cursor on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenLargeCursorEnabled",
+      "policyDescription": "Large cursor."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenCursorHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenCursorHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenCursorHighlightEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_cursor_highlight_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenCursorHighlightEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable cursor highlight on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable cursor highlight on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenCursorHighlightEnabled",
+      "policyDescription": "Cursor highlight."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenPrimaryMouseButtonSwitch",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenPrimaryMouseButtonSwitch"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenPrimaryMouseButtonSwitch",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_primary_mouse_button_switch",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenPrimaryMouseButtonSwitch",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Right button is primary on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Left button is primary on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenPrimaryMouseButtonSwitch",
+      "policyDescription": "Primary mouse button."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenMonoAudioEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenMonoAudioEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenMonoAudioEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_mono_audio_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenMonoAudioEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable mono audio on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable mono audio on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenMonoAudioEnabled",
+      "policyDescription": "Mono audio."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableBoolean",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "loginScreenAccessibilityShortcutsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LoginScreenAccessibilityShortcutsEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "NullableBoolean",
+            "value": [
+              {
+                "name": "UNSET",
+                "number": 1
+              },
+              {
+                "name": "FALSE",
+                "number": 2
+              },
+              {
+                "name": "TRUE",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LoginScreenAccessibilityShortcutsEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#login_screen_accessibility_shortcuts_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "loginScreenAccessibilityShortcutsEnabled",
+          "defaultValue": "UNSET",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "UNSET"
+            },
+            {
+              "description": "Enable accessibility shortcuts on the sign-in screen.",
+              "value": "TRUE"
+            },
+            {
+              "description": "Disable accessibility shortcuts on the sign-in screen.",
+              "value": "FALSE"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Sign-in screen accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LoginScreenAccessibilityShortcutsEnabled",
+      "policyDescription": "Accessibility shortcuts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "updateDisabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "rebootAfterUpdate",
+                "number": 2
+              },
+              {
+                "typeName": "AutoUpdateConnectionTypeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "autoUpdateAllowedConnectionType",
+                "number": 3
+              },
+              {
+                "typeName": "RollbackToTargetVersionEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceRollbackToTargetVersion",
+                "number": 5
+              },
+              {
+                "typeName": "AutoUpdateRolloutPlan",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "autoUpdateRolloutPlan",
+                "number": 6
+              },
+              {
+                "typeName": "AutoUpdateTimeRestrictions",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "autoUpdateTimeRestrictions",
+                "number": 7
+              },
+              {
+                "typeName": "AutoUpdateTargetVersionLts",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "autoUpdateTargetVersionLts",
+                "number": 8
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "deviceMinimumVersionAueMessage",
+                "number": 9
+              },
+              {
+                "typeName": "DeviceMinimumVersion",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "deviceMinimumVersion",
+                "number": 10
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "autoUpdateHttpDownloadsEnabled",
+                "number": 11
+              },
+              {
+                "typeName": "ReleaseChannelWithLtsEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "releaseChannelWithLts",
+                "number": 12
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "deviceAutoUpdatePeerToPeerEnabled",
+                "number": 13
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "autoUpdateTargetSelector",
+                "number": 14
+              }
+            ],
+            "name": "AutoUpdateSettings"
+          },
+          {
+            "field": [
+              {
+                "typeName": "RolloutPlan",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "plan",
+                "number": 1
+              },
+              {
+                "typeName": "Stage",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "stages",
+                "number": 2
+              },
+              {
+                "typeName": "ScatterFactor",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "scatter",
+                "number": 3
+              }
+            ],
+            "name": "AutoUpdateRolloutPlan"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "days",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "percentage",
+                "number": 2
+              }
+            ],
+            "name": "Stage"
+          },
+          {
+            "field": [
+              {
+                "typeName": "TimeRestriction",
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_MESSAGE",
+                "name": "timeRestriction",
+                "number": 1
+              }
+            ],
+            "name": "AutoUpdateTimeRestrictions"
+          },
+          {
+            "field": [
+              {
+                "typeName": "DayAndTime",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "start",
+                "number": 1
+              },
+              {
+                "typeName": "DayAndTime",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "end",
+                "number": 2
+              }
+            ],
+            "name": "TimeRestriction"
+          },
+          {
+            "field": [
+              {
+                "typeName": "DayOfWeek",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "dayOfWeek",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "hours",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT32",
+                "name": "minutes",
+                "number": 3
+              }
+            ],
+            "name": "DayAndTime"
+          },
+          {
+            "field": [
+              {
+                "typeName": "SelectedVersion",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "selectedVersion",
+                "number": 5
+              }
+            ],
+            "name": "AutoUpdateTargetVersionLts"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "displayName",
+                "number": 1
+              }
+            ],
+            "name": "SelectedVersion"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "chromeosVersion",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "aueWarningPeriodDays",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "warningPeriodDays",
+                "number": 3
+              }
+            ],
+            "name": "DeviceMinimumVersion"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "AutoUpdateConnectionTypeEnum",
+            "value": [
+              {
+                "name": "AUTO_UPDATE_CONNECTION_TYPE_ENUM_WIFI_AND_ETHERNET",
+                "number": 1
+              },
+              {
+                "name": "AUTO_UPDATE_CONNECTION_TYPE_ENUM_ALL_CONNECTIONS",
+                "number": 2
+              }
+            ]
+          },
+          {
+            "name": "RollbackToTargetVersionEnum",
+            "value": [
+              {
+                "name": "ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_DISABLED",
+                "number": 1
+              },
+              {
+                "name": "ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_AND_RESTORE_IF_POSSIBLE",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "RolloutPlan",
+            "value": [
+              {
+                "name": "DEFAULT_UPDATES",
+                "number": 1
+              },
+              {
+                "name": "SCATTER_UPDATES",
+                "number": 2
+              },
+              {
+                "name": "SCHEDULE_UPDATES",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "ScatterFactor",
+            "value": [
+              {
+                "name": "NO_SCATTER_FACTOR",
+                "number": 1
+              },
+              {
+                "name": "ONE_DAY",
+                "number": 2
+              },
+              {
+                "name": "TWO_DAYS",
+                "number": 3
+              },
+              {
+                "name": "THREE_DAYS",
+                "number": 4
+              },
+              {
+                "name": "FOUR_DAYS",
+                "number": 5
+              },
+              {
+                "name": "FIVE_DAYS",
+                "number": 6
+              },
+              {
+                "name": "SIX_DAYS",
+                "number": 7
+              },
+              {
+                "name": "SEVEN_DAYS",
+                "number": 8
+              },
+              {
+                "name": "EIGHT_DAYS",
+                "number": 9
+              },
+              {
+                "name": "NINE_DAYS",
+                "number": 10
+              },
+              {
+                "name": "TEN_DAYS",
+                "number": 11
+              },
+              {
+                "name": "ELEVEN_DAYS",
+                "number": 12
+              },
+              {
+                "name": "TWELVE_DAYS",
+                "number": 13
+              },
+              {
+                "name": "THIRTEEN_DAYS",
+                "number": 14
+              },
+              {
+                "name": "FOURTEEN_DAYS",
+                "number": 15
+              }
+            ]
+          },
+          {
+            "name": "DayOfWeek",
+            "value": [
+              {
+                "name": "MONDAY",
+                "number": 1
+              },
+              {
+                "name": "TUESDAY",
+                "number": 2
+              },
+              {
+                "name": "WEDNESDAY",
+                "number": 3
+              },
+              {
+                "name": "THURSDAY",
+                "number": 4
+              },
+              {
+                "name": "FRIDAY",
+                "number": 5
+              },
+              {
+                "name": "SATURDAY",
+                "number": 6
+              },
+              {
+                "name": "SUNDAY",
+                "number": 7
+              }
+            ]
+          },
+          {
+            "name": "ReleaseChannelWithLtsEnum",
+            "value": [
+              {
+                "name": "RELEASE_CHANNEL_WITH_LTS_ENUM_ALLOW_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL",
+                "number": 2
+              },
+              {
+                "name": "RELEASE_CHANNEL_WITH_LTS_ENUM_BETA_CHANNEL",
+                "number": 3
+              },
+              {
+                "name": "RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL",
+                "number": 4
+              },
+              {
+                "name": "RELEASE_CHANNEL_WITH_LTS_ENUM_LTC_CHANNEL",
+                "number": 5
+              },
+              {
+                "name": "RELEASE_CHANNEL_WITH_LTS_ENUM_DEV_CHANNEL",
+                "number": 6
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.AutoUpdateSettings",
+      "supportUri": "https://support.google.com/chrome/a/answer/3168106?hl=en",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "updateDisabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Block updates.",
+              "value": "true"
+            },
+            {
+              "description": "Allow updates.",
+              "value": "false"
+            }
+          ],
+          "description": "Allow devices to automatically update OS version.",
+          "name": "Allow devices to automatically update OS version."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow auto-reboots.",
+              "value": "true"
+            },
+            {
+              "description": "Disallow auto-reboots.",
+              "value": "false"
+            }
+          ],
+          "description": "Auto reboot after updates.",
+          "defaultValue": false,
+          "field": "rebootAfterUpdate",
+          "name": "Auto reboot after updates."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow automatic updates over Wi-Fi and Ethernet only.",
+              "value": "AUTO_UPDATE_CONNECTION_TYPE_ENUM_WIFI_AND_ETHERNET"
+            },
+            {
+              "description": "Allow automatic updates on all connections, including cellular.",
+              "value": "AUTO_UPDATE_CONNECTION_TYPE_ENUM_ALL_CONNECTIONS"
+            }
+          ],
+          "description": "Updates over cellular.",
+          "defaultValue": "AUTO_UPDATE_CONNECTION_TYPE_ENUM_WIFI_AND_ETHERNET",
+          "field": "autoUpdateAllowedConnectionType",
+          "name": "Updates over cellular."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Do not roll back OS.",
+              "value": "ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_DISABLED"
+            },
+            {
+              "description": "Roll back OS.",
+              "value": "ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_AND_RESTORE_IF_POSSIBLE"
+            }
+          ],
+          "description": "Roll back to target version. To use a previous version, devices will need to be restarted. Devices will be wiped and all local data will be lost. Learn more about rolling back devices here: https://support.google.com/chrome/a?p=rollback.",
+          "defaultValue": "ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_DISABLED",
+          "fieldDescription": "To use a previous version, devices will need to be restarted. Devices will be wiped and all local data will be lost. Learn more about rolling back devices here: https://support.google.com/chrome/a?p=rollback.",
+          "field": "deviceRollbackToTargetVersion",
+          "name": "Roll back to target version."
+        },
+        {
+          "field": "autoUpdateRolloutPlan",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "plan",
+              "knownValueDescriptions": [
+                {
+                  "description": "Default (devices should update as soon as a new version is available).",
+                  "value": "DEFAULT_UPDATES"
+                },
+                {
+                  "description": "Roll out updates over a specific schedule.",
+                  "value": "SCHEDULE_UPDATES"
+                },
+                {
+                  "description": "Scatter updates.",
+                  "value": "SCATTER_UPDATES"
+                }
+              ],
+              "description": "Update rollout plan.",
+              "name": "Update rollout plan."
+            },
+            {
+              "field": "stages",
+              "description": "Rollout stages.",
+              "name": "Rollout stages.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "days",
+                  "description": "Days.",
+                  "name": "Days."
+                },
+                {
+                  "field": "percentage",
+                  "description": "Percentage.",
+                  "name": "Percentage."
+                }
+              ]
+            },
+            {
+              "field": "scatter",
+              "knownValueDescriptions": [
+                {
+                  "description": "No scatter factor.",
+                  "value": "NO_SCATTER_FACTOR"
+                },
+                {
+                  "description": "Scatter updates over one day.",
+                  "value": "ONE_DAY"
+                },
+                {
+                  "description": "Scatter updates over two days.",
+                  "value": "TWO_DAYS"
+                },
+                {
+                  "description": "Scatter updates over three days.",
+                  "value": "THREE_DAYS"
+                },
+                {
+                  "description": "Scatter updates over four days.",
+                  "value": "FOUR_DAYS"
+                },
+                {
+                  "description": "Scatter updates over five days.",
+                  "value": "FIVE_DAYS"
+                },
+                {
+                  "description": "Scatter updates over six days.",
+                  "value": "SIX_DAYS"
+                },
+                {
+                  "description": "Scatter updates over seven days.",
+                  "value": "SEVEN_DAYS"
+                },
+                {
+                  "description": "Scatter updates over eight days.",
+                  "value": "EIGHT_DAYS"
+                },
+                {
+                  "description": "Scatter updates over nine days.",
+                  "value": "NINE_DAYS"
+                },
+                {
+                  "description": "Scatter updates over ten days.",
+                  "value": "TEN_DAYS"
+                },
+                {
+                  "description": "Scatter updates over eleven days.",
+                  "value": "ELEVEN_DAYS"
+                },
+                {
+                  "description": "Scatter updates over twelve days.",
+                  "value": "TWELVE_DAYS"
+                },
+                {
+                  "description": "Scatter updates over thirteen days.",
+                  "value": "THIRTEEN_DAYS"
+                },
+                {
+                  "description": "Scatter updates over fourteen days.",
+                  "value": "FOURTEEN_DAYS"
+                }
+              ],
+              "description": "Scatter Factor.",
+              "name": "Scatter Factor."
+            }
+          ]
+        },
+        {
+          "field": "autoUpdateTimeRestrictions",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "timeRestriction",
+              "description": "Update time restrictions.",
+              "name": "Update time restrictions.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "start",
+                  "description": "Start.",
+                  "name": "Start.",
+                  "nestedFieldDescriptions": [
+                    {
+                      "field": "dayOfWeek",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "Monday.",
+                          "value": "MONDAY"
+                        },
+                        {
+                          "description": "Tuesday.",
+                          "value": "TUESDAY"
+                        },
+                        {
+                          "description": "Wednesday.",
+                          "value": "WEDNESDAY"
+                        },
+                        {
+                          "description": "Thursday.",
+                          "value": "THURSDAY"
+                        },
+                        {
+                          "description": "Friday.",
+                          "value": "FRIDAY"
+                        },
+                        {
+                          "description": "SATURDAY.",
+                          "value": "SATURDAY"
+                        },
+                        {
+                          "description": "Sunday.",
+                          "value": "SUNDAY"
+                        }
+                      ],
+                      "description": "Day of week.",
+                      "name": "Day of week."
+                    },
+                    {
+                      "field": "hours",
+                      "description": "Hours.",
+                      "name": "Hours."
+                    },
+                    {
+                      "field": "minutes",
+                      "knownValueDescriptions": [
+                        {
+                          "description": "0.",
+                          "value": "0"
+                        },
+                        {
+                          "description": "15.",
+                          "value": "15"
+                        },
+                        {
+                          "description": "30.",
+                          "value": "30"
+                        },
+                        {
+                          "description": "45.",
+                          "value": "45"
+                        }
+                      ],
+                      "description": "Minutes.",
+                      "name": "Minutes."
+                    }
+                  ]
+                },
+                {
+                  "field": "end",
+                  "description": "End.",
+                  "name": "End."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "autoUpdateTargetVersionLts",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "selectedVersion",
+              "description": "Selected auto update version.",
+              "name": "Selected auto update version.",
+              "nestedFieldDescriptions": [
+                {
+                  "field": "displayName",
+                  "knownValueDescriptions": [
+                    {
+                      "description": "No restriction.",
+                      "value": "No restriction"
+                    },
+                    {
+                      "description": "104.*.",
+                      "value": "104.*"
+                    },
+                    {
+                      "description": "105.*.",
+                      "value": "105.*"
+                    },
+                    {
+                      "description": "106.*.",
+                      "value": "106.*"
+                    },
+                    {
+                      "description": "107.*.",
+                      "value": "107.*"
+                    },
+                    {
+                      "description": "102.* (long-term support).",
+                      "value": "102.*"
+                    }
+                  ],
+                  "description": "Version name.",
+                  "name": "Version name."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "deviceMinimumVersionAueMessage",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "fieldDescription": "When a device reaches Auto Update Expiration(https://support.google.com/chrome/a/answer/6220366)automatic software updates from Google will no longer be provided. This text overrides the default message that will be shown on the device.",
+          "description": "Enforce updates Auto Update Expiration (AUE) message. When a device reaches Auto Update Expiration(https://support.google.com/chrome/a/answer/6220366)automatic software updates from Google will no longer be provided. This text overrides the default message that will be shown on the device.",
+          "name": "Enforce updates Auto Update Expiration (AUE) message."
+        },
+        {
+          "field": "deviceMinimumVersion",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "description": "N/A",
+          "nestedFieldDescriptions": [
+            {
+              "field": "chromeosVersion",
+              "knownValueDescriptions": [
+                {
+                  "description": "Do not enforce updates.",
+                  "value": ""
+                },
+                {
+                  "description": "86.*.",
+                  "value": "13421"
+                },
+                {
+                  "description": "87.*.",
+                  "value": "13505"
+                },
+                {
+                  "description": "88.*.",
+                  "value": "13597"
+                },
+                {
+                  "description": "89.*.",
+                  "value": "13729"
+                },
+                {
+                  "description": "90.*.",
+                  "value": "13816"
+                },
+                {
+                  "description": "91.*.",
+                  "value": "13904"
+                },
+                {
+                  "description": "92.*.",
+                  "value": "13982"
+                },
+                {
+                  "description": "93.*.",
+                  "value": "14092"
+                },
+                {
+                  "description": "94.*.",
+                  "value": "14150"
+                },
+                {
+                  "description": "96.*.",
+                  "value": "14268"
+                },
+                {
+                  "description": "97.*.",
+                  "value": "14324"
+                },
+                {
+                  "description": "98.*.",
+                  "value": "14388"
+                },
+                {
+                  "description": "99.*.",
+                  "value": "14469"
+                },
+                {
+                  "description": "100.*.",
+                  "value": "14526"
+                },
+                {
+                  "description": "101.*.",
+                  "value": "14588"
+                },
+                {
+                  "description": "102.*.",
+                  "value": "14695"
+                },
+                {
+                  "description": "103.*.",
+                  "value": "14816"
+                },
+                {
+                  "description": "104.*.",
+                  "value": "14909"
+                },
+                {
+                  "description": "105.*.",
+                  "value": "14989"
+                },
+                {
+                  "description": "106.*.",
+                  "value": "15054"
+                }
+              ],
+              "description": "Chrome version.",
+              "name": "Chrome version."
+            },
+            {
+              "field": "aueWarningPeriodDays",
+              "knownValueDescriptions": [
+                {
+                  "description": "No warning.",
+                  "value": "0"
+                },
+                {
+                  "description": "One week.",
+                  "value": "7"
+                },
+                {
+                  "description": "Two weeks.",
+                  "value": "14"
+                },
+                {
+                  "description": "Three weeks.",
+                  "value": "21"
+                },
+                {
+                  "description": "Four weeks.",
+                  "value": "28"
+                },
+                {
+                  "description": "Five weeks.",
+                  "value": "35"
+                },
+                {
+                  "description": "Six weeks.",
+                  "value": "42"
+                },
+                {
+                  "description": "Seven weeks.",
+                  "value": "49"
+                },
+                {
+                  "description": "Eight weeks.",
+                  "value": "56"
+                },
+                {
+                  "description": "Nine weeks.",
+                  "value": "63"
+                },
+                {
+                  "description": "Ten weeks.",
+                  "value": "70"
+                },
+                {
+                  "description": "Eleven weeks.",
+                  "value": "77"
+                },
+                {
+                  "description": "Twelve weeks.",
+                  "value": "84"
+                }
+              ],
+              "description": "Extended period to update for Auto Update Expiration devices (AUE).",
+              "name": "Extended period to update for Auto Update Expiration devices (AUE)."
+            },
+            {
+              "field": "warningPeriodDays",
+              "knownValueDescriptions": [
+                {
+                  "description": "No warning.",
+                  "value": "0"
+                },
+                {
+                  "description": "One week.",
+                  "value": "7"
+                },
+                {
+                  "description": "Two weeks.",
+                  "value": "14"
+                },
+                {
+                  "description": "Three weeks.",
+                  "value": "21"
+                },
+                {
+                  "description": "Four weeks.",
+                  "value": "28"
+                },
+                {
+                  "description": "Five weeks.",
+                  "value": "35"
+                },
+                {
+                  "description": "Six weeks.",
+                  "value": "42"
+                }
+              ],
+              "description": "Period to block devices and user sessions after if the device is not update to chrome_version.",
+              "name": "Period to block devices and user sessions after if the device is not update to chrome_version."
+            }
+          ]
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Use HTTP for update downloads.",
+              "value": "true"
+            },
+            {
+              "description": "Use HTTPS for update downloads.",
+              "value": "false"
+            }
+          ],
+          "description": "Update downloads.",
+          "defaultValue": false,
+          "field": "autoUpdateHttpDownloadsEnabled",
+          "name": "Update downloads."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow user to configure.",
+              "value": "RELEASE_CHANNEL_WITH_LTS_ENUM_ALLOW_USER_CHOICE"
+            },
+            {
+              "description": "Stable channel.",
+              "value": "RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL"
+            },
+            {
+              "description": "Beta channel.",
+              "value": "RELEASE_CHANNEL_WITH_LTS_ENUM_BETA_CHANNEL"
+            },
+            {
+              "description": "Long-term support channel.",
+              "value": "RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL"
+            },
+            {
+              "description": "Long-term support candidate channel.",
+              "value": "RELEASE_CHANNEL_WITH_LTS_ENUM_LTC_CHANNEL"
+            },
+            {
+              "description": "Dev channel (may be unstable).",
+              "value": "RELEASE_CHANNEL_WITH_LTS_ENUM_DEV_CHANNEL"
+            }
+          ],
+          "description": "Release channel. Changing the release channel can have drastic effects on the current organization and its children. Ensure any changes to this setting are intended. Learn more about release channels: https://support.google.com/chrome/a/answer/1375678#release_channel?hl={$languageCode}.",
+          "defaultValue": "RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL",
+          "fieldDescription": "Changing the release channel can have drastic effects on the current organization and its children. Ensure any changes to this setting are intended. Learn more about release channels: https://support.google.com/chrome/a/answer/1375678#release_channel?hl={$languageCode}.",
+          "field": "releaseChannelWithLts",
+          "name": "Release channel."
+        },
+        {
+          "defaultValue": true,
+          "field": "deviceAutoUpdatePeerToPeerEnabled",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "updateDisabled"
+            },
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Allow peer to peer auto update downloads.",
+              "value": "true"
+            },
+            {
+              "description": "Do not allow peer to peer auto update downloads.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "autoUpdateTargetSelector",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "false",
+              "sourceField": "updateDisabled"
+            }
+          ],
+          "fieldDescription": "This will override the Chrome version restriction.",
+          "description": "Specific update version. This will override the Chrome version restriction.",
+          "name": "Specific update version."
+        }
+      ],
+      "categoryTitle": "Device update settings",
+      "notices": [
+        {
+          "field": "deviceRollbackToTargetVersion",
+          "noticeMessage": "Keep in mind: 1) To use a previous version, devices will need to be restarted. Devices will be wiped and all local data will be lost. 2) By default, devices with ChromeOS version 105 or earlier do not automatically re-enroll into your account after rollback. Users have to manually re-enroll them. Learn more about rolling back devices here: https://support.google.com/chrome/a?p=rollback.",
+          "noticeValue": "ROLLBACK_TO_TARGET_VERSION_ENUM_ROLLBACK_AND_RESTORE_IF_POSSIBLE"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.AutoUpdateSettings",
+      "policyDescription": "Auto-update settings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "appToPinOsVersion",
+                "number": 1
+              }
+            ],
+            "name": "AppToPinOsVersion"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.AppToPinOsVersion",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#app_controlled_updates",
+      "fieldDescriptions": [
+        {
+          "field": "appToPinOsVersion",
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Device update settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.AppToPinOsVersion",
+      "policyDescription": "App-controlled updates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "allowKioskAppControlChromeVersion",
+                "number": 1
+              }
+            ],
+            "name": "KioskAppControlChromeVersion"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.KioskAppControlChromeVersion",
+      "fieldDescriptions": [
+        {
+          "field": "allowKioskAppControlChromeVersion",
+          "knownValueDescriptions": [
+            {
+              "description": "OS version updates will not be set to a version defined in the manifest of a kiosk app.",
+              "value": "false"
+            },
+            {
+              "description": "OS version updates will be set to a version defined in the manifest of a kiosk app.",
+              "value": "true"
+            }
+          ],
+          "description": "Whether the OS version updates will be set to a version defined in the manifest of a kiosk app.",
+          "name": "Whether the OS version updates will be set to a version defined in the manifest of a kiosk app."
+        }
+      ],
+      "categoryTitle": "Device update settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.KioskAppControlChromeVersion",
+      "policyDescription": "Kiosk-controlled updates."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "wilcoScheduledUpdateEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "wilcoScheduledUpdateTimeOfDay",
+                "number": 2
+              },
+              {
+                "typeName": "WilcoUpdateFrequencyEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "wilcoScheduledUpdateFrequency",
+                "number": 3
+              },
+              {
+                "typeName": "WeekDayEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "wilcoScheduledUpdateDayOfWeek",
+                "number": 4
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "wilcoScheduledUpdateDayOfMonth",
+                "number": 5
+              }
+            ],
+            "name": "WilcoScheduledUpdate"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "WilcoUpdateFrequencyEnum",
+            "value": [
+              {
+                "name": "WILCO_UPDATE_FREQUENCY_ENUM_DAILY",
+                "number": 1
+              },
+              {
+                "name": "WILCO_UPDATE_FREQUENCY_ENUM_WEEKLY",
+                "number": 2
+              },
+              {
+                "name": "WILCO_UPDATE_FREQUENCY_ENUM_MONTHLY",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "WeekDayEnum",
+            "value": [
+              {
+                "name": "WEEK_DAY_ENUM_MONDAY",
+                "number": 1
+              },
+              {
+                "name": "WEEK_DAY_ENUM_TUESDAY",
+                "number": 2
+              },
+              {
+                "name": "WEEK_DAY_ENUM_WEDNESDAY",
+                "number": 3
+              },
+              {
+                "name": "WEEK_DAY_ENUM_THURSDAY",
+                "number": 4
+              },
+              {
+                "name": "WEEK_DAY_ENUM_FRIDAY",
+                "number": 5
+              },
+              {
+                "name": "WEEK_DAY_ENUM_SATURDAY",
+                "number": 6
+              },
+              {
+                "name": "WEEK_DAY_ENUM_SUNDAY",
+                "number": 7
+              }
+            ]
+          }
+        ]
+      },
+      "policyDescription": "Scheduled updates.",
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.WilcoScheduledUpdate",
+      "fieldDescriptions": [
+        {
+          "field": "wilcoScheduledUpdateEnabled",
+          "knownValueDescriptions": [
+            {
+              "value": "true"
+            },
+            {
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "wilcoScheduledUpdateTimeOfDay",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "wilcoScheduledUpdateEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "12:00 AM.",
+              "value": "0"
+            },
+            {
+              "description": "12:15 AM.",
+              "value": "15"
+            },
+            {
+              "description": "12:30 AM.",
+              "value": "30"
+            },
+            {
+              "description": "12:45 AM.",
+              "value": "45"
+            },
+            {
+              "description": "1:00 AM.",
+              "value": "60"
+            },
+            {
+              "description": "1:15 AM.",
+              "value": "75"
+            },
+            {
+              "description": "1:30 AM.",
+              "value": "90"
+            },
+            {
+              "description": "1:45 AM.",
+              "value": "105"
+            },
+            {
+              "description": "2:00 AM.",
+              "value": "120"
+            },
+            {
+              "description": "2:15 AM.",
+              "value": "135"
+            },
+            {
+              "description": "2:30 AM.",
+              "value": "150"
+            },
+            {
+              "description": "2:45 AM.",
+              "value": "165"
+            },
+            {
+              "description": "3:00 AM.",
+              "value": "180"
+            },
+            {
+              "description": "3:15 AM.",
+              "value": "195"
+            },
+            {
+              "description": "3:30 AM.",
+              "value": "210"
+            },
+            {
+              "description": "3:45 AM.",
+              "value": "225"
+            },
+            {
+              "description": "4:00 AM.",
+              "value": "240"
+            },
+            {
+              "description": "4:15 AM.",
+              "value": "255"
+            },
+            {
+              "description": "4:30 AM.",
+              "value": "270"
+            },
+            {
+              "description": "4:45 AM.",
+              "value": "285"
+            },
+            {
+              "description": "5:00 AM.",
+              "value": "300"
+            },
+            {
+              "description": "5:15 AM.",
+              "value": "315"
+            },
+            {
+              "description": "5:30 AM.",
+              "value": "330"
+            },
+            {
+              "description": "5:45 AM.",
+              "value": "345"
+            },
+            {
+              "description": "6:00 AM.",
+              "value": "360"
+            },
+            {
+              "description": "6:15 AM.",
+              "value": "375"
+            },
+            {
+              "description": "6:30 AM.",
+              "value": "390"
+            },
+            {
+              "description": "6:45 AM.",
+              "value": "405"
+            },
+            {
+              "description": "7:00 AM.",
+              "value": "420"
+            },
+            {
+              "description": "7:15 AM.",
+              "value": "435"
+            },
+            {
+              "description": "7:30 AM.",
+              "value": "450"
+            },
+            {
+              "description": "7:45 AM.",
+              "value": "465"
+            },
+            {
+              "description": "8:00 AM.",
+              "value": "480"
+            },
+            {
+              "description": "8:15 AM.",
+              "value": "495"
+            },
+            {
+              "description": "8:30 AM.",
+              "value": "510"
+            },
+            {
+              "description": "8:45 AM.",
+              "value": "525"
+            },
+            {
+              "description": "9:00 AM.",
+              "value": "540"
+            },
+            {
+              "description": "9:15 AM.",
+              "value": "555"
+            },
+            {
+              "description": "9:30 AM.",
+              "value": "570"
+            },
+            {
+              "description": "9:45 AM.",
+              "value": "585"
+            },
+            {
+              "description": "10:00 AM.",
+              "value": "600"
+            },
+            {
+              "description": "10:15 AM.",
+              "value": "615"
+            },
+            {
+              "description": "10:30 AM.",
+              "value": "630"
+            },
+            {
+              "description": "10:45 AM.",
+              "value": "645"
+            },
+            {
+              "description": "11:00 AM.",
+              "value": "660"
+            },
+            {
+              "description": "11:15 AM.",
+              "value": "675"
+            },
+            {
+              "description": "11:30 AM.",
+              "value": "690"
+            },
+            {
+              "description": "11:45 AM.",
+              "value": "705"
+            },
+            {
+              "description": "12:00 PM.",
+              "value": "720"
+            },
+            {
+              "description": "12:15 PM.",
+              "value": "735"
+            },
+            {
+              "description": "12:30 PM.",
+              "value": "750"
+            },
+            {
+              "description": "12:45 PM.",
+              "value": "765"
+            },
+            {
+              "description": "1:00 PM.",
+              "value": "780"
+            },
+            {
+              "description": "1:15 PM.",
+              "value": "795"
+            },
+            {
+              "description": "1:30 PM.",
+              "value": "810"
+            },
+            {
+              "description": "1:45 PM.",
+              "value": "825"
+            },
+            {
+              "description": "2:00 PM.",
+              "value": "840"
+            },
+            {
+              "description": "2:15 PM.",
+              "value": "855"
+            },
+            {
+              "description": "2:30 PM.",
+              "value": "870"
+            },
+            {
+              "description": "2:45 PM.",
+              "value": "885"
+            },
+            {
+              "description": "3:00 PM.",
+              "value": "900"
+            },
+            {
+              "description": "3:15 PM.",
+              "value": "915"
+            },
+            {
+              "description": "3:30 PM.",
+              "value": "930"
+            },
+            {
+              "description": "3:45 PM.",
+              "value": "945"
+            },
+            {
+              "description": "4:00 PM.",
+              "value": "960"
+            },
+            {
+              "description": "4:15 PM.",
+              "value": "975"
+            },
+            {
+              "description": "4:30 PM.",
+              "value": "990"
+            },
+            {
+              "description": "4:45 PM.",
+              "value": "1005"
+            },
+            {
+              "description": "5:00 PM.",
+              "value": "1020"
+            },
+            {
+              "description": "5:15 PM.",
+              "value": "1035"
+            },
+            {
+              "description": "5:30 PM.",
+              "value": "1050"
+            },
+            {
+              "description": "5:45 PM.",
+              "value": "1065"
+            },
+            {
+              "description": "6:00 PM.",
+              "value": "1080"
+            },
+            {
+              "description": "6:15 PM.",
+              "value": "1095"
+            },
+            {
+              "description": "6:30 PM.",
+              "value": "1110"
+            },
+            {
+              "description": "6:45 PM.",
+              "value": "1125"
+            },
+            {
+              "description": "7:00 PM.",
+              "value": "1140"
+            },
+            {
+              "description": "7:15 PM.",
+              "value": "1155"
+            },
+            {
+              "description": "7:30 PM.",
+              "value": "1170"
+            },
+            {
+              "description": "7:45 PM.",
+              "value": "1185"
+            },
+            {
+              "description": "8:00 PM.",
+              "value": "1200"
+            },
+            {
+              "description": "8:15 PM.",
+              "value": "1215"
+            },
+            {
+              "description": "8:30 PM.",
+              "value": "1230"
+            },
+            {
+              "description": "8:45 PM.",
+              "value": "1245"
+            },
+            {
+              "description": "9:00 PM.",
+              "value": "1260"
+            },
+            {
+              "description": "9:15 PM.",
+              "value": "1275"
+            },
+            {
+              "description": "9:30 PM.",
+              "value": "1290"
+            },
+            {
+              "description": "9:45 PM.",
+              "value": "1305"
+            },
+            {
+              "description": "10:00 PM.",
+              "value": "1320"
+            },
+            {
+              "description": "10:15 PM.",
+              "value": "1335"
+            },
+            {
+              "description": "10:30 PM.",
+              "value": "1350"
+            },
+            {
+              "description": "10:45 PM.",
+              "value": "1365"
+            },
+            {
+              "description": "11:00 PM.",
+              "value": "1380"
+            },
+            {
+              "description": "11:15 PM.",
+              "value": "1395"
+            },
+            {
+              "description": "11:30 PM.",
+              "value": "1410"
+            },
+            {
+              "description": "11:45 PM.",
+              "value": "1425"
+            }
+          ],
+          "description": "N/A",
+          "inputConstraint": "The long field should have value greater than or equal to zero."
+        },
+        {
+          "defaultValue": "WILCO_UPDATE_FREQUENCY_ENUM_DAILY",
+          "field": "wilcoScheduledUpdateFrequency",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "wilcoScheduledUpdateEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "value": "WILCO_UPDATE_FREQUENCY_ENUM_DAILY"
+            },
+            {
+              "value": "WILCO_UPDATE_FREQUENCY_ENUM_WEEKLY"
+            },
+            {
+              "value": "WILCO_UPDATE_FREQUENCY_ENUM_MONTHLY"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": "WEEK_DAY_ENUM_MONDAY",
+          "field": "wilcoScheduledUpdateDayOfWeek",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "wilcoScheduledUpdateEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "value": "WEEK_DAY_ENUM_MONDAY"
+            },
+            {
+              "value": "WEEK_DAY_ENUM_TUESDAY"
+            },
+            {
+              "value": "WEEK_DAY_ENUM_WEDNESDAY"
+            },
+            {
+              "value": "WEEK_DAY_ENUM_THURSDAY"
+            },
+            {
+              "value": "WEEK_DAY_ENUM_FRIDAY"
+            },
+            {
+              "value": "WEEK_DAY_ENUM_SATURDAY"
+            },
+            {
+              "value": "WEEK_DAY_ENUM_SUNDAY"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "field": "wilcoScheduledUpdateDayOfMonth",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "wilcoScheduledUpdateEnabled"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "The 1st day of the month.",
+              "value": "1"
+            },
+            {
+              "description": "The 2nd day of the month.",
+              "value": "2"
+            },
+            {
+              "description": "The 3rd day of the month.",
+              "value": "3"
+            },
+            {
+              "description": "The 4th day of the month.",
+              "value": "4"
+            },
+            {
+              "description": "The 5th day of the month.",
+              "value": "5"
+            },
+            {
+              "description": "The 6th day of the month.",
+              "value": "6"
+            },
+            {
+              "description": "The 7th day of the month.",
+              "value": "7"
+            },
+            {
+              "description": "The 8th day of the month.",
+              "value": "8"
+            },
+            {
+              "description": "The 9th day of the month.",
+              "value": "9"
+            },
+            {
+              "description": "The 10th day of the month.",
+              "value": "10"
+            },
+            {
+              "description": "The 11th day of the month.",
+              "value": "11"
+            },
+            {
+              "description": "The 12th day of the month.",
+              "value": "12"
+            },
+            {
+              "description": "The 13th day of the month.",
+              "value": "13"
+            },
+            {
+              "description": "The 14th day of the month.",
+              "value": "14"
+            },
+            {
+              "description": "The 15th day of the month.",
+              "value": "15"
+            },
+            {
+              "description": "The 16th day of the month.",
+              "value": "16"
+            },
+            {
+              "description": "The 17th day of the month.",
+              "value": "17"
+            },
+            {
+              "description": "The 18th day of the month.",
+              "value": "18"
+            },
+            {
+              "description": "The 19th day of the month.",
+              "value": "19"
+            },
+            {
+              "description": "The 20th day of the month.",
+              "value": "20"
+            },
+            {
+              "description": "The 21st day of the month.",
+              "value": "21"
+            },
+            {
+              "description": "The 22nd day of the month.",
+              "value": "22"
+            },
+            {
+              "description": "The 23rd day of the month.",
+              "value": "23"
+            },
+            {
+              "description": "The 24th day of the month.",
+              "value": "24"
+            },
+            {
+              "description": "The 25th day of the month.",
+              "value": "25"
+            },
+            {
+              "description": "The 26th day of the month.",
+              "value": "26"
+            },
+            {
+              "description": "The 27th day of the month.",
+              "value": "27"
+            },
+            {
+              "description": "The 28th day of the month.",
+              "value": "28"
+            },
+            {
+              "description": "The 29th day of the month.",
+              "value": "29"
+            },
+            {
+              "description": "The 30th day of the month.",
+              "value": "30"
+            },
+            {
+              "description": "The 31st day of the month.",
+              "value": "31"
+            }
+          ],
+          "description": "N/A",
+          "inputConstraint": "The long field should have value greater than or equal to zero."
+        }
+      ],
+      "categoryTitle": "Device update settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.WilcoScheduledUpdate",
+      "accessRestrictions": [
+        "This policy only affects device types: Dell Latitude 5400 Chromebook Enterprise, Dell Latitude 5300 2-in-1 Chromebook Enterprise, Dell Latitude 7410 Chromebook Enterprise, Dell Latitude 7410 2-in-1 Chromebook Enterprise."
+      ]
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DeviceVariationsLevelEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "deviceVariationsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "Variations"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DeviceVariationsLevelEnum",
+            "value": [
+              {
+                "name": "DEVICE_VARIATIONS_LEVEL_ENUM_ENABLED",
+                "number": 1
+              },
+              {
+                "name": "DEVICE_VARIATIONS_LEVEL_ENUM_CRITICAL_FIXES_ONLY",
+                "number": 2
+              },
+              {
+                "name": "DEVICE_VARIATIONS_LEVEL_ENUM_DISABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.Variations",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "fieldDescriptions": [
+        {
+          "field": "deviceVariationsEnabled",
+          "defaultValue": "DEVICE_VARIATIONS_LEVEL_ENUM_ENABLED",
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Chrome variations.",
+              "value": "DEVICE_VARIATIONS_LEVEL_ENUM_ENABLED"
+            },
+            {
+              "description": "Enable variations for critical fixes only.",
+              "value": "DEVICE_VARIATIONS_LEVEL_ENUM_CRITICAL_FIXES_ONLY"
+            },
+            {
+              "description": "Disable variations.",
+              "value": "DEVICE_VARIATIONS_LEVEL_ENUM_DISABLED"
+            }
+          ],
+          "description": "Chrome Variations.",
+          "name": "Chrome Variations."
+        }
+      ],
+      "categoryTitle": "Device update settings",
+      "notices": [
+        {
+          "field": "deviceVariationsEnabled",
+          "noticeMessage": "Disabling variations significantly increases the risk of future security and compatibility issues and is not recommended.",
+          "noticeValue": "DEVICE_VARIATIONS_LEVEL_ENUM_DISABLED"
+        }
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.Variations",
+      "policyDescription": "Variations."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ManagedGuestSessionAvailabilityEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "managedGuestSessionAvailability",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "autoLaunchDelaySeconds",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "deviceHealthMonitoring",
+                "number": 3
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "systemLogUploadEnabled",
+                "number": 4
+              },
+              {
+                "typeName": "DisplayRotationEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "displayRotation",
+                "number": 5
+              }
+            ],
+            "name": "ManagedGuestSession"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ManagedGuestSessionAvailabilityEnum",
+            "value": [
+              {
+                "name": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_NOT_ALLOWED",
+                "number": 1
+              },
+              {
+                "name": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_ALLOWED",
+                "number": 2
+              },
+              {
+                "name": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_AUTO_LAUNCH",
+                "number": 3
+              }
+            ]
+          },
+          {
+            "name": "DisplayRotationEnum",
+            "value": [
+              {
+                "name": "DISPLAY_ROTATION_ENUM_UNSET",
+                "number": 1
+              },
+              {
+                "name": "DISPLAY_ROTATION_ENUM_ROTATE_0",
+                "number": 2
+              },
+              {
+                "name": "DISPLAY_ROTATION_ENUM_ROTATE_90",
+                "number": 3
+              },
+              {
+                "name": "DISPLAY_ROTATION_ENUM_ROTATE_180",
+                "number": 4
+              },
+              {
+                "name": "DISPLAY_ROTATION_ENUM_ROTATE_270",
+                "number": 5
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.ManagedGuestSession",
+      "fieldDescriptions": [
+        {
+          "field": "managedGuestSessionAvailability",
+          "defaultValue": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_NOT_ALLOWED",
+          "knownValueDescriptions": [
+            {
+              "description": "Do not allow managed guest sessions.",
+              "value": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_NOT_ALLOWED"
+            },
+            {
+              "description": "Allow managed guest sessions.",
+              "value": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_ALLOWED"
+            },
+            {
+              "description": "Auto-launch managed guest session.",
+              "value": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_AUTO_LAUNCH"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_AUTO_LAUNCH",
+              "sourceField": "managedGuestSessionAvailability"
+            }
+          ],
+          "description": "Auto-launch delay. Number of seconds to delay before launching the managed guest session. During this time the sign-in screen will be visible.",
+          "defaultValue": 0,
+          "fieldDescription": "Number of seconds to delay before launching the managed guest session. During this time the sign-in screen will be visible.",
+          "inputConstraint": "The long field should have value greater than or equal to zero.",
+          "field": "autoLaunchDelaySeconds",
+          "name": "Auto-launch delay."
+        },
+        {
+          "defaultValue": false,
+          "field": "deviceHealthMonitoring",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_AUTO_LAUNCH",
+              "sourceField": "managedGuestSessionAvailability"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Enable device health monitoring.",
+              "value": "true"
+            },
+            {
+              "description": "Disable device health monitoring.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": false,
+          "field": "systemLogUploadEnabled",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_AUTO_LAUNCH",
+              "sourceField": "managedGuestSessionAvailability"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Enable device system log upload.",
+              "value": "true"
+            },
+            {
+              "description": "Disable device system log upload.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "MANAGED_GUEST_SESSION_AVAILABILITY_ENUM_AUTO_LAUNCH",
+              "sourceField": "managedGuestSessionAvailability"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "No policy set (allow the device to keep its current display rotation).",
+              "value": "DISPLAY_ROTATION_ENUM_UNSET"
+            },
+            {
+              "description": "0 degrees.",
+              "value": "DISPLAY_ROTATION_ENUM_ROTATE_0"
+            },
+            {
+              "description": "90 degrees.",
+              "value": "DISPLAY_ROTATION_ENUM_ROTATE_90"
+            },
+            {
+              "description": "180 degrees.",
+              "value": "DISPLAY_ROTATION_ENUM_ROTATE_180"
+            },
+            {
+              "description": "270 degrees.",
+              "value": "DISPLAY_ROTATION_ENUM_ROTATE_270"
+            }
+          ],
+          "description": "Screen Rotation (clockwise).",
+          "defaultValue": "DISPLAY_ROTATION_ENUM_UNSET",
+          "field": "displayRotation",
+          "name": "Screen Rotation (clockwise)."
+        }
+      ],
+      "categoryTitle": "Kiosk settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.ManagedGuestSession",
+      "policyDescription": "Managed guest session."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "deviceStatusAlertDeliveryModes",
+                "number": 1
+              }
+            ],
+            "name": "Alerting"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.Alerting",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#device_status_alert_delivery_modes",
+      "fieldDescriptions": [
+        {
+          "field": "deviceStatusAlertDeliveryModes",
+          "defaultValue": null,
+          "knownValueDescriptions": [
+            {
+              "description": "Receive alerts via email.",
+              "value": "EMAIL"
+            },
+            {
+              "description": "Receive alerts via SMS.",
+              "value": "SMS"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.Alerting",
+      "policyDescription": "Kiosk device status alerting delivery."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "alertingEmail",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "alertingMobilePhone",
+                "number": 2
+              }
+            ],
+            "name": "AlertingContactInfo"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.AlertingContactInfo",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#alerting_email",
+      "fieldDescriptions": [
+        {
+          "field": "alertingEmail",
+          "fieldDescription": "Email addresses (e.g. user@example.com).",
+          "description": "Alerting emails. Email addresses (e.g. user@example.com).",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'email'.",
+          "name": "Alerting emails."
+        },
+        {
+          "field": "alertingMobilePhone",
+          "fieldDescription": "Phone numbers (e.g. +1XXXYYYZZZZ, +1AAABBBCCCC).",
+          "description": "Alerting mobile phones. Phone numbers (e.g. +1XXXYYYZZZZ, +1AAABBBCCCC).",
+          "name": "Alerting mobile phones."
+        }
+      ],
+      "categoryTitle": "Kiosk settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.AlertingContactInfo",
+      "policyDescription": "Kiosk device status alerting contact info."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "urlBlocklist",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "urlAllowlist",
+                "number": 2
+              }
+            ],
+            "name": "UrlBlocking"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.UrlBlocking",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#url_blocklist",
+      "fieldDescriptions": [
+        {
+          "field": "urlBlocklist",
+          "fieldDescription": "Any URL in the URL blocklist will be blocked, unless it also appears in the URL blocklist exception list.",
+          "description": "Blocked URLs. Any URL in the URL blocklist will be blocked, unless it also appears in the URL blocklist exception list.",
+          "name": "Blocked URLs."
+        },
+        {
+          "field": "urlAllowlist",
+          "fieldDescription": "Any URL that matches an entry in the blocklist exception list will be allowed, even if it matches an entry in the URL blocklist. Wildcards (\"*\") are allowed when appended to a URL, but cannot be entered alone.",
+          "description": "Blocked URLs exceptions. Any URL that matches an entry in the blocklist exception list will be allowed, even if it matches an entry in the URL blocklist. Wildcards (\"*\") are allowed when appended to a URL, but cannot be entered alone.",
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url filter'.",
+          "name": "Blocked URLs exceptions."
+        }
+      ],
+      "categoryTitle": "Kiosk settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.UrlBlocking",
+      "policyDescription": "URL blocking."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "virtualKeyboardFeatures",
+                "number": 1
+              }
+            ],
+            "name": "KioskVirtualKeyboardFeatures"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.KioskVirtualKeyboardFeatures",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#virtual_keyboard_features",
+      "fieldDescriptions": [
+        {
+          "field": "virtualKeyboardFeatures",
+          "defaultValue": null,
+          "knownValueDescriptions": [
+            {
+              "description": "Auto suggest.",
+              "value": "AUTO_SUGGEST"
+            },
+            {
+              "description": "Handwriting recognition.",
+              "value": "HANDWRITING"
+            },
+            {
+              "description": "Voice input.",
+              "value": "VOICE_INPUT"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.KioskVirtualKeyboardFeatures",
+      "policyDescription": "Kiosk virtual keyboard features (websites only)."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskActionOnLidCloseEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "lidCloseAction",
+                "number": 1
+              }
+            ],
+            "name": "LidCloseAction"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskActionOnLidCloseEnum",
+            "value": [
+              {
+                "name": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_SUSPEND",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_SHUTDOWN",
+                "number": 3
+              },
+              {
+                "name": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_DO_NOTHING",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.LidCloseAction",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#lid_close_action",
+      "fieldDescriptions": [
+        {
+          "field": "lidCloseAction",
+          "defaultValue": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_SUSPEND",
+          "knownValueDescriptions": [
+            {
+              "description": "Sleep.",
+              "value": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_SUSPEND"
+            },
+            {
+              "description": "Shutdown.",
+              "value": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_SHUTDOWN"
+            },
+            {
+              "description": "Do nothing.",
+              "value": "KIOSK_ACTION_ON_LID_CLOSE_ENUM_DO_NOTHING"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk power settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.LidCloseAction",
+      "policyDescription": "Action on lid close."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "acIdleTimeout",
+                "number": 1
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "acWarningTimeout",
+                "number": 2
+              },
+              {
+                "typeName": "KioskActionIdleAcEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "acIdleAction",
+                "number": 3
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "acDimTimeout",
+                "number": 4
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "acScreenOffTimeout",
+                "number": 5
+              }
+            ],
+            "name": "AcPowerSettings"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskActionIdleAcEnum",
+            "value": [
+              {
+                "name": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_SUSPEND",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_LOGOUT",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_SHUTDOWN",
+                "number": 3
+              },
+              {
+                "name": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_DO_NOTHING",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.AcPowerSettings",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#ac_idle_settings",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "To prevent any action while idle, choose \"Do nothing\" in 'acIdleAction'. Leave empty for system default.",
+          "name": "Idle timeout in minutes.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 minutes. The input duration policy field value should be converted to seconds. Multiply the desired value in minutes by 60 and append an 's'.",
+          "field": "acIdleTimeout",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Idle timeout in minutes. To prevent any action while idle, choose \"Do nothing\" in 'acIdleAction'. Leave empty for system default."
+        },
+        {
+          "field": "acWarningTimeout",
+          "fieldDescription": "The warning appears only if the idle action is logout or shutdown. Enter zero to never show an idle warning. Leave empty for system default.",
+          "description": "Idle warning timeout in minutes. The warning appears only if the idle action is logout or shutdown. Enter zero to never show an idle warning. Leave empty for system default.",
+          "name": "Idle warning timeout in minutes."
+        },
+        {
+          "field": "acIdleAction",
+          "defaultValue": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_SUSPEND",
+          "knownValueDescriptions": [
+            {
+              "description": "Sleep.",
+              "value": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_SUSPEND"
+            },
+            {
+              "description": "Logout.",
+              "value": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_LOGOUT"
+            },
+            {
+              "description": "Shutdown.",
+              "value": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_SHUTDOWN"
+            },
+            {
+              "description": "Do nothing.",
+              "value": "KIOSK_ACTION_IDLE_AC_ENUM_IDLE_ACTION_DO_NOTHING"
+            }
+          ],
+          "description": "Action on idle.",
+          "name": "Action on idle."
+        },
+        {
+          "field": "acDimTimeout",
+          "fieldDescription": "Enter zero to never dim the screen. Leave empty for system default.",
+          "description": "Screen dim timeout in minutes. Enter zero to never dim the screen. Leave empty for system default.",
+          "name": "Screen dim timeout in minutes."
+        },
+        {
+          "field": "acScreenOffTimeout",
+          "fieldDescription": "Enter zero to never turn off the screen. Leave empty for system default.",
+          "description": "Screen off timeout in minutes. Enter zero to never turn off the screen. Leave empty for system default.",
+          "name": "Screen off timeout in minutes."
+        }
+      ],
+      "categoryTitle": "Kiosk power settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.AcPowerSettings",
+      "policyDescription": "AC Kiosk power settings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "batteryIdleTimeout",
+                "number": 1
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "batteryWarningTimeout",
+                "number": 2
+              },
+              {
+                "typeName": "KioskActionIdleBatteryEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "batteryIdleAction",
+                "number": 3
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "batteryDimTimeout",
+                "number": 4
+              },
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "batteryScreenOffTimeout",
+                "number": 5
+              }
+            ],
+            "name": "BatteryPowerSettings"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskActionIdleBatteryEnum",
+            "value": [
+              {
+                "name": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_SUSPEND",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_LOGOUT",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_SHUTDOWN",
+                "number": 3
+              },
+              {
+                "name": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_DO_NOTHING",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.BatteryPowerSettings",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#battery_idle_settings",
+      "fieldDescriptions": [
+        {
+          "fieldDescription": "To prevent any action while idle, choose \"Do nothing\" in 'batteryIdleAction'. Leave empty for system default.",
+          "name": "Idle timeout in minutes.",
+          "inputConstraint": "Duration policy field value has minimum value of 1 minutes. The input duration policy field value should be converted to seconds. Multiply the desired value in minutes by 60 and append an 's'.",
+          "field": "batteryIdleTimeout",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Idle timeout in minutes. To prevent any action while idle, choose \"Do nothing\" in 'batteryIdleAction'. Leave empty for system default."
+        },
+        {
+          "field": "batteryWarningTimeout",
+          "fieldDescription": "The warning appears only if the idle action is logout or shutdown. Enter zero to never show an idle warning. Leave empty for system default.",
+          "description": "Idle warning timeout in minutes. The warning appears only if the idle action is logout or shutdown. Enter zero to never show an idle warning. Leave empty for system default.",
+          "name": "Idle warning timeout in minutes."
+        },
+        {
+          "field": "batteryIdleAction",
+          "defaultValue": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_SUSPEND",
+          "knownValueDescriptions": [
+            {
+              "description": "Sleep.",
+              "value": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_SUSPEND"
+            },
+            {
+              "description": "Logout.",
+              "value": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_LOGOUT"
+            },
+            {
+              "description": "Shutdown.",
+              "value": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_SHUTDOWN"
+            },
+            {
+              "description": "Do nothing.",
+              "value": "KIOSK_ACTION_IDLE_BATTERY_ENUM_IDLE_ACTION_DO_NOTHING"
+            }
+          ],
+          "description": "Action on idle.",
+          "name": "Action on idle."
+        },
+        {
+          "field": "batteryDimTimeout",
+          "fieldDescription": "Enter zero to never dim the screen. Leave empty for system default.",
+          "description": "Screen dim timeout in minutes. Enter zero to never dim the screen. Leave empty for system default.",
+          "name": "Screen dim timeout in minutes."
+        },
+        {
+          "field": "batteryScreenOffTimeout",
+          "fieldDescription": "Enter zero to never turn off the screen. Leave empty for system default.",
+          "description": "Screen off timeout in minutes. Enter zero to never turn off the screen. Leave empty for system default.",
+          "name": "Screen off timeout in minutes."
+        }
+      ],
+      "categoryTitle": "Kiosk power settings",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.BatteryPowerSettings",
+      "policyDescription": "Battery Kiosk power settings."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "showAccessibilityMenu",
+                "number": 1
+              }
+            ],
+            "name": "ShowAccessibilityMenu"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.ShowAccessibilityMenu",
+      "fieldDescriptions": [
+        {
+          "field": "showAccessibilityMenu",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Show the floating accessibility menu in kiosk mode.",
+              "value": "true"
+            },
+            {
+              "description": "Do not show the floating accessibility menu in kiosk mode.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.ShowAccessibilityMenu",
+      "policyDescription": "Kiosk floating accessibility menu."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskSpokenFeedbackAccessibilityStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "spokenFeedbackEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SpokenFeedbackEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskSpokenFeedbackAccessibilityStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.SpokenFeedbackEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "spokenFeedbackEnabled",
+          "defaultValue": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable spoken feedback.",
+              "value": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable spoken feedback.",
+              "value": "KIOSK_SPOKEN_FEEDBACK_ACCESSIBILITY_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.SpokenFeedbackEnabled",
+      "policyDescription": "Kiosk spoken feedback."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskSelectToSpeakEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "selectToSpeakEnabled",
+                "number": 1
+              }
+            ],
+            "name": "SelectToSpeakEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskSelectToSpeakEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.SelectToSpeakEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "selectToSpeakEnabled",
+          "defaultValue": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable select to speak.",
+              "value": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable select to speak.",
+              "value": "KIOSK_SELECT_TO_SPEAK_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.SelectToSpeakEnabled",
+      "policyDescription": "Kiosk select to speak."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "HighContrastEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "highContrastEnabled",
+                "number": 1
+              }
+            ],
+            "name": "HighContrastEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "HighContrastEnabledStateEnum",
+            "value": [
+              {
+                "name": "HIGH_CONTRAST_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "HIGH_CONTRAST_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "HIGH_CONTRAST_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.HighContrastEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "highContrastEnabled",
+          "defaultValue": "HIGH_CONTRAST_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "HIGH_CONTRAST_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable high contrast.",
+              "value": "HIGH_CONTRAST_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable high contrast.",
+              "value": "HIGH_CONTRAST_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.HighContrastEnabled",
+      "policyDescription": "Kiosk high contrast."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskStickyKeysEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "stickyKeysEnabled",
+                "number": 1
+              }
+            ],
+            "name": "StickyKeysEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskStickyKeysEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.StickyKeysEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "stickyKeysEnabled",
+          "defaultValue": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable sticky keys.",
+              "value": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable sticky keys.",
+              "value": "KIOSK_STICKY_KEYS_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.StickyKeysEnabled",
+      "policyDescription": "Kiosk sticky keys."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskVirtualKeyboardEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "virtualKeyboardEnabled",
+                "number": 1
+              }
+            ],
+            "name": "VirtualKeyboardEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskVirtualKeyboardEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.VirtualKeyboardEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "virtualKeyboardEnabled",
+          "defaultValue": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable on-screen keyboard.",
+              "value": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable on-screen keyboard.",
+              "value": "KIOSK_VIRTUAL_KEYBOARD_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.VirtualKeyboardEnabled",
+      "policyDescription": "Kiosk on-screen keyboard."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "DictationEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "dictationEnabled",
+                "number": 1
+              }
+            ],
+            "name": "DictationEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "DictationEnabledStateEnum",
+            "value": [
+              {
+                "name": "DICTATION_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "DICTATION_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "DICTATION_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.DictationEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "dictationEnabled",
+          "defaultValue": "DICTATION_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "DICTATION_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable dictation.",
+              "value": "DICTATION_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable dictation.",
+              "value": "DICTATION_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.DictationEnabled",
+      "policyDescription": "Kiosk dictation."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskKeyboardFocusHighlightEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "keyboardFocusHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "KeyboardFocusHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskKeyboardFocusHighlightEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.KeyboardFocusHighlightEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "keyboardFocusHighlightEnabled",
+          "defaultValue": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable keyboard focus highlighting.",
+              "value": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable keyboard focus highlighting.",
+              "value": "KIOSK_KEYBOARD_FOCUS_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.KeyboardFocusHighlightEnabled",
+      "policyDescription": "Kiosk keyboard focus highlighting."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskCaretHighlightEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "caretHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "CaretHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskCaretHighlightEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.CaretHighlightEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "caretHighlightEnabled",
+          "defaultValue": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable caret highlight.",
+              "value": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable caret highlight.",
+              "value": "KIOSK_CARET_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.CaretHighlightEnabled",
+      "policyDescription": "Kiosk caret highlight."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskAutoclickEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "autoclickEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AutoclickEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskAutoclickEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.AutoclickEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "autoclickEnabled",
+          "defaultValue": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable auto-click.",
+              "value": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable auto-click.",
+              "value": "KIOSK_AUTOCLICK_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.AutoclickEnabled",
+      "policyDescription": "Kiosk auto-click enabled."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskLargeCursorEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "largeCursorEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LargeCursorEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskLargeCursorEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.LargeCursorEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "largeCursorEnabled",
+          "defaultValue": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable large cursor.",
+              "value": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable large cursor.",
+              "value": "KIOSK_LARGE_CURSOR_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.LargeCursorEnabled",
+      "policyDescription": "Kiosk large cursor."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskCursorHighlightEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "cursorHighlightEnabled",
+                "number": 1
+              }
+            ],
+            "name": "CursorHighlightEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskCursorHighlightEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.CursorHighlightEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "cursorHighlightEnabled",
+          "defaultValue": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable cursor highlight.",
+              "value": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable cursor highlight.",
+              "value": "KIOSK_CURSOR_HIGHLIGHT_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.CursorHighlightEnabled",
+      "policyDescription": "Kiosk cursor highlight."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskPrimaryMouseButtonSwitchStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "primaryMouseButtonSwitch",
+                "number": 1
+              }
+            ],
+            "name": "PrimaryMouseButtonSwitch"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskPrimaryMouseButtonSwitchStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.PrimaryMouseButtonSwitch",
+      "fieldDescriptions": [
+        {
+          "field": "primaryMouseButtonSwitch",
+          "defaultValue": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Left button is primary.",
+              "value": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Right button is primary.",
+              "value": "KIOSK_PRIMARY_MOUSE_BUTTON_SWITCH_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.PrimaryMouseButtonSwitch",
+      "policyDescription": "Kiosk primary mouse button."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskMonoAudioEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "monoAudioEnabled",
+                "number": 1
+              }
+            ],
+            "name": "MonoAudioEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskMonoAudioEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.MonoAudioEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "monoAudioEnabled",
+          "defaultValue": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable mono audio.",
+              "value": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable mono audio.",
+              "value": "KIOSK_MONO_AUDIO_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.MonoAudioEnabled",
+      "policyDescription": "Kiosk mono audio."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "KioskAccessibilityShortcutsEnabledStateEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "accessibilityShortcutsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AccessibilityShortcutsEnabled"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "KioskAccessibilityShortcutsEnabledStateEnum",
+            "value": [
+              {
+                "name": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.AccessibilityShortcutsEnabled",
+      "fieldDescriptions": [
+        {
+          "field": "accessibilityShortcutsEnabled",
+          "defaultValue": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable accessibility shortcuts.",
+              "value": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable accessibility shortcuts.",
+              "value": "KIOSK_ACCESSIBILITY_SHORTCUTS_ENABLED_STATE_ENUM_ACCESSIBILITY_ENABLED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.AccessibilityShortcutsEnabled",
+      "policyDescription": "Kiosk accessibility shortcuts."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ScreenMagnifierTypeEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "screenMagnifierType",
+                "number": 1
+              }
+            ],
+            "name": "ScreenMagnifierType"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ScreenMagnifierTypeEnum",
+            "value": [
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_DEFAULT_USER_CHOICE",
+                "number": 1
+              },
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_ACCESSIBILITY_DISABLED",
+                "number": 2
+              },
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_ACCESSIBILITY_FULL_SCREEN",
+                "number": 3
+              },
+              {
+                "name": "SCREEN_MAGNIFIER_TYPE_ENUM_ACCESSIBILITY_DOCKED",
+                "number": 4
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.kiosk.ScreenMagnifierType",
+      "fieldDescriptions": [
+        {
+          "field": "screenMagnifierType",
+          "defaultValue": "SCREEN_MAGNIFIER_TYPE_ENUM_DEFAULT_USER_CHOICE",
+          "knownValueDescriptions": [
+            {
+              "description": "Allow the user to decide.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_DEFAULT_USER_CHOICE"
+            },
+            {
+              "description": "Disable screen magnifier.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_ACCESSIBILITY_DISABLED"
+            },
+            {
+              "description": "Enable full-screen magnifier.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_ACCESSIBILITY_FULL_SCREEN"
+            },
+            {
+              "description": "Enable docked magnifier.",
+              "value": "SCREEN_MAGNIFIER_TYPE_ENUM_ACCESSIBILITY_DOCKED"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "Kiosk accessibility",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.kiosk.ScreenMagnifierType",
+      "policyDescription": "Kiosk screen magnifier."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ReportingOsInfoBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "reportingOsInfoBehavior",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "reportOsInfoCustomAllowlist",
+                "number": 2
+              }
+            ],
+            "name": "EnableGranularDeviceOsReporting"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ReportingOsInfoBehaviorEnum",
+            "value": [
+              {
+                "name": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL",
+                "number": 1
+              },
+              {
+                "name": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL",
+                "number": 2
+              },
+              {
+                "name": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableGranularDeviceOsReporting",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#reporting_os_info_behavior",
+      "fieldDescriptions": [
+        {
+          "field": "reportingOsInfoBehavior",
+          "defaultValue": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+          "knownValueDescriptions": [
+            {
+              "description": "Disable all OS reporting.",
+              "value": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL"
+            },
+            {
+              "description": "Enable all OS reporting.",
+              "value": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL"
+            },
+            {
+              "description": "Customize.",
+              "value": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": [
+            "report_version_info",
+            "report_boot_mode"
+          ],
+          "field": "reportOsInfoCustomAllowlist",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "REPORTING_OS_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+              "sourceField": "reportingOsInfoBehavior"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "OS version info.",
+              "value": "report_version_info"
+            },
+            {
+              "description": "OS boot mode.",
+              "value": "report_boot_mode"
+            },
+            {
+              "description": "OS update status.",
+              "value": "report_os_update_status"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableGranularDeviceOsReporting",
+      "policyDescription": "Report device OS information."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ReportingHardwareInfoBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "reportingHardwareInfoBehavior",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "reportHardwareInfoCustomAllowlist",
+                "number": 2
+              }
+            ],
+            "name": "EnableGranularDeviceHardwareReporting"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ReportingHardwareInfoBehaviorEnum",
+            "value": [
+              {
+                "name": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL",
+                "number": 1
+              },
+              {
+                "name": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL",
+                "number": 2
+              },
+              {
+                "name": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableGranularDeviceHardwareReporting",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#reporting_hardware_info_behavior",
+      "fieldDescriptions": [
+        {
+          "field": "reportingHardwareInfoBehavior",
+          "defaultValue": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL",
+          "knownValueDescriptions": [
+            {
+              "description": "Disable all hardware information reporting.",
+              "value": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL"
+            },
+            {
+              "description": "Enable all hardware information reporting.",
+              "value": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL"
+            },
+            {
+              "description": "Customize.",
+              "value": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": null,
+          "field": "reportHardwareInfoCustomAllowlist",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "REPORTING_HARDWARE_INFO_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+              "sourceField": "reportingHardwareInfoBehavior"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Device vital product data info.",
+              "value": "report_vpd_info"
+            },
+            {
+              "description": "Device system information.",
+              "value": "report_system_info"
+            },
+            {
+              "description": "Device timezone status.",
+              "value": "report_timezone_info"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableGranularDeviceHardwareReporting",
+      "policyDescription": "Report device hardware information."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "ReportingTelemetryBehaviorEnum",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_ENUM",
+                "name": "reportingTelemetryBehavior",
+                "number": 1
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "reportTelemetryCustomAllowlist",
+                "number": 2
+              }
+            ],
+            "name": "EnableGranularDeviceTelemetryReporting"
+          }
+        ],
+        "enumType": [
+          {
+            "name": "ReportingTelemetryBehaviorEnum",
+            "value": [
+              {
+                "name": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL",
+                "number": 1
+              },
+              {
+                "name": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL",
+                "number": 2
+              },
+              {
+                "name": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+                "number": 3
+              }
+            ]
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableGranularDeviceTelemetryReporting",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#reporting_telemetry_behavior",
+      "fieldDescriptions": [
+        {
+          "field": "reportingTelemetryBehavior",
+          "defaultValue": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+          "knownValueDescriptions": [
+            {
+              "description": "Disable all telemetry reporting.",
+              "value": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_DISABLE_ALL"
+            },
+            {
+              "description": "Enable all telemetry reporting.",
+              "value": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_ENABLE_ALL"
+            },
+            {
+              "description": "Customize.",
+              "value": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST"
+            }
+          ],
+          "description": "N/A"
+        },
+        {
+          "defaultValue": [
+            "report_hardware_status",
+            "report_activity_times",
+            "report_network_interfaces",
+            "report_network_configuration",
+            "report_network_status",
+            "report_storage_status",
+            "report_memory_info",
+            "report_cpu_info",
+            "report_audio_status"
+          ],
+          "field": "reportTelemetryCustomAllowlist",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "REPORTING_TELEMETRY_BEHAVIOR_ENUM_REPORTING_CUSTOM_WITH_ALLOWLIST",
+              "sourceField": "reportingTelemetryBehavior"
+            }
+          ],
+          "knownValueDescriptions": [
+            {
+              "description": "Hardware status (deprecated).",
+              "value": "report_hardware_status"
+            },
+            {
+              "description": "Network interface (deprecated).",
+              "value": "report_network_interfaces"
+            },
+            {
+              "description": "Network configuration.",
+              "value": "report_network_configuration"
+            },
+            {
+              "description": "Network status.",
+              "value": "report_network_status"
+            },
+            {
+              "description": "Device activity status.",
+              "value": "report_activity_times"
+            },
+            {
+              "description": "Power status.",
+              "value": "report_power_status"
+            },
+            {
+              "description": "Storage status.",
+              "value": "report_storage_status"
+            },
+            {
+              "description": "Board status.",
+              "value": "report_board_status"
+            },
+            {
+              "description": "CPU status.",
+              "value": "report_cpu_info"
+            },
+            {
+              "description": "Graphics status.",
+              "value": "report_graphics_status"
+            },
+            {
+              "description": "Audio status.",
+              "value": "report_audio_status"
+            },
+            {
+              "description": "Crash information.",
+              "value": "report_crash_report_info"
+            },
+            {
+              "description": "Memory status.",
+              "value": "report_memory_info"
+            },
+            {
+              "description": "Backlight status.",
+              "value": "report_backlight_info"
+            },
+            {
+              "description": "Bluetooth status.",
+              "value": "report_bluetooth_info"
+            },
+            {
+              "description": "Fan status.",
+              "value": "report_fan_info"
+            },
+            {
+              "description": "Login/Logout status.",
+              "value": "report_login_logout"
+            },
+            {
+              "description": "Security status.",
+              "value": "report_security_status"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableGranularDeviceTelemetryReporting",
+      "policyDescription": "Report device telemetry."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "reportDeviceUsers",
+                "number": 1
+              }
+            ],
+            "name": "EnableReportDeviceUsers"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableReportDeviceUsers",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#report_device_users",
+      "fieldDescriptions": [
+        {
+          "field": "reportDeviceUsers",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable tracking recent users.",
+              "value": "true"
+            },
+            {
+              "description": "Disable tracking recent users.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableReportDeviceUsers",
+      "policyDescription": "Report device user tracking."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "reportDeviceSessionStatus",
+                "number": 1
+              }
+            ],
+            "name": "EnableReportDeviceKioskSession"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableReportDeviceKioskSession",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#report_device_session_status",
+      "fieldDescriptions": [
+        {
+          "field": "reportDeviceSessionStatus",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable kiosk session status reporting.",
+              "value": "true"
+            },
+            {
+              "description": "Disable kiosk session status reporting.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableReportDeviceKioskSession",
+      "policyDescription": "Report kiosk session status."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "reportDeviceRunningKioskApp",
+                "number": 1
+              }
+            ],
+            "name": "EnableReportDeviceRunningKioskApp"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableReportDeviceRunningKioskApp",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#report_device_running_kiosk_app",
+      "fieldDescriptions": [
+        {
+          "field": "reportDeviceRunningKioskApp",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable the running kiosk app reporting.",
+              "value": "true"
+            },
+            {
+              "description": "Disable the running kiosk app reporting.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableReportDeviceRunningKioskApp",
+      "policyDescription": "Report the running kiosk app."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "reportDevicePrintJobs",
+                "number": 1
+              }
+            ],
+            "name": "EnableReportDevicePrintJobs"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableReportDevicePrintJobs",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#report_device_print_jobs",
+      "fieldDescriptions": [
+        {
+          "field": "reportDevicePrintJobs",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable print jobs reporting.",
+              "value": "true"
+            },
+            {
+              "description": "Disable print jobs reporting.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableReportDevicePrintJobs",
+      "policyDescription": "Report device print jobs."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "typeName": "NullableDuration",
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_MESSAGE",
+                "name": "reportDeviceUploadFrequency",
+                "number": 1
+              }
+            ],
+            "name": "EnableReportUploadFrequency"
+          },
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_STRING",
+                "name": "duration",
+                "number": 1
+              }
+            ],
+            "name": "NullableDuration"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.EnableReportUploadFrequency",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#report_device_upload_frequency",
+      "fieldDescriptions": [
+        {
+          "name": "Minutes.",
+          "defaultValue": "10800s",
+          "inputConstraint": "Duration policy field value is in the range [60, 25379] minutes. The input duration policy field value should be converted to seconds. Multiply the desired value in minutes by 60 and append an 's'.",
+          "field": "reportDeviceUploadFrequency",
+          "nestedFieldDescriptions": [
+            {
+              "field": "duration",
+              "description": "N/A"
+            }
+          ],
+          "description": "Minutes."
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.EnableReportUploadFrequency",
+      "policyDescription": "Device status report upload frequency."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "notificationEnabled",
+                "number": 1
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "numDaysConsideredInactive",
+                "number": 2
+              },
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_INT64",
+                "name": "cadence",
+                "number": 3
+              },
+              {
+                "label": "LABEL_REPEATED",
+                "type": "TYPE_STRING",
+                "name": "emailsToNotify",
+                "number": 4
+              }
+            ],
+            "name": "InactiveDeviceNotifications"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.InactiveDeviceNotifications",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#notification_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "notificationEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable inactive device notifications.",
+              "value": "true"
+            },
+            {
+              "description": "Disable inactive device notifications.",
+              "value": "false"
+            }
+          ],
+          "description": "Inactive device notification reports.",
+          "name": "Inactive device notification reports."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "notificationEnabled"
+            }
+          ],
+          "description": "Inactive range (days). Devices that have \"Last Sync\" time beyond this range are considered inactive.",
+          "defaultValue": 0,
+          "fieldDescription": "Devices that have \"Last Sync\" time beyond this range are considered inactive.",
+          "inputConstraint": "The long field should have value greater than or equal to 1.",
+          "field": "numDaysConsideredInactive",
+          "name": "Inactive range (days)."
+        },
+        {
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "notificationEnabled"
+            }
+          ],
+          "description": "Notification cadence (days). Send me an inactive device report with this frequency.",
+          "defaultValue": 0,
+          "fieldDescription": "Send me an inactive device report with this frequency.",
+          "inputConstraint": "The long field should have value greater than or equal to 1.",
+          "field": "cadence",
+          "name": "Notification cadence (days)."
+        },
+        {
+          "field": "emailsToNotify",
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true",
+              "sourceField": "notificationEnabled"
+            }
+          ],
+          "fieldDescription": "Enter a list of email addresses to receive inactive device reports (one address per line).",
+          "description": "Email addresses to receive notification reports. Enter a list of email addresses to receive inactive device reports (one address per line).",
+          "name": "Email addresses to receive notification reports."
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.InactiveDeviceNotifications",
+      "policyDescription": "Inactive device notifications."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "metricsEnabled",
+                "number": 1
+              }
+            ],
+            "name": "AnonymousMetricReporting"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.AnonymousMetricReporting",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#metrics_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "metricsEnabled",
+          "defaultValue": true,
+          "knownValueDescriptions": [
+            {
+              "description": "Always send metrics to Google.",
+              "value": "true"
+            },
+            {
+              "description": "Never send metrics to Google.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.AnonymousMetricReporting",
+      "policyDescription": "Anonymous metric reporting."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL",
+                "type": "TYPE_BOOL",
+                "name": "logUploadEnabled",
+                "number": 1
+              }
+            ],
+            "name": "LogUploadEnabled"
+          }
+        ]
+      },
+      "name": "customers/C02h8e9nw/policySchemas/chrome.devices.LogUploadEnabled",
+      "supportUri": "https://support.google.com/chrome/a/answer/1375678?hl=en#log_upload_enabled",
+      "fieldDescriptions": [
+        {
+          "field": "logUploadEnabled",
+          "defaultValue": false,
+          "knownValueDescriptions": [
+            {
+              "description": "Enable device system log upload.",
+              "value": "true"
+            },
+            {
+              "description": "Disable device system log upload.",
+              "value": "false"
+            }
+          ],
+          "description": "N/A"
+        }
+      ],
+      "categoryTitle": "User and device reporting",
+      "validTargetResources": [
+        "ORG_UNIT"
+      ],
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_CURRENT"
+      },
+      "schemaName": "chrome.devices.LogUploadEnabled",
+      "policyDescription": "Device system log upload."
+    }
+]

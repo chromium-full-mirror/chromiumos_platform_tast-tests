@@ -18,7 +18,7 @@ import argparse
 import json
 import os
 import subprocess
-import logging
+import re
 
 # Default output filename and path.
 OUTPUT_FILENAME = 'defs.go'
@@ -26,9 +26,8 @@ OUTPUT_FILEPATH = os.path.join(os.path.dirname(__file__), '..',
   OUTPUT_FILENAME)
 
 # Default input filename and path.
-INPUT_FILENAME = 'policy_schemas.json'
-INPUT_FILEPATH = os.path.join(os.path.dirname(__file__), '..',
-  INPUT_FILENAME)
+INPUT_FILENAME_TEMPLATE = 'policy_schemas_{index}.json'
+INPUT_FILEPATH = os.path.join(os.path.dirname(__file__), '..')
 
 # Header for the GO code.
 HEADER = """// Copyright 2022 The ChromiumOS Authors
@@ -224,24 +223,26 @@ def main():
   parser.add_argument('--out', dest='out', default=OUTPUT_FILEPATH, type=str,
     help=('Optional filepath for the output. By default, use the path where '
     'the output is checked in.'))
-  parser.add_argument('--input', dest='input', default=INPUT_FILEPATH,
-    type=str, help=('Optional filepath for the input. By default, use the path'
-    ' where the input is checked in.'))
 
   args = parser.parse_args()
 
-  with open(args.input, 'r') as fh:
-    policy_schemas = json.load(fh)
-
-  # Parse the policy schemas.
   policy_schema_objs = []
   # duplication_set is used to prevent us from having multiples of the same
   # structs and enums.
   duplication_set = set()
-  for policy_schema in policy_schemas:
-    policy_schema_obj = parse_schema(policy_schema, duplication_set)
-    policy_schema_obj.generate_code()
-    policy_schema_objs.append(policy_schema_obj)
+  r = re.compile('policy_schemas_\d\d\.json')
+  for entry in sorted(os.scandir(INPUT_FILEPATH), key=lambda e: e.name):
+    if not entry.is_file() or not r.match(entry.name):
+      continue
+
+    with open(entry, 'r') as fh:
+      policy_schemas = json.load(fh)
+
+    # Parse the policy schemas.
+    for policy_schema in policy_schemas:
+      policy_schema_obj = parse_schema(policy_schema, duplication_set)
+      policy_schema_obj.generate_code()
+      policy_schema_objs.append(policy_schema_obj)
 
   # Generate and write the code to the file and check it with gofmt.
   write_code(args.out, policy_schema_objs)
