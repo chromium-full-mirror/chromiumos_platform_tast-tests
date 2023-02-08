@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 	"github.com/mafredri/cdp/protocol/target"
@@ -227,8 +228,12 @@ func (s *Session) SigninProfileTestAPIConn(ctx context.Context) (*TestConn, erro
 func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID string, autotestPrivateSupported bool) (*TestConn, error) {
 	if *extConn != nil {
 		// Check if the API is still available.
-		if err := (*extConn).WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+		checkCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+
+		if err := (*extConn).WaitForExpr(checkCtx, `document.readyState === "complete"`); err != nil {
 			testing.ContextLog(ctx, "Test API extension became unavailable: ", err)
+			return nil, err
 		}
 		return &TestConn{conn: *extConn}, nil
 	}
