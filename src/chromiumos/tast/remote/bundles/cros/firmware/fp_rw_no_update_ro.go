@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -86,16 +86,20 @@ func FpRWNoUpdateRO(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Flashing RO firmware (expected to fail)")
-	flashCmd := []string{
-		"flashrom",
-		"--noverify-all",   // only verify included regions
-		"-V",               // verbose
-		"-p", "ec:type=fp", // use "programmer" for fingerprint "EC"
-		"-i", "EC_RO", // target image is RO
-		"-w", testImages[fingerprint.TestImageTypeDev].Path, // write specified file
+
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerEc, "type=fp").
+		SetDut(d.DUT()).
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 	}
-	s.Log("Running command: ", shutil.EscapeSlice(flashCmd))
-	if output, err := d.Conn().CommandContext(ctx, flashCmd[0], flashCmd[1:]...).CombinedOutput(); err == nil {
+
+	if output, err := flashromInstance.Write(ctx, testImages[fingerprint.TestImageTypeDev].Path, true, false, "", []string{"EC_RO"}); err == nil {
 		s.Fatal("Flashing RO firmware should not succeed, cmd output: ", output)
 	}
 
