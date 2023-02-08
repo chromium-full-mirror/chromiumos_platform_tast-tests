@@ -118,7 +118,7 @@ var tabTargetsMap = map[cuj.WebSourceType][]tabTarget{
 
 // googleWebsitesTargets defines Google related websites as browse tab targets.
 var googleWebsitesTargets = []tabTarget{
-	{cuj.GoogleWorkspaceFeaturesURL, newPageInfo(cuj.Essential, googleWorkspace, `/features`, `/products/meet`)},
+	{cuj.GoogleWorkspaceURL, newPageInfo(cuj.Essential, googleWorkspace, `/`, `/products/meet`)},
 	{cuj.GoogleWorkspacePricingURL, newPageInfo(cuj.Essential, googleWorkspace, `/pricing`, `/products/calendar`)},
 	{cuj.GoogleWorkspaceSecurityURL, newPageInfo(cuj.Essential, googleWorkspace, `/security`, `/products/docs`)},
 	{cuj.GoogleWorkspaceFAQURL, newPageInfo(cuj.Advanced, googleWorkspace, `/faq`, `/products/slides`)},

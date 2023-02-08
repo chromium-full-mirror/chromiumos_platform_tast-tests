@@ -152,12 +152,12 @@ const (
 	GoogleStorePhonesURL = "https://store.google.com/us/category/phones"
 	// GoogleStoreSubscriptionsURL specifies the URL for Google Store's subscriptions page.
 	GoogleStoreSubscriptionsURL = "https://store.google.com/us/category/subscriptions"
+	// GoogleWorkspaceURL specifies the URL for Google Workspace's home page.
+	GoogleWorkspaceURL = "https://workspace.google.com/intl/en/"
 	// GoogleWorkspaceBusinessURL specifies the URL for Google Workspace's business page.
 	GoogleWorkspaceBusinessURL = "https://workspace.google.com/intl/en/business"
 	// GoogleWorkspaceFAQURL specifies the URL for Google Workspace's FAQ page.
 	GoogleWorkspaceFAQURL = "https://workspace.google.com/intl/en/faq"
-	// GoogleWorkspaceFeaturesURL specifies the URL for Google Workspace's features page.
-	GoogleWorkspaceFeaturesURL = "https://workspace.google.com/intl/en/features"
 	// GoogleWorkspacePricingURL specifies the URL for Google Workspace's pricing page.
 	GoogleWorkspacePricingURL = "https://workspace.google.com/intl/en/pricing"
 	// GoogleWorkspaceResourcesURL specifies the URL for Google Workspace's resources page.

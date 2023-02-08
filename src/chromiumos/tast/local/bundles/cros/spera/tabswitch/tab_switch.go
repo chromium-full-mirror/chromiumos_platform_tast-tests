@@ -31,6 +31,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -598,6 +599,20 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 			// In case of lose connection to the tab, need to update the URL to reconnect to it
 			if err := tab.conn.Eval(ctx, "window.location.href", &tab.url); err != nil {
 				return errors.Wrap(err, "failed update the URL of tab")
+			}
+
+			// Google Workspace page plays the video automatically.
+			// Wait for the histogram Graphics.Smoothness.PercentDroppedFrames.CompositorThread.Video
+			// collected from the page.
+			if tab.url == cuj.GoogleWorkspaceURL {
+				const videoHistogramName = "Graphics.Smoothness.PercentDroppedFrames.CompositorThread.Video"
+
+				videoWaitStartTime := time.Now()
+				videoHistogram, err := metrics.WaitForHistogram(ctx, tconn, videoHistogramName, shortUITimeout)
+				if err != nil {
+					return errors.Wrapf(err, "failed to wait for %q histogram", videoHistogramName)
+				}
+				testing.ContextLogf(ctx, "Collected %v in %v", videoHistogram, time.Since(videoWaitStartTime))
 			}
 
 			if tabIdx%3 == 0 || isRecordMode {
