@@ -81,9 +81,14 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click on the instant tether device in Quick Settings menu: ", err)
 	}
 
-	// Accept first-use onboarding dialogs on both CrOS and Android.
-	if err := instanttether.HandleFirstUseDialog(ctx, cr, settings, androidDevice); err != nil {
+	// Accept first-use onboarding dialog on CrOS.
+	if err := instanttether.HandleFirstUseDialog(ctx, cr, settings); err != nil {
 		s.Fatal("Failed to accept first-use dialog: ", err)
+	}
+
+	// Accept the Android prompt to allow tethering, which can appear even if the first-use dialog on CrOS does not.
+	if err := androidDevice.AcceptTetherNotification(ctx); err != nil {
+		s.Fatal("Failed to accept tethering notification on the phone: ", err)
 	}
 
 	// Open Quick Settings network menu.

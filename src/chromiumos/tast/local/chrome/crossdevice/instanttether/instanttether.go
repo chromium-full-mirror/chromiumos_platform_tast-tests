@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
@@ -57,22 +56,18 @@ func ConnectUsingNotification(ctx context.Context, tconn *chrome.TestConn) error
 }
 
 // HandleFirstUseDialog accepts the first-use dialog for Instant Tether if it appears.
-func HandleFirstUseDialog(ctx context.Context, cr *chrome.Chrome, sconn *ossettings.OSSettings, ad *crossdevice.AndroidDevice) error {
+func HandleFirstUseDialog(ctx context.Context, cr *chrome.Chrome, sconn *ossettings.OSSettings) error {
 	testing.ContextLog(ctx, "Waiting to see if first-use dialog is shown")
 	firstUseText := nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile("(?i)connect to new hotspot?"))
-	if err := sconn.WithTimeout(10 * time.Second).WaitUntilExists(firstUseText)(ctx); err != nil {
+	if err := sconn.WithTimeout(5 * time.Second).WaitUntilExists(firstUseText)(ctx); err != nil {
 		// If the first-use dialog doesn't appear, we don't need to do anything here.
+		testing.ContextLog(ctx, "First-use dialog did not appear")
 		return nil
 	}
 
 	connectBtn := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(?i)connect")).Ancestor(nodewith.Role(role.Dialog))
 	if err := sconn.LeftClick(connectBtn)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click first-use dialog's connect button")
-	}
-
-	// We need to accept a notification on the phone to initiate tethering for the first time.
-	if err := ad.AcceptTetherNotification(ctx); err != nil {
-		return errors.Wrap(err, "failed to accept tethering notification on the phone")
 	}
 
 	return nil
