@@ -204,6 +204,10 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		if err := ms.PowerOff(ctx); err != nil {
 			return errors.Wrap(err, "powering off DUT")
 		}
+		testing.ContextLog(ctx, "Sleeping for 20 seconds")
+		if err := testing.Sleep(ctx, 20*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep for 20 seconds")
+		}
 		if ok, err := h.Servo.HasControl(ctx, string(servo.ImageUSBKeyPwr)); err != nil {
 			return errors.Wrap(err, "failed checking control ImageUSBKeyPwr")
 		} else if ok {
@@ -962,6 +966,10 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 
 	if err := ms.PowerOff(ctx); err != nil {
 		return errors.Wrap(err, "powering off DUT")
+	}
+	testing.ContextLog(ctx, "Sleeping for 20 seconds")
+	if err := testing.Sleep(ctx, 20*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep for 20 seconds")
 	}
 	// Booting into recovery mode seems to work better if you don't enable the USB key until after the recovery power state.
 	if usbMux == servo.USBMuxDUT {
