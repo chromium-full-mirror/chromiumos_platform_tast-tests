@@ -1,4 +1,4 @@
-From 6ff31e82e640e96e62a19bb878867d66288d9182 Mon Sep 17 00:00:00 2001
+From 9453868686cecc214bd0cb3dd26cb77d84ae49db Mon Sep 17 00:00:00 2001
 From: Pilar Molina Lopez <pmolinalopez@chromium.org>
 Date: Tue, 22 Nov 2022 17:16:48 -0500
 Subject: [PATCH] [DO NOT SUBMIT] Make video_decode Pepper example send
@@ -14,13 +14,39 @@ correctly and fail.
 
 Bug: None
 ---
- .../examples/api/video_decode/video_decode.cc | 36 +++++++++++++++----
- 1 file changed, 30 insertions(+), 6 deletions(-)
+ .../src/examples/api/video_decode/testdata.h  |  1 +
+ .../examples/api/video_decode/video_decode.cc | 43 +++++++++++++++----
+ 2 files changed, 35 insertions(+), 9 deletions(-)
 
+diff --git a/native_client_sdk/src/examples/api/video_decode/testdata.h b/native_client_sdk/src/examples/api/video_decode/testdata.h
+index cb7fc5b702ba3..9a41077fe4d44 100644
+--- a/native_client_sdk/src/examples/api/video_decode/testdata.h
++++ b/native_client_sdk/src/examples/api/video_decode/testdata.h
+@@ -7,6 +7,7 @@
+ 
+ namespace {
+ 
++const unsigned int kNumVisibleFrames = 250;
+ // We use a kData array of raw bitstream data because out-of-process file
+ // loading was not working right on ARM.
+ // TODO(bbudge): Load data from file.
 diff --git a/native_client_sdk/src/examples/api/video_decode/video_decode.cc b/native_client_sdk/src/examples/api/video_decode/video_decode.cc
-index 5c0ce634fabd8..0d32d500df730 100644
+index 5c0ce634fabd8..d4bfb5c70ad65 100644
 --- a/native_client_sdk/src/examples/api/video_decode/video_decode.cc
 +++ b/native_client_sdk/src/examples/api/video_decode/video_decode.cc
+@@ -24,9 +24,9 @@
+ #include "ppapi/cpp/video_decoder.h"
+ #include "ppapi/utility/completion_callback_factory.h"
+ 
+-// VP8 is more likely to work on different versions of Chrome. Undefine this
+-// to decode H264.
+-#define USE_VP8_TESTDATA_INSTEAD_OF_H264
++// H264 hw video decoding is more likely to be supported on different ChromeOS
++// devices. Define this to decode VP8 instead.
++#undef USE_VP8_TESTDATA_INSTEAD_OF_H264
+ #include "testdata.h"
+ 
+ // Use assert as a makeshift CHECK, even in non-debug mode.
 @@ -82,6 +82,8 @@ class MyInstance : public pp::Instance, public pp::Graphics3DClient {
  
    void PaintPicture(Decoder* decoder, const PP_VideoPicture& picture);
@@ -81,7 +107,7 @@ index 5c0ce634fabd8..0d32d500df730 100644
  }
  
 +void Decoder::RenderDone() {
-+  if (++num_frames_rendered_ == next_picture_id_ &&
++  if (++num_frames_rendered_ == kNumVisibleFrames &&
 +      encoded_data_next_pos_to_decode_ >= kDataLen) {
 +    instance_->AllFramesRenderedForDecoder();
 +  }
@@ -130,18 +156,19 @@ index 5c0ce634fabd8..0d32d500df730 100644
    pending_pictures_.pop();
  
    // Keep painting as long as we have pictures.
-@@ -545,6 +564,11 @@ void MyInstance::PaintFinished(int32_t result) {
+@@ -545,6 +564,12 @@ void MyInstance::PaintFinished(int32_t result) {
      PaintNextPicture();
  }
  
 +void MyInstance::AllFramesRenderedForDecoder() {
-+  if (++decoders_done_ == video_decoders_.size())
++  if (++decoders_done_ == video_decoders_.size()) {
 +    this->PostMessage(pp::Var("testCompleted"));
++  }
 +}
 +
  void MyInstance::InitGL() {
    assert(plugin_size_.width() && plugin_size_.height());
    is_painting_ = false;
 -- 
-2.38.1.584.g0f3c55d4c2-goog
+2.39.1.581.gbfd45094c4-goog
 

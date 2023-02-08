@@ -9,10 +9,11 @@ The plugin used by this test is compiled from the `video_decode.cc` example in
 the NaCl SDK. It can be found in the Chromium repository and the link below
 points to the exact version used as a start point:
 
-[`native_client_sdk/src/examples/api/video_decode/video_decode.cc`](https://chromium.googlesource.com/chromium/src/+/07edf8593383fe7963d4aa10e1fa4a0e2ac6dfcb/native_client_sdk/src/examples/api/video_decode/video_decode.cc)
+[`native_client_sdk/src/examples/api/video_decode/video_decode.cc`](https://chromium.googlesource.com/chromium/src/+/d8e1635ae92a906f587c613cf5b2526ca838f483/native_client_sdk/src/examples/api/video_decode/video_decode.cc)
 
-This file was modified in order to make the plugin send a message to
-the Tast test when the video finishes. Without this change the
+This file and the [`testdata.h`](https://chromium.googlesource.com/chromium/src/+/d8e1635ae92a906f587c613cf5b2526ca838f483/native_client_sdk/src/examples/api/video_decode/testdata.h) file
+(in the same folder) were modified in order to make the plugin send a message
+to the Tast test when the video finishes. Without this change the
 test will never know when the video finished playing. These changes are
 available in the `video_decode.patch` file that can be found in this folder.
 
