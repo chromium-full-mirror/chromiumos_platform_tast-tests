@@ -51,6 +51,9 @@ var mergeThresholdSize480Models = []string{
 	"chronicler",
 	"collis",
 	"copano",
+	"craask",
+	"craaskbowl",
+	"craaskvin",
 	"crota",
 	"crota360",
 	"delbin",
@@ -63,6 +66,9 @@ var mergeThresholdSize480Models = []string{
 	"lillipup",
 	"lindar",
 	"mithrax",
+	"nereid",
+	"nirwen",
+	"nivviks",
 	"osiris",
 	"primus",
 	"redrix",
@@ -76,6 +82,8 @@ var mergeThresholdSize480Models = []string{
 	"volta",
 	"volteer2",
 	"voxel",
+	"xivu",
+	"xivu360",
 	"zavala",
 }
 
