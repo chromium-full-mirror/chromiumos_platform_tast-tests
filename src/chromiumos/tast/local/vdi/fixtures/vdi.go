@@ -241,7 +241,7 @@ func (v *fixtureState) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	if err != nil {
 		s.Fatal("Failed to get a keyboard")
 	}
-	// Keep it fo closing.
+	// Keep it for closing.
 	v.keyboard = kb
 
 	detector := uidetection.New(tconn,
@@ -310,6 +310,12 @@ func (v *fixtureState) Reset(ctx context.Context) error {
 
 func (v *fixtureState) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 func (v *fixtureState) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, v.cr, "vdi_fixt_posttest_ui_tree_"+s.TestName())
+
+	if err := v.vdiConnector.CleanUpSession(ctx); err != nil {
+		s.Error("Failed at cleaning VDI session: ", err)
+	}
+
 	tconn, err := v.cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
