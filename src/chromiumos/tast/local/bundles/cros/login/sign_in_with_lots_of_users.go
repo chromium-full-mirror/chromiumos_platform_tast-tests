@@ -31,9 +31,7 @@ func init() {
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
-			"jason.hsiao@cienet.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		Attr:         []string{"group:mainline", "informational"},
