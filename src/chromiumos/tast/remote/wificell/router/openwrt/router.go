@@ -32,6 +32,8 @@ import (
 	"chromiumos/tast/timing"
 )
 
+const readyStatusFile = "/tmp/cros/status/ready"
+
 // Router controls an OpenWrt router and stores the router state.
 type Router struct {
 	host             *ssh.Conn
@@ -81,6 +83,10 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 
 	ctx, st := timing.Start(shortCtx, "initialize")
 	defer st.End()
+
+	if err := r.waitForReady(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for router to be ready")
+	}
 
 	closeBeforeErrorReturn := func(cause error) {
 		if err := r.Close(shortCtx); err != nil {
@@ -258,6 +264,26 @@ func (r *Router) RouterName() string {
 // fully rebooted.
 func (r *Router) StartReboot(ctx context.Context) error {
 	_ = r.host.CommandContext(ctx, "reboot").Run()
+	return nil
+}
+
+// waitForReady blocks until the router is ready to be configured.
+// The router is seen as ready when the ready status file, created by the last
+// boot script, is present.
+func (r *Router) waitForReady(ctx context.Context) error {
+	ctx, t := timing.Start(ctx, "waitForReady")
+	defer t.End()
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := r.host.CommandContext(ctx, "test", "-f", readyStatusFile).Run(); err != nil {
+			return errors.Wrapf(err, "ready status file %q` not present", readyStatusFile)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: 1 * time.Second,
+		Timeout:  30 * time.Second,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

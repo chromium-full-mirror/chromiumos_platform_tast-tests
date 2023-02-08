@@ -63,7 +63,7 @@ const pingLossThreshold float64 = 20
 const arpingLossThreshold float64 = 30
 
 // The amount of time to wait before reconnecting after a router reboot.
-const routerPostRebootWaitTime = 2 * time.Minute
+const routerPostRebootWaitTime = 5 * time.Second
 
 // TODO(b/232150137): Using a different subnet than other ip addrs in Tast.
 // Move all hardcoded ip addresses to one file to avoid collision.
@@ -753,11 +753,8 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 		tf.pcapHost = nil
 		tf.pcap = nil
 	}
-	// Wait for router reboot to complete and for the router to be ready for use.
-	// Currently, there's no reliable way to identify router state is stabilized
-	// enough to run tests, so as a short term work around, just Sleep for fixed
-	// amount of time which is considered long enough to stabilize the reboot.
-	// TODO(b/239583375): Replace this simple wait with a more optimized process.
+
+	// Give the router a moment to shut down before trying to reconnect.
 	testing.ContextLogf(ctx, "Waiting %s before trying to reconnect to %s", routerPostRebootWaitTime, routerMsgName)
 	if err := testing.Sleep(ctx, routerPostRebootWaitTime); err != nil {
 		return errors.Wrapf(err, "failed to wait for %s after rebooting %s", routerPostRebootWaitTime, routerMsgName)
@@ -765,20 +762,30 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 
 	// Reconnect to router and create a new router controller.
 	testing.ContextLogf(ctx, "Reconnecting to %s", routerMsgName)
-	routerHost, err := tf.connectCompanion(ctx, rd.target, true)
-	if err != nil {
-		return errors.Wrapf(err, "failed to reconnect to %s after reboot", routerMsgName)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		routerHost, err := tf.connectCompanion(ctx, rd.target, true)
+		if err != nil {
+			return errors.Wrapf(err, "failed to reconnect to %s after reboot", routerMsgName)
+		}
+		rd.host = routerHost
+		return nil
+	}, &testing.PollOptions{
+		Interval: 1 * time.Second,
+		Timeout:  90 * time.Second,
+	}); err != nil {
+		return err
 	}
-	rd.host = routerHost
 	testing.ContextLogf(ctx, "Reconnected to %s", routerMsgName)
+
+	testing.ContextLogf(ctx, "Reinitializing %s", routerMsgName)
 	routerObject, err := newRouter(ctx, ctx, rd.host, routerName)
 	if err != nil {
-		return errors.Wrapf(err, "failed to recreate %s", routerMsgName)
+		return errors.Wrapf(err, "failed to reinitialize %s", routerMsgName)
 	}
 	rd.object = routerObject
 	testing.ContextLogf(ctx, "Reconnected to %s with new router controller after reboot", routerMsgName)
 	if routerIsPcap {
-		tf.pcapHost = routerHost
+		tf.pcapHost = rd.host
 		tf.pcap = routerObject
 		testing.ContextLogf(ctx, "Router also serves as capture device, reconnecting pcapHost to %s after reboot", routerMsgName)
 	}
