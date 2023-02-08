@@ -23,7 +23,7 @@ type Event struct {
 // EventlogList returns the result of `elogtool list`.
 // The returned events are sorted from oldest to newest.
 func (r *Reporter) EventlogList(ctx context.Context) ([]Event, error) {
-	output, err := r.CommandOutputLines(ctx, "elogtool", "list")
+	output, err := r.CommandOutputLines(ctx, "env", "TZ=UTC", "elogtool", "list")
 	if err != nil {
 		return []Event{}, err
 	}
