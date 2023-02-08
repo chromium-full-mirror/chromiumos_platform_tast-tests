@@ -267,7 +267,7 @@ const (
 	DoNotChangeMulticast
 )
 
-// NightLightMode what setup is needed for a test.
+// NightLightMode indicates what night light setup is needed for a test.
 type NightLightMode int
 
 const (
@@ -275,6 +275,18 @@ const (
 	DoNotDisableNightLight NightLightMode = iota
 	// DisableNightLight indicates that Night Light should be disabled.
 	DisableNightLight
+)
+
+// DarkThemeMode indicates what dark theme setup is needed for a test.
+type DarkThemeMode int
+
+const (
+	// DoNotChangeTheme indicates that OS theme should be left in the same state.
+	DoNotChangeTheme DarkThemeMode = iota
+	// EnableDarkTheme indicates that dark theme should be enabled.
+	EnableDarkTheme
+	// EnableLightTheme indicates that light theme should be enabled.
+	EnableLightTheme
 )
 
 // AudioMode indicates what audio setup is needed for a test.
@@ -302,6 +314,7 @@ type PowerTestOptions struct {
 	// The default value of the following options is not to perform any changes.
 	Wifi       WifiInterfacesMode
 	NightLight NightLightMode
+	DarkTheme  DarkThemeMode
 
 	// The default value of the following options is to perform the actions.
 	Powerd             PowerdMode
@@ -365,6 +378,12 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.NightLight == DisableNightLight {
 			s.Add(TurnOffNightLight(ctx, c))
+		}
+		if options.DarkTheme == EnableDarkTheme {
+			s.Add(TurnOnDarkTheme(ctx, c))
+		}
+		if options.DarkTheme == EnableLightTheme {
+			s.Add(TurnOnLightTheme(ctx, c))
 		}
 		return nil
 	})
