@@ -231,8 +231,6 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	var opts = []chrome.Option{
 		chrome.EnableFeatures("SpeakOnMuteEnabled"),
 		chrome.EnableFeatures("VideoConference"),
-		// Avoid the need to grant camera/microphone permissions.
-		chrome.ExtraArgs("--use-fake-ui-for-media-stream"),
 	}
 
 	var err error
@@ -247,8 +245,6 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	// keep-alive for lacros extension apps. A no-op for ash extensions.
 	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(
 		lacrosfixt.KeepAlive(true),
-		// Avoid the need to grant camera/microphone permissions in Lacros.
-		lacrosfixt.ChromeOptions(chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream")),
 	), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 )
 
 var (
@@ -46,7 +47,19 @@ var (
 // ClearPromptsForNewMeeting clears potential prompts on launching new meeting.
 func (gm *GoogleMeet) ClearPromptsForNewMeeting(ctx context.Context) error {
 	promptsToBeManaged := []prompts.Prompt{
-		prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt, meetingReadyPrompt, meetKeepsYouSafePrompt, whiteboardPrompt, micMutedPrompt,
+		meetingReadyPrompt, meetKeepsYouSafePrompt, whiteboardPrompt, micMutedPrompt,
 	}
+
+	// ChromePermissionPrompts will merge camera and microphone permissions to one prompt.
+	permissionPrompts, err := prompts.ChromePermissionPrompts(ctx, gm.conn,
+		webutil.PermissionNotification,
+		webutil.PermissionCamera,
+		webutil.PermissionMicrophone)
+	if err != nil {
+		return err
+	}
+
+	promptsToBeManaged = append(promptsToBeManaged, permissionPrompts...)
+
 	return prompts.ClearPotentialPrompts(gm.tconn, 3*time.Second, promptsToBeManaged...)(ctx)
 }

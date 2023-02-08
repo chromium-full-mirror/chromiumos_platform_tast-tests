@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/screenshot"
@@ -256,14 +257,24 @@ func (gm *GoogleMeet) SwitchMicrophone(expectedOn bool) action.Action {
 			return errors.Wrap(err, "failed to wait for the meet microphone switch button to show")
 		}
 		// Skip action if the microphone is already as expected.
-		if (strings.HasPrefix(info.Name, "Turn on") && expectedOn) || (strings.HasPrefix(info.Name, "Turn off") && !expectedOn) {
-			microphoneButton = nodewith.Name(info.Name).Role(role.Button)
-			if err := gm.ui.DoDefaultUntil(
-				microphoneButton,
-				gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(microphoneButton),
-			)(ctx); err != nil {
-				return errors.Wrapf(err, "failed to %q", actionDesc)
-			}
+		if (strings.HasPrefix(info.Name, "Turn on") && !expectedOn) || (strings.HasPrefix(info.Name, "Turn off") && expectedOn) {
+			return nil
+		}
+
+		// If microphone permission is not yet granted,
+		// switching on microphone should handle permission prompt.
+		// Otherwise it is straightforward to switch on/off.
+		microphoneButton = nodewith.Name(info.Name).Role(role.Button)
+		if expectedOn {
+			return prompts.ActionAndGrantPermissionIfRequired(
+				gm.tconn, gm.conn, gm.ui.DoDefault(microphoneButton), webutil.PermissionMicrophone)(ctx)
+		}
+
+		if err := gm.ui.DoDefaultUntil(
+			microphoneButton,
+			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(microphoneButton),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to %q", actionDesc)
 		}
 		return nil
 	}
@@ -289,6 +300,13 @@ func (gm *GoogleMeet) SwitchVideo(expectedOn bool) action.Action {
 		}
 
 		cameraButton = nodewith.Name(info.Name).Role(role.Button)
+		// Switch on video should check permission status to decide whether need to handle permission prompt.
+		if expectedOn {
+			return prompts.ActionAndGrantPermissionIfRequired(
+				gm.tconn, gm.conn, gm.ui.DoDefault(cameraButton), webutil.PermissionCamera)(ctx)
+		}
+
+		// Otherwise it is straightforward to switch video.
 		if err := gm.ui.DoDefaultUntil(
 			cameraButton,
 			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(cameraButton),

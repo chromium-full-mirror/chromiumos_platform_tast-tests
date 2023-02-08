@@ -141,7 +141,7 @@ func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.Test
 	} else if foundNode == startThisMeetingButton {
 		// Stop previous meeting takes a bit time, so using longer wait here.
 		if err := ui.WithTimeout(longUITimeout).DoDefaultUntil(startThisMeetingButton,
-			ui.WaitUntilGone(startThisMeetingButton),
+			ui.WithTimeout(mediumUITimeout).WaitUntilGone(startThisMeetingButton),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to stop previous meeting")
 		}

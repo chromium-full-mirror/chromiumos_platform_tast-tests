@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/testing"
 )
 
@@ -112,4 +113,72 @@ func DismissPrompt(ui *uiauto.Context, prompt Prompt) action.Action {
 	return ui.DoDefaultUntil(
 		prompt.ClearButtonFinder,
 		ui.WithTimeout(3*time.Second).WaitUntilGone(prompt.PromptFinder))
+}
+
+// ChromePermissionPrompts returns the a list of potential prompts of Chrome permissions.
+// It checks the permission status first and only returns the applicable prompts.
+func ChromePermissionPrompts(ctx context.Context, conn *chrome.Conn, permissionNames ...webutil.PermissionName) ([]Prompt, error) {
+	var permissionPrompts = []Prompt{}
+
+	for _, permissionName := range permissionNames {
+		var prompt Prompt
+		switch permissionName {
+		// Camera and Microphone use same prompt.
+		case webutil.PermissionCamera, webutil.PermissionMicrophone:
+			prompt = AllowAVPermissionPrompt
+		case webutil.PermissionNotification:
+			prompt = ShowNotificationsPrompt
+		default:
+			return permissionPrompts, errors.Errorf("Prompt of %q permission is not defined", permissionName)
+		}
+
+		isPrompt, err := webutil.IsPermissionPrompt(ctx, conn, permissionName)
+		if err != nil {
+			return permissionPrompts, errors.Wrapf(err, "failed to check permission status of %q", permissionName)
+		}
+
+		if isPrompt {
+			// Append prompt handling only if it does not exist.
+			promptExists := false
+			for _, promptToBeHandled := range permissionPrompts {
+				if prompt == promptToBeHandled {
+					promptExists = true
+					break
+				}
+			}
+			if !promptExists {
+				permissionPrompts = append(permissionPrompts, prompt)
+			}
+		}
+	}
+	return permissionPrompts, nil
+}
+
+// ActionAndGrantPermissionIfRequired returns an action that performing a user action which potentially triggers a permission prompt.
+// It grants the permission if required.
+func ActionAndGrantPermissionIfRequired(tconn *chrome.TestConn, conn *chrome.Conn, performAction action.Action, permissionName webutil.PermissionName) action.Action {
+	return func(ctx context.Context) error {
+		permissionPrompts, err := ChromePermissionPrompts(ctx, conn, permissionName)
+		if err != nil {
+			return errors.Wrapf(err, "failed to query prompts of permission %q", permissionName)
+		}
+
+		// No permission needs to be granted.
+		if len(permissionPrompts) == 0 {
+			return performAction(ctx)
+		}
+
+		ui := uiauto.New(tconn)
+		if err := ui.RetryUntil(
+			performAction,
+			ui.WithTimeout(5*time.Second).WaitUntilExists(permissionPrompts[0].PromptFinder),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to perform action for prompt")
+		}
+
+		if err := DismissPrompt(ui, permissionPrompts[0])(ctx); err != nil {
+			return errors.Wrapf(err, "failed to grant permission %q", permissionName)
+		}
+		return nil
+	}
 }

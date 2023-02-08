@@ -12,7 +12,9 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/testing"
 )
 
@@ -122,10 +124,8 @@ func (zm *Zoom) SwitchVideo(value bool) action.Action {
 			return errors.Wrap(err, "failed to find video toggle button")
 		}
 		if value && cameraToggleButton == startVideoButton {
-			return uiauto.NamedCombine("turn on the camera",
-				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(startVideoButton,
-					ui.WaitUntilGone(startVideoButton)),
-				ui.WaitUntilExists(stopVideoButton))(ctx)
+			return prompts.ActionAndGrantPermissionIfRequired(
+				zm.tconn, zm.conn, zm.ui.DoDefault(cameraToggleButton), webutil.PermissionCamera)(ctx)
 		} else if !value && cameraToggleButton == stopVideoButton {
 			return uiauto.NamedCombine("turn off the camera",
 				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(stopVideoButton,
