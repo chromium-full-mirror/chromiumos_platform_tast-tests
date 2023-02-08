@@ -50,10 +50,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test a file on Google Drive will appear on top of the list in filesapp after edited",
 		Contacts: []string{
-			"vivian.tsai@cienet.com",
+			"chromeos-files-syd@google.com",
 			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			"vivian.tsai@cienet.com",
 		},
+		BugComponent: "b:167289", // ChromeOS > Software > Files
 		// TODO(crbug/1299712): This test is constantly failing. The maintainers are
 		// external and it overlaps with other more robust tests (e.g. filemanager.DrivefsGoogleDoc).
 		// Attr:         []string{"group:mainline", "informational"},
