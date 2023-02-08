@@ -148,16 +148,24 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 
 // SetUpSSHConnection sets up a ssh connection to chronos@localhost.
 func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
+	cmd := "chronos@localhost -o StrictHostKeyChecking=no " + sshArgs
+	relay := "--ssh-client-version=pnacl"
+	addSSH := uiauto.Combine("input ssh information",
+		ta.ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
+		ta.ui.LeftClick(nodewith.Name("Command").Role(role.TextField)),
+		ta.Kb.TypeAction(cmd),
+		ta.ui.LeftClick(nodewith.Name("SSH relay server options").Role(role.TextField)),
+		ta.Kb.TypeAction(relay),
+		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(cmd)),
+		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(relay)))
+
+	save := ta.ui.LeftClick(nodewith.Name("Save").Role(role.Button))
+	cancel := ta.ui.LeftClick(nodewith.Name("Cancel").Role(role.Button))
+
 	return uiauto.Combine("set up ssh connection",
 		ime.EnglishUS.InstallAndActivate(ta.tconn),
 		ta.DeleteSSHConnection("chronos@localhost"),
-		ta.ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
-		ta.ui.LeftClick(nodewith.Name("Command").Role(role.TextField)),
-		ta.Kb.TypeAction("chronos@localhost -o StrictHostKeyChecking=no "+sshArgs),
-		ta.ui.LeftClick(nodewith.Name("SSH relay server options").Role(role.TextField)),
-		ta.Kb.TypeAction("--ssh-client-version=pnacl"),
-		ta.ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
-	)
+		uiauto.Retry(3, uiauto.IfSucceedThenElse(addSSH, save, cancel)))
 }
 
 // OpenSSHConnection opens the ssh connection set up by SetUpSSHConnection().

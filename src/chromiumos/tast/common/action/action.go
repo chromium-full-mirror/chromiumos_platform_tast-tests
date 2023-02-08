@@ -149,6 +149,18 @@ func IfFailThen(preFunc, action Action) Action {
 	}
 }
 
+// IfSucceedThenElse returns a function that runs action according to the first function result.
+// If it succeeds, it runs successAction.
+// Otherwise, it runs failAction.
+func IfSucceedThenElse(preFunc, successAction, failAction Action) Action {
+	return func(ctx context.Context) error {
+		if err := preFunc(ctx); err == nil {
+			return successAction(ctx)
+		}
+		return failAction(ctx)
+	}
+}
+
 // Sleep returns a function that sleeps for the specified duration.
 func Sleep(duration time.Duration) Action {
 	return func(ctx context.Context) error {

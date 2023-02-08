@@ -6,6 +6,7 @@ package terminal
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -54,6 +55,9 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
+
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	ui := uiauto.New(tconn)
 

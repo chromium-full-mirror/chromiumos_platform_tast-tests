@@ -1004,6 +1004,13 @@ func IfFailThen(preFunc, fn Action) Action {
 	return action.IfFailThen(preFunc, fn)
 }
 
+// IfSucceedThenElse returns a function that runs action according to the first function result.
+// If it succeeds, it runs successAction.
+// Otherwise, it runs failAction.
+func IfSucceedThenElse(preFunc, successAction, failAction Action) Action {
+	return action.IfSucceedThenElse(preFunc, successAction, failAction)
+}
+
 // Retry returns a function that retries a given action if it returns error.
 // The action will be executed up to n times, including the first attempt.
 // The last error will be returned.  Any other errors will be silently logged.
