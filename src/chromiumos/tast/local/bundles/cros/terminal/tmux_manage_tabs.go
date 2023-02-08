@@ -56,13 +56,19 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	ta, err := terminalapp.LaunchTmux(ctx, tconn)
-	if err != nil {
+	var ta *terminalapp.TerminalApp
+	defer func() {
+		faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+		if ta != nil {
+			ta.Close()(cleanupCtx)
+		}
+	}()
+
+	if ta, err = terminalapp.LaunchTmux(ctx, tconn); err != nil {
 		s.Fatal("Failed to launch Tmux: ", err)
 	}
-	defer ta.Close()(cleanupCtx)
 
 	if err := uiauto.Combine("open two new tmux tabs and check list windows",
 		ui.LeftClick(nodewith.ClassName("NewTabButton")),

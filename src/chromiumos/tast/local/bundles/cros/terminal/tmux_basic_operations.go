@@ -50,13 +50,19 @@ func TmuxBasicOperations(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	ta, err := terminalapp.LaunchTmux(ctx, tconn)
-	if err != nil {
+	var ta *terminalapp.TerminalApp
+	defer func() {
+		faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+		if ta != nil {
+			ta.Close()(cleanupCtx)
+		}
+	}()
+
+	if ta, err = terminalapp.LaunchTmux(ctx, tconn); err != nil {
 		s.Fatal("Failed to launch Tmux: ", err)
 	}
-	defer ta.Close()(cleanupCtx)
 
 	// Verify the controlling tab.
 	if err := ta.ClickNthTabUntilNodeExists(1, terminalapp.TmuxModeMsg)(ctx); err != nil {
