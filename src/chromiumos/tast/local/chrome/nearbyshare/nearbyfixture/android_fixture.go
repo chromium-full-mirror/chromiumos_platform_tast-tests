@@ -197,6 +197,31 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		}
 	}
 
+	// Try forcing a GMSCore update if the phone was recently factory restored.
+	// TODO(b/255660878): Remove this once GMSCore provisioning is rolled out to the lab.
+	gmsVersions, err := adbDevice.GMSCoreVersions(ctx)
+	if err != nil {
+		s.Fatal("Failed to get GMSCore versions on the phone: ", err)
+	}
+	if len(gmsVersions) < 2 {
+		s.Log("Single GMSCore version detected, phone was recently factory restored. Attempting GMSCore update")
+		if err := adbDevice.ForceGMSCoreUpdate(ctx); err != nil {
+			s.Fatal("Failed to force a GMSCore update: ", err)
+		}
+		if err := testing.Poll(ctx, func(context.Context) error {
+			v, err := adbDevice.GMSCoreVersions(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get GMSCore versions")
+			}
+			if len(v) < 2 {
+				return errors.New("GMSCore not yet updated")
+			}
+			return nil
+		}, nil); err != nil {
+			s.Fatal("Failed to update GMSCore away from the Android OS bundled version: ", err)
+		}
+	}
+
 	tags := []string{
 		"Nearby",
 		"NearbyMessages",

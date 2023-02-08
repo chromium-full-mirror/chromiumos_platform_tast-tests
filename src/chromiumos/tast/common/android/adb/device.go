@@ -395,27 +395,58 @@ func (d *Device) AndroidVersion(ctx context.Context) (int, error) {
 	return strconv.Atoi(strings.TrimSuffix(string(androidVersion), "\n"))
 }
 
-// GMSCoreVersion returns the GMS Core version.
-func (d *Device) GMSCoreVersion(ctx context.Context) (int, error) {
+// GMSCoreVersions returns both GMS Core versions on the phone.
+// There will typically be two: the active running version, and a backup
+// that is bundled with Android OS that is used when the device is factory reset.
+func (d *Device) GMSCoreVersions(ctx context.Context) ([]int, error) {
 	versionInfo, err := d.ShellCommand(ctx, "sh", "-c", "dumpsys package com.google.android.gms | grep versionCode").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	const versionCodePattern = "versionCode=([0-9]+)"
 	r, err := regexp.Compile(versionCodePattern)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to compile versionCode pattern")
+		return nil, errors.Wrap(err, "failed to compile versionCode pattern")
 	}
-	versionCodeMatch := r.FindStringSubmatch(string(versionInfo))
+	versionCodeMatch := r.FindAllStringSubmatch(string(versionInfo), -1)
 	if len(versionCodeMatch) == 0 {
-		return 0, errors.New("GMS Core version number not found in command output")
+		return nil, errors.New("GMS Core version number not found in command output")
 	}
-	version, err := strconv.Atoi(versionCodeMatch[1])
+	var versions []int
+	for _, v := range versionCodeMatch {
+		version, err := strconv.Atoi(v[1])
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to convert GMS Core version %v to int", v)
+		}
+		versions = append(versions, version)
+	}
+	return versions, nil
+}
+
+// GMSCoreVersion returns the GMS Core version.
+func (d *Device) GMSCoreVersion(ctx context.Context) (int, error) {
+	versions, err := d.GMSCoreVersions(ctx)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to convert GMS Core version %v to int", versionCodeMatch[0])
+		return 0, err
 	}
-	return version, nil
+	// If there's only one version just return it (i.e. phone was just factory reset and no new GMSCore has been installed)
+	if len(versions) == 1 {
+		return versions[0], nil
+	}
+	// Otherwise return the latest one. This should work with the current GMSCore versioning scheme until next century :)
+	var latest int
+	for _, v := range versions {
+		if v > latest {
+			latest = v
+		}
+	}
+	return latest, nil
+}
+
+// ForceGMSCoreUpdate attempts to force a GMSCore update by launching its Play Store info page.
+func (d *Device) ForceGMSCoreUpdate(ctx context.Context) error {
+	return d.SendIntentCommand(ctx, "android.intent.action.VIEW", "market://details?id=com.google.android.gms").Run(testexec.DumpLogOnError)
 }
 
 // GoogleAccount returns the first found Google account signed in to the Android device.
