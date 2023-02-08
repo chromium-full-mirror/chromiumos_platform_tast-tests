@@ -58,8 +58,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Browser profile gets auto-created for the user, user is automatically logged into the profile",
 		Contacts: []string{
+			"lacros-team@google.com",
 			"anastasiian@chromium.org", // Test author
 		},
+		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.LacrosPolicyLoggedInRealUser,

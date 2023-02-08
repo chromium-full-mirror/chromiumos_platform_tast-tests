@@ -30,9 +30,10 @@ func init() {
 		Desc:         "Behavior of LacrosSecondaryProfilesAllowed policy",
 		LacrosStatus: testing.LacrosVariantExists,
 		Contacts: []string{
+			"lacros-team@google.com",
 			"anastasiian@chromium.org", // Test author
-			"chromeos-commercial-identity@google.com",
 		},
+		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,
