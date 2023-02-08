@@ -1405,6 +1405,7 @@ func DismissSortNudgeIfExists(ctx context.Context, tconn *chrome.TestConn) error
 		dismissButton := nodewith.Name("OK").ClassName("PillButton")
 		if err := uiauto.Combine("Click on the dismiss button",
 			ui.WaitUntilExists(dismissButton),
+			ui.WaitForLocation(dismissButton),
 			ui.LeftClick(dismissButton),
 			ui.WaitUntilGone(sortNudge),
 		)(ctx); err != nil {
@@ -1422,6 +1423,7 @@ func DismissPrivacyNotice(ctx context.Context, tconn *chrome.TestConn) error {
 	privacyNoticeButton := nodewith.Ancestor(continueSection).ClassName("PillButton").Name("OK")
 	if err := uiauto.Combine("Click on privacy notice OK button",
 		ui.WaitUntilExists(privacyNoticeButton),
+		ui.WaitForLocation(privacyNoticeButton),
 		ui.LeftClick(privacyNoticeButton),
 		ui.WaitUntilGone(privacyNoticeButton),
 	)(ctx); err != nil {
