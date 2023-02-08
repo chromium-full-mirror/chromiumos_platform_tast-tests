@@ -50,16 +50,8 @@ func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest
 // LaunchAtNetwork will launch the OS Settings application at Network page.
 func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		_, err := Launch(ctx, tconn)
-		if err != nil {
-			return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS-Settings")
-		}
-
-		if err := uiauto.New(tconn).LeftClick(Network)(ctx); err != nil {
-			return &emptypb.Empty{}, errors.Wrap(err, `failed to navigate to sub page "Network"`)
-		}
-
-		return &emptypb.Empty{}, nil
+		_, err := LaunchAtPage(ctx, tconn, Network)
+		return &emptypb.Empty{}, err
 	})
 }
 
