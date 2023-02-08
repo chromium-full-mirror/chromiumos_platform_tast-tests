@@ -7,6 +7,7 @@ package setup
 import (
 	"context"
 	"regexp"
+	"time"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -127,7 +128,15 @@ func DisableNetworkMulticast(ctx context.Context, iface string) (CleanupCallback
 
 	return func(ctx context.Context) error {
 		testing.ContextLogf(ctx, "Re-enabling multicast on network interface %q", iface)
-		return enableNetworkMulticast(ctx, iface)
+		// Other power setups (suspect toggling wifi) could cause a usb re-connect.
+		// As a result, "eth0" via usb dongles could be temporarily not available
+		// for 5-6s. Using a poll to work around the problem.  See b/262254989.
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			return enableNetworkMulticast(ctx, iface)
+		}, &testing.PollOptions{
+			Timeout:  15 * time.Second,
+			Interval: 5 * time.Second,
+		})
 	}, nil
 }
 
