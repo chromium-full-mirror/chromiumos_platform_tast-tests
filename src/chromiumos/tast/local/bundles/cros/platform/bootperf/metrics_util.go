@@ -577,7 +577,7 @@ func readFirmwareTimestamps(ctx context.Context, machine bool) ([]byte, error) {
 //   - seconds_shutdown_time
 //   - seconds_reboot_time
 //   - seconds_reboot_error
-func GatherRebootMetrics(results *platform.GetBootPerfMetricsResponse) error {
+func GatherRebootMetrics(results *platform.GetRebootMetricsResponse) error {
 	bootstatDir, err := findMostRecentBootstatArchivePath()
 	if err != nil {
 		return err

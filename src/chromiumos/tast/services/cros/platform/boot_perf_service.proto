@@ -24,12 +24,20 @@ service BootPerfService {
   // Collects boot perf metrics from the device.
   rpc GetBootPerfMetrics(google.protobuf.Empty) returns (GetBootPerfMetricsResponse) {}
 
+  // Collects reboot metrics from the device.
+  rpc GetRebootMetrics(google.protobuf.Empty) returns (GetRebootMetricsResponse) {}
+
   // Saves boot perf raw data and other files like console-ramoops for debugging.
   rpc GetBootPerfRawData(google.protobuf.Empty) returns (GetBootPerfRawDataResponse) {}
 }
 
 message GetBootPerfMetricsResponse {
   // Key: metric name. Value: boot metric. Example: "seconds_power_on_to_login" => 10.0.
+  map<string, double> metrics = 1;
+}
+
+message GetRebootMetricsResponse {
+  // Key: metric name. Value: boot metric. Example: "seconds_reboot_time" => 5.0.
   map<string, double> metrics = 1;
 }
 

@@ -116,12 +116,6 @@ func (*BootPerfService) GetBootPerfMetrics(ctx context.Context, _ *empty.Empty) 
 		return nil, err
 	}
 
-	testing.ContextLog(ctx, "Gather reboot metrics")
-	err = bootperf.GatherRebootMetrics(out)
-	if err != nil {
-		return nil, err
-	}
-
 	testing.ContextLog(ctx, "Calculate diff")
 	bootperf.CalculateDiff(out)
 
@@ -130,6 +124,20 @@ func (*BootPerfService) GetBootPerfMetrics(ctx context.Context, _ *empty.Empty) 
 		if strings.HasPrefix(key, "seconds_") {
 			out.Metrics[key] = math.Round(value*1000) / 1000
 		}
+	}
+
+	return out, nil
+}
+
+func (*BootPerfService) GetRebootMetrics(ctx context.Context, _ *empty.Empty) (*platform.GetRebootMetricsResponse, error) {
+	out := &platform.GetRebootMetricsResponse{
+		Metrics: make(map[string]float64),
+	}
+
+	testing.ContextLog(ctx, "Gather reboot metrics")
+	err := bootperf.GatherRebootMetrics(out)
+	if err != nil {
+		return nil, err
 	}
 
 	return out, nil

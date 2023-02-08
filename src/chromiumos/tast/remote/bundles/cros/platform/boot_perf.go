@@ -35,6 +35,7 @@ const (
 var (
 	defaultIterations      = 10    // The number of boot iterations. Can be overridden by var "platform.BootPerf.iterations".
 	defaultSkipRootfsCheck = false // Should we skip rootfs verification? Can be overridden by var "platform.BootPerf.skipRootfsCheck"
+	defaultManualReboot    = false // If set to true, don't reboot the device and collect the timing of the current boot. This is used in collecting boot performance with manual reboots.
 )
 
 func init() {
@@ -53,7 +54,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},
 		// Deps of "chrome" is used to ensure the test doesn't boot to the OOBE screen.
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"platform.BootPerf.iterations", "platform.BootPerf.skipRootfsCheck"},
+		Vars:         []string{"platform.BootPerf.iterations", "platform.BootPerf.skipRootfsCheck", "platform.BootPerf.manualReboot"},
 		// This test collects boot timing for |iterations| times and requires a longer timeout.
 		Timeout: 25 * time.Minute,
 
@@ -105,20 +106,23 @@ func preReboot(ctx context.Context, s *testing.State) {
 }
 
 // bootPerfOnce runs one iteration of the boot perf test.
-func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *perf.Values) {
+func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *perf.Values, manualReboot bool) {
 	s.Logf("Running iteration %d/%d", i+1, iterations)
 	d := s.DUT()
 
-	preReboot(ctx, s)
+	if !manualReboot {
+		preReboot(ctx, s)
 
-	if err := d.Reboot(ctx); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
+		if err := d.Reboot(ctx); err != nil {
+			s.Fatal("Failed to reboot DUT: ", err)
+		}
+
+		// Wait for |reconnectDelay| duration before reconnecting to the DUT to avoid interfere with early boot stages.
+		if err := testing.Sleep(ctx, reconnectDelay); err != nil {
+			s.Log("Warning: failed in sleep before redialing RPC: ", err)
+		}
 	}
 
-	// Wait for |reconnectDelay| duration before reconnecting to the DUT to avoid interfere with early boot stages.
-	if err := testing.Sleep(ctx, reconnectDelay); err != nil {
-		s.Log("Warning: failed in sleep before redialing RPC: ", err)
-	}
 	// Need to reconnect to the gRPC server after rebooting DUT.
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
@@ -128,12 +132,24 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 
 	bootPerfService := platform.NewBootPerfServiceClient(cl.Conn)
 	// Collect boot metrics through RPC call to BootPerfServiceClient. This call waits until system boot is complete and returns the metrics.
-	metrics, err := bootPerfService.GetBootPerfMetrics(ctx, &empty.Empty{})
+	m, err := bootPerfService.GetBootPerfMetrics(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to get boot perf metrics: ", err)
 	}
+	metrics := m.GetMetrics()
 
-	for k, v := range metrics.GetMetrics() {
+	if !manualReboot { // Reboot metrics can be skipped on measuring the current boot.
+		m2, err := bootPerfService.GetRebootMetrics(ctx, &empty.Empty{})
+		if err != nil {
+			s.Fatal("Failed to get reboot metrics: ", err)
+		}
+		// Merge reboot metrics into metrics.
+		for k, v := range m2.GetMetrics() {
+			metrics[k] = v
+		}
+	}
+
+	for k, v := range metrics {
 		// |unit|: rdbytes or seconds.
 		unit := strings.Split(k, "_")[0]
 		pv.Append(perf.Metric{
@@ -229,6 +245,16 @@ func BootPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Collect the metrics of the current boot.
+	manualReboot := defaultManualReboot
+	if val, ok := s.Var("platform.BootPerf.manualReboot"); ok {
+		// We only accept "true" (case insensitive) as valid value to enable this option. Other values are just ignored silently.
+		manualReboot = (strings.ToLower(val) == "true")
+	}
+	if manualReboot {
+		iterations = 1
+	}
+
 	// Create a shorter ctx for normal operations to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -284,7 +310,7 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 	for i := 0; i < iterations; i++ {
 		// Run the boot test once.
-		bootPerfOnce(ctx, s, i, iterations, pv)
+		bootPerfOnce(ctx, s, i, iterations, pv, manualReboot)
 	}
 	collected, err := collectExtraDebugInfo(ctx, s)
 	if err != nil {
