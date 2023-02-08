@@ -36,6 +36,7 @@ func init() {
 			"informational",
 			"group:crosbolt",
 			"crosbolt_nightly",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
