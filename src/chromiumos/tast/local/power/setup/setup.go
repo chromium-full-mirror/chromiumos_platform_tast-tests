@@ -239,10 +239,12 @@ const (
 type KbBrightnessMode int
 
 const (
-	// SetKbBrightness indicates that back light should be disabled.
+	// SetKbBrightness indicates that backlight should be set to a default value.
 	SetKbBrightness KbBrightnessMode = iota
-	// DoNotChangeKbBrightness indicates that back light should be left in the same state.
+	// DoNotChangeKbBrightness indicates that backlight should be left in the same state.
 	DoNotChangeKbBrightness
+	// SetKbBrightnessToZero indicates that keyboard backlight should be set to 0.
+	SetKbBrightnessToZero
 )
 
 // WifiInterfacesMode describes how to setup WiFi interfaces for a test.
@@ -341,6 +343,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.KeyboardBrightness == SetKbBrightness {
 			s.Add(SetKeyboardBrightness(ctx, 24))
+		}
+		if options.KeyboardBrightness == SetKbBrightnessToZero {
+			s.Add(SetKeyboardBrightness(ctx, 0))
 		}
 		if options.Audio == Mute {
 			s.Add(MuteAudio(ctx))
