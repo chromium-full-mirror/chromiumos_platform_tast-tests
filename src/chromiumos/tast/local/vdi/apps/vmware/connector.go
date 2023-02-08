@@ -222,3 +222,12 @@ func (c *Connector) ResetSearch(ctx context.Context) error {
 func (c *Connector) ReplaceDetector(d *uidetection.Context) {
 	c.detector = d
 }
+
+// CleanUpSession cleans up the session by logging off from existing
+// connections. It is being executed in fixtures (mgs, user session) PostTest()
+// function.
+// If not performed then user upon consecutive logins will have several apps
+// opened.
+func (c *Connector) CleanUpSession(ctx context.Context) error {
+	return errors.New("CleanUpSession for WMware is not implemented")
+}

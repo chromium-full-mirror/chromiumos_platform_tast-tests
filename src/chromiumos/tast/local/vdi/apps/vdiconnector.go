@@ -38,4 +38,5 @@ type VDIInt interface {
 	SearchAndOpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action
 	ResetSearch(ctx context.Context) error
 	ReplaceDetector(d *uidetection.Context)
+	CleanUpSession(ctx context.Context) error
 }

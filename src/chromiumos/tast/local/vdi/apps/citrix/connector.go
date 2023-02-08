@@ -9,8 +9,11 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
+	crApps "chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vdi/apps"
@@ -35,10 +38,11 @@ func (c *Connector) Init(s *testing.FixtState, tconn *chrome.TestConn, d *uidete
 	c.keyboard = k
 }
 
-// EnterServerURL enters url to the Citix setup.
+// EnterServerURL enters url to the Citrix setup.
 func (c *Connector) EnterServerURL(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "Citrix: entering server url")
 
+	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
 	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("https://URL"))(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for Citrix splashscreen")
 	}
@@ -58,6 +62,7 @@ func (c *Connector) EnterServerURL(ctx context.Context, cfg *apps.VDILoginConfig
 // EnterCredentialsAndLogin waits for the screen and enters credentials.
 func (c *Connector) EnterCredentialsAndLogin(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "Citrix: entering username and password and logging in")
+	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
 	if err := uiauto.Combine("enter username and password and connect login",
 		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"User", "name"})),
 		c.keyboard.TypeAction(cfg.Username),
@@ -91,6 +96,7 @@ func (c *Connector) Login(ctx context.Context, cfg *apps.VDILoginConfig) error {
 // visible.
 func (c *Connector) Logout(ctx context.Context) error {
 	testing.ContextLog(ctx, "Citrix: logging out")
+	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
 	if err := uiauto.Combine("log out from the Citrix",
 		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Citrix", "Workspace"})),
 		c.detector.LeftClick(uidetection.TextBlock([]string{"Citrix", "Workspace"})), // By clicking, focus on the first UI element.
@@ -115,6 +121,7 @@ func (c *Connector) LoginAfterRestart(ctx context.Context) error {
 // WaitForMainScreenVisible ensures that element visible on the screen
 // indicates it is the main Citrix screen.
 func (c *Connector) WaitForMainScreenVisible(ctx context.Context) error {
+
 	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Search", "Workspace"}))(ctx); err != nil {
 		return errors.Wrap(err, "didn't see expected text block after logging into Citrix")
 	}
@@ -127,6 +134,7 @@ func (c *Connector) WaitForMainScreenVisible(ctx context.Context) error {
 // make sure main Citrix screen is visible by calling
 // WaitForMainScreenVisible(). Call ResetSearch() to clean the search state.
 func (c *Connector) SearchAndOpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action {
+	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
 	return func(ctx context.Context) error {
 		testing.ContextLogf(ctx, "Citrix: opening app %s", appName)
 		return uiauto.Combine("open application "+appName+" in Citrix",
@@ -166,4 +174,49 @@ func (c *Connector) ResetSearch(ctx context.Context) error {
 // ReplaceDetector replaces detector instance.
 func (c *Connector) ReplaceDetector(d *uidetection.Context) {
 	c.detector = d
+}
+
+// CleanUpSession cleans up the session by logging off from existing
+// connections. It is being executed in fixtures (mgs, user session) PostTest()
+// function.
+// If not performed then user upon consecutive logins will have several apps
+// opened.
+func (c *Connector) CleanUpSession(ctx context.Context) error {
+	testing.ContextLog(ctx, "Citrix: open Connection Center and focus on it")
+	ui := uiauto.New(c.tconn)
+	vdiAppShelfButton := nodewith.Name(crApps.Citrix.Name).HasClass("ash/ShelfAppButton")
+	connectorCenterContextMenuItem := nodewith.Name("Connection Center").HasClass("MenuItemView")
+	if err := uiauto.Combine("open Connector Center on VDI app",
+		ui.RightClick(vdiAppShelfButton),
+		ui.WaitUntilExists(connectorCenterContextMenuItem),
+		ui.LeftClick(connectorCenterContextMenuItem),
+		ui.LeftClick(vdiAppShelfButton),
+		ui.WaitUntilExists(connectorCenterContextMenuItem),
+		ui.LeftClick(connectorCenterContextMenuItem),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open Connector Center and bring it to the foreground")
+	}
+
+	session := nodewith.HasClass("sessionElement")
+	// Only if there are active sessions log off from them.
+	if err := ui.Exists(session)(ctx); err == nil {
+		testing.ContextLog(ctx, "Citrix: select session and log off")
+		logoffBtn := nodewith.Name("Logoff").HasClass("sessionButton").Role(role.Button)
+		if err := uiauto.Combine("select session and log off",
+			ui.LeftClick(session),
+			ui.LeftClick(logoffBtn),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to select session and log off")
+		}
+	} else {
+		testing.ContextLog(ctx, "Citrix: no active sessions found")
+	}
+
+	// Close the Connection Center window.
+	closeButton := nodewith.HasClass("close_button")
+	if err := ui.LeftClick(closeButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to close the connection center")
+	}
+
+	return nil
 }
