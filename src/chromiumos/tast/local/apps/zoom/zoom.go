@@ -7,8 +7,10 @@ package zoom
 import (
 	"context"
 	"regexp"
+	"strconv"
 	"time"
 
+	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
@@ -19,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+	"chromiumos/tast/testing"
 )
 
 const (
@@ -333,4 +336,54 @@ func (zm *Zoom) hideInterface(ctx context.Context) error {
 		zm.ui.MouseMoveTo(mainLayoutCanvas, 10*time.Millisecond),
 		zm.ui.WaitUntilGone(moreOptionsButton),
 	)(ctx)
+}
+
+// WaitParticipantsNum waits for the number of participants to reach the expected number.
+// When entering a meeting room for the first time, it may take some time to display the
+// correct number of participants. Add retry to get the correct participants number.
+func (zm *Zoom) WaitParticipantsNum(expectedNumber int) action.Action {
+	checkParticipantsNum := func(ctx context.Context) error {
+		number, err := zm.GetParticipantsNum(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the number of the meeting participants")
+		}
+		if int(number) != expectedNumber {
+			return errors.Wrapf(err, "participant number is %d but %d is expected", number, expectedNumber)
+		}
+		testing.ContextLog(ctx, "Current participants number: ", number)
+		return nil
+	}
+	return zm.ui.WithInterval(time.Second).Retry(10, checkParticipantsNum)
+}
+
+// GetParticipantsNum returns the number of meeting participants.
+func (zm *Zoom) GetParticipantsNum(ctx context.Context) (int, error) {
+	ui := zm.ui
+	participantButton := nodewith.NameContaining("open the participants list pane").Role(role.Button)
+	noParticipantButton := nodewith.NameContaining("[0] particpants").Role(role.Button)
+
+	if err := uiauto.NamedCombine("wait participant info",
+		ui.WaitUntilExists(participantButton),
+		ui.WithTimeout(mediumUITimeout).WaitUntilGone(noParticipantButton),
+	)(ctx); err != nil {
+		return 0, err
+	}
+
+	participantInfo, err := ui.Info(ctx, participantButton)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get participant info")
+	}
+	testing.ContextLog(ctx, "Get participant info: ", participantInfo.Name)
+
+	re := regexp.MustCompile(`\[([0-9]+)\]`)
+	match := re.FindStringSubmatch(participantInfo.Name)
+	if len(match) != 2 {
+		return 0, errors.Wrap(err, "failed to find number of participants")
+	}
+	number, err := strconv.ParseInt(match[1], 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse number of participants")
+	}
+
+	return int(number), nil
 }
