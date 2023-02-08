@@ -13,7 +13,8 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/rpc"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/testing"
 )
@@ -31,21 +32,21 @@ func init() {
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:network", "network_e2e_unstable"},
-		ServiceDeps:  []string{"tast.cros.network.ProxySettingService"},
+		ServiceDeps: []string{
+			"tast.cros.network.ProxySettingService",
+			wificell.TFServiceName,
+		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      10 * time.Minute,
+		Fixture:      "wificellFixt",
 	})
 }
 
 // ProxyRetainAfterReboot tests that the proxy values remain the same after DUT reboots.
 func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
-	var (
-		dut         = s.DUT()
-		rpcHint     = s.RPCHint()
-		manifestKey = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
-	)
-
+	tf := s.FixtValue().(*wificell.TestFixture)
+	manifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	proxyConfigs := &network.ProxyConfigs{
 		HttpHost:  "localhost",
 		HttpPort:  "123",
@@ -55,52 +56,46 @@ func ProxyRetainAfterReboot(ctx context.Context, s *testing.State) {
 		SocksPort: "8080",
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
+	setUpBeforeReboot := func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
 
-	var proxyRebootClient network.ProxySettingServiceClient
-	func() {
-		client, err := rpc.Dial(ctx, dut, rpcHint)
-		if err != nil {
-			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+		rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+		proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
+		if _, err := proxySettingSvc.New(ctx, &network.NewRequest{ManifestKey: manifestKey}); err != nil {
+			return errors.Wrap(err, "failed to create a new proxy setting service")
 		}
-		defer client.Close(cleanupCtx)
+		defer proxySettingSvc.Close(cleanupCtx, &empty.Empty{})
 
-		proxyRebootClient = network.NewProxySettingServiceClient(client.Conn)
-
-		if _, err := proxyRebootClient.New(ctx, &network.NewRequest{ManifestKey: manifestKey, ClearProxySettings: true}); err != nil {
-			s.Fatal("Failed to create a new proxy setting service: ", err)
+		if _, err := proxySettingSvc.Setup(ctx, proxyConfigs); err != nil {
+			return errors.Wrap(err, "failed to setup proxy")
 		}
-		defer func(ctx context.Context) {
-			proxyRebootClient.Close(ctx, &network.CloseRequest{Cleanup: s.HasError()})
-		}(cleanupCtx)
+		return nil
+	}
 
-		if _, err := proxyRebootClient.Setup(ctx, proxyConfigs); err != nil {
-			s.Fatal("Failed to setup proxy: ", err)
-		}
-	}()
+	if err := setUpBeforeReboot(ctx); err != nil {
+		s.Fatal("Failed to set up proxy before reboot: ", err)
+	}
 
-	if err := s.DUT().Reboot(ctx); err != nil {
+	if err := tf.RebootDUT(ctx, wificell.DefaultDUT); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
-	client, err := rpc.Dial(ctx, dut, rpcHint)
-	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-	defer client.Close(cleanupCtx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
-	proxyRebootClient = network.NewProxySettingServiceClient(client.Conn)
-
-	if _, err := proxyRebootClient.New(ctx, &network.NewRequest{ManifestKey: manifestKey, ClearProxySettings: false}); err != nil {
+	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	proxySettingSvc := network.NewProxySettingServiceClient(rpcClient.Conn)
+	if _, err := proxySettingSvc.New(ctx, &network.NewRequest{ManifestKey: manifestKey}); err != nil {
 		s.Fatal("Failed to create a new proxy setting service: ", err)
 	}
-	defer proxyRebootClient.Close(cleanupCtx, &network.CloseRequest{Cleanup: true})
+	defer proxySettingSvc.Close(cleanupCtx, &empty.Empty{})
 
-	returnedConfigs, err := proxyRebootClient.FetchConfigurations(ctx, &empty.Empty{})
+	returnedConfigs, err := proxySettingSvc.FetchConfigurations(ctx, &empty.Empty{})
 	if err != nil {
-		s.Fatal("Failed to setup proxy: ", err)
+		s.Fatal("Failed to fetch proxy configurations: ", err)
 	}
 
 	if diff := cmp.Diff(returnedConfigs, proxyConfigs, protocmp.Transform()); diff != "" {

@@ -217,6 +217,11 @@ service ShillService {
 
   // GetCaptivePortalList returns the CheckPortalList manager property value.
   rpc GetCaptivePortalList(google.protobuf.Empty) returns (GetCaptivePortalListResponse) {}
+
+  // EnsureTestProfileAvailable ensures the test profile is available.
+  // The test profile will not be on stack once shill restarts and the DUT is not logged in,
+  // it can be used to restore the wifi settings for a DUT that is rebooted from log in screen.
+  rpc EnsureTestProfileAvailable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message ConnectRequest {

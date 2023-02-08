@@ -3209,3 +3209,36 @@ func (s *ShillService) GetCaptivePortalList(ctx context.Context, _ *empty.Empty)
 	}
 	return &wifi.GetCaptivePortalListResponse{CaptivePortalList: list}, nil
 }
+
+// EnsureTestProfileAvailable ensures the test profile is available.
+// The test profile will not be on stack once shill restarts and the DUT is not logged in,
+// it can be used to restore the wifi settings for a DUT that is rebooted from log in screen.
+func (s *ShillService) EnsureTestProfileAvailable(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	m, _, err := s.wifiDev(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	profiles, err := m.Profiles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, profile := range profiles {
+		props, err := profile.GetProperties(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get properties from profile object")
+		}
+
+		name, err := props.GetString(shillconst.ProfilePropertyName)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get profile name")
+		}
+
+		if name == wifiTestProfileName {
+			return &empty.Empty{}, nil
+		}
+	}
+	_, err = m.PushProfile(ctx, wifiTestProfileName)
+	return &empty.Empty{}, err
+}

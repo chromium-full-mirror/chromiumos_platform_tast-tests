@@ -204,6 +204,7 @@ type routerData struct {
 // TODO(b/234845693): make that an independent structure.
 type dutData struct {
 	dut              *dut.DUT
+	rpcHint          *testing.RPCHint
 	rpc              *rpc.Client
 	wifiClient       *WifiClient
 	originalLogLevel int
@@ -347,7 +348,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 	defer st.End()
 
 	tf := &TestFixture{
-		duts:      []*dutData{{dut: d}},
+		duts:      []*dutData{{dut: d, rpcHint: rpcHint}},
 		capturers: make(map[*APIface]*pcap.Capturer),
 		aps:       make(map[*APIface]struct{}),
 		// Set the router's default router type.
@@ -380,9 +381,9 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 
 	for _, d := range tf.duts {
 		var err error
-		d.rpc, err = rpc.Dial(daemonCtx, d.dut, rpcHint)
+		d.rpc, err = rpc.Dial(daemonCtx, d.dut, d.rpcHint)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to connect rpc")
+			return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 		}
 		d.wifiClient = &WifiClient{
 			ShillServiceClient: wifi.NewShillServiceClient(d.rpc.Conn),
@@ -2067,4 +2068,29 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) error {
 // ReserveForStopTethering returns a shorter ctx and cancel function for tf.StopTethering().
 func (tf *TestFixture) ReserveForStopTethering(ctx context.Context) (context.Context, context.CancelFunc) {
 	return ctxutil.Shorten(ctx, 10*time.Second)
+}
+
+// RebootDUT reboots DUT and re-establishes wifiClient for the given DUT.
+// re-esablish wifiClient is required after rebooting due to the RPC client will be closed.
+func (tf *TestFixture) RebootDUT(ctx context.Context, dutIdx DutIdx) (retErr error) {
+	if err := tf.duts[dutIdx].dut.Reboot(ctx); err != nil {
+		return errors.Wrap(err, "failed to reboot DUT")
+	}
+
+	var err error
+	if tf.duts[dutIdx].rpc, err = rpc.Dial(ctx, tf.duts[dutIdx].dut, tf.duts[dutIdx].rpcHint); err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	tf.duts[dutIdx].wifiClient = &WifiClient{ShillServiceClient: wifi.NewShillServiceClient(tf.duts[dutIdx].rpc.Conn)}
+
+	if tf.setLogging {
+		if err := setLoggingConfig(ctx, tf.duts[dutIdx].wifiClient, tf.logLevel, tf.logTags); err != nil {
+			return err
+		}
+	}
+
+	// Network configurations will be written in test profile when user isn't logged in, but it will not be reloaded if DUT restarts.
+	// Call this function to make sure test profile is reloaded.
+	_, err = tf.duts[dutIdx].wifiClient.EnsureTestProfileAvailable(ctx, &empty.Empty{})
+	return err
 }

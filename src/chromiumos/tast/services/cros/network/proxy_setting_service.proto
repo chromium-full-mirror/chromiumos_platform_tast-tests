@@ -18,7 +18,7 @@ service ProxySettingService {
     rpc New(NewRequest) returns (google.protobuf.Empty) {}
 
     // Close releases the resources obtained by New.
-    rpc Close(CloseRequest) returns (google.protobuf.Empty) {}
+    rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
     // Setup sets up proxy values.
     rpc Setup(ProxyConfigs) returns (google.protobuf.Empty) {}
@@ -30,12 +30,6 @@ service ProxySettingService {
 message NewRequest {
     // ManifestKey is the key used to create testing connection while in OOBE.
     string ManifestKey = 1;
-    // ClearProxySettings specifies if clearing the proxy settings is needed.
-    bool ClearProxySettings = 2;
-}
-
-message CloseRequest {
-    bool Cleanup = 1;
 }
 
 message ProxyConfigs {

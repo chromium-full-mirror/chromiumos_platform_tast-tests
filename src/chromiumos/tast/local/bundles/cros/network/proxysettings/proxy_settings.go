@@ -39,6 +39,11 @@ const (
 	Socks
 )
 
+// Name returns the name of proxy protocol.
+func (p Protocol) Name() string {
+	return []string{"HTTP", "HTTPS", "Socks"}[p]
+}
+
 // Config represents the proxy configuration.
 type Config struct {
 	// Protocol is the type of proxy protocol.
@@ -58,8 +63,9 @@ func (c *Config) HostNode() *nodewith.Finder {
 		return ossettings.HTTPSHostTextField
 	case Socks:
 		return ossettings.SocksHostTextField
+	default:
+		return nil
 	}
-	return nil
 }
 
 // HostName returns the name of the proxy host.
@@ -71,8 +77,9 @@ func (c *Config) HostName() string {
 		return "https host"
 	case Socks:
 		return "socks host"
+	default:
+		return ""
 	}
-	return ""
 }
 
 // PortNode returns the node for the proxy port.
@@ -84,8 +91,9 @@ func (c *Config) PortNode() *nodewith.Finder {
 		return ossettings.HTTPSPortTextField
 	case Socks:
 		return ossettings.SocksPortTextField
+	default:
+		return nil
 	}
-	return nil
 }
 
 // PortName returns the name of the proxy port.
@@ -97,8 +105,9 @@ func (c *Config) PortName() string {
 		return "https port"
 	case Socks:
 		return "socks port"
+	default:
+		return ""
 	}
-	return ""
 }
 
 // ProxySettings represents the proxy-setting page.

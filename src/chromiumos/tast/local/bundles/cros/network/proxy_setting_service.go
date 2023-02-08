@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/proxysettings"
-	"chromiumos/tast/local/bundles/cros/network/shill"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -41,22 +40,12 @@ type ProxySetupAndVerifyService struct {
 	kb    *input.KeyboardEventWriter
 }
 
-// New sets up the login process.
+// New starts up a new proxy setting service instance.
+// Close must be called later to clean up the associated resources.
 func (s *ProxySetupAndVerifyService) New(ctx context.Context, req *network.NewRequest) (_ *empty.Empty, retErr error) {
 	opts := []chrome.Option{
 		chrome.LoadSigninProfileExtension(req.ManifestKey),
 		chrome.NoLogin(),
-	}
-
-	if !req.ClearProxySettings {
-		opts = append(opts, chrome.KeepState())
-	} else {
-		// TODO(b/242474992): Proxy values will be preserved across Chrome sessions
-		// and will not be wiped out automatically. Therefore, we need to
-		// wipe out the proxy values before starting new test.
-		if err := s.cleanupProxy(ctx); err != nil {
-			return &empty.Empty{}, errors.Wrap(err, "failed to cleanup proxy")
-		}
 	}
 
 	cleanupCtx := ctx
@@ -70,7 +59,7 @@ func (s *ProxySetupAndVerifyService) New(ctx context.Context, req *network.NewRe
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
-			s.Close(ctx, &network.CloseRequest{Cleanup: true})
+			s.Close(ctx, &empty.Empty{})
 		}
 	}(cleanupCtx)
 
@@ -90,7 +79,7 @@ func (s *ProxySetupAndVerifyService) New(ctx context.Context, req *network.NewRe
 }
 
 // Close releases the resources obtained by New.
-func (s *ProxySetupAndVerifyService) Close(ctx context.Context, req *network.CloseRequest) (*empty.Empty, error) {
+func (s *ProxySetupAndVerifyService) Close(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if s.kb != nil {
 		if err := s.kb.Close(); err != nil {
 			testing.ContextLog(ctx, "Failed to close keyboard: ", err)
@@ -105,22 +94,17 @@ func (s *ProxySetupAndVerifyService) Close(ctx context.Context, req *network.Clo
 		s.cr = nil
 	}
 
-	if req.Cleanup {
-		if err := s.cleanupProxy(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup proxy: ", err)
-		}
-	}
 	return &empty.Empty{}, nil
 }
 
 // dumpUITreeToFile is a helper function to acquire the ContextOutDir and dumps the UI tree to a file.
-func (s *ProxySetupAndVerifyService) dumpUITreeToFile(ctx context.Context, hasError func() bool, namePrefix string) {
+func (s *ProxySetupAndVerifyService) dumpUITreeToFile(ctx context.Context, hasError func() bool, nameSuffix string) {
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		testing.ContextLog(ctx, "Failed to get output dir")
 		return
 	}
-	faillog.DumpUITreeOnError(ctx, filepath.Join(outDir, "ProxySetupAndVerifyService_"+namePrefix), hasError, s.tconn)
+	faillog.DumpUITreeOnError(ctx, filepath.Join(outDir, "ProxySetupAndVerifyService_"+nameSuffix), hasError, s.tconn)
 }
 
 // Setup sets up proxy values.
@@ -208,16 +192,4 @@ func (s *ProxySetupAndVerifyService) fetchProxyFieldAndValues(req *network.Proxy
 			Port:     req.SocksPort,
 		},
 	}
-}
-
-// cleanupProxy cleans up network settings by calling ResetShill() and combines
-// error messages into a single error.
-func (s *ProxySetupAndVerifyService) cleanupProxy(ctx context.Context) error {
-	if errs := shill.ResetShill(ctx); len(errs) > 0 {
-		for _, err := range errs {
-			testing.ContextLog(ctx, "ResetShill error: ", err)
-		}
-		return errors.Wrap(errs[0], "failed to reset shill")
-	}
-	return nil
 }
