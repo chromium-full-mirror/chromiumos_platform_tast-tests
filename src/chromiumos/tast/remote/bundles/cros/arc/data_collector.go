@@ -254,7 +254,7 @@ func init() {
 			// 8GB if possible to match requirement for ureadahead generation.
 			// x86-64 ARC: kohaku(hatch), eve
 			// arm64 ARC: gimble(herobrine), steelix(corsola)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "morphius", "steelix", "hoglin")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "eve", "gimble", "morphius", "steelix", "hoglin", "krane")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
