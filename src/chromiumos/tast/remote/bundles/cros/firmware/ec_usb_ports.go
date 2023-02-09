@@ -76,6 +76,12 @@ func ECUSBPorts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to probe usb ports: ", err)
 	}
 
+	// If device has no USB A ports, there is no reason to run the full test.
+	if len(enablePins) == 0 {
+		s.Log("No USB A ports to test")
+		return
+	}
+
 	s.Log("Check that ports are initially enabled")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := checkUSBAPortEnabled(ctx, h, enablePins, 1); err != nil {
