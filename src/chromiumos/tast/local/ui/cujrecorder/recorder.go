@@ -1112,6 +1112,7 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	r.profilerRecorder.Record(r.pv)
 
 	collectCLCP(ctx, r.pv)
+	collectMSPH(ctx, r.pv)
 
 	return nil
 }
@@ -1252,4 +1253,49 @@ func collectCLCP(ctx context.Context, pv *perf.Values) {
 		Unit:      "ms",
 		Direction: perf.SmallerIsBetter,
 	}, lcp2Values[0]-ttfbValues[0])
+}
+
+// collectMSPH collects Memory Stall-time Per Hour values.
+func collectMSPH(ctx context.Context, pv *perf.Values) {
+	testing.ContextLog(ctx, "Collect MSPH metric")
+
+	var (
+		psiFullMetric = perf.Metric{
+			Name:      "ChromeOS.CWP.PSIMemPressure.Full",
+			Variant:   "average",
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+		}
+		psiSomeMetric = perf.Metric{
+			Name:      "ChromeOS.CWP.PSIMemPressure.Some",
+			Variant:   "average",
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+		}
+	)
+	psiFullValues := pv.GetValueByMetric(psiFullMetric)
+	psiSomeValues := pv.GetValueByMetric(psiSomeMetric)
+
+	// psiFullValues is the stall time percentage * 100 (i.e. 20% = 2000).
+	// AvgStallTimePerHour is that percentage applied to 1 hour (3600s).
+	// So psiFullValues[0] / 10000 * 3600 = psiFullValues[0] * 0.36.
+	if len(psiFullValues) != 1 {
+		testing.ContextLogf(ctx, "Unexpected number of psiFullMetric values, got %d; expected 1", len(psiFullValues))
+	} else {
+		pv.Set(perf.Metric{
+			Name:      "Memory.PSIFull.AvgStallTimePerHour",
+			Unit:      "s",
+			Direction: perf.SmallerIsBetter,
+		}, psiFullValues[0]*0.36)
+	}
+	if len(psiSomeValues) != 1 {
+		testing.ContextLogf(ctx, "Unexpected number of psiSomeMetric values, got %d; expected 1", len(psiSomeValues))
+	} else {
+		pv.Set(perf.Metric{
+			Name:      "Memory.PSISome.AvgStallTimePerHour",
+			Unit:      "s",
+			Direction: perf.SmallerIsBetter,
+		}, psiSomeValues[0]*0.36)
+	}
+
 }
