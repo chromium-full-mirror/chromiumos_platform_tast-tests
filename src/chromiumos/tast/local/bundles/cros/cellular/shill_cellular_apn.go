@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/shillconst"
@@ -92,6 +93,16 @@ func ShillCellularApn(ctx context.Context, s *testing.State) {
 	modbOverrideProto := params.ModbOverrideProto
 	expectedLastGoodAPN := params.ExpectedLastGoodAPN
 	expectedLastAttachAPN := params.ExpectedLastAttachAPN
+
+	// Fail immediately if there is a known bug that will cause the test to run until it times out.
+	isL850, _ := cellular.IsModemType(ctx, cellular.ModemTypeL850)
+	isFM350, _ := cellular.IsModemType(ctx, cellular.ModemTypeFM350)
+	isFM101, _ := cellular.IsModemType(ctx, cellular.ModemTypeFM101)
+	if (isL850 || isFM350 || isFM101) && strings.HasSuffix(s.TestName(), "round_robin_connect_all_invalid_apn_errors") {
+		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellular.ModemType{cellular.ModemTypeFM350, cellular.ModemTypeL850, cellular.ModemTypeFM101})
+		s.Fatalf("Fail early to avoid wasting DUT time: %s", err)
+	}
+
 	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
