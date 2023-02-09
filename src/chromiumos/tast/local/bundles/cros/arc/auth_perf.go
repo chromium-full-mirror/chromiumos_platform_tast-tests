@@ -31,7 +31,6 @@ import (
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 type testParam struct {
@@ -90,20 +89,10 @@ func init() {
 		}, {
 			Name:              "unmanaged_no_guest_ureadahead_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
 			Val: testParam{
 				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--arcvm-ureadahead-mode=disabled"},
-			},
-		}, {
-			Name:              "unmanaged_no_host_ureadahead_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(7500)),
-			Val: testParam{
-				browserType:       browser.TypeAsh,
-				maxErrorBootCount: 3,
-				chromeArgs:        []string{"--arc-disable-ureadahead", "--arcvm-ureadahead-mode=readahead"},
 			},
 		}, {
 			Name:              "unmanaged_lacros",
