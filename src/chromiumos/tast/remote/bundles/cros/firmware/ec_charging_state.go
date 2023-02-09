@@ -204,7 +204,8 @@ func compareHostAndECBatteryStatus(ctx context.Context, h *firmware.Helper, ecBa
 		}
 		return nil
 	case "not charging", "discharging":
-		if ecBatt.statusCode&discharging == 0 {
+		// EC might report the battery is not discharging if its fully charged, so raise error only if not discharging and not fully charged.
+		if ecBatt.statusCode&discharging == 0 && ecBatt.statusCode&fullyCharged == 0 && ecBatt.charge < fullBatteryPercent {
 			return errors.Errorf("Kernel reports battery status to be discharging, but actual status was %v instead", ecBatt.status)
 		}
 		return nil
