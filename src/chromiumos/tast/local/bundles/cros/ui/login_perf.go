@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"os/exec"
 	"time"
 
 	"github.com/mafredri/cdp/rpcc"
@@ -32,6 +33,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/session"
@@ -51,9 +53,13 @@ const (
 )
 
 type loginPerfTestParam struct {
-	bt              browser.Type     // browser.{TypeAsh/TypeLacros}
-	lacrosSelection lacros.Selection // lacros.{Omaha,Rootfs}
-	lacrosMode      lacros.Mode      // lacros.{LacrosPrimary,LacrosSideBySide}
+	checkArcAllModes bool             // Whether to check the "arcsupported" mode. When false only "noarc" and "arcenabled" are checked.
+	checkTabletMode  bool             // Whether to check the Tablet mode in addition to the Clamshell mode.
+	bt               browser.Type     // browser.{TypeAsh/TypeLacros}
+	lacrosSelection  lacros.Selection // lacros.{Omaha,Rootfs}
+	lacrosMode       lacros.Mode      // lacros.{LacrosPrimary,LacrosSideBySide}
+	preloadLacros    bool             // Whether to enable LacrosLaunchAtLoginScreen feature
+	dropCaches       bool             // Whether to drop block caches before starting test.
 }
 
 func init() {
@@ -80,33 +86,111 @@ func init() {
 			Name:      "ash_chrome",
 			ExtraAttr: []string{"group:cuj"},
 			Val: loginPerfTestParam{
-				browser.TypeAsh, lacros.NotSelected, lacros.NotSpecified,
+				true, // checkArcAllModes
+				true, // checkTabletMode
+				browser.TypeAsh,
+				lacros.NotSelected,
+				lacros.NotSpecified,
+				false, // preloadLacros
+				false, // dropCaches
+			},
+		}, {
+			Name:      "ash_chrome_cold_boot",
+			ExtraAttr: []string{"group:cuj"},
+			Val: loginPerfTestParam{
+				false, // checkArcAllModes
+				false, // checkTabletMode
+				browser.TypeAsh,
+				lacros.NotSelected,
+				lacros.NotSpecified,
+				false, // preloadLacros
+				true,  // dropCaches
 			},
 		}, {
 			Name:      "lacros_chrome_root_fs_primary",
 			ExtraAttr: []string{"group:cuj"},
 			Val: loginPerfTestParam{
-				browser.TypeLacros, lacros.Rootfs, lacros.LacrosPrimary,
+				true, // checkArcAllModes
+				true, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosPrimary,
+				false, // preloadLacros
+				false, // dropCaches
+			},
+		}, {
+			Name:      "lacros_chrome_root_fs_primary_cold_boot",
+			ExtraAttr: []string{"group:cuj"},
+			Val: loginPerfTestParam{
+				false, // checkArcAllModes
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosPrimary,
+				false, // preloadLacros
+				true,  // dropCaches
+			},
+		}, {
+			Name:      "lacros_chrome_root_fs_primary_enable_preload",
+			ExtraAttr: []string{"group:cuj"},
+			Val: loginPerfTestParam{
+				false, // checkArcAllModes
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosPrimary,
+				true,  // preloadLacros
+				false, // dropCaches
+			},
+		}, {
+			Name:      "lacros_chrome_root_fs_primary_enable_preload_cold_boot",
+			ExtraAttr: []string{"group:cuj"},
+			Val: loginPerfTestParam{
+				false, // checkArcAllModes
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosPrimary,
+				true, // preloadLacros
+				true, // dropCaches
 			},
 		}, {
 			Name:      "lacros_chrome_root_fs_side_by_side",
 			ExtraAttr: []string{"group:cuj"},
 			Val: loginPerfTestParam{
-				browser.TypeLacros, lacros.Rootfs, lacros.LacrosSideBySide,
+				true, // checkArcAllModes
+				true, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosSideBySide,
+				false, // preloadLacros
+				false, // dropCaches
 			},
 		}, {
 			Name: "lacros_chrome_omaha_primary",
 			// Disabled per b/246818834.
 			ExtraAttr: []string{},
 			Val: loginPerfTestParam{
-				browser.TypeLacros, lacros.Omaha, lacros.LacrosPrimary,
+				true, // checkArcAllModes
+				true, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Omaha,
+				lacros.LacrosPrimary,
+				false, // preloadLacros
+				false, // dropCaches
 			},
 		}, {
 			Name: "lacros_chrome_omaha_side_by_side",
 			// Disabled per b/246818834.
 			ExtraAttr: []string{},
 			Val: loginPerfTestParam{
-				browser.TypeLacros, lacros.Omaha, lacros.LacrosSideBySide,
+				true, // checkArcAllModes
+				true, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Omaha,
+				lacros.LacrosSideBySide,
+				false, // preloadLacros
+				false, // dropCaches
 			},
 		}},
 	})
@@ -155,6 +239,17 @@ func loginPerfStartToLoginScreen(
 		// For Ash we need to force session restore in another way.
 		options = append(options, chrome.ForceLaunchBrowser())
 	}
+	if testConfig.param.preloadLacros {
+		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
+		s.Log("loginPerfStartToLoginScreen: Enabling LacrosLaunchAtLoginScreen feature")
+	}
+	if testConfig.param.dropCaches {
+		if err := disk.DropCaches(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to drop caches")
+		}
+		s.Log("loginPerfStartToLoginScreen: File caches dropped")
+	}
+
 	cr, err := chrome.New(
 		ctx,
 		append(options, testConfig.arcOpt...)...,
@@ -418,6 +513,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	browserType browser.Type,
 	lacrosConfig *lacrosfixt.Config,
 	loginPool string,
+	preloadLacros bool,
 ) (
 	chrome.Creds,
 	error,
@@ -441,6 +537,10 @@ func initializeLoginPerfTest(ctx context.Context,
 			return chrome.Creds{}, errors.Wrap(err, "failed to get default options")
 		}
 		options = append(options, defaultOpts...)
+	}
+	if preloadLacros {
+		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
+		testing.ContextLog(ctx, "initializeLoginPerfTest: Enabling LacrosLaunchAtLoginScreen feature")
 	}
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
@@ -530,7 +630,12 @@ func testFunction(
 
 	// The actual test function
 	testFunc := func(ctx context.Context) error {
-		var err error
+		out, err := exec.Command("ps", "aux").Output()
+		testing.ContextLog(ctx, "ps aux result:")
+		testing.ContextLog(ctx, string(out))
+		if err != nil {
+			s.Fatal("ps aux failed with: ", err)
+		}
 		l, lacrosConnectTime, err = loginPerfDoLogin(ctx, cr, testConfig.creds, testConfig.param.bt)
 		if err != nil {
 			return errors.Wrap(err, "failed to log in")
@@ -685,7 +790,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		lacrosfixt.Mode(param.lacrosMode))
 
 	// Log in and log out to create a user pod on the login screen.
-	creds, err := initializeLoginPerfTest(ctx, param.bt, lacrosCfg, s.RequiredVar("ui.gaiaPoolDefault"))
+	creds, err := initializeLoginPerfTest(ctx, param.bt, lacrosCfg, s.RequiredVar("ui.gaiaPoolDefault"), param.preloadLacros)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
 	}
@@ -706,7 +811,12 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	)
 	arcmodes := []string{noarc}
 	if arc.Supported() {
-		arcmodes = append(arcmodes, arcenabled, arcsupported)
+		// param.checkArcAllModes controls whether to check all Arc modes or only enabled/disabled.
+		if param.checkArcAllModes {
+			arcmodes = append(arcmodes, arcenabled, arcsupported)
+		} else {
+			arcmodes = append(arcmodes, arcenabled)
+		}
 	}
 
 	currentWindows := 0
@@ -780,6 +890,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			}
 
 			for _, inTabletMode := range []bool{false, true} {
+				if inTabletMode && !param.checkTabletMode {
+					// Skip if not configured.
+					continue
+				}
 				var suffix string
 				if inTabletMode {
 					suffix = ".TabletMode"
