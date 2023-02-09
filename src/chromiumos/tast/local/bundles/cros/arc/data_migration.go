@@ -94,8 +94,6 @@ func init() {
 			ExtraSoftwareDeps: []string{
 				"android_vm",
 				"amd64",
-				// P-to-R migration is not yet supported for virtio-blk /data enabled devices.
-				"no_arcvm_virtio_blk_data",
 			},
 		}, {
 			// Launch ARC R with /data created on ARC P (for arm).
@@ -110,8 +108,6 @@ func init() {
 			ExtraSoftwareDeps: []string{
 				"android_vm",
 				"arm",
-				// P-to-R migration is not yet supported for virtio-blk /data enabled devices.
-				"no_arcvm_virtio_blk_data",
 			},
 		}, {
 			// Launch ARC R with /data created on ARC P for managed user(for x86).
@@ -129,8 +125,6 @@ func init() {
 			ExtraSoftwareDeps: []string{
 				"android_vm",
 				"amd64",
-				// P-to-R migration is not yet supported for virtio-blk /data enabled devices.
-				"no_arcvm_virtio_blk_data",
 			},
 		}},
 	})
@@ -203,6 +197,7 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 		chrome.ARCSupported(),
 		chrome.KeepState(),
 		chrome.UnRestrictARCCPU(),
+		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
 		chrome.ExtraArgs(args...),
 	}
 
