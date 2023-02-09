@@ -216,8 +216,6 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
-
 	appliedRestriction := s.Param().(fileUSBCopyTestParams).restriction
 
 	// Update the policy blob.
@@ -272,6 +270,8 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to connect to browser's test API: ", err)
 	}
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
+
 	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
 	closeTabsFunc := browser.CloseAllTabs
 	if s.Param().(fileUSBCopyTestParams).browserType == browser.TypeLacros {
@@ -289,6 +289,8 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to open browser: ", err)
 	}
 	defer conn.Close()
+
+	s.Log("Opened the browser")
 
 	// Close all prior notifications.
 	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
@@ -317,6 +319,8 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		s.Fatal("Download should be allowed, but wasn't. Notification: ", ntfctn)
 	}
 
+	s.Log("Downloaded the file")
+
 	// Create the virtual USB device.
 	if err := setupVirtualUSBDevice(ctx); err != nil {
 		s.Fatal("Fail to setup virtual USB device: ", err)
@@ -336,6 +340,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err := filesApp.FormatDevice()(ctx); err != nil {
 		s.Fatal("Failed to format USB drive: ", err)
 	}
+	s.Log("USB drive is formatted")
 	if err := filesApp.OpenDownloads()(ctx); err != nil {
 		s.Fatal("Failed to open Downloads folder: ", err)
 	}
