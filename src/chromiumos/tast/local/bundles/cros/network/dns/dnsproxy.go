@@ -17,6 +17,12 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// ProxyJobName is the job name of DNS proxy.
+const ProxyJobName = "dns-proxy"
+
+// ProxyProcName is the process name of DNS proxy.
+const ProxyProcName = "dnsproxyd"
+
 // ProxyNamespaces returns all network namespaces used by the dnsproxyd process.
 func ProxyNamespaces(ctx context.Context) ([]string, error) {
 	out, err := testexec.CommandContext(ctx, "ip", "netns", "list").Output(testexec.DumpLogOnError)
@@ -31,7 +37,7 @@ func ProxyNamespaces(ctx context.Context) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if strings.Contains(string(ss), "dnsproxyd") {
+		if strings.Contains(string(ss), ProxyProcName) {
 			nss = append(nss, ns)
 		}
 	}

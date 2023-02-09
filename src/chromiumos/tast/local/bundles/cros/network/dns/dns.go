@@ -5,12 +5,16 @@
 package dns
 
 import (
+	"bytes"
 	"context"
+	"html/template"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
@@ -65,6 +69,21 @@ const (
 	ARC
 )
 
+// Config defines a DNS-related config.
+type Config struct {
+	IPv4Nameservers      []string
+	IPv6Nameservers      []string
+	IPv4DomainSearchList []string
+	// IPv6 domain search list is not supported by shill (b/172214013).
+}
+
+// virtualnet's priority used in DNS tests.
+const (
+	HighPriority = 5
+	BasePriority = 3
+	LowPriority  = 1
+)
+
 // Env wraps the test environment created for DNS tests.
 type Env struct {
 	Router       *env.Env
@@ -96,6 +115,23 @@ var ARCQueryRCodeRE = regexp.MustCompile(`rcode: .* \(([0-9]+)\)`)
 // ARC P: "... DnsAddresses: [100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010,] ... "
 // ARC R+: "... DnsAddresses: [ /100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010 ] ..."
 var ARCNameserversRE = regexp.MustCompile(`MojoLinkProperties:.*DnsAddresses: \[ ?(?:(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))?(?:,(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))*,? ?\]`)
+
+// DNS proxy run path, contains resolv.conf.
+const proxyRunPath = "/run/dns-proxy"
+
+// ResolvConfPath points to the resolv.conf file for name resolution.
+const ResolvConfPath = "/etc/resolv.conf"
+
+// Template for the expected /etc/resolv.conf's data.
+const resolvConfTemplate = `
+{{- range .nameservers -}}
+nameserver {{.}}
+{{end -}}
+{{if .search_lists -}}
+search{{range .search_lists}} {{.}}{{end}}
+{{end -}}
+options single-request timeout:1 attempts:5
+`
 
 // GetClientString get the string representation of a DNS client.
 func GetClientString(c Client) string {
@@ -623,4 +659,98 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet, ipv6Subnet *net.
 
 	success = true
 	return server, nil
+}
+
+// NewShillService creates a shill service with a certain DNS configuration.
+func NewShillService(ctx context.Context, config Config, nameSuffix string, priority int, pool *subnet.Pool) (*shill.Service, *virtualnet.Env, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to create manager proxy")
+	}
+	svc, r, err := virtualnet.CreateRouterEnv(ctx, m, pool, virtualnet.EnvOptions{
+		Priority:             priority,
+		NameSuffix:           nameSuffix,
+		IPv4DNSServers:       config.IPv4Nameservers,
+		IPv6DNSServers:       config.IPv6Nameservers,
+		IPv4DomainSearchList: config.IPv4DomainSearchList,
+		EnableDHCP:           true,
+		RAServer:             true,
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to set up shill service")
+	}
+	if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
+		if err := r.Cleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to cleanup router: ", err)
+		}
+		return nil, nil, errors.Wrap(err, "failed to wait for shill service to be online")
+	}
+	return svc, r, nil
+}
+
+// VerifyResolvConfContents returns an error if /etc/resolv.conf contents does not match the expected config.
+// When DNS proxy is enabled, /etc/resolv.conf is expected to be replaced by the proxy's addresses.
+func VerifyResolvConfContents(ctx context.Context, config Config, proxyEnabled bool) error {
+	var nameservers []template.HTML
+	if proxyEnabled {
+		nameservers = expectedNameserversWithDNSProxy(ctx, config)
+	} else {
+		// Check if DNS proxy is managing resolv.conf.
+		l, err := os.Readlink(ResolvConfPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to get resolv.conf link")
+		}
+		dnsProxyManaged := strings.HasPrefix(l, proxyRunPath)
+		nameservers = expectedNameserversWithoutDNSProxy(ctx, config, dnsProxyManaged)
+	}
+
+	// Build the expected /etc/resolv.conf data.
+	vals := map[string]interface{}{
+		"nameservers":  nameservers,
+		"search_lists": config.IPv4DomainSearchList,
+	}
+	b := &bytes.Buffer{}
+	template.Must(template.New("").Parse(resolvConfTemplate)).Execute(b, vals)
+	re := regexp.MustCompile(b.String())
+
+	// Read the actual /etc/resolv.conf data.
+	d, err := os.ReadFile(ResolvConfPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read resolv.conf")
+	}
+	if !re.MatchString(string(d)) {
+		return errors.Errorf("resolv.conf value does not match, got: %s, want: %s", d, b)
+	}
+	return nil
+}
+
+// expectedNameserversWithoutDNSProxy gets the expected /etc/resolv.conf nameservers without DNS proxy overwriting it.
+// For dual-stack networks, when /etc/resolv.conf is managed by shill (and not DNS proxy),
+// only IPv4 nameservers are used (b/265680125#comment11).
+// The behavior is a limitation of shill.
+func expectedNameserversWithoutDNSProxy(ctx context.Context, config Config, dnsProxyManaged bool) []template.HTML {
+	var nss []template.HTML
+	for _, ns := range config.IPv4Nameservers {
+		nss = append(nss, template.HTML(ns))
+	}
+	if dnsProxyManaged || len(nss) == 0 {
+		for _, ns := range config.IPv6Nameservers {
+			nss = append(nss, template.HTML(ns))
+		}
+	}
+	return nss
+}
+
+// expectedNameserversWithDNSProxy gets the expected /etc/resolv.conf nameservers
+// regex when DNS proxy is overwriting it.
+func expectedNameserversWithDNSProxy(ctx context.Context, config Config) []template.HTML {
+	// template.HTML to avoid the regex to be escaped.
+	var nssRE []template.HTML
+	if len(config.IPv4Nameservers) > 0 {
+		nssRE = append(nssRE, DNSProxyIPv4Prefix+".\\d+")
+	}
+	if len(config.IPv6Nameservers) > 0 {
+		nssRE = append(nssRE, "([a-f0-9:]+:+)+[a-f0-9]+")
+	}
+	return nssRE
 }
