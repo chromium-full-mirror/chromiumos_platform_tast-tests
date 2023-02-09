@@ -69,7 +69,7 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 	// the stress script starts hammering the filesystem.
 	script := "echo $$ > /sys/fs/cgroup/freezer/ui/cgroup.procs;" +
 		"sync;" +
-		"while true; do find /media/archive -type f | xargs cat &> /dev/null; done"
+		"while true; do find /media/archive -type f; done"
 
 	cmd := testexec.CommandContext(
 		ctx,
