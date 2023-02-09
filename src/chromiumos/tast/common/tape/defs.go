@@ -12784,3 +12784,18 @@ func (p *FastPairEnabledDevicesManagedguest) Schema2JSON(updateMask []string) ([
 	}
 	return marshalJSON("chrome.devices.managedguest.FastPairEnabled", p, updateMask)
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// DeviceReportXdrEventsDevices
+///////////////////////////////////////////////////////////////////////////////
+
+type DeviceReportXdrEventsDevices struct {
+	DeviceReportXdrEvents bool `json:"deviceReportXdrEvents"`
+}
+
+func (p *DeviceReportXdrEventsDevices) Schema2JSON(updateMask []string) ([]byte, error) {
+	if len(updateMask) == 0 {
+		updateMask = []string{"deviceReportXdrEvents"}
+	}
+	return marshalJSON("chrome.devices.DeviceReportXdrEvents", p, updateMask)
+}
