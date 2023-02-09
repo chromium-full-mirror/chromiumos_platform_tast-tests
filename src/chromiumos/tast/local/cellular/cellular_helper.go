@@ -51,6 +51,7 @@ type SIMProfileInfo struct {
 	SimPin      string
 	SimPuk      string
 	CarrierName string
+	OwnNumber   string
 }
 
 // SIMInfo Gets SIM info from host_info_labels.
@@ -1265,30 +1266,31 @@ func (h *Helper) RunTestOnCellularInterface(ctx context.Context, testBody func(c
 // PrintHostInfoLabels prints the host info labels
 func (h *Helper) PrintHostInfoLabels(ctx context.Context) {
 	for _, label := range h.Labels {
-		testing.ContextLog(ctx, "Labels :", label)
+		testing.ContextLog(ctx, "Labels: ", label)
 	}
 }
 
 // PrintModemInfo prints modem details
 func (h *Helper) PrintModemInfo(ctx context.Context) {
-	testing.ContextLog(ctx, "Modem Type : ", h.modemInfo.Type)
-	testing.ContextLog(ctx, "Modem IMEI : ", h.modemInfo.IMEI)
+	testing.ContextLog(ctx, "Modem Type            : ", h.modemInfo.Type)
+	testing.ContextLog(ctx, "Modem IMEI            : ", h.modemInfo.IMEI)
 	testing.ContextLog(ctx, "Modem Supported Bands : ", h.modemInfo.SupportedBands)
-	testing.ContextLog(ctx, "Modem SIM Count : ", h.modemInfo.SimCount)
+	testing.ContextLog(ctx, "Modem SIM Count       : ", h.modemInfo.SimCount)
 }
 
 // PrintSIMInfo prints SIM details
 func (h *Helper) PrintSIMInfo(ctx context.Context) {
 	for _, s := range h.simInfo {
-		testing.ContextLog(ctx, "SIM Slot ID   : ", s.SlotID)
-		testing.ContextLog(ctx, "SIM Type      : ", s.Type)
-		testing.ContextLog(ctx, "SIM Test eSIM : ", s.TestEsim)
-		testing.ContextLog(ctx, "SIM EID       : ", s.EID)
+		testing.ContextLog(ctx, "SIM Slot ID              : ", s.SlotID)
+		testing.ContextLog(ctx, "SIM Type                 : ", s.Type)
+		testing.ContextLog(ctx, "SIM Test eSIM            : ", s.TestEsim)
+		testing.ContextLog(ctx, "SIM EID                  : ", s.EID)
 		for _, p := range s.ProfileInfo {
-			testing.ContextLog(ctx, "SIM Profile ICCID : ", p.ICCID)
-			testing.ContextLog(ctx, "SIM Profile PIN : ", p.SimPin)
-			testing.ContextLog(ctx, "SIM Profile PUK : ", p.SimPuk)
+			testing.ContextLog(ctx, "SIM Profile ICCID        : ", p.ICCID)
+			testing.ContextLog(ctx, "SIM Profile PIN          : ", p.SimPin)
+			testing.ContextLog(ctx, "SIM Profile PUK          : ", p.SimPuk)
 			testing.ContextLog(ctx, "SIM Profile Carrier Name : ", p.CarrierName)
+			testing.ContextLog(ctx, "SIM Profile Own Number   : ", p.OwnNumber)
 		}
 	}
 }
@@ -1321,6 +1323,18 @@ func (h *Helper) GetPINAndPUKForICCID(ctx context.Context, iccid string) (string
 // GetLabelCarrierName return the current carrier name
 func (h *Helper) GetLabelCarrierName(ctx context.Context) string {
 	return h.carrierName
+}
+
+// GetLabelOwnNumber return the current own number.
+func (h *Helper) GetLabelOwnNumber(ctx context.Context, iccid string) string {
+	for _, s := range h.simInfo {
+		for _, p := range s.ProfileInfo {
+			if p.ICCID == iccid {
+				return p.OwnNumber
+			}
+		}
+	}
+	return ""
 }
 
 // ConnectAndCheckSignalQuality verifies that cellular is connected and has sufficient signal coverage to run test cases

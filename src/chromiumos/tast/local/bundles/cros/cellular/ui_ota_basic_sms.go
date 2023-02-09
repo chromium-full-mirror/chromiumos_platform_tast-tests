@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
@@ -35,6 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
 		VarDeps:      []string{"cellular.gaiaAccountPool"},
+		Vars:         []string{"autotest_host_info_labels"},
 	})
 }
 
@@ -57,28 +57,30 @@ func UIOtaBasicSms(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to delete all messages: ", err)
 	}
 
-	props, err := modem.GetProperties(ctx)
+	// Device properties from host info store labels.
+	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
 	if err != nil {
-		s.Fatal("Failed to call GetProperties on modem: ", err)
+		s.Fatal("Failed to read autotest_host_info_labels: ", err)
 	}
 
-	value, err := props.Get(mmconst.ModemPropertyOwnNumbers)
+	helper, err := cellular.NewHelperWithLabels(ctx, labels)
 	if err != nil {
-		s.Fatal("Failed to read OwnNumbers property: ", err)
+		s.Fatal("Failed to create cellular.Helper: ", err)
 	}
-	if value == nil {
-		s.Fatal("OwnNumbers property does not exist")
-	}
-
-	phoneNumbers, ok := value.([]string)
-	if !ok {
-		s.Fatal("OwnNumbers property type conversion failed")
-	}
-	if len(phoneNumbers) < 1 {
-		s.Fatal("Empty OwnNumbers property")
+	iccid, err := helper.GetCurrentICCID(ctx)
+	if err != nil {
+		s.Fatal("Could not get current ICCID: ", err)
 	}
 
-	s.Logf("Phone number: %s to send message: %s", phoneNumbers[0], messageToSend)
+	// Read modem property OwnNumber from labels.
+	phoneNumber := helper.GetLabelOwnNumber(ctx, iccid)
+	if phoneNumber == "" || len(phoneNumber) < 10 {
+		s.Fatal("Invalid OwnNumber label value")
+	}
+	if phoneNumber == "1234567890" || phoneNumber == "1111111111" {
+		s.Fatal("SMS test not applicable for this dut")
+	}
+	s.Logf("Phone number: %s to send message: %s", phoneNumber, messageToSend)
 
 	// Create cleanup context to ensure UI tree dumps correctly.
 	cleanupCtx := ctx
@@ -117,7 +119,7 @@ func UIOtaBasicSms(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("After finding messages tab")
-	err = uiHelper.SendMessage(ctx, phoneNumbers[0], messageToSend)
+	err = uiHelper.SendMessage(ctx, phoneNumber, messageToSend)
 	if err != nil {
 		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 		s.Fatal("Failed to send message: ", err)

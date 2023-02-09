@@ -349,6 +349,9 @@ func GetSIMInfoFromHostInfoLabels(ctx context.Context, labels []string) []*SIMIn
 
 			lv = "sim_" + simID + "_" + profileID + "_carrier_name"
 			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].CarrierName, lv)
+
+			lv = "sim_" + simID + "_" + profileID + "_own_number"
+			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].OwnNumber, lv)
 		}
 		simInfo[i] = s
 	}
