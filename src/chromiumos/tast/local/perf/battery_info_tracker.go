@@ -303,7 +303,7 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 		Direction: perf.SmallerIsBetter,
 	}, t.batteryCapacityStart-t.batteryCapacityEnd)
 
-	powerTimesName := t.prefix + "PowerTimeline.t"
+	powerTimesName := t.prefix + "Power.Timeline.t"
 	pv.Set(perf.Metric{
 		Name:     powerTimesName,
 		Unit:     "s",
@@ -311,7 +311,7 @@ func (t *BatteryInfoTracker) Record(pv *perf.Values) {
 	}, t.powerTime...)
 
 	pv.Set(perf.Metric{
-		Name:      t.prefix + "PowerTimeline",
+		Name:      t.prefix + "Power.Timeline",
 		Unit:      "watt",
 		Direction: perf.SmallerIsBetter,
 		Multiple:  true,
