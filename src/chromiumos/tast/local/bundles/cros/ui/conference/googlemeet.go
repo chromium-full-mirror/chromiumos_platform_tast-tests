@@ -23,7 +23,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
-	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -560,27 +559,16 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 		selectLayout := uiauto.NamedAction("click layout "+mode,
 			ui.WithTimeout(mediumUITimeout).DoDefaultUntil(modeNode,
 				ui.WaitUntilExists(modeNode.Focused())))
-		setTiles := func(mode string) action.Action {
+		setToMaxTiles := func(mode string) action.Action {
 			return func(ctx context.Context) error {
 				if mode != "Tiled" {
 					return nil
 				}
-
-				dialog := nodewith.Name("Caption languages & translation").Role(role.Dialog)
-				gotItButton := nodewith.Name("Got it").Role(role.Button).Ancestor(dialog)
-				skipPopupDialog := uiauto.IfSuccessThen(ui.Exists(gotItButton),
-					ui.LeftClickUntil(gotItButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(gotItButton)))
 				slider := nodewith.Name("Tiles").Role(role.Slider).First()
-				clickSliderToMax := func(ctx context.Context) error {
-					sliderLocation, err := ui.Location(ctx, slider)
-					if err != nil {
-						return errors.Wrap(err, "failed to get slider info")
-					}
-					expectedlocation := coords.Point{X: sliderLocation.Right() - 1, Y: sliderLocation.CenterY()}
-					return uiauto.NamedAction("click slider to max", ui.MouseClickAtLocation(0, expectedlocation))(ctx)
-				}
-
+				raiseTiles := conf.kb.AccelAction("Right")
 				isMaxTiles := func(ctx context.Context) error {
+					// "49 tiles" is the maximum number of layout tiles.
+					// It has nothing to do with the number of participants.
 					const expectedResult = "49 tiles"
 					sliderInfo, err := ui.Info(ctx, slider)
 					if err != nil {
@@ -595,11 +583,13 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 					return errors.Errorf("wrong tiles: got %q; want %q", value, expectedResult)
 				}
 
-				return ui.Retry(retryTimes, uiauto.Combine("set tiles",
-					skipPopupDialog,
+				return ui.Retry(retryTimes, uiauto.NamedCombine("set to max tiles",
 					ui.LeftClick(slider),
-					ui.WithInterval(shortUITimeout).RetryUntil(clickSliderToMax, isMaxTiles),
-				))(ctx)
+					// Some Duts don't capture the correct tile number.
+					// Turn down the number of tiles and try again.
+					uiauto.IfFailThen(
+						ui.WithInterval(500*time.Millisecond).RetryUntil(raiseTiles, isMaxTiles),
+						conf.kb.AccelAction("Left"))))(ctx)
 			}
 		}
 
@@ -641,7 +631,7 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 			conf.closeNotifDialog(),
 			openLayout,
 			selectLayout,
-			setTiles(mode),
+			setToMaxTiles(mode),
 			closePanel,
 			ui.Retry(5, checkTiledGrids(mode)),
 		)(ctx)
@@ -861,6 +851,17 @@ func (conf *GoogleMeetConference) DisplayAllParticipantsTime() time.Duration {
 }
 
 func (conf *GoogleMeetConference) closeNotifDialog() action.Action {
+	gotItButton := nodewith.Name("Got it").Role(role.Button).Ancestor(meetWebArea)
+	gotItPrompt := prompts.Prompt{
+		Name:              "Got it",
+		PromptFinder:      gotItButton,
+		ClearButtonFinder: gotItButton,
+	}
+
 	return uiauto.Retry(retryTimes,
-		prompts.ClearPotentialPrompts(conf.tconn, shortUITimeout, prompts.ShowNotificationsPrompt))
+		prompts.ClearPotentialPrompts(
+			conf.tconn,
+			shortUITimeout,
+			prompts.ShowNotificationsPrompt,
+			gotItPrompt))
 }
