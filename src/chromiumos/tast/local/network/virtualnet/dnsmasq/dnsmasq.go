@@ -38,6 +38,9 @@ address={{. -}}
 {{if .dns}}
 dhcp-option=option:dns-server,{{.dns}}
 {{end -}}
+{{if .search_list}}
+dhcp-option=option:domain-search,{{.search_list}}
+{{end -}}
 {{if .classless_static_routes}}
 dhcp-option=121,{{.classless_static_routes}}
 {{end -}}
@@ -76,6 +79,7 @@ type dnsmasq struct {
 	classlessStaticRoutes []Route
 	resolvedHosts         []ResolvedHost
 	dns                   []string
+	searchList            []string
 	enableDNS             bool
 	ifname                string
 	noIfname              bool
@@ -101,6 +105,14 @@ func WithDHCPServer(subnet *net.IPNet) Option {
 func WithDHCPNameServers(dns []string) Option {
 	return func(d *dnsmasq) {
 		d.dns = dns
+	}
+}
+
+// WithDHCPDomainSearchList configures the external DNS search lists which will
+// be broadcast as a DHCP option.
+func WithDHCPDomainSearchList(searchList []string) Option {
+	return func(d *dnsmasq) {
+		d.searchList = searchList
 	}
 }
 
@@ -215,6 +227,10 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 
 	if len(d.dns) > 0 {
 		confVals["dns"] = strings.Join(d.dns, ",")
+	}
+
+	if len(d.searchList) > 0 {
+		confVals["search_list"] = strings.Join(d.searchList, ",")
 	}
 
 	if len(d.wpad) > 0 {
