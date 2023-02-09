@@ -32,6 +32,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/dbus"
 	_ "chromiumos/tast/local/bundles/cros/debugd"
 	_ "chromiumos/tast/local/bundles/cros/demomode"
+	_ "chromiumos/tast/local/bundles/cros/deskapi"
 	_ "chromiumos/tast/local/bundles/cros/dev"
 	_ "chromiumos/tast/local/bundles/cros/diagnostics"
 	_ "chromiumos/tast/local/bundles/cros/dlp"
