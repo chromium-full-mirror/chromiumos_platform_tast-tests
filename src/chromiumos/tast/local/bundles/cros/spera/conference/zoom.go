@@ -7,8 +7,6 @@ package conference
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -18,8 +16,6 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -53,55 +49,17 @@ func (conf *ZoomConference) Join(ctx context.Context, room string) (err error) {
 	if err != nil {
 		return errors.Wrap(err, "failed to join zoom meeting")
 	}
+	expectedParticipants := ZoomRoomParticipants[conf.roomType]
 
-	// Checks the number of participants in the conference that
-	// for different tiers testing would ask for different size
-	checkParticipantsNum := func(ctx context.Context) error {
-		expectedParticipants := ZoomRoomParticipants[conf.roomType]
-		participants, err := conf.GetParticipants(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get the the number of meeting participants")
-		}
-		if int(participants) != expectedParticipants {
-			return errors.Wrapf(err, "meeting participant number is %d but %d is expected", participants, expectedParticipants)
-		}
-		testing.ContextLog(ctx, "Current participants: ", participants)
-		return nil
-	}
 	return uiauto.Combine("check participants and join audio",
-		// Sometimes participants number caught at the beginning is wrong, it will be correct after a while.
-		// Add retry to get the correct participants number.
-		ui.WithInterval(time.Second).Retry(10, checkParticipantsNum),
+		conf.zm.WaitParticipantsNum(expectedParticipants),
 		ui.Retry(retryTimes, conf.zm.SetJoinAudio(true)),
 	)(ctx)
 }
 
 // GetParticipants returns the number of meeting participants.
 func (conf *ZoomConference) GetParticipants(ctx context.Context) (int, error) {
-	ui := conf.ui
-
-	participant := nodewith.NameContaining("open the participants list pane").Role(role.Button)
-	noParticipant := nodewith.NameContaining("[0] particpants").Role(role.Button)
-	if err := uiauto.NamedCombine("wait participants",
-		ui.WaitUntilExists(participant),
-		ui.WithTimeout(mediumUITimeout).WaitUntilGone(noParticipant),
-	)(ctx); err != nil {
-		return 0, errors.Wrap(err, "failed to wait participant info")
-	}
-
-	node, err := ui.Info(ctx, participant)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get participant info")
-	}
-	testing.ContextLog(ctx, "Get participant info: ", node.Name)
-	info := strings.Split(node.Name, "[")
-	info = strings.Split(info[1], "]")
-	participants, err := strconv.ParseInt(info[0], 10, 64)
-	if err != nil {
-		return 0, errors.Wrap(err, "cannot parse number of participants")
-	}
-
-	return int(participants), nil
+	return conf.zm.GetParticipantsNum(ctx)
 }
 
 // SetLayoutMax sets the conference UI layout to max tiled grid.
