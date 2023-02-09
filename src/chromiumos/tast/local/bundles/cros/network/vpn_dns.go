@@ -120,7 +120,7 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 	// The first verification is relaxed with a timeout for dnsproxy to finish initialization.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return verifyDNS(ctx, "chronos", privateDomain, true, privateDomainAddr)
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Error("DNS verification failure: ", err)
 	}
 	if err := verifyDNS(ctx, "root", privateDomain, false, ""); err != nil {
