@@ -92,7 +92,7 @@ func init() {
 }
 
 const (
-	coldBootMax time.Duration = time.Second
+	coldBootMax time.Duration = 1100 * time.Millisecond
 	maxWaitTime time.Duration = 60 * time.Second
 )
 
