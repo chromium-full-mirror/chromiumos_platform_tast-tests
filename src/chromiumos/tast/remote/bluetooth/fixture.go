@@ -99,9 +99,13 @@ const (
 	tearDownTimeout = 70 * time.Second
 	postTestTimeout = 1 * time.Second
 
-	// btpeerTimeoutBuffer is added to fixture per btpeer expected to give
-	// additional time to manage each btpeer.
-	btpeerTimeoutBuffer = 15 * time.Second
+	// btpeerSetUpBuffer is added to the setup phase per btpeer expected to give
+	// additional time to set up each btpeer.
+	btpeerSetUpBuffer = 90 * time.Second
+
+	// btpeerResetBuffer is added to fixture per btpeer expected to give
+	// additional time to reset each btpeer.
+	btpeerResetBuffer = 15 * time.Second
 )
 
 func init() {
@@ -137,9 +141,9 @@ func init() {
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
 		Vars:            []string{fixtureVarBTPeers},
-		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
-		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
-		TearDownTimeout: tearDownTimeout + btpeerTimeoutBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -157,9 +161,9 @@ func init() {
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
 		Vars:            []string{fixtureVarBTPeers},
-		SetUpTimeout:    setUpTimeout + 2*btpeerTimeoutBuffer,
-		ResetTimeout:    resetTimeout + 2*btpeerTimeoutBuffer,
-		TearDownTimeout: tearDownTimeout + 2*btpeerTimeoutBuffer,
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -177,9 +181,9 @@ func init() {
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
 		Vars:            []string{fixtureVarBTPeers},
-		SetUpTimeout:    setUpTimeout + 3*btpeerTimeoutBuffer,
-		ResetTimeout:    resetTimeout + 3*btpeerTimeoutBuffer,
-		TearDownTimeout: tearDownTimeout + 3*btpeerTimeoutBuffer,
+		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -197,9 +201,9 @@ func init() {
 			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 		}),
 		Vars:            []string{fixtureVarBTPeers},
-		SetUpTimeout:    setUpTimeout + 4*btpeerTimeoutBuffer,
-		ResetTimeout:    resetTimeout + 4*btpeerTimeoutBuffer,
-		TearDownTimeout: tearDownTimeout + 4*btpeerTimeoutBuffer,
+		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -218,9 +222,9 @@ func init() {
 			EnableHidScreenOnOobe: true,
 		}),
 		Vars:            []string{fixtureVarBTPeers, fixtureVarSigninKey},
-		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
-		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
-		TearDownTimeout: tearDownTimeout + btpeerTimeoutBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -247,9 +251,9 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerTimeoutBuffer,
-		ResetTimeout:    resetTimeout + btpeerTimeoutBuffer,
-		TearDownTimeout: tearDownTimeout + btpeerTimeoutBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -278,9 +282,9 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    2*setUpTimeout + btpeerTimeoutBuffer,
-		ResetTimeout:    2*resetTimeout + btpeerTimeoutBuffer,
-		TearDownTimeout: 2*tearDownTimeout + btpeerTimeoutBuffer,
+		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer,
+		ResetTimeout:    2*resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: 2*tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: 2 * postTestTimeout,
 		ServiceDeps:     []string{serviceDepBTTestService, serviceDepChromeService},
 	})
@@ -738,26 +742,75 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			return errors.Wrapf(err, "failed to connect to btpeer host %q over ssh", host)
 		}
 
-		// Start collecting chameleond logs on the btpeer from chameleond.
-		logCollector, err := log.StartJournalctlCollector(ctx, sshConn, "--output", "short-full")
-		if err != nil {
-			return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", host)
+		var logCollector *log.JournalctlCollector
+		var chameleondPortForwarder *ssh.Forwarder
+		prepareBTPeerForChameleond := func() error {
+			var err error
+
+			// Start collecting chameleond logs on the btpeer from chameleond.
+			logCollector, err = log.StartJournalctlCollector(ctx, sshConn, "--output", "short-full")
+			if err != nil {
+				return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", host)
+			}
+
+			// Port forward chameleond port.
+			onFwdError := func(err error) {
+				testing.ContextLogf(ctx, "ssh forwarding error for btpeer host %q: %v", host, err)
+			}
+
+			chameleondPortForwarder, err = sshConn.ForwardLocalToRemote("tcp", "localhost:0", "localhost:9992", onFwdError)
+			if err != nil {
+				return errors.Wrapf(err, "failed to port forward chameleond port for btpeer host %q", host)
+			}
+			return nil
+		}
+		if err := prepareBTPeerForChameleond(); err != nil {
+			return err
 		}
 
-		// Port forward chameleond port.
-		onFwdError := func(err error) {
-			testing.ContextLogf(ctx, "ssh forwarding error for btpeer host %q: %v", host, err)
-		}
-		chameleondPortForwarder, err := sshConn.ForwardLocalToRemote("tcp", "localhost:0", "localhost:9992", onFwdError)
-		if err != nil {
-			return errors.Wrapf(err, "failed to port forward chameleond port for btpeer host %q", host)
-		}
-
-		// Connect chameleond client to forwarded port.
+		// Connect chameleond client to forwarded port. Reboot once if the first try
+		// fails, as sometimes the btpeer can be left in an unstable state.
 		testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q through forwarded chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
 		chameleondClient, err := chameleon.NewChameleond(ctx, chameleondPortForwarder.ListenAddr().String())
 		if err != nil {
-			return errors.Wrapf(err, "failed to connect to chameleond on btpeer host %q through forward chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
+			testing.ContextLogf(ctx, "Initial chameleond connection attempt for btpeer host %q failed, rebooting btpeer and retrying", host)
+
+			// Reboot, ignoring the ssh error that occurs due to severed connection.
+			_ = logCollector.Close()
+			_ = sshConn.CommandContext(ctx, "reboot").Run()
+
+			// Try to reconnect via ssh until successful.
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				var err error
+				sshConn, err = ssh.New(ctx, sshOptions)
+				if err != nil {
+					return errors.Wrapf(err, "failed to reconnect to btpeer host %q over ssh after reboot", host)
+				}
+				return nil
+			}, &testing.PollOptions{
+				Interval: 1 * time.Second,
+				Timeout:  1 * time.Minute,
+			}); err != nil {
+				return err
+			}
+
+			if err := prepareBTPeerForChameleond(); err != nil {
+				return err
+			}
+
+			// Try chameleond again with a short poll as ssh may come up before
+			// chameleond does.
+			testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q through forwarded chameleond port at %q after reboot", host, chameleondPortForwarder.ListenAddr().String())
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				var err error
+				chameleondClient, err = chameleon.NewChameleond(ctx, chameleondPortForwarder.ListenAddr().String())
+				return err
+			}, &testing.PollOptions{
+				Interval: 500 * time.Millisecond,
+				Timeout:  10 * time.Second,
+			}); err != nil {
+				return errors.Wrapf(err, "failed to connect to chameleond on btpeer host %q through forward chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
+			}
 		}
 
 		// Save btpeer companion for later use.
