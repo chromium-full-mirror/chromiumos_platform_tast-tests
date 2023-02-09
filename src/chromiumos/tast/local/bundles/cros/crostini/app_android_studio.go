@@ -126,7 +126,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	newProjectWindow := nodewith.NameStartingWith("My Application [~/AndroidStudioProjects/MyApplication]").Role(role.Window).First()
 	nextButton := uidetection.Word("Next")
 	finishButton := uidetection.Word("Finish")
-	ud := uidetection.NewDefault(tconn)
+	ud := uidetection.NewDefault(tconn).WithScreenshotResizing()
 	if err := uiauto.Combine("Create a new project with defaults",
 		// Two-letter words normally need an exact match.
 		ud.LeftClick(uidetection.Word("OK").ExactMatch()),
@@ -144,11 +144,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.LeftClick(finishButton),
 		ud.LeftClick(uidetection.TextBlock(strings.Split("Start a new Android Studio project", " "))),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Project Template", " "))),
-		// b/252698065, it always fail to find button Next in this step in voxel.
-		// Press enter to replacing clicking Next as Next is the default button on the page.
-		uiauto.IfFailThen(
-			ud.LeftClick(nextButton.WithinA11yNode(nodewith.Name("Create New Project").HasClass("Widget"))),
-			pressEnter(keyboard)),
+		ud.LeftClick(nextButton.WithinA11yNode(nodewith.Name("Create New Project").HasClass("Widget"))),
 		ud.LeftClick(finishButton),
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(newProjectWindow),
 	)(ctx); err != nil {
