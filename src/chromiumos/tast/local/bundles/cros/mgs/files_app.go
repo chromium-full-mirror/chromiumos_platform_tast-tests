@@ -6,23 +6,25 @@ package mgs
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/printpreview"
-	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/mgs"
 	"chromiumos/tast/testing"
 )
 
-const fileName = "chrome___dino_.pdf"
+const fileName = "files_app_chrome_dino.pdf"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -37,13 +39,14 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		Data:         []string{fileName},
 	})
 }
 
-// FilesApp Tests the Files App by:
-// 1. Starting a managed guest session (MGS).
-// 2. Opening chrome://dino and printing the page with Print to PDF
-// 3. Using the Files App to open the saved PDF file
+// FilesApp tests the Files App by:
+// 1. Starting a managed guest session (MGS)
+// 2. Copying the pdf file to Downloads
+// 3. Launching and using the Files App to open the PDF file
 // 4. Verifying the file is opened by checking the Gallery app is opened
 func FilesApp(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -59,35 +62,25 @@ func FilesApp(ctx context.Context, s *testing.State) {
 	}
 	defer mgs.Close(ctx)
 
-	if _, err := cr.NewConn(ctx, "chrome://dino"); err != nil {
-		s.Fatal("Failed to navigate: ", err)
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get the keyboard: ", err)
-	}
-	defer kb.Close()
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	ui := uiauto.New(tconn)
-	textInpt := nodewith.NameStartingWith(fileName).First()
-	saveBtn := nodewith.Name("Save").
-		Role(role.Button).
-		Ancestor(nodewith.Name("Save file as").Role(role.Window))
-	if err := uiauto.Combine("open Print Preview with shortcut Ctrl+P",
-		kb.AccelAction("Ctrl+P"),
-		printpreview.WaitForPrintPreview(tconn),
-		kb.AccelAction("enter"),
-		ui.WaitUntilExists(textInpt),
-		ui.WaitUntilExists(saveBtn),
-		ui.DoDefault(saveBtn),
-	)(ctx); err != nil {
-		s.Fatal("Failed to save to pdf: ", err)
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user's Download path: ", err)
+	}
+	// Clean up in the end.
+	defer func() {
+		if err := removeAllFilesInDirectory(downloadsPath); err != nil {
+			s.Error("Failed to clean up Downloads: ", err)
+		}
+	}()
+
+	if err := fsutil.CopyFile(
+		s.DataPath(fileName), filepath.Join(downloadsPath, fileName)); err != nil {
+		s.Fatal("Failed to copy file to Downloads: ", err)
 	}
 
 	fa, err := filesapp.Launch(ctx, tconn)
@@ -106,4 +99,20 @@ func FilesApp(ctx context.Context, s *testing.State) {
 	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Second*30); err != nil {
 		s.Fatal("Failed to check Gallery in shelf: ", err)
 	}
+}
+
+// removeAllFilesInDirectory removes all files in a directory.
+// TODO(b/268604942): Move to a common package and reuse it in tests.
+func removeAllFilesInDirectory(directory string) error {
+	files, err := ioutil.ReadDir(directory)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read files in %s", directory)
+	}
+	for _, f := range files {
+		path := filepath.Join(directory, f.Name())
+		if err := os.RemoveAll(path); err != nil {
+			return errors.Wrapf(err, "failed to RemoveAll(%q)", path)
+		}
+	}
+	return nil
 }
