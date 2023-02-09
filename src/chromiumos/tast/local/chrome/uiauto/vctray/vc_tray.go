@@ -33,6 +33,8 @@ var (
 	bgBlurOffButton   = nodewith.Name("Off").Role(role.Button).Ancestor(panelSection)
 	bgBlurLightButton = nodewith.Name("Light").Role(role.Button).Ancestor(panelSection)
 	bgBlurFullButton  = nodewith.Name("Full").Role(role.Button).Ancestor(panelSection)
+
+	showAppsButton = nodewith.Name("Show apps").Role(role.Button).Ancestor(panelSection)
 )
 
 // VCTray represents the type of video conference tray.
@@ -116,4 +118,29 @@ func (vcTray VCTray) SwitchPortraitRelighting() action.Action {
 // SwitchLiveCaption switches on/off the Live Caption option.
 func (vcTray VCTray) SwitchLiveCaption() action.Action {
 	return vcTray.ui.DoDefault(liveCaptionButton)
+}
+
+// ReturnToApp returns an action returning to the VC app.
+func (vcTray VCTray) ReturnToApp(appName string) action.Action {
+	appFinder := nodewith.NameContaining(appName).Role(role.Button).Ancestor(panelSection)
+
+	return func(ctx context.Context) error {
+		// Multiple VC apps are hidden inside the app list.
+		// Click "Show apps" arrow button will expand the list.
+		foundFinder, err := vcTray.ui.FindAnyExists(ctx, showAppsButton, appFinder)
+		if err != nil {
+			return errors.Wrap(err, "failed to find vc app/section")
+		}
+
+		if foundFinder == showAppsButton {
+			if err := vcTray.ui.DoDefaultUntil(
+				showAppsButton,
+				vcTray.ui.WithTimeout(3*time.Second).WaitUntilExists(appFinder),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to expand app list")
+			}
+		}
+
+		return vcTray.ui.DoDefault(appFinder)(ctx)
+	}
 }
