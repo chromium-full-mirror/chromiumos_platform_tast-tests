@@ -572,9 +572,10 @@ func (vkbCtx *VirtualKeyboardContext) SelectFromSuggestionIgnoringCase(candidate
 }
 
 func (vkbCtx *VirtualKeyboardContext) selectFromSuggestionFunc(candidateText string, ignoringCase bool) uiauto.Action {
-	suggestionFinder := KeyFinder.Name(candidateText).HasClass("sk")
+	suggestionFinder := KeyFinder.NameRegex(regexp.MustCompile("(word suggestion )?" + candidateText)).HasClass("sk")
 	if ignoringCase {
-		suggestionFinder = KeyByNameIgnoringCase(candidateText).HasClass("sk")
+		suggestionFinder = KeyFinder.NameRegex(regexp.MustCompile(`((?i)^` + regexp.QuoteMeta(candidateText) + `$)|((?i)^word suggestion ` + regexp.QuoteMeta(candidateText) + `$))`)).HasClass("sk")
+
 	}
 	opts := testing.PollOptions{Timeout: 3 * time.Second, Interval: 500 * time.Millisecond}
 	ac := vkbCtx.ui.WithPollOpts(opts)
