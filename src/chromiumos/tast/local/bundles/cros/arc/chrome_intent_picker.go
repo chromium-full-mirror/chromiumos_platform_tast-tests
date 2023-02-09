@@ -107,13 +107,11 @@ func ChromeIntentPicker(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 
 	// Locate and left click on the Intent Picker button in Chrome omnibox.
-	intentPicker := nodewith.ClassName("IntentPickerView").Role(role.Button)
-	appLabel := nodewith.Name(appName).Role(role.Button)
+	intentPicker := nodewith.Name("Open in app").Role(role.Button)
 	openButton := nodewith.Name("Open").Role(role.Button)
 	ui := uiauto.New(tconn).WithInterval(arcChromeIntentPickerPollInterval)
 	if err := uiauto.Combine("",
 		ui.LeftClick(intentPicker),
-		ui.LeftClick(appLabel),
 		ui.LeftClick(openButton))(ctx); err != nil {
 		s.Fatal("Failed to click intent picker button: ", err)
 	}
