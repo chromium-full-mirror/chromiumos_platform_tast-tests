@@ -440,6 +440,12 @@ func (c *Connection) Cleanup(ctx context.Context) error {
 		}
 	}
 
+	// Makes sure charon is stopped for IPsec-based VPNs.
+	if err := waitForCharonExitOrKill(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for charon to stop: ", err)
+		lastErr = err
+	}
+
 	return lastErr
 }
 

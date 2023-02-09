@@ -20,26 +20,52 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// checkPidExists returns if the process with the pid stored in |pidFile| is
-// still running. Returns false if |pidFile| does not exist.
-func checkPidExists(pidFile string) (bool, error) {
+const charonExitTimeout = 5 * time.Second
+
+// waitForCharonExitOrKill waits until the charon process stopped after the
+// disconnection of an strongswan-based connection. If the connection is not
+// strongswan-based, returns nil immediately. If the charon process is still
+// running after charonExitTimeout, this function will kill it directly and
+// return an error. Reasons that this function is needed: 1) a leftover charon
+// process may affect the following tests; 2) shill is supposed to stop the
+// charon process properly after VPN is disconnected, if the charon process is
+// still running after the test, it probably indicates an issue in shill or
+// shill has crashed.
+func waitForCharonExitOrKill(ctx context.Context) error {
+	const pidFile = "/run/ipsec/charon.pid"
+
+	// Assume charon is not running and return nil directly if either 1) pid file
+	// does not exist, or 2) pid file does not contain a valid pid number.
 	pidStr, err := ioutil.ReadFile(pidFile)
-	if err != nil && errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
 	if err != nil {
-		return false, err
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
 	}
 	pid, err := strconv.Atoi(strings.TrimRight(string(pidStr), "\n"))
 	if err != nil {
-		return false, err
+		testing.ContextLogf(ctx, "Charon pid file has content `%s`, assume it is not running", string(pidStr))
+		return nil
 	}
-	process, err := os.FindProcess(int(pid))
+
+	process, err := os.FindProcess(pid)
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to find process: %d", pid)
+		return errors.Wrapf(err, "failed to find process: %d", pid)
 	}
-	err = process.Signal(unix.Signal(0))
-	return err == nil, nil
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := process.Signal(unix.Signal(0)); err == nil {
+			return errors.New("charon is still running")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: charonExitTimeout}); err == nil {
+		return nil
+	}
+
+	process.Kill()
+	process.Wait()
+	return errors.New("charon is still running")
 }
 
 // RemoveVPNProfile removes the VPN service with |name| if it exists in a

@@ -33,6 +33,7 @@ func init() {
 			"cros-networking@google.com", // platform networking team
 		},
 		SetUpTimeout:    shill.ResetShillTimeout + 5*time.Second,
+		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    shill.ResetShillTimeout + 5*time.Second,
 		TearDownTimeout: shill.ResetShillTimeout + 5*time.Second,
 		Impl:            &vpnFixture{useCert: false, useCr: false},
@@ -45,6 +46,7 @@ func init() {
 			"cros-networking@google.com", // platform networking team
 		},
 		SetUpTimeout:    shill.ResetShillTimeout + certOpTimeout + 5*time.Second,
+		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    shill.ResetShillTimeout + 5*time.Second,
 		TearDownTimeout: shill.ResetShillTimeout + certOpTimeout + 5*time.Second,
 		Impl:            &vpnFixture{useCert: true, useCr: false},
@@ -57,6 +59,7 @@ func init() {
 			"cros-networking@google.com", // platform networking team
 		},
 		SetUpTimeout:    shill.ResetShillTimeout + certOpTimeout + chrome.LoginTimeout + 5*time.Second,
+		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    shill.ResetShillTimeout + chrome.ResetTimeout + 5*time.Second,
 		TearDownTimeout: shill.ResetShillTimeout + certOpTimeout + chrome.LoginTimeout + 5*time.Second,
 		Impl:            &vpnFixture{useCert: true, useCr: true},
@@ -216,6 +219,9 @@ func (f *vpnFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func (f *vpnFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := waitForCharonExitOrKill(ctx); err != nil {
+		s.Error("Failed to wait for charon to stop: ", err)
+	}
 	f.hasError = s.HasError()
 	if err := f.stopLogSaver(ctx, "net.log"); err != nil {
 		s.Error("Failed to stop log saver: ", err)
