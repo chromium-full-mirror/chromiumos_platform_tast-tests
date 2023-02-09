@@ -64,7 +64,7 @@ func (r *radvd) Start(ctx context.Context, env *env.Env) error {
 		"prefix": r.prefix.String(),
 	}
 	if len(r.dns) > 0 {
-		confVals["dns"] = strings.Join(r.dns, ",")
+		confVals["dns"] = strings.Join(r.dns, " ")
 	}
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(confTemplate)).Execute(b, confVals)
