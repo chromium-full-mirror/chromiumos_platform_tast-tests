@@ -126,6 +126,7 @@ func writeTestExtension(dir, key, extraBgJs, clientID string) (id string, err er
     "browsingData",
     "clipboardRead",
     "clipboardWrite",
+    "contentSettings",
     "desktopCapture",
     "feedbackPrivate",
     "fontSettings",

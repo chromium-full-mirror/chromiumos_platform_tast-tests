@@ -80,8 +80,8 @@ func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) erro
 	signInArea := nodewith.NameContaining("Google").Role(role.RootWebArea)
 	// Use First() to select the first account in the account list.
 	accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@.*.com")).Role(role.Link).Ancestor(signInArea).First()
-	return ui.LeftClickUntil(accountSelectLink,
-		ui.WithTimeout(shortUITimeout).WaitUntilGone(accountSelectLink))(ctx)
+	return ui.WithTimeout(mediumUITimeout).LeftClickUntil(accountSelectLink,
+		ui.WaitUntilGone(accountSelectLink))(ctx)
 }
 
 func createAccount(ctx context.Context, tconn *chrome.TestConn) error {
@@ -217,5 +217,16 @@ func allowPerm(tconn *chrome.TestConn) action.Action {
 		// Check the spinner image to quickly determine if it requires permission to allow microphone and camera.
 		uiauto.IfSuccessThen(checkSpinnerImageExists, allowPermissions),
 		apps.AllowPagePermissions(tconn),
+	)
+}
+
+// GrantPermissions grants Microphone, Camera and Notifications permissions to Zoom.
+func GrantPermissions(ctx context.Context, br *browser.Browser) error {
+	zoomURLPatterns := []string{"*://zoom.us/*", "*://*.zoom.us/*"}
+
+	return br.GrantPermissions(ctx, zoomURLPatterns,
+		browser.CameraContentSetting,
+		browser.MicrophoneContentSetting,
+		browser.NotificationsContentSetting,
 	)
 }

@@ -416,3 +416,13 @@ func (gm *GoogleMeet) joinConference(ctx context.Context) error {
 func (gm *GoogleMeet) waitUntilInMeeting(ctx context.Context) error {
 	return gm.ui.WithTimeout(mediumUITimeout).WaitUntilExists(inMeetingIdentifier)(ctx)
 }
+
+// GrantPermissions grants Microphone, Camera and Notifications permissions to Google Meet.
+func GrantPermissions(ctx context.Context, br *browser.Browser) error {
+	meetURLPatterns := []string{"*://meet.google.com/*"}
+	return br.GrantPermissions(ctx, meetURLPatterns,
+		browser.CameraContentSetting,
+		browser.MicrophoneContentSetting,
+		browser.NotificationsContentSetting,
+	)
+}

@@ -7,6 +7,7 @@ package zoom
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
@@ -62,7 +63,7 @@ func (zm *Zoom) SetJoinAudio(expectedValue bool) action.Action {
 	ui := zm.ui
 	joinAudioByComputerButton := nodewith.Name("Join Audio by Computer").Role(role.Button)
 	closeButton := nodewith.Name("close").HasClass("join-dialog__close").Role(role.Button)
-	joinAudioButton := nodewith.Name("Join Audio").Role(role.Button).Focusable()
+	joinAudioButton := nodewith.Name("join audio").Role(role.Button).Focusable()
 	dismissJoinAudioDialog := ui.DoDefaultUntil(
 		closeButton,
 		ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton))
@@ -89,8 +90,8 @@ func (zm *Zoom) SetJoinAudio(expectedValue bool) action.Action {
 		}
 
 		// Check whether `Join audio dialog` is automatically shown up.
-		// This can add 3s wait time if user decides to join audio after initial setup. But it is unusual.
-		if err := ui.WithTimeout(shortUITimeout).WaitUntilExists(joinAudioByComputerButton)(ctx); err != nil {
+		// This can add 10s wait time if user decides to join audio after initial setup. But it is unusual.
+		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(joinAudioByComputerButton)(ctx); err != nil {
 			if !expectedValue {
 				testing.ContextLog(ctx, "Audio is not joined")
 				return nil

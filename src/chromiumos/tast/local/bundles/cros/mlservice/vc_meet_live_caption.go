@@ -140,6 +140,10 @@ func VCMeetLiveCaption(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
+	if err := googlemeet.GrantPermissions(ctx, br); err != nil {
+		s.Fatal("Failed to grant permissions to Meet: ", err)
+	}
+
 	var gm *googlemeet.GoogleMeet
 	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
 		gm, err = googlemeet.JoinMeetingUsingPWA(ctx, cr, br, meetingCode)

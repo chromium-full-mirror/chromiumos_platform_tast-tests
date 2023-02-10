@@ -94,6 +94,8 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+
 	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
 
 	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
@@ -101,6 +103,10 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(cleanupCtx)
+
+	if err := zoom.GrantPermissions(ctx, br); err != nil {
+		s.Fatal("Failed to grant permissions to Meet: ", err)
+	}
 
 	var zm *zoom.Zoom
 
@@ -114,7 +120,7 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 	}
 	defer zm.Close(cleanupCtx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_zoom")
 
 	if err := zm.SwitchVideo(true)(ctx); err != nil {
 		s.Fatal("Failed to switch on camera: ", err)
