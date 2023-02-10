@@ -649,3 +649,14 @@ func (its *InputsTestServer) ValidateResult(inputField InputField, expectedText 
 	}
 	return validateField
 }
+
+// Conn returns the browser driver used in the test page.
+func (its *InputsTestServer) Conn() *chrome.Conn {
+	return its.pc
+}
+
+// RetrieveTextSelectionInfo is a wrapper of uiauto.RetrieveTextSelectionInfo
+// to simplify the use for inputs tests.
+func (its *InputsTestServer) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.Conn, inputField InputField) (*uiauto.TextSelectionInfo, error) {
+	return its.ui.RetrieveTextSelectionInfo(ctx, its.pc, inputField.Finder())
+}

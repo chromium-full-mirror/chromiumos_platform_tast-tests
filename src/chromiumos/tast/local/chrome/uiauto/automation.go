@@ -500,6 +500,74 @@ func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, 
 	return &out, nil
 }
 
+// SelectText returns an action that selects text in the range
+// [startIndex, endIndex) given an editable text finder.
+// This is done via mouse actions.
+func (ac *Context) SelectText(finder *nodewith.Finder, startIndex, endIndex int) Action {
+	return func(ctx context.Context) error {
+		if startIndex >= endIndex {
+			return errors.Errorf("invalid startIndex(%d) and endIndex(%d): startIndex must be less than endIndex", startIndex, endIndex)
+		}
+		textBounds, err := ac.BoundsForRange(ctx, finder, startIndex, endIndex)
+		if err != nil {
+			return errors.Wrap(err, "failed to get text location")
+		}
+		return Combine(
+			"Select text via mouse",
+			mouse.Move(ac.tconn, textBounds.LeftCenter(), 200*time.Millisecond),
+			mouse.Press(ac.tconn, mouse.LeftButton),
+			mouse.Move(ac.tconn, textBounds.RightCenter(), 200*time.Millisecond),
+			mouse.Release(ac.tconn, mouse.LeftButton),
+		)(ctx)
+	}
+}
+
+// TextSelectionInfo represents the data in text selection.
+type TextSelectionInfo struct {
+	// Start index of the selection range, inclusively.
+	StartIndex int `json:"start_index"`
+	// End index of the selection range, exclusively.
+	EndIndex int `json:"end_index"`
+	// String value of the text selection.
+	Text string `json:"text"`
+}
+
+// RetrieveTextSelectionInfo retrieves the text selection info given an
+// editable text finder.
+func (ac *Context) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.Conn, finder *nodewith.Finder) (*TextSelectionInfo, error) {
+	nodeInfo, err := New(ac.tconn).Info(ctx, finder)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve node info")
+	}
+
+	result := &TextSelectionInfo{}
+	query := `
+		(ariaLabel) => {
+			const node = document.querySelectorAll('[aria-label="' + ariaLabel + '"')[0];
+			const startIndex = node.selectionStart
+			const endIndex = node.selectionEnd
+			if (startIndex === null || endIndex === null) {
+				throw 'Either startIndex or endIndex is null'
+			}
+			if (startIndex > endIndex) {
+				throw 'Invalid startIndex(' + startIndex + ') and endIndex(' + endIndex + '): startIndex must be less than endIndex'
+			}
+			if (startIndex === endIndex) {
+				throw 'There is no text in selection'
+			}
+			return {
+				"start_index": startIndex,
+				"end_index": endIndex,
+				"text": node.value.substring(startIndex, endIndex)
+			}
+		}
+	`
+	if err := conn.Call(ctx, result, query, nodeInfo.HTMLAttributes["aria-label"]); err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve text selection info via JS")
+	}
+	return result, nil
+}
+
 // WaitUntilExists returns a function that waits until the node found by the input finder exists.
 func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
