@@ -37,6 +37,7 @@ func init() {
 		Attr:         []string{"group:wificell"},
 		ServiceDeps:  []string{wificell.TFServiceName},
 		Fixture:      "wificellFixt",
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
 		Params: []testing.Param{
 			{
 				Name:      "80211g",
@@ -46,6 +47,7 @@ func init() {
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211g)}},
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(11), hostapd.Mode(hostapd.Mode80211g)}},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 			},
 			{
 				Name:      "80211n24ht40",
@@ -56,6 +58,7 @@ func init() {
 						apOps:        []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211nPure), hostapd.HTCaps(hostapd.HTCapHT40)},
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 			},
 			{
 				Name:      "80211n5ht40",
@@ -66,6 +69,7 @@ func init() {
 						apOps:        []hostapd.Option{hostapd.Channel(48), hostapd.Mode(hostapd.Mode80211nPure), hostapd.HTCaps(hostapd.HTCapHT40Minus)},
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 			},
 			{
 				Name:      "80211acvht80",
@@ -79,6 +83,7 @@ func init() {
 						},
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 			},
 			{
 				Name:      "hidden",
@@ -88,6 +93,7 @@ func init() {
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(36), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20)}},
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(48), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20)}},
 				},
+				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 			},
 			{
 				Name:      "wpa2",
@@ -99,7 +105,7 @@ func init() {
 						secConfFac:   wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					},
 				},
-				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
+				ExtraRequirements: []string{tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, tdreq.WiFiSecSupportWPA2Personal},
 			},
 			{
 				Name:      "stress_80211n24ht40",
@@ -111,7 +117,7 @@ func init() {
 						apOps:        []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211nPure), hostapd.HTCaps(hostapd.HTCapHT40)},
 					},
 				},
-				ExtraRequirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassStress, tdreq.WiFiProcPassStressBeforeUpdates},
+				ExtraRequirements: []string{tdreq.WiFiProcPassStress, tdreq.WiFiProcPassStressBeforeUpdates},
 			},
 			{
 				Name:      "stress_wpa2",
@@ -124,7 +130,7 @@ func init() {
 						secConfFac:   wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					},
 				},
-				ExtraRequirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassStress, tdreq.WiFiProcPassStressBeforeUpdates},
+				ExtraRequirements: []string{tdreq.WiFiProcPassStress, tdreq.WiFiProcPassStressBeforeUpdates},
 			},
 		},
 	})
