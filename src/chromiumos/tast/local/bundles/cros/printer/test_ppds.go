@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -37,6 +38,8 @@ func init() {
 		// This may take a while on slower boards.
 		Timeout:      time.Minute * 9,
 		SoftwareDeps: []string{"cros_internal", "cups"},
+		// TODO(b/267797274): Restore elm if the test can be sped up.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("elm")),
 		Data:         []string{ppdsAll},
 	})
 }
