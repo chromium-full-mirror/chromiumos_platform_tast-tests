@@ -34,6 +34,22 @@ func SaveScreenshotToFileOnError(ctx context.Context, cr *chrome.Chrome, outDir 
 		return
 	}
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to obtain test API conn to check the existence of external displays: ", err)
+		return
+	}
+
+	SaveScreenshotToFileWithTestAPIOnError(ctx, tconn, outDir, hasError, fileName)
+}
+
+// SaveScreenshotToFileWithTestAPIOnError checks the given hasError function and takes screenshot into a file 'fileName' when the test fails.
+// It does nothing when the test succeeds.
+func SaveScreenshotToFileWithTestAPIOnError(ctx context.Context, tconn *chrome.TestConn, outDir string, hasError func() bool, fileName string) {
+	if !hasError() {
+		return
+	}
+
 	dir := filepath.Join(outDir, faillogDir)
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		testing.ContextLogf(ctx, "Failed to create directory %s: %v", dir, err)
@@ -43,18 +59,13 @@ func SaveScreenshotToFileOnError(ctx context.Context, cr *chrome.Chrome, outDir 
 	screenshotFile := filepath.Join(dir, fileName)
 	testing.ContextLog(ctx, "Test failed. Saving screenshot to ", screenshotFile)
 	// Take screenshot for internal display.
-	if err := screenshot.CaptureChrome(ctx, cr, screenshotFile); err != nil {
+	if err := screenshot.CaptureChromeWithTestAPI(ctx, tconn, screenshotFile); err != nil {
 		testing.ContextLog(ctx, "Failed to take screenshot: ", err)
 		// Return on error whithout further trying external displays.
 		return
 	}
 
 	// Get display info and take screenshots for external displays.
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to obtain test API conn to check the existence of external displays: ", err)
-		return
-	}
 	displayInfos, err := display.GetInfo(ctx, tconn)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get display info: ", err)
@@ -68,7 +79,7 @@ func SaveScreenshotToFileOnError(ctx context.Context, cr *chrome.Chrome, outDir 
 		fileNameDisplay := fmt.Sprintf("%s-display-%s.png", baseName, info.ID)
 		screenshotFileDisplay := filepath.Join(dir, fileNameDisplay)
 		testing.ContextLogf(ctx, "Saving screenshot of display %q to %s", info.ID, screenshotFileDisplay)
-		if err := screenshot.CaptureChromeForDisplay(ctx, cr, info.ID, screenshotFileDisplay); err != nil {
+		if err := screenshot.CaptureChromeForDisplayWithTestAPI(ctx, tconn, info.ID, screenshotFileDisplay); err != nil {
 			testing.ContextLogf(ctx, "Failed to capture screenshot for display %q: %v", info.ID, err)
 		}
 	}

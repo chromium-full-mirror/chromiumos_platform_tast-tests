@@ -20,18 +20,26 @@ const (
 	uiTreeFileName = "ui_tree.txt"
 )
 
+// DumpUITreeWithScreenshotWithTestAPIOnError checks the given hasError function and dumps the whole UI tree data
+// into 'filePrefix'.txt and a screenshot into 'filePrefix'.png when the test fails. It does nothing when the test succeeds.
+func DumpUITreeWithScreenshotWithTestAPIOnError(ctx context.Context, outDir string, hasError func() bool, tconn *chrome.TestConn, filePrefix string) {
+	SaveScreenshotToFileWithTestAPIOnError(ctx, tconn, outDir, hasError, filePrefix+".png")
+	DumpUITreeOnErrorToFile(ctx, outDir, hasError, tconn, filePrefix+".txt")
+}
+
 // DumpUITreeWithScreenshotOnError checks the given hasError function and dumps the whole UI tree data
 // into 'filePrefix'.txt and a screenshot into 'filePrefix'.png when the test fails. It does nothing when the test succeeds.
 func DumpUITreeWithScreenshotOnError(ctx context.Context, outDir string, hasError func() bool, cr *chrome.Chrome, filePrefix string) {
-	SaveScreenshotToFileOnError(ctx, cr, outDir, hasError, filePrefix+".png")
+	if !hasError() {
+		return
+	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to obtain test API conn to dump UI tree: ", err)
 		return
 	}
-
-	DumpUITreeOnErrorToFile(ctx, outDir, hasError, tconn, filePrefix+".txt")
+	DumpUITreeWithScreenshotWithTestAPIOnError(ctx, outDir, hasError, tconn, filePrefix)
 }
 
 // DumpUITreeOnError dumps tree to 'ui_tree.txt', when the test fails.

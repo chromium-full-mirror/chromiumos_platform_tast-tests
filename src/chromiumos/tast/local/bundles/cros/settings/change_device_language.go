@@ -40,7 +40,11 @@ func ChangeDeviceLanguage(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(cleanupCtx)
+	defer func() {
+		if cr != nil {
+			cr.Close(cleanupCtx)
+		}
+	}()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -57,12 +61,18 @@ func ChangeDeviceLanguage(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open language page: ", err)
 	}
-	defer settings.Close(cleanupCtx)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer func() {
+		defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_dump")
+	}()
 
 	if err := settings.ChangeDeviceLanguageAndRestart(ctx, tconn, languageSearchKeyboard, languageUniqueIdentifier); err != nil {
 		s.Fatal("Failed to change device language: ", err)
 	}
+
+	// Close Chrome to do some cleanup.
+	// It will log some errors, as the session is closed already.
+	cr.Close(ctx)
+	cr = nil
 
 	// Sleep a short time to ensure reboot button is safely clicked.
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
@@ -75,7 +85,6 @@ func ChangeDeviceLanguage(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome after changing device language: ", err)
 	}
-	defer cr.Close(cleanupCtx)
 
 	tconn, err = cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {

@@ -71,7 +71,11 @@ func Logout(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
-	defer cr.Close(cleanupCtx)
+	defer func() {
+		if cr != nil {
+			cr.Close(cleanupCtx)
+		}
+	}()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -84,7 +88,9 @@ func Logout(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "logout")
+	defer func() {
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "logout")
+	}()
 
 	sm, err := session.NewSessionManager(ctx)
 	if err != nil {
@@ -117,6 +123,11 @@ func Logout(ctx context.Context, s *testing.State) {
 		s.Fatal("Didn't get SessionStateChanged signal: ", ctx.Err())
 	}
 
+	// Close Chrome to do some cleanup.
+	// It will log some errors, as the session is closed already.
+	cr.Close(ctx)
+	cr = nil
+
 	if cr, err = chrome.New(ctx,
 		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
 		chrome.NoLogin(),
@@ -125,7 +136,6 @@ func Logout(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Failed to restart Chrome for testing: ", err)
 	}
-	defer cr.Close(cleanupCtx)
 
 	if tconn, err = cr.SigninProfileTestAPIConn(ctx); err != nil {
 		s.Fatal("Failed to re-establish test API connection")

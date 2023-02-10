@@ -52,9 +52,7 @@ func CaptureChrome(ctx context.Context, cr *chrome.Chrome, path string) error {
 	if err != nil {
 		return err
 	}
-	return captureInternal(ctx, path, func(code string, out interface{}) error {
-		return tconn.Eval(ctx, code, out)
-	})
+	return CaptureChromeWithTestAPI(ctx, tconn, path)
 }
 
 // CaptureChromeWithSigninProfile takes a screenshot of the primary display and saves it as a PNG
@@ -65,6 +63,12 @@ func CaptureChromeWithSigninProfile(ctx context.Context, cr *chrome.Chrome, path
 	if err != nil {
 		return err
 	}
+	return CaptureChromeWithTestAPI(ctx, tconn, path)
+}
+
+// CaptureChromeWithTestAPI takes a screenshot of the primary display and saves it as a PNG
+// image to the specified file path. It will use Test API to perform the screen capture.
+func CaptureChromeWithTestAPI(ctx context.Context, tconn *chrome.TestConn, path string) error {
 	return captureInternal(ctx, path, func(code string, out interface{}) error {
 		return tconn.Eval(ctx, code, out)
 	})
@@ -145,6 +149,12 @@ func CaptureChromeForDisplay(ctx context.Context, cr *chrome.Chrome, displayID, 
 	if err != nil {
 		return err
 	}
+	return CaptureChromeForDisplayWithTestAPI(ctx, tconn, displayID, path)
+}
+
+// CaptureChromeForDisplayWithTestAPI takes a screenshot for a given displayID and saves it as a PNG
+// image to the specified file path. It will use Test API to perform the screen capture.
+func CaptureChromeForDisplayWithTestAPI(ctx context.Context, tconn *chrome.TestConn, displayID, path string) error {
 	var base64PNG string
 	if err := tconn.Call(ctx, &base64PNG, "tast.promisify(chrome.autotestPrivate.takeScreenshotForDisplay)", displayID); err != nil {
 		return err
