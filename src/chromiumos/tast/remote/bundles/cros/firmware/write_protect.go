@@ -48,7 +48,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      25 * time.Minute,
+		Timeout:      35 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:    "dev_mode_read_write",
@@ -131,6 +131,7 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer func(ctx context.Context) {
 		s.Log("Make sure DUT is connected")
+		h.DisconnectDUT(ctx)
 		if err := h.WaitConnect(ctx); err != nil {
 			s.Fatal("Failed to connect to the DUT: ", err)
 		}
@@ -140,10 +141,6 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to delete temp dir: ", err)
 		}
 	}(cleanupContext)
-
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
 
 	switch testType {
 	case readWriteTest: // Test flashrom read/write with/without WP.
@@ -173,11 +170,16 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (reterr error) {
 	// Only restore firmware if it was unexpectedly corrupted.
 	needsRestore := false
+
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		return errors.Wrap(err, "failed requiring BiosServiceClient")
+	}
+
 	testing.ContextLog(ctx, "Read current fw image")
 	roBefore, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
 		Section:    wpTargetToRegion[target],
 		Programmer: wpTargetToProg[target],
-		Path:       wpTmpDirPath,
+		Path:       "/usr/local/share/tast/",
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to save current fw image")
@@ -188,6 +190,7 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 	defer cancel()
 	defer func(ctx context.Context) {
 		testing.ContextLog(ctx, "Make sure DUT is connected")
+		h.DisconnectDUT(ctx)
 		if err := h.WaitConnect(ctx); err != nil {
 			reterr = errors.Wrap(err, "failed to connect to the DUT")
 		}
@@ -198,6 +201,10 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 		}
 
 		if needsRestore {
+			if err := h.RequireBiosServiceClient(ctx); err != nil {
+				reterr = errors.Wrap(err, "failed requiring BiosServiceClient")
+			}
+
 			testing.ContextLog(ctx, "Fw may have been modified, restore original fw from backup: ", roBefore.Path)
 			if _, err := h.BiosServiceClient.RestoreImageSection(ctx, roBefore); err != nil {
 				reterr = errors.Wrap(err, "failed to restore fw image")
@@ -210,6 +217,10 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 		return errors.Wrap(err, "failed to set FW write protect state")
 	}
 
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		return errors.Wrap(err, "failed requiring BiosServiceClient")
+	}
+
 	needsRestore = true // In case flashrom completes a partial write but still has errors.
 	testing.ContextLog(ctx, "Attempt to overwrite fw with write protect enabled")
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{
@@ -217,10 +228,6 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 		Programmer: wpTargetToProg[target],
 	}); err == nil {
 		return errors.Wrap(err, "expected flashrom write to fail since wp is enabled")
-	}
-
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the bios service on the DUT")
 	}
 
 	testing.ContextLog(ctx, "Read fw, make sure write didn't succeed with wp enabled")
@@ -252,62 +259,46 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 
 func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool) error {
 	enableStr := "enable"
-	fwwpState := servo.FWWPStateOn
+	apWPFunc := fwUtils.APSoftwareWriteProtectEnable
 	if !enable {
 		enableStr = "disable"
-		fwwpState = servo.FWWPStateOff
+		apWPFunc = fwUtils.APSoftwareWriteProtectDisable
 	}
 
-	if target == targetBIOS {
-		// Make sure hardware wp is disabled for now so flashrom cmd can run.
-		if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
-			// If fw wp is enabled or unknown, disable and reboot so ap wp can be changed.
-			if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-				return errors.Wrap(err, "failed to disable firmware write protect")
-			}
+	// Make sure hardware wp is disabled for now so flashrom cmd can run.
+	if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
+		// If fw wp is enabled or unknown, disable and reboot so ap wp can be changed.
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			return errors.Wrap(err, "failed to disable firmware write protect")
 		}
 
-		// Make sure fwwpstate is set and reconnect dut to ssh and biosserviceclient.
+		// Make sure fwwpstate is set and reconnect dut to ssh.
 		if err := performModeAwareReboot(ctx, h); err != nil {
 			return errors.Wrap(err, "failed to perform mode aware reboot")
 		}
 
+		h.DisconnectDUT(ctx)
 		if err := h.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to connect to the DUT")
 		}
+	}
 
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to the bios service on the DUT")
-		}
-
-		if _, err := h.BiosServiceClient.SetAPSoftwareWriteProtect(ctx, &pb.WPRequest{Enable: enable}); err != nil {
-			return errors.Wrapf(err, "failed to %s AP write protection", enableStr)
-		}
-
-		if enable {
-			// If !enable, fwwp is already disabled from earlier.
-			if err := h.Servo.SetFWWPState(ctx, fwwpState); err != nil {
-				return errors.Wrapf(err, "failed to %s firmware write protect", enableStr)
-			}
+	if target == targetBIOS {
+		testing.ContextLog(ctx, "Enable AP write protect")
+		if err := apWPFunc(ctx, h.DUT.Conn()); err != nil {
+			return errors.Wrapf(err, "failed to set AP wp to %s", enableStr)
 		}
 
 	} else {
-		// Enable software wp before hardware wp if enabling.
-		if enable {
-			if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
-				return errors.Wrap(err, "failed to enable flashwp")
-			}
+		// Enable/disable EC WP.
+		if err := h.Servo.RunECCommand(ctx, fmt.Sprintf("flashwp %v", enableStr)); err != nil {
+			return errors.Wrapf(err, "failed to %s flashwp", enableStr)
 		}
+	}
 
-		if err := h.Servo.SetFWWPState(ctx, fwwpState); err != nil {
+	if enable {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
 			return errors.Wrapf(err, "failed to %s firmware write protect", enableStr)
-		}
-
-		// Disable software wp after hardware wp so its allowed.
-		if !enable {
-			if err := h.Servo.RunECCommand(ctx, "flashwp disable"); err != nil {
-				return errors.Wrap(err, "failed to disable flashwp")
-			}
 		}
 	}
 
@@ -315,13 +306,6 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 		return errors.Wrap(err, "failed to perform mode aware reboot")
 	}
 
-	if err := h.DUT.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the DUT")
-	}
-
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the bios service on the DUT")
-	}
 	return nil
 }
 
@@ -351,11 +335,6 @@ func testWPOverReboot(ctx context.Context, h *firmware.Helper, target wpTarget, 
 		return errors.Wrap(err, "failed to enable FW write protect state")
 	}
 	defer func() {
-		testing.ContextLog(ctx, "Make sure DUT is connected")
-		if err := h.WaitConnect(ctx); err != nil {
-			reterr = errors.Wrap(err, "failed to connect to the DUT")
-		}
-
 		testing.ContextLog(ctx, "reset write protect to disabled")
 		if err := setWriteProtect(ctx, h, target, false); err != nil {
 			reterr = errors.Wrap(err, "failed to disable FW write protect state")
@@ -365,14 +344,6 @@ func testWPOverReboot(ctx context.Context, h *firmware.Helper, target wpTarget, 
 	testing.ContextLog(ctx, "Reboot DUT using ", rebootMethod)
 	if err := rebootFunc(ctx, h); err != nil {
 		return errors.Wrapf(err, "failed to reboot with %q", rebootMethod)
-	}
-
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the DUT")
-	}
-
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the bios service on the DUT")
 	}
 
 	testing.ContextLog(ctx, "Expect write protect state to be enabled")
@@ -402,14 +373,6 @@ func testWPOverReboot(ctx context.Context, h *firmware.Helper, target wpTarget, 
 		return errors.Wrapf(err, "failed to reboot with %q", rebootMethod)
 	}
 
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the DUT")
-	}
-
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to the bios service on the DUT")
-	}
-
 	testing.ContextLog(ctx, "Expect write protect state to be disabled")
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 0); err != nil {
 		return errors.Wrap(err, "failed to check crossystem")
@@ -428,6 +391,10 @@ func performRebootWithECReboot(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
+	h.DisconnectDUT(ctx)
+	if err := h.DUT.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to the DUT")
+	}
 	return nil
 }
 
@@ -442,6 +409,10 @@ func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
+	h.DisconnectDUT(ctx)
+	if err := h.DUT.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to the DUT")
+	}
 	return nil
 }
 
@@ -470,6 +441,10 @@ func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper) error
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
+	h.DisconnectDUT(ctx)
+	if err := h.DUT.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to the DUT")
+	}
 	return nil
 }
 
@@ -497,6 +472,11 @@ func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper) error {
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
+
+	h.DisconnectDUT(ctx)
+	if err := h.DUT.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to the DUT")
+	}
 	return nil
 }
 
@@ -508,5 +488,13 @@ func performModeAwareReboot(ctx context.Context, h *firmware.Helper) error {
 	}
 	testing.ContextLog(ctx, "Performing mode aware reboot")
 
-	return ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce)
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce, firmware.SkipWaitConnect); err != nil {
+		return errors.Wrap(err, "failed to perform mode aware reboot")
+	}
+
+	h.DisconnectDUT(ctx)
+	if err := h.DUT.WaitConnect(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to the DUT")
+	}
+	return nil
 }
