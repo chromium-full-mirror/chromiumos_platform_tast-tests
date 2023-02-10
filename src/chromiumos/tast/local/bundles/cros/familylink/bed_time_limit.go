@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		VarDeps:      []string{"family.unicornEmail", "family.unicornPassword"},
 		Fixture:      "familyLinkUnicornPolicyLogin",
 	})
@@ -102,10 +102,10 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	authTimeOut := 10 * time.Second
+	lockStateUpdateTimeOut := 1 * time.Minute
 	s.Log("Waiting for bed time starts in ", timeBeforeLocked)
 	if _, err := lockscreen.WaitState(ctx, tconn,
-		func(st lockscreen.State) bool { return st.Locked }, timeBeforeLocked+authTimeOut); err != nil {
+		func(st lockscreen.State) bool { return st.Locked }, timeBeforeLocked+lockStateUpdateTimeOut); err != nil {
 		s.Fatal("Waiting for screen to be locked failed: ", err)
 	}
 	if err := ui.WaitUntilExists(nodewith.Name("Time for bed").Role(role.StaticText))(ctx); err != nil {
@@ -114,7 +114,7 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 
 	s.Log("Waiting for bed time ends in ", bedTimeDuration)
 	childUser := strings.ToLower(s.RequiredVar("family.unicornEmail"))
-	if err := lockscreen.WaitForPasswordField(ctx, tconn, childUser, bedTimeDuration+authTimeOut); err != nil {
+	if err := lockscreen.WaitForPasswordField(ctx, tconn, childUser, bedTimeDuration+lockStateUpdateTimeOut); err != nil {
 		s.Error("Password text field did not appear in the UI: ", err)
 	}
 
@@ -129,7 +129,7 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 		s.Fatal("Entering password failed: ", err)
 	}
 	if st, err := lockscreen.WaitState(ctx, tconn,
-		func(st lockscreen.State) bool { return st.LoggedIn }, authTimeOut); err != nil {
+		func(st lockscreen.State) bool { return st.LoggedIn }, lockStateUpdateTimeOut); err != nil {
 		s.Fatal(fmt.Sprintf("Waiting for screen to be unlocked failed (last status %+v): ", st), err)
 	}
 

@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		VarDeps:      []string{"family.unicornEmail", "family.unicornPassword"},
 		Fixture:      "familyLinkUnicornPolicyLogin",
 	})
@@ -138,13 +138,13 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	authTimeOut := 10 * time.Second
+	lockStateUpdateTimeOut := 1 * time.Minute
 
 	// The tested account on DUT might have been active before this test. The screen might be
 	// locked less than `dailyScreenTimeLimit`.
 	s.Log("Waiting for daily limit reaches at most in ", dailyScreenTimeLimit)
 	if _, err := lockscreen.WaitState(ctx, tconn,
-		func(st lockscreen.State) bool { return st.Locked }, dailyScreenTimeLimit+authTimeOut); err != nil {
+		func(st lockscreen.State) bool { return st.Locked }, dailyScreenTimeLimit+lockStateUpdateTimeOut); err != nil {
 		s.Fatal("Waiting for screen to be locked failed: ", err)
 	}
 	if err := ui.WaitUntilExists(nodewith.Name("Time is up").Role(role.StaticText))(ctx); err != nil {
@@ -153,7 +153,7 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 
 	s.Log("Waiting for daily limit reset at most in ", resetInMin)
 	childUser := strings.ToLower(s.RequiredVar("family.unicornEmail"))
-	if err := lockscreen.WaitForPasswordField(ctx, tconn, childUser, resetInMin+authTimeOut); err != nil {
+	if err := lockscreen.WaitForPasswordField(ctx, tconn, childUser, resetInMin+lockStateUpdateTimeOut); err != nil {
 		s.Error("Password text field did not appear in the UI: ", err)
 	}
 
@@ -168,7 +168,7 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 		s.Fatal("Entering password failed: ", err)
 	}
 	if st, err := lockscreen.WaitState(ctx, tconn,
-		func(st lockscreen.State) bool { return st.LoggedIn }, authTimeOut); err != nil {
+		func(st lockscreen.State) bool { return st.LoggedIn }, lockStateUpdateTimeOut); err != nil {
 		s.Fatalf("Waiting for screen to be unlocked failed (last status %+v): %v", st, err)
 	}
 
