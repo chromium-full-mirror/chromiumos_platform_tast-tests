@@ -6,10 +6,13 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
+	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -34,6 +37,7 @@ func init() {
 		Timeout:      30 * time.Minute,
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		SoftwareDeps: []string{"tpm"},
 	})
 }
 
@@ -178,12 +182,56 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// For debugging purposes, log current boot mode after the reboot.
+	// Check boot mode after the reboot.
 	mode, err := h.Reporter.CurrentBootMode(ctx)
 	if err != nil {
 		s.Fatal("Failed to check boot mode: ", err)
 	}
-	s.Logf("Boot mode after reboot: %s", mode)
+	if mode == fwCommon.BootModeDev {
+		// Read the firmware log.
+		out, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		re := regexp.MustCompile(`[vboot_draw_|vb2ex_display_ui|ui_display].*screen=0x([0-9a-f]+),?` +
+			`\s+locale=\d+,?\s+(selected_item=\d+|selected_index=\d+)?`)
+		screensVisited := re.FindAllStringSubmatch(out, -1)
+		// Map firmware screen ids to respective names for readability.
+		var fwScreenNames = map[firmware.FwScreenID]string{
+			// White theme firmware screens.
+			firmware.Blank:            "blank",
+			firmware.DeveloperWarning: "developerWarning",
+			firmware.DeveloperToNorm:  "developerToNorm",
+			// Detachables ui firmware screens.
+			firmware.DeveloperWarningMenu: "developerWarningMenu",
+			firmware.DeveloperMenu:        "developerMenu",
+			firmware.DeveloperToNormMenu:  "developerToNormMenu",
+			firmware.LanguagesMenu:        "languagesMenu",
+			// Dark theme firmware screens.
+			firmware.AdvancedOptions:    "advancedOptions",
+			firmware.LanguageSelect:     "languageSelect",
+			firmware.DebugInfo:          "debugInfo",
+			firmware.FirmwareLog:        "firmwareLog",
+			firmware.DeveloperMode:      "developerMode",
+			firmware.ReturnToSecureMode: "returnToSecureMode",
+		}
+		var foundScreens []string
+		for _, screen := range screensVisited {
+			if len(screen) != 3 {
+				s.Fatal("Found unexpected matches: ", screen)
+			}
+			screenNumber, err := strconv.ParseInt(screen[1], 16, 64)
+			if err != nil {
+				s.Fatalf("Failed to parse screen number for %s: %v", screen[1], err)
+			}
+			if name, ok := fwScreenNames[firmware.FwScreenID(screenNumber)]; ok {
+				foundScreens = append(foundScreens, fmt.Sprintf("%s, %s", name, screen[2]))
+			} else {
+				foundScreens = append(foundScreens, fmt.Sprintf("screen=0x%s, %s", screen[1], screen[2]))
+			}
+		}
+		s.Fatalf("DUT booted unexpectedly into dev mode after FWMP flags set to 0x1, and went through the following firmware screens: %s", strings.Join(foundScreens, "; "))
+	}
 
 	// Confirm TPM ownership changed.
 	s.Log("Checking that TPM ownership changed at the end of the test")

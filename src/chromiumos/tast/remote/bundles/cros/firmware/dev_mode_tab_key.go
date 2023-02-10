@@ -22,32 +22,6 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-/*
-fwScreenId contains the id for each individual fw screen.
-These ids were found from the depthcharge repo:
-'src/vboot/ui.h' & 'src/drivers/video/display.h'
-*/
-type fwScreenID int
-
-// Below are the ids representing different fw screens.
-const (
-	blank            fwScreenID = 0x0
-	developerWarning fwScreenID = 0x101
-	developerToNorm  fwScreenID = 0x205
-
-	developerWarningMenu fwScreenID = 0x20a
-	developerMenu        fwScreenID = 0x20b
-	developerToNormMenu  fwScreenID = 0x20e
-	languagesMenu        fwScreenID = 0x20f
-
-	advancedOptions    fwScreenID = 0x120
-	languageSelect     fwScreenID = 0x130
-	debugInfo          fwScreenID = 0x140
-	firmwareLog        fwScreenID = 0x150
-	developerMode      fwScreenID = 0x300
-	returnToSecureMode fwScreenID = 0x310
-)
-
 type noDebugInfoErr struct {
 	*errors.E
 }
@@ -210,17 +184,17 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	}
 }
 
-func checkFwScreenType(ctx context.Context, h *firmware.Helper, logPath string) (fwScreenID, error) {
-	mainFwScreenID := blank
+func checkFwScreenType(ctx context.Context, h *firmware.Helper, logPath string) (firmware.FwScreenID, error) {
+	mainFwScreenID := firmware.Blank
 	output, err := h.Reporter.CatFile(ctx, logPath)
 	if err != nil {
 		return mainFwScreenID, errors.Wrap(err, "failed to read firmware log")
 	}
 
-	for _, id := range []fwScreenID{
-		developerWarning,
-		developerWarningMenu,
-		developerMode,
+	for _, id := range []firmware.FwScreenID{
+		firmware.DeveloperWarning,
+		firmware.DeveloperWarningMenu,
+		firmware.DeveloperMode,
 	} {
 		pattern := fmt.Sprintf("screen=0x%x", id)
 		re := regexp.MustCompile(pattern)
@@ -233,8 +207,8 @@ func checkFwScreenType(ctx context.Context, h *firmware.Helper, logPath string) 
 	return mainFwScreenID, errors.New("unable to match any firmware screen type")
 }
 
-func getScreenID(log string, mainFwScreen fwScreenID, checkDebugInfoPage bool) (fwScreenID, error) {
-	screenID := blank
+func getScreenID(log string, mainFwScreen firmware.FwScreenID, checkDebugInfoPage bool) (firmware.FwScreenID, error) {
+	screenID := firmware.Blank
 	if checkDebugInfoPage {
 		// On some DUTs, such as astronaut/coral, debug info is shown in the top left corner.
 		// On some other DUTs, such as jinlon/hatch, pressing <tab> would bring up a separate debug info page.
@@ -242,7 +216,7 @@ func getScreenID(log string, mainFwScreen fwScreenID, checkDebugInfoPage bool) (
 		// For the latter case, check for the VbDisplayDebugInfo or the screen=0x140 string.
 		if strings.Contains(log, "VbDisplayDebugInfo") ||
 			strings.Contains(log, "screen=0x140") {
-			return debugInfo, nil
+			return firmware.DebugInfo, nil
 		}
 	}
 	var screenPrefix string
@@ -255,7 +229,7 @@ func getScreenID(log string, mainFwScreen fwScreenID, checkDebugInfoPage bool) (
 	return screenID, nil
 }
 
-func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen fwScreenID, logPath string) error {
+func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen firmware.FwScreenID, logPath string) error {
 	// Grep for HWID information, which is usually the first line
 	// displayed on the debug info page, and check that debug info
 	// data is available.
@@ -266,7 +240,7 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen fwScre
 	debugInfo := string(output)
 
 	regs := `HWID:(\n|.)*?kernel_subkey:[^\n\r]*`
-	if mainFwScreen == developerMode {
+	if mainFwScreen == firmware.DeveloperMode {
 		regs = `HWID:(\n|.)*?TPM state:[^\n\r]*`
 	}
 
@@ -278,7 +252,7 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen fwScre
 	return nil
 }
 
-func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScreenID fwScreenID) error {
+func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScreenID firmware.FwScreenID) error {
 	var (
 		upKey    = "<up>"
 		downKey  = "<down>"
@@ -341,7 +315,7 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 	}
 	var traverseSeq []traverse
 	switch mainFwScreenID {
-	case developerWarningMenu:
+	case firmware.DeveloperWarningMenu:
 		traverseSeq = []traverse{
 			// Pressing tab key once displays debug info on the main menu.
 			{1, tabKey, false},
@@ -357,7 +331,7 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 			{1, downKey, true},
 			{1, tabKey, false},
 		}
-	case developerWarning:
+	case firmware.DeveloperWarning:
 		traverseSeq = []traverse{
 			// Pressing tab key once displays debug info on the main menu.
 			{1, tabKey, false},
@@ -367,7 +341,7 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 			// Send tab key on the Language screen to display debug info.
 			{1, escKey, false},
 		}
-	case developerMode:
+	case firmware.DeveloperMode:
 		traverseSeq = []traverse{
 			// Pressing tab key once displays debug info on the main menu.
 			{1, tabKey, false},
@@ -398,27 +372,27 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 	return nil
 }
 
-func setVerifyScreenSequence(mainFwScreenID fwScreenID) ([]fwScreenID, error) {
+func setVerifyScreenSequence(mainFwScreenID firmware.FwScreenID) ([]firmware.FwScreenID, error) {
 	switch mainFwScreenID {
-	case developerWarningMenu:
-		return []fwScreenID{
-			developerWarningMenu,
-			developerMenu,
-			developerToNormMenu,
-			languagesMenu,
+	case firmware.DeveloperWarningMenu:
+		return []firmware.FwScreenID{
+			firmware.DeveloperWarningMenu,
+			firmware.DeveloperMenu,
+			firmware.DeveloperToNormMenu,
+			firmware.LanguagesMenu,
 		}, nil
-	case developerWarning:
-		return []fwScreenID{
-			developerWarning,
-			developerToNorm,
+	case firmware.DeveloperWarning:
+		return []firmware.FwScreenID{
+			firmware.DeveloperWarning,
+			firmware.DeveloperToNorm,
 		}, nil
-	case developerMode:
-		return []fwScreenID{
-			developerMode,
-			languageSelect,
-			returnToSecureMode,
-			advancedOptions,
-			firmwareLog,
+	case firmware.DeveloperMode:
+		return []firmware.FwScreenID{
+			firmware.DeveloperMode,
+			firmware.LanguageSelect,
+			firmware.ReturnToSecureMode,
+			firmware.AdvancedOptions,
+			firmware.FirmwareLog,
 		}, nil
 	}
 	return nil, errors.Errorf("Unable to identify the main dev screen: %q", mainFwScreenID)
