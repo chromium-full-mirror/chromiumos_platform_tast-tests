@@ -25,7 +25,7 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		SoftwareDeps: []string{"chrome", "screenshot"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeGraphics",
 	})
 }
