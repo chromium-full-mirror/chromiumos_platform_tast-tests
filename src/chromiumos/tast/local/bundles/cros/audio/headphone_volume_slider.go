@@ -30,7 +30,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HeadphoneVolumeSlider,
 		Desc:         "System volume slider works fine for audio playback in 3.5mm headset in lockscreen",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:875484",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
