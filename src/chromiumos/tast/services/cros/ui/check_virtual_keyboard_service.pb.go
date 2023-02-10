@@ -244,7 +244,7 @@ var file_check_virtual_keyboard_service_proto_rawDesc = []byte{
 	0x72, 0x74, 0x75, 0x61, 0x6c, 0x5f, 0x6b, 0x65, 0x79, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x5f, 0x70,
 	0x72, 0x65, 0x73, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x18, 0x69, 0x73,
 	0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x4b, 0x65, 0x79, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x50,
-	0x72, 0x65, 0x73, 0x65, 0x6e, 0x74, 0x32, 0xd9, 0x04, 0x0a, 0x1b, 0x43, 0x68, 0x65, 0x63, 0x6b,
+	0x72, 0x65, 0x73, 0x65, 0x6e, 0x74, 0x32, 0xa5, 0x05, 0x0a, 0x1b, 0x43, 0x68, 0x65, 0x63, 0x6b,
 	0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x4b, 0x65, 0x79, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x53,
 	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x4e, 0x0a, 0x11, 0x4e, 0x65, 0x77, 0x43, 0x68, 0x72,
 	0x6f, 0x6d, 0x65, 0x4c, 0x6f, 0x67, 0x67, 0x65, 0x64, 0x49, 0x6e, 0x12, 0x1f, 0x2e, 0x74, 0x61,
@@ -282,9 +282,14 @@ var file_check_virtual_keyboard_service_proto_rawDesc = []byte{
 	0x63, 0x6b, 0x56, 0x69, 0x72, 0x74, 0x75, 0x61, 0x6c, 0x4b, 0x65, 0x79, 0x62, 0x6f, 0x61, 0x72,
 	0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
 	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x22, 0x00, 0x42, 0x22, 0x5a, 0x20, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73,
-	0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63,
-	0x72, 0x6f, 0x73, 0x2f, 0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x00, 0x12, 0x4a, 0x0a, 0x16, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x4f, 0x6e, 0x73, 0x63,
+	0x72, 0x65, 0x65, 0x6e, 0x4b, 0x65, 0x79, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x12, 0x16, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
+	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x22,
+	0x5a, 0x20, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73,
+	0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f,
+	0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -317,15 +322,17 @@ var file_check_virtual_keyboard_service_proto_depIdxs = []int32{
 	4, // 5: tast.cros.ui.CheckVirtualKeyboardService.TouchChromeAddressBar:input_type -> google.protobuf.Empty
 	2, // 6: tast.cros.ui.CheckVirtualKeyboardService.CheckVirtualKeyboardIsPresent:input_type -> tast.cros.ui.CheckVirtualKeyboardRequest
 	2, // 7: tast.cros.ui.CheckVirtualKeyboardService.ClickSearchBar:input_type -> tast.cros.ui.CheckVirtualKeyboardRequest
-	4, // 8: tast.cros.ui.CheckVirtualKeyboardService.NewChromeLoggedIn:output_type -> google.protobuf.Empty
-	4, // 9: tast.cros.ui.CheckVirtualKeyboardService.CloseChrome:output_type -> google.protobuf.Empty
-	4, // 10: tast.cros.ui.CheckVirtualKeyboardService.OpenChromePage:output_type -> google.protobuf.Empty
-	4, // 11: tast.cros.ui.CheckVirtualKeyboardService.ClickChromeAddressBar:output_type -> google.protobuf.Empty
-	4, // 12: tast.cros.ui.CheckVirtualKeyboardService.TouchChromeAddressBar:output_type -> google.protobuf.Empty
-	3, // 13: tast.cros.ui.CheckVirtualKeyboardService.CheckVirtualKeyboardIsPresent:output_type -> tast.cros.ui.CheckVirtualKeyboardResponse
-	4, // 14: tast.cros.ui.CheckVirtualKeyboardService.ClickSearchBar:output_type -> google.protobuf.Empty
-	8, // [8:15] is the sub-list for method output_type
-	1, // [1:8] is the sub-list for method input_type
+	4, // 8: tast.cros.ui.CheckVirtualKeyboardService.EnableOnscreenKeyboard:input_type -> google.protobuf.Empty
+	4, // 9: tast.cros.ui.CheckVirtualKeyboardService.NewChromeLoggedIn:output_type -> google.protobuf.Empty
+	4, // 10: tast.cros.ui.CheckVirtualKeyboardService.CloseChrome:output_type -> google.protobuf.Empty
+	4, // 11: tast.cros.ui.CheckVirtualKeyboardService.OpenChromePage:output_type -> google.protobuf.Empty
+	4, // 12: tast.cros.ui.CheckVirtualKeyboardService.ClickChromeAddressBar:output_type -> google.protobuf.Empty
+	4, // 13: tast.cros.ui.CheckVirtualKeyboardService.TouchChromeAddressBar:output_type -> google.protobuf.Empty
+	3, // 14: tast.cros.ui.CheckVirtualKeyboardService.CheckVirtualKeyboardIsPresent:output_type -> tast.cros.ui.CheckVirtualKeyboardResponse
+	4, // 15: tast.cros.ui.CheckVirtualKeyboardService.ClickSearchBar:output_type -> google.protobuf.Empty
+	4, // 16: tast.cros.ui.CheckVirtualKeyboardService.EnableOnscreenKeyboard:output_type -> google.protobuf.Empty
+	9, // [9:17] is the sub-list for method output_type
+	1, // [1:9] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -421,6 +428,8 @@ type CheckVirtualKeyboardServiceClient interface {
 	CheckVirtualKeyboardIsPresent(ctx context.Context, in *CheckVirtualKeyboardRequest, opts ...grpc.CallOption) (*CheckVirtualKeyboardResponse, error)
 	// ClickSearchBar clicks the search bar.
 	ClickSearchBar(ctx context.Context, in *CheckVirtualKeyboardRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// EnableOnscreenKeyboard enables the on-screen keyboard.
+	EnableOnscreenKeyboard(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type checkVirtualKeyboardServiceClient struct {
@@ -494,6 +503,15 @@ func (c *checkVirtualKeyboardServiceClient) ClickSearchBar(ctx context.Context, 
 	return out, nil
 }
 
+func (c *checkVirtualKeyboardServiceClient) EnableOnscreenKeyboard(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.ui.CheckVirtualKeyboardService/EnableOnscreenKeyboard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CheckVirtualKeyboardServiceServer is the server API for CheckVirtualKeyboardService service.
 type CheckVirtualKeyboardServiceServer interface {
 	// NewChromeLoggedIn Logs into a user session.
@@ -510,6 +528,8 @@ type CheckVirtualKeyboardServiceServer interface {
 	CheckVirtualKeyboardIsPresent(context.Context, *CheckVirtualKeyboardRequest) (*CheckVirtualKeyboardResponse, error)
 	// ClickSearchBar clicks the search bar.
 	ClickSearchBar(context.Context, *CheckVirtualKeyboardRequest) (*emptypb.Empty, error)
+	// EnableOnscreenKeyboard enables the on-screen keyboard.
+	EnableOnscreenKeyboard(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedCheckVirtualKeyboardServiceServer can be embedded to have forward compatible implementations.
@@ -536,6 +556,9 @@ func (*UnimplementedCheckVirtualKeyboardServiceServer) CheckVirtualKeyboardIsPre
 }
 func (*UnimplementedCheckVirtualKeyboardServiceServer) ClickSearchBar(context.Context, *CheckVirtualKeyboardRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClickSearchBar not implemented")
+}
+func (*UnimplementedCheckVirtualKeyboardServiceServer) EnableOnscreenKeyboard(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableOnscreenKeyboard not implemented")
 }
 
 func RegisterCheckVirtualKeyboardServiceServer(s *grpc.Server, srv CheckVirtualKeyboardServiceServer) {
@@ -668,6 +691,24 @@ func _CheckVirtualKeyboardService_ClickSearchBar_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CheckVirtualKeyboardService_EnableOnscreenKeyboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CheckVirtualKeyboardServiceServer).EnableOnscreenKeyboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.ui.CheckVirtualKeyboardService/EnableOnscreenKeyboard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CheckVirtualKeyboardServiceServer).EnableOnscreenKeyboard(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CheckVirtualKeyboardService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.ui.CheckVirtualKeyboardService",
 	HandlerType: (*CheckVirtualKeyboardServiceServer)(nil),
@@ -699,6 +740,10 @@ var _CheckVirtualKeyboardService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClickSearchBar",
 			Handler:    _CheckVirtualKeyboardService_ClickSearchBar_Handler,
+		},
+		{
+			MethodName: "EnableOnscreenKeyboard",
+			Handler:    _CheckVirtualKeyboardService_EnableOnscreenKeyboard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -22,6 +22,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/touch"
 	"chromiumos/tast/local/common"
@@ -224,5 +226,53 @@ func (cvk *CheckVirtualKeyboardService) ClickSearchBar(ctx context.Context, req 
 			return nil, errors.Wrap(err, "could not tap the search bar")
 		}
 	}
+	return &empty.Empty{}, nil
+}
+
+// EnableOnscreenKeyboard enables the on-screen keyboard.
+func (cvk *CheckVirtualKeyboardService) EnableOnscreenKeyboard(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	cvk.sharedObject.ChromeMutex.Lock()
+	defer cvk.sharedObject.ChromeMutex.Unlock()
+
+	cr := cvk.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("chrome is not instantiated")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := quicksettings.ShowWithRetry(ctx, tconn, 5*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to open Quick Settings")
+	}
+	defer quicksettings.Hide(ctx, tconn)
+
+	if err := quicksettings.OpenSettingsApp(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to open the Settings App from Quick Settings")
+	}
+
+	// Confirm that the Settings app is open by checking for the search box.
+	if err := uiauto.New(tconn).WaitUntilExists(ossettings.SearchBoxFinder)(ctx); err != nil {
+		return nil, errors.Wrap(err, "waiting for Settings app search box failed")
+	}
+
+	settings := ossettings.New(tconn)
+	defer settings.Close(ctx)
+
+	manageAccessibility := nodewith.Name("Keyboard and text input On-screen keyboard, dictation, Switch Access, and more").Role(role.Link)
+	onscreenButton := nodewith.Name("On-screen keyboard").Role(role.ToggleButton).Focusable()
+
+	if err := uiauto.Combine("Enable on-screen keyboard, using Accessibility",
+		settings.FocusAndWait(ossettings.Accessibility),
+		settings.LeftClick(ossettings.Accessibility),
+		settings.LeftClick(manageAccessibility),
+		settings.FocusAndWait(onscreenButton),
+		settings.LeftClick(onscreenButton),
+	)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to enable on-screen keyboard")
+	}
+
 	return &empty.Empty{}, nil
 }

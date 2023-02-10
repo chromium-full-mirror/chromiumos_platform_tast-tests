@@ -38,6 +38,10 @@ type dutTestParams struct {
 	tabletModeOff     string
 }
 
+type verifyVkErr struct {
+	*errors.E
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ECVerifyVK,
@@ -214,15 +218,36 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to check DUT's tablet mode status: ", err)
 		}
-		s.Log("Using search bar to trigger virtual keyboard")
-		if _, err := vkService.ClickSearchBar(ctx, &pb.CheckVirtualKeyboardRequest{
-			IsDutTabletMode: dutInTabletMode,
-		}); err != nil {
-			s.Fatal("Failed to click Search Bar: ", err)
+
+		verifyVK := func() error {
+			s.Log("Using search bar to trigger virtual keyboard")
+			if _, err := vkService.ClickSearchBar(ctx, &pb.CheckVirtualKeyboardRequest{
+				IsDutTabletMode: dutInTabletMode,
+			}); err != nil {
+				return errors.Wrap(err, "failed to click Search Bar")
+			}
+			s.Log("Checking if virtual keyboard is present")
+			if err := checkVKIsPresent(ctx, h, vkService, dutInTabletMode); err != nil {
+				return &verifyVkErr{E: errors.Wrap(err, "failed to check VK is present")}
+			}
+			return nil
 		}
-		s.Log("Checking if virtual keyboard is present")
-		if err := checkVKIsPresent(ctx, h, vkService, dutInTabletMode); err != nil {
-			s.Fatal("Failed to check VK is present: ", err)
+		if err := verifyVK(); err != nil {
+			_, ok := err.(*verifyVkErr)
+			if tc.turnTabletModeOn && ok {
+				// If on-screen keyboard is enabled, vk should appear
+				// when search bar is clicked in both laptop and tablet
+				// mode. For debugging purposes, if checking for vk failed
+				// in tablet mode, check again with on-screen keyboard allowed.
+				s.Log("Unable to find virtual keyboard in tablet mode, testing with on-screen keyboard enabled")
+				if _, err := vkService.EnableOnscreenKeyboard(ctx, &empty.Empty{}); err != nil {
+					s.Fatal("Failed to enable on-screen keyboard: ", err)
+				}
+				if err := verifyVK(); err != nil {
+					s.Fatal("Failed to verify on-screen keyboard: ", err)
+				}
+			}
+			s.Fatal("Failed to verify virtual keyboard, but passed with on-screen keyboard enabled: ", err)
 		}
 		if tc.formFactor == chromeslate {
 			// Because chromeslates do not support clamshell mode,
@@ -283,7 +308,7 @@ func checkVKIsPresent(ctx context.Context, h *firmware.Helper, cvkc pb.CheckVirt
 	}
 	res, err := cvkc.CheckVirtualKeyboardIsPresent(ctx, &req)
 	if err != nil {
-		return errors.Wrap(err, "failed to check whether virtual keyboard is present")
+		return err
 	} else if tabletMode != res.IsVirtualKeyboardPresent {
 		return errors.Errorf(
 			"found unexpected behavior, and got tabletmode: %t, VirtualKeyboardPresent: %t",
