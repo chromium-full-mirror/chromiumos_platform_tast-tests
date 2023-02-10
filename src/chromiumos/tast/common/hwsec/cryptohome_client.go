@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
@@ -412,24 +414,30 @@ func (u *CryptohomeClient) GetSystemSalt(ctx context.Context, useDBus bool) (str
 	return outs, nil
 }
 
-// CheckVaultAndUnlockWebAuthnSecret checks the vault via |CheckKeyEx| dbus method, and set the unlock_webauthn_secret param to true.
-func (u *CryptohomeClient) CheckVaultAndUnlockWebAuthnSecret(ctx context.Context, label string, authConfig *AuthConfig) (bool, error) {
-	extraFlags := authConfigToExtraFlags(authConfig)
-	_, err := u.binary.checkKeyEx(ctx, authConfig.Username, label, true, extraFlags)
+func (u *CryptohomeClient) checkVaultWithAuthFactor(ctx context.Context, label string, authConfig *AuthConfig) (bool, error) {
+	// Start an Auth session and get an authSessionID.
+	_, authSessionID, err := u.StartAuthSession(ctx, authConfig.Username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to check key")
+		return false, errors.Wrap(err, "failed to start Auth session")
+	}
+	defer u.InvalidateAuthSession(ctx, authSessionID)
+
+	result, err := u.AuthenticateAuthFactor(ctx, authSessionID, label, authConfig.Password)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to authenticate AuthFactor")
+	}
+	// Check that reply authenticatied with correct AuthIntent VERIFY_ONLY.
+	less := func(a, b uda.AuthIntent) bool { return a < b }
+	diff := cmp.Diff(result.AuthorizedFor, []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY}, cmpopts.SortSlices(less))
+	if diff != "" {
+		return false, errors.New(diff)
 	}
 	return true, nil
 }
 
-// CheckVault checks the vault via |CheckKeyEx| dbus method.
+// CheckVault checks the vault via AuthenticateAuthFactor, using lightweight verification.
 func (u *CryptohomeClient) CheckVault(ctx context.Context, label string, authConfig *AuthConfig) (bool, error) {
-	extraFlags := authConfigToExtraFlags(authConfig)
-	_, err := u.binary.checkKeyEx(ctx, authConfig.Username, label, false, extraFlags)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check key")
-	}
-	return true, nil
+	return u.checkVaultWithAuthFactor(ctx, label, authConfig)
 }
 
 // ListVaultKeys queries the vault associated with user username, and returns nil for error iff the operation is completed successfully, in that case, the returned slice of string contains the labels of keys belonging to that vault.

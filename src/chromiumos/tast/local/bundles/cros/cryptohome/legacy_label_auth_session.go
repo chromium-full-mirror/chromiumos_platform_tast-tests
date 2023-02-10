@@ -119,11 +119,11 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 		s.Fatal("Key check with explicit label failed despite no error")
 	}
 	accepted, err = client.CheckVault(ctx /*keyLabel=*/, "", hwsec.NewPassAuthConfig(userName, userPassword))
-	if err != nil {
-		s.Fatal("Failed to check key with wildcard label: ", err)
+	if err == nil {
+		s.Fatal("Key check with empty label succeeded when it shouldn't")
 	}
-	if !accepted {
-		s.Fatal("Key check with wildcard label failed despite no error")
+	if accepted {
+		s.Fatal("Wildcard label accepted when AuthFactor should not accept empty label")
 	}
 
 	// Verify lock-screen check fails with wrong password or wrong label.

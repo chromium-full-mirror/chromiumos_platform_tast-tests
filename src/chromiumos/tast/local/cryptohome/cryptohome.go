@@ -396,11 +396,11 @@ func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, 
 	}
 
 	accepted, err = cryptohome.CheckVault(ctx, "" /* label */, hwsec.NewPassAuthConfig(userName, userPassword))
-	if err != nil {
-		return errors.Wrap(err, "failed to check correct password with wildcard label")
+	if err == nil {
+		return errors.Wrap(err, "empty key label check succeeded when it shouldn't")
 	}
-	if !accepted {
-		return errors.New("correct password rejected with wildcard label")
+	if accepted {
+		return errors.New("wildcard label accepted when AuthFactor should not accept empty label")
 	}
 
 	accepted, err = cryptohome.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, wrongPassword))
