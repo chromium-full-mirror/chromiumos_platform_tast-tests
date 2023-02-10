@@ -26,6 +26,7 @@ import (
 
 var (
 	disableFirmwareUpdater = chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp")
+	enablePassthrough = chrome.ExtraArgs("--enable-features=DefaultPassthroughCommandDecoder")
 )
 
 func init() {
@@ -115,6 +116,21 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+
+	// TOOD(b/233238923): Remove when passthrough is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeGraphicsPassthrough",
+		Desc:     "Logged into a user session for graphics testing with the passthrough command decoder feature enabled",
+		Contacts: []string{"chromeos-gfx@google.com", "hob@chromium.org"},
+		Parent:   "gpuWatchDog",
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{disableFirmwareUpdater, enablePassthrough}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 
 	testing.AddFixture(&testing.Fixture{
 		Name:            "graphicsNoChrome",

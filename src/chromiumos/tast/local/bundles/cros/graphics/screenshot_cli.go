@@ -22,11 +22,18 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
+			"chromeos-gfx-compositor@google.com",
+			"hob@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeGraphics",
+		Params: []testing.Param{{
+			Fixture: "chromeGraphics",
+		}, {
+			Name:    "passthrough",
+			Fixture: "chromeGraphicsPassthrough",
+		}},
 	})
 }
 
