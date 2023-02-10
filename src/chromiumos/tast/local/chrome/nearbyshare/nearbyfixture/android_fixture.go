@@ -76,7 +76,7 @@ func init() {
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    6 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
@@ -97,7 +97,7 @@ func init() {
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    6 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
@@ -118,7 +118,7 @@ func init() {
 			unrootedAndroidUsername,
 			skipAndroidLogin,
 		},
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    6 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
@@ -188,6 +188,13 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	if !rooted && !loggedIn {
 		androidUsername = s.RequiredVar("nearbyshare.unrooted_android_username")
 	}
+
+	// Start a screen recording for the duration of the Android setup in case of failure.
+	saveScreen, err := adbDevice.StartScreenRecording(ctx, "android-screen", s.OutDir())
+	if err != nil {
+		s.Log("Failed to start screen recording on Android: ", err)
+	}
+	defer saveScreen(cleanupCtx, s.HasError)
 
 	// Remove and re-add the specified account. A GAIA login is required to configure Nearby Share on the Android device.
 	// Root access is required for adding and removing accounts.
