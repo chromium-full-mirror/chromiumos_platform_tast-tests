@@ -8,10 +8,12 @@ import (
 	"context"
 	"path/filepath"
 
+	"chromiumos/tast/common/cros/crossdevice"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	remotenearby "chromiumos/tast/remote/cros/nearbyshare"
 	"chromiumos/tast/services/cros/nearbyservice"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -28,55 +30,114 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Params: []testing.Param{
+			// Stable subset of boards.
 			{
-				Name:      "dataoffline_allcontacts_png5kb",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContacts",
-				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				Name:              "dataoffline_allcontacts_png5kb",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineAllContacts",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
-				Name:      "dataoffline_allcontacts_jpg11kb",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContacts",
-				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				Name:              "dataoffline_allcontacts_jpg11kb",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineAllContacts",
+				Val:               nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
-				Name:      "dataoffline_somecontacts_png5kb",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContacts",
-				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				Name:              "dataoffline_somecontacts_png5kb",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineSomeContacts",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
-				Name:      "dataoffline_somecontacts_jpg11kb",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContacts",
-				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				Name:              "dataoffline_somecontacts_jpg11kb",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineSomeContacts",
+				Val:               nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
 				Name:    "dataonline_allcontacts_txt30mb",
 				Fixture: "nearbyShareRemoteDataUsageOnlineAllContacts",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraData: []string{"big_txt.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				ExtraData:         []string{"big_txt.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 			{
 				Name:    "dataonline_somecontacts_txt30mb",
 				Fixture: "nearbyShareRemoteDataUsageOnlineSomeContacts",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraData: []string{"big_txt.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_cq"},
+				ExtraData:         []string{"big_txt.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+				ExtraAttr:         []string{"cross-device-remote_cq"},
+			},
+
+			// Untable subset of boards.
+			{
+				Name:              "dataoffline_allcontacts_png5kb_unstable",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineAllContacts",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:              "dataoffline_allcontacts_jpg11kb_unstable",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineAllContacts",
+				Val:               nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:              "dataoffline_somecontacts_png5kb_unstable",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineSomeContacts",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:              "dataoffline_somecontacts_jpg11kb_unstable",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineSomeContacts",
+				Val:               nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_jpg.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+			},
+			{
+				Name:    "dataonline_allcontacts_txt30mb_unstable",
+				Fixture: "nearbyShareRemoteDataUsageOnlineAllContacts",
+				Val: nearbycommon.TestData{
+					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
+				ExtraData:         []string{"big_txt.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			},
+			{
+				Name:    "dataonline_somecontacts_txt30mb_unstable",
+				Fixture: "nearbyShareRemoteDataUsageOnlineSomeContacts",
+				Val: nearbycommon.TestData{
+					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
+				ExtraData:         []string{"big_txt.zip"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 
 			// Floss duplicates

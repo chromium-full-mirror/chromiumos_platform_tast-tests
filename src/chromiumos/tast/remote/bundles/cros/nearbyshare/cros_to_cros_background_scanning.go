@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/cros/crossdevice"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/errors"
 	remotenearby "chromiumos/tast/remote/cros/nearbyshare"
@@ -22,7 +23,7 @@ func init() {
 		Func:         CrosToCrosBackgroundScanning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Nearby Device is trying to share notification shows up, clicking the notification enables high-vis mode and the receive flow is successful",
-		Contacts:     []string{
+		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"hansenmichael@google.com",
@@ -33,6 +34,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Vars:         []string{"secondaryTarget"},
 		Params: []testing.Param{
+			// Stable subset of boards.
 			{
 				Name:      "dataoffline_hidden_png5kb",
 				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
@@ -42,9 +44,23 @@ func init() {
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
 				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
 					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
+					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.BGScanningStableSkipModels...)),
 				},
 				ExtraAttr: []string{"cross-device-remote_cq"},
+			},
+
+			// Unstable subset of boards.
+			{
+				Name:      "dataoffline_hidden_png5kb_unstable",
+				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
+				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData: []string{"small_png.zip"},
+				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
+				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
+					// Companion DUT 1 dependency.
+					"cd1": hwdep.D(hwdep.Model(crossdevice.BGScanningUnstableModels...)),
+				},
 			},
 
 			// Floss duplicate
@@ -57,7 +73,7 @@ func init() {
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
 				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
 					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.SkipOnModel("babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360")),
+					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.BackgroundScanningDisabledModels...)),
 				},
 				ExtraAttr: []string{"cross-device-remote_floss"},
 			},
