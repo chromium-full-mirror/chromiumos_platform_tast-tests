@@ -32,10 +32,13 @@ import (
 // TestParams stores data common to the tests run in this package.
 type TestParams struct {
 	BrowserType     browser.Type
+	Tier            cuj.Tier
 	VideoCallURL    string
+	DocsURL         string
 	OutDir          string
 	TraceConfigPath string
 	TabletMode      bool
+	IsGrid          bool
 }
 
 // Run runs the VideoConfProxy test.
@@ -147,7 +150,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 			return err
 		}
 
-		docsConn, err := br.NewConn(ctx, cuj.VideoCallDocsURL, browser.WithNewWindow())
+		docsConn, err := br.NewConn(ctx, p.DocsURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open docs window")
 		}
