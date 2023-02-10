@@ -33,8 +33,11 @@ type testParam struct {
 	vmEnabled bool
 	// Android package name.
 	androidPackage string
-	// if set, collected data will be upload to cloud.
+	// if set, collected data will be upload to the cloud.
 	upload bool
+	// if set, packages reference would be uploaded to the cloud.
+	// This is required for T+ builds.
+	uploadPackagesReference bool
 	// if set, this verifies others uploads and creates pin to version if needed.
 	uprevBranch bool
 	// set of CPU ABIs required for uprev to pin to the next version. If caches for
@@ -143,63 +146,92 @@ func init() {
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val: testParam{
-				vmEnabled:      false,
-				androidPackage: "android-container-pi",
-				upload:         true,
-				uprevBranch:    false,
-				dataDir:        "",
+				vmEnabled:               false,
+				androidPackage:          "android-container-pi",
+				upload:                  true,
+				uploadPackagesReference: false,
+				uprevBranch:             false,
+				dataDir:                 "",
 			},
 		}, {
 			Name:              "container_r",
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			Val: testParam{
-				vmEnabled:      false,
-				androidPackage: "android-container-rvc",
-				upload:         true,
-				uprevBranch:    false,
-				dataDir:        "",
+				vmEnabled:               false,
+				androidPackage:          "android-container-rvc",
+				upload:                  true,
+				uploadPackagesReference: false,
+				uprevBranch:             false,
+				dataDir:                 "",
 			},
 		}, {
 			Name:              "vm_r",
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
 			Val: testParam{
-				vmEnabled:      true,
-				androidPackage: "android-vm-rvc",
-				upload:         true,
-				uprevBranch:    false,
-				dataDir:        "",
+				vmEnabled:               true,
+				androidPackage:          "android-vm-rvc",
+				upload:                  true,
+				uploadPackagesReference: false,
+				uprevBranch:             false,
+				dataDir:                 "",
+			},
+		}, {
+			Name:              "vm_t",
+			ExtraAttr:         []string{"group:arc-data-collector"},
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			Val: testParam{
+				vmEnabled:               true,
+				androidPackage:          "android-vm-tm",
+				upload:                  true,
+				uploadPackagesReference: true,
+				uprevBranch:             false,
+				dataDir:                 "",
 			},
 		}, {
 			Name:              "local",
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val: testParam{
-				vmEnabled:      false,
-				androidPackage: "android-container-pi",
-				upload:         false,
-				uprevBranch:    false,
-				dataDir:        "/tmp/data_collector",
+				vmEnabled:               false,
+				androidPackage:          "android-container-pi",
+				upload:                  false,
+				uploadPackagesReference: false,
+				uprevBranch:             false,
+				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
 			Name:              "container_r_local",
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			Val: testParam{
-				vmEnabled:      false,
-				androidPackage: "android-container-rvc",
-				upload:         false,
-				uprevBranch:    false,
-				dataDir:        "/tmp/data_collector",
+				vmEnabled:               false,
+				androidPackage:          "android-container-rvc",
+				upload:                  false,
+				uploadPackagesReference: false,
+				uprevBranch:             false,
+				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
 			Name:              "vm_r_local",
 			ExtraSoftwareDeps: []string{"android_vm_r"},
 			Val: testParam{
-				vmEnabled:      true,
-				androidPackage: "android-vm-rvc",
-				upload:         false,
-				uprevBranch:    false,
-				dataDir:        "/tmp/data_collector",
+				vmEnabled:               true,
+				androidPackage:          "android-vm-rvc",
+				upload:                  false,
+				uploadPackagesReference: false,
+				uprevBranch:             false,
+				dataDir:                 "/tmp/data_collector",
+			},
+		}, {
+			Name:              "vm_t_local",
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			Val: testParam{
+				vmEnabled:               true,
+				androidPackage:          "android-vm-tm",
+				upload:                  false,
+				uploadPackagesReference: true,
+				uprevBranch:             false,
+				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
 			// branch_uprev versions are designed to provide caches uprev functionality
@@ -229,6 +261,7 @@ func init() {
 				vmEnabled:                     false,
 				androidPackage:                "android-container-pi",
 				upload:                        true,
+				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
@@ -242,6 +275,7 @@ func init() {
 				vmEnabled:                     false,
 				androidPackage:                "android-container-rvc",
 				upload:                        true,
+				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				requiredCPUAbisForBranchUprev: []string{"x86_64"},
 				dataDir:                       "/tmp/data_collector",
@@ -259,6 +293,7 @@ func init() {
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
 				upload:                        true,
+				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
@@ -272,6 +307,9 @@ func init() {
 // the binary server.
 func DataCollector(ctx context.Context, s *testing.State) {
 	const (
+		// Packages reference bucket
+		packagesReference = "packages_reference"
+
 		// ureadahed packs bucket
 		ureadaheadPack = "ureadahead_pack"
 
@@ -356,6 +394,12 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	}
 
 	genUreadaheadPack := func() (retErr error) {
+		if param.androidPackage == "android-vm-tm" {
+			// Skip so far to unblock other caches work.
+			testing.ContextLog(ctx, "ureadahead generation is skipped for ARCVM-T. Please see b/266029539")
+			return nil
+		}
+
 		service := arc.NewUreadaheadPackServiceClient(cl.Conn)
 		// First boot is needed to be initial boot with removing all user data.
 		request := arcpb.UreadaheadPackRequest{
@@ -433,12 +477,40 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	genGmsCoreCache := func() error {
+	packAndUploadData := func(ctx context.Context, bucket, srcDir string, resources []string) {
+		targetDir := filepath.Join(dataDir, bucket)
+		if err = os.Mkdir(targetDir, 0744); err != nil {
+			s.Fatalf("Failed to create %q: %v", targetDir, err)
+		}
+
+		for _, resource := range resources {
+			if err = linuxssh.GetFile(
+				ctx, d.Conn(),
+				filepath.Join(srcDir, resource),
+				filepath.Join(targetDir, resource),
+				linuxssh.PreserveSymlinks); err != nil {
+				s.Fatalf("Failed to get %q from the device: %v", resource, err)
+			}
+		}
+
+		targetTar := filepath.Join(targetDir, v+".tar")
+		testing.ContextLogf(ctx, "Compressing %s to %q", bucket, targetTar)
+		if err = exec.Command("tar", "-cvpf", targetTar, "-C", targetDir, ".").Run(); err != nil {
+			s.Fatalf("Failed to compress %q: %v", targetDir, err)
+		}
+
+		if err := du.uploadIfNeeded(targetTar, bucket); err != nil {
+			s.Fatalf("Failed to upload %q: %v", bucket, err)
+		}
+	}
+
+	genPackagesReferenceAndGmsCoreCache := func() error {
 		service := arc.NewGmsCoreCacheServiceClient(cl.Conn)
 
 		request := arcpb.GmsCoreCacheRequest{
-			PackagesCacheEnabled: true,
-			GmsCoreEnabled:       false,
+			PackagesCacheEnabled:       true,
+			GmsCoreEnabled:             false,
+			CopyGeneratedPackagesCache: false,
 		}
 
 		// Shorten the total context by 5 seconds to allow for cleanup.
@@ -447,29 +519,18 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		response, err := service.Generate(shortCtx, &request)
 		if err != nil {
-			return errors.Wrap(err, "failed to generate GMS Core caches")
+			return errors.Wrap(err, "failed to generate packages reference and GMS Core caches")
 		}
 		defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
 
-		targetDir := filepath.Join(dataDir, gmsCoreCache)
-		if err = os.Mkdir(targetDir, 0744); err != nil {
-			s.Fatalf("Failed to create %q: %v", targetDir, err)
-		}
+		resources := []string{response.GmsCoreCacheName,
+			response.GmsCoreManifestName,
+			response.GsfCacheName}
+		packAndUploadData(shortCtx, gmsCoreCache, response.TargetDir, resources)
 
-		resources := []string{response.GmsCoreCacheName, response.GmsCoreManifestName, response.GsfCacheName}
-		for _, resource := range resources {
-			if err = linuxssh.GetFile(shortCtx, d.Conn(), filepath.Join(response.TargetDir, resource), filepath.Join(targetDir, resource), linuxssh.PreserveSymlinks); err != nil {
-				s.Fatalf("Failed to get %q from the device: %v", resource, err)
-			}
-		}
-		targetTar := filepath.Join(targetDir, v+".tar")
-		testing.ContextLogf(shortCtx, "Compressing gms core caches to %q", targetTar)
-		if err = exec.Command("tar", "-cvpf", targetTar, "-C", targetDir, ".").Run(); err != nil {
-			s.Fatalf("Failed to compress %q: %v", targetDir, err)
-		}
-
-		if err := du.uploadIfNeeded(targetTar, gmsCoreCache); err != nil {
-			s.Fatalf("Failed to upload %q: %v", gmsCoreCache, err)
+		if param.uploadPackagesReference {
+			resources = []string{response.PackagesCacheName}
+			packAndUploadData(shortCtx, packagesReference, response.TargetDir, resources)
 		}
 
 		return nil
@@ -497,7 +558,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 	attempts := 0
 	for {
-		err := genGmsCoreCache()
+		err := genPackagesReferenceAndGmsCoreCache()
 		if err == nil {
 			break
 		}

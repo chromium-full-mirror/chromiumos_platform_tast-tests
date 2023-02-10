@@ -19,6 +19,11 @@ message GmsCoreCacheRequest {
   bool packages_cache_enabled = 1;
   // If set, GMSCoreEnabled is requested. Otherwise, requests GMSCoreDisabled.
   bool gms_core_enabled = 2;
+  // If set, generated packages cache file would be copied from
+  // /system/etc/packages_cache.xml. This is required for cache
+  // validation and cache perf tests. It is not required for DataCollector
+  // and it will fail for ARCVM-T+ if requested.
+  bool copy_generated_packages_cache = 3;
 }
 
 message GmsCoreCacheResponse {

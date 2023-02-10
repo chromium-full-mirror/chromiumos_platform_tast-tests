@@ -74,11 +74,13 @@ func (c *GmsCoreCacheService) Generate(ctx context.Context, request *arcpb.GmsCo
 		return nil, errors.Wrap(err, "failed to generate GMS Core caches")
 	}
 
-	src := filepath.Join("/system/etc", cache.PackagesCacheXML)
-	dst := filepath.Join(targetDir, cache.GeneratedPackagesCacheXML)
-	if err := a.PullFile(ctx, src, dst); err != nil {
-		testing.ContextLog(ctx, "Could not pull file from Android, this may mean that pre-generated packages cache was not installed when building the image")
-		return nil, errors.Wrapf(err, "failed to pull %s from Android: ", cache.GeneratedPackagesCacheXML)
+	if request.CopyGeneratedPackagesCache {
+		src := filepath.Join("/system/etc", cache.PackagesCacheXML)
+		dst := filepath.Join(targetDir, cache.GeneratedPackagesCacheXML)
+		if err := a.PullFile(ctx, src, dst); err != nil {
+			testing.ContextLog(ctx, "Could not pull file from Android, this may mean that pre-generated packages cache was not installed when building the image")
+			return nil, errors.Wrapf(err, "failed to pull %s from Android: ", cache.GeneratedPackagesCacheXML)
+		}
 	}
 
 	response := arcpb.GmsCoreCacheResponse{

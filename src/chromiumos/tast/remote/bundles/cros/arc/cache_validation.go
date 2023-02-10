@@ -195,8 +195,9 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 	// after copying them over. Also returns the temp directory for removal.
 	getCaches := func(cacheEnabled bool) (string, string, string, string) {
 		request := arcpb.GmsCoreCacheRequest{
-			PackagesCacheEnabled: cacheEnabled,
-			GmsCoreEnabled:       cacheEnabled,
+			PackagesCacheEnabled:       cacheEnabled,
+			GmsCoreEnabled:             cacheEnabled,
+			CopyGeneratedPackagesCache: true,
 		}
 
 		// Shorten the total context by 5 seconds to allow for cleanup.
