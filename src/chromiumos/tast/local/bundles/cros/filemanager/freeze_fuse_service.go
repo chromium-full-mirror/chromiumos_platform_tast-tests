@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -141,6 +143,11 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 			return nil, errors.Wrap(err, "failed to read wakeup count before suspend")
 		}
 
+		successfulSuspends, err := readSuccessfulSuspends(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read successful suspends before suspend attempt")
+		}
+
 		// Suspend for 45 seconds since the stress script slows us down.
 		// This gives freeze during suspend enough time to timeout in 20s.
 		testing.ContextLogf(ctx, "Attempting suspend iteration %d", i)
@@ -153,6 +160,14 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 			return nil, errors.Wrap(err, "powerd_dbus_suspend failed to properly suspend")
 		}
 
+		successfulSuspendsAfter, err := readSuccessfulSuspends(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read successful suspends after suspend attempt")
+		}
+		if successfulSuspendsAfter != successfulSuspends+1 {
+			return nil, errors.Errorf("successful suspends did not increase by 1. Before: %d, After: %d", successfulSuspends, successfulSuspendsAfter)
+		}
+
 		if err := shill.WaitForOnline(ctx); err != nil {
 			return nil, errors.Wrap(err, "timed out waiting for the network to connect after resume")
 		}
@@ -162,4 +177,18 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 	}
 
 	return &empty.Empty{}, lastErr
+}
+
+var successfulSuspendsRegex = regexp.MustCompile(`success: ([0-9]+)`)
+
+func readSuccessfulSuspends(ctx context.Context) (int, error) {
+	out, err := ioutil.ReadFile("/sys/kernel/debug/suspend_stats")
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to read suspend_stats for the number of successful suspends")
+	}
+	successfulSuspendsMatch := successfulSuspendsRegex.FindSubmatch([]byte(out))
+	if successfulSuspendsMatch == nil {
+		return 0, errors.New("failed to parse number of successful suspends from suspend_stats")
+	}
+	return strconv.Atoi(string(successfulSuspendsMatch[1]))
 }
