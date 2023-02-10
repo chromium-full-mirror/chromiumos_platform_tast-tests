@@ -196,7 +196,8 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 			}
 
 			s.Log("Draging and dropping content")
-			browserRoot := nodewith.ClassName("BrowserFrame").NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
+			// Root node of the frame with the title "Editable Text Box" in ash or lacros.
+			browserRoot := nodewith.ClassNameRegex(regexp.MustCompile("(BrowserFrame)|(ExoShellSurface-.*)")).NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
 			dstNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
 			if err := dragdrop.DragDrop(ctx, tconn, param.content, dstNode); err != nil {
 				s.Error("Failed to drag drop content: ", err)
