@@ -7,7 +7,6 @@
 package removablemedia
 
 import (
-	"bytes"
 	"context"
 	"io/ioutil"
 	"os"
@@ -16,10 +15,13 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/bundles/cros/arc/storage"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crosdisks"
 	"chromiumos/tast/testing"
 )
@@ -167,15 +169,13 @@ func CreateAndMountImage(ctx context.Context, imageSize int64, diskName string) 
 }
 
 // RunTest executes the testing scenario of arc.RemovableMedia.
-func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, testFile string) {
+func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, testFile string) {
 	const (
 		imageSize = 64 * 1024 * 1024
 		diskName  = "MyDisk"
 	)
-	expected, err := ioutil.ReadFile(s.DataPath(testFile))
-	if err != nil {
-		s.Fatalf("Failed to read %s: %v", testFile, err)
-	}
+
+	expected := []byte(storage.ExpectedFileContent)
 
 	mountDir, cleanupFunc, err := CreateAndMountImage(ctx, imageSize, diskName)
 	if err != nil {
@@ -187,31 +187,17 @@ func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, testFile string)
 		s.Fatal("Failed to wait for the volume to be mounted in ARC: ", err)
 	}
 
-	// Create a picture in the removable media.
+	// Create a text file in the removable media.
 	tpath := filepath.Join(mountDir, testFile)
 	if err := ioutil.WriteFile(tpath, expected, 0644); err != nil {
 		s.Fatal("Failed to write a data file: ", err)
 	}
 
-	// VolumeProvider should be able to read the file.
-	verify := func(uri, dumpPath string) error {
-		out, err := a.Command(ctx, "content", "read", "--uri", uri).Output(testexec.DumpLogOnError)
-		if err != nil {
-			return errors.Wrap(err, "failed to read the content")
-		}
-
-		if !bytes.Equal(out, expected) {
-			if err := ioutil.WriteFile(dumpPath, out, 0644); err != nil {
-				s.Logf("Failed to dump the read content to %s: %v", dumpPath, err)
-				return errors.New("file content does not match with the original")
-			}
-			return errors.Errorf("file content does not match with the original (see %s for the read content)", dumpPath)
-		}
-		return nil
-	}
-
-	uri := arc.VolumeProviderContentURIPrefix + path.Join(arc.RemovableMediaUUID, testFile)
-	if err := verify(uri, filepath.Join(s.OutDir(), testFile)); err != nil {
-		s.Fatalf("Failed to read the file via VolumeProvider using content URI %s: %v", uri, err)
-	}
+	testFileURI := arc.VolumeProviderContentURIPrefix + filepath.Join(arc.RemovableMediaUUID, testFile)
+	config := storage.TestConfig{DirName: diskName, DirTitle: "Files - " + diskName, SubDirectories: []string{}, FileName: testFile, CreateTestFile: false}
+	expectations := []storage.Expectation{
+		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
+		{LabelID: storage.URIID, Value: testFileURI},
+		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
+	storage.TestOpenWithAndroidApp(ctx, s, a, cr, d, config, expectations)
 }

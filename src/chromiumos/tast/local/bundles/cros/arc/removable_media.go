@@ -22,7 +22,6 @@ func init() {
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Data:         []string{"capybara.jpg"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -34,5 +33,9 @@ func init() {
 }
 
 func RemovableMedia(ctx context.Context, s *testing.State) {
-	removablemedia.RunTest(ctx, s, s.FixtValue().(*arc.PreData).ARC, "capybara.jpg")
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+	d := s.FixtValue().(*arc.PreData).UIDevice
+
+	removablemedia.RunTest(ctx, s, a, cr, d, "storage.txt")
 }
