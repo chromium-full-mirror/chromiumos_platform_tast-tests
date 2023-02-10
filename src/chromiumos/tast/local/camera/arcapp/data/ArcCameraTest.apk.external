@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/camera/ArcCameraTest-1.0.5_20230213.apk",
-  "size": 4224351,
-  "sha256sum": "b8f8b0f8e256568bf63dfafd64653fd07c327c988c1de2e7d3cfad07de163a42"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/camera/ArcCameraTest-1.0.6_20230214.apk",
+  "size": 4215401,
+  "sha256sum": "0ec580a66fc4efa89281eb5338abec0214fcea6fbf40c1862b026753aefffbad"
 }

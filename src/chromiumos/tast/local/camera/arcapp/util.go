@@ -26,23 +26,27 @@ const (
 	// CameraAppApk is the APK name of the ARC Camera Test App.
 	CameraAppApk = "ArcCameraTest.apk"
 
-	cameraAppActivity = ".MainActivity"
-	cameraAppPackage  = "chromeos.camera.app.arccameratest"
+	cameraAppActivity       = ".MainActivity"
+	orientationTestActivity = ".OrientationTestActivity"
 
-	intentSwitchCamera      = "chromeos.camera.app.arccameratest.ACTION_SWITCH_CAMERA"
-	intentSwitchMode        = "chromeos.camera.app.arccameratest.ACTION_SWITCH_MODE"
-	intentTakePhoto         = "chromeos.camera.app.arccameratest.ACTION_TAKE_PHOTO"
-	intentStartRecording    = "chromeos.camera.app.arccameratest.ACTION_START_RECORDING"
-	intentStopRecording     = "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING"
-	intentResetCamera       = "chromeos.camera.app.arccameratest.ACTION_RESET_CAMERA"
-	intentGetMetrics        = "chromeos.camera.app.arccameratest.ACTION_GET_METRICS"
-	intentSetFps            = "chromeos.camera.app.arccameratest.ACTION_SET_FPS"
-	intentGetFrameDropRatio = "chromeos.camera.app.arccameratest.ACTION_GET_FRAME_DROP_RATIO"
-	intentResetMetrics      = "chromeos.camera.app.arccameratest.ACTION_RESET_METRICS"
-	keyCameraFacing         = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
-	keyCameraMode           = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
-	valuePhoto              = "Photo"
-	valueVideo              = "Video"
+	cameraAppPackage = "chromeos.camera.app.arccameratest"
+
+	intentSwitchCamera             = "chromeos.camera.app.arccameratest.ACTION_SWITCH_CAMERA"
+	intentSwitchMode               = "chromeos.camera.app.arccameratest.ACTION_SWITCH_MODE"
+	intentTakePhoto                = "chromeos.camera.app.arccameratest.ACTION_TAKE_PHOTO"
+	intentStartRecording           = "chromeos.camera.app.arccameratest.ACTION_START_RECORDING"
+	intentStopRecording            = "chromeos.camera.app.arccameratest.ACTION_STOP_RECORDING"
+	intentResetCamera              = "chromeos.camera.app.arccameratest.ACTION_RESET_CAMERA"
+	intentGetMetrics               = "chromeos.camera.app.arccameratest.ACTION_GET_METRICS"
+	intentSetFps                   = "chromeos.camera.app.arccameratest.ACTION_SET_FPS"
+	intentGetFrameDropRatio        = "chromeos.camera.app.arccameratest.ACTION_GET_FRAME_DROP_RATIO"
+	intentResetMetrics             = "chromeos.camera.app.arccameratest.ACTION_RESET_METRICS"
+	intentStartOrientationTest     = "chromeos.camera.app.arccameratest.ACTION_START_ORIENTATION_TEST"
+	intentGetOrientationTestResult = "chromeos.camera.app.arccameratest.ACTION_GET_ORIENTATION_TEST_RESULT"
+	keyCameraFacing                = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
+	keyCameraMode                  = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
+	valuePhoto                     = "Photo"
+	valueVideo                     = "Video"
 
 	// Snapshots can be really small if the room is dark, but JPEGs and MP4s are never smaller than 100 bytes.
 	minExpectedFileSize = 100
@@ -66,6 +70,8 @@ type ErrorFacingNotSupported struct {
 	facing string
 }
 
+type funcWithTestConn func(context.Context, *chrome.TestConn)
+
 func (err ErrorFacingNotSupported) Error() string {
 	return fmt.Sprintf("Facing %v is not supported", err.facing)
 }
@@ -79,12 +85,21 @@ func broadcastIntentGetData(ctx context.Context, a *arc.ARC, action string, para
 }
 
 // LaunchARCCameraApp launches the ARC Camera Test App and returns cleanup function and error is there is any.
-func LaunchARCCameraApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn) (cleanupFunc func(context.Context, *chrome.TestConn), retErr error) {
+func LaunchARCCameraApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn) (funcWithTestConn, error) {
+	return launchApp(ctx, a, tconn, cameraAppActivity)
+}
+
+// LaunchOrientationTestApp launches the ARC Camera Test App and lands on the orientation test activity.
+func LaunchOrientationTestApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn) (funcWithTestConn, error) {
+	return launchApp(ctx, a, tconn, orientationTestActivity)
+}
+
+func launchApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, act string) (cleanupFunc funcWithTestConn, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancelCleanup := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancelCleanup()
 
-	activity, err := arc.NewActivity(a, cameraAppPackage, cameraAppActivity)
+	activity, err := arc.NewActivity(a, cameraAppPackage, act)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new activity")
 	}
@@ -168,9 +183,13 @@ func StopRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 
 // SwitchCamera switches camera to the given facing. If given facing is not supported, it returns nil.
 func SwitchCamera(ctx context.Context, a *arc.ARC, facing string) error {
-	if success, err := broadcastIntentGetData(ctx, a, intentSwitchCamera, "--ei", keyCameraFacing, facing); err != nil {
-		return err
-	} else if success == "FALSE" {
+	rawData, err := broadcastIntentGetData(ctx, a, intentSwitchCamera, "--ei", keyCameraFacing, facing)
+	if err != nil {
+		return errors.Wrap(err, "failed to request switching camera")
+	}
+	if success, err := strconv.ParseBool(rawData); err != nil {
+		return errors.Wrap(err, "failed to parse raw data to boolean")
+	} else if !success {
 		// Continue when there is no camera with such facing.
 		return ErrorFacingNotSupported{facing: facing}
 	}
@@ -234,6 +253,23 @@ func ResetMetrics(ctx context.Context, a *arc.ARC) error {
 		return errors.Wrap(err, "failed to reset metrics")
 	}
 	return nil
+}
+
+// StartOrientationTest starts to run orientation test in the app.
+func StartOrientationTest(ctx context.Context, a *arc.ARC) error {
+	if _, err := broadcastIntent(ctx, a, intentStartOrientationTest); err != nil {
+		return errors.Wrap(err, "failed to start orientation test")
+	}
+	return nil
+}
+
+// OrientationTestPassed returns the orientation test result.
+func OrientationTestPassed(ctx context.Context, a *arc.ARC) (bool, error) {
+	rawData, err := broadcastIntentGetData(ctx, a, intentGetOrientationTestResult)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get orientation test result")
+	}
+	return strconv.ParseBool(rawData)
 }
 
 // fileSizeInDCIM searches the file inside Android DCIM folder and returns its size.
