@@ -318,6 +318,42 @@ var vp90Group1Sub8x8Sf = []string{
 	"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_384X192_fr30_bd8_sub8x8_sf_l11.ivf",
 }
 
+var vp92Group1Buf = []string{
+	"test_vectors/vp9/Profile_2_10bit/buf/grass_1_256X144_fr15_bd10_8buf_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/buf/street1_1_256X144_fr15_bd10_8buf_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/buf/crowd_run_256X144_fr15_bd10_8buf_l1.ivf",
+}
+
+var vp92Group1FrmResize = []string{
+	"test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_256X144_fr15_bd10_frm_resize_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_256X144_fr15_bd10_frm_resize_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_256X144_fr15_bd10_frm_resize_l1.ivf",
+}
+
+var vp92Group1GfDist = []string{
+	"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_256X144_fr15_bd10_gf_dist_4_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_256X144_fr15_bd10_gf_dist_4_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_256X144_fr15_bd10_gf_dist_4_l1.ivf",
+}
+
+var vp92Group1OddSize = []string{
+	"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_248X144_fr15_bd10_odd_size_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_248X144_fr15_bd10_odd_size_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_248X144_fr15_bd10_odd_size_l1.ivf",
+}
+
+var vp92Group1Sub8x8 = []string{
+	"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_256X144_fr15_bd10_sub8X8_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_256X144_fr15_bd10_sub8X8_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_256X144_fr15_bd10_sub8X8_l1.ivf",
+}
+
+var vp92Group1Sub8x8Sf = []string{
+	"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_256X144_fr15_bd10_sub8x8_sf_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_256X144_fr15_bd10_sub8x8_sf_l1.ivf",
+	"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_256X144_fr15_bd10_sub8x8_sf_l1.ivf",
+}
+
 var vp9SVCFiles = []string{
 	"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf",
 }
@@ -713,6 +749,72 @@ func init() {
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8Sf),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:    vp90Group1Sub8x8Sf,
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "vp9_2_group1_buf",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
+				ExtraData:         appendJSONFiles(vp92Group1Buf),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    vp92Group1Buf,
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "vp9_2_group1_frm_resize",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
+				ExtraData:         appendJSONFiles(vp92Group1FrmResize),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    vp92Group1FrmResize,
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "vp9_2_group1_gf_dist",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
+				ExtraData:         appendJSONFiles(vp92Group1GfDist),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    vp92Group1GfDist,
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "vp9_2_group1_odd_size",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
+				ExtraData:         appendJSONFiles(vp92Group1OddSize),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    vp92Group1OddSize,
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "vp9_2_group1_sub8x8",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
+				ExtraData:         appendJSONFiles(vp92Group1Sub8x8),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    vp92Group1Sub8x8,
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "vp9_2_group1_sub8x8_sf",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
+				ExtraData:         appendJSONFiles(vp92Group1Sub8x8Sf),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    vp92Group1Sub8x8Sf,
 					validatorType: decoding.MD5,
 					mustFail:      false,
 				},

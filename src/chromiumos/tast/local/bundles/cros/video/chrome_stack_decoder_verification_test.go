@@ -200,6 +200,42 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			VideoFiles:    "vp90Group1Sub8x8Sf",
 			ValidatorType: "decoding.MD5",
 		}, {
+			Name:          "vp9_2_group1_buf",
+			Attr:          perBuildAttrs,
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
+			VideoFiles:    "vp92Group1Buf",
+			ValidatorType: "decoding.MD5",
+		}, {
+			Name:          "vp9_2_group1_frm_resize",
+			Attr:          perBuildAttrs,
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
+			VideoFiles:    "vp92Group1FrmResize",
+			ValidatorType: "decoding.MD5",
+		}, {
+			Name:          "vp9_2_group1_gf_dist",
+			Attr:          perBuildAttrs,
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
+			VideoFiles:    "vp92Group1GfDist",
+			ValidatorType: "decoding.MD5",
+		}, {
+			Name:          "vp9_2_group1_odd_size",
+			Attr:          perBuildAttrs,
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
+			VideoFiles:    "vp92Group1OddSize",
+			ValidatorType: "decoding.MD5",
+		}, {
+			Name:          "vp9_2_group1_sub8x8",
+			Attr:          perBuildAttrs,
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
+			VideoFiles:    "vp92Group1Sub8x8",
+			ValidatorType: "decoding.MD5",
+		}, {
+			Name:          "vp9_2_group1_sub8x8_sf",
+			Attr:          perBuildAttrs,
+			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
+			VideoFiles:    "vp92Group1Sub8x8Sf",
+			ValidatorType: "decoding.MD5",
+		}, {
 			Name: "vp9_0_svc",
 			// TODO(b/210167476): Reenable when it's not failing everywhere.
 			//Attr:         perBuildAttrs,
