@@ -192,15 +192,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 
 		// Given time to close chrome.
 		cleanupCtx := ctx
-		ctx, cancel = ctxutil.Shorten(ctx, 15*time.Second)
+		ctx, cancel = ctxutil.Shorten(ctx, 20*time.Second)
 		defer cancel()
 
 		defer func(ctx context.Context) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_tree")
 
+			shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			defer cancel()
+
 			closeFunc := func(ctx context.Context) error {
 				// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
-				if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+				if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 					// When closing the "Youtube Music" website, the popup "Leave site?" might appear.
 					leaveWindow := nodewith.Name("Leave site?").Role(role.Window).First()
