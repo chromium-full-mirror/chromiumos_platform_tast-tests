@@ -667,15 +667,20 @@ func NewShillService(ctx context.Context, config Config, nameSuffix string, prio
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create manager proxy")
 	}
-	svc, r, err := virtualnet.CreateRouterEnv(ctx, m, pool, virtualnet.EnvOptions{
-		Priority:             priority,
-		NameSuffix:           nameSuffix,
-		IPv4DNSServers:       config.IPv4Nameservers,
-		IPv6DNSServers:       config.IPv6Nameservers,
-		IPv4DomainSearchList: config.IPv4DomainSearchList,
-		EnableDHCP:           true,
-		RAServer:             true,
-	})
+	opts := virtualnet.EnvOptions{
+		Priority:   priority,
+		NameSuffix: nameSuffix,
+	}
+	if len(config.IPv4Nameservers) > 0 || len(config.IPv4DomainSearchList) > 0 {
+		opts.EnableDHCP = true
+		opts.IPv4DNSServers = config.IPv4Nameservers
+		opts.IPv4DomainSearchList = config.IPv4DomainSearchList
+	}
+	if len(config.IPv6Nameservers) > 0 {
+		opts.RAServer = true
+		opts.IPv6DNSServers = config.IPv6Nameservers
+	}
+	svc, r, err := virtualnet.CreateRouterEnv(ctx, m, pool, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to set up shill service")
 	}
