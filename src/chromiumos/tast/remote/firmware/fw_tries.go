@@ -24,26 +24,10 @@ func SetFWTries(ctx context.Context, d *dut.DUT, nextFW fwCommon.RWSection, tryC
 	if nextFW != fwCommon.RWSectionA && nextFW != fwCommon.RWSectionB {
 		return errors.Errorf("unexpected param nextFW: got %s; want A or B", nextFW)
 	}
-	// Determine crossystem values to set, based on whether DUT uses Vboot2
-	r := reporters.New(d)
-	vboot2, err := r.Vboot2(ctx)
-	if err != nil {
-		return errors.Wrap(err, "determining whether DUT uses vboot2")
-	}
 	crossystemMap := make(map[string]string)
-	if vboot2 {
-		crossystemMap["fw_try_next"] = string(nextFW)
-		if tryCount > 0 {
-			crossystemMap["fw_try_count"] = strconv.Itoa(int(tryCount))
-		}
-	} else {
-		// For a vboot1 DUT, tryCount represents fwb_tries.
-		// Setting fwb_tries=0 implies that nextFW=A. Likewise, setting fwb_tries>0 implies that nextFW=B.
-		// Thus, a combination of nextFW/tryCount = A/>0 or B/0 does not make sense.
-		if (nextFW == fwCommon.RWSectionA && tryCount > 0) || (nextFW == fwCommon.RWSectionB && tryCount == 0) {
-			return errors.Errorf("unexpected params nextFW/tryCount for vboot1 DUT: want either A/0 or B/>0; got %s/%d", nextFW, tryCount)
-		}
-		crossystemMap["fwb_tries"] = strconv.Itoa(int(tryCount))
+	crossystemMap["fw_try_next"] = string(nextFW)
+	if tryCount > 0 {
+		crossystemMap["fw_try_count"] = strconv.Itoa(int(tryCount))
 	}
 	// Send crossystem command to set values
 	crossystemArgs := make([]string, len(crossystemMap))

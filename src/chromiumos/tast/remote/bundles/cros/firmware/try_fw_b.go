@@ -13,7 +13,6 @@ import (
 	fwUtils "chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -63,19 +62,6 @@ func TryFWB(ctx context.Context, s *testing.State) {
 		s.Fatal(err, "failed to set the USB Mux direction to the Host")
 	}
 
-	vboot2, err := h.Reporter.Vboot2(ctx)
-	if err != nil {
-		s.Fatal("Failed to determine fw_vboot2: ", err)
-	}
-
-	if !vboot2 {
-		if triedFWB, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamTriedFWB); err != nil {
-			s.Fatal("Failed to read the tried_fwb param: ", err)
-		} else if triedFWB != "0" {
-			s.Log("Firmware is booted with tried_fwb. Reboot to clear")
-		}
-	}
-
 	s.Log("Start test with FW A")
 	if err := fwUtils.ChangeFWVariant(ctx, h, ms, fwCommon.RWSectionA); err != nil {
 		s.Fatal("Failed to change FW variant: ", err)
@@ -90,10 +76,7 @@ func TryFWB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to perform mode aware reboot: ", err)
 	}
 
-	finalFWVer := "A"
-	if vboot2 {
-		finalFWVer = "B"
-	}
+	finalFWVer := "B"
 
 	if isFWVerCorrect, err := h.Reporter.CheckFWVersion(ctx, finalFWVer); err != nil {
 		s.Fatal(err, "failed to check a firmware version")

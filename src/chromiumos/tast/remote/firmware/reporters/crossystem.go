@@ -23,7 +23,6 @@ const (
 	CrossystemParamDevBootAltfw       CrossystemParam = "dev_boot_altfw"
 	CrossystemParamDevswBoot          CrossystemParam = "devsw_boot"
 	CrossystemParamFwid               CrossystemParam = "fwid"
-	CrossystemParamFWBTries           CrossystemParam = "fwb_tries"
 	CrossystemParamFWTryNext          CrossystemParam = "fw_try_next"
 	CrossystemParamFWTryCount         CrossystemParam = "fw_try_count"
 	CrossystemParamFWUpdatetries      CrossystemParam = "fwupdate_tries"
@@ -35,7 +34,6 @@ const (
 	CrossystemParamRoFwid             CrossystemParam = "ro_fwid"
 	CrossystemParamWpswCur            CrossystemParam = "wpsw_cur"
 	CrossystemParamRecoveryReason     CrossystemParam = "recovery_reason"
-	CrossystemParamTriedFWB           CrossystemParam = "tried_fwb"
 	CrossystemParamRecoveryRequest    CrossystemParam = "recovery_request"
 	CrossystemParamFWTried            CrossystemParam = "fw_tried"
 	CrossystemParamFWResult           CrossystemParam = "fw_result"
@@ -48,7 +46,6 @@ const (
 var (
 	knownCrossystemParams = []CrossystemParam{
 		CrossystemParamDevswBoot,
-		CrossystemParamFWBTries,
 		CrossystemParamFWTryCount,
 		CrossystemParamFWTryNext,
 		CrossystemParamFWVboot2,
