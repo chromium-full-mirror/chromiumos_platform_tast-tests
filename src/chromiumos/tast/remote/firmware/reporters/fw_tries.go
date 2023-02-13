@@ -17,7 +17,7 @@ import (
 
 // FWTries returns the currently booted firmware, the next firmware that should be booted, and the try_count.
 func (r *Reporter) FWTries(ctx context.Context) (fwCommon.RWSection, fwCommon.RWSection, uint, error) {
-	csMap, err := r.Crossystem(ctx, CrossystemParamFWVboot2, CrossystemParamMainfwAct, CrossystemParamFWTryNext, CrossystemParamFWTryCount)
+	csMap, err := r.Crossystem(ctx, CrossystemParamMainfwAct, CrossystemParamFWTryNext, CrossystemParamFWTryCount)
 	if err != nil {
 		return fwCommon.RWSectionUnspecified, fwCommon.RWSectionUnspecified, 0, err
 	}

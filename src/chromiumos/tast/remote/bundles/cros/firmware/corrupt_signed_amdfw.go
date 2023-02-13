@@ -137,19 +137,7 @@ func CorruptSignedAMDFW(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to perform mode aware reboot: ", err)
 		}
 
-		vboot2, err := h.Reporter.Vboot2(ctx)
-		if err != nil {
-			s.Fatal("Failed to determine fw_vboot2: ", err)
-		}
-
-		var finalFWVer string
-		if vboot2 {
-			finalFWVer = fwVariantOpposite
-		} else {
-			finalFWVer = "A"
-		}
-
-		if isFWVerCorrect, err := h.Reporter.CheckFWVersion(ctx, finalFWVer); err != nil {
+		if isFWVerCorrect, err := h.Reporter.CheckFWVersion(ctx, fwVariantOpposite); err != nil {
 			s.Fatal(err, "failed to check a firmware version")
 		} else if !isFWVerCorrect {
 			s.Fatal("Failed to boot into the opposite firmware")

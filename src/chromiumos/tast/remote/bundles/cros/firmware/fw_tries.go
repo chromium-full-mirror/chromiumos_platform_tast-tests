@@ -50,16 +50,6 @@ func FWTries(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	vboot2, err := h.Reporter.Vboot2(ctx)
-	if err != nil {
-		s.Fatal("Failed to determine fw_vboot2: ", err)
-	}
-	if vboot2 {
-		s.Log("DUT uses vboot2")
-	} else {
-		s.Log("DUT does not use vboot2")
-	}
-
 	currentFW, nextFW, tryCount, err := h.Reporter.FWTries(ctx)
 	if err != nil {
 		s.Fatal("Reporting FW Tries at start of test: ", err)

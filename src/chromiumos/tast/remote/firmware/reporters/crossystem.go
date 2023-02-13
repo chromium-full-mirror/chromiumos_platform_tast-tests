@@ -26,7 +26,6 @@ const (
 	CrossystemParamFWTryNext          CrossystemParam = "fw_try_next"
 	CrossystemParamFWTryCount         CrossystemParam = "fw_try_count"
 	CrossystemParamFWUpdatetries      CrossystemParam = "fwupdate_tries"
-	CrossystemParamFWVboot2           CrossystemParam = "fw_vboot2"
 	CrossystemParamKernkeyVfy         CrossystemParam = "kernkey_vfy"
 	CrossystemParamLocIdx             CrossystemParam = "loc_idx"
 	CrossystemParamMainfwAct          CrossystemParam = "mainfw_act"
@@ -48,7 +47,6 @@ var (
 		CrossystemParamDevswBoot,
 		CrossystemParamFWTryCount,
 		CrossystemParamFWTryNext,
-		CrossystemParamFWVboot2,
 		CrossystemParamKernkeyVfy,
 		CrossystemParamMainfwAct,
 		CrossystemParamMainfwType,

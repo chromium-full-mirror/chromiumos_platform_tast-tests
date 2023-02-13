@@ -72,27 +72,6 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	// Check if DUT uses vboot2.
-	vboot2, err := h.Reporter.Vboot2(ctx)
-	if err != nil {
-		s.Fatal("Failed to determine fw_vboot2: ", err)
-	}
-
-	// For legacy devices with vboot1, reboot if crossystem backup_nvram_request
-	// doesn't return 0.
-	if !vboot2 {
-		shouldReboot, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamBackupNvramRequest)
-		if err != nil {
-			s.Fatal("Failed to run crossystem param: ", err)
-		}
-		if shouldReboot != "0" {
-			s.Logf("Got crossystem backup_nvram_request value: %s, rebooting DUT now", shouldReboot)
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-				s.Fatal("Failed to reboot DUT by servo: ", err)
-			}
-		}
-	}
-
 	cs := crossystemValues{}
 	s.Log("Saving original crossystem values under evaluation to restore at the end of test")
 	csOriginal, err := readTargetCsVals(ctx, s, h, cs)
@@ -153,13 +132,10 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		return "all fw versions are up to date"
 	}
 	fwStatus := needFwUpdate()
-	for _, tc := range []struct {
-		powerDisruption string
-		fwVboot2        bool
-	}{
-		{"powerCycleByReboot", vboot2},
-		{"powerCycleByPressingPowerKey", vboot2},
-		{"powerCycleByRemovingBattery", vboot2},
+	for _, powerDisruption := range []string{
+		"powerCycleByReboot",
+		"powerCycleByPressingPowerKey",
+		"powerCycleByRemovingBattery",
 	} {
 		s.Log("Saving crossystem params and their values before a power-cycle")
 		csBefore, err := readTargetCsVals(ctx, s, h, cs)
@@ -168,14 +144,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 		}
 		beforeCrossystemMap := createCsMap(csBefore)
 
-		// For legacy devices with vboot1, crossystem backup_nvram_request should return 1.
-		if !tc.fwVboot2 {
-			if csBefore.backupNvramRequest != "1" {
-				s.Fatalf("DUT is a legacy device. Expected value 1 before power-cycle from crossystem backup_nvram_request, but got %s", csBefore.backupNvramRequest)
-			}
-		}
-
-		switch tc.powerDisruption {
+		switch powerDisruption {
 		case "powerCycleByReboot":
 			s.Log("Power-cycling DUT with a reboot")
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
@@ -406,13 +375,6 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to read crossystem values after a power-cycle: ", err)
 		}
 		afterCrossystemMap := createCsMap(csAfter)
-
-		// For legacy devices with vboot1, crossystem backup_nvram_request should return 0.
-		if !tc.fwVboot2 {
-			if csAfter.backupNvramRequest != "0" {
-				s.Fatalf("DUT is a legacy device. Expected value 0 after power-cycle from crossystem backup_nvram_request, but got %s", csAfter.backupNvramRequest)
-			}
-		}
 
 		// Compare the before and after values in crossystemValues, except backupNvramRequest,
 		// which is only checked on DUTs using vboot1.

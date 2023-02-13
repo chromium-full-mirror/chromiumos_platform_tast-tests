@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:firmware"},
 		Timeout:      30 * time.Minute,
 		Fixture:      fixture.DevMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Vboot2()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
 }
 

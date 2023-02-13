@@ -19,7 +19,7 @@ import (
 )
 
 // SetFWTries sets which firmware (A or B) the DUT should boot to next, and how many times it should try booting ino that firmware.
-// If tryCount is 0 for a vboot2 DUT, then fw_try_count will not be modified, only fw_try_next.
+// If tryCount is 0, then fw_try_count will not be modified, only fw_try_next.
 func SetFWTries(ctx context.Context, d *dut.DUT, nextFW fwCommon.RWSection, tryCount uint) error {
 	if nextFW != fwCommon.RWSectionA && nextFW != fwCommon.RWSectionB {
 		return errors.Errorf("unexpected param nextFW: got %s; want A or B", nextFW)
