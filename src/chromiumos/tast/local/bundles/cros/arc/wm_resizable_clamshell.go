@@ -765,6 +765,22 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 		return errors.Wrap(err, "failed to restore window if maximized")
 	}
 
+	sdkVer, err := arc.SDKVersion()
+	if err != nil {
+		return errors.Wrap(err, "failed to get SDKVersion")
+	}
+	if sdkVer == arc.SDKR {
+		// In ARC-R, auto-snapping is enabled in clamshell mode, which is an undefined behavior by the spec.
+		// Thus here we make sure the window is in the "clean" (i.e. freeform) state to continue the following tests.
+		// On the other hand, in ARC-T and later, auto-snapping is disabled in clamshell mode to be consistent with non-ARC windows (e.g. browser windows) thanks to the better SystemUI control over the launch bounds.
+		if err := wm.DragCaptionToUnsnap(ctx, tconn, pc, dInfo, rightAct); err != nil {
+			return errors.Wrap(err, "failed to drag caption bar to unsnap")
+		}
+		if err := wm.WaitForArcAndAshWindowState(ctx, tconn, d, rightAct, arc.WindowStateNormal); err != nil {
+			return errors.Wrap(err, "failed to wait until window state changes to unsnapped")
+		}
+	}
+
 	// Snap the activity to the right.
 	if err := wm.DragCaptionToSnap(ctx, tconn, pc, dInfo, rightAct, false /*isLeft*/); err != nil {
 		return errors.Wrap(err, "failed to drag caption bar to snap right")
