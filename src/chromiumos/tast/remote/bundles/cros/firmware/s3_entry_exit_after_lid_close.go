@@ -40,11 +40,12 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.security.BootLockboxService", "tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
+		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.
 		Attr:         []string{},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: fixture.NormalMode,

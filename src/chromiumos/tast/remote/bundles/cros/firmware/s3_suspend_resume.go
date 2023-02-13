@@ -45,6 +45,7 @@ func init() {
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.
 		Attr:         []string{},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "stability_test_clamshell_mode",
 			Fixture: fixture.NormalMode,
