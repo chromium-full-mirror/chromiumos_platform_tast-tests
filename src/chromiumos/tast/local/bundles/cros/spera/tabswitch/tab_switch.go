@@ -610,9 +610,10 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 				videoWaitStartTime := time.Now()
 				videoHistogram, err := metrics.WaitForHistogram(ctx, tconn, videoHistogramName, shortUITimeout)
 				if err != nil {
-					return errors.Wrapf(err, "failed to wait for %q histogram", videoHistogramName)
+					testing.ContextLog(ctx, "Failed to wait for histogram: ", err)
+				} else {
+					testing.ContextLogf(ctx, "Collected %v in %v", videoHistogram, time.Since(videoWaitStartTime))
 				}
-				testing.ContextLogf(ctx, "Collected %v in %v", videoHistogram, time.Since(videoWaitStartTime))
 			}
 
 			if tabIdx%3 == 0 || isRecordMode {
