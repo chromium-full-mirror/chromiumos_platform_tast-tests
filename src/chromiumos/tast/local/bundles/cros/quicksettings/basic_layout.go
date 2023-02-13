@@ -43,8 +43,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"cros-status-area-eng@google.com",
-			"cienet-development@googlegroups.com",
-			"alfredyu@cienet.com",
+			"awendy@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
