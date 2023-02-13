@@ -30,6 +30,7 @@ type testParamForGoo struct {
 	rightOn bool
 	backOn  bool
 	persons int
+	power   int
 }
 
 type hpsResult struct {
@@ -53,26 +54,48 @@ func init() {
 		BugComponent: "b:1140302",
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.HPS()),
-		Data:         []string{"gooigi_mansion.py", "gooigi_dmatrix.py"},
+		Data:         []string{"gooigi_mansion.py", "gooigi_dmatrix.py", "gooigi_PWM_PCA9685.py"},
 		SoftwareDeps: []string{"hps", "chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.hps.HpsService"},
 		Params: []testing.Param{
 			{
-				Name: "side",
+				Name: "side_50",
 				Val: testParamForGoo{
 					leftOn:  true,
 					rightOn: true,
 					backOn:  false,
-					persons: 1,
+					persons: 2,
+					power:   50,
 				},
 			},
 			{
-				Name: "back",
+				Name: "back_50",
 				Val: testParamForGoo{
 					leftOn:  false,
 					rightOn: false,
 					backOn:  true,
-					persons: 1,
+					persons: 2,
+					power:   50,
+				},
+			},
+			{
+				Name: "side_100",
+				Val: testParamForGoo{
+					leftOn:  true,
+					rightOn: true,
+					backOn:  false,
+					persons: 2,
+					power:   100,
+				},
+			},
+			{
+				Name: "back_100",
+				Val: testParamForGoo{
+					leftOn:  false,
+					rightOn: false,
+					backOn:  true,
+					persons: 2,
+					power:   100,
 				},
 			},
 		},
@@ -134,7 +157,7 @@ func Gooigi(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for HPS to be ready: ", err)
 	}
 
-	files := [2]string{"gooigi_mansion.py", "gooigi_dmatrix.py"}
+	files := [3]string{"gooigi_mansion.py", "gooigi_dmatrix.py", "gooigi_PWM_PCA9685.py"}
 	filesMap := map[string]string{}
 
 	for _, file := range files {
@@ -159,6 +182,7 @@ func Gooigi(ctx context.Context, s *testing.State) {
 	}
 
 	args = append(args, fmt.Sprintf("-d %d", duration+5))
+	args = append(args, fmt.Sprintf("-p %d", param.power))
 
 	pyCom := dut.Conn().CommandContext(ctx, "python", args...)
 

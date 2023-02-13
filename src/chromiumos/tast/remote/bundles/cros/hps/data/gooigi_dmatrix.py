@@ -19,7 +19,7 @@ class DotMatrixDisplay(object):
         pin_A: GPIO pin that the DMD's A pin is connected to.
         pin_B: GPIO pin that the DMD's B pin is connected to.
         pin_SCLK: GPIO pin that the DMD's SCLK pin is connected to.
-        pin_nOE: GPIO pin that the DMD's nOE pin is connected to.
+        pin_OE: LED PWM control object to adjust DMD brightness.
         displays_total: Number of displays all together.
         row1: Offset of first row (0 indexed).
         row2: Offset of second row.
@@ -44,7 +44,7 @@ class DotMatrixDisplay(object):
         pin_A,
         pin_B,
         pin_SCLK,
-        pin_nOE,
+        pin_OE,
     ):
 
         self._displays_wide = displays_wide
@@ -58,21 +58,19 @@ class DotMatrixDisplay(object):
         self._pin_A = digitalio.DigitalInOut(pin_A)
         self._pin_B = digitalio.DigitalInOut(pin_B)
         self._pin_SCLK = digitalio.DigitalInOut(pin_SCLK)
-        self._pin_nOE = digitalio.DigitalInOut(pin_nOE)
         self._pin_SCK = digitalio.DigitalInOut(pin_SCK)
         self._pin_MOSI = digitalio.DigitalInOut(pin_MOSI)
+        self._pin_OE = pin_OE
 
         self._pin_A.direction = digitalio.Direction.OUTPUT
         self._pin_B.direction = digitalio.Direction.OUTPUT
         self._pin_SCLK.direction = digitalio.Direction.OUTPUT
-        self._pin_nOE.direction = digitalio.Direction.OUTPUT
         self._pin_SCK.direction = digitalio.Direction.OUTPUT
         self._pin_MOSI.direction = digitalio.Direction.OUTPUT
 
         self._pin_A.value = False
         self._pin_B.value = False
         self._pin_SCLK.value = False
-        self._pin_nOE.value = False
         self._pin_SCK.value = False
         self._pin_MOSI.value = False
 
