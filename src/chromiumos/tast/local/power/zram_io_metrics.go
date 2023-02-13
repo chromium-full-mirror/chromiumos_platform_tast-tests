@@ -25,11 +25,8 @@ type ZramIOMetrics struct {
 // Assert that ZramIOMetrics can be used in perf.Timeline.
 var _ perf.TimelineDatasource = &ZramIOMetrics{}
 
-// Number of zram device file stats.
-const zramStatLength = 17
-
 // zramIOStats reads zram I/O number statistics about the block device zram0.
-// The stat file consists of a single line of text containing 17 decimal values separated by spaces.
+// The stat file (Kernel v6.2.0) consists of a single line of text containing 17 decimal values separated by spaces.
 // The fields are:
 // 0. read I/Os
 // 1. read merges
@@ -49,8 +46,12 @@ const zramStatLength = 17
 // 15. flush I/Os
 // 16. flush ticks
 // See https://www.kernel.org/doc/html/latest/block/stat.html for details.
+// Older versions of kernel may only contain the first 15 or 11 values.
+// https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/block/stat.rst?h=v5.4.231
+// https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/block/stat.txt?h=v4.14.305
+//
 // This function returns a map that only contains:
-// ["read":readI/Os, "write":writeI/Os, "flight":in_flight, "discard":discardI/Os, "flush":flushI/Os]
+// ["read":readI/Os, "write":writeI/Os, "flight":in_flight]
 // where key is the name of metrics as string, aligned with keys of ZramIOMetrics metrics map
 // and value is the read result.
 func zramIOStats(ctx context.Context) (map[string]float64, error) {
@@ -63,11 +64,9 @@ func zramIOStats(ctx context.Context) (map[string]float64, error) {
 
 	// zramStatIdx stores the index postiion of each stat in zram stat file's read.
 	zramStatIdx := map[string]int{
-		"read":    0,  // read I/O index
-		"write":   4,  // write I/O index
-		"flight":  8,  // in flight I/O index
-		"discard": 11, // discard I/O index
-		"flush":   15, // flush I/O index
+		"read":   0, // read I/O index
+		"write":  4, // write I/O index
+		"flight": 8, // in flight I/O index
 	}
 	statsRead := make(map[string]float64)
 
@@ -102,15 +101,11 @@ func (z *ZramIOMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 	}
 
 	if z.hasZram {
-		// Number of read I/0s processed.
+		// Number of read I/Os processed.
 		z.metrics["read"] = perf.Metric{Name: "zram_read_IOs", Unit: "requests", Direction: perf.SmallerIsBetter, Multiple: true}
-		// Number of write I/0s processed.
+		// Number of write I/Os processed.
 		z.metrics["write"] = perf.Metric{Name: "zram_write_IOs", Unit: "requests", Direction: perf.SmallerIsBetter, Multiple: true}
-		// Number of discard I/0s processed.
-		z.metrics["discard"] = perf.Metric{Name: "zram_discard_IOs", Unit: "requests", Direction: perf.SmallerIsBetter, Multiple: true}
-		// Number of flush I/0s processed.
-		z.metrics["flush"] = perf.Metric{Name: "zram_flush_IOs", Unit: "requests", Direction: perf.SmallerIsBetter, Multiple: true}
-		// Number of I/0s currently in flight.
+		// Number of I/Os in flight.
 		z.metrics["flight"] = perf.Metric{Name: "zram_IOs_in_flight", Unit: "requests", Direction: perf.SmallerIsBetter, Multiple: true}
 	}
 	return nil
