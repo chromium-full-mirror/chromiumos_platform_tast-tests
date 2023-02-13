@@ -227,9 +227,9 @@ const (
 type BacklightMode int
 
 const (
-	// SetBacklight indicates that back light should be disabled.
+	// SetBacklight indicates that backlight should be set to a default value.
 	SetBacklight BacklightMode = iota
-	// DoNotChangeBacklight indicates that back light should be left in the same state.
+	// DoNotChangeBacklight indicates that backlight should be left in the same state.
 	DoNotChangeBacklight
 	// SetBacklightToZero indicates that display backlight should be set to 0.
 	SetBacklightToZero
