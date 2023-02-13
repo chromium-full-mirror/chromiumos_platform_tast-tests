@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/audio/audionode"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type streamSource string
@@ -72,7 +73,8 @@ func init() {
 				},
 			},
 			{
-				Name: "cras",
+				Name:              "cras",
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 				Val: audioStreamTestParameters{
 					StreamSource:               cras,
 					RateCriteria:               0.001,
@@ -97,11 +99,14 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 	runCtx, cancel := context.WithTimeout(ctx, audioStreamsConformanceTimeout)
 	defer cancel()
 
-	const expectedAudioNode = "INTERNAL_SPEAKER"
-	_, err := audionode.SetAudioNode(ctx, expectedAudioNode)
-	if err != nil {
-		s.Fatal("Failed to set the Audio node: ", err)
+	if param.StreamSource != noop {
+		const expectedAudioNode = "INTERNAL_SPEAKER"
+		_, err := audionode.SetAudioNode(ctx, expectedAudioNode)
+		if err != nil {
+			s.Fatal("Failed to set the audio node: ", err)
+		}
 	}
+
 	dump, err := testexec.CommandContext(
 		runCtx, "/usr/local/bin/audio_streams_conformance_test",
 		"-P", string(param.StreamSource),
@@ -120,7 +125,7 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 	}
 
 	if stats.EstimatedRate.Rate < sampleRate*(1-param.RateCriteria) || stats.EstimatedRate.Rate > sampleRate*(1+param.RateCriteria) {
-		s.Fatalf("Expect sample rate: %f (+- %f%%), got: %f", sampleRate, param.RateCriteria*100, stats.EstimatedRate.Rate)
+		s.Fatalf("Expect sample rate: %f (+- %.2f%%), got: %f", sampleRate, param.RateCriteria*100, stats.EstimatedRate.Rate)
 	}
 
 	if stats.EstimatedRate.Error > sampleRate*param.RateErrCriteria {
