@@ -9,8 +9,11 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/godbus/dbus/v5"
+
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 )
@@ -102,4 +105,80 @@ func SetFwupdChargingState(ctx context.Context, charge bool) (setup.CleanupCallb
 	localCleanup = nil
 
 	return retCleanup, nil
+}
+
+// Device represents a hardware device supported by fwupd.
+type Device struct {
+	GUIDs         []string
+	DeviceID      string
+	Name          string
+	InstanceIDs   []string
+	Plugin        string
+	Version       string
+	VersionFormat uint
+}
+
+const (
+	dbusName      = "org.freedesktop.fwupd"
+	dbusPath      = "/"
+	dbusInterface = "org.freedesktop.fwupd"
+)
+
+// GetDeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
+// matching the provided one.
+func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) {
+	conn, err := dbusutil.SystemBus()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to system bus")
+	}
+	defer conn.Close()
+	fwupd := conn.Object(dbusName, dbusPath)
+
+	var devices []map[string]dbus.Variant
+	if err = fwupd.Call(dbusInterface+".GetDevices", 0).Store(&devices); err != nil {
+		return nil, errors.Wrap(err, "failed to call GetDevices")
+	}
+
+	// Scan all devices to locate one with the expected GUID.
+	for _, rawDevice := range devices {
+		testing.ContextLog(ctx, "Inspecting device: ", rawDevice)
+
+		// Unmarshal variants into our device type.
+		var device Device
+		rawDeviceFields := []interface{}{
+			rawDevice["Guid"],
+			rawDevice["DeviceId"],
+			rawDevice["Name"],
+			rawDevice["Plugin"],
+			rawDevice["Version"],
+			rawDevice["VersionFormat"],
+		}
+		deviceFields := []interface{}{
+			&device.GUIDs,
+			&device.DeviceID,
+			&device.Name,
+			&device.Plugin,
+			&device.Version,
+			&device.VersionFormat,
+		}
+		if err := dbus.Store(rawDeviceFields, deviceFields...); err != nil {
+			return nil, errors.Wrap(err, "failed to read device fields to struct")
+		}
+
+		// Not all devices have InstanceIds, so unmarshal those only if defined
+		// because a zero value causes the above Store() to fail.
+		if rawDevice["InstanceIds"].Value() != nil {
+			if err := dbus.Store([]interface{}{rawDevice["InstanceIds"]}, &device.InstanceIDs); err != nil {
+				return nil, errors.Wrap(err, "failed to read device instance IDs")
+			}
+		}
+
+		for _, guid := range device.GUIDs {
+			if guid == expectedGUID {
+				return &device, nil
+			}
+		}
+	}
+
+	return nil, errors.New("No device found with GUID " + expectedGUID)
 }

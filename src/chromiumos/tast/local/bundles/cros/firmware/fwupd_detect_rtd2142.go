@@ -6,26 +6,11 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
-	"path/filepath"
-	"regexp"
 
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
+	"chromiumos/tast/local/bundles/cros/firmware/fwupd"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
-
-// rtd2142InfoPattern matches the expected output from fwupd when a
-// RTD2142 is detected in the system.
-const rtd2142InfoPattern = `.*RTD2142:
-.*Device ID:          [0-9a-f]+
-.*Summary:            DisplayPort MST hub
-.*Current version:    \d+\.\d+
-.*Vendor:             Realtek \(PCI:0x10EC\)
-.*GUID:               15cb53a3-3217-5949-87ac-2e5cce94e15b \? I2C\\NAME_10EC2142:00
-`
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -45,20 +30,17 @@ func init() {
 	})
 }
 
-func verifyRTD2142Detected(ctx context.Context, output []byte) error {
-	matched, err := regexp.Match(rtd2142InfoPattern, output)
+// FwupdDetectRTD2142 gets devices from fwupd via dbus and verifies that a RTD2142 is recognized.
+func FwupdDetectRTD2142(ctx context.Context, s *testing.State) {
+	const (
+		expectedDeviceName       = "RTD2142"
+		expectedDeviceInstanceID = `I2C\NAME_10EC2142:00`
+		expectedDeviceGUID       = "15cb53a3-3217-5949-87ac-2e5cce94e15b"
+		expectedPlugin           = "realtek_mst"
+	)
+
+	device, err := fwupd.GetDeviceByGUID(ctx, expectedDeviceGUID)
 	if err != nil {
-		return err
-	}
-	if !matched {
-		outdir, ok := testing.ContextOutDir(ctx)
-		if !ok {
-			return errors.New("failed to get test out dir")
-		}
-		if err := ioutil.WriteFile(filepath.Join(outdir, "fwupd_output.txt"),
-			output, 0644); err != nil {
-			testing.ContextLogf(ctx, "Failed to write fwupd output to file: %s", err)
-		}
 		testing.ContextLog(ctx, "On some devices (particularly if in a"+
 			" pre-MP build phase), the MST firmware may be too"+
 			" old to support detection and needs to be replaced:"+
@@ -66,21 +48,24 @@ func verifyRTD2142Detected(ctx context.Context, output []byte) error {
 			" ran on, not a bug in this test or fwupd. See"+
 			" https://issuetracker.google.com/issues/173742142#comment30"+
 			" for details.")
-		return errors.New("get-devices output didn't match expected format")
-	}
-	return nil
-}
-
-// FwupdDetectRTD2142 runs fwupdmgr and verifies that a RTD2142 is recognized.
-func FwupdDetectRTD2142(ctx context.Context, s *testing.State) {
-	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "get-devices")
-
-	output, err := cmd.Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatalf("%q failed: %v", shutil.EscapeSlice(cmd.Args), err)
+		s.Fatal("Failed to detect expected device: ", err)
 	}
 
-	if err := verifyRTD2142Detected(ctx, output); err != nil {
-		s.Fatal("fwupdmgr failed to detect RTD2142: ", err)
+	foundInstanceID := false
+	for _, instanceID := range device.InstanceIDs {
+		if instanceID == expectedDeviceInstanceID {
+			foundInstanceID = true
+		}
+	}
+	if !foundInstanceID {
+		s.Errorf("Failed to find expected instance ID %q among %q", expectedDeviceInstanceID, device.InstanceIDs)
+	}
+
+	if device.Name != expectedDeviceName {
+		s.Errorf("Failed to verify device name: expected %q, got %q", expectedDeviceName, device.Name)
+	}
+
+	if device.Plugin != expectedPlugin {
+		s.Errorf("Failed to verify plugin: expected %q, got %q", expectedPlugin, device.Plugin)
 	}
 }
