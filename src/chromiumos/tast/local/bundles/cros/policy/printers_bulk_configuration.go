@@ -21,25 +21,26 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintersBulkAccessMode,
+		Func:         PrintersBulkConfiguration,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behavior of PrintersBulkAccessMode user policy",
+		Desc:         "Verify behavior of printer bulk configuration user policies",
 		Contacts: []string{
-			"mohamedaomar@google.com", // Test author
+			"chromeos-commercial-printing@google.com",
 		},
+		BugComponent: "b:1111614", // ChromeOS > Software > Commercial (Enterprise) > Printing
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintersBulkAccessMode{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.PrintersBulkAllowlist{}, pci.VerifiedValue),
-			pci.SearchFlag(&policy.PrintersBulkBlocklist{}, pci.VerifiedValue),
-			pci.SearchFlag(&policy.PrintersBulkConfiguration{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.PrintersBulkAllowlist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.PrintersBulkBlocklist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.PrintersBulkConfiguration{}, pci.VerifiedFunctionalityJS),
 		},
 	})
 }
 
-func PrintersBulkAccessMode(ctx context.Context, s *testing.State) {
+func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
