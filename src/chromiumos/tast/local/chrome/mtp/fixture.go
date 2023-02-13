@@ -19,8 +19,15 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// resetTimeout is the timeout duration of trying to reset the current fixture.
-const resetTimeout = 30 * time.Second
+const (
+	// resetTimeout is the timeout duration of trying to reset the current fixture.
+	resetTimeout = 30 * time.Second
+)
+
+const (
+	// DeviceName is the name of the Android phone connected in MTP mode to the devices in mtp_pool.
+	DeviceName = "Nexus/Pixel (MTP+ADB)"
+)
 
 // NewMTPFixture creates a new implementation of MTP fixture with an Android device.
 func NewMTPFixture(User, Password string, opts ...chrome.Option) testing.FixtureImpl {
