@@ -30,8 +30,14 @@ func init() {
 		Contacts: []string{
 			"snijhara@google.com", // Test author
 		},
+		BugComponent: "TBA",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:commercial_limited"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,

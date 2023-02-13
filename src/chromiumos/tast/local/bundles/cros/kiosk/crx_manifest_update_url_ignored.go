@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
@@ -32,10 +33,19 @@ func init() {
 		},
 		BugComponent: "b:1253865",
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		Timeout:      7 * time.Minute, // Starting multiple extensions requires longer timeout.
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.KioskCRXManifestUpdateURLIgnored{}, pci.VerifiedFunctionalityUI),
+		},
+		Timeout: 7 * time.Minute, // Starting multiple extensions requires longer timeout.
 	})
 }
 
