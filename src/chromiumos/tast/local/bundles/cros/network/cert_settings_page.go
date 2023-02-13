@@ -464,7 +464,10 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	deleteClientCert(ctx, s, ui)
 	createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, connectionErrorRegex)
 
+	// TODO(b:269086979): Re-enable this part of the test after the UI tree is
+	// changed and the to-be-deleted cert can be selected again (the current
+	// solution with "tab" doesn't work anymore).
 	// Delete the CA cert and check that Chrome gets the CA error again.
-	deleteCACert(ctx, s, ui)
-	createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, caInvalidErrorRegex)
+	// deleteCACert(ctx, s, ui)
+	// createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, caInvalidErrorRegex)
 }
