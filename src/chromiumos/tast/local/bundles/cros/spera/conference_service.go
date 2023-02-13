@@ -78,7 +78,7 @@ func init() {
 			"spera.zoom_bot_server",
 			"spera.zoom_bot_token",
 
-			// Optional. Expecting "google", "external", default is "external".
+			// Optional. Expecting "google", "external", default is "google".
 			"spera.Conference.web_source",
 		},
 	})
@@ -145,8 +145,8 @@ func preTest(ctx context.Context) {
 
 const tmpDir = "/tmp"
 
-// The default web source is the external websites.
-var webSource = cuj.ExternalWebSource
+// The default web source is the google websites.
+var webSource = cuj.GoogleWebSource
 
 func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.MeetScenarioRequest) (*empty.Empty, error) {
 	roomType := conference.RoomType(req.RoomType)
@@ -163,8 +163,9 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 	if collect, ok := s.s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = tmpDir + "/" + cujrecorder.SystemTraceConfigFile
 	}
-	if v, ok := s.s.Var("spera.Conference.web_source"); ok {
-		webSource = cuj.WebSourceType(strings.ToLower(v))
+	v, ok := s.s.Var("spera.Conference.web_source")
+	if ok && strings.ToLower(v) == string(cuj.ExternalWebSource) {
+		webSource = cuj.ExternalWebSource
 	}
 	run := func(ctx context.Context, roomURL string) error {
 		accountPool, ok := s.s.Var("ui.cujAccountPool")
@@ -357,8 +358,9 @@ func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetSce
 		traceConfigPath = tmpDir + "/" + cujrecorder.SystemTraceConfigFile
 	}
 
-	if v, ok := s.s.Var("spera.Conference.web_source"); ok {
-		webSource = cuj.WebSourceType(strings.ToLower(v))
+	v, ok := s.s.Var("spera.Conference.web_source")
+	if ok && strings.ToLower(v) == string(cuj.ExternalWebSource) {
+		webSource = cuj.ExternalWebSource
 	}
 
 	testing.ContextLog(ctx, "Start zoom meet scenario")

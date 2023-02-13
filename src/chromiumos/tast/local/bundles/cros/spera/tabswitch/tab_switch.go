@@ -350,8 +350,8 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 	}
 	defer cleanupSetting(cleanupSettingsCtx)
 
-	// The default web source is the external websites.
-	webSource := cuj.ExternalWebSource
+	// The default web source is the google websites.
+	webSource := cuj.GoogleWebSource
 	if ws, ok := s.Var("spera.web_source"); ok {
 		ws := cuj.WebSourceType(strings.ToLower(ws))
 		if _, ok := tabTargetsMap[ws]; ok {

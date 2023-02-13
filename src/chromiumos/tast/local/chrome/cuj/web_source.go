@@ -5,7 +5,7 @@
 package cuj
 
 // WebSourceType defines the type of web source.
-// Contains "external", "google", "local". Usually the default is "external".
+// Contains "external", "google", "local". Usually the default is "google".
 type WebSourceType string
 
 const (

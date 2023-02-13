@@ -36,7 +36,7 @@ func init() {
 			"spera.cuj_mute",
 			"spera.cuj_mode",     // Expecting "tablet" or "clamshell".
 			"spera.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".
-			"spera.web_source",   // Optional. Expecting "google", "external" or "local", default is "external".
+			"spera.web_source",   // Optional. Expecting "google", "external" or "local", default is "google".
 			// WPR addresses are only required when running with WPR Proxy.
 			"ui.wpr_http_addr",
 			"ui.wpr_https_addr",

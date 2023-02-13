@@ -40,7 +40,7 @@ func init() {
 			"spera.cuj_mode",                      // Optional. Expecting "tablet" or "clamshell".
 			"spera.collectTrace",                  // Optional. Expecting "enable" or "disable", default is "disable".
 			"spera.MultiTaskingApp.operateCamera", // Optional. Expecting "true" or "false", default is "true".
-			"spera.MultiTaskingApp.web_source",    // Optional. Expecting "google" or "external", default is "external".
+			"spera.MultiTaskingApp.web_source",    // Optional. Expecting "google" or "external", default is "google".
 		},
 		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
@@ -125,9 +125,10 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		ccaScriptPaths = []string{s.DataPath("cca_ui.js")}
 	}
 
-	webSource := cuj.ExternalWebSource
-	if ws, ok := s.Var("spera.MultiTaskingApp.web_source"); ok {
-		webSource = cuj.WebSourceType(strings.ToLower(ws))
+	webSource := cuj.GoogleWebSource
+	ws, ok := s.Var("spera.MultiTaskingApp.web_source")
+	if ok && strings.ToLower(ws) == string(cuj.ExternalWebSource) {
+		webSource = cuj.ExternalWebSource
 	}
 
 	params := &multitaskingapp.TestParams{
