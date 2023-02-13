@@ -52,6 +52,9 @@ type audioStreamsConformanceReport struct {
 	MismatchedFrameCount int `json:"mismatched_frame_count"`
 }
 
+// TODO(b/269065601): Relex the ColdStartLatencyCriteriaMs for the following devices to prevent test flakiness.
+var relexedCriteriaModels = []string{"atlas", "nocturne", "beetley"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioStreamsConformance,
@@ -74,12 +77,23 @@ func init() {
 			},
 			{
 				Name:              "cras",
-				ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(relexedCriteriaModels...)),
 				Val: audioStreamTestParameters{
 					StreamSource:               cras,
 					RateCriteria:               0.001,
 					RateErrCriteria:            10,
 					ColdStartLatencyCriteriaMs: 500,
+				},
+			},
+			{
+				// Compare to cras subtest, it prolongs ColdStartLatencyCriteriaMs from 500 to 700 ms.
+				Name:              "cras_relaxed",
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(relexedCriteriaModels...)),
+				Val: audioStreamTestParameters{
+					StreamSource:               cras,
+					RateCriteria:               0.001,
+					RateErrCriteria:            10,
+					ColdStartLatencyCriteriaMs: 700,
 				},
 			},
 		},
@@ -103,14 +117,14 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 		const expectedAudioNode = "INTERNAL_SPEAKER"
 		_, err := audionode.SetAudioNode(ctx, expectedAudioNode)
 		if err != nil {
-			s.Fatal("Failed to set the audio node: ", err)
+			s.Fatal("Failed to set the Audio node: ", err)
 		}
 	}
 
 	dump, err := testexec.CommandContext(
 		runCtx, "/usr/local/bin/audio_streams_conformance_test",
 		"-P", string(param.StreamSource),
-		"--iterations", "200",
+		"--iterations", "400",
 		"--json",
 	).Output(testexec.DumpLogOnError)
 
