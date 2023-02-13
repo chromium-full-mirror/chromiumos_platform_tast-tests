@@ -86,6 +86,8 @@ func StatefulFiles(ctx context.Context, s *testing.State) {
 		chk.NewPattern(chk.Tree("encrypted/var/lib/imageloader"), chk.Users("imageloaderd"), chk.Groups("imageloaderd"), chk.NotMode(022)),
 		// TODO(chromium:1197973): Re-add permissions checks for /var/lib/metrics
 		chk.NewPattern(chk.Tree("encrypted/var/lib/metrics"), chk.SkipChildren()),
+		chk.NewPattern(chk.Tree("encrypted/var/lib/ml_core"), chk.Users("ml-core"), chk.Groups("ml-core"), chk.NotMode(02)),
+		chk.NewPattern(chk.Tree("encrypted/var/lib/ml_core/opencl_cache"), chk.Users("ml-core"), chk.Groups("ml-core"), chk.NotMode(02)),
 		chk.NewPattern(chk.Tree("encrypted/var/lib/ml_service"), chk.Users("ml-service"), chk.Groups("ml-service"), chk.NotMode(02)),
 		chk.NewPattern(chk.Tree("encrypted/var/lib/modemfwd"), chk.Users("modem"), chk.Groups("modem"), chk.NotMode(022)),
 		chk.NewPattern(chk.Tree("encrypted/var/lib/oobe_config_restore"), chk.Users("oobe_config_restore"), chk.Groups("oobe_config_restore"), chk.NotMode(022)),
