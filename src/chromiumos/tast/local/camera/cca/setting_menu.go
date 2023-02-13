@@ -21,10 +21,6 @@ type SettingMenu struct {
 var (
 	// MainMenu is the main setting menu.
 	MainMenu = &SettingMenu{"view-settings", &SettingsButton}
-	// GridTypeMenu is the grid settings menu.
-	GridTypeMenu = &SettingMenu{"view-grid-settings", &GridTypeSettingsButton}
-	// TimerMenu is the timer settings menu.
-	TimerMenu = &SettingMenu{"view-timer-settings", &TimerSettingsButton}
 	// PhotoResolutionMenu is the photo resolution settings menu.
 	PhotoResolutionMenu = &SettingMenu{"view-photo-resolution-settings", &PhotoResolutionSettingButton}
 	// PhotoAspectRatioMenu is the photo aspect ratio settings menu.

@@ -60,16 +60,6 @@ func CCAUICameraBoxDocumentScanning(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// For the devices with document mode enabled by default, the scan mode button should be visible
-	// upon launching the app.
-	if visible, err := app.Visible(ctx, cca.ScanModeButton); err != nil {
-		s.Fatal("Failed to check visibility of scan mode button: ", err)
-	} else if !visible {
-		if err := app.EnableDocumentMode(ctx); err != nil {
-			s.Fatal("Failed to enable scan mode: ", err)
-		}
-	}
-
 	// Switch to scan mode.
 	if err := app.SwitchMode(ctx, cca.Scan); err != nil {
 		s.Fatal("Failed to switch to scan mode: ", err)

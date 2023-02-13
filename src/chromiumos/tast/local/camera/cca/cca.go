@@ -822,19 +822,10 @@ func (a *App) RecordVideo(ctx context.Context, timerState TimerState, duration t
 
 // RecordGif records a gif with maximal duration and |save| specify whether to save result gif in review page.
 func (a *App) RecordGif(ctx context.Context, save bool) (os.FileInfo, error) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second*5)
-	defer cancel()
-
 	if visible, err := a.Visible(ctx, GifRecordingOption); err != nil {
 		return nil, err
 	} else if !visible {
-		// TODO(b/191950622): Remove the legacy enabling logic after formally launched.
-		testing.ContextLog(ctx, "No gif recording option present, try enabling from expert mode")
-		if err := a.setEnableGifRecording(ctx, true); err != nil {
-			return nil, errors.Wrap(err, "failed to enable gif recording")
-		}
-		defer a.setEnableGifRecording(cleanupCtx, false)
+		return nil, errors.Wrap(err, "failed to find gif recording option")
 	}
 
 	if err := a.Click(ctx, GifRecordingOption); err != nil {
@@ -1105,55 +1096,13 @@ func (a *App) setEnableOption(ctx context.Context, option Option, enabled bool) 
 	return nil
 }
 
-// maybeToggleQRCodeOption toggle QR code option if current state is not |target|.
-func (a *App) maybeToggleQRCodeOption(ctx context.Context, target bool) error {
-	if current, err := a.State(ctx, ScanBarcodeOptionInPhotoMode.state); err != nil {
-		return errors.Wrap(err, "failed to check scan barcode option state")
-	} else if current != target {
-		if after, err := a.ToggleOption(ctx, ScanBarcodeOptionInPhotoMode); err != nil {
-			return errors.Wrap(err, "failed to toggle scan barcode option")
-		} else if after != target {
-			return errors.New("failed to toggle scan barcode option to target state")
-		}
+// OpenQRCodeScanMode switches to Scan mode and chooses QR Code option.
+func (a *App) OpenQRCodeScanMode(ctx context.Context) error {
+	if err := a.SwitchMode(ctx, Scan); err != nil {
+		return errors.Wrap(err, "failed to switch to scan mode")
 	}
-	return nil
-}
-
-// EnableQRCodeDetection enables the QR code detection.
-func (a *App) EnableQRCodeDetection(ctx context.Context) error {
-	if visible, err := a.Visible(ctx, ScanModeButton); err != nil {
-		return errors.Wrap(err, "failed to check visibility of scan mode button")
-	} else if visible {
-		if err := a.SwitchMode(ctx, Scan); err != nil {
-			return errors.Wrap(err, "failed to switch to scan mode")
-		}
-		if err := a.Click(ctx, ScanBarcodeOption); err != nil {
-			return errors.Wrap(err, "failed to click the scan barcode option")
-		}
-	} else {
-		if err := a.SwitchMode(ctx, Photo); err != nil {
-			return errors.Wrap(err, "failed to switch to photo mode")
-		}
-		if err := a.maybeToggleQRCodeOption(ctx, true); err != nil {
-			return errors.Wrap(err, "failed to toggle QR code detection")
-		}
-	}
-	return nil
-}
-
-// DisableQRCodeDetection disables the QR code detection.
-func (a *App) DisableQRCodeDetection(ctx context.Context) error {
-	visible, err := a.Visible(ctx, ScanModeButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to check visibility of scan mode button")
-	}
-	if err := a.SwitchMode(ctx, Photo); err != nil {
-		return errors.Wrap(err, "failed to switch to photo mode")
-	}
-	if visible {
-		if err := a.maybeToggleQRCodeOption(ctx, false); err != nil {
-			return errors.Wrap(err, "failed to toggle QR code detection")
-		}
+	if err := a.Click(ctx, ScanBarcodeOption); err != nil {
+		return errors.Wrap(err, "failed to click the scan barcode option")
 	}
 	return nil
 }
@@ -1230,33 +1179,6 @@ func (a *App) CheckMetadataVisibility(ctx context.Context, enabled bool) error {
 	return nil
 }
 
-// EnableDocumentMode enables the document mode via expert mode.
-func (a *App) EnableDocumentMode(ctx context.Context) error {
-	if err := a.EnableExpertMode(ctx); err != nil {
-		return errors.Wrap(err, "failed to enable expert mode")
-	}
-
-	if err := MainMenu.Open(ctx, a); err != nil {
-		return errors.Wrap(err, "failed to open main menu")
-	}
-	defer MainMenu.Close(ctx, a)
-
-	if err := ExpertMenu.Open(ctx, a); err != nil {
-		return errors.Wrap(err, "failed to open expert menu")
-	}
-	defer ExpertMenu.Close(ctx, a)
-
-	if err := a.setEnableOption(ctx, EnableDocumentModeOnAllCamerasOption, true); err != nil {
-		return errors.Wrap(err, "failed to enable document mode")
-	}
-
-	if err := a.WaitForVisibleState(ctx, ScanModeButton, true); err != nil {
-		return errors.Wrap(err, "failed to wait for scan mode button shows up")
-	}
-
-	return nil
-}
-
 // SetEnableMultiStreamRecording enables/disables recording videos with multiple streams via expert mode.
 func (a *App) SetEnableMultiStreamRecording(ctx context.Context, enabled bool) error {
 	if err := a.EnableExpertMode(ctx); err != nil {
@@ -1275,33 +1197,6 @@ func (a *App) SetEnableMultiStreamRecording(ctx context.Context, enabled bool) e
 
 	if err := a.setEnableOption(ctx, EnableMultistreamRecordingOption, enabled); err != nil {
 		return errors.Wrap(err, "failed to enable multi-stream recording")
-	}
-
-	if err := a.WaitForVideoActive(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for video active")
-	}
-
-	return nil
-}
-
-// setEnableGifRecording enables/disables the gif recording via expert mode.
-func (a *App) setEnableGifRecording(ctx context.Context, enabled bool) error {
-	if err := a.EnableExpertMode(ctx); err != nil {
-		return errors.Wrap(err, "failed to enable expert mode")
-	}
-
-	if err := MainMenu.Open(ctx, a); err != nil {
-		return errors.Wrap(err, "failed to open main menu")
-	}
-	defer MainMenu.Close(ctx, a)
-
-	if err := ExpertMenu.Open(ctx, a); err != nil {
-		return errors.Wrap(err, "failed to open expert menu")
-	}
-	defer ExpertMenu.Close(ctx, a)
-
-	if err := a.setEnableOption(ctx, ShowGifRecordingOption, enabled); err != nil {
-		return err
 	}
 
 	if err := a.WaitForVideoActive(ctx); err != nil {

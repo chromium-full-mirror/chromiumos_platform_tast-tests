@@ -54,14 +54,6 @@ var (
 	FeedbackButton = UIComponent{"feedback button", []string{"#settings-feedback"}}
 	// HelpButton is the help button showing in the settings menu.
 	HelpButton = UIComponent{"help button", []string{"#settings-help"}}
-	// GridTypeSettingsButton is the button showing in the settings menu which is used for entering the grid type settings menu.
-	GridTypeSettingsButton = UIComponent{"grid type settings button", []string{"#settings-gridtype"}}
-	// GoldenGridButton is the button to enable golden grid type.
-	GoldenGridButton = UIComponent{"golden grid type button", []string{"#grid-golden"}}
-	// TimerSettingsButton is the button showing in the settings menu which is used for entering the timer settings menu.
-	TimerSettingsButton = UIComponent{"timer settings button", []string{"#settings-timerdur"}}
-	// Timer10sButton is the button to enable 10s timer.
-	Timer10sButton = UIComponent{"timer 10s button", []string{"#timer-10s"}}
 
 	// BarcodeChipURL is chip for url detected from barcode.
 	BarcodeChipURL = UIComponent{"barcode chip url", []string{".barcode-chip-url a"}}
@@ -104,8 +96,6 @@ var (
 	// PTZResetAllButton is the button for reset PTZ to default value.
 	PTZResetAllButton = UIComponent{"ptz reset all button", []string{"#ptz-reset-all"}}
 
-	// ScanModeButton is the button to enter scan mode.
-	ScanModeButton = UIComponent{"scan mode button", []string{".mode-item>input[data-mode=\"scan\"]"}}
 	// ScanBarcodeOption is the option button to switch to QR code detection mode in scan mode.
 	ScanBarcodeOption = UIComponent{"scan barcode option", []string{"#scan-barcode"}}
 	// ScanDocumentModeOption is the document mode option of scan mode.
@@ -195,14 +185,8 @@ var (
 	SaveMetadataOption = newOption("save-metadata", "#expert-save-metadata")
 	// ShowMetadataOption is the option to show preview metadata.
 	ShowMetadataOption = newOption("show-metadata", "#expert-show-metadata")
-	// EnableDocumentModeOnAllCamerasOption is the option to enable document scanning on all cameras.
-	EnableDocumentModeOnAllCamerasOption = newOption("enable-document-mode-on-all-cameras", "#expert-enable-document-mode-on-all-cameras")
 	// EnableMultistreamRecordingOption is the option to enable document scanning on all cameras.
 	EnableMultistreamRecordingOption = newOption("enable-multistream-recording", "#expert-enable-multistream-recording")
-	// ScanBarcodeOptionInPhotoMode is the option to enable barcode scanning in photo mode.
-	ScanBarcodeOptionInPhotoMode = newOption("enable-scan-barcode", "#toggle-barcode")
-	// ShowGifRecordingOption is the option to enable gif recording.
-	ShowGifRecordingOption = newOption("show-gif-recording-option", "#expert-enable-gif-recording")
 )
 
 type errorUINotExist struct {

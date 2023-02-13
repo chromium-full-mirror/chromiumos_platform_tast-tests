@@ -93,8 +93,8 @@ func CCAUIQRCode(ctx context.Context, s *testing.State) {
 }
 
 func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app *cca.App, testParams qrcodeTestParams) error {
-	if err := app.EnableQRCodeDetection(ctx); err != nil {
-		return errors.Wrap(err, "failed to enable QR code detection")
+	if err := app.OpenQRCodeScanMode(ctx); err != nil {
+		return errors.Wrap(err, "failed to open QR code scan mode")
 	}
 	testing.ContextLog(ctx, "Start scanning QR Code")
 

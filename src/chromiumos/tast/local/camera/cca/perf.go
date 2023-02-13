@@ -147,17 +147,13 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	}
 
 	// Enable QR code detection and measure the performance again.
-	if err := app.EnableQRCodeDetection(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure QR code detection is enabled")
+	if err := app.OpenQRCodeScanMode(ctx); err != nil {
+		return errors.Wrap(err, "failed to open QR code scan mode")
 	}
 
 	usageQR, err := measureStablizedUsage(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage with QR code detection")
-	}
-
-	if err := app.DisableQRCodeDetection(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure QR code detection is disabled")
 	}
 
 	if cpuUsageQR, exist := usageQR["cpu"]; exist {
