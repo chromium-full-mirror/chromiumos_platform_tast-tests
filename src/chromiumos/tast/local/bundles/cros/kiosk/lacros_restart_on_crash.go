@@ -30,11 +30,7 @@ func init() {
 			"chromeos-kiosk-eng+TAST@google.com",
 			"zubeil@google.com", // Test author
 		},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary"},
+		Attr:         []string{"group:golden_tier"},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
