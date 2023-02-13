@@ -552,9 +552,6 @@ func (ac *Context) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.C
 			if (startIndex > endIndex) {
 				throw 'Invalid startIndex(' + startIndex + ') and endIndex(' + endIndex + '): startIndex must be less than endIndex'
 			}
-			if (startIndex === endIndex) {
-				throw 'There is no text in selection'
-			}
 			return {
 				"start_index": startIndex,
 				"end_index": endIndex,

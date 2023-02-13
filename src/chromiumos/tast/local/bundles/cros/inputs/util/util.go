@@ -115,6 +115,27 @@ func WaitForFieldEmpty(tconn *chrome.TestConn, finder *nodewith.Finder) uiauto.A
 	})
 }
 
+// WaitForFieldSelectionToBe returns an action checking whether the input field text selection equals given range.
+func WaitForFieldSelectionToBe(conn *chrome.Conn, tconn *chrome.TestConn, finder *nodewith.Finder, expectedSelectionStart, expectedSelectionEnd int, expectedSelectedText string) uiauto.Action {
+	ui := uiauto.New(tconn).WithInterval(time.Second)
+	return uiauto.Combine("validate field selection",
+		// Sleep 200ms before validating text field.
+		// Without sleep, it almost never pass the first time check due to the input delay.
+		uiauto.Sleep(200*time.Millisecond),
+		ui.RetrySilently(8, func(ctx context.Context) error {
+			selectionInfo, err := ui.RetrieveTextSelectionInfo(ctx, conn, finder)
+			if err != nil {
+				return err
+			}
+
+			if selectionInfo.StartIndex == expectedSelectionStart && selectionInfo.EndIndex == expectedSelectionEnd && selectionInfo.Text == expectedSelectedText {
+				return nil
+			}
+
+			return errors.Errorf("failed to validate selection: got: %d %d %s; want: %d %d %s", selectionInfo.StartIndex, selectionInfo.EndIndex, selectionInfo.Text, expectedSelectionStart, expectedSelectionEnd, expectedSelectedText)
+		}))
+}
+
 // GetNthCandidateText returns the candidate text in the specified position in the candidates window.
 func GetNthCandidateText(ctx context.Context, tconn *chrome.TestConn, n int) (string, error) {
 	ui := uiauto.New(tconn)
