@@ -132,12 +132,8 @@ func ARCAvailableAppInstall(ctx context.Context, s *testing.State) {
 			return rl.Exit("open app page", err)
 		}
 
-		if installButton, err := arcent.WaitForInstallButton(ctx, d); err != nil {
+		if _, err := playstore.FindInstallButton(ctx, d, 15*time.Second); err != nil {
 			return rl.Exit("find the install button", err)
-		} else if enabled, err := installButton.IsEnabled(ctx); err != nil {
-			return rl.Exit("check install button state", err)
-		} else if !enabled {
-			return rl.Exit("verify install button is enabled", nil)
 		}
 
 		return nil

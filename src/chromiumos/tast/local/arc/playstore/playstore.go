@@ -50,6 +50,40 @@ type Options struct {
 	InstallationTimeout time.Duration
 }
 
+// FindInstallButton finds the install button on app detail page.
+func FindInstallButton(ctx context.Context, d *ui.Device, timeout time.Duration) (*ui.Object, error) {
+	var result *ui.Object
+
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		const installText = "Install"
+		buttonClass := ui.ClassName("android.widget.Button")
+
+		installButton := d.Object(buttonClass, ui.Text(installText), ui.Enabled(true))
+		if err := installButton.WaitForExists(ctx, time.Second); err == nil {
+			testing.ContextLog(ctx, "Found the button")
+			result = installButton
+			return nil
+		}
+
+		viewClass := ui.ClassName("android.view.View")
+		installView := d.Object(viewClass, ui.Index(5), ui.Enabled(true), ui.Clickable(true))
+		if err := installView.WaitForExists(ctx, time.Second); err != nil {
+			return errors.New("Did not find the wrapper")
+		}
+
+		hiddenBtn := d.Object(buttonClass, ui.Index(2), ui.Enabled(true))
+		if err := installView.GetChild(ctx, hiddenBtn); err == nil {
+			testing.ContextLog(ctx, "Found the wrapped button")
+			result = installView
+			return nil
+		}
+
+		return errors.New("Did not find the button")
+	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
+
+	return result, err
+}
+
 // FindAndDismissDialog finds a dialog containing text with a corresponding button and presses the button.
 func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonText string, timeout time.Duration) error {
 	if err := d.Object(ui.TextMatches("(?i)"+dialogText)).WaitForExists(ctx, time.Second); err == nil {

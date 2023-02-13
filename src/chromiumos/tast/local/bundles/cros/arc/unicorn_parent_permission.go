@@ -112,9 +112,9 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open the app page in Play Store: ", err)
 	}
 
-	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText), ui.Enabled(true))
-	if err := installButton.WaitForExists(ctx, 30*time.Second); err != nil {
-		s.Fatal("Install Button Exisits: ", err)
+	installButton, err := playstore.FindInstallButton(ctx, d, 15*time.Second)
+	if err != nil {
+		s.Fatal("Failed to find the install button: ", err)
 	}
 
 	askinPersonButton := d.Object(ui.ClassName("android.widget.Button"), ui.Text(askinPersonButtonText), ui.Enabled(true))
