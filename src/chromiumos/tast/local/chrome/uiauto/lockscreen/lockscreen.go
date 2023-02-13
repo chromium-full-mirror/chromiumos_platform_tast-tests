@@ -24,8 +24,10 @@ const uiTimeout = 10 * time.Second
 
 const authIconViewClassName = "AuthIconView"
 
+var authErrorRegex = regexp.MustCompile(`Your.* password couldn't be verified. Try again.*`)
+
 // AuthErrorFinder is the finder for the authentication error shown on the first failure.
-var AuthErrorFinder = nodewith.Role(role.AlertDialog).NameStartingWith("Your PIN or password couldn't be verified. Try again.").ClassName("LoginErrorBubble")
+var AuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(authErrorRegex).ClassName("LoginErrorBubble")
 
 // ConsecutiveAuthErrorFinder is the finder for the authentication error shown on the consecutive failures.
 var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameStartingWith("Your PIN or password still couldn't be verified. Note: If you recently changed your password, use your old password. Your new password will be applied once you sign out.").ClassName("LoginErrorBubble")
@@ -36,6 +38,9 @@ var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone
 // SimplePinFieldFinder is like PINFieldFinder, but doesn't check the name attribute so that username doesn't
 // need to be passed in and it's more convenient to use.
 var SimplePinFieldFinder = nodewith.Role(role.TextField).Attribute("placeholder", "PIN or password")
+
+// recoverUserFinder is the finder for the user recovery button.
+var recoverUserFinder = nodewith.Role(role.Button).Name("Recover user")
 
 // State contains the state returned by chrome.autotestPrivate.loginStatus,
 // corresponding to 'LoginStatusDict' as defined in autotest_private.idl.
@@ -296,4 +301,10 @@ func UnlockWithPassword(ctx context.Context, tconn *chrome.TestConn, username, p
 		return errors.Wrapf(err, "failed waiting to log in (last state: %+v)", st)
 	}
 	return nil
+}
+
+// ClickRecoverUser clicks the user recovery button on the login screen.
+// The button must be already visible.
+func ClickRecoverUser(ctx context.Context, tconn *chrome.TestConn) error {
+	return uiauto.New(tconn).WithTimeout(uiTimeout).LeftClick(recoverUserFinder)(ctx)
 }

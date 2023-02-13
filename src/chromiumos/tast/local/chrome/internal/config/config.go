@@ -168,6 +168,10 @@ func (c *Config) KeepOwnership() bool { return c.m.KeepOwnership }
 // users should call Chrome.ContinueLogin to continue login.
 func (c *Config) DeferLogin() bool { return c.m.DeferLogin }
 
+// ReauthMode returns whether to reauth on the GAIA screen instead of doing
+// the full login. Reauth means that the user email will not be entered.
+func (c *Config) ReauthMode() bool { return c.m.ReauthMode }
+
 // LoginMode returns a login mode.
 func (c *Config) LoginMode() LoginMode { return c.m.LoginMode }
 
@@ -323,6 +327,7 @@ type MutableConfig struct {
 	KeepState                       bool       `reuse_match:"false"`
 	KeepOwnership                   bool       `reuse_match:"true"`
 	DeferLogin                      bool       `reuse_match:"customized"`
+	ReauthMode                      bool       `reuse_match:"customized"`
 	EnableRestoreTabs               bool       `reuse_match:"false"`
 	LoginMode                       LoginMode  `reuse_match:"customized"`
 	TryReuseSession                 bool       `reuse_match:"false"`
@@ -494,6 +499,9 @@ func (c *Config) customizedReuseCheck(newCfg *Config) error {
 	// yet and we are not sure if the session can be reused.
 	if newCfg.DeferLogin() {
 		return errors.New("session with DeferLogin cannot be reused")
+	}
+	if newCfg.ReauthMode() {
+		return errors.New("session with ReauthMode cannot be reused")
 	}
 	if newCfg.LoginMode() == NoLogin {
 		return errors.New("session with NoLogin as LoginMode cannot be reused")

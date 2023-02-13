@@ -85,6 +85,15 @@ func DeferLogin() Option {
 	}
 }
 
+// ReauthMode returns an option that instructs chrome.New to reauth on the GAIA screen
+// instead of doing the full login. Reauth means that the user email will not be entered.
+func ReauthMode() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.ReauthMode = true
+		return nil
+	}
+}
+
 // GAIALogin returns an Option that can be passed to New to perform a real
 // GAIA-based login rather than the default fake login.
 func GAIALogin(creds Creds) Option {
