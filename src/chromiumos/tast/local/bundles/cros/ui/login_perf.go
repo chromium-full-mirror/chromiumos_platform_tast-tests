@@ -59,7 +59,7 @@ type loginPerfTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LoginPerf,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures performance and UI smoothness of ChromeOS login",
 		Contacts: []string{
 			"chromeos-perfmetrics-eng@google.com",
