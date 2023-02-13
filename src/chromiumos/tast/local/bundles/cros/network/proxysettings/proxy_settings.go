@@ -4,7 +4,7 @@
 
 // This package provides a set of functions to collect and setup proxy settings
 // from both login screen and Settings app.
-// This package only works for "Manual Settings Configuration" and "Direct Internet connection" at the moment.
+// This package only works for "Manual Settings Configuration" at the moment.
 
 package proxysettings
 
@@ -38,11 +38,13 @@ const (
 	HTTPS
 	// Socks represents the SOCKS proxy protocol.
 	Socks
+	// SameProxy represents all protocols sharing the same proxy values.
+	SameProxy
 )
 
 // Name returns the name of proxy protocol.
 func (p Protocol) Name() string {
-	return []string{"HTTP", "HTTPS", "Socks"}[p]
+	return []string{"HTTP", "HTTPS", "Socks", "SameProxy"}[p]
 }
 
 // Config represents the proxy configuration.
@@ -64,6 +66,8 @@ func (c *Config) HostNode() *nodewith.Finder {
 		return ossettings.HTTPSHostTextField
 	case Socks:
 		return ossettings.SocksHostTextField
+	case SameProxy:
+		return ossettings.SameProxyHostTextField
 	default:
 		return nil
 	}
@@ -78,6 +82,8 @@ func (c *Config) HostName() string {
 		return "https host"
 	case Socks:
 		return "socks host"
+	case SameProxy:
+		return "proxy host"
 	default:
 		return ""
 	}
@@ -92,6 +98,8 @@ func (c *Config) PortNode() *nodewith.Finder {
 		return ossettings.HTTPSPortTextField
 	case Socks:
 		return ossettings.SocksPortTextField
+	case SameProxy:
+		return ossettings.SameProxyPortTextField
 	default:
 		return nil
 	}
@@ -106,6 +114,8 @@ func (c *Config) PortName() string {
 		return "https port"
 	case Socks:
 		return "socks port"
+	case SameProxy:
+		return "proxy port"
 	default:
 		return ""
 	}
@@ -236,16 +246,19 @@ func (ps *ProxySettings) SetManualConfig(ctx context.Context, tconn *chrome.Test
 		return err
 	}
 
+	// The SameHost/SamePort is one and only proxy when using the same proxy.
+	useSameProxy := (len(configs) == 1) && (configs[0].Protocol == SameProxy)
+
 	sameProtocolToggle := nodewith.Name("Use the same proxy for all protocols").Role(role.ToggleButton)
 	if err := ui.WaitUntilExists(sameProtocolToggle)(ctx); err != nil {
 		return errors.Wrap(err, `failed to check "Use the same proxy for all protocols" is enabled or not`)
 	}
 
 	if err := uiauto.IfFailThen(
-		ui.WaitUntilCheckedState(sameProtocolToggle, false),
+		ui.WaitUntilCheckedState(sameProtocolToggle, useSameProxy),
 		ui.WithTimeout(30*time.Second).LeftClickUntil(
 			sameProtocolToggle,
-			ui.WithTimeout(5*time.Second).WaitUntilCheckedState(sameProtocolToggle, false),
+			ui.WithTimeout(5*time.Second).WaitUntilCheckedState(sameProtocolToggle, useSameProxy),
 		),
 	)(ctx); err != nil {
 		return errors.Wrap(err, `failed to disable "Use the same proxy for all protocols"`)
@@ -255,13 +268,26 @@ func (ps *ProxySettings) SetManualConfig(ctx context.Context, tconn *chrome.Test
 		if err := uiauto.Combine(fmt.Sprintf("setup proxy, host: %q, port: %q", config.Host, config.Port),
 			ui.EnsureFocused(config.HostNode()),
 			kb.AccelAction("Ctrl+A"),
+			// Clear the content because the host could be blank. When the host is blank
+			// this will result in no keys being pressed, and thus the existing content
+			// will not be cleared.
+			kb.AccelAction("Backspace"),
 			kb.TypeAction(config.Host),
 			ui.EnsureFocused(config.PortNode()),
 			kb.AccelAction("Ctrl+A"),
+			// Clear the content because the port could be blank. When the port is blank
+			// this will result in no keys being pressed, and thus the existing content
+			// will not be cleared.
+			kb.AccelAction("Backspace"),
 			kb.TypeAction(config.Port),
 		)(ctx); err != nil {
 			return err
 		}
+	}
+
+	// The "Use the same proxy for all protocols" toggle button could be (depends on the proxy value) automatically turned on once the values are saved, checking it again before saving it.
+	if err := ui.WaitUntilCheckedState(sameProtocolToggle, useSameProxy)(ctx); err != nil {
+		return errors.Wrap(err, "failed to check node state")
 	}
 
 	saveButton := ossettings.WindowFinder.HasClass("action-button").Name("Save").Role(role.Button)
@@ -331,4 +357,20 @@ func setConnectionType(ctx context.Context, ui *uiauto.Context, connectionType C
 		ui.LeftClick(option),
 		ui.WaitUntilGone(option),
 	)(ctx)
+}
+
+// IsUseSameProxyToggleOptionEnabled checks whether the toggle option 'Use the same proxy for all protocols' is enabled or not.
+func (ps *ProxySettings) IsUseSameProxyToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	ui := uiauto.New(tconn)
+
+	useSameProxyToggle := nodewith.Name("Use the same proxy for all protocols").Role(role.ToggleButton)
+	if err := ui.WaitForLocation(useSameProxyToggle)(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to wait until node stable")
+	}
+
+	info, err := ui.Info(ctx, useSameProxyToggle)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get node info")
+	}
+	return info.Checked == checked.True, nil
 }

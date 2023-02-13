@@ -6,9 +6,12 @@ package network
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -18,7 +21,10 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/restriction"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/services/cros/network"
@@ -91,7 +97,7 @@ func (s *ProxySettingsService) ResetConnectionType(ctx context.Context, req *net
 		return &emptypb.Empty{}, err
 	}
 
-	if err := s.prepareProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
 		return &emptypb.Empty{}, err
 	}
 
@@ -120,6 +126,8 @@ func (s *ProxySettingsService) dumpUITreeToFile(ctx context.Context, hasError fu
 }
 
 // Setup sets up proxy values.
+// Not specifying the SameHost/SamePort will ensure the toggle button "Use the same proxy for all protocols" being disabled.
+// Note: It can not include other proxies when specifying the SameHost/SamePort.
 func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConfigs) (_ *emptypb.Empty, retErr error) {
 	tconn, err := s.testAPIConn(ctx)
 	if err != nil {
@@ -131,12 +139,12 @@ func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConf
 	defer cancel()
 	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "ui_dump_setup")
 
-	if err := s.prepareProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
 		return &emptypb.Empty{}, err
 	}
 	switch req.ProxyConnectionType {
 	case network.ProxyConnectionType_ManualProxyConfiguration:
-		if err := s.proxySettings.SetManualConfig(ctx, tconn, s.kb, s.parseProxyConfigs(req)); err != nil {
+		if err := s.proxySettings.SetManualConfig(ctx, tconn, s.kb, parseProxyConfigs(req)); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to setup the contents for proxy fields")
 		}
 	case network.ProxyConnectionType_DirectInternetConnection:
@@ -148,7 +156,6 @@ func (s *ProxySettingsService) Setup(ctx context.Context, req *network.ProxyConf
 	}
 
 	return &emptypb.Empty{}, nil
-
 }
 
 // FetchProxySettings returns proxy configurations.
@@ -163,7 +170,7 @@ func (s *ProxySettingsService) FetchProxySettings(ctx context.Context, req *netw
 	defer cancel()
 	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "ui_dump_fetch_config")
 
-	if err := s.prepareProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
 		return nil, err
 	}
 
@@ -198,9 +205,14 @@ func (s *ProxySettingsService) FetchProxySettings(ctx context.Context, req *netw
 		return nil, errors.Errorf("unknown or unsupported proxy connection type: %q", dropDownMenu.Value)
 	}
 
-	for _, protocol := range []proxysettings.Protocol{
-		proxysettings.HTTP, proxysettings.HTTPS, proxysettings.Socks,
-	} {
+	protocols := []proxysettings.Protocol{proxysettings.HTTP, proxysettings.HTTPS, proxysettings.Socks}
+	if enable, err := s.proxySettings.IsUseSameProxyToggleOptionEnabled(ctx, tconn); err != nil {
+		return nil, err
+	} else if enable {
+		protocols = []proxysettings.Protocol{proxysettings.SameProxy}
+	}
+
+	for _, protocol := range protocols {
 		c, err := s.proxySettings.ManualConfigContent(ctx, tconn, protocol)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to acquire proxy configuration of %s", protocol.Name())
@@ -213,6 +225,8 @@ func (s *ProxySettingsService) FetchProxySettings(ctx context.Context, req *netw
 			result.HttpsHost, result.HttpsPort = c.Host, c.Port
 		case proxysettings.Socks:
 			result.SocksHost, result.SocksPort = c.Host, c.Port
+		case proxysettings.SameProxy:
+			result.SameHost, result.SamePort = c.Host, c.Port
 		default:
 			return nil, errors.Errorf("unknown protocol: %v", c.Protocol)
 		}
@@ -227,17 +241,77 @@ func (s *ProxySettingsService) FetchConfigurations(ctx context.Context, _ *empty
 	return nil, errors.New("rpc: tast.cros.network.ProxySettingService/New is deprecated, use tast.cros.network.ProxySettingService/FetchProxySettings instead")
 }
 
-// parseProxyConfigs parses ProxyConfig from network grpc service into local proxysettings config.
-func (s *ProxySettingsService) parseProxyConfigs(req *network.ProxyConfigs) []*proxysettings.Config {
-	return []*proxysettings.Config{
-		{Protocol: proxysettings.HTTP, Host: req.HttpHost, Port: req.HttpPort},
-		{Protocol: proxysettings.HTTPS, Host: req.HttpsHost, Port: req.HttpsPort},
-		{Protocol: proxysettings.Socks, Host: req.SocksHost, Port: req.SocksPort},
+// SetException interacts/controls the exception domains in network detail page.
+func (s *ProxySettingsService) SetException(ctx context.Context, req *network.SetExceptionRequest) (_ *empty.Empty, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	defer s.dumpUITreeToFile(cleanupCtx, func() bool { return retErr != nil }, "ui_dump_setup_exception")
+
+	tconn, err := s.testAPIConn(ctx)
+	if err != nil {
+		s.serviceState.Log(ctx, "Failed to get Test API connection: ", err)
+		return &emptypb.Empty{}, err
 	}
+
+	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+		return nil, err
+	}
+
+	ui := uiauto.New(tconn)
+	removeURLName := fmt.Sprintf("Remove exception for %s", req.Host)
+	removeURL := nodewith.Role(role.Button).Name(removeURLName)
+	if req.Action == network.SetExceptionRequest_REMOVE {
+		return &empty.Empty{}, uiauto.Combine("remove exception domain",
+			ui.WaitUntilExists(removeURL),
+			ui.LeftClick(removeURL),
+			ui.WaitUntilGone(nodewith.NameContaining(req.Host)),
+			saveSettings(ui),
+			ui.EnsureGoneFor(nodewith.Role(role.Button).NameStartingWith("Remove exception for "), 5*time.Second),
+		)(ctx)
+	}
+	return &empty.Empty{}, uiauto.Combine("add an exception domain",
+		ui.EnsureFocused(nodewith.Role(role.TextField).Name("Host or domain to exclude")),
+		s.kb.TypeAction(req.Host),
+		ui.LeftClick(nodewith.Role(role.Button).Name("Add exception")),
+		ui.WaitUntilExists(removeURL),
+		saveSettings(ui),
+	)(ctx)
 }
 
-// prepareProxySettingsPage opens proxy settings page of the specified network.
-func (s *ProxySettingsService) prepareProxySettingsPage(ctx context.Context, tconn *chrome.TestConn, networkInfo *network.NetworkInfo) error {
+// FetchException returns exception settings.
+func (s *ProxySettingsService) FetchException(ctx context.Context, req *network.FetchExceptionRequest) (*network.FetchExceptionResponse, error) {
+	tconn, err := s.testAPIConn(ctx)
+	if err != nil {
+		s.serviceState.Log(ctx, "Failed to get Test API connection: ", err)
+		return nil, err
+	}
+
+	if err := s.openProxySettingsPage(ctx, tconn, req.NetworkInfo); err != nil {
+		return nil, err
+	}
+
+	ui := uiauto.New(tconn)
+	if err := ui.WaitUntilExists(nodewith.Role(role.TextField).Name("Host or domain to exclude"))(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait exception field exists")
+	}
+
+	removeURLPrefix := "Remove exception for "
+	removeURL := nodewith.Role(role.Button).NameStartingWith(removeURLPrefix)
+	exceptionNodes, err := ui.NodesInfo(ctx, removeURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get nodes info")
+	}
+
+	var exceptions []string
+	for _, exception := range exceptionNodes {
+		exceptions = append(exceptions, strings.TrimLeft(exception.Name, removeURLPrefix))
+	}
+	return &network.FetchExceptionResponse{Exception: exceptions}, nil
+}
+
+// openProxySettingsPage opens proxy settings page of the specified network.
+func (s *ProxySettingsService) openProxySettingsPage(ctx context.Context, tconn *chrome.TestConn, networkInfo *network.NetworkInfo) error {
 	if s.proxySettings != nil {
 		return nil
 	}
@@ -268,4 +342,31 @@ func (s *ProxySettingsService) prepareProxySettingsPage(ctx context.Context, tco
 	}
 
 	return nil
+}
+
+// parseProxyConfigs parses ProxyConfig from network grpc service into local proxysettings config.
+func parseProxyConfigs(req *network.ProxyConfigs) []*proxysettings.Config {
+	if req.SameHost != "" {
+		return []*proxysettings.Config{
+			{Protocol: proxysettings.SameProxy, Host: req.SameHost, Port: req.SamePort},
+		}
+	}
+	return []*proxysettings.Config{
+		{Protocol: proxysettings.HTTP, Host: req.HttpHost, Port: req.HttpPort},
+		{Protocol: proxysettings.HTTPS, Host: req.HttpsHost, Port: req.HttpsPort},
+		{Protocol: proxysettings.Socks, Host: req.SocksHost, Port: req.SocksPort},
+	}
+}
+
+func saveSettings(ui *uiauto.Context) uiauto.Action {
+	saveButton := ossettings.WindowFinder.HasClass("action-button").Name("Save").Role(role.Button)
+	return func(ctx context.Context) error {
+		return uiauto.Combine("save settings",
+			// Verify the save button gets enabled.
+			ui.CheckRestriction(ossettings.WindowFinder.HasClass("action-button").Name("Save").Role(role.Button), restriction.None),
+			ui.MakeVisible(saveButton),
+			ui.WaitForLocation(saveButton),
+			ui.WithInterval(time.Second).LeftClickUntil(saveButton, ui.CheckRestriction(saveButton, restriction.Disabled)),
+		)(ctx)
+	}
 }

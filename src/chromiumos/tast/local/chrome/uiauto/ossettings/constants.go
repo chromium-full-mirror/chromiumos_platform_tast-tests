@@ -267,6 +267,14 @@ var (
 
 	// SocksPortTextField is the finder for the "SOCKS port" text field.
 	SocksPortTextField = nodewith.Name("SOCKS Host - Port").Role(role.TextField)
+
+	// SameProxyHostTextField is the finder for the "Proxy host" text field.
+	// This field only exists when "Use the same proxy for all protocols" is enabled."
+	SameProxyHostTextField = nodewith.Name("Proxy - Host").Role(role.TextField)
+
+	// SameProxyPortTextField is the finder for the "Proxy port" text field.
+	// This field only exists when "Use the same proxy for all protocols" is enabled."
+	SameProxyPortTextField = nodewith.Name("Proxy - Port").Role(role.TextField)
 )
 
 // ManagedEsimProfileName is the name of the managde eSim profile name used in network.CellularPolicyConnection* tests.
