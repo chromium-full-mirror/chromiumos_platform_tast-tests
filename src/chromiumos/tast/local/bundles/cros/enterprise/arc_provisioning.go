@@ -19,9 +19,9 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/arc/playstore"
-	"chromiumos/tast/local/bundles/cros/enterprise/arcent"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/policyutil"
@@ -322,7 +322,7 @@ func ensurePlayStoreNotEmpty(ctx context.Context, tconn *chrome.TestConn, cr *ch
 			return errors.New("Play Store is empty")
 		}
 
-		if err := playstore.FindAndDismissDialog(ctx, d, serverErrorText, tryAgainButtonText, 2*time.Second); err != nil {
+		if err := playstore.FindAndDismissDialog(ctx, d, serverErrorText, tryAgainButtonText); err != nil {
 			return testing.PollBreak(err)
 		}
 

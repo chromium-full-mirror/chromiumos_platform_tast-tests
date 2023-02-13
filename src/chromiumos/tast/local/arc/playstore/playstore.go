@@ -22,8 +22,9 @@ import (
 type operation string
 
 const (
-	installApp operation = "install"
-	updateApp  operation = "update"
+	installApp       operation = "install"
+	updateApp        operation = "update"
+	playStorePackage           = "com.android.vending"
 )
 
 // Options contains options used when installing or updating an app.
@@ -45,12 +46,99 @@ type Options struct {
 	InstallationTimeout time.Duration
 }
 
+// FindInstallButton finds the install button on app detail page.
+func FindInstallButton(ctx context.Context, d *ui.Device, timeout time.Duration) (*ui.Object, error) {
+	return FindActionButton(ctx, d, "install", timeout)
+}
+
+// FindActionButton finds the action button on app detail page.
+func FindActionButton(ctx context.Context, d *ui.Device, actionText string, timeout time.Duration) (*ui.Object, error) {
+	var result *ui.Object
+
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		buttonClass := ui.ClassName("android.widget.Button")
+		actionButton := d.Object(buttonClass, ui.TextMatches("(?i)"+actionText), ui.Enabled(true))
+		if err := actionButton.WaitForExists(ctx, time.Second); err == nil {
+			testing.ContextLog(ctx, "Found the button")
+			result = actionButton
+			return nil
+		}
+
+		viewClass := ui.ClassName("android.view.View")
+		actionView := d.Object(viewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
+		if err := actionView.WaitForExists(ctx, time.Second); err == nil {
+			testing.ContextLog(ctx, "Found the view")
+			result = actionView
+			return nil
+		}
+
+		return errors.New("Did not find the button")
+	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
+
+	return result, err
+}
+
+// FindAndDismissErrorDialog finds and dismisses all possible intermittent errors in Play Store.
+func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
+	const (
+		serverErrorText           = "Server busy.*|Server error|Error.*server.*|.*connection with the server.|Connection timed out."
+		cantDownloadText          = "Can.t download.*"
+		cantInstallText           = "Can.t install.*"
+		compatibleText            = "Your device is not compatible with this item."
+		openMyAppsText            = "Please open my apps.*"
+		termsOfServiceText        = "Terms of Service"
+		installAppsFromDeviceText = "Install apps from your devices"
+		internalProblemText       = "There.s an internal problem with your device.*"
+		itemNotFoundText          = ".*item.*could not be found.*"
+
+		acceptButtonText       = "accept"
+		gotItButtonText        = "got it"
+		okButtonText           = "ok"
+		noThanksButtonText     = "No thanks"
+		tryAgainOrOkButtonText = "Try again|OK"
+	)
+
+	for _, val := range []struct {
+		dialogText string
+		buttonText string
+	}{
+		// Due to timing of propagation of policy, the UI may be enabled but the item is not available.
+		{itemNotFoundText, okButtonText},
+		// These are intermittent server side errors that can happen under load.
+		{serverErrorText, tryAgainOrOkButtonText},
+		// Sometimes a dialog of "Can't download <app name>" pops up. Press "Got it" to
+		// dismiss the dialog. This check needs to be done before checking the
+		// install button since the install button exists underneath.
+		{cantDownloadText, gotItButtonText},
+		// Similarly, press "Got it" button if "Can't install <app name>" dialog pops up.
+		{cantInstallText, gotItButtonText},
+		// Also, press Ok to dismiss the dialog if "Please open my apps" dialog pops up.
+		{openMyAppsText, okButtonText},
+		// Also, press "NO THANKS" to dismiss the dialog if "Install apps from your devices" dialog pops up.
+		{installAppsFromDeviceText, noThanksButtonText},
+		// When Play Store hits the rate limit it sometimes show "Your device is not compatible with this item." error.
+		// This error is incorrect and should be ignored like the "Can't download <app name>" error.
+		{compatibleText, okButtonText},
+		// Somehow, playstore shows a ToS dialog upon opening even after playsore
+		// optin finishes. Click "accept" button to accept and dismiss.
+		{termsOfServiceText, acceptButtonText},
+		// Press Ok to dismiss the dialog if "There\'s an internal problem with your device" dialog pops up.
+		{internalProblemText, okButtonText},
+	} {
+		if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // FindAndDismissDialog finds a dialog containing text with a corresponding button and presses the button.
-func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonText string, timeout time.Duration) error {
-	if err := d.Object(ui.TextMatches("(?i)"+dialogText)).WaitForExists(ctx, time.Second); err == nil {
+func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonText string) error {
+	if err := d.Object(ui.TextMatches("(?i)" + dialogText)).Exists(ctx); err == nil {
 		testing.ContextLogf(ctx, `%q popup found. Skipping`, dialogText)
 		okButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+buttonText))
-		if err := okButton.WaitForExists(ctx, timeout); err != nil {
+		if err := okButton.WaitForExists(ctx, time.Second); err != nil {
 			return err
 		}
 		if err := okButton.Click(ctx); err != nil {
@@ -58,6 +146,25 @@ func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonT
 		}
 	}
 	return nil
+}
+
+// OpenAppPage opens the detail page of an app in Play Store.
+func OpenAppPage(ctx context.Context, a *arc.ARC, pkgName string) error {
+	const (
+		intentActionView    = "android.intent.action.VIEW"
+		playStoreAppPageURI = "market://details?id="
+	)
+
+	if err := a.SendIntentCommand(ctx, intentActionView, playStoreAppPageURI+pkgName).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to send intent to open the Play Store")
+	}
+
+	return nil
+}
+
+// Close closes Play Store.
+func Close(ctx context.Context, a *arc.ARC) error {
+	return a.Command(ctx, "am", "force-stop", playStorePackage).Run(testexec.DumpLogOnError)
 }
 
 // printPercentageOfAppInstalled func prints the percentage of app installed so far.
@@ -87,33 +194,21 @@ func printPercentageOfAppInstalled(ctx context.Context, d *ui.Device) {
 // installOrUpdate uses the Play Store to install or update an application.
 func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string, opt *Options, op operation) error {
 	const (
-		accountSetupText          = "Complete account setup"
-		permissionsText           = "needs access to"
-		cantDownloadText          = "Can.t download.*"
-		cantInstallText           = "Can.t install.*"
-		versionText               = "Your device isn.t compatible with this version."
-		compatibleText            = "Your device is not compatible with this item."
-		openMyAppsText            = "Please open my apps.*"
-		termsOfServiceText        = "Terms of Service"
-		linkPaypalAccountText     = "Want to link your PayPal account.*"
-		installAppsFromDeviceText = "Install apps from your devices"
-		serverBusyText            = "Server busy, please try again later."
-		internalProblemText       = "There.s an internal problem with your device.*"
+		accountSetupText      = "Complete account setup"
+		permissionsText       = "needs access to"
+		versionText           = "Your device isn.t compatible with this version."
+		linkPaypalAccountText = "Want to link your PayPal account.*"
 
 		acceptButtonText   = "accept"
 		continueButtonText = "continue"
-		gotItButtonText    = "got it"
 		installButtonText  = "install"
 		updateButtonText   = "update"
-		okButtonText       = "ok"
 		openButtonText     = "open"
 		playButtonText     = "play"
 		retryButtonText    = "retry"
 		tryAgainButtonText = "try again"
 		skipButtonText     = "skip"
 		noThanksButtonText = "No thanks"
-
-		intentActionView = "android.intent.action.VIEW"
 	)
 
 	o := *opt
@@ -141,19 +236,18 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		return errors.Wrap(err, "failed to wait for ArcIntentHelper")
 	}
 
-	playStoreAppPageURI := "market://details?id=" + pkgName
-	if err := a.SendIntentCommand(ctx, intentActionView, playStoreAppPageURI).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to send intent to open the Play Store")
+	if err := OpenAppPage(ctx, a, pkgName); err != nil {
+		return err
 	}
 
-	var opButton *ui.Object // Operation button - install or update.
+	var btnText string // Action button text - install or update.
 	switch op {
 	case installApp:
 		// Look for install button.
-		opButton = d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText), ui.Enabled(true))
+		btnText = installButtonText
 	case updateApp:
 		// Look for update button.
-		opButton = d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+updateButtonText), ui.Enabled(true))
+		btnText = updateButtonText
 	default:
 		return errors.Errorf("operation %s is not supported", op)
 	}
@@ -163,34 +257,8 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 	tries := 0
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		for _, val := range []struct {
-			dialogText string
-			buttonText string
-		}{
-			// Sometimes a dialog of "Can't download <app name>" pops up. Press "Got it" to
-			// dismiss the dialog. This check needs to be done before checking the
-			// install button since the install button exists underneath.
-			{cantDownloadText, gotItButtonText},
-			// Similarly, press "Got it" button if "Can't install <app name>" dialog pops up.
-			{cantInstallText, gotItButtonText},
-			// Also, press Ok to dismiss the dialog if "Please open my apps" dialog pops up.
-			{openMyAppsText, okButtonText},
-			// Also, press "NO THANKS" to dismiss the dialog if "Install apps from your devices" dialog pops up.
-			{installAppsFromDeviceText, noThanksButtonText},
-			// When Play Store hits the rate limit it sometimes show "Your device is not compatible with this item." error.
-			// This error is incorrect and should be ignored like the "Can't download <app name>" error.
-			{compatibleText, okButtonText},
-			// Somehow, playstore shows a ToS dialog upon opening even after playsore
-			// optin finishes. Click "accept" button to accept and dismiss.
-			{termsOfServiceText, acceptButtonText},
-			// Press "Try again" if "Server busy, please try again later." screen is shown.
-			{serverBusyText, tryAgainButtonText},
-			// Press Ok to dismiss the dialog if "There\'s an internal problem with your device" dialog pops up.
-			{internalProblemText, okButtonText},
-		} {
-			if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText, defaultUITimeout); err != nil {
-				return testing.PollBreak(err)
-			}
+		if err := FindAndDismissErrorDialog(ctx, d); err != nil {
+			return testing.PollBreak(err)
 		}
 
 		// If the version isn't compatible with the device, no install button will be available.
@@ -205,8 +273,8 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 			if tryLimit == -1 || tries < tryLimit {
 				tries++
 				testing.ContextLogf(ctx, "Retry button is shown. Trying to reopen the Play Store. Total attempts so far: %d", tries)
-				if err := a.SendIntentCommand(ctx, intentActionView, playStoreAppPageURI).Run(testexec.DumpLogOnError); err != nil {
-					return errors.Wrap(err, "failed to send intent to reopen the Play Store")
+				if err := OpenAppPage(ctx, a, pkgName); err != nil {
+					return err
 				}
 			} else {
 				return testing.PollBreak(errors.Errorf("reopen Play Store attempt limit of %d times", tryLimit))
@@ -214,7 +282,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// If the install or update button is enabled, click it.
-		if err := opButton.Exists(ctx); err == nil {
+		if opButton, err := FindActionButton(ctx, d, btnText, 2*time.Second); err == nil {
 			// Limit number of tries to help mitigate Play Store rate limiting across test runs.
 			if tryLimit == -1 || tries < tryLimit {
 				tries++
@@ -228,7 +296,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// Grant permissions if necessary.
-		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText, defaultUITimeout); err != nil {
+		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText); err != nil {
 			return testing.PollBreak(err)
 		}
 
@@ -273,19 +341,21 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// Grant permissions if necessary.
-		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText, defaultUITimeout); err != nil {
+		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText); err != nil {
 			return testing.PollBreak(err)
 		}
 
-		// Wait until progress bar is gone.
-		testing.ContextLog(ctx, "Checking existence of progress bar")
-		progressBar := d.Object(ui.ClassName("android.widget.ProgressBar"))
-		if err := progressBar.WaitForExists(ctx, defaultUITimeout); err == nil {
+		testing.ContextLog(ctx, "Checking existence of installation")
+		// There are two possible of descriptions on the Play Store installation page.
+		// One is "Download in progress", the other is "Install in progress".
+		// If one of them exists, that means the installation is still in progress.
+		progress := d.Object(ui.DescriptionContains("in progress"))
+		if err := progress.WaitForExists(ctx, defaultUITimeout); err == nil {
 			// Print the percentage of app installed so far.
 			printPercentageOfAppInstalled(ctx, d)
-			testing.ContextLog(ctx, "Wait until progress bar is gone")
-			if err := progressBar.WaitUntilGone(ctx, installationTimeout); err != nil {
-				return errors.Wrap(err, "progress bar still exists")
+			testing.ContextLog(ctx, "Wait until download and install complete")
+			if err := progress.WaitUntilGone(ctx, installationTimeout); err != nil {
+				return errors.Wrap(err, "installation is still in progress")
 			}
 		}
 
@@ -293,8 +363,8 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		// If not, reopen the Play Store page by sending the same intent again.
 		if err := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches(fmt.Sprintf("(?i)(%s|%s)", openButtonText, playButtonText))).Exists(ctx); err != nil {
 			testing.ContextLog(ctx, "App installation page disappeared; reopen it")
-			if err := a.SendIntentCommand(ctx, intentActionView, playStoreAppPageURI).Run(testexec.DumpLogOnError); err != nil {
-				return errors.Wrap(err, "failed to send intent to reopen the Play Store")
+			if err := OpenAppPage(ctx, a, pkgName); err != nil {
+				return err
 			}
 		}
 
@@ -359,4 +429,22 @@ func InstallOrUpdateAppAndClose(ctx context.Context, tconn *chrome.TestConn, a *
 		return err
 	}
 	return optin.ClosePlayStore(ctx, tconn)
+}
+
+// LaunchAssetBrowserActivity starts the activity that displays the available apps.
+func LaunchAssetBrowserActivity(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC) (*arc.Activity, error) {
+	const (
+		assetBrowserActivity = "com.android.vending.AssetBrowserActivity"
+	)
+
+	testing.ContextLog(ctx, "Starting Asset Browser activity")
+	act, err := arc.NewActivity(a, playStorePackage, assetBrowserActivity)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new activity")
+	}
+	if err := act.Start(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed starting Play Store")
+	}
+
+	return act, nil
 }

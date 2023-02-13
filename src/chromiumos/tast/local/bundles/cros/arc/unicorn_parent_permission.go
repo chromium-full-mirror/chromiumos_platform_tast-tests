@@ -6,15 +6,20 @@ package arc
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
+	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome/familylink"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/launcher"
+	"chromiumos/tast/local/retry"
 	"chromiumos/tast/testing"
 )
 
@@ -44,89 +49,108 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		askinPersonButtonText  = "Ask in person"
 		installButtonText      = "install"
 		playStoreSearchText    = "Search for apps & games"
-		appName                = "Instagram"
+		appPkgName             = "com.instagram.android"
 	)
 	parentUser := s.RequiredVar("arc.parentUser")
 	cr := s.FixtValue().(*familylink.FixtData).Chrome
 	tconn := s.FixtValue().(*familylink.FixtData).TestConn
 
-	st, err := arc.GetState(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get ARC state: ", err)
-	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-	if st.Provisioned {
-		s.Log("ARC is already provisioned. Skipping the Play Store setup")
-		if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
-			s.Fatal("Failed to close the provisioned Play Store: ", err)
+	// Use a shortened context for test operations to reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
+	defer cancel()
+
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+
+		st, err := arc.GetState(ctx, tconn)
+		if err != nil {
+			rl.Exit("get ARC state", err)
 		}
-	} else {
-		// Optin to Play Store.
-		s.Log("Opting into Play Store")
-		if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-			s.Fatal("Failed to optin to Play Store and Close: ", err)
+		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+		if st.Provisioned {
+			s.Log("ARC is already provisioned. Skipping the Play Store setup")
+			if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
+				rl.Exit("close the provisioned Play Store", err)
+			}
+		} else {
+			s.Log("Opting into Play Store")
+			if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
+				return rl.Retry("optin to Play Store and Close", err)
+			}
 		}
-	}
-	if err := launcher.LaunchApp(tconn, apps.PlayStore.Name)(ctx); err != nil {
-		s.Fatal("Failed to launch Play Store")
-	}
-	defer apps.Close(ctx, tconn, apps.PlayStore.ID)
 
-	// Setup ARC.
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
+		a, err := arc.New(ctx, s.OutDir())
+		if err != nil {
+			return rl.Retry("start ARC", err)
+		}
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), s.HasError)
+		defer a.Close(cleanupCtx)
 
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
-	}
-	defer d.Close(ctx)
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return rl.Retry("initializing UI Automator", err)
+		}
+		defer d.Close(cleanupCtx)
 
-	// Try on Install Some Games App.
-	searchText := d.Object(ui.ClassName("android.widget.TextView"), ui.Text(playStoreSearchText))
-	if err := searchText.WaitForExists(ctx, 90*time.Second); err != nil {
-		s.Fatal("searchText doesn't exist: ", err)
-	}
-	if err := searchText.Click(ctx); err != nil {
-		s.Fatal("Failed to click on searchText: ", err)
-	}
+		// Start screen recording for easier to debug failures.
+		screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+		if err != nil || screenRecorder == nil {
+			rl.Exit("create ScreenRecorder", err)
+		}
+		if err := screenRecorder.Start(ctx, tconn); err != nil {
+			rl.Exit("start screen recorder", err)
+		}
 
-	searchTextEdit := d.Object(ui.ClassName("android.widget.EditText"), ui.Text(playStoreSearchText))
-	if err := searchTextEdit.SetText(ctx, appName); err != nil {
-		s.Fatal("Failed to set text to search: ", err)
-	}
-	if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
-		s.Fatal("Failed to click on KEYCODE_ENTER button: ", err)
-	}
+		defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
 
-	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText), ui.Enabled(true))
-	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
-		s.Fatal("Install Button Exisits: ", err)
-	}
-	if err := installButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click  installButton: ", err)
-	}
+		if err := playstore.OpenAppPage(ctx, a, appPkgName); err != nil {
+			rl.Exit("open the app page in Play Store", err)
+		}
 
-	// Verify Parent Permission Dialog is displayed.
-	askinPersonButton := d.Object(ui.ClassName("android.widget.Button"), ui.Text(askinPersonButtonText), ui.Enabled(true))
-	if err := askinPersonButton.WaitForExists(ctx, 90*time.Second); err != nil {
-		s.Fatal("Ask in person button doesn't Exists: ", err)
-	}
+		installButton, err := playstore.FindInstallButton(ctx, d, 15*time.Second)
+		if err != nil {
+			rl.Exit("find the install button", err)
+		}
 
-	if err := d.Object(ui.TextMatches(askinMessageButtonText)).Exists(ctx); err != nil {
-		s.Fatal("Ask in a message button doesn't exist: ", err)
-	}
+		askinPersonButton := d.Object(ui.ClassName("android.widget.Button"), ui.Text(askinPersonButtonText), ui.Enabled(true))
 
-	if err = askinPersonButton.Click(ctx); err != nil {
-		s.Fatal("Failed to click  Ask in person: ", err)
-	}
+		if err := uiauto.Retry(3, func(ctx context.Context) error {
+			if err := installButton.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click installButton")
+			}
 
-	parentPwd := d.Object(ui.ClassName("android.widget.EditText"), ui.Text(parentUser))
-	if err := parentPwd.WaitForExists(ctx, 90*time.Second); err != nil {
-		s.Fatal("parentPwd doesn't Exists: ", err)
+			// Verify Parent Permission Dialog is displayed.
+			if err := askinPersonButton.WaitForExists(ctx, 90*time.Second); err != nil {
+				return errors.Wrap(err, "Ask in person button doesn't exist")
+			}
+
+			return nil
+		})(ctx); err != nil {
+			rl.Exit("click installButton and check the existence of Ask in person button", err)
+		}
+
+		if err := d.Object(ui.TextMatches(askinMessageButtonText)).Exists(ctx); err != nil {
+			rl.Exit("find Ask in a message button", err)
+		}
+
+		if err = askinPersonButton.Click(ctx); err != nil {
+			rl.Exit("click Ask in person button", err)
+		}
+
+		parentPwd := d.Object(ui.ClassName("android.widget.EditText"), ui.Text(parentUser))
+		if err := parentPwd.WaitForExists(ctx, 90*time.Second); err != nil {
+			rl.Exit("find the parentPwd element", err)
+		}
+		return nil
+	}, nil); err != nil {
+		s.Fatal("Unicorn parent permission test failed: ", err)
 	}
 
 }

@@ -6,14 +6,11 @@ package arc
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome/familylink"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -45,14 +42,8 @@ func init() {
 
 func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	const (
-		DefaultUITimeout     = 1 * time.Minute
-		installButtonText    = "install"
-		provisioningTimeout  = 3 * time.Minute
-		maxAttempts          = 2
-		playStorePackage     = "com.android.vending"
-		assetBrowserActivity = "com.android.vending.AssetBrowserActivity"
-		logcatBufferSize     = "10M"
-		blockedPackage       = "com.google.android.apps.youtube.creator"
+		provisioningTimeout = 3 * time.Minute
+		blockedPackage      = "com.google.android.apps.youtube.creator"
 	)
 	fdms := s.FixtValue().(*familylink.FixtData).FakeDMS
 	cr := s.FixtValue().(*familylink.FixtData).Chrome
@@ -90,23 +81,12 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to change log level: ", err)
 	}
 
-	if err := a.Command(ctx, "logcat", "-G", logcatBufferSize).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Unable to increase buffer size: ", err)
+	if err := arcent.ConfigureProvisioningLogs(ctx, a); err != nil {
+		s.Fatal("Unable to configure provisioning logs: ", err)
 	}
 
 	if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
 		s.Fatal("Failed to wait for provisioning: ", err)
-	}
-
-	s.Log("Starting Play Store")
-	act, err := arc.NewActivity(a, playStorePackage, assetBrowserActivity)
-	if err != nil {
-		s.Fatal("Failed to create new activity: ", err)
-	}
-	defer act.Close()
-
-	if err := act.Start(ctx, tconn); err != nil {
-		s.Fatal("Failed starting Play Store or Play Store is empty: ", err)
 	}
 
 	d, err := a.NewUIDevice(ctx)
@@ -115,66 +95,9 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(ctx)
 
-	searchText := d.Object(ui.ClassName("android.widget.TextView"), ui.Text("Search for apps & games"))
-	if err := searchText.WaitForExists(ctx, DefaultUITimeout); err != nil {
-		s.Error("searchText doesn't exist: ", err)
-	} else if err := searchText.Click(ctx); err != nil {
-		s.Fatal("Failed to click on searchText: ", err)
+	// Blocked app should either not install or immediately uninstall after installation.
+	if err := arcent.ValidateBlockedAppInstall(ctx, tconn, a, d, blockedPackage, 5*time.Minute); err != nil {
+		s.Fatal("Failed to verify blocked app uninstall: ", err)
 	}
 
-	searchTextEdit := d.Object(ui.ClassName("android.widget.EditText"), ui.Text("Search for apps & games"))
-	if err := searchTextEdit.SetText(ctx, "youtube.creator"); err != nil {
-		s.Fatal("Failed to searchText: ", err)
-	} else if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
-		s.Fatal("Failed to click on KEYCODE_ENTER button: ", err)
-	}
-
-	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText))
-	if err := installButton.WaitForExists(ctx, DefaultUITimeout); err != nil {
-		s.Fatal("Failed to find the install button for blocked app: ", err)
-	}
-
-	if enabled, err := installButton.IsEnabled(ctx); err != nil {
-		s.Fatal("Failed to check install button state")
-	} else if !enabled {
-		testing.ContextLog(ctx, "Install button is disabled")
-	} else if err := validateAutoUninstall(ctx, a, installButton, blockedPackage); err != nil {
-		dumpBugReport(ctx, a, s.OutDir())
-		s.Fatal("Blocked package did not uninstall: ", err)
-	}
-}
-
-func validateAutoUninstall(ctx context.Context, a *arc.ARC, installButton *ui.Object, blockedPackage string) error {
-	testing.ContextLog(ctx, "Install button is enabled. Attempting install")
-	if err := installButton.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the install button")
-	}
-
-	if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
-		return errors.Wrap(err, "package installation failed")
-	}
-
-	testing.ContextLog(ctx, "Waiting for package to uninstall")
-	if err := waitForUninstall(ctx, a, blockedPackage); err != nil {
-		return errors.Wrap(err, "package not uninstalled")
-	}
-
-	return nil
-}
-
-func waitForUninstall(ctx context.Context, a *arc.ARC, blockedPackage string) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		if installed, err := a.PackageInstalled(ctx, blockedPackage); err != nil {
-			return testing.PollBreak(err)
-		} else if installed {
-			return errors.New("Package not yet uninstalled")
-		}
-		return nil
-	}, &testing.PollOptions{Interval: time.Second})
-}
-
-func dumpBugReport(ctx context.Context, a *arc.ARC, outDir string) {
-	if err := a.BugReport(ctx, filepath.Join(outDir, "bugreport.zip")); err != nil {
-		testing.ContextLog(ctx, "Failed to get bug report: ", err)
-	}
 }
