@@ -116,20 +116,16 @@ func AuthError(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for auth error gone: ", err)
 		}
 	} else {
-		if err := ui.LeftClick(nodewith.Role(role.Button).NameStartingWith("Learn more"))(ctx); err != nil {
-			s.Fatal("Failed to click Learn more button")
+		helpWindow := nodewith.Role(role.AlertDialog).NameStartingWith("Sign-in help")
+
+		if err := ui.LeftClickUntil(nodewith.Role(role.Button).NameStartingWith("Learn more"),
+			ui.Exists(helpWindow))(ctx); err != nil {
+			s.Fatal("Failed to click Learn more button: ", err)
 		}
 
-		if err := ui.WaitUntilExists(nodewith.Role(role.Window).NameStartingWith("Help"))(ctx); err != nil {
-			s.Fatal("Failed to wait for help diaglog")
-		}
-
-		if err := ui.LeftClick(nodewith.Role(role.Button).NameStartingWith("Close"))(ctx); err != nil {
-			s.Fatal("Failed to close help dialog")
-		}
-
-		if err := ui.WaitUntilGone(nodewith.Role(role.Window).NameStartingWith("Help"))(ctx); err != nil {
-			s.Fatal("Failed to wait for help dialog to close")
+		if err := ui.LeftClickUntil(nodewith.Role(role.Button).NameStartingWith("Close"),
+			ui.Gone(helpWindow))(ctx); err != nil {
+			s.Fatal("Failed to close help dialog: ", err)
 		}
 	}
 }
