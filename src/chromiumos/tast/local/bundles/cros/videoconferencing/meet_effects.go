@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package mlservice
+package videoconferencing
 
 import (
 	"context"
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/apps/zoom"
-	"chromiumos/tast/local/bundles/cros/mlservice/commontype"
-	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
+	"chromiumos/tast/local/apps/googlemeet"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -23,9 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VCZoomEffects,
+		Func:         MeetEffects,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks Video Effects in Zoom conference",
+		Desc:         "Checks Video Effects in Google Meet",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"shengjun@chromium.org",
@@ -60,41 +60,40 @@ func init() {
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},
 	})
 }
 
-func VCZoomEffects(ctx context.Context, s *testing.State) {
+func MeetEffects(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
 
@@ -104,26 +103,34 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	if err := zoom.GrantPermissions(ctx, br); err != nil {
+	if err := googlemeet.GrantPermissions(ctx, br); err != nil {
 		s.Fatal("Failed to grant permissions to Meet: ", err)
 	}
 
-	var zm *zoom.Zoom
+	var gm *googlemeet.GoogleMeet
 
 	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
-		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br)
+		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br)
 	} else {
-		zm, err = zoom.StartNewMeeting(ctx, cr, br)
+		// Meet can dynamically switch between different segmentation models.
+		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
+		gm, err = googlemeet.StartNewMeeting(ctx, cr, br,
+			map[string]string{
+				"e": "ForceSegmentationModelVariant::GpuMid",
+			})
 	}
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}
-	defer zm.Close(cleanupCtx)
+	defer gm.Close(cleanupCtx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_zoom")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
 
-	if err := zm.SwitchVideo(true)(ctx); err != nil {
-		s.Fatal("Failed to switch on camera: ", err)
+	if err := uiauto.Combine("configure Meet",
+		gm.MuteIfMicAvailable,
+		gm.SwitchVideo(true),
+	)(ctx); err != nil {
+		s.Fatal("Failed to configure Meet: ", err)
 	}
 
 	vcTray := vctray.New(ctx, tconn)
@@ -137,7 +144,7 @@ func VCZoomEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure effects: ", err)
 	}
 
-	if err := zm.EnterFullScreen(ctx); err != nil {
+	if err := gm.EnterFullScreen(ctx); err != nil {
 		s.Fatal("Failed to enter full screen: ", err)
 	}
 }

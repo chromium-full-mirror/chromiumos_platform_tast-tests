@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package mlservice
+package videoconferencing
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps/googlemeet"
-	"chromiumos/tast/local/bundles/cros/mlservice/commontype"
-	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -24,7 +24,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VCTrayReturnToApp,
+		Func:         TrayReturnToApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks VC tray returns to app is functional",
 		Contacts: []string{
@@ -63,7 +63,7 @@ func init() {
 	})
 }
 
-func VCTrayReturnToApp(ctx context.Context, s *testing.State) {
+func TrayReturnToApp(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

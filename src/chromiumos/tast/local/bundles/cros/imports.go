@@ -127,6 +127,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/uidetection"
 	_ "chromiumos/tast/local/bundles/cros/vdi"
 	_ "chromiumos/tast/local/bundles/cros/video"
+	_ "chromiumos/tast/local/bundles/cros/videoconferencing"
 	_ "chromiumos/tast/local/bundles/cros/vm"
 	_ "chromiumos/tast/local/bundles/cros/wallpaper"
 	_ "chromiumos/tast/local/bundles/cros/webrtc"

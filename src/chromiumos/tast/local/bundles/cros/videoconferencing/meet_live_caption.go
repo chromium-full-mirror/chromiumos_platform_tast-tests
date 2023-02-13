@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package mlservice
+package videoconferencing
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/apps/googlemeet"
-	"chromiumos/tast/local/bundles/cros/mlservice/commontype"
-	"chromiumos/tast/local/bundles/cros/mlservice/fixture"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -30,7 +30,7 @@ const credsVarName = "ui.bond_credentials"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VCMeetLiveCaption,
+		Func:         MeetLiveCaption,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks on-device live caption works in Google Meet",
 		Contacts: []string{
@@ -71,7 +71,7 @@ func init() {
 	})
 }
 
-func VCMeetLiveCaption(ctx context.Context, s *testing.State) {
+func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

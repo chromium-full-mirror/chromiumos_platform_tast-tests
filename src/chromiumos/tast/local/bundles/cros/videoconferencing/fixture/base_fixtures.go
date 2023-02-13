@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package fixture defines fixtures for ML service tests.
+// Package fixture defines fixtures for video conferencing tests.
 package fixture
 
 import (
@@ -20,7 +20,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// List of fixture names for ML service testing.
+// List of fixture names for video conferencing testing.
 const (
 	LoggedIn                    = "mlLoggedIn"
 	GAIALoggedIn                = "mlGaiaLoggedIn"
