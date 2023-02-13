@@ -159,7 +159,7 @@ func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 
 	timeout := int32(privacyScreenReportingTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
