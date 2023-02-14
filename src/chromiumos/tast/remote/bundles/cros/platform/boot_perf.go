@@ -136,29 +136,36 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 	if err != nil {
 		s.Fatal("Failed to get boot perf metrics: ", err)
 	}
-	metrics := m.GetMetrics()
 
-	if !manualReboot { // Reboot metrics can be skipped on measuring the current boot.
-		m2, err := bootPerfService.GetRebootMetrics(ctx, &empty.Empty{})
-		if err != nil {
-			s.Fatal("Failed to get reboot metrics: ", err)
-		}
-		// Merge reboot metrics into metrics.
-		for k, v := range m2.GetMetrics() {
-			metrics[k] = v
+	// appendPerfValues is a local helper function to convert the metrics in the RPC response and append to pv.
+	// e.g. m.GetMetrics(): [ "seconds_power_on_to_kernel": 3.343, ] =>
+	//      pv.Append(perf.Metric{ Name: "seconds_power_on_to_kernel", Unit: "seconds", ...},
+	//                3.343)
+	appendPerfValues := func(pv *perf.Values, m map[string]float64) {
+		for k, v := range m {
+			// |unit|: rdbytes or seconds.
+			unit := strings.Split(k, "_")[0]
+			pv.Append(perf.Metric{
+				Name:      k,
+				Unit:      unit,
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+			}, v)
 		}
 	}
+	appendPerfValues(pv, m.GetMetrics())
 
-	for k, v := range metrics {
-		// |unit|: rdbytes or seconds.
-		unit := strings.Split(k, "_")[0]
-		pv.Append(perf.Metric{
-			Name:      k,
-			Unit:      unit,
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-		}, v)
+	if manualReboot {
+		// For manual reboot testing, skip collecting reboot metrics as they are unavailable.
+		// Also skip collecting raw data as some items that are saved on reboot are unavailable.
+		return
 	}
+
+	m2, err := bootPerfService.GetRebootMetrics(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get reboot metrics: ", err)
+	}
+	appendPerfValues(pv, m2.GetMetrics())
 
 	// Save raw data for this iteration.
 	savedRaw := filepath.Join(s.OutDir(), fmt.Sprintf("raw.%03d", i+1))
