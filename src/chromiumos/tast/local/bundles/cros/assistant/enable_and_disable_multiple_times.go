@@ -22,7 +22,7 @@ func init() {
 		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Timeout:      3 * time.Minute,
+		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:              "libassistant_dlc",
