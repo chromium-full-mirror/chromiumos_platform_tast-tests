@@ -20,6 +20,7 @@ var (
 	// Kernel configuration items that should be disabled i.e. MODULE not exist or MODULE = n
 	isDisabled = []string{
 		"DRM_KMS_FB_HELPER",
+		"DRM_VGEM",
 		"FB_CFB_COPYAREA",
 		"FB_CFB_FILLRECT",
 		"FB_CFB_IMAGEBLIT",
