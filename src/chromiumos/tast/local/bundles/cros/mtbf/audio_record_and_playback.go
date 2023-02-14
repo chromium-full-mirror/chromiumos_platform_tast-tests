@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package mtbf
 
 import (
 	"context"
@@ -25,9 +25,17 @@ func init() {
 		Func:         AudioRecordAndPlayback,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Records audio via ARC++ app Voice Recorder and verifies that it can playback the recorded audio file",
-		Contacts:     []string{"sun.tsai@cienet.com", "alfredyu@cienet.com", "cienet-development@googlegroups.com"},
-		// Purposely leave the empty Attr here. MTBF tests are not included in mainline or crosbolt for now.
-		Attr:         []string{},
+		Contacts: []string{
+			"chromeos-perf-reliability-eng@google.com",
+			"abergman@google.com",
+			"xibin@google.com",
+			"cienet-development@googlegroups.com",
+			"sun.tsai@cienet.com", // Test author.
+		},
+		// ChromeOS > EngProd > Platform > SPERA > Automation
+		BugComponent: "b:1025042",
+		// MTBF tests are not included in mainline or crosbolt for now.
+		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		VarDeps:      []string{"uidetection.key_type", "uidetection.key", "uidetection.server"},
 		Data:         []string{voicerecorder.PlayingIcon},

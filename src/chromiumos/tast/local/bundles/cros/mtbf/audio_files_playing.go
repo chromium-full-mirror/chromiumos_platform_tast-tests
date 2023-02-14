@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package mtbf
 
 import (
 	"context"
@@ -39,9 +39,16 @@ func init() {
 		Func:         AudioFilesPlaying,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Play audio files via ARC++ app VLC player and verifies audio volume level is changed based on volume controls",
-		Contacts:     []string{"ting.chen@cienet.com", "alfredyu@cienet.com", "cienet-development@googlegroups.com"},
-		// Purposely leave the empty Attr here. MTBF tests are not included in mainline or crosbolt for now.
-		Attr:         []string{},
+		Contacts: []string{
+			"chromeos-perf-reliability-eng@google.com",
+			"abergman@google.com",
+			"xibin@google.com",
+			"cienet-development@googlegroups.com",
+		},
+		// ChromeOS > EngProd > Platform > SPERA > Automation
+		BugComponent: "b:1025042",
+		// MTBF tests are not included in mainline or crosbolt for now.
+		Attr:         []string{"group:hw_agnostic"},
 		Data:         []string{"format_m4a.m4a", "format_mp3.mp3", "format_ogg.ogg", "format_wav.wav"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc"},
 		Fixture:      mtbf.LoginReuseFixture,

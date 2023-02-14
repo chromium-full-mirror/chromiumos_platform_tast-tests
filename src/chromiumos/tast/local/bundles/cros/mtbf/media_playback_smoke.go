@@ -52,12 +52,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify media is supported by checking the series of media fundamental playback functionalities",
 		Contacts: []string{
-			"cienet-development@googlegroups.com",
-			"xibin@google.com",
+			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",
+			"xibin@google.com",
+			"cienet-development@googlegroups.com",
 			"sun.tsai@cienet.com", // Test author.
 		},
-		BugComponent: "b:732213",
+		// ChromeOS > EngProd > Platform > SPERA > Automation
+		BugComponent: "b:1025042",
 		// MTBF tests are not included in mainline or crosbolt for now.
 		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},

@@ -28,15 +28,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Plays multiple videos simultaneously in different tabs",
 		Contacts: []string{
+			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",
-			"alfred.yu@cienet.com",
-			"cj.tsai@cienet.com",
+			"xibin@google.com",
 			"cienet-development@googlegroups.com",
+			"cj.tsai@cienet.com", // Test author.
 		},
+		// ChromeOS > EngProd > Platform > SPERA > Automation
+		BugComponent: "b:1025042",
+		// MTBF tests are not included in mainline or crosbolt for now.
+		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		// Purposely leave the empty Attr here. MTBF tests are not included in mainline or crosbolt for now.
-		Attr:    []string{},
-		Timeout: 5 * time.Minute,
+		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture: mtbf.LoginReuseFixture,
