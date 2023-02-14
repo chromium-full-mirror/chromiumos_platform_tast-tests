@@ -42,8 +42,9 @@ func init() {
 				Name:    "plus",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 15 * time.Minute,
-				Val: productivitycuj.ProductivityParam{
-					Tier: cuj.Plus,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Plus,
+					BrowserType: browser.TypeAsh,
 				},
 			},
 			{
@@ -51,9 +52,9 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           15 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: productivitycuj.ProductivityParam{
-					Tier:     cuj.Plus,
-					IsLacros: true,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Plus,
+					BrowserType: browser.TypeLacros,
 				},
 			},
 			{
@@ -61,8 +62,9 @@ func init() {
 				Fixture:   "loggedInAndKeepState",
 				Timeout:   15 * time.Minute,
 				ExtraData: []string{"productivity_cuj_voice_to_text_en.wav"},
-				Val: productivitycuj.ProductivityParam{
-					Tier: cuj.Premium,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Premium,
+					BrowserType: browser.TypeAsh,
 				},
 			},
 			{
@@ -71,9 +73,9 @@ func init() {
 				Timeout:           15 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraData:         []string{"productivity_cuj_voice_to_text_en.wav"},
-				Val: productivitycuj.ProductivityParam{
-					Tier:     cuj.Premium,
-					IsLacros: true,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Premium,
+					BrowserType: browser.TypeLacros,
 				},
 			},
 		},
@@ -81,7 +83,7 @@ func init() {
 }
 
 func MicrosoftOfficeWebCUJ(ctx context.Context, s *testing.State) {
-	p := s.Param().(productivitycuj.ProductivityParam)
+	p := s.Param().(productivitycuj.TestParams)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	sampleSheetURL, ok := s.Var("spera.sampleMSOfficeSheetURL")
 	if !ok {
@@ -129,22 +131,21 @@ func MicrosoftOfficeWebCUJ(ctx context.Context, s *testing.State) {
 	username := s.RequiredVar("spera.ms_username")
 	password := s.RequiredVar("spera.ms_password")
 
-	office := productivitycuj.NewMicrosoftWebOffice(tconn, uiHdl, kb, tabletMode, p.IsLacros, username, password)
+	browserType := p.BrowserType
+
+	office := productivitycuj.NewMicrosoftWebOffice(tconn, uiHdl, kb, browserType, tabletMode, username, password)
 
 	var expectedText, testFileLocation string
 	if p.Tier == cuj.Premium {
 		expectedText = "Mary had a little lamb whose fleece was white as snow And everywhere that Mary went the lamb was sure to go"
 		testFileLocation = s.DataPath("productivity_cuj_voice_to_text_en.wav")
 	}
-	bt := browser.TypeAsh
-	if p.IsLacros {
-		bt = browser.TypeLacros
-	}
+
 	traceConfigPath := ""
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	if err := productivitycuj.Run(ctx, cr, office, p.Tier, tabletMode, bt, s.OutDir(), traceConfigPath, sampleSheetURL, expectedText, testFileLocation); err != nil {
+	if err := productivitycuj.Run(ctx, cr, office, p.Tier, tabletMode, browserType, s.OutDir(), traceConfigPath, sampleSheetURL, expectedText, testFileLocation); err != nil {
 		s.Fatal("Failed to run productivity cuj: ", err)
 	}
 }

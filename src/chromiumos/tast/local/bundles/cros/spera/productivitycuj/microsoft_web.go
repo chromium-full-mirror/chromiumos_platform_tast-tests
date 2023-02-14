@@ -15,6 +15,7 @@ import (
 	"github.com/mafredri/cdp/protocol/target"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -79,13 +80,13 @@ type MicrosoftWebOffice struct {
 	ui              *uiauto.Context
 	kb              *input.KeyboardEventWriter
 	uiHdl           cuj.UIActionHandler
+	browserType     browser.Type
 	tabletMode      bool
 	username        string
 	password        string
 	documentCreated bool
 	slideCreated    bool
 	sheetCreated    bool
-	isLacros        bool
 }
 
 // CreateDocument creates a new document from microsoft web app.
@@ -153,21 +154,21 @@ func (app *MicrosoftWebOffice) CreateSpreadsheet(ctx context.Context, cr *chrome
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create test API connection")
 	}
-	closeTabsFunc := browser.CloseAllTabs
-	if app.isLacros {
-		// For lacros-Chrome, it should leave a new tab to keep the Chrome process alive.
-		closeTabsFunc = browser.ReplaceAllTabsWithSingleNewTab
-	}
+
 	connExcel, err = app.br.NewConn(ctx, sampleSheetURL)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to open URL: %s", sampleSheetURL)
 	}
 
-	defer func() {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
 		faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return err != nil }, cr, "ui_tree")
+		cuj.CloseAllTabs(ctx, bTconn, app.browserType)
 		connExcel.Close()
-		closeTabsFunc(ctx, bTconn)
-	}()
+	}(cleanupCtx)
 
 	if err = webutil.WaitForQuiescence(ctx, connExcel, longerUIWaitTime); err != nil {
 		return "", errors.Wrap(err, "failed to wait for sample sheet page to finish loading")
@@ -1282,16 +1283,16 @@ func (app *MicrosoftWebOffice) removeDocument(fileName string) uiauto.Action {
 }
 
 // NewMicrosoftWebOffice creates MicrosoftWebOffice instance which implements ProductivityApp interface.
-func NewMicrosoftWebOffice(tconn *chrome.TestConn, uiHdl cuj.UIActionHandler, kb *input.KeyboardEventWriter, tabletMode, isLacros bool, username, password string) *MicrosoftWebOffice {
+func NewMicrosoftWebOffice(tconn *chrome.TestConn, uiHdl cuj.UIActionHandler, kb *input.KeyboardEventWriter, browserType browser.Type, tabletMode bool, username, password string) *MicrosoftWebOffice {
 	return &MicrosoftWebOffice{
-		tconn:      tconn,
-		ui:         uiauto.New(tconn),
-		uiHdl:      uiHdl,
-		kb:         kb,
-		tabletMode: tabletMode,
-		isLacros:   isLacros,
-		username:   username,
-		password:   password,
+		tconn:       tconn,
+		ui:          uiauto.New(tconn),
+		uiHdl:       uiHdl,
+		kb:          kb,
+		tabletMode:  tabletMode,
+		browserType: browserType,
+		username:    username,
+		password:    password,
 	}
 }
 

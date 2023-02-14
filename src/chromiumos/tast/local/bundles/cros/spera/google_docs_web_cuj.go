@@ -40,8 +40,9 @@ func init() {
 				Name:    "basic",
 				Fixture: "loggedInAndKeepState",
 				Timeout: 15 * time.Minute,
-				Val: productivitycuj.ProductivityParam{
-					Tier: cuj.Basic,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Basic,
+					BrowserType: browser.TypeAsh,
 				},
 			},
 			{
@@ -49,9 +50,9 @@ func init() {
 				Fixture:           "loggedInAndKeepStateLacros",
 				Timeout:           15 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: productivitycuj.ProductivityParam{
-					Tier:     cuj.Basic,
-					IsLacros: true,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Basic,
+					BrowserType: browser.TypeLacros,
 				},
 			},
 			{
@@ -59,8 +60,9 @@ func init() {
 				Fixture:   "loggedInAndKeepState",
 				ExtraData: []string{"productivity_cuj_voice_to_text_en.wav"},
 				Timeout:   15 * time.Minute,
-				Val: productivitycuj.ProductivityParam{
-					Tier: cuj.Premium,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Premium,
+					BrowserType: browser.TypeAsh,
 				},
 			},
 			{
@@ -69,9 +71,9 @@ func init() {
 				ExtraData:         []string{"productivity_cuj_voice_to_text_en.wav"},
 				Timeout:           15 * time.Minute,
 				ExtraSoftwareDeps: []string{"lacros"},
-				Val: productivitycuj.ProductivityParam{
-					Tier:     cuj.Premium,
-					IsLacros: true,
+				Val: productivitycuj.TestParams{
+					Tier:        cuj.Premium,
+					BrowserType: browser.TypeLacros,
 				},
 			},
 		},
@@ -79,7 +81,7 @@ func init() {
 }
 
 func GoogleDocsWebCUJ(ctx context.Context, s *testing.State) {
-	p := s.Param().(productivitycuj.ProductivityParam)
+	p := s.Param().(productivitycuj.TestParams)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	sampleSheetURL, ok := s.Var("spera.sampleGDocSheetURL")
@@ -132,15 +134,12 @@ func GoogleDocsWebCUJ(ctx context.Context, s *testing.State) {
 		expectedText = "Mary had a little lamb whose fleece was white as snow And everywhere that Mary went the lamb was sure to go"
 		testFileLocation = s.DataPath("productivity_cuj_voice_to_text_en.wav")
 	}
-	bt := browser.TypeAsh
-	if p.IsLacros {
-		bt = browser.TypeLacros
-	}
+
 	traceConfigPath := ""
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	if err := productivitycuj.Run(ctx, cr, office, p.Tier, tabletMode, bt, s.OutDir(), traceConfigPath, sampleSheetURL, expectedText, testFileLocation); err != nil {
+	if err := productivitycuj.Run(ctx, cr, office, p.Tier, tabletMode, p.BrowserType, s.OutDir(), traceConfigPath, sampleSheetURL, expectedText, testFileLocation); err != nil {
 		s.Fatal("Failed to run productivity cuj: ", err)
 	}
 }

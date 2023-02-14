@@ -66,10 +66,10 @@ type ProductivityApp interface {
 	SetBrowser(br *browser.Browser)
 }
 
-// ProductivityParam defines the test parameters for productivity.
-type ProductivityParam struct {
-	Tier     cuj.Tier
-	IsLacros bool
+// TestParams defines the test parameters for productivity.
+type TestParams struct {
+	Tier        cuj.Tier
+	BrowserType browser.Type
 }
 
 // dialogInfo holds the information of a dialog that will be encountered and needs to be handled during testing.
