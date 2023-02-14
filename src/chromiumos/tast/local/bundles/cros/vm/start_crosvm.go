@@ -20,6 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StartCrosvm,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that crosvm starts termina and runs commands through stdin",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
