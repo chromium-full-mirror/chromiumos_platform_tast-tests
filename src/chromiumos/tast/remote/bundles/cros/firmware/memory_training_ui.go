@@ -5,15 +5,14 @@
 package firmware
 
 import (
-	"bufio"
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -21,7 +20,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryTraining,
+		Func:         MemoryTrainingUI,
 		Desc:         "Verify user is notified during memory training",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
@@ -29,6 +28,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"flashrom"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      30 * time.Minute,
@@ -36,9 +36,20 @@ func init() {
 	})
 }
 
-func MemoryTraining(ctx context.Context, s *testing.State) {
+func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	dut := s.DUT()
+
+	var cutoffEvent reporters.Event
+	r := h.Reporter
+	oldEvents, err := r.EventlogList(ctx)
+	if err != nil {
+		s.Fatal("Finding last event: ", err)
+	}
+	if len(oldEvents) > 0 {
+		cutoffEvent = oldEvents[len(oldEvents)-1]
+		s.Log("Found previous event: ", cutoffEvent)
+	}
 
 	s.Log("Clearing MRC cache")
 	if err := dut.Conn().CommandContext(ctx, "flashrom", "-p", "host", "-E", "-i", "RW_MRC_CACHE").Run(ssh.DumpLogOnError); err != nil {
@@ -58,26 +69,18 @@ func MemoryTraining(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	expectedLogRe := regexp.MustCompile(`Informing user on-display of ([^\.]*)\.`)
-	startBootRe := regexp.MustCompile(`coreboot.*romstage starting`)
 	checkMatches := func(ctx context.Context, expected string) error {
-		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+		events, err := r.EventlogListAfter(ctx, cutoffEvent)
 		if err != nil {
-			return errors.Wrap(err, "failed to read firmware log")
+			return errors.Wrap(err, "failed to read event log")
 		}
-		scanner := bufio.NewScanner(strings.NewReader(output))
 		found := false
-		var mismatchError error
-		for scanner.Scan() {
-			line := scanner.Text()
-			if startBootRe.MatchString(line) {
-				found = false
-				mismatchError = nil
-			} else {
-				m := expectedLogRe.FindStringSubmatch(line)
-				if m != nil && string(m[1]) != expected {
-					mismatchError = errors.Errorf("unexpected log message: %q", string(m[0]))
-				}
+		for _, event := range events {
+			s.Log("Found event: ", event)
+			if strings.Contains(event.Message, "Early Sign of Life") && event.Message != expected {
+				return errors.Errorf("unexpected log message: %q", event.Message)
+			}
+			if expected != "" && event.Message == expected {
 				found = true
 			}
 		}
@@ -85,10 +88,11 @@ func MemoryTraining(ctx context.Context, s *testing.State) {
 		if !found && expected != "" {
 			return errors.Errorf("expected log message not found: %q", expected)
 		}
-		return mismatchError
+		cutoffEvent = events[len(events)-1]
+		return nil
 	}
 
-	if err := checkMatches(ctx, "memory training"); err != nil {
+	if err := checkMatches(ctx, "Early Sign of Life | MRC Early SOL Screen Shown"); err != nil {
 		s.Error("Firmware log: ", err)
 	}
 
