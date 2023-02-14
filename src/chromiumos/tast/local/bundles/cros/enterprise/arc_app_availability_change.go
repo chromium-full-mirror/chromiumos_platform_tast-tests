@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
-	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
@@ -169,14 +168,8 @@ func ARCAppAvailabilityChange(ctx context.Context, s *testing.State) {
 			return
 		}
 
-		// Sometimes the catalog view is cached so the app shows even though Play Store considers
-		// it as blocked so try to install the blocked app.
-		if err := playstore.OpenAppPage(ctx, a, testPackage); err != nil {
-			return rl.Exit("open play store", err)
-		}
-
 		// Blocked app should either not install or immediately uninstall after installation.
-		if err := arcent.ValidateBlockedAppInstall(ctx, a, d, testPackage); err != nil {
+		if err := arcent.ValidateBlockedAppInstall(ctx, tconn, a, d, testPackage, 5*time.Minute); err != nil {
 			return rl.Exit("validate auto-uninstall", err)
 		}
 

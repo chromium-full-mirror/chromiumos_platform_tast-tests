@@ -88,42 +88,45 @@ func IncreaseLogcatBufferSize(ctx context.Context, a *arc.ARC) error {
 	return a.Command(ctx, "logcat", "-G", "10M").Run(testexec.DumpLogOnError)
 }
 
-// ValidateBlockedAppInstall validates that the blocked app is uninstalled automatically.
-func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, blockedPackage string) error {
-	if err := WaitForAppUnavailableMessage(ctx, d, time.Second); err == nil {
-		testing.ContextLog(ctx, "App unavailable message found")
-		return nil
-	}
-
-	installButton, err := playstore.FindInstallButton(ctx, d, 15*time.Second)
-	if err != nil {
-		return errors.Wrap(err, "failed to find the install button")
-	}
-
-	testing.ContextLog(ctx, "Install button is enabled. Attempting install")
-	if err := installButton.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the install button")
-	}
-
-	if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
-		// When the local view is cached and app shows as installable, Play Server rejects the
-		// install request. If that happens, then the flow is validated.
-		if err := d.Object(ui.TextMatches("(?i)Can.t download .*")).Exists(ctx); err == nil {
-			testing.ContextLog(ctx, "Blocked app not installable")
+// ValidateBlockedAppInstall validates that the blocked app cannot be installed or is uninstalled automatically if installed.
+func ValidateBlockedAppInstall(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, blockedPackage string, timeout time.Duration) error {
+	testing.ContextLog(ctx, "Validating install attempt for a blocked app")
+	return PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
+		if err := WaitForAppUnavailableMessage(ctx, d, time.Second); err == nil {
+			testing.ContextLog(ctx, "App unavailable message found")
 			return nil
 		}
 
-		return errors.Wrap(err, "package installation failed")
-	}
+		installButton, err := playstore.FindInstallButton(ctx, d, 15*time.Second)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the install button")
+		}
 
-	// If the install goes through, we expect it to be uninstalled immediately.
-	testing.ContextLog(ctx, "Waiting for package to uninstall")
-	if err := WaitForUninstall(ctx, a, blockedPackage); err != nil {
-		return errors.Wrap(err, "package not uninstalled")
-	}
+		testing.ContextLog(ctx, "Install button is enabled. Attempting install")
+		if err := installButton.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the install button")
+		}
 
-	testing.ContextLog(ctx, "Blocked app uninstalled")
-	return nil
+		if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
+			// When the local view is cached and app shows as installable, Play Server rejects the
+			// install request. If that happens, then the flow is validated.
+			if err := d.Object(ui.TextMatches("(?i)Can.t download .*")).Exists(ctx); err == nil {
+				testing.ContextLog(ctx, "Blocked app not installable")
+				return nil
+			}
+
+			return errors.Wrap(err, "package installation failed")
+		}
+
+		// If the install goes through, we expect it to be uninstalled immediately.
+		testing.ContextLog(ctx, "Waiting for package to uninstall")
+		if err := WaitForUninstall(ctx, a, blockedPackage); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "package not uninstalled"))
+		}
+
+		testing.ContextLog(ctx, "Blocked app uninstalled")
+		return nil
+	}, timeout)
 }
 
 // PollAppPageState polls the Play Store app detail page for desired state.

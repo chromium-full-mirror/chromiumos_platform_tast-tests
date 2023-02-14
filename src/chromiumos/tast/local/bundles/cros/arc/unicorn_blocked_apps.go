@@ -117,14 +117,8 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 		}
 		defer d.Close(cleanupCtx)
 
-		if err := arcent.PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
-			if err := arcent.ValidateBlockedAppInstall(ctx, a, d, blockedPackage); err != nil {
-				testing.PollBreak(err)
-			}
-
-			testing.ContextLog(ctx, "Blocked app uninstalled")
-			return nil
-		}, time.Minute); err != nil {
+		// Blocked app should either not install or immediately uninstall after installation.
+		if err := arcent.ValidateBlockedAppInstall(ctx, tconn, a, d, blockedPackage, 5*time.Minute); err != nil {
 			return rl.Exit("verify blocked app uninstall", err)
 		}
 
