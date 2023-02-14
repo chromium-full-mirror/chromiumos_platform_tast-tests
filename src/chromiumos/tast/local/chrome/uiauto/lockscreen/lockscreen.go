@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -37,9 +38,13 @@ var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(conse
 // SmartLockArrowButtonFinder is the finder for the button that needs to be clicked to complete authentication with Smart Lock.
 var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone. Tap or click to enter.").ClassName("ArrowButtonView")
 
-// SimplePinFieldFinder is like PINFieldFinder, but doesn't check the name attribute so that username doesn't
+// SimplePinOrPasswordFieldFinder is like PINFieldFinder, but doesn't check the name attribute so that username doesn't
 // need to be passed in and it's more convenient to use.
-var SimplePinFieldFinder = nodewith.Role(role.TextField).Attribute("placeholder", "PIN or password")
+var SimplePinOrPasswordFieldFinder = nodewith.Role(role.TextField).Attribute("placeholder", "PIN or password")
+
+// PinInputFieldFinder finds the node that displays the entered PIN when autosubmit is
+// enabled.
+var PinInputFieldFinder = nodewith.ClassName("LoginPinInputView")
 
 // recoverUserFinder is the finder for the user recovery button.
 var recoverUserFinder = nodewith.Role(role.Button).Name("Recover user")
@@ -168,24 +173,45 @@ func Lock(ctx context.Context, tconn *chrome.TestConn) error {
 
 // EnterPIN enters the specified PIN.
 func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, PIN string) error {
-	// If PIN pad is present, press the PIN pad buttons. Otherwise wait until the PIN or password
-	// field to exist before typing the PIN.
 	ui := uiauto.New(tconn)
+
+	// Wait until one of the "PIN or password" field or the PIN-only input field appears and accepts
+	// input (i.e. not disabled, not read only).
+
+	// For PIN only input, each entered digit is displayed in a separate input field. This finder
+	// matches the input field holding the first digit.
+	digitFieldFinder := nodewith.Role(role.TextField).Ancestor(PinInputFieldFinder).First()
+
+	if err := ui.WithTimeout(uiTimeout).WaitUntilAnyExists(SimplePinOrPasswordFieldFinder, digitFieldFinder)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find PIN input field")
+	}
+	inputFinder, err := ui.FindAnyExists(ctx, SimplePinOrPasswordFieldFinder, digitFieldFinder)
+	if err != nil {
+		return errors.Wrap(err, "failed to find PIN input field again")
+	}
+
+	if err := ui.WithTimeout(uiTimeout).WaitForRestriction(inputFinder, restriction.None)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find PIN input field unrestricted")
+	}
+
+	// If we can't find the PIN pad, we click the input field and enter the PIN via the keyboard. If
+	// we do find the PIN pad, we use the PIN pad to enter the PIN.
 	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.ClassName("LoginPinView"))(ctx); err != nil {
-		if err := ui.WithTimeout(uiTimeout).WaitUntilExists(SimplePinFieldFinder)(ctx); err != nil {
+		if err := ui.WithTimeout(uiTimeout).WaitUntilExists(SimplePinOrPasswordFieldFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find PIN or password box")
 		}
-		if err := ui.LeftClick(SimplePinFieldFinder)(ctx); err != nil {
+		if err := ui.LeftClick(SimplePinOrPasswordFieldFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click PIN or password box")
 		}
 		// Wait for the field to be focused before entering PIN.
-		if err := ui.WaitUntilExists(SimplePinFieldFinder.Focused())(ctx); err != nil {
+		if err := ui.WaitUntilExists(SimplePinOrPasswordFieldFinder.Focused())(ctx); err != nil {
 			return errors.Wrap(err, "PIN or password field not focused yet")
 		}
 		if err := kb.Type(ctx, PIN); err != nil {
 			return errors.Wrap(err, "failed to type PIN")
 		}
 	} else {
+		//return errors.New("found LoginPinView");
 		for i, d := range PIN {
 			button := nodewith.Role(role.Button).Name(string(d))
 			if err := ui.WithTimeout(uiTimeout).DoDefault(button)(ctx); err != nil {

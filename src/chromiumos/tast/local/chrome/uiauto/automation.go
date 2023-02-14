@@ -616,6 +616,23 @@ func (ac *Context) WaitUntilAnyExists(finders ...*nodewith.Finder) Action {
 	}
 }
 
+// WaitForRestriction returns a function that waits until the restriction of a node found by an
+// input finder is equal to a given value.
+func (ac *Context) WaitForRestriction(finder *nodewith.Finder, restriction restriction.Restriction) Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			nodeInfo, err := ac.Info(ctx, finder)
+			if err != nil {
+				return err
+			}
+			if nodeInfo.Restriction != restriction {
+				return errors.Wrapf(err, "%v has restriction %s, expected %s", nodeInfo.Name, nodeInfo.Restriction, restriction)
+			}
+			return nil
+		}, &ac.pollOpts)
+	}
+}
+
 // WaitUntilEnabled returns a function that waits until the node found by the
 // input finder is not disabled. Use it when an action should be taken after
 // the node is enabled. E.g.
