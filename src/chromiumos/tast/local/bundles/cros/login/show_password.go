@@ -165,7 +165,8 @@ func showAndHidePassword(ctx context.Context, tconn *chrome.TestConn, username, 
 		return errors.New("failed to read PIN / Password")
 	}
 	if passwordField.Value != password {
-		return errors.New("PIN / Password revealed after clicking the Show password button is not matching with the user entered value")
+		return errors.Errorf("the revealed PIN / Password %q is not matching with the user entered value %q",
+			passwordField.Value, password)
 	}
 
 	// Verify that the PIN / Password goes hidden after clicking the "Hide password" button.
