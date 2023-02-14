@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/kioskmode"
@@ -43,6 +44,38 @@ func init() {
 			vdiConnector:          &citrix.Connector{},
 			vdiServerKey:          "vdi.citrix_url",
 			useTape:               true,
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+			"vdi.citrix_url",
+			"uidetection.key_type",
+			"uidetection.key",
+			"uidetection.server",
+		},
+		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: time.Minute,
+		PostTestTimeout: time.Minute,
+		Data:            citrix.CitrixData,
+		Parent:          fixture.FakeDMSEnrolled,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.KioskLacrosCitrixLaunched,
+		Desc: "Starts DUT fake enrolled in Kiosk mode with Citrix application installed, started and logged in",
+		Contacts: []string{
+			"kamilszare@google.com",
+			"cros-engprod-muc@google.com",
+		},
+		Impl: &kioskFixtureState{
+			vdiApplicationToStart: apps.Citrix,
+			vdiConnector:          &citrix.Connector{},
+			vdiServerKey:          "vdi.citrix_url",
+			useTape:               true,
+			extraPublicAccountPolicies: []policy.Policy{
+				&policy.LacrosAvailability{Val: "lacros_only"},
+			},
+			lacros: true,
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -123,6 +156,10 @@ type kioskFixtureState struct {
 	useTape bool
 	// tapeAccountManager is used for cleaning up Tape.
 	tapeAccountManager *tape.GenericAccountManager
+	// extraPublicAccountPolicies holds a policies that will be applied.
+	extraPublicAccountPolicies []policy.Policy
+	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
+	lacros bool
 }
 
 func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -151,6 +188,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		ctx,
 		fdms,
 		kioskmode.CustomLocalAccounts(&v.accountsConfiguration),
+		kioskmode.PublicAccountPolicies(vdiAccountID, v.extraPublicAccountPolicies),
 		kioskmode.AutoLaunch(vdiAccountID),
 	)
 	if err != nil {
@@ -159,6 +197,15 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 			s.Error("Failed to take screenshot: ", err)
 		}
 		s.Fatal("Failed to start Chrome in kiosk mode: ", err)
+	}
+
+	if v.lacros {
+		// If we run Lacros flavor fail fast if Lacros is not up.
+		testConn, err := cr.TestAPIConn(ctx)
+		_, err = lacrosproc.Root(ctx, testConn)
+		if err != nil {
+			s.Fatal("Failed to get lacros proc: ", err)
+		}
 	}
 
 	ok = false

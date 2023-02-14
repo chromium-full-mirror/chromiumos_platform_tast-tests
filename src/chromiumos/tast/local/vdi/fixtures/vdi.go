@@ -62,6 +62,37 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: fixture.LacrosCitrixLaunched,
+		Desc: "Starts DUT using TOA with set Lacros to lacros_only with Citrix application installed, started and logged in",
+		Contacts: []string{
+			"kamilszare@google.com",
+			"cros-engprod-muc@google.com",
+		},
+		Impl: &fixtureState{
+			vdiApplicationToStart: apps.Citrix,
+			vdiConnector:          &citrix.Connector{},
+			usernameKey:           "vdi.ota_lacros_citrix_username",
+			passwordKey:           "vdi.ota_lacros_citrix_password",
+			vdiServerKey:          "vdi.citrix_url",
+			useTape:               true,
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+			"vdi.ota_lacros_citrix_username",
+			"vdi.ota_lacros_citrix_password",
+			"vdi.citrix_url",
+			"uidetection.key_type",
+			"uidetection.key",
+			"uidetection.server",
+		},
+		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: time.Minute,
+		PostTestTimeout: time.Minute,
+		Data:            citrix.CitrixData,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: fixture.VmwareLaunched,
 		Desc: "Starts DUT using TOA with VMware application installed, started and logged in",
 		Contacts: []string{
