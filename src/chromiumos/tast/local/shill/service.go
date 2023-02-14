@@ -171,8 +171,7 @@ func (s *Service) IsVisible(ctx context.Context) (bool, error) {
 // * Service.Error to be set to an error value, in which case that is returned as an error.
 // Any failure also returns an error.
 func (s *Service) WaitForConnectedOrError(ctx context.Context) error {
-	errorStr := ""
-	pollErr := testing.Poll(ctx, func(ctx context.Context) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
 		props, err := s.GetShillProperties(ctx)
 		if err != nil {
 			return err
@@ -188,26 +187,16 @@ func (s *Service) WaitForConnectedOrError(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		errorStr = errorVal.(string)
-		// Treat "no-failure" Error values as empty values.
-		if errorStr == shillconst.ServiceErrorNoFailure {
-			errorStr = ""
-		}
-		if errorStr != "" {
-			return nil
+		errorStr := errorVal.(string)
+		// Treat "no-failure" Error values the same as the no error case.
+		if errorStr != shillconst.ServiceErrorNoFailure {
+			return testing.PollBreak(errors.New(errorStr))
 		}
 		return errors.New("not connected and no error")
 	}, &testing.PollOptions{
 		Timeout:  shillconst.DefaultTimeout,
 		Interval: 100 * time.Millisecond,
 	})
-	if pollErr != nil {
-		return pollErr
-	}
-	if errorStr != "" {
-		return errors.New(errorStr)
-	}
-	return nil
 }
 
 // Connect calls the Connect method on the service.
