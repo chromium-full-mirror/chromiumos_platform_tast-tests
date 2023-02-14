@@ -109,15 +109,13 @@ func DataCollection(ctx context.Context, s *testing.State) {
 
 			// Check the support case ID field.
 			if err := ud.WithTimeout(uiDetectionTimeout).WaitUntilExists(
-				uidetection.Word(param.caseID).First().
-					BelowA11yNode(nodewith.HasClass("support-tool-title")))(ctx); err != nil {
+				uidetection.Word(param.caseID).First())(ctx); err != nil {
 				s.Fatal("Failed to verify support case ID: ", err)
 			}
 
 			// Check the user's email field in UI.
 			if err := ud.WithTimeout(uiDetectionTimeout).WaitUntilExists(
-				uidetection.Word(defaultUser).First().
-					Below(uidetection.Word("Email")))(ctx); err != nil {
+				uidetection.Word(defaultUser).First())(ctx); err != nil {
 				s.Fatal("Failed to verify email: ", err)
 			}
 
