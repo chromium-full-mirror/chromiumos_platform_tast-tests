@@ -27,8 +27,8 @@ var (
 // Node finders in the expanded panel which is implemented in TrayBubbleView.
 var (
 	panelSection             = nodewith.HasClass("TrayBubbleView").Role(role.Window)
-	portraitRelightingButton = nodewith.Name("Portrait Relighting").Role(role.ToggleButton).Ancestor(panelSection)
-	liveCaptionButton        = nodewith.Name("Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
+	portraitRelightingButton = nodewith.Name("Portrait Relighting").Role(role.Button).Ancestor(panelSection)
+	liveCaptionButton        = nodewith.Name("Live Caption").Role(role.Button).Ancestor(panelSection)
 
 	bgBlurOffButton   = nodewith.Name("Off").Role(role.Button).Ancestor(panelSection)
 	bgBlurLightButton = nodewith.Name("Light").Role(role.Button).Ancestor(panelSection)
