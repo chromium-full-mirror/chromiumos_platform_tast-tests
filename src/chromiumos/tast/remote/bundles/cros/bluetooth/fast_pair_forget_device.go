@@ -16,6 +16,7 @@ import (
 	pb "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 		BugComponent: "b:1133283",
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
 		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
 		Timeout:      3 * time.Minute,

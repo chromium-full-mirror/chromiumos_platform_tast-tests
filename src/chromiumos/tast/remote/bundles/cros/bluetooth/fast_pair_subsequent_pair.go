@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/remote/bluetooth"
 	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -30,6 +31,7 @@ func init() {
 		BugComponent: "b:1133283",
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair_multidut"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
 		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
 		Fixture:      "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
 		Timeout:      3 * time.Minute,
