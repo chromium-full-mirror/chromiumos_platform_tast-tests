@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/cws"
@@ -47,7 +49,10 @@ func init() {
 			"informational",
 		},
 		Timeout: 5 * time.Minute,
-		Fixture: "driveFsStartedWithNativeMessaging",
+		Params: []testing.Param{{
+			Val:     browser.TypeAsh,
+			Fixture: "driveFsStartedWithNativeMessaging",
+		}},
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -57,19 +62,19 @@ func init() {
 	})
 }
 
-func installRequiredExtensions(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+func installRequiredExtensions(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
 	// TODO(b/193595364): Figure out why these extensions aren't being installed by default in tast tests.
 	docsOfflineName := "Google Docs Offline"
 	docsOfflineURL := "https://chrome.google.com/webstore/detail/google-docs-offline/ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
-	if err := cws.InstallApp(ctx, cr.Browser(), tconn, docsOfflineExt); err != nil {
+	if err := cws.InstallApp(ctx, br, tconn, docsOfflineExt); err != nil {
 		return errors.Wrap(err, "failed to install Google Docs Offline extension")
 	}
 
 	proxyExtName := "Application Launcher For Drive (by Google)"
 	proxyExtURL := "https://chrome.google.com/webstore/detail/application-launcher-for/lmjegmlicamnimmfhcmpkclmigmmcbeh"
 	proxyExt := cws.App{Name: proxyExtName, URL: proxyExtURL}
-	if err := cws.InstallApp(ctx, cr.Browser(), tconn, proxyExt); err != nil {
+	if err := cws.InstallApp(ctx, br, tconn, proxyExt); err != nil {
 		return errors.Wrap(err, "failed to install Application Launcher for Drive extension")
 	}
 	return nil
@@ -77,7 +82,6 @@ func installRequiredExtensions(ctx context.Context, cr *chrome.Chrome, tconn *ch
 
 func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	APIClient := s.FixtValue().(*drivefs.FixtureData).APIClient
-	cr := s.FixtValue().(*drivefs.FixtureData).Chrome
 	tconn := s.FixtValue().(*drivefs.FixtureData).TestAPIConn
 	driveFsClient := s.FixtValue().(*drivefs.FixtureData).DriveFs
 
@@ -88,6 +92,12 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
+
+	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
 
 	// Create the unique folder that will be directly navigated to below.
 	testFilePath := driveFsClient.MyDrivePath(uniqueTestFolderName, testDocFileName)
@@ -106,7 +116,7 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
-	if err := installRequiredExtensions(ctx, cr, tconn); err != nil {
+	if err := installRequiredExtensions(ctx, br, tconn); err != nil {
 		s.Fatal("Failed to install the required extensions: ", err)
 	}
 
