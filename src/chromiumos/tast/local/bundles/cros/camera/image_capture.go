@@ -1,4 +1,4 @@
-// Copyright 2018 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,16 +14,15 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/media/pre"
-	"chromiumos/tast/local/media/vm"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GetUserMedia,
+		Func:         ImageCapture,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that getUserMedia captures video",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		Desc:         "Verifies availability of ImageCapture API outside CCA",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(getusermedia.DataFiles(), "web_api.html"),
@@ -36,22 +35,10 @@ func init() {
 				Val:               browser.TypeAsh,
 			},
 			{
-				Name:              "vivid",
-				Pre:               pre.ChromeVideo(),
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.VividCamera},
-				Val:               browser.TypeAsh,
-			},
-			{
-				Name: "fake",
-				Pre:  pre.ChromeVideoWithFakeWebcam(),
-				Val:  browser.TypeAsh,
-			},
-			{
 				Name:              "lacros",
 				Fixture:           "chromeVideoLacros",
 				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera, "lacros"},
+				ExtraSoftwareDeps: []string{caps.BuiltinCamera, "lacros"},
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 				Val:               browser.TypeLacros,
 			},
@@ -60,21 +47,11 @@ func init() {
 	})
 }
 
-// GetUserMedia calls getUserMedia call and renders the camera's media stream
-// in a video tag. It will test VGA and 720p and check if the gUM call succeeds.
-// This test will fail when an error occurs or too many frames are broken.
-//
-// GetUserMedia performs video capturing for 3 seconds with 480p and 720p.
-// (It's 10 seconds in case it runs under QEMU.) This a short version of
-// camera.GetUserMediaPerf.
-func GetUserMedia(ctx context.Context, s *testing.State) {
-	duration := 3 * time.Second
-	// Since we use vivid on VM and it's slower than real cameras,
-	// we use a longer time limit: https://crbug.com/929537
-	if vm.IsRunningOnVM() {
-		duration = 10 * time.Second
-	}
-
+// ImageCapture calls getUserMedia call and renders the camera's media stream
+// in a video tag. It performs video capturing with 480p and 720p.
+// And then it calls four functions of ImageCapture APIs.
+// This test will fail when an error occurs among ImageCapture API functions.
+func ImageCapture(ctx context.Context, s *testing.State) {
 	var ci getusermedia.ChromeInterface
 	if s.Param().(browser.Type) == browser.TypeLacros {
 		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
@@ -90,6 +67,8 @@ func GetUserMedia(ctx context.Context, s *testing.State) {
 	} else {
 		ci = s.PreValue().(*chrome.Chrome)
 	}
-	// Run tests for 480p and 720p.
-	getusermedia.RunGetUserMedia(ctx, s, ci, duration, getusermedia.VerboseLogging)
+
+	if err := getusermedia.RunImageCaptureAPI(ctx, s, ci, getusermedia.VerboseLogging); err != nil {
+		s.Fatal("Failed to run ImageCapture API: ", err)
+	}
 }

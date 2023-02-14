@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/media/caps"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -29,7 +30,10 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
-		Data:         append(getusermedia.DataFiles(), "getusermedia.html"),
+		Data:         append(getusermedia.DataFiles(), "web_api.html"),
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityJS),
+		},
 		Params: []testing.Param{
 			{
 				Name:    "ash",

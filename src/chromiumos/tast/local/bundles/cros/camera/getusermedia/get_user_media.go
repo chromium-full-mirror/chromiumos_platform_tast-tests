@@ -129,7 +129,7 @@ func openPageAndCheckBucket(ctx context.Context, fileSystem http.FileSystem, get
 	return nil
 }
 
-// cameraResults is a type for decoding JSON objects obtained from /data/getusermedia.html.
+// cameraResults is a type for decoding JSON objects obtained from /data/web_api.html.
 type cameraResults []struct {
 	Width      int        `json:"width"`
 	Height     int        `json:"height"`
@@ -162,7 +162,7 @@ type ChromeInterface interface {
 	Close(ctx context.Context) error
 }
 
-// RunGetUserMedia run a test in /data/getusermedia.html.
+// RunGetUserMedia run a test in /data/web_api.html.
 // duration specifies how long video capturing will run for each resolution.
 // If verbose is true, video drivers' verbose messages will be enabled.
 // verbose must be false for performance tests.
@@ -178,7 +178,7 @@ func RunGetUserMedia(ctx context.Context, s *testing.State, cr ChromeInterface,
 
 	var results cameraResults
 	var logs []string
-	RunTest(ctx, s, cr, "getusermedia.html", fmt.Sprintf("testNextResolution(%d)", duration/time.Second), &results, &logs)
+	RunTest(ctx, s, cr, "web_api.html", fmt.Sprintf("testGetUserMedia(%d)", duration/time.Second), &results, &logs)
 
 	s.Logf("Results: %+v", results)
 
@@ -209,4 +209,41 @@ func RunGetUserMedia(ctx context.Context, s *testing.State, cr ChromeInterface,
 	}
 
 	return results
+}
+
+// RunImageCaptureAPI run a test in /data/web_api.html.
+// If verbose is true, video drivers' verbose messages will be enabled.
+// verbose must be false for performance tests.
+func RunImageCaptureAPI(ctx context.Context, s *testing.State, cr ChromeInterface,
+	verbose VerboseLoggingMode) error {
+	if verbose == VerboseLogging {
+		vl, err := logging.NewVideoLogger()
+		if err != nil {
+			return errors.Wrap(err, "failed to set values for verbose logging")
+		}
+		defer vl.Close()
+	}
+
+	var results cameraResults
+	var logs []string
+	RunTest(ctx, s, cr, "web_api.html", fmt.Sprintf("testImageCaptureAPI()"), &results, &logs)
+
+	s.Logf("Results: %+v", results)
+
+	for _, result := range results {
+		if len(result.Errors) != 0 {
+			for _, msg := range result.Errors {
+				return errors.Errorf("%dx%d: %s", result.Width, result.Height, msg)
+			}
+		}
+	}
+
+	if s.HasError() {
+		s.Log("Logs collected from JS:")
+		for _, log := range logs {
+			s.Log(log)
+		}
+	}
+
+	return nil
 }

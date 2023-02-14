@@ -19,15 +19,34 @@ function addLog(msg) {
   logs.push(`[${curTime}] ${msg}`);
 }
 
-function testNextResolution(durationSec) {
-  addLog('testNextResolution');
-  const nextResolution = resolutions.shift();
-  if (nextResolution === undefined) {
+async function testGetUserMedia(durationSec) {
+  addLog('testGetUserMedia');
+  try {
+    for (const resolution of resolutions) {
+      const test = new CameraTest(resolution);
+      test.checkVideoFrames();
+      await test.callGetUserMedia();
+      await new Promise(r => setTimeout(r, durationSec * 1000));
+      test.stop();
+    }
+  } finally {
     reportTestDone();
-    return;
   }
-  const test = new CameraTest(nextResolution, durationSec);
-  test.start();
+}
+
+async function testImageCaptureAPI() {
+  addLog('testImageCaptureAPI');
+  try {
+    for (const resolution of resolutions) {
+      const test = new CameraTest(resolution);
+      test.checkVideoFrames();
+      await test.callGetUserMedia();
+      await test.checkImageCaptureAPIs();
+      test.stop();
+    }
+  } finally {
+    reportTestDone();
+  }
 }
 
 function reportTestDone() {
@@ -54,11 +73,14 @@ function saveResult(resolution, verdict) {
 }
 
 // Check if a video input exists
-function checkVideoInput() {
+async function checkVideoInput() {
   addLog('checkVideoInput');
-  navigator.mediaDevices.enumerateDevices()
-      .then(findVideoInput)
-      .catch(gotEnumerateDevicesError);
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    findVideoInput(devices);
+  } catch (error) {
+    gotEnumerateDevicesError(error);
+  }
   return isVideoInputFound;
 }
 
@@ -72,9 +94,8 @@ function gotEnumerateDevicesError(error) {
   enumerateDevicesError = error.toString();
 }
 
-function CameraTest(resolution, durationSec) {
+function CameraTest(resolution) {
   this.resolution = resolution;
-  this.durationSec = durationSec;
   this.localVideo = document.createElement('video');
   this.localVideo.id = 'local-video';
   this.localVideo.autoplay = true;
@@ -107,33 +128,14 @@ function CameraTest(resolution, durationSec) {
 
 CameraTest.prototype = {
 
-  start: function() {
-    addLog(`CameraTest.start: ${this.resolution[0]}x${this.resolution[1]}`);
+  checkVideoFrames: function() {
+    addLog('CameraTest.checkVideoFrames');
     this.localVideo.addEventListener('play',
-        this.startCheckingVideoFrames.bind(this), false);
-
-    navigator.mediaDevices.getUserMedia(this.constraints)
-        .then(this.gotLocalStream.bind(this))
-        .catch(this.gotUserMediaError.bind(this));
+        this.startVideoFrameChecker.bind(this), false);
   },
 
-  gotLocalStream: function(stream) {
-    addLog('CameraTest.gotLocalStream');
-    this.localStream = stream;
-    this.localVideo.srcObject = stream;
-    setTimeout(() => {
-      this.stop();
-      testNextResolution(this.durationSec);
-    }, 1000 * this.durationSec);
-  },
-
-  gotUserMediaError: function(error) {
-    console.log('navigator.mediaDevices.getUserMedia error: ', error);
-    this.results.errors.push('GetUserMedia error: ' + error.toString());
-  },
-
-  startCheckingVideoFrames: function() {
-    addLog('CameraTest.startCheckingVideoFrames');
+  startVideoFrameChecker: function() {
+    addLog('CameraTest.startVideoFrameChecker');
     if (!resolutionMatchesIndependentOfRotation(this.localVideo.videoWidth,
         this.localVideo.videoHeight, this.resolution[0], this.resolution[1])) {
       this.results.errors.push('resolution', 'Got ' +
@@ -164,8 +166,43 @@ CameraTest.prototype = {
     this.results.frameStats.totalFrames++;
   },
 
+  callGetUserMedia: async function() {
+    addLog('CameraTest.callGetUserMedia: ${this.resolution[0]}x${this.resolution[1]}');
+    try{
+      this.localStream = await navigator.mediaDevices.getUserMedia(this.constraints);
+      this.localVideo.srcObject = this.localStream;
+    } catch (error) {
+      this.gotUserMediaError(error);
+    }
+  },
+
+  gotUserMediaError: function(error) {
+    console.log('navigator.mediaDevices.getUserMedia error: ', error);
+    this.results.errors.push('getUserMedia error: ' + error.toString());
+  },
+
+  checkImageCaptureAPIs: async function() {
+    addLog('CameraTest.checkImageCaptureAPIs');
+    this.ImageCapturer = new ImageCapture(this.localStream.getVideoTracks()[0]);
+    const p1 = this.ImageCapturer.getPhotoCapabilities();
+    const p2 = this.ImageCapturer.getPhotoSettings();
+    const p3 = this.ImageCapturer.grabFrame();
+    const p4 = this.ImageCapturer.takePhoto();
+
+    try {
+      await Promise.all([p1, p2, p3, p4]);
+    } catch (error) {
+      this.gotImageCaptureError(error);
+    }
+  },
+
+  gotImageCaptureError: function(error) {
+    console.log('ImageCapture error: ', error);
+    this.results.errors.push('ImageCapture error: ' + error.toString());
+  },
+
   stop: function() {
-    addLog('CameraTest.start');
+    addLog('CameraTest.stop');
     clearInterval(this.videoFrameChecker);
     saveResult(this.resolution, this.results);
     this.localStream.getTracks().forEach((track) => track.stop());

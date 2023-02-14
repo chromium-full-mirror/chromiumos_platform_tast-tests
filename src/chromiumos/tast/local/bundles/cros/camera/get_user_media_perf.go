@@ -39,13 +39,14 @@ func init() {
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
 		Data: append(
 			getusermedia.DataFiles(),
-			"getusermedia.html",
+			"web_api.html",
 			"perfetto/camera_config.pbtxt",
 			"perfetto/camera_query.sql"),
 		Params: []testing.Param{
 			{
-				Pre: pre.ChromeCameraPerf(),
-				Val: browser.TypeAsh,
+				Name: "ash",
+				Pre:  pre.ChromeCameraPerf(),
+				Val:  browser.TypeAsh,
 			},
 			{
 				Name:              "lacros",
