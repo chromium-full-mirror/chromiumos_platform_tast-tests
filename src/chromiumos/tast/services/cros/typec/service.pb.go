@@ -207,7 +207,7 @@ var file_service_proto_rawDesc = []byte{
 	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x54, 0x79,
 	0x70, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d,
 	0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79,
-	0x4e, 0x61, 0x6d, 0x65, 0x32, 0x9d, 0x07, 0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x4e, 0x61, 0x6d, 0x65, 0x32, 0xfc, 0x08, 0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
 	0x12, 0x5c, 0x0a, 0x26, 0x4e, 0x65, 0x77, 0x43, 0x68, 0x72, 0x6f, 0x6d, 0x65, 0x4c, 0x6f, 0x67,
 	0x69, 0x6e, 0x57, 0x69, 0x74, 0x68, 0x50, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c,
 	0x44, 0x61, 0x74, 0x61, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x12, 0x18, 0x2e, 0x74, 0x61, 0x73,
@@ -265,10 +265,24 @@ var file_service_proto_rawDesc = []byte{
 	0x12, 0x18, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x74, 0x79, 0x70,
 	0x65, 0x63, 0x2e, 0x4b, 0x65, 0x79, 0x50, 0x61, 0x74, 0x68, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
-	0x74, 0x79, 0x22, 0x00, 0x42, 0x25, 0x5a, 0x23, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d,
-	0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73,
-	0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x74, 0x79, 0x22, 0x00, 0x12, 0x42, 0x0a, 0x0e, 0x4e, 0x65, 0x77, 0x43, 0x68, 0x72, 0x6f, 0x6d,
+	0x65, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4d, 0x0a, 0x19, 0x52, 0x65, 0x63, 0x6f,
+	0x6e, 0x6e, 0x65, 0x63, 0x74, 0x43, 0x68, 0x72, 0x6f, 0x6d, 0x65, 0x43, 0x6f, 0x6e, 0x6e, 0x65,
+	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4a, 0x0a, 0x16, 0x4e, 0x65, 0x77, 0x43, 0x6f,
+	0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x46, 0x6f, 0x72, 0x54, 0x61, 0x72, 0x67, 0x65,
+	0x74, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74,
+	0x79, 0x22, 0x00, 0x42, 0x25, 0x5a, 0x23, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f,
+	0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f,
+	0x63, 0x72, 0x6f, 0x73, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -302,20 +316,26 @@ var file_service_proto_depIdxs = []int32{
 	0,  // 9: tast.cros.typec.Service.DisplayName:input_type -> tast.cros.typec.KeyPath
 	2,  // 10: tast.cros.typec.Service.AudioCrasSelectedOutputDevice:input_type -> google.protobuf.Empty
 	0,  // 11: tast.cros.typec.Service.VerifyFirstRunningDevice:input_type -> tast.cros.typec.KeyPath
-	2,  // 12: tast.cros.typec.Service.NewChromeLoginWithPeripheralDataAccess:output_type -> google.protobuf.Empty
-	2,  // 13: tast.cros.typec.Service.SetMirrorModeDisplay:output_type -> google.protobuf.Empty
-	2,  // 14: tast.cros.typec.Service.VerifyWindowOnDisplay:output_type -> google.protobuf.Empty
-	2,  // 15: tast.cros.typec.Service.PlayLocalVideo:output_type -> google.protobuf.Empty
-	1,  // 16: tast.cros.typec.Service.DownloadsPath:output_type -> tast.cros.typec.TypecResponse
-	2,  // 17: tast.cros.typec.Service.VerifyMirrorMode:output_type -> google.protobuf.Empty
-	2,  // 18: tast.cros.typec.Service.PlayVideo:output_type -> google.protobuf.Empty
-	2,  // 19: tast.cros.typec.Service.VerifyEdpPrimary:output_type -> google.protobuf.Empty
-	2,  // 20: tast.cros.typec.Service.SetActiveNodeByUI:output_type -> google.protobuf.Empty
-	1,  // 21: tast.cros.typec.Service.DisplayName:output_type -> tast.cros.typec.TypecResponse
-	1,  // 22: tast.cros.typec.Service.AudioCrasSelectedOutputDevice:output_type -> tast.cros.typec.TypecResponse
-	2,  // 23: tast.cros.typec.Service.VerifyFirstRunningDevice:output_type -> google.protobuf.Empty
-	12, // [12:24] is the sub-list for method output_type
-	0,  // [0:12] is the sub-list for method input_type
+	2,  // 12: tast.cros.typec.Service.NewChromeLogin:input_type -> google.protobuf.Empty
+	2,  // 13: tast.cros.typec.Service.ReconnectChromeConnection:input_type -> google.protobuf.Empty
+	2,  // 14: tast.cros.typec.Service.NewConnectionForTarget:input_type -> google.protobuf.Empty
+	2,  // 15: tast.cros.typec.Service.NewChromeLoginWithPeripheralDataAccess:output_type -> google.protobuf.Empty
+	2,  // 16: tast.cros.typec.Service.SetMirrorModeDisplay:output_type -> google.protobuf.Empty
+	2,  // 17: tast.cros.typec.Service.VerifyWindowOnDisplay:output_type -> google.protobuf.Empty
+	2,  // 18: tast.cros.typec.Service.PlayLocalVideo:output_type -> google.protobuf.Empty
+	1,  // 19: tast.cros.typec.Service.DownloadsPath:output_type -> tast.cros.typec.TypecResponse
+	2,  // 20: tast.cros.typec.Service.VerifyMirrorMode:output_type -> google.protobuf.Empty
+	2,  // 21: tast.cros.typec.Service.PlayVideo:output_type -> google.protobuf.Empty
+	2,  // 22: tast.cros.typec.Service.VerifyEdpPrimary:output_type -> google.protobuf.Empty
+	2,  // 23: tast.cros.typec.Service.SetActiveNodeByUI:output_type -> google.protobuf.Empty
+	1,  // 24: tast.cros.typec.Service.DisplayName:output_type -> tast.cros.typec.TypecResponse
+	1,  // 25: tast.cros.typec.Service.AudioCrasSelectedOutputDevice:output_type -> tast.cros.typec.TypecResponse
+	2,  // 26: tast.cros.typec.Service.VerifyFirstRunningDevice:output_type -> google.protobuf.Empty
+	2,  // 27: tast.cros.typec.Service.NewChromeLogin:output_type -> google.protobuf.Empty
+	2,  // 28: tast.cros.typec.Service.ReconnectChromeConnection:output_type -> google.protobuf.Empty
+	2,  // 29: tast.cros.typec.Service.NewConnectionForTarget:output_type -> google.protobuf.Empty
+	15, // [15:30] is the sub-list for method output_type
+	0,  // [0:15] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name
@@ -396,6 +416,9 @@ type ServiceClient interface {
 	DisplayName(ctx context.Context, in *KeyPath, opts ...grpc.CallOption) (*TypecResponse, error)
 	AudioCrasSelectedOutputDevice(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*TypecResponse, error)
 	VerifyFirstRunningDevice(ctx context.Context, in *KeyPath, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NewChromeLogin(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ReconnectChromeConnection(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NewConnectionForTarget(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type serviceClient struct {
@@ -514,6 +537,33 @@ func (c *serviceClient) VerifyFirstRunningDevice(ctx context.Context, in *KeyPat
 	return out, nil
 }
 
+func (c *serviceClient) NewChromeLogin(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.typec.Service/NewChromeLogin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) ReconnectChromeConnection(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.typec.Service/ReconnectChromeConnection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) NewConnectionForTarget(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.typec.Service/NewConnectionForTarget", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	NewChromeLoginWithPeripheralDataAccess(context.Context, *KeyPath) (*emptypb.Empty, error)
@@ -528,6 +578,9 @@ type ServiceServer interface {
 	DisplayName(context.Context, *KeyPath) (*TypecResponse, error)
 	AudioCrasSelectedOutputDevice(context.Context, *emptypb.Empty) (*TypecResponse, error)
 	VerifyFirstRunningDevice(context.Context, *KeyPath) (*emptypb.Empty, error)
+	NewChromeLogin(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	ReconnectChromeConnection(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	NewConnectionForTarget(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
@@ -569,6 +622,15 @@ func (*UnimplementedServiceServer) AudioCrasSelectedOutputDevice(context.Context
 }
 func (*UnimplementedServiceServer) VerifyFirstRunningDevice(context.Context, *KeyPath) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyFirstRunningDevice not implemented")
+}
+func (*UnimplementedServiceServer) NewChromeLogin(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewChromeLogin not implemented")
+}
+func (*UnimplementedServiceServer) ReconnectChromeConnection(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReconnectChromeConnection not implemented")
+}
+func (*UnimplementedServiceServer) NewConnectionForTarget(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewConnectionForTarget not implemented")
 }
 
 func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
@@ -791,6 +853,60 @@ func _Service_VerifyFirstRunningDevice_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_NewChromeLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).NewChromeLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.typec.Service/NewChromeLogin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).NewChromeLogin(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_ReconnectChromeConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ReconnectChromeConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.typec.Service/ReconnectChromeConnection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ReconnectChromeConnection(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_NewConnectionForTarget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).NewConnectionForTarget(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.typec.Service/NewConnectionForTarget",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).NewConnectionForTarget(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.typec.Service",
 	HandlerType: (*ServiceServer)(nil),
@@ -842,6 +958,18 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyFirstRunningDevice",
 			Handler:    _Service_VerifyFirstRunningDevice_Handler,
+		},
+		{
+			MethodName: "NewChromeLogin",
+			Handler:    _Service_NewChromeLogin_Handler,
+		},
+		{
+			MethodName: "ReconnectChromeConnection",
+			Handler:    _Service_ReconnectChromeConnection_Handler,
+		},
+		{
+			MethodName: "NewConnectionForTarget",
+			Handler:    _Service_NewConnectionForTarget_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

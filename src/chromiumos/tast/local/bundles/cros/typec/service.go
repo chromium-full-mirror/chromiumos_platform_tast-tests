@@ -284,3 +284,35 @@ func (c *Service) VerifyFirstRunningDevice(ctx context.Context, req *typec.KeyPa
 	}
 	return &empty.Empty{}, nil
 }
+
+// NewChromeLogin is default chrome login.
+func (c *Service) NewChromeLogin(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	// Get to the Chrome login screen with proxy.
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start Chrome at login screen")
+	}
+	c.cr = cr
+	return &empty.Empty{}, nil
+}
+
+// ReconnectChromeConnection reconnects to closed chrome connection.
+func (c *Service) ReconnectChromeConnection(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if c.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+	if err := c.cr.Reconnect(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to reconnect chrome")
+	}
+	return &empty.Empty{}, nil
+}
+
+// NewConnectionForTarget updates new connection for existing target.
+func (c *Service) NewConnectionForTarget(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	conn, err := c.cr.NewConnForTarget(ctx, chrome.MatchAllPages())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to reconnect to browser tab")
+	}
+	c.conn = conn
+	return &empty.Empty{}, nil
+}

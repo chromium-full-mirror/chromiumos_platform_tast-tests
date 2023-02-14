@@ -25,6 +25,9 @@ service Service {
     rpc DisplayName(KeyPath) returns (TypecResponse){}
     rpc AudioCrasSelectedOutputDevice(google.protobuf.Empty) returns (TypecResponse){}
     rpc VerifyFirstRunningDevice(KeyPath) returns (google.protobuf.Empty){} 
+    rpc NewChromeLogin(google.protobuf.Empty) returns (google.protobuf.Empty){} 
+    rpc ReconnectChromeConnection (google.protobuf.Empty) returns (google.protobuf.Empty){} 
+    rpc NewConnectionForTarget (google.protobuf.Empty) returns (google.protobuf.Empty){} 
 }
 
 // The service modifies the device policy while logging in to enable peripheral data access. In order to do
