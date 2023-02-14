@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
+	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
 )
@@ -137,6 +138,31 @@ func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, bl
 	}
 
 	return nil
+}
+
+// PollAppPageState polls the Play Store app detail page for desired state.
+func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, testPackage string, assertFn func(ctx context.Context) error, timeout time.Duration) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := playstore.OpenAppPage(ctx, a, testPackage); err != nil {
+			return testing.PollBreak(err)
+		}
+
+		err := assertFn(ctx)
+
+		if err != nil {
+			testing.ContextLogf(ctx, "App page for %q not in desired state: %s", testPackage, err)
+			playstore.Close(ctx, a)
+		}
+		return err
+	}, &testing.PollOptions{Timeout: timeout, Interval: 30 * time.Second})
+}
+
+// WaitForAppUnavailableMessage waits for the message shown for blocked apps.
+func WaitForAppUnavailableMessage(ctx context.Context, d *ui.Device, timeout time.Duration) error {
+	const appUnavailableText = "Your administrator has not given you access to this item."
+
+	obj := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches("(?i)"+appUnavailableText))
+	return obj.WaitForExists(ctx, timeout)
 }
 
 // WaitForProvisioning waits for provisioning to finish and dumps logcat if doesn't.

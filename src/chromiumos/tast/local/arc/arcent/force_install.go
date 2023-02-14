@@ -141,31 +141,6 @@ func CreateArcPolicyWithApps(packages []string, installType string) *policy.ArcP
 	return arcPolicy
 }
 
-// WaitForAppUnavailableMessage waits for the message shown for blocked apps.
-func WaitForAppUnavailableMessage(ctx context.Context, d *ui.Device, timeout time.Duration) error {
-	const appUnavailableText = "Your administrator has not given you access to this item."
-
-	obj := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches("(?i)"+appUnavailableText))
-	return obj.WaitForExists(ctx, timeout)
-}
-
-// PollAppPageState polls the Play Store app detail page for desired state.
-func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, testPackage string, assertFn func(ctx context.Context) error, timeout time.Duration) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := playstore.OpenAppPage(ctx, a, testPackage); err != nil {
-			return testing.PollBreak(err)
-		}
-
-		err := assertFn(ctx)
-
-		if err != nil {
-			testing.ContextLogf(ctx, "App page for %q not in desired state: %s", testPackage, err)
-			playstore.Close(ctx, a)
-		}
-		return err
-	}, &testing.PollOptions{Timeout: timeout, Interval: 30 * time.Second})
-}
-
 // EnsurePlayStoreEmpty ensures that the asset browser displays empty screen.
 func EnsurePlayStoreEmpty(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, a *arc.ARC, d *ui.Device, outDir string, runID int) (retErr error) {
 	return EnsurePlayStoreState(ctx, tconn, cr, a, d, outDir, runID, true)
