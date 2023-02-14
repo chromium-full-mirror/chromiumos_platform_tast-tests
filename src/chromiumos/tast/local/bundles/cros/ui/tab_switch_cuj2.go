@@ -32,7 +32,8 @@ func init() {
 		Func:         TabSwitchCUJ2,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of tab-switching CUJ, scrolling content with trackpad",
-		Contacts:     []string{"abergman@google.com", "tclaiborne@chromium.org", "xliu@cienet.com", "alfredyu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			"ui.cuj_mute",

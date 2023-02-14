@@ -36,7 +36,8 @@ func init() {
 		Func:         EverydayMultiTaskingCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of everyday multi-tasking CUJ",
-		Contacts:     []string{"xliu@cienet.com", "jane.yang@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{

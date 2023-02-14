@@ -33,7 +33,8 @@ func init() {
 		Func:         QuickCheckCUJ2,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the system performance after login or wakeup by checking common apps",
-		Contacts:     []string{"xliu@cienet.com", "hc.tsai@cienet.com", "alfredyu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "arc", "wifi"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{

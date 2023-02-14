@@ -23,7 +23,8 @@ func init() {
 		Func:         GoogleMeetCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Host a Google Meet video conference and do presentation to participants",
-		Contacts:     []string{"jane.yang@cienet.com", "xliu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		ServiceDeps: []string{
 			"tast.cros.ui.ConferenceService",
