@@ -41,15 +41,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "docs",
-				Fixture: fixture.GoogleDocs,
+				Fixture: fixture.GoogleDocsWithVK,
 			},
 			{
 				Name:    "sheets",
-				Fixture: fixture.GoogleSheets,
+				Fixture: fixture.GoogleSheetsWithVK,
 			},
 			{
 				Name:    "slides",
-				Fixture: fixture.GoogleSlides,
+				Fixture: fixture.GoogleSlidesWithVK,
 			},
 		},
 	})
@@ -96,6 +96,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 				Steps: uiauto.Combine("testing typing, user type text English",
 					vkbCtx.TapKeyIgnoringCase("e"),
 					vkbCtx.TapKeys(strings.Split("nglish", "")),
+					vkbCtx.HideVirtualKeyboard(),
 					util.VerifyTextToBe(tconn, nil, "English", util.VerifyInScreenshot),
 				),
 			},
@@ -134,10 +135,9 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 
 			case "Google Sheets":
 				baner := nodewith.Role(role.Banner)
-				application := nodewith.ClassName("cell-input").Ancestor(baner)
-				textBox := nodewith.Role(role.InlineTextBox).Ancestor(application).First()
+				inputField := nodewith.ClassName("cell-input").Ancestor(baner)
 
-				if err := vkbCtx.TapScreenTriggerVK(touchCtx, tconn, textBox)(ctx); err != nil {
+				if err := vkbCtx.TapScreenTriggerVK(touchCtx, tconn, inputField)(ctx); err != nil {
 					s.Fatal("Failed to trigger vk in google sheets: ", err)
 				}
 			}

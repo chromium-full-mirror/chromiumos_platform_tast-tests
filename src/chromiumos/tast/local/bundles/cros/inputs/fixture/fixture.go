@@ -54,6 +54,7 @@ const (
 	ClamshellNonVKInGuest                     = "clamshellNonVKInGuest"
 	ClamshellNonVKRestart                     = "clamshellNonVKRestart"
 	ClamshellNonVKWithMultiwordSuggest        = "clamshellNonVKWithMultiwordSuggest"
+	ClamshellNonVKInGAIA                      = "clamshellNonVKInGAIA"
 	TabletVK                                  = "tabletVK"
 	TabletVKRestart                           = "tabletVKRestart"
 	TabletVKInGuest                           = "tabletVKInGuest"
@@ -112,6 +113,21 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(notForced, true, false, browser.TypeAsh, gaiaLogin),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKInGAIA,
+		Desc: "Clamshell mode Gaia login with VK disabled",
+		Contacts: []string{
+			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, gaiaLogin),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

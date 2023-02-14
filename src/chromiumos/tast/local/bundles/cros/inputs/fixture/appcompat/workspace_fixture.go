@@ -19,11 +19,21 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// fixture's name
+const (
+	GoogleDocsWithVK   = "googleDocsWithVK"
+	GoogleSheetsWithVK = "googleSheetsWithVK"
+	GoogleSlidesWithVK = "googleSlidesWithVK"
+	GoogleDocsNonVK    = "googleDocsNoVK"
+	GoogleSheetsNonVK  = "googleSheetsNoVK"
+	GoogleSlidesNonVK  = "googleSlidesNoVK"
+)
+
 // app's name
 const (
-	GoogleDocs   = "googleDocs"
-	GoogleSheets = "googleSheets"
-	GoogleSlides = "googleSlides"
+	googleDocs   = "Google Docs"
+	googleSheets = "Google Sheets"
+	googleSlides = "Google Slides"
 )
 
 const (
@@ -50,43 +60,82 @@ type WorkspaceFixtData struct {
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: GoogleDocs,
+		Name: GoogleDocsWithVK,
 		Desc: "Open google docs for testing",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            &workSpaceFixtureImpl{appName: GoogleDocs},
+		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
 		PostTestTimeout: workspacePostTestTimeout,
 		Parent:          fixture.AnyVKInGAIA,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: GoogleSlides,
+		Name: GoogleDocsNonVK,
+		Desc: "Open google docs for testing",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            &workSpaceFixtureImpl{appName: googleDocs},
+		SetUpTimeout:    workspaceSetUpTestTimeout,
+		PreTestTimeout:  workspacePreTestTimeout,
+		PostTestTimeout: workspacePostTestTimeout,
+		Parent:          fixture.ClamshellNonVKInGAIA,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: GoogleSlidesWithVK,
 		Desc: "Open google slides for testing",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            &workSpaceFixtureImpl{appName: GoogleSlides},
+		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
 		PostTestTimeout: workspacePostTestTimeout,
 		Parent:          fixture.AnyVKInGAIA,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: GoogleSheets,
+		Name: GoogleSlidesNonVK,
+		Desc: "Open google slides for testing",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            &workSpaceFixtureImpl{appName: googleSlides},
+		SetUpTimeout:    workspaceSetUpTestTimeout,
+		PreTestTimeout:  workspacePreTestTimeout,
+		PostTestTimeout: workspacePostTestTimeout,
+		Parent:          fixture.ClamshellNonVKInGAIA,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: GoogleSheetsWithVK,
 		Desc: "Open google sheet for testing",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            &workSpaceFixtureImpl{appName: GoogleSheets},
+		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
 		SetUpTimeout:    workspaceSetUpTestTimeout,
 		PreTestTimeout:  workspacePreTestTimeout,
 		PostTestTimeout: workspacePostTestTimeout,
 		Parent:          fixture.AnyVKInGAIA,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: GoogleSheetsNonVK,
+		Desc: "Open google sheet for testing",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            &workSpaceFixtureImpl{appName: googleSheets},
+		SetUpTimeout:    workspaceSetUpTestTimeout,
+		PreTestTimeout:  workspacePreTestTimeout,
+		PostTestTimeout: workspacePostTestTimeout,
+		Parent:          fixture.ClamshellNonVKInGAIA,
 	})
 }
 
@@ -97,16 +146,7 @@ func (f *workSpaceFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 
 	f.cr = cr
 	f.tconn = tconn
-
-	var appRootWebAreaName string
-	switch f.appName {
-	case GoogleDocs:
-		appRootWebAreaName = "Google Docs"
-	case GoogleSheets:
-		appRootWebAreaName = "Google Sheets"
-	case GoogleSlides:
-		appRootWebAreaName = "Google Slides"
-	}
+	appRootWebAreaName := f.appName
 
 	return WorkspaceFixtData{f.cr, f.tconn, uc, appRootWebAreaName}
 }
@@ -116,11 +156,11 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 	var err error
 
 	switch f.appName {
-	case GoogleDocs:
+	case googleDocs:
 		conn, err = f.cr.NewConn(ctx, cuj.NewGoogleDocsURL)
-	case GoogleSheets:
+	case googleSheets:
 		conn, err = f.cr.NewConn(ctx, cuj.NewGoogleSheetsURL)
-	case GoogleSlides:
+	case googleSlides:
 		conn, err = f.cr.NewConn(ctx, cuj.NewGoogleSlidesURL)
 	}
 
@@ -132,19 +172,18 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 	if err := webutil.WaitForQuiescence(ctx, conn, workspacePreTestTimeout); err != nil {
 		s.Fatal("Failed to wait for page to finish loading: ", err)
 	}
-
 	if err := cuj.MaximizeBrowserWindow(ctx, f.tconn, true, f.appName); err != nil {
 		s.Fatal(fmt.Sprintf("Failed to maximize the %s page: ", f.appName), err)
 	}
 
 	// Set big font size for acuiti to do pixel comparison to avoid flaky test.
-	if f.appName == GoogleDocs {
+	if f.appName == googleDocs {
 		if err := googledocs.ChangeDocFontSize(f.tconn, "18")(ctx); err != nil {
 			s.Fatal("Failed to set font size for google docs")
 		}
 	}
 
-	if f.appName == GoogleSheets {
+	if f.appName == googleSheets {
 		if err := googledocs.ChangeSheetFontSize(f.tconn, "12")(ctx); err != nil {
 			s.Fatal("Failed to set font size for google sheets")
 		}
@@ -152,7 +191,7 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 
 	// google slide has to make title field or text field editable first
 	// otherwise, user cannot typing anything
-	if f.appName == GoogleSlides {
+	if f.appName == googleSlides {
 		if err := googledocs.ActivateTitleField(f.tconn)(ctx); err != nil {
 			s.Fatal("Failed to activate slides title field")
 		}
@@ -163,11 +202,11 @@ func (f *workSpaceFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTest
 	var err error
 
 	switch f.appName {
-	case GoogleDocs:
+	case googleDocs:
 		err = googledocs.DeleteDoc(f.tconn)(ctx)
-	case GoogleSheets:
+	case googleSheets:
 		err = googledocs.DeleteSheets(f.tconn)(ctx)
-	case GoogleSlides:
+	case googleSlides:
 		err = googledocs.DeleteSlide(f.tconn)(ctx)
 	}
 

@@ -37,15 +37,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "docs",
-				Fixture: fixture.GoogleDocs,
+				Fixture: fixture.GoogleDocsNonVK,
 			},
 			{
 				Name:    "sheets",
-				Fixture: fixture.GoogleSheets,
+				Fixture: fixture.GoogleSheetsNonVK,
 			},
 			{
 				Name:    "slides",
-				Fixture: fixture.GoogleSlides,
+				Fixture: fixture.GoogleSlidesNonVK,
 			},
 		},
 	})
