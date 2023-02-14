@@ -48,12 +48,12 @@ func clickButtonsOnWikipedia(ui *uiauto.Context, activeWindow *nodewith.Finder) 
 // clickButtonsOnGoogleHelp returns click actions that can be applied on the Google Help.
 func clickButtonsOnGoogleHelp(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
 	mainMenuButton := nodewith.Name("Main menu").Role(role.Button).Ancestor(activeWindow)
+	mainMenuButtonCollapsed := mainMenuButton.Collapsed()
 	closeMenuButton := nodewith.Name("Close menu").Role(role.Button).Ancestor(activeWindow)
 	textField := nodewith.NameStartingWith("Describe your issue").Role(role.TextFieldWithComboBox).Ancestor(activeWindow)
 	return uiauto.NamedCombine("click menu buttons and the search field",
 		ui.LeftClick(mainMenuButton),
-		ui.LeftClick(closeMenuButton),
-		ui.WaitUntilExists(mainMenuButton.Collapsed()),
+		ui.LeftClickUntil(closeMenuButton, ui.WithTimeout(5*time.Second).WaitUntilExists(mainMenuButtonCollapsed)),
 		ui.LeftClick(textField),
 		ui.WaitUntilExists(textField.Focused()),
 	)
