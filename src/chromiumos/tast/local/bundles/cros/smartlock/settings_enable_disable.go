@@ -66,9 +66,17 @@ func SettingsEnableDisable(ctx context.Context, s *testing.State) {
 
 	// Ensure all logins do not clear existing users.
 	opts = append(opts, chrome.KeepState())
-	loginOpts := append(opts, chrome.GAIALogin(chrome.Creds{User: username, Pass: password}))
-	noLoginOpts := append(opts, chrome.NoLogin(),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
+
+	// Explicitly copy opts. Otherwise loginOpts could be overridden by append() when constructing noLoginOpts.
+	loginOpts := append(
+		append([]chrome.Option(nil), opts...),
+		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+	)
+	noLoginOpts := append(
+		append([]chrome.Option(nil), opts...),
+		chrome.NoLogin(),
+		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+	)
 
 	defer func() {
 		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
