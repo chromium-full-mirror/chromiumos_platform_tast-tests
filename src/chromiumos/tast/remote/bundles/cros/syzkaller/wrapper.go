@@ -255,17 +255,6 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		s.Logf("SSH [%v] success: %v", d.HostName(), string(out))
 	}
 
-	// Chmod the keyfile so that ssh connections do not fail due to
-	// open permissions.
-	cmd := exec.Command("cp", s.DataPath("testing_rsa"), syzkallerTastDir)
-	if err := cmd.Run(); err != nil {
-		s.Fatal("Failed to copy testing_rsa to tast temp dir: ", err)
-	}
-	sshKey := filepath.Join(syzkallerTastDir, "testing_rsa")
-	if err := os.Chmod(sshKey, 0600); err != nil {
-		s.Fatal("Unable to chmod sshkey to 0600: ", err)
-	}
-
 	param := s.Param().(string)
 	s.Log("Loading enabled syscalls from: ", param)
 
@@ -303,7 +292,6 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		Workdir:   syzkallerWorkdir,
 		Syzkaller: artifactsDir,
 		Type:      "isolated",
-		SSHKey:    sshKey,
 		Procs:     5,
 		DUTConfig: dutConfig{
 			Targets:       []string{d.HostName()},
@@ -313,6 +301,9 @@ func Wrapper(ctx context.Context, s *testing.State) {
 			Pstore:        true,
 		},
 		EnableSyscalls: enabledSyscalls,
+	}
+	if runLocal {
+		config.SSHKey = s.DataPath("testing_rsa")
 	}
 
 	configFile, err := os.Create(filepath.Join(syzkallerTastDir, "config"))
@@ -355,13 +346,11 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		// that it is performed even if the test fails with a call to s.Fatal().
 		tastResultsDir := s.OutDir()
 		s.Log("Copying syzkaller workdir to tast results directory")
-		cmd = exec.Command("cp", "-r", syzkallerWorkdir, tastResultsDir)
-		if err := cmd.Run(); err != nil {
+		if err := exec.Command("cp", "-r", syzkallerWorkdir, tastResultsDir).Run(); err != nil {
 			s.Fatal("Failed to copy syzkaller workdir: ", err)
 		}
 		s.Log("Copying syzkaller logfile to tast results directory")
-		cmd = exec.Command("cp", logFile.Name(), tastResultsDir)
-		if err := cmd.Run(); err != nil {
+		if err := exec.Command("cp", logFile.Name(), tastResultsDir).Run(); err != nil {
 			s.Fatal("Failed to copy syzkaller logfile: ", err)
 		}
 	}()
