@@ -21,7 +21,8 @@ func init() {
 		Func:         ExtendedDisplayCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test video entertainment with extended display",
-		Contacts:     []string{"jane.yang@cienet.com", "cienet-development@googlegroups.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		ServiceDeps: []string{
 			"tast.cros.spera.ConferenceService2",

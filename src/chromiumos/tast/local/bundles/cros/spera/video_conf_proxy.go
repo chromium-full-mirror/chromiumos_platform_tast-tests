@@ -24,8 +24,8 @@ func init() {
 		Func:         VideoConfProxy,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "A test case that simulates the video call testing",
-		Contacts:     []string{"jane.yang@cienet.com", "cienet-development@googlegroups.com"},
-		BugComponent: "b:259504099",
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{

@@ -23,7 +23,8 @@ func init() {
 		Func:         VideoEditingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of editing video on the web",
-		Contacts:     []string{"xliu@cienet.com", "jane.yang@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			// Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".

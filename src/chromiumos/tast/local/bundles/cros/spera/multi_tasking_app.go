@@ -31,8 +31,8 @@ func init() {
 		Func:         MultiTaskingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of multi-tasking app test",
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
-		Contacts:     []string{"cienet-development@googlegroups.com", "jane.yang@cienet.com", "xibin@google.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{

@@ -25,8 +25,8 @@ func init() {
 		Func:         TelemedicineCUJ,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure the performance of simulated telemedicine operations on the Citrix Workspace client app",
-		Contacts:     []string{"cienet-development@googlegroups.com", "jane.yang@cienet.com", "xibin@google.com"},
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		Vars: []string{
 			// Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".
 			"spera.cuj_mode",

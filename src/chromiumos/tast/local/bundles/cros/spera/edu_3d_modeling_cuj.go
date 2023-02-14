@@ -23,7 +23,8 @@ func init() {
 		Func:         EDU3DModelingCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of editing the 3D models on TinkerCAD website",
-		Contacts:     []string{"abergman@google.com", "xliu@cienet.com", "jeff.lin@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"rotate.png", cujrecorder.SystemTraceConfigFile},
 		Vars: []string{

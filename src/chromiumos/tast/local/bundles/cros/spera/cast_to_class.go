@@ -35,10 +35,10 @@ func init() {
 		Func:         CastToClass,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure the performance of casting to a screen connected to ADT-3. Additional chromecast hardware needs to be prepared before running this test",
-		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Vars: []string{
 			"spera.cuj_mode",     // Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".
 			"spera.collectTrace", // Optional. Expecting "enable" or "disable", default is "disable".

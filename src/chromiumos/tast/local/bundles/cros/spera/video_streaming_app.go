@@ -34,8 +34,8 @@ func init() {
 		Func:         VideoStreamingApp,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the smoothness of switch between full screen YouTube video and another browser window",
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
-		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com", "cienet-development@googlegroups.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{

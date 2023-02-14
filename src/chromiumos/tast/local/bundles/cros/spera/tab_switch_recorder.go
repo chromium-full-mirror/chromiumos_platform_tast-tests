@@ -21,7 +21,8 @@ func init() {
 		Func:         TabSwitchRecorder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run tab-switching test in chromewpr recording mode",
-		Contacts:     []string{"abergman@google.com", "tclaiborne@chromium.org", "xliu@cienet.com", "alfredyu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{

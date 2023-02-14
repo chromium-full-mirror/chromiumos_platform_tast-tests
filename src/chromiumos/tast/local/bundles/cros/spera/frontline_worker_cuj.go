@@ -32,10 +32,10 @@ func init() {
 		Func:         FrontlineWorkerCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of Frontline Worker CUJ",
-		Contacts:     []string{"xliu@cienet.com", "alston.huang@cienet.com", "cienet-development@googlegroups.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Vars: []string{
 			"spera.username",       // Required. It is necessary to have account to use Google Sheets.
 			"spera.password",       // Required. It is necessary to have account to use Google Sheets.
