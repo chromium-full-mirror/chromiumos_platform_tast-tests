@@ -64,6 +64,14 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	}
 	daemonController := helper.DaemonController()
 
+	// Clean up obsolete state, in case there's any.
+	if err := client.UnmountAll(ctx); err != nil {
+		s.Fatal("Failed to unmount vaults for preparation: ", err)
+	}
+	if err := cryptohome.RemoveVault(ctx, userName); err != nil {
+		s.Fatal("Failed to remove old vault for preparation: ", err)
+	}
+
 	// Create and mount the persistent user.
 	_, authSessionID, err := client.StartAuthSession(ctx, userName /*ephemeral*/, false, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
