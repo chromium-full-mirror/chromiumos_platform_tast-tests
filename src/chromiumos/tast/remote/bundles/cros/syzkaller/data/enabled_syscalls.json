@@ -657,7 +657,9 @@
 		"syscalls": [
 			"openat$udambuf",
 			"ioctl$UDMABUF_CREATE",
-			"ioctl$UDMABUF_CREATE_LIST"
+			"ioctl$UDMABUF_CREATE_LIST",
+			"ioctl$DMA_BUF_IOCTL_SYNC",
+			"ioctl$DMA_BUF_SET_NAME_A"
 		]
 	},
 	{
