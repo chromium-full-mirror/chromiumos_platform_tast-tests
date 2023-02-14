@@ -88,31 +88,16 @@ func IncreaseLogcatBufferSize(ctx context.Context, a *arc.ARC) error {
 	return a.Command(ctx, "logcat", "-G", "10M").Run(testexec.DumpLogOnError)
 }
 
-// WaitForInstallButton waits for Install button to show up on the app detail page.
-func WaitForInstallButton(ctx context.Context, d *ui.Device) (*ui.Object, error) {
-	const installButtonText = "install"
-	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText))
-	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
-		return nil, err
-	}
-	return installButton, nil
-}
-
 // ValidateBlockedAppInstall validates that the blocked app is uninstalled automatically.
 func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, blockedPackage string) error {
-	installButton, err := WaitForInstallButton(ctx, d)
+	if err := WaitForAppUnavailableMessage(ctx, d, time.Second); err == nil {
+		testing.ContextLog(ctx, "App unavailable message found")
+		return nil
+	}
+
+	installButton, err := playstore.FindInstallButton(ctx, d, 15*time.Second)
 	if err != nil {
 		return errors.Wrap(err, "failed to find the install button")
-	}
-
-	enabled, err := installButton.IsEnabled(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check the install button state")
-	}
-
-	if !enabled {
-		testing.ContextLog(ctx, "Install button is disabled")
-		return nil
 	}
 
 	testing.ContextLog(ctx, "Install button is enabled. Attempting install")
@@ -123,7 +108,7 @@ func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, bl
 	if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
 		// When the local view is cached and app shows as installable, Play Server rejects the
 		// install request. If that happens, then the flow is validated.
-		if err := d.Object(ui.TextMatches("(?i)Can't download .*")).Exists(ctx); err == nil {
+		if err := d.Object(ui.TextMatches("(?i)Can.t download .*")).Exists(ctx); err == nil {
 			testing.ContextLog(ctx, "Blocked app not installable")
 			return nil
 		}
@@ -137,6 +122,7 @@ func ValidateBlockedAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, bl
 		return errors.Wrap(err, "package not uninstalled")
 	}
 
+	testing.ContextLog(ctx, "Blocked app uninstalled")
 	return nil
 }
 
@@ -159,9 +145,9 @@ func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, t
 
 // WaitForAppUnavailableMessage waits for the message shown for blocked apps.
 func WaitForAppUnavailableMessage(ctx context.Context, d *ui.Device, timeout time.Duration) error {
-	const appUnavailableText = "Your administrator has not given you access to this item."
+	const appUnavailableText = ".*(not given you access|app isn.t available).*"
 
-	obj := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches("(?i)"+appUnavailableText))
+	obj := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches(appUnavailableText))
 	return obj.WaitForExists(ctx, timeout)
 }
 
