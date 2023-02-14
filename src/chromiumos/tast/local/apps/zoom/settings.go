@@ -125,8 +125,11 @@ func (zm *Zoom) SwitchVideo(value bool) action.Action {
 			return errors.Wrap(err, "failed to find video toggle button")
 		}
 		if value && cameraToggleButton == startVideoButton {
-			return prompts.ActionAndGrantPermissionIfRequired(
-				zm.tconn, zm.conn, zm.ui.DoDefault(cameraToggleButton), webutil.PermissionCamera)(ctx)
+			return uiauto.RetrySilently(5, uiauto.Combine("turn on the camera",
+				prompts.ActionAndGrantPermissionIfRequired(
+					zm.tconn, zm.conn, zm.ui.DoDefault(cameraToggleButton), webutil.PermissionCamera),
+				ui.WithTimeout(5*time.Second).WaitUntilGone(cameraToggleButton)),
+			)(ctx)
 		} else if !value && cameraToggleButton == stopVideoButton {
 			return uiauto.NamedCombine("turn off the camera",
 				ui.WithTimeout(mediumUITimeout).DoDefaultUntil(stopVideoButton,
