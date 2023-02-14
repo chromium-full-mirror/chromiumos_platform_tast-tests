@@ -176,7 +176,7 @@ func (f *FilesApp) Close(ctx context.Context) error {
 // OpenDir returns a function that opens one of the directories shown in the navigation tree.
 // An error is returned if dir is not found or does not open.
 func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
-	dir := nodewith.Name(dirName).Role(role.TreeItem)
+	dir := nodewith.Name(dirName).Role(role.TreeItem).First()
 	roleType := role.RootWebArea
 	if f.appID == apps.FilesSWA.ID {
 		roleType = role.Window
