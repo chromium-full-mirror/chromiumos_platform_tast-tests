@@ -11,30 +11,27 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/testing"
 )
 
-// getImage gets part of the image that should contain only the camera feed and not menus and control elements
-// In effect we split the window in 3x3 grid and use the middle one. This is tested to work on the VM with the default resolution.
-func getImage(ctx context.Context, cr *chrome.Chrome, rct coords.Rect) (image.Image, error) {
-	var w int = rct.Width / 3
-	var h int = rct.Height / 3
-	var l int = rct.Left + w
-	var t int = rct.Top + h
-	var subR coords.Rect = coords.Rect{Left: l, Top: t, Width: w, Height: h}
-	sshot, err := screenshot.GrabAndCropScreenshot(ctx, cr, subR)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to grab screenshot")
-	}
-	return sshot, nil
+// scaledRect returns a scaled rectangle with keeping it's center unchanged.
+func scaledRect(r coords.Rect, coeff float64) coords.Rect {
+	var x = r.CenterX()
+	var y = r.CenterY()
+	var w = int(float64(r.Width) * coeff)
+	var h = int(float64(r.Height) * coeff)
+	return coords.NewRect(x-w/2, y-h/2, w, h)
 }
 
 // SaveImage saves a given image.Image as png.
@@ -67,8 +64,7 @@ func IsImageBlack(img image.Image) (bool, error) {
 	return true, nil
 }
 
-// CameraScreenshot takes a screenshot from the Camera app and crops it to contain no UI elements (works in VM resolution).
-func CameraScreenshot(ctx context.Context, cr *chrome.Chrome, tconn *browser.TestConn) (image.Image, error) {
+func launchCameraAppFromHomeMenu(ctx context.Context, tconn *browser.TestConn) {
 	ui := uiauto.New(tconn)
 	homeButton := nodewith.Role("button").Name("Launcher").ClassName("ash/HomeButton")
 	cameraAppButton := nodewith.Role("button").Name("Camera").ClassName("AppListItemView").First()
@@ -79,23 +75,94 @@ func CameraScreenshot(ctx context.Context, cr *chrome.Chrome, tconn *browser.Tes
 	if err := ui.LeftClick(cameraAppButton)(ctx); err != nil {
 		errors.Wrap(err, "failed to right click the Camera App")
 	}
+}
 
+func getRectPXForUIElement(ctx context.Context, cr *chrome.Chrome, tconn *browser.TestConn,
+	finderForUIElement *nodewith.Finder) (*coords.Rect, error) {
+	ui := uiauto.New(tconn)
+
+	// Get bounds in DP for the UI element.
+	frameLocDP, err := ui.Location(ctx, finderForUIElement)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain camera app Location")
+	}
+
+	// Convert bounds from DP to PX.
+	displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the primary display info")
+	}
+	displayMode, err := displayInfo.GetSelectedMode()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the selected display mode of the primary display")
+	}
+	rect := coords.ConvertBoundsFromDPToPX(*frameLocDP, displayMode.DeviceScaleFactor)
+	return &rect, nil
+}
+
+// LaunchCameraAndTakeScreenshot starts the Camera app and
+// takes a screenshot of content (cropped, without UI elements).
+func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
+	tconn *browser.TestConn, s *testing.State) (image.Image, error) {
+
+	launchCameraAppFromHomeMenu(ctx, tconn)
+
+	ui := uiauto.New(tconn)
+
+	// Wait till the camera frame will appear.
 	cameraBrowserFrame := nodewith.Role("window").ClassName("BrowserFrame").Name("Camera")
 	cameraFrame := nodewith.ClassName("RenderWidgetHostViewAura").FinalAncestor(cameraBrowserFrame)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(cameraBrowserFrame)(ctx); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to find camera view during a defined timeout")
 	}
 
-	frameLoc, err := ui.Location(ctx, cameraFrame)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain Location")
+	// Get rect in px of camera app.
+	rectPX, err := getRectPXForUIElement(ctx, cr, tconn, cameraFrame)
+
+	// We need to have a subRectPX, as the rectPX holds
+	// the entire viewing area of the camera app
+	// (with buttons & UI elements we shall not capture).
+	var subRectPX = scaledRect(*rectPX, 0.70)
+	subRectPX.Top = rectPX.Top
+	subRectPX = scaledRect(subRectPX, 0.90)
+
+	// Polling at most 10 sec till camera will start showing a stream
+	// (as the camera takes 1-2 sec to start capturing
+	// the real picture, or will keep showing black if camera is off).
+	if err = testing.Poll(ctx, func(ctx context.Context) error {
+
+		img, err := screenshot.GrabAndCropScreenshot(ctx, cr, subRectPX)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+
+		isStreamBlack, err := IsImageBlack(img)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+
+		if isStreamBlack {
+			// Return error to repeat an another poll.
+			return errors.New("the camera is not showing image yet")
+		}
+
+		// The camera app shows non-black stream - stop the Pooling (return nil).
+		return nil
+
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
+		wasPoolTimeouted := strings.Contains(err.Error(), "context deadline exceeded")
+		// Return the err only if it was not a timeout
+		// (it's expected that pooling may timeout).
+		if !wasPoolTimeouted {
+			return nil, errors.Wrap(err, "failed to wait for camera stream")
+		}
 	}
 
+	// Grab and return the camera stream.
 	var sshot image.Image
-	sshot, err = getImage(ctx, cr, *frameLoc)
+	sshot, err = screenshot.GrabAndCropScreenshot(ctx, cr, subRectPX)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create camera feed image")
 	}
 	return sshot, nil
-
 }

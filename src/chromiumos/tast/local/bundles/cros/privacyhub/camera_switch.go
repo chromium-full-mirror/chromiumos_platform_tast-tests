@@ -16,19 +16,35 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
+
+// Models, where the camera test should not be flaky.
+var goldenCameraModels = []string{
+	"eldrid",
+	"chronicler",
+	"volta",
+	"jinlon",
+	"dragonair",
+	"dratini",
+	"gimble",
+	"redrix",
+	"atlas",
+	"eve",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CameraSwitch,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that PrivacyHub camera toggle switches off the camera. Should be used only on VMs where the vivid daemon ensures that there is some colorful pattern present in the camera feed. Also this test assumes default vm resolution when cropping the image, and hence different resolution might lead to spurious results",
-		Contacts:     []string{"janlanik@google.com", "chromeos-privacyhub@google.com"},
+		Contacts:     []string{"chromeos-privacyhub@google.com", "janlanik@google.com", "kisliaks@google.com"},
 		// ChromeOS > Privacy > ChromeOS Privacy Feature Development.
 		BugComponent: "b:1178745",
-		SoftwareDeps: []string{"chrome", "qemu"},
+		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
+		HardwareDeps: hwdep.D(hwdep.Model(goldenCameraModels...)),
 	})
 }
 
@@ -66,7 +82,7 @@ func CameraSwitch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable the camera")
 	}
 	var sshot image.Image
-	sshot, err = privacyhubutil.CameraScreenshot(ctx, cr, tconn)
+	sshot, err = privacyhubutil.LaunchCameraAndTakeScreenshot(ctx, cr, tconn, s)
 	if err != nil {
 		s.Fatal("Couldn't get camera screenshot: ", err)
 	}
@@ -86,7 +102,7 @@ func CameraSwitch(ctx context.Context, s *testing.State) {
 	} else if enabled {
 		s.Fatal("Failed to disable the camera")
 	}
-	sshot, err = privacyhubutil.CameraScreenshot(ctx, cr, tconn)
+	sshot, err = privacyhubutil.LaunchCameraAndTakeScreenshot(ctx, cr, tconn, s)
 	if err != nil {
 		s.Fatal("Couldn't get camera screenshot: ", err)
 	}
