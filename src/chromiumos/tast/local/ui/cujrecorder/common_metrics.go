@@ -120,10 +120,8 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		// Other metrics to monitor.
 		NewCustomMetricConfig("EventLatency.TotalLatency", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Media.Video.Roughness.60fps", "ms", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames.AllInteractions", "percent", perf.SmallerIsBetter),
-		// TODO (b/247638726): Replaced with Graphics.Smoothness.PercentDroppedFrames3.AllSequences and removed.
-		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames.AllSequences", "percent", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames.CompositorThread.Video", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllInteractions", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllSequences", "percent", perf.SmallerIsBetter),
 	}
 }

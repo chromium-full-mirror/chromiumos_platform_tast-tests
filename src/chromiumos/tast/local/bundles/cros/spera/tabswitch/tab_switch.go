@@ -602,10 +602,10 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 			}
 
 			// Google Workspace page plays the video automatically.
-			// Wait for the histogram Graphics.Smoothness.PercentDroppedFrames.CompositorThread.Video
+			// Wait for the histogram Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video
 			// collected from the page.
 			if tab.url == cuj.GoogleWorkspaceURL {
-				const videoHistogramName = "Graphics.Smoothness.PercentDroppedFrames.CompositorThread.Video"
+				const videoHistogramName = "Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video"
 
 				videoWaitStartTime := time.Now()
 				videoHistogram, err := metrics.WaitForHistogram(ctx, tconn, videoHistogramName, shortUITimeout)
