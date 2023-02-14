@@ -16,6 +16,9 @@ const chameleondDefaultXMLRPCPort = 9992
 type PortType string
 
 const (
+	// PortTypeError is used for error handling.
+	PortTypeError PortType = "error"
+
 	// PortTypeDP is the PortType for a DisplayPort chameleon port.
 	PortTypeDP PortType = "DP"
 
@@ -152,6 +155,7 @@ func (p PortID) Int() int {
 // chameleon V3 devices should support GetConnectorType for all PortID values so
 // this would not be used with a chameleon V3 device.
 var chameleonV2PortIDToPortTypeMap = map[PortID]PortType{
+	0:  PortTypeError,
 	1:  PortTypeDP,
 	2:  PortTypeDP,
 	3:  PortTypeHDMI,
@@ -437,10 +441,11 @@ func (ift InfoFrameType) String() string {
 // AudioBusNumber represents the audio bus number.
 type AudioBusNumber int
 
-// AudioBusNumber values.  Bus 1 and Bus 2 are the supported values.
+// AudioBusNumber values.  Bus 1, 2, and 9 are the supported values.
 const (
 	AudioBus1 AudioBusNumber = 1
 	AudioBus2 AudioBusNumber = 2
+	USBOut    AudioBusNumber = 9
 )
 
 // Int returns this PortID as an int.

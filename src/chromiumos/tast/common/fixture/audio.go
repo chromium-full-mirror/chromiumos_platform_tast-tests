@@ -12,4 +12,6 @@ const (
 	AloopLoaded = "aloopLoaded"
 	// Configure the ALSA loopback device for CRAS and stop UI.
 	AloopLoadedWithoutUI = "aloopLoadedWithoutUI"
+	// For the testbed with Chameleon
+	ChameleonAudioTestbed = "chameleonAudioTestbed"
 )
