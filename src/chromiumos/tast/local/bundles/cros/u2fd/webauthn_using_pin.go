@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -24,7 +25,6 @@ import (
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/u2fd"
-	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -45,6 +45,10 @@ func init() {
 		Data: []string{
 			"webauthn.html",
 			"bundle.js",
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.PinUnlockAutosubmitEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.QuickUnlockModeAllowlist{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
@@ -72,8 +76,12 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 	bt := s.Param().(browser.Type)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
 
-	if err := upstart.CheckJob(ctx, "u2fd"); err != nil {
-		s.Fatal("u2fd isn't started: ", err)
+	u2fDaemon, err := util.NewU2fDaemon(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to u2fd: ", err)
+	}
+	if err = u2fDaemon.WaitUntilInitialized(ctx); err != nil {
+		s.Fatal("Failed to wait until u2fd is initialized: ", err)
 	}
 
 	const (
