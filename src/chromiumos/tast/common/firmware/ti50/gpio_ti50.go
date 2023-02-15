@@ -44,6 +44,10 @@ const (
 	GpioTi50ResetL GpioTi50 = "RESET"
 	// GpioTi50PltRstL is the PLT reset signal to GSC (active low)
 	GpioTi50PltRstL GpioTi50 = "PLT_RST_L"
+	// GpioTi50EcRstL is the EC reset signal (active low)
+	GpioTi50EcRstL GpioTi50 = "EC_RST_ODL"
+	// GpioTi50EcRstFet is the controls a FET to drive the EC reset signal (high means reset)
+	GpioTi50EcRstFet GpioTi50 = "EC_RST_FET_ODL"
 	// GpioTi50PowerBtnL is the power signal to GSC (active low)
 	GpioTi50PowerBtnL GpioTi50 = "PWR_BTN_L"
 	// GpioTi50EcPowerBtnL is the power signal from GSC to EC (active low)
