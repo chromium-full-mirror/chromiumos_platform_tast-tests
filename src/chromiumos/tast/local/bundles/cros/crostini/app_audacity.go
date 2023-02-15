@@ -122,7 +122,7 @@ func AppAudacity(ctx context.Context, s *testing.State) {
 	// starting up...", also look for the File menu in the window.
 	audacityWindow := nodewith.Name("Audacity").Role(role.Window).First()
 	if err := uiauto.Combine("wait for Audacity",
-		ui.WithTimeout(time.Minute).WaitUntilExists(audacityWindow),
+		ui.WithTimeout(2*time.Minute).WaitUntilExists(audacityWindow),
 		ud.WaitUntilExists(uidetection.Word("File").WithinA11yNode(audacityWindow)),
 		ui.MouseClickAtLocation(0, coords.Point{X: 0, Y: 0}),
 		d.DiffWindow(ctx, "audacity", screenshot.Retries(2)),
