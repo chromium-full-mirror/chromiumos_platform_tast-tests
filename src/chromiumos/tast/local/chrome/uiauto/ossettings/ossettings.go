@@ -263,12 +263,17 @@ func (s *OSSettings) EvalJSWithShadowPiercer(ctx context.Context, cr *chrome.Chr
 // It does nothing if the option is already expected.
 func (s *OSSettings) SetToggleOption(cr *chrome.Chrome, optionName string, expected bool) uiauto.Action {
 	return func(ctx context.Context) error {
+		optionFinder := nodewith.Name(optionName).Role(role.ToggleButton)
+		if err := s.WaitUntilExists(optionFinder)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait until toggle option exist")
+		}
+
 		if isEnabled, err := s.IsToggleOptionEnabled(ctx, cr, optionName); err != nil {
 			return err
 		} else if isEnabled == expected {
 			return nil
 		}
-		optionFinder := nodewith.Name(optionName).Role(role.ToggleButton)
+
 		return uiauto.Combine("set toggle option",
 			s.ui.WaitUntilEnabled(optionFinder),
 			s.ui.LeftClick(optionFinder),
