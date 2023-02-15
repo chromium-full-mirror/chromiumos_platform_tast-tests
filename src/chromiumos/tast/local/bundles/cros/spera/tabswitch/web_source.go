@@ -128,7 +128,7 @@ var googleWebsitesTargets = []tabTarget{
 
 	{cuj.GoogleStoreURL, newPageInfo(cuj.Essential, googleStore, `/`, `/ideas`, `/cart`)},
 	{cuj.GoogleStorePhonesURL, newPageInfo(cuj.Essential, googleStore, `/category/phones`, `/category/earbuds`, `/cart`)},
-	{cuj.GoogleStoreRepairCenterURL, newPageInfo(cuj.Essential, googleStore, `/magazine/repaircenter`, `/repair`, `/cart`)},
+	{cuj.GoogleStoreRepairCenterURL, newPageInfo(cuj.Essential, googleStore, `/magazine/repaircenter`, `/regionpicker`, `/cart`)},
 	{cuj.GoogleStoreInstallationURL, newPageInfo(cuj.Advanced, googleStore, `/magazine/installation`, `/category/watches`, `/cart`)},
 	{cuj.GoogleStoreSubscriptionsURL, newPageInfo(cuj.Advanced, googleStore, `/category/subscriptions`, `/support`, `/cart`)},
 
