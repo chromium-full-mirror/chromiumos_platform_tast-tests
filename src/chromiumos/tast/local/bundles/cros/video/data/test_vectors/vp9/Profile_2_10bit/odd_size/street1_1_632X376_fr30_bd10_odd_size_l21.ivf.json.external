@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_632X376_fr30_bd10_odd_size_l21_20210928.ivf.json",
-  "size": 12250,
-  "sha256sum": "905b8e3d0f6c2a5a7fc6bed32cd7f413845291faa41bc0cb47b9cc15ba2f25b9"
+  "sha256sum": "ac3f11303c65c7d5b14b7dea7ca5770c219626269f16868eed549b1549b75192",
+  "size": 11682,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_632X376_fr30_bd10_odd_size_l21_20230215.ivf.json"
 }
