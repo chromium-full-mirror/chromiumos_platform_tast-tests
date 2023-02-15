@@ -46,12 +46,13 @@ func getHostUreadaheadAbi(ctx context.Context, dut *dut.DUT) (string, error) {
 	// /sbin/ureadahead: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[xxHash]=8cf6d9f23fc96e28, stripped
 	// /sbin/ureadahead: ELF 32-bit LSB shared object, ARM, EABI5 version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-armhf.so.3, for GNU/Linux 3.2.0, BuildID[xxHash]=941ad6a55a036954, stripped
 	// /sbin/ureadahead: ELF 64-bit LSB shared object, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 3.7.0, BuildID[xxHash]=4daedd7720f6c1cf, stripped
+	// /sbin/ureadahead: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 3.7.0, BuildID[xxHash]=1407b67a13da96be, stripped\n"
 	ureadaheadVersion := string(b)
-	mVer := regexp.MustCompile(`^/sbin/ureadahead: ELF (32|64)-bit LSB shared object, (ARM aarch64|ARM|x86-64),.+\n`).FindStringSubmatch(ureadaheadVersion)
+	mVer := regexp.MustCompile(`^/sbin/ureadahead: ELF (32|64)-bit LSB (shared object|pie executable), (ARM aarch64|ARM|x86-64),.+\n`).FindStringSubmatch(ureadaheadVersion)
 	if mVer == nil {
 		return "", errors.Errorf("failed to parse ureadahead version: %q", ureadaheadVersion)
 	}
-	ureadaheadAbi := mVer[1] + " " + mVer[2]
+	ureadaheadAbi := mVer[1] + " " + mVer[3]
 	// Note, x86 is not expected and this is error condition.
 	abiMap := map[string]string{
 		"32 ARM":         "arm",
