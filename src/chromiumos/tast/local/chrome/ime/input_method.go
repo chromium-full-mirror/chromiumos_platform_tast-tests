@@ -118,6 +118,15 @@ var EnglishSouthAfrica = InputMethod{
 	VoiceLanguage:       LanguageEn,
 }
 
+// EnglishIndia represents the input method of English (India).
+var EnglishIndia = InputMethod{
+	Name:                "English (India)",
+	ID:                  "xkb:in::eng",
+	ShortLabel:          "IN",
+	HandwritingLanguage: LanguageEn,
+	VoiceLanguage:       LanguageEn,
+}
+
 // Japanese represents the input method of Japanese.
 var Japanese = InputMethod{
 	Name:                "Japanese",

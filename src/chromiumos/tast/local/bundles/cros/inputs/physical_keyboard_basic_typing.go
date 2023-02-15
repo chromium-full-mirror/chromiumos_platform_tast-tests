@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -24,19 +24,19 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardAltgr,
+		Func:         PhysicalKeyboardBasicTyping,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that user can lock altgr modifier key on physical keyboard",
+		Desc:         "Checks that user can do basic typing physical keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard, ime.Swedish}),
+		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishIndia}),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVK,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{
@@ -56,7 +56,7 @@ func init() {
 	})
 }
 
-func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
+func PhysicalKeyboardBasicTyping(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.FixtData).Chrome
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
 	uc := s.FixtValue().(fixture.FixtData).UserContext
@@ -68,46 +68,10 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 		expectedShiftedText string
 	}{
 		{
-			inputMethod:         ime.EnglishUSWithInternationalKeyboard,
-			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789",
-			expectedText:        "áb©ðéfghíjœøµñóöä®ßþúvåxüæ’¡²³¤€¼½¾‘",
-			expectedShiftedText: "ÁB¢ÐÉFGHÍJŒØµÑÓÖÄ®§ÞÚVÅXÜÆ£",
-		},
-		{
-			inputMethod:         ime.Swedish,
-			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789",
-			expectedText:        "ª”©ð€đŋħ→łµnœþ@®ßþ↓“ł»←«}¡@£$€¥{[]",
-			expectedShiftedText: "º’©Ð¢ªŊĦıŁºNŒÞΩ®§Þ↑‘Ł>¥<°¹²³¼¢⅝÷«»",
-		},
-		{
-			inputMethod:         ime.Norwegian,
-			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789",
-			expectedText:        "ª”©ð€đŋħ→łµnœπ@®ßþ↓“ł»←«}¡@£$½¥{[]",
-			expectedShiftedText: "º’©Ð¢ªŊĦıŁºNŒΠΩ™§Þ↑‘Ł>¥<°¹²³¼‰⅝÷«»",
-		},
-		{
-			inputMethod:         ime.EnglishUK,
-			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789",
-			expectedText:        "á”çðéđŋħíłµnóþ@¶ßŧú“ẃ»ý«}¹€½[]",
-			expectedShiftedText: "Á’ÇÐÉªŊĦÍŁºNÓÞΩ®§ŦÚ‘Ẃ>Ý<°¡½⅓¼⅜⅝⅞™±",
-		},
-		{
-			inputMethod:         ime.Polish,
-			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789",
-			expectedText:        "ą”ćðęæŋ’→ə…łµńóþπ©śß↓„œź←ż»≠²³¢€½§·«",
-			expectedShiftedText: "Ą“ĆÐĘÆŊ•↔Ə∞ŃÓÞΩ®Ś™↑‘ŒŹ¥Ż°¡¿£¼‰∧≈¾±",
-		},
-		{
-			inputMethod:         ime.DutchNetherlands,
-			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789",
-			expectedText:        "áb©ðéfghíjœøµñóöä®ßþúvåxüæ’¡²³¤€¼½¾‘",
-			expectedShiftedText: "ÁB¢ÐÉFGHÍJŒØµÑÓÖÄ®§ÞÚVÅXÜÆ£",
-		},
-		{
 			inputMethod:         ime.EnglishIndia,
-			typeAction:          "4",
-			expectedText:        "₹",
-			expectedShiftedText: "",
+			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
+			expectedText:        "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
+			expectedShiftedText: "ABCDEFGHIJKLMNOPQRSTUVWXYZ)!@#$%^&*(_+{}|:\"<>?",
 		},
 	}
 
@@ -132,12 +96,11 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 	defer its.CloseAll(cleanupCtx)
 
 	for _, testcase := range testCases {
-		name := "PKAltgrModifierWorksFor" + testcase.inputMethod.ShortLabel
-		scenario := "Verify PK Altgr Modifier Works For " + testcase.inputMethod.Name
+		name := "PKBasicTypingWorksFor" + testcase.inputMethod.ShortLabel
+		scenario := "Verify PK Basic Typing Works For " + testcase.inputMethod.Name
 
 		s.Run(ctx, name, func(ctx context.Context, s *testing.State) {
-			// Reset Altgr, in case Altgr is in a held-down state (if release action did not get run due to failures)
-			defer keyboard.AccelAction("Altgr")(cleanupCtx)
+			// Reset Shift, in case Shift is in a held-down state (if release action did not get run due to failures)
 			defer keyboard.AccelAction("Shift")(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(name))
@@ -148,18 +111,16 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to set input method to %v: %v: ", im, err)
 			}
 
-			if err := uiauto.UserAction("Verify PK Altgr Modifer Output",
-				uiauto.Combine("Verify PK Altgr Modifier Output",
+			if err := uiauto.UserAction("Verify PK Basic Typing Output",
+				uiauto.Combine("Verify PK Basic Typing Output",
 					its.Clear(inputField),
 					its.ClickFieldAndWaitForActive(inputField),
-					keyboard.AccelPressAction("Altgr"),
 					keyboard.TypeAction(testcase.typeAction),
 					util.WaitForFieldTextToBe(tconn, inputField.Finder(), testcase.expectedText),
 					its.Clear(inputField),
 					its.ClickFieldAndWaitForActive(inputField),
 					keyboard.AccelPressAction("Shift"),
 					keyboard.TypeAction(testcase.typeAction),
-					keyboard.AccelReleaseAction("Altgr"),
 					keyboard.AccelReleaseAction("Shift"),
 					util.WaitForFieldTextToBe(tconn, inputField.Finder(), testcase.expectedShiftedText),
 				),
@@ -172,7 +133,7 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 					},
 				},
 			)(ctx); err != nil {
-				s.Fatal("Failed to validate altgr: ", err)
+				s.Fatal("Failed to validate basic typing: ", err)
 			}
 		})
 	}
