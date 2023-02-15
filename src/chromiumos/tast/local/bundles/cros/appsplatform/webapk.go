@@ -8,6 +8,7 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/android/ui"
@@ -19,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/webapk"
 	"chromiumos/tast/testing"
 )
@@ -141,10 +143,25 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	defer wm.ShutdownServer(cleanupCtx)
 	defer close(shareChan)
 
+	// Start screen recording, to help with debugging errors.
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create screen recorder: ", err)
+	}
+	if recorder.Start(ctx, tconn); err != nil {
+		s.Fatal("Failed to start screen recorder: ", err)
+	}
+	defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+
 	if err = installTestApps(ctx, wm, a); err != nil {
 		s.Fatal("Failed to install test apps: ", err)
 	}
 	defer wm.CloseApp(cleanupCtx)
+
+	// Close the app which was opened during installation.
+	if err := wm.CloseApp(ctx); err != nil {
+		s.Fatal("Failed to close test app: ", err)
+	}
 
 	activity, err := arc.NewActivity(a, testPackage, testClass)
 	if err != nil {
@@ -162,6 +179,11 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	}
 	if err := verifySharedText(ctx, shareChan); err != nil {
 		s.Fatal("Failed to share text from test app: ", err)
+	}
+
+	// Close the app which was opened by clicking the share text button.
+	if err := wm.CloseApp(ctx); err != nil {
+		s.Fatal("Failed to close test app: ", err)
 	}
 
 	// Click the "Share Files" button and verify that files are received.
