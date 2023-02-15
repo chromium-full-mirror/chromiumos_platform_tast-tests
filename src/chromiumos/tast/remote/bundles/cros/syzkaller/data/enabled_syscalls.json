@@ -836,5 +836,26 @@
 			"ioctl$MEDIA_REQUEST_IOC_QUEUE",
 			"ioctl$MEDIA_REQUEST_IOC_REINIT"
 		]
+	},
+	{
+		"driver": "camx(CONFIG_QTI_CAMERA_CRM)",
+		"boards": ["strongbad"],
+		"startup_cmds": ["until stop cros-camera; do sleep 1; done"],
+		"syscalls": [
+			"openat$camx",
+			"ioctl$CAM_REQ_MGR_CREATE_SESSION",
+			"ioctl$CAM_REQ_MGR_DESTROY_SESSION",
+			"ioctl$CAM_REQ_MGR_LINK",
+			"ioctl$CAM_REQ_MGR_UNLINK",
+			"ioctl$CAM_REQ_MGR_SCHED_REQ",
+			"ioctl$CAM_REQ_MGR_FLUSH_REQ",
+			"ioctl$CAM_REQ_MGR_SYNC_MODE",
+			"ioctl$CAM_REQ_MGR_ALLOC_BUF",
+			"ioctl$CAM_REQ_MGR_MAP_BUF",
+			"ioctl$CAM_REQ_MGR_RELEASE_BUF",
+			"ioctl$CAM_REQ_MGR_LINK_CONTROL",
+			"ioctl$CAM_REQ_MGR_LINK_V2",
+			"ioctl$CAM_REQ_MGR_REQUEST_DUMP"
+		]
 	}
 ]
