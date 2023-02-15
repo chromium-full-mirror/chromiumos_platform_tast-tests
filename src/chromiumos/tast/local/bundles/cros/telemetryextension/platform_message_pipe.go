@@ -31,6 +31,7 @@ func init() {
 			{
 				Name:              "stable",
 				Fixture:           fixture.TelemetryExtension,
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: dep.StableModels(),
 			},
 			{

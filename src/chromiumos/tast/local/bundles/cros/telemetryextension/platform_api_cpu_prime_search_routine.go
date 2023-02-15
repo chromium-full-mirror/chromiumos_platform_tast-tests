@@ -32,6 +32,7 @@ func init() {
 			{
 				Name:              "stable",
 				Fixture:           fixture.TelemetryExtension,
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: dep.StableModels(),
 			},
 			{
@@ -43,6 +44,7 @@ func init() {
 			{
 				Name:              "stable_lacros",
 				Fixture:           fixture.TelemetryExtensionLacros,
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: dep.StableModels(),
 			},
 			{
