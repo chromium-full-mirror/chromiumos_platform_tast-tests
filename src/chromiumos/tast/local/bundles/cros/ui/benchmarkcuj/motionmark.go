@@ -40,11 +40,10 @@ func RunMotionMark(ctx context.Context, benchmarkConn *chrome.Conn) error {
 
 // RetrieveMotionMarkScore retrieves the score after MotionMark finished.
 func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]float64) error {
-
 	benchmarkScores := make(map[string]float64)
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
-		scoreMap = new Map();
+		let scoreMap = new Map();
 		if (!benchmarkRunnerClient || !benchmarkRunnerClient.results
 			|| !benchmarkRunnerClient.results.results) {
 			resolve(scoreMap);

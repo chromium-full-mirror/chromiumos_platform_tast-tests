@@ -33,6 +33,7 @@ type benchmarkInfo struct {
 	name           string
 	windowState    ash.WindowStateType
 	benchmarkURL   string
+	benchmarkSetUp func(context.Context, *browser.TestConn) error
 	benchmarkRun   func(context.Context, *chrome.Conn) error
 	benchmarkScore func(context.Context, *chrome.Conn, map[string]float64) error
 }
@@ -91,6 +92,13 @@ func Run(ctx context.Context, s *testing.State) {
 
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 1); err != nil {
 		s.Log("Failed to add screenshot recorder: ", err)
+	}
+
+	if benchmarkParam.benchmarkSetUp != nil {
+		s.Logf("Setting up %s", benchmarkParam.name)
+		if err := benchmarkParam.benchmarkSetUp(ctx, tconn); err != nil {
+			s.Fatal("Failed to setup benchmark: ", err)
+		}
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {

@@ -61,6 +61,23 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+			{
+				Name:    "jetstream",
+				Fixture: "loggedInToCUJUser",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
+				},
+			},
+			{
+				Name:    "lacros_jetstream",
+				Fixture: "loggedInToCUJUserLacros",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
 		},
 	})
 }
