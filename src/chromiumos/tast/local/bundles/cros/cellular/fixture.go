@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
+	"chromiumos/tast/local/network"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/starfish"
 	"chromiumos/tast/local/upstart"
@@ -77,6 +78,7 @@ type cellularFixture struct {
 	helper          *cellular.Helper
 	modemfwdStopped bool
 	sf              *starfish.Starfish
+	netUnlock       func()
 }
 
 // FixtData holds information made available to tests that specify this fixture.
@@ -223,6 +225,18 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	if err := outFile.Close(); err != nil {
 		testing.ContextLog(ctx, "Failed to close modem-status.txt: ", err)
 	}
+
+	// Prevent check_ethernet.hook from interrupting test if network is temporarily
+	// disabled. Automatically unlocked after 30 minutes, so unlock and lock it
+	// between each test.
+	if unlock, err := network.LockCheckNetworkHook(ctx); err != nil {
+		f.netUnlock = nil
+		// Technically possible to time out acquiring lock, log the error but
+		// do not fatal since it's not a test prereq.
+		testing.ContextLog(ctx, "Failed to lock the check network hook: ", err)
+	} else {
+		f.netUnlock = unlock
+	}
 }
 
 func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -246,6 +260,10 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 		}
 		// Delay starting the next test to avoid any transients caused by restarting MM and shill.
 		testing.Sleep(ctx, uptimeBeforeTest)
+	}
+
+	if f.netUnlock != nil {
+		f.netUnlock()
 	}
 }
 
