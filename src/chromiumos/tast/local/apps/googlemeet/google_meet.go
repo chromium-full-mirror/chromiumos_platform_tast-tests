@@ -100,24 +100,40 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, 
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer cleanup(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, urlParams map[string]string, permissionOption PermissionOption) (*GoogleMeet, error) {
-	gm, err := startMeeting(ctx, cr, br, newMeetingURL, urlParams, permissionOption)
+func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
+	gm, err := startMeeting(ctx, cr, br, newMeetingURL, urlParams, permissionOption, opts...)
 	if err != nil {
 		return gm, err
 	}
+
 	return gm, gm.waitUntilInMeeting(ctx)
 }
 
 // JoinMeeting joins an existing meeting using given browser.
-func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingCode string, urlParams map[string]string, permissionOption PermissionOption) (*GoogleMeet, error) {
-	gm, err := startMeeting(ctx, cr, br, homePageURL+meetingCode, urlParams, permissionOption)
+func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingCode string, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
+	gm, err := startMeeting(ctx, cr, br, homePageURL+meetingCode, urlParams, permissionOption, opts...)
 	if err != nil {
 		return gm, err
 	}
+
 	return gm, gm.joinConference(ctx)
 }
 
-func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingURL string, urlParams map[string]string, permissionOption PermissionOption) (*GoogleMeet, error) {
+// JoinMeetingWithEffect selects specific effect and joins an existing meeting using given browser.
+func JoinMeetingWithEffect(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingURL string, effect EffectOption, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
+	gm, err := startMeeting(ctx, cr, br, meetingURL, urlParams, permissionOption, opts...)
+	if err != nil {
+		return gm, err
+	}
+
+	if err := gm.SetEffectOnJoinPage(effect)(ctx); err != nil {
+		return gm, err
+	}
+
+	return gm, gm.joinConference(ctx)
+}
+
+func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, meetingURL string, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
 	if permissionOption == WithAllPermissions {
 		if err := GrantPermissions(ctx, br); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions to Meet")
@@ -132,7 +148,7 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, m
 		meetingURL = meetingURL + "?" + values.Encode()
 	}
 
-	conn, err := br.NewTab(ctx, meetingURL)
+	conn, err := br.NewTab(ctx, meetingURL, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +164,10 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, m
 		return nil, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
 	}
 
-	if err := gm.ClearPromptsForNewMeeting(ctx); err != nil {
+	if err := uiauto.Combine("allow permissions",
+		uiauto.Retry(3, gm.ClearPromptsForNewMeeting),
+		apps.AllowPagePermissions(gm.tconn),
+	)(ctx); err != nil {
 		return nil, err
 	}
 
@@ -442,7 +461,7 @@ func (gm *GoogleMeet) joinConference(ctx context.Context) error {
 }
 
 func (gm *GoogleMeet) waitUntilInMeeting(ctx context.Context) error {
-	return gm.ui.WithTimeout(mediumUITimeout).WaitUntilExists(inMeetingIdentifier)(ctx)
+	return gm.ui.WithTimeout(longUITimeout).WaitUntilExists(inMeetingIdentifier)(ctx)
 }
 
 // GrantPermissions grants Microphone, Camera and Notifications permissions to Google Meet.

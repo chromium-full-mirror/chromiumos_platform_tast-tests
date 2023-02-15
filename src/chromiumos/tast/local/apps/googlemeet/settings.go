@@ -127,6 +127,20 @@ func (gm *GoogleMeet) setDropdownValue(dropdown, option *nodewith.Finder, value 
 	}
 }
 
+// EffectOption indicates the option name of the effect that can be selected.
+type EffectOption string
+
+const (
+	// NoEffect is the no effect option.
+	NoEffect EffectOption = "Turn off visual effects"
+	// BlurEffect is the blur effect option.
+	BlurEffect EffectOption = "Blur your background"
+	// StaticEffect is the static effect option.
+	StaticEffect EffectOption = "Blurry sky with purple horizon"
+	// DynamicEffect is the dynamic effect option.
+	DynamicEffect EffectOption = "Spaceship"
+)
+
 var videoEffectsPageHeading = nodewith.Name("Effects").Role(role.Heading).Ancestor(meetRootWebArea)
 
 // OpenVideoEffects opens video effects page in GoogleMeet.
@@ -134,8 +148,10 @@ func (gm *GoogleMeet) OpenVideoEffects(ctx context.Context) error {
 	applyVisualEffectsButton := nodewith.Name("Apply visual effects").Role(role.MenuItem).Ancestor(meetRootWebArea)
 
 	return uiauto.Combine("open video effects setting dialog",
-		gm.ui.DoDefault(moreOptionsButton),
-		gm.ui.DoDefaultUntil(applyVisualEffectsButton, gm.ui.WithTimeout(shortUITimeout).WaitUntilExists(videoEffectsPageHeading)),
+		gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(moreOptionsButton,
+			gm.ui.WaitUntilExists(applyVisualEffectsButton)),
+		gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(applyVisualEffectsButton,
+			gm.ui.WaitUntilExists(videoEffectsPageHeading)),
 	)(ctx)
 }
 
@@ -151,12 +167,52 @@ func (gm *GoogleMeet) CloseVideoEffects(ctx context.Context) error {
 	)(ctx)
 }
 
+// SetEffect sets the option of video effects.
+func (gm *GoogleMeet) SetEffect(effectOption EffectOption) action.Action {
+	effectButton := nodewith.NameContaining(string(effectOption)).Role(role.ToggleButton).Ancestor(meetRootWebArea)
+
+	return uiauto.NamedAction(fmt.Sprintf("set effect %q", effectOption),
+		gm.setToggleValue(effectButton, true))
+}
+
 // SetEffectBlur sets the option of video effects & blur.
 func (gm *GoogleMeet) SetEffectBlur(value bool) action.Action {
-	blurButtonName := "Turn off visual effects"
+	blurButtonName := NoEffect
 	if value {
-		blurButtonName = "Blur your background"
+		blurButtonName = BlurEffect
 	}
-	blurButton := nodewith.Name(blurButtonName).Role(role.ToggleButton).Ancestor(meetRootWebArea)
-	return gm.setToggleValue(blurButton, true)
+
+	return gm.SetEffect(blurButtonName)
+}
+
+// SetEffectOnJoinPage sets the option of video effects on the join page.
+// The "Get ready" dialog is the setup before joining a meeting room.
+// Including changing visual effects.
+func (gm *GoogleMeet) SetEffectOnJoinPage(effectOption EffectOption) action.Action {
+	ui := gm.ui
+	applyVisualEffectsButton := nodewith.Name("Apply visual effects").Role(role.Button).Ancestor(meetRootWebArea)
+	getReadyDialog := nodewith.Name("Get ready").Role(role.Dialog).Ancestor(meetRootWebArea)
+	effectsTab := nodewith.NameContaining("Effects").Role(role.Tab).Ancestor(getReadyDialog)
+	noEffectButton := nodewith.Name(string(NoEffect)).Role(role.ToggleButton).Ancestor(getReadyDialog)
+	effectButton := nodewith.Name(string(effectOption)).Role(role.ToggleButton).Ancestor(getReadyDialog)
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(getReadyDialog)
+	selectAFileDialog := nodewith.Name("Select a file to open").ClassName("ExtensionViewViews")
+	closeDialogButton := nodewith.Name("Close").Role(role.Button).Ancestor(selectAFileDialog)
+
+	return uiauto.NamedCombine(fmt.Sprintf("set effect %q on the join page", effectOption),
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(applyVisualEffectsButton, ui.WaitUntilExists(effectsTab)),
+		ui.LeftClick(effectsTab),
+		// If the effect is already expected from the beginning, clicking it again will
+		// turn off the visual effect.
+		// To avoid this problem, turn off visual effects at the beginning.
+		ui.WithTimeout(mediumUITimeout).DoDefaultUntil(noEffectButton,
+			ui.WaitUntilExists(noEffectButton.Focused())),
+		ui.WithTimeout(mediumUITimeout).DoDefaultUntil(effectButton,
+			ui.WaitUntilExists(effectButton.Focused())),
+		ui.LeftClick(closeButton),
+		// Some DUT performance is too poor, clicking the turn off button will trigger "Upload a background image".
+		// If the dialog "select a file to open" is opened, close it.
+		uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(selectAFileDialog),
+			ui.LeftClick(closeDialogButton)),
+	)
 }
