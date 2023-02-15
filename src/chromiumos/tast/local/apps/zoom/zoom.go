@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 )
 
 const (
@@ -125,6 +126,10 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 		return nil, errors.Wrap(err, "failed to clear notification prompt")
 	}
 
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for page finish loading")
+	}
+
 	// Do not join audio by default by dismissing the dialog.
 	// Assume the dialog is not shown up if not found in a certain time.
 	if err := zm.SetJoinAudio(false)(ctx); err != nil {
@@ -210,6 +215,10 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 	}
 	if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to clear notification prompt")
+	}
+
+	if err := webutil.WaitForQuiescence(ctx, zm.conn, time.Minute); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for page finish loading")
 	}
 
 	// Do not join audio by default by dismissing the dialog.
