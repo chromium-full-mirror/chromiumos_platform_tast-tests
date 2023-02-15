@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/feedbackapp"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
@@ -106,6 +107,7 @@ type settingsOSSearch struct {
 	keyword  string
 	ui       *uiauto.Context
 	settings *ossettings.OSSettings
+	tconn    *chrome.TestConn
 }
 
 func searchDetail(st settingsSearchType) []settingsSearchDetail {
@@ -283,8 +285,8 @@ func SearchSections(ctx context.Context, s *testing.State) {
 		}
 
 		if search.expectedMismatch {
-			resource := &settingsOSSearch{search.keyword, ui, osSettings}
-			if err := sendSearchFeedback(ctx, resource)(ctx); err != nil {
+			resource := &settingsOSSearch{search.keyword, ui, osSettings, tconn}
+			if err := sendSearchFeedback(ctx, resource, s); err != nil {
 				s.Fatal("Failed to send feedback for no search results: ", err)
 			}
 		}
@@ -348,16 +350,40 @@ func searchAndCheck(ctx context.Context, osSettings *ossettings.OSSettings, kb *
 	return nil, errors.Errorf("no match results found, the first result is %q", infos[0].Name)
 }
 
-func sendSearchFeedback(ctx context.Context, resource *settingsOSSearch) uiauto.Action {
+func sendSearchFeedback(ctx context.Context, resource *settingsOSSearch, s *testing.State) error {
 	testing.ContextLogf(ctx, "Send search feedback when there are no search results for query: %q", resource.keyword)
 
+	if err := resource.settings.LeftClick(ossettings.SearchFeedbackButton)(ctx); err != nil {
+		return err
+	}
+
+	if err := feedbackapp.VerifyFeedbackAppIsLaunched(ctx, resource.tconn, resource.ui); err != nil {
+		return err
+	}
+
 	feedbackDescriptionPlaceholderNodeName := fmt.Sprintf("#Settings No search results returned for '%v'", resource.keyword)
-	return uiauto.Combine("check search feedback dialog with pre-populated description",
-		resource.settings.LeftClick(ossettings.SearchFeedbackButton),
-		resource.ui.WaitUntilExists(ossettings.FeedbackDialogRoot),
-		resource.ui.WaitUntilExists(nodewith.Name("Describe the issue in detail").Role(role.InlineTextBox).Ancestor(ossettings.FeedbackDialogRoot)),
-		resource.ui.Exists(nodewith.Name(feedbackDescriptionPlaceholderNodeName).Role(role.StaticText).Ancestor(ossettings.FeedbackDialogRoot)),
-		resource.ui.LeftClick(nodewith.Name("Close").Ancestor(ossettings.FeedbackDialogRoot)),
-		resource.ui.WaitUntilGone(ossettings.FeedbackDialogRoot),
-	)
+	feedbackAncestor := nodewith.Name("Send feedback").Role(role.Heading)
+
+	if err := uiauto.Combine("check search feedback app with pre-populated description",
+		resource.ui.Exists(nodewith.Name("Send feedback").Role(role.StaticText).Ancestor(feedbackAncestor)),
+		resource.ui.Exists(nodewith.Name("Description").Role(role.InlineTextBox)),
+		resource.ui.Exists(nodewith.Name(feedbackDescriptionPlaceholderNodeName).Role(role.StaticText)),
+	)(ctx); err != nil {
+		return err
+	}
+
+	sysInfoMetricsCheckboxAncestor := nodewith.Name("Send system & app info and metrics").Role(role.GenericContainer)
+	sysInfoMetricsCheckbox := nodewith.Role(role.CheckBox).Ancestor(sysInfoMetricsCheckboxAncestor)
+
+	if err := uiauto.Combine("search feedback's checkbox `send sys info and metrics` is unchecked, send feedback and close the feedback app",
+		resource.ui.LeftClick(nodewith.Name("Continue").Role(role.Button)),
+		resource.ui.WaitUntilExists(sysInfoMetricsCheckbox.Attribute("checked", "false")),
+		resource.ui.LeftClick(nodewith.Name("Send").Role(role.Button)),
+		resource.ui.LeftClick(nodewith.Name("Done").Role(role.Button)),
+		resource.ui.WaitUntilGone(feedbackAncestor),
+	)(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }

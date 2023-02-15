@@ -275,7 +275,7 @@ func init() {
 		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OsSettingsSearchFeedback")}, nil
+			return []Option{EnableFeatures("OsFeedback, OsSettingsSearchFeedback")}, nil
 		}),
 		SetUpTimeout:    LoginTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -287,7 +287,7 @@ func init() {
 		Desc:     "Logged into a guest user session with searchFeedbackEnabled flag enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback")}, nil
+			return []Option{GuestLogin(), EnableFeatures("OsFeedback, OsSettingsSearchFeedback")}, nil
 		}),
 		SetUpTimeout:    LoginTimeout,
 		ResetTimeout:    ResetTimeout,
