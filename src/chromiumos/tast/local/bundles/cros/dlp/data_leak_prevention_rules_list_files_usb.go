@@ -6,19 +6,18 @@ package dlp
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/bundles/cros/dlp/restrictionlevel"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -26,7 +25,6 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
-	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -111,23 +109,25 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Block users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK1_WF1.
-			Value: "screenplay-8372a021-869b-466b-a031-0199b899874c",
-		}, {
-			Key: "feature_id",
-			// Block users from sharing confidential information within company (usb): COM_DATPROT_CUJ4_TASK1_WF1.
-			Value: "screenplay-b6dab588-8e02-4914-a8d5-608395e75d4b",
-		}, {
-			Key: "feature_id",
-			// Warn users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK2_WF1.
-			Value: "screenplay-6d903887-d562-4238-9a8c-99bef2351d72",
-		}, {
-			Key: "feature_id",
-			// Warn users from sharing confidential information within company (usb): COM_DATPROT_CUJ4_TASK2_WF1.
-			Value: "screenplay-387a9ca9-a622-43df-b0a1-8f95fa1c78c8",
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// Block users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK1_WF1.
+				Value: "screenplay-8372a021-869b-466b-a031-0199b899874c",
+			}, {
+				Key: "feature_id",
+				// Block users from sharing confidential information within company (usb): COM_DATPROT_CUJ4_TASK1_WF1.
+				Value: "screenplay-b6dab588-8e02-4914-a8d5-608395e75d4b",
+			}, {
+				Key: "feature_id",
+				// Warn users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK2_WF1.
+				Value: "screenplay-6d903887-d562-4238-9a8c-99bef2351d72",
+			}, {
+				Key: "feature_id",
+				// Warn users from sharing confidential information within company (usb): COM_DATPROT_CUJ4_TASK2_WF1.
+				Value: "screenplay-387a9ca9-a622-43df-b0a1-8f95fa1c78c8",
+			}},
 		Params: []testing.Param{
 			{
 				Name:    "ash_allowed",
@@ -218,33 +218,22 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 
 	appliedRestriction := s.Param().(fileUSBCopyTestParams).restriction
 
-	// Update the policy blob.
-	pb := policy.NewBlob()
+	// Update the policy.
+	var policy []policy.Policy
 	switch appliedRestriction {
 	case restrictionlevel.Blocked:
-		pb.AddPolicies(filesUSBCopyBlockPolicy())
+		policy = filesUSBCopyBlockPolicy()
 	case restrictionlevel.WarnCancelled, restrictionlevel.WarnProceeded:
-		pb.AddPolicies(filesUSBCopyWarnPolicy())
+		policy = filesUSBCopyWarnPolicy()
 	}
-
-	// Update policy.
-	if err := policyutil.ServeBlobAndRefresh(ctx, fakeDMS, cr, pb); err != nil {
-		s.Fatal("Failed to serve and refresh: ", err)
-	}
-
-	// Clear Downloads directory.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-	files, err := ioutil.ReadDir(downloadsPath)
-	if err != nil {
-		s.Fatal("Failed to get files from Downloads directory")
-	}
-	for _, file := range files {
-		if err = os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
-			s.Fatal("Failed to remove file: ", file.Name())
+	if policy != nil {
+		if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, policy); err != nil {
+			s.Fatal("Failed to serve and verify: ", err)
 		}
+	}
+
+	if err := files.ClearDownloads(ctx, cr); err != nil {
+		s.Fatal("Failed to clear Downloads directory: ", err)
 	}
 
 	tconnAsh, err := cr.TestAPIConn(ctx)

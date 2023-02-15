@@ -6,11 +6,8 @@ package dlp
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -21,6 +18,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -30,7 +28,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -125,19 +122,8 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to serve and verify policy: ", err)
 	}
 
-	// Clear Downloads directory.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-	files, err := ioutil.ReadDir(downloadsPath)
-	if err != nil {
-		s.Fatal("Failed to get files from Downloads directory")
-	}
-	for _, file := range files {
-		if err = os.RemoveAll(filepath.Join(downloadsPath, file.Name())); err != nil {
-			s.Fatal("Failed to remove file: ", file.Name())
-		}
+	if err := files.ClearDownloads(ctx, cr); err != nil {
+		s.Fatal("Failed to clear Downloads directory: ", err)
 	}
 
 	tconnAsh, err := cr.TestAPIConn(ctx)
