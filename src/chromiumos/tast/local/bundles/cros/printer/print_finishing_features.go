@@ -48,7 +48,6 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
-		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cros_internal", "cups"},
 		Data:         []string{"ipp_conf_finishings.txt", "get-jobs-finishings-info.test"},
 		Params: []testing.Param{
@@ -61,6 +60,7 @@ func init() {
 				Val:               browser.TypeLacros,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "lacros",
+				Timeout:           4 * time.Minute,
 			},
 		},
 		SearchFlags: []*testing.StringPair{
@@ -199,7 +199,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	conn, err := br.NewConn(ctx, "chrome://version/")
 	if err != nil {
