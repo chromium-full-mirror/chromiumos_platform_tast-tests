@@ -5,7 +5,10 @@
 package crash
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"os"
@@ -109,32 +112,67 @@ type SendData struct {
 	BootMode     string
 }
 
+// UploadsLogEntry is the data of a single upload log entry. It would be output in json format by
+// crash_sender under the dry run mode.
+type UploadsLogEntry = struct {
+	FatalCrashType string `json:"fatal_crash_type"`
+	LocalID        string `json:"local_id"`
+	PathHash       string `json:"path_hash"`
+	Source         string `json:"source"`
+	State          int    `json:"state"`
+	UploadID       string `json:"upload_id"`
+	UploadTime     string `json:"upload_time"`
+}
+
 // RunSender runs crash_sender to process pending crash dumps and returns the send
 // results by parsing its syslog output.
 // crash_sender is run with --ignore_pause_file to ignore the pause file
 // created by crash.SetUpCrashTest.
 func RunSender(ctx context.Context) ([]*SendResult, error) {
-	return runSenderWithArgs(ctx, "--ignore_pause_file")
+	sendResult, _, err := runSenderWithArgs(ctx, "--ignore_pause_file")
+	return sendResult, err
 }
 
 // RunSenderNoIgnorePauseFile is similar to RunSender but does not instruct crash_sender to
 // ignore the pause file.
 func RunSenderNoIgnorePauseFile(ctx context.Context) ([]*SendResult, error) {
-	return runSenderWithArgs(ctx)
+	sendResult, _, err := runSenderWithArgs(ctx)
+	return sendResult, err
 }
 
-func runSenderWithArgs(ctx context.Context, args ...string) ([]*SendResult, error) {
+// RunSenderInDryRun runs crash_sender under the dry run mode and returns the result by parsing its
+// syslog output and its stdout.
+func RunSenderInDryRun(ctx context.Context) ([]*SendResult, []*UploadsLogEntry, error) {
+	return runSenderWithArgs(ctx, "--dry_run", "--ignore_pause_file")
+}
+
+// isDryRun tells whether crash_sender is running under the dry run mode based on its command line arguments.
+func isDryRun(args []string) bool {
+	for _, arg := range args {
+		if arg == "--dry_run" {
+			return true
+		}
+	}
+	return false
+}
+
+// The prefix in dry run mode log content
+var dryRunLogPrefixPattern = regexp.MustCompile(`^dryrun:\S+ crash_sender: \[\S+\] `)
+
+func runSenderWithArgs(ctx context.Context, args ...string) ([]*SendResult, []*UploadsLogEntry, error) {
 	sr, err := syslog.NewReader(ctx, syslog.Program(syslog.CrashSender))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer sr.Close()
 
 	testing.ContextLog(ctx, "Running: crash_sender ", shutil.EscapeSlice(args))
 	cmd := testexec.CommandContext(ctx, "/sbin/crash_sender", args...)
-	// crash_sender does not output anything to stdout/stderr. For debugging,
+	// crash_sender only outputs to stdout under the dry run mode. For debugging,
 	// always proceed to syslog processing.
-	runErr := cmd.Run()
+	out, _, runErr := cmd.SeparatedOutput()
+
+	dryRun := isDryRun(args)
 
 	var es []*syslog.Entry
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -148,6 +186,9 @@ func runSenderWithArgs(ctx context.Context, args ...string) ([]*SendResult, erro
 			}
 			// Log crash_sender syslog entries for debugging.
 			testing.ContextLog(ctx, "crash_sender: ", e.Content)
+			if dryRun { // e.Content would include a large prefix under the dry run mode. Clear it.
+				e.Content = dryRunLogPrefixPattern.ReplaceAllLiteralString(e.Content, "")
+			}
 			es = append(es, e)
 			// crash_sender runs its main function in minijail, so this message is
 			// printed by two processes. Catch the message from the parent process.
@@ -159,14 +200,38 @@ func runSenderWithArgs(ctx context.Context, args ...string) ([]*SendResult, erro
 			}
 		}
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for crash_sender reports")
+		return nil, nil, errors.Wrap(err, "failed to wait for crash_sender reports")
 	}
 
 	if runErr != nil {
-		return nil, errors.Wrap(runErr, "crash_sender failed (see logs for output)")
+		return nil, nil, errors.Wrap(runErr, "crash_sender failed (see logs for output)")
 	}
 
-	return parseLogs(es)
+	var uploadsLogEntries []*UploadsLogEntry
+	if dryRun {
+		uploadsLogEntries, err = parseUploadsLog(out)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	sendResults, err := parseLogs(es)
+	return sendResults, uploadsLogEntries, err
+}
+
+func parseUploadsLog(content []byte) ([]*UploadsLogEntry, error) {
+	var uploadsEntries []*UploadsLogEntry
+	scanner := bufio.NewScanner(bytes.NewReader(content))
+	for scanner.Scan() {
+		entry := UploadsLogEntry{}
+		decoder := json.NewDecoder(bytes.NewReader(scanner.Bytes()))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&entry); err != nil {
+			return nil, err
+		}
+		uploadsEntries = append(uploadsEntries, &entry)
+	}
+	return uploadsEntries, nil
 }
 
 func parseLogs(es []*syslog.Entry) ([]*SendResult, error) {
