@@ -1,4 +1,4 @@
-// Copyright 2021 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,26 +23,26 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintersBulkConfiguration,
+		Func:         DevicePrinters,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behavior of printer bulk configuration user policies",
+		Desc:         "Verify behavior of printer configuration device policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 		},
 		BugComponent: "b:1111614", // ChromeOS > Software > Commercial (Enterprise) > Printing
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.ChromePolicyLoggedIn,
+		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.PrintersBulkAccessMode{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.PrintersBulkAllowlist{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.PrintersBulkBlocklist{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.PrintersBulkConfiguration{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DevicePrintersAccessMode{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DevicePrintersAllowlist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DevicePrintersBlocklist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DevicePrinters{}, pci.VerifiedFunctionalityJS),
 		},
 	})
 }
 
-func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
+func DevicePrinters(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -55,9 +55,9 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 	// All the common policies that define the printers configuration, allowlist and blocklist.
 	// DevicePrinters configures 4 printers with the following names: "wl", "bl", "both", "other".
 	commonPolicies := []policy.Policy{
-		&policy.PrintersBulkAllowlist{Val: []string{"both", "wl"}},
-		&policy.PrintersBulkBlocklist{Val: []string{"both", "bl"}},
-		&policy.PrintersBulkConfiguration{Val: &policy.PrintersBulkConfigurationValue{
+		&policy.DevicePrintersAllowlist{Val: []string{"both", "wl"}},
+		&policy.DevicePrintersBlocklist{Val: []string{"both", "bl"}},
+		&policy.DevicePrinters{Val: &policy.DevicePrintersValue{
 			Url:  "https://storage.googleapis.com/chromiumos-test-assets-public/enterprise/printers.json",
 			Hash: "7a052c5e4f23c159668148df2a3c202bed4d65749cab5ecd0fa7db211c12a3b8",
 		}},
@@ -73,7 +73,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 			expectedIDs: []string{"wl", "other"},
 			policies: append(
 				commonPolicies,
-				&policy.PrintersBulkAccessMode{Val: 0},
+				&policy.DevicePrintersAccessMode{Val: 0},
 			),
 		},
 		{
@@ -81,7 +81,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 			expectedIDs: []string{"wl", "both"},
 			policies: append(
 				commonPolicies,
-				&policy.PrintersBulkAccessMode{Val: 1},
+				&policy.DevicePrintersAccessMode{Val: 1},
 			),
 		},
 		{
@@ -89,7 +89,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 			expectedIDs: []string{"bl", "wl", "other", "both"},
 			policies: append(
 				commonPolicies,
-				&policy.PrintersBulkAccessMode{Val: 2},
+				&policy.DevicePrintersAccessMode{Val: 2},
 			),
 		},
 		{
@@ -97,7 +97,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 			expectedIDs: []string{"bl", "wl", "other", "both"},
 			policies: append(
 				commonPolicies,
-				&policy.PrintersBulkAccessMode{Stat: policy.StatusUnset},
+				&policy.DevicePrintersAccessMode{Stat: policy.StatusUnset},
 			),
 		},
 	} {
