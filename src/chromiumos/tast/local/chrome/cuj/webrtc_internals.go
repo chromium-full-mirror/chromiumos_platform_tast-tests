@@ -26,7 +26,7 @@ import (
 
 // OpenWebRTCInternals opens chrome://webrtc-internals now so it will collect data on the meeting's streams.
 func OpenWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (*browser.Conn, error) {
-	conn, err := br.NewConn(ctx, WebRTCInternalsURL, browser.WithNewWindow())
+	conn, err := br.NewTab(ctx, WebRTCInternalsURL, browser.WithNewWindow())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open %s", WebRTCInternalsURL)
 	}
