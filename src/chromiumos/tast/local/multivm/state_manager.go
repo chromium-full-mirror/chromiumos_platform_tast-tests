@@ -33,7 +33,7 @@ type VMOptions interface {
 	Name() string
 	// ChromeOpts returns the Chrome option(s) that should be passed to
 	// chrome.New().
-	ChromeOpts() []chrome.Option
+	ChromeOpts(ctx context.Context) []chrome.Option
 	// ActivateTimeout returns the time needed to activate the VM.
 	ActivateTimeout() time.Duration
 	// Activate activates the requested VM. The operation should either
@@ -175,7 +175,7 @@ func (s *StateManager) Activate(ctx context.Context, st StateManagerTestingState
 		var opts []chrome.Option
 		opts = append(opts, chrome.EnableFeatures(s.crOptions.EnableFeatures...), chrome.ExtraArgs(s.crOptions.ExtraArgs...))
 		for _, v := range s.vmOptions {
-			opts = append(opts, v.ChromeOpts()...)
+			opts = append(opts, v.ChromeOpts(ctx)...)
 		}
 
 		testing.ContextLog(ctx, "Creating Chrome")

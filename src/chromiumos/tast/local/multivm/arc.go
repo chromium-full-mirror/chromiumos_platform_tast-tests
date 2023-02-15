@@ -34,7 +34,7 @@ func (o ARCOptions) Name() string {
 
 // ChromeOpts returns the Chrome option(s) that should be passed to
 // chrome.New().
-func (o ARCOptions) ChromeOpts() []chrome.Option {
+func (o ARCOptions) ChromeOpts(ctx context.Context) []chrome.Option {
 	return []chrome.Option{chrome.ARCEnabled()}
 }
 

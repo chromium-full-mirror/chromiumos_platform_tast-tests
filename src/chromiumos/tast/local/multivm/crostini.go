@@ -39,7 +39,7 @@ func (o CrostiniOptions) Name() string {
 
 // ChromeOpts returns the Chrome option(s) that should be passed to
 // chrome.New().
-func (o CrostiniOptions) ChromeOpts() []chrome.Option {
+func (o CrostiniOptions) ChromeOpts(ctx context.Context) []chrome.Option {
 	return []chrome.Option{chrome.ExtraArgs("--vmodule=crostini*=1")}
 }
 
