@@ -215,26 +215,19 @@ func (y *YtWeb) SwitchQuality(resolution string) uiauto.Action {
 
 // EnterFullScreen switches youtube video to full screen.
 func (y *YtWeb) EnterFullScreen(ctx context.Context) error {
-	testing.ContextLog(ctx, "Make Youtube video full screen")
-
-	if ytWin, err := ash.GetWindow(ctx, y.tconn, y.ytWinID); err != nil {
-		return errors.Wrap(err, "failed to get youtube window")
-	} else if ytWin.State == ash.WindowStateFullscreen {
+	// If the youtube app is already in full screen, skip the process to go fullscreen.
+	if err := waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle)(ctx); err == nil {
 		return nil
 	}
 
-	// Notification prompts are sometimes shown in fullscreen.
-	if err := y.clearNotificationPrompts(ctx); err != nil {
-		return errors.Wrap(err, "failed to clear notification prompts")
-	}
-
 	fullscreenBtn := nodewith.Name("Full screen (f)").Role(role.Button)
-	if err := y.ui.DoDefault(fullscreenBtn)(ctx); err != nil {
+	if err := uiauto.NamedCombine("make Youtube video fullscreen",
+		// Notification prompts are sometimes shown in fullscreen.
+		y.clearNotificationPrompts,
+		y.ui.DoDefault(fullscreenBtn),
+		waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle),
+	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click full screen button")
-	}
-
-	if err := waitWindowStateFullscreen(ctx, y.tconn, YoutubeWindowTitle); err != nil {
-		return errors.Wrap(err, "failed to tap full screen button")
 	}
 
 	if err := waitForYoutubeReadyState(ctx, y.ytConn); err != nil {
@@ -245,30 +238,21 @@ func (y *YtWeb) EnterFullScreen(ctx context.Context) error {
 
 // ExitFullScreen exits Youtube video from full screen.
 func (y *YtWeb) ExitFullScreen(ctx context.Context) error {
-	testing.ContextLog(ctx, "Exit Youtube video from full screen")
-
-	if ytWin, err := ash.GetWindow(ctx, y.tconn, y.ytWinID); err != nil {
-		return errors.Wrap(err, "failed to get youtube window")
-	} else if ytWin.State != ash.WindowStateFullscreen {
+	// If the youtube app is already not in full screen, skip the process to exit fullscreen.
+	if err := waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle)(ctx); err == nil {
 		return nil
-	}
-
-	if err := y.clearNotificationPrompts(ctx); err != nil {
-		return errors.Wrap(err, "failed to clear notification prompts")
 	}
 
 	// Move the mouse to a specific location to ensure focus on the video now.
 	// Sometimes the button name will be "Exit full screen" or remain "Full screen" even when entering full screen.
 	// It's more stable to use keyboard shortcuts.
-	if err := uiauto.NamedCombine("click exit full screen button",
+	if err := uiauto.NamedCombine("exit Youtube from fullscreen",
+		y.clearNotificationPrompts,
 		y.ui.MouseMoveTo(videoButton, mouseMoveDuration),
 		y.kb.AccelAction("f"),
+		waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click exit full screen button")
-	}
-
-	if err := waitWindowStateExitFullscreen(ctx, y.tconn, YoutubeWindowTitle); err != nil {
-		return errors.Wrap(err, "failed to tap exit full screen button")
+		return errors.Wrap(err, "failed to exit fullscreen")
 	}
 
 	if err := waitForYoutubeReadyState(ctx, y.ytConn); err != nil {

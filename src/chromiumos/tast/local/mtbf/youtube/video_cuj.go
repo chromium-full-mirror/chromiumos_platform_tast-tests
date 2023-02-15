@@ -338,12 +338,11 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 				return w.WindowType == ash.WindowTypeLacros
 			})
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to find the lacros window")
 			}
 			if err := lacrosWindow.ActivateWindow(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to activate lacros window")
 			}
-			return nil
 		}
 
 		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleHelpChromeURL, true)
@@ -445,24 +444,28 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 	return nil
 }
 
-func waitWindowStateFullscreen(ctx context.Context, tconn *chrome.TestConn, winTitle string) error {
-	testing.ContextLog(ctx, "Check if the window is in fullscreen state")
-	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return strings.Contains(w.Title, winTitle) && w.State == ash.WindowStateFullscreen
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to wait for fullscreen")
+func waitWindowStateFullscreen(tconn *chrome.TestConn, winTitle string) uiauto.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Check if the window is in fullscreen state")
+		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+			return strings.Contains(w.Title, winTitle) && w.State == ash.WindowStateFullscreen
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to wait for fullscreen")
+		}
+		return nil
 	}
-	return nil
 }
 
-func waitWindowStateExitFullscreen(ctx context.Context, tconn *chrome.TestConn, winTitle string) error {
-	testing.ContextLog(ctx, "Check if the window is in full screen state")
-	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return strings.Contains(w.Title, winTitle) && w.State != ash.WindowStateFullscreen
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to wait for exit from full screen")
+func waitWindowStateExitFullscreen(tconn *chrome.TestConn, winTitle string) uiauto.Action {
+	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Check if the window is in fullscreen state")
+		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+			return strings.Contains(w.Title, winTitle) && w.State != ash.WindowStateFullscreen
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to wait for exit from fullscreen")
+		}
+		return nil
 	}
-	return nil
 }
 
 func getFirstWindowID(ctx context.Context, tconn *chrome.TestConn) (int, error) {

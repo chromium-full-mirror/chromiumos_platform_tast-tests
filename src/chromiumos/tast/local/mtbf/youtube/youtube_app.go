@@ -452,14 +452,8 @@ func (y *YtApp) checkYoutubeAppPIP(ctx context.Context) error {
 // EnterFullScreen switches youtube video to full screen.
 func (y *YtApp) EnterFullScreen(ctx context.Context) error {
 	// If the youtube app is already in full screen, skip the process to go fullscreen.
-	if err := ash.WaitForCondition(ctx, y.tconn, func(w *ash.Window) bool {
-		return w.Title == YoutubeWindowTitle && w.State == ash.WindowStateFullscreen
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err == nil {
+	if err := waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle)(ctx); err == nil {
 		return nil
-	}
-
-	waitWindowStateFullscreen := func(ctx context.Context) error {
-		return waitWindowStateFullscreen(ctx, y.tconn, YoutubeWindowTitle)
 	}
 
 	const fullscreenDesc = "Enter fullscreen"
@@ -471,7 +465,7 @@ func (y *YtApp) EnterFullScreen(ctx context.Context) error {
 		uiauto.Retry(retryTimes, uiauto.Combine("enter fullscreen",
 			cuj.FindAndClick(playerView, uiWaitTime),
 			cuj.FindAndClick(fsBtn, uiWaitTime),
-			waitWindowStateFullscreen,
+			waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle),
 		)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to enter fullscreen")
@@ -483,18 +477,24 @@ func (y *YtApp) EnterFullScreen(ctx context.Context) error {
 
 // ExitFullScreen exits Youtube video from fullscreen.
 func (y *YtApp) ExitFullScreen(ctx context.Context) error {
-	testing.ContextLog(ctx, "Exit Youtube video from full screen")
+	// If the youtube app is already not in full screen, skip the process to exit fullscreen.
+	if err := waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle)(ctx); err == nil {
+		return nil
+	}
 
 	const exitFullscreenDesc = "Exit fullscreen"
 	exitFsBtn := y.d.Object(androidui.Description(exitFullscreenDesc))
 	playerView := y.d.Object(androidui.ID(playerViewID))
 
 	startTime := time.Now()
-	if err := uiauto.NamedCombine("exit Youtube from full screen",
-		cuj.FindAndClick(playerView, uiWaitTime),
-		cuj.FindAndClick(exitFsBtn, uiWaitTime),
+	if err := uiauto.NamedAction("exit Youtube from fullscreen",
+		uiauto.Retry(retryTimes, uiauto.Combine("exit fullscreen",
+			cuj.FindAndClick(playerView, uiWaitTime),
+			cuj.FindAndClick(exitFsBtn, uiWaitTime),
+			waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle),
+		)),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to exit full screen")
+		return errors.Wrap(err, "failed to exit fullscreen")
 	}
 
 	testing.ContextLogf(ctx, "Elapsed time when doing exit full screen %.3f s", time.Since(startTime).Seconds())
