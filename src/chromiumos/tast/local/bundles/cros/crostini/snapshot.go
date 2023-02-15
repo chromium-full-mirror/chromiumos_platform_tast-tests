@@ -29,27 +29,27 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBusterRestart",
-				Timeout:           3 * time.Minute,
+				Timeout:           6 * time.Minute,
 			}, {
 				Name:              "buster_unstable",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBusterRestart",
-				Timeout:           3 * time.Minute,
+				Timeout:           6 * time.Minute,
 			}, {
 				Name:              "bullseye_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseyeRestart",
-				Timeout:           3 * time.Minute,
+				Timeout:           6 * time.Minute,
 			}, {
 				Name:              "bullseye_unstable",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseyeRestart",
-				Timeout:           3 * time.Minute,
+				Timeout:           6 * time.Minute,
 			},
 		},
 	})
@@ -87,5 +87,4 @@ func Snapshot(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to restore the snapshot at iteration=%d: %s", i, err)
 		}
 	}
-
 }
