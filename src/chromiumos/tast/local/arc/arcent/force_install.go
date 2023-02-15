@@ -156,12 +156,6 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 	const (
 		searchBarTextStart = "Search for apps"
 		emptyPlayStoreText = "No results found."
-		serverErrorText    = "Server error|Error.*server.*"
-		tryAgainButtonText = "Try again"
-		appNodeResourceID1 = "com.android.vending:id/mini_blurb"
-		appNodeClassName1  = "android.widget.FrameLayout"
-		appNodeResourceID2 = "com.android.vending:id/play_card"
-		appNodeClassName2  = "android.view.ViewGroup"
 	)
 
 	assertState := func(ctx context.Context, isEmpty bool, message string) error {
@@ -194,7 +188,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 				return testing.PollBreak(errors.New("Play Store closed"))
 			}
 
-			if err := playstore.FindAndDismissDialog(ctx, d, serverErrorText, tryAgainButtonText, 2*time.Second); err != nil {
+			if err := playstore.FindAndDismissServerErrorDialog(ctx, d); err != nil {
 				return testing.PollBreak(err)
 			}
 

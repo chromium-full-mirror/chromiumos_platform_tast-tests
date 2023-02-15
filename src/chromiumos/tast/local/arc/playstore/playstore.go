@@ -84,6 +84,15 @@ func FindInstallButton(ctx context.Context, d *ui.Device, timeout time.Duration)
 	return result, err
 }
 
+// FindAndDismissServerErrorDialog finds and dismisses server error dialog.
+func FindAndDismissServerErrorDialog(ctx context.Context, d *ui.Device) error {
+	const (
+		serverErrorText    = "Server error|Error.*server.*|.*connection with the server."
+		tryAgainButtonText = "Try again|OK"
+	)
+	return FindAndDismissDialog(ctx, d, serverErrorText, tryAgainButtonText, 2*time.Second)
+}
+
 // FindAndDismissDialog finds a dialog containing text with a corresponding button and presses the button.
 func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonText string, timeout time.Duration) error {
 	if err := d.Object(ui.TextMatches("(?i)"+dialogText)).WaitForExists(ctx, time.Second); err == nil {
