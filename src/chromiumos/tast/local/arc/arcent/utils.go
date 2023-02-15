@@ -150,8 +150,21 @@ func PollAppPageState(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, t
 func WaitForAppUnavailableMessage(ctx context.Context, d *ui.Device, timeout time.Duration) error {
 	const appUnavailableText = ".*(not given you access|app isn.t available).*"
 
-	obj := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches(appUnavailableText))
-	return obj.WaitForExists(ctx, timeout)
+	selectors := [][]ui.SelectorOption{
+		{ui.ClassName("android.view.View"), ui.DescriptionMatches(appUnavailableText)},
+		{ui.ClassName("android.widget.TextView"), ui.TextMatches(appUnavailableText)},
+	}
+
+	var lastErr error
+	waitTime := time.Second * time.Duration((int)(timeout.Seconds())/len(selectors))
+	for _, selector := range selectors {
+		lastErr = d.Object(selector...).WaitForExists(ctx, waitTime)
+		if lastErr == nil {
+			break
+		}
+	}
+
+	return lastErr
 }
 
 // WaitForProvisioning waits for provisioning to finish and dumps logcat if doesn't.

@@ -208,14 +208,9 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 				return assertState(ctx, true, "Play Store is empty")
 			}
 
-			// Play Store is considered to be not empty when an app blurb (in allowlist mode) is found.
-			if err := d.Object(ui.ResourceID(appNodeResourceID1), ui.ClassName(appNodeClassName1)).Exists(ctx); err == nil {
-				return assertState(ctx, false, "App blurb found")
-			}
-
-			// Play Store is also considered to be not empty when an app card (in blocklist mode) is found.
-			if err := d.Object(ui.ResourceID(appNodeResourceID2), ui.ClassName(appNodeClassName2)).Exists(ctx); err == nil {
-				return assertState(ctx, false, "Play card found")
+			// Play Store is considered to be not empty when an app is found.
+			if IsAnyAppInCatalog(ctx, d) {
+				return assertState(ctx, false, "App found")
 			}
 
 			// Play Store is considered to be empty when we didn't find an app blurb or app card.
@@ -227,4 +222,21 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		}
 		return err
 	}, &testing.PollOptions{Interval: 10 * time.Second})
+}
+
+// IsAnyAppInCatalog finds an app icon in Play Store catalog view.
+func IsAnyAppInCatalog(ctx context.Context, d *ui.Device) bool {
+	selectors := [][]ui.SelectorOption{
+		{ui.DescriptionStartsWith("Image of app or game"), ui.ClassName("android.view.View")},
+		{ui.ResourceID("com.android.vending:id/mini_blurb"), ui.ClassName("android.widget.FrameLayout")},
+		{ui.ResourceID("com.android.vending:id/play_card"), ui.ClassName("android.view.ViewGroup")},
+	}
+
+	for _, selector := range selectors {
+		if err := d.Object(selector...).Exists(ctx); err == nil {
+			return true
+		}
+	}
+
+	return false
 }
