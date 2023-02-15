@@ -26,6 +26,8 @@ service BiosService {
   rpc ChromeosFirmwareUpdate (FirmwareUpdateModeRequest) returns (google.protobuf.Empty) {}
   // ParseFMAP reads and parses FMAP section for given programmer.
   rpc ParseFMAP (FMAP) returns (FMAP) {}
+  // CorruptCBFSFWSection corrupts CBFS file in specified section in chosen way.
+  rpc CorruptCBFSFWSection (CBFSCorruptInfo) returns (FWSectionInfo) {}
 }
 
 // GBBFlag bit positions. These must match what is in src/platform/vboot_reference/firmware/2lib/include/2gbb_flags.h.
@@ -173,4 +175,20 @@ message FMAP {
   }
   Programmer programmer = 1;
   repeated FMAPEntry fmap = 2;
+}
+
+// CBFS file corruption to apply.
+enum CBFSCorruptType {
+  NONE = 0;
+  MAGIC = 1;
+  LENGTH = 2;
+  ATTRIBUTES = 3;
+  DATA = 4;
+}
+
+// CBFSCorruptInfo provides args for selecting CBFS file and method for its corruption
+message CBFSCorruptInfo {
+  FWSectionInfo section_info = 1;
+  CBFSCorruptType type = 2;
+  string filename = 3;
 }

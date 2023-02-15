@@ -5,7 +5,9 @@
 package firmware
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -173,6 +175,30 @@ func (bs *BiosService) SetAPSoftwareWriteProtect(ctx context.Context, req *pb.WP
 	return &empty.Empty{}, nil
 }
 
+func copyAndFlash(ctx context.Context, img *bios.Image, req *pb.FWSectionInfo, flashromInstance *flashrom.Instance) (*pb.FWSectionInfo, error) {
+	// Save copy of data to file before writing.
+	imgPath, err := img.WriteImageToFile(ctx, sectionEnumToSection[req.Section], req.Path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed writing image contents to file")
+	}
+	// Delete temporary image file if saving not requested with req.Path.
+	if req.Path == "" {
+		defer os.Remove(imgPath)
+	}
+
+	// Write image with flashrom.
+	err = bios.WriteImageFromSingleSectionFile(ctx, imgPath, sectionEnumToSection[req.Section], flashromInstance)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not write firmware")
+	}
+
+	// Return path to fw file if save path provided.
+	if req.Path == "" {
+		return &pb.FWSectionInfo{Section: req.Section, Programmer: req.Programmer}, nil
+	}
+	return &pb.FWSectionInfo{Path: imgPath, Section: req.Section, Programmer: req.Programmer}, nil
+}
+
 // CorruptFWSection writes garbage over part of the specified firmware section.
 // Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
 func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionInfo) (*pb.FWSectionInfo, error) {
@@ -195,27 +221,7 @@ func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionIn
 		img.Data[i] = (v + 1) & 0xff
 	}
 
-	// Save copy of corrupted data to file before writing.
-	corruptedImg, err := img.WriteImageToFile(ctx, sectionEnumToSection[req.Section], req.Path)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed writing image contents to file")
-	}
-	// Delete temporary image file if saving not requested with req.Path.
-	if req.Path == "" {
-		defer os.Remove(corruptedImg)
-	}
-
-	// Write corrupted image with flashrom.
-	err = bios.WriteImageFromSingleSectionFile(ctx, corruptedImg, sectionEnumToSection[req.Section], flashromInstance)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not write firmware")
-	}
-
-	// Return path to corrupted fw file if save path provided.
-	if req.Path == "" {
-		return &pb.FWSectionInfo{Section: req.Section, Programmer: req.Programmer}, nil
-	}
-	return &pb.FWSectionInfo{Path: corruptedImg, Section: req.Section, Programmer: req.Programmer}, nil
+	return copyAndFlash(ctx, img, req, flashromInstance)
 }
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
@@ -270,4 +276,88 @@ func (bs *BiosService) ParseFMAP(ctx context.Context, req *pb.FMAP) (*pb.FMAP, e
 	}
 	req.Fmap = fmap
 	return req, nil
+}
+
+// CorruptCBFSFWSection corrupts CBFS file in the specified way and in specified section.
+// Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
+func (bs *BiosService) CorruptCBFSFWSection(ctx context.Context, req *pb.CBFSCorruptInfo) (*pb.FWSectionInfo, error) {
+	if req.Type == pb.CBFSCorruptType_NONE {
+		return nil, errors.New("NONE corruption type is not allowed")
+	}
+
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(programmerEnumToProgrammer[req.SectionInfo.Programmer], "").
+		Probe(ctx)
+	defer cleanup()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+	img, err := bios.NewImage(ctx, sectionEnumToSection[req.SectionInfo.Section], flashromInstance)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not read firmware")
+	}
+
+	var corruptorWalker bios.CBFSWalker
+
+	switch req.Type {
+	case pb.CBFSCorruptType_MAGIC:
+		corruptorWalker = func(ctxb bios.CBFSWalkerContext) bool {
+			header := ctxb.File.Header
+			for i, v := range header.Magic {
+				header.Magic[i] = v + 1 // Corrupt file magic so file is not recognized.
+			}
+
+			buf := new(bytes.Buffer)
+			binary.Write(buf, bios.CBFSEndianness, header)
+			copy(ctxb.Buffer, buf.Bytes())
+
+			return true
+		}
+	case pb.CBFSCorruptType_LENGTH:
+		corruptorWalker = func(ctxb bios.CBFSWalkerContext) bool {
+			header := ctxb.File.Header
+			header.Len = ^uint32(0) - 1 // Set file data length to UINT32_MAX - 1.
+
+			buf := new(bytes.Buffer)
+			binary.Write(buf, bios.CBFSEndianness, header)
+			copy(ctxb.Buffer, buf.Bytes())
+
+			return true
+		}
+	case pb.CBFSCorruptType_ATTRIBUTES:
+		corruptorWalker = func(ctxb bios.CBFSWalkerContext) bool {
+			header := ctxb.File.Header
+
+			if header.AttributesOffset == 0 {
+				return true
+			}
+
+			for i := int(header.AttributesOffset); i < int(header.Offset); i++ {
+				ctxb.Buffer[i] = ctxb.Buffer[i] + 1 // Corrupt whole attributes data range.
+			}
+
+			return true
+		}
+	case pb.CBFSCorruptType_DATA:
+		corruptorWalker = func(ctxb bios.CBFSWalkerContext) bool {
+			header := ctxb.File.Header
+
+			for i := int(header.Offset); i < int(header.Offset+header.Len); i++ {
+				ctxb.Buffer[i] = ctxb.Buffer[i] + 1 // Corrupt whole file data.
+			}
+
+			return true
+		}
+	default:
+		return nil, errors.Errorf("%v corruption type is not allowed", req.Type.String())
+	}
+
+	if err := bios.CBFSWalk(img.Data, bios.CBFSCreateSingleFileWalker(req.Filename, corruptorWalker)); err != nil {
+		return nil, errors.Wrap(err, "failed to work on CBFS")
+	}
+
+	return copyAndFlash(ctx, img, req.SectionInfo, flashromInstance)
 }
