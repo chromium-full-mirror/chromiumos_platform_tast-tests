@@ -15,7 +15,7 @@ const timeout = 2 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RemoteTimeout,
+		Func:     LocalTimeout,
 		Desc:     "Always times out",
 		Contacts: []string{"tast-owners@google.com"},
 		Timeout:  timeout,
@@ -24,7 +24,7 @@ func init() {
 	})
 }
 
-func RemoteTimeout(ctx context.Context, s *testing.State) {
+func LocalTimeout(ctx context.Context, s *testing.State) {
 	sleepTime := timeout + time.Minute
 	s.Logf("Sleeping for %v to force test timeout(%v) to be reached ", sleepTime, timeout)
 	sleepContext, cancel := context.WithTimeout(context.Background(), sleepTime)
