@@ -94,7 +94,7 @@ const (
 	timeForCleanup       = 2 * time.Minute
 	biodUpstartJobName   = "biod"
 	powerdUpstartJobName = "powerd"
-	disableFpUpdaterFile = ".disable_fp_updater"
+	disableFpUpdaterPath = "/mnt/stateful_partition/.disable_fp_updater"
 	dutTempPathPattern   = "fp_test_*"
 )
 
