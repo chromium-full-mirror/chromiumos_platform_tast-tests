@@ -7,9 +7,6 @@ package conference
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -47,7 +44,7 @@ type GoogleMeetConference struct {
 	tabletMode                 bool
 	extendedDisplay            bool
 	networkLostCount           int
-	participants               int
+	participantsNumber         int
 }
 
 var _ Conference = (*GoogleMeetConference)(nil)
@@ -94,38 +91,37 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err er
 		return err
 	}
 
-	// Checks the number of participants in the conference that
-	// for different tiers testing would ask for different size.
+	// checkParticipantsNum checks the number of meeting participants.
 	checkParticipantsNum := func(ctx context.Context) error {
-		// Check number of participants following this logic:
+		// Each room type has a different number of participants:
 		// - Class size room: >= 35 participants
 		// - Large size room: 16 ~ 17 participants
 		// - Small size room: 6 ~ 7 participants
 		// - One to one room: 2
-		expectedParticipants := GoogleMeetRoomParticipants[conf.roomType]
-		participants, err := conf.GetParticipants(ctx)
+		expectedNumber := GoogleMeetRoomParticipants[conf.roomType]
+		number, err := conf.gm.GetParticipantsNum(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the the number of meeting participants")
 		}
-		if participants == 1 {
-			return ParticipantError(errors.Wrapf(err, "there are no other participants in the conference room %q; meeting participant number got %d; want %d", room, participants, expectedParticipants))
+		if number == 1 {
+			return ParticipantError(errors.Wrapf(err, "there are no other participants in the meeting room; got %d; want %d", number, expectedNumber))
 		}
 		switch conf.roomType {
 		case ClassRoomSize:
-			if participants < expectedParticipants {
-				return ParticipantError(errors.Wrapf(err, "room url %q; meeting participant number got %d; want at least %d", room, participants, expectedParticipants))
+			if number < expectedNumber {
+				return ParticipantError(errors.Wrapf(err, "the number of participants got %d; want at least %d", number, expectedNumber))
 			}
 		case SmallRoomSize, LargeRoomSize:
-			if participants != expectedParticipants && participants != expectedParticipants+1 {
-				return ParticipantError(errors.Wrapf(err, "room url %q; meeting participant number got %d; want %d ~ %d", room, participants, expectedParticipants, expectedParticipants+1))
+			if number != expectedNumber && number != expectedNumber+1 {
+				return ParticipantError(errors.Wrapf(err, "the number of participants got %d; want %d ~ %d", number, expectedNumber, expectedNumber+1))
 			}
 		case TwoRoomSize:
-			if participants != expectedParticipants {
-				return ParticipantError(errors.Wrapf(err, "room url %q; meeting participant number got %d; want %d", room, participants, expectedParticipants))
+			if number != expectedNumber {
+				return ParticipantError(errors.Wrapf(err, "the number of participants got %d; want %d", number, expectedNumber))
 			}
 		}
-		testing.ContextLog(ctx, "Current participants: ", participants)
-		conf.participants = participants
+		testing.ContextLog(ctx, "Current participants number: ", number)
+		conf.participantsNumber = number
 
 		return nil
 	}
@@ -138,32 +134,11 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err er
 // GetParticipants returns the number of meeting participants.
 // If the participants already has a value, return the value directly.
 func (conf *GoogleMeetConference) GetParticipants(ctx context.Context) (int, error) {
-	if conf.participants != 0 {
-		return conf.participants, nil
-	}
-	ui := conf.ui
-	participant := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetWebArea)
-	if err := uiauto.NamedCombine("wait for the meet page to load participant",
-		conf.closeNotifDialog(),
-		// Some DUT models have poor performance. When joining
-		// a large conference (over 15 participants), it would take much time
-		// to render DOM elements. Set a longer timer here.
-		ui.WithTimeout(longUITimeout).WaitUntilExists(participant),
-	)(ctx); err != nil {
-		return 0, errors.Wrap(err, "failed to wait participant info")
+	if conf.participantsNumber != 0 {
+		return conf.participantsNumber, nil
 	}
 
-	node, err := ui.Info(ctx, participant)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get participant info")
-	}
-	info := strings.Split(node.Name, " ")
-	participants, err := strconv.ParseInt(info[0], 10, 64)
-	if err != nil {
-		return 0, errors.Wrap(err, "cannot parse number of participants")
-	}
-
-	return int(participants), nil
+	return conf.gm.GetParticipantsNum(ctx)
 }
 
 // VideoAudioControl controls the video and audio during conference.
