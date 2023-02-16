@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android"
+	"chromiumos/tast/common/android/ui"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -215,7 +216,18 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		if err := adbDevice.ForceGMSCoreUpdate(ctx); err != nil {
 			s.Fatal("Failed to force a GMSCore update: ", err)
 		}
+		uiDevice, err := ui.NewDeviceWithRetry(ctx, adbDevice)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to the UI Automator server")
+		}
+		defer uiDevice.Close(ctx)
+		updateBtn := uiDevice.Object(ui.DescriptionContains("Update"))
 		if err := testing.Poll(ctx, func(context.Context) error {
+			if err := updateBtn.Exists(ctx); err == nil { // button is present
+				if err := updateBtn.Click(ctx); err != nil {
+					return errors.Wrap(err, "failed to click update button")
+				}
+			}
 			v, err := adbDevice.GMSCoreVersions(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to get GMSCore versions")
