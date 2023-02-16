@@ -45,7 +45,7 @@ func init() {
 
 func NToMChromeLogin(ctx context.Context, s *testing.State) {
 	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
-	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA", "MILESTONE"})
+	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA"})
 
 	env, err := util.NewHwsecEnv(s.DUT())
 	if err != nil {

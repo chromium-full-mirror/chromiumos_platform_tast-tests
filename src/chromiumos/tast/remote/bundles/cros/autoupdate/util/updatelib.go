@@ -101,11 +101,7 @@ func NToMTest(ctx context.Context, dut *dut.DUT, outDir string, rpcHint *testing
 	}
 	milestoneM := milestoneN - deltaM // Target milestone.
 
-	// Model doesn't always effectively filter the paygen entries because if a
-	// board has only 1 possible model, the `applicable_models` field will be
-	// omitted in the paygen entry. Therefore we still have to filter entries by
-	// board first.
-	filtered := paygen.FilterBoard(board).FilterModel(model).FilterMilestone(milestoneM)
+	filtered := paygen.FilterBoard(board).FilterMilestone(milestoneM)
 	latest, err := filtered.FindLatest()
 	if err != nil {
 		return errors.Wrapf(err, "failed to find the latest release for milestone %d, board %s, and model %s", milestoneM, board, model)
