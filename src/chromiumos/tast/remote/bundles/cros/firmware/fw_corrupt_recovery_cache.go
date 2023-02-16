@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"time"
 
 	fwCommon "chromiumos/tast/common/firmware"
@@ -23,14 +25,23 @@ func init() {
 		Desc: "Corrupt recovery cache and then check it's rebuilt",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"js@semihalf.com",
+			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/194907751): Add back to firmware_unstable once this test actually works.
-		Attr:        []string{},
-		Fixture:     fixture.DevModeGBB,
-		Timeout:     20 * time.Minute,
-		ServiceDeps: []string{"tast.cros.firmware.BiosService"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Timeout:      20 * time.Minute,
+		Vars:         []string{"firmware.skipFlashUSB"},
+		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
+		Params: []testing.Param{
+			{
+				Name:    "normal",
+				Fixture: fixture.NormalMode,
+			},
+			{
+				Name:    "dev",
+				Fixture: fixture.USBDevModeGBBNoServices,
+			},
+		},
 	})
 }
 
@@ -40,6 +51,23 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
+	}
+
+	s.Log("Setup USB Key")
+	skipFlashUSB := false
+	if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
+		var err error
+		skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
+		if err != nil {
+			s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
+		}
+	}
+	cs := s.CloudStorage()
+	if skipFlashUSB {
+		cs = nil
+	}
+	if err := h.SetupUSBKey(ctx, cs); err != nil {
+		s.Fatal("USBKey not working: ", err)
 	}
 
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
@@ -56,24 +84,19 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	}
 	s.Log("RECOVERY_MRC_CACHE region backup is stored at: ", rmcPath.Path)
 
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
+	defer cancel()
 	defer func(ctx context.Context) {
 		s.Log("Wait for DUT to reconnect")
-		if err = h.DUT.WaitConnect(ctx); err != nil {
-			s.Fatal("Failed to reconnect to DUT: ", err)
-		}
-
-		s.Log("Reconnecting to RPC services on DUT")
-		if err := h.RequireRPCClient(ctx); err != nil {
-			s.Fatal("Failed to reconnect to the RPC service on DUT: ", err)
+		h.DisconnectDUT(ctx)
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure the DUT is booted: ", err)
 		}
 
 		s.Log("Reconnecting to BiosService on DUT")
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
 			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
-		}
-
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted: ", err)
 		}
 
 		s.Log("Restoring RECOVERY_MRC_CACHE image")
@@ -85,11 +108,7 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmcPath.Path).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete RECOVERY_MRC_CACHE image from DUT: ", err)
 		}
-	}(ctx)
-
-	// Shorten the deadline for everything to save some time for the restore.
-	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
-	defer cancel()
+	}(cleanupContext)
 
 	s.Log("Corrupting RECOVERY_MRC_CACHE section")
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx,
@@ -109,16 +128,22 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	if err := ms.RebootToMode(ctx, fwCommon.BootModeRecovery); err != nil {
 		s.Fatal("Failed to reboot into recovery mode: ", err)
 	}
+	h.DisconnectDUT(ctx)
 
 	s.Log("Reconnecting to DUT")
 	if err := h.WaitConnect(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
-	s.Log("Reconnected to DUT")
 
 	s.Log("Checking if recovery MRC cache has been rebuilt")
-	const cbmemCheckCommand = `cbmem -1 | grep "'RECOVERY_MRC_CACHE' needs update."`
-	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", cbmemCheckCommand).Run(); err != nil {
-		s.Fatal("Recovery MRC cache rebuilt check failed: ", err)
+	const cbmemCheckCommand = `cbmem -1 | grep MRC`
+	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", cbmemCheckCommand).Output()
+	if err != nil {
+		s.Fatalf("Failed to grep for MRC from cbmem, got output %v with error: %v", string(out), err)
+	}
+	s.Log("Got output from cbmem: ", string(out))
+	if !strings.Contains(string(out), "MRC: cache data 'RECOVERY_MRC_CACHE' needs update.") {
+		s.Fatal("Output from cbmem did not contain expected message: ", err)
+
 	}
 }
