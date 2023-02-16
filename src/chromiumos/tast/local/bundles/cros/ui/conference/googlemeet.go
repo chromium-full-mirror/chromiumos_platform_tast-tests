@@ -174,51 +174,14 @@ func (conf *GoogleMeetConference) GetParticipants(ctx context.Context) (int, err
 
 // VideoAudioControl controls the video and audio during conference.
 func (conf *GoogleMeetConference) VideoAudioControl(ctx context.Context) error {
-	ui := conf.ui
+	gm := conf.gm
 
-	toggleVideo := func(ctx context.Context) error {
-		cameraButton := nodewith.NameRegex(regexp.MustCompile("Turn (on|off) camera.*")).Role(role.Button)
-		info, err := ui.WithTimeout(mediumUITimeout).Info(ctx, cameraButton)
-		if err != nil {
-			return errors.Wrap(err, "failed to wait for the meet camera switch button to show")
-		}
-		if strings.HasPrefix(info.Name, "Turn on") {
-			testing.ContextLog(ctx, "Turn camera from off to on")
-		} else {
-			testing.ContextLog(ctx, "Turn camera from on to off")
-		}
-		cameraButton = nodewith.Name(info.Name).Role(role.Button)
-		if err := ui.WithTimeout(mediumUITimeout).DoDefaultUntil(cameraButton, ui.WaitUntilGone(cameraButton))(ctx); err != nil {
-			return errors.Wrap(err, "failed to switch camera")
-		}
-		return nil
-	}
-
-	toggleAudio := func(ctx context.Context) error {
-		microphoneButton := nodewith.NameRegex(regexp.MustCompile("Turn (on|off) microphone.*")).Role(role.Button)
-		info, err := ui.WithTimeout(mediumUITimeout).Info(ctx, microphoneButton)
-		if err != nil {
-			return errors.Wrap(err, "failed to wait for the meet microphone switch button to show")
-		}
-		if strings.HasPrefix(info.Name, "Turn on") {
-			testing.ContextLog(ctx, "Turn microphone from off to on")
-		} else {
-			testing.ContextLog(ctx, "Turn microphone from on to off")
-		}
-		microphoneButton = nodewith.Name(info.Name).Role(role.Button)
-		if err := ui.WithTimeout(mediumUITimeout).DoDefaultUntil(microphoneButton, ui.WaitUntilGone(microphoneButton))(ctx); err != nil {
-			return errors.Wrap(err, "failed to switch microphone")
-		}
-		return nil
-	}
-
-	return uiauto.NamedCombine("toggle video and audio",
-		conf.closeNotifDialog(),
+	return uiauto.Combine("switch video and audio",
 		// Remain in the state for 5 seconds after each action.
-		toggleVideo, uiauto.Sleep(viewingTime),
-		toggleVideo, uiauto.Sleep(viewingTime),
-		toggleAudio, uiauto.Sleep(viewingTime),
-		toggleAudio, uiauto.Sleep(viewingTime),
+		gm.SwitchVideo(false), uiauto.Sleep(viewingTime),
+		gm.SwitchVideo(true), uiauto.Sleep(viewingTime),
+		gm.SwitchMicrophone(true), uiauto.Sleep(viewingTime),
+		gm.SwitchMicrophone(false), uiauto.Sleep(viewingTime),
 	)(ctx)
 }
 
