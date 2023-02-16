@@ -176,20 +176,54 @@ func requiredFields(ctx context.Context, s *testing.State) (requiredFieldSet, er
 	return fieldsMapping, nil
 }
 
-// decodeResult will return decoded binary of hex-encoded result from
-// dbus-send, also it trims the prefix, suffix, and all space characters.
-// For reference, the output format of dbus-send is:
+// decodeResult will return decoded result from dbus-send.  There are three
+// formats of the output according to
+// https://github.com/freedesktop/dbus/blob/33bc01e/tools/dbus-print-message.c#L124
+//
+//  1. All bytes are ascii-printable (byte value between 32 and 126):
+//     array of bytes "2(5F36B2EA290645EE34D943220A14"
+//
+//  2. Similar to 1., except that the last byte is NUL (\0):
+//     array of bytes "2(5F36B2EA290645EE34D943220A14"\0
+//
+//  3. None of the above, hex encode the result:
+//
+// For example:
 //
 //	array of bytes [
 //	   1a 6f 0a ...
 //	]
-func decodeResult(result string) []byte {
-	result = strings.TrimSuffix(strings.TrimPrefix(result, "   array of bytes ["), "]\n")
-	result = strings.NewReplacer(" ", "", "\n", "").Replace(result)
-	resultBytes := []byte(result)
-	decoded := make([]byte, hex.DecodedLen(len(resultBytes)))
-	hex.Decode(decoded, resultBytes)
-	return decoded
+func decodeResult(result string) ([]byte, error) {
+	asciiPrefix := "   array of bytes \""
+	asciiSuffix := "\"\n"
+	asciiWithNulSuffix := "\"\\0\n"
+	hexEncodedPrefix := "   array of bytes ["
+	hexEncodedSuffix := "]\n"
+	var trimmedResult string
+	if strings.HasPrefix(result, asciiPrefix) {
+		trimmedResult = strings.TrimPrefix(result, asciiPrefix)
+		if strings.HasSuffix(trimmedResult, asciiSuffix) {
+			return []byte(strings.TrimSuffix(trimmedResult, asciiSuffix)), nil
+		}
+		if strings.HasSuffix(trimmedResult, asciiWithNulSuffix) {
+			return []byte(strings.TrimSuffix(trimmedResult, asciiWithNulSuffix) + "\x00"), nil
+		}
+		return nil, errors.Errorf("invalid dbus result format: %q", result)
+	}
+	if strings.HasPrefix(result, hexEncodedPrefix) {
+		trimmedResult = strings.TrimPrefix(result, hexEncodedPrefix)
+		if strings.HasSuffix(trimmedResult, hexEncodedSuffix) {
+			trimmedResult = strings.TrimSuffix(trimmedResult, hexEncodedSuffix)
+			trimmedResult = strings.NewReplacer(" ", "", "\n", "").Replace(trimmedResult)
+			resultBytes := []byte(trimmedResult)
+			decoded := make([]byte, hex.DecodedLen(len(resultBytes)))
+			if _, err := hex.Decode(decoded, resultBytes); err != nil {
+				return nil, errors.Wrapf(err, "invalid dbus result format: %q", result)
+			}
+			return decoded, nil
+		}
+	}
+	return nil, errors.Errorf("invalid dbus result format: %q", result)
 }
 
 // trimFields trims fields not defined in fieldsMapping and return all
@@ -268,12 +302,18 @@ func probe(ctx context.Context, dut *dut.DUT, fieldsMapping requiredFieldSet) (s
 		return nil, err
 	}
 	hexEncodedResult := string(output)
-	binaryResult := decodeResult(hexEncodedResult)
+	binaryResult, err := decodeResult(hexEncodedResult)
+	if err != nil {
+		return nil, err
+	}
 	message := &rppb.ProbeResult{}
 	if err := proto.Unmarshal(binaryResult, message); err != nil {
 		return nil, err
 	}
-
+	probeResultErr := message.GetError()
+	if probeResultErr != rppb.ErrorCode_RUNTIME_PROBE_ERROR_NOT_SET {
+		return nil, errors.Errorf("probe error: %v", probeResultErr)
+	}
 	probeResults, err := trimFields(message, fieldsMapping)
 	if err != nil {
 		return nil, err
