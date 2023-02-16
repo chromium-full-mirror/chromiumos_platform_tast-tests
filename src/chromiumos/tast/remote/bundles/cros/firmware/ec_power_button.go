@@ -36,29 +36,24 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
-		SoftwareDeps: []string{"crossystem"},
-		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:      "toggle_powerd",
-				Val:       powerOffWithAndWithoutPowerd,
-				ExtraAttr: []string{"firmware_unstable"},
+				Name: "toggle_powerd",
+				Val:  powerOffWithAndWithoutPowerd,
 			},
 			{
 				Name:              "ignore_short_power_key",
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				Val:               ignoresShortPowerKey,
-				ExtraAttr:         []string{"firmware_unstable"},
 			},
 			{
 				Name:              "short_power_key",
 				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalDisplay()),
 				Val:               powerOffWithShortPowerKey,
-				ExtraAttr:         []string{"firmware_unstable"},
 			},
 		},
 	})
@@ -220,6 +215,12 @@ func enablePowerd(ctx context.Context, h *firmware.Helper, status bool) error {
 	}
 
 	startStopJob := func(ctx context.Context, job string, missingOk bool) error {
+		if status, err := h.DUT.Conn().CommandContext(ctx, "status", job).Output(); err == nil {
+			if strings.Contains(string(status), startOrStop) {
+				testing.ContextLogf(ctx, "Job %q already has status %q", job, startOrStop)
+				return nil
+			}
+		}
 		cmd := h.DUT.Conn().CommandContext(ctx, startOrStop, job)
 		stderr, _ := cmd.StderrPipe()
 		if err := cmd.Start(); err != nil {
@@ -231,7 +232,8 @@ func enablePowerd(ctx context.Context, h *firmware.Helper, status bool) error {
 			errMsg = fmt.Sprintf("%s\n%s", errMsg, scanner.Text())
 		}
 		if err := cmd.Wait(); err != nil {
-			if strings.Contains(errMsg, "Job is already running") {
+			// If stopping already stopped job or starting already running job, ignore error.
+			if strings.Contains(errMsg, "Job is already running") || strings.Contains(errMsg, "Unknown instance") {
 				return nil
 			}
 			if missingOk && strings.Contains(errMsg, "Unknown job:") {
@@ -262,7 +264,10 @@ func enablePowerd(ctx context.Context, h *firmware.Helper, status bool) error {
 }
 
 func testPowerdPowerOff(ctx context.Context, h *firmware.Helper) (reterr error) {
-
+	testing.ContextLog(ctx, "stopping powerd")
+	if err := enablePowerd(ctx, h, false); err != nil {
+		return errors.Wrap(err, "failed to stop powerd")
+	}
 	// Make sure fwupd and powerd are running again after test.
 	defer func() {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -286,6 +291,10 @@ func testPowerdPowerOff(ctx context.Context, h *firmware.Helper) (reterr error) 
 	powerdDur := h.Config.HoldPwrButtonPowerOff
 	noPowerdDur := h.Config.HoldPwrButtonNoPowerdShutdown
 
+	if err := shutdownAndWake(ctx, h, noPowerdDur, "G3"); err != nil {
+		return errors.Wrap(err, "failed shut down and wake with no powerd")
+	}
+
 	testing.ContextLog(ctx, "starting powerd")
 	if err := enablePowerd(ctx, h, true); err != nil {
 		return errors.Wrap(err, "failed to start powerd")
@@ -295,14 +304,6 @@ func testPowerdPowerOff(ctx context.Context, h *firmware.Helper) (reterr error) 
 		return errors.Wrap(err, "failed shut down and wake with powerd")
 	}
 
-	testing.ContextLog(ctx, "stopping powerd")
-	if err := enablePowerd(ctx, h, false); err != nil {
-		return errors.Wrap(err, "failed to stop powerd")
-	}
-
-	if err := shutdownAndWake(ctx, h, noPowerdDur, "G3"); err != nil {
-		return errors.Wrap(err, "failed shut down and wake with no powerd")
-	}
 	return nil
 }
 
