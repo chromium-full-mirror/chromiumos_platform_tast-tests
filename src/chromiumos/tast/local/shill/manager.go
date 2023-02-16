@@ -761,6 +761,30 @@ func (m *Manager) WaitForUserProfile(ctx context.Context) (dbus.ObjectPath, erro
 	return path, nil
 }
 
+// ConfigureTethering is a wrapper for conveniently setting of tethering configuration.
+func (m *Manager) ConfigureTethering(ctx context.Context, props map[string]interface{}) error {
+	return m.SetProperty(ctx, "TetheringConfig", props)
+}
+
+// EnableTethering enables tethering.
+func (m *Manager) EnableTethering(ctx context.Context) error {
+	return m.Call(ctx, "SetTetheringEnabled", true).Err
+}
+
+// DisableTethering disables tethering.
+func (m *Manager) DisableTethering(ctx context.Context) error {
+	return m.Call(ctx, "SetTetheringEnabled", false).Err
+}
+
+// TetheringStatus returns Tethering status dict.
+func (m *Manager) TetheringStatus(ctx context.Context) (*dbusutil.Properties, error) {
+	p, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return p.GetMap("TetheringStatus")
+}
+
 // GetDefaultService gets the current default shill service.
 func (m *Manager) GetDefaultService(ctx context.Context) (*Service, error) {
 	p, err := m.GetProperties(ctx)

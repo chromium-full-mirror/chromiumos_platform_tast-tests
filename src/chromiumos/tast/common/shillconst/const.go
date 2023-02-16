@@ -113,6 +113,7 @@ const (
 	ManagerPropertyProfiles               = "Profiles"
 	ManagerPropertyProhibitedTechnologies = "ProhibitedTechnologies"
 	ManagerPropertyServices               = "Services"
+	ManagerTetheringAllowed               = "TetheringAllowed"
 	ManagerPropertyServiceCompleteList    = "ServiceCompleteList"
 	ManagerPropertyTetheringAllowed       = "TetheringAllowed"
 	ManagerPropertyGlobalFTEnabled        = "WiFi.GlobalFTEnabled"
@@ -412,9 +413,63 @@ const (
 	AlwaysOnVPNModeBestEffort = "best-effort"
 )
 
-// CheckTetheringReadiness status.
+// Tethering-related constants, as defined in dbus-constants.h
 const (
+	// Manager TetheringConfig dictionary key names.
+	TetheringConfAutoDisable  = "auto_disable"
+	TetheringConfBand         = "band"
+	TetheringConfMAR          = "randomize_mac_address"
+	TetheringConfPassphrase   = "passphrase"
+	TetheringConfSecurity     = "security"
+	TetheringConfSSID         = "ssid"
+	TetheringConfUpstreamTech = "upstream_technology"
+
+	// Manager TetheringCapabilities dictionary key names.
+	TetheringCapDownstream = "downstream_technologies"
+	TetheringCapSecurity   = "wifi_security_modes"
+	TetheringCapUpstream   = "upstream_technologies"
+
+	// Manager TetheringStatus dictionary key names.
+	TetheringStatusClientHostname  = "hostname"
+	TetheringStatusClientIPv4      = "IPv4"
+	TetheringStatusClientIPv6      = "IPv6"
+	TetheringStatusClientMAC       = "MAC"
+	TetheringStatusClients         = "active_clients"
+	TetheringStatusDownstreamTech  = "downstream_technology"
+	TetheringStatusIdleReason      = "idle_reason"
+	TetheringStatusState           = "state"
+	TetheringStatusUpstreamTech    = "upstream_technology"
+	TetheringStatusUpstreamService = "upstream_service"
+
+	// TetheringStatusIdleReason values.
+	TetheringIdleReasonClientStop         = "client_stop"
+	TetheringIdleReasonError              = "error"
+	TetheringIdleReasonInactive           = "inactive"
+	TetheringIdleReasonInitialState       = "initial_state"
+	TetheringIdleReasonSuspend            = "suspend"
+	TetheringIdleReasonUpstreamDisconnect = "upstream_disconnect"
+	TetheringIdleReasonUserExit           = "user_exit"
+
+	// TetheringStatusState values.
+	TetheringStateActive   = "active"
+	TetheringStateIdle     = "idle"
+	TetheringStateStarting = "starting"
+
+	// SetTetheringEnabled result values.
+	TetheringEnableResultFailure              = "failure"
+	TetheringEnableResultInvalidProperties    = "invalid_properties"
+	TetheringEnableResultNotAllowed           = "not_allowed"
+	TetheringEnableResultSuccess              = "success"
+	TetheringEnableResultUpstreamNotAvailable = "upstream_not_available"
+
+	// CheckTetheringReadinessFunction return status.
 	TetheringReadinessNotAllowed                  = "not_allowed"
 	TetheringReadinessReady                       = "ready"
 	TetheringReadinessUpstreamNetworkNotAvailable = "upstream_network_not_available"
+
+	// WiFi Band options.
+	Band2GHz    = "2.4GHz"
+	Band5GHz    = "5GHz"
+	BandAll     = "all-bands"
+	BandUnknown = "unknown"
 )
