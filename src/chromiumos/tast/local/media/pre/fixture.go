@@ -57,6 +57,7 @@ func init() {
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
+				chrome.DisableFeatures("UseMojoVideoDecoderForPepper"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -74,6 +75,7 @@ func init() {
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
+				chrome.DisableFeatures("UseMojoVideoDecoderForPepper"),
 				chrome.DisableFeatures("Pepper3DImageChromium"),
 			}, nil
 		}),
