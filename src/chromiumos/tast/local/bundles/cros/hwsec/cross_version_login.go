@@ -69,6 +69,11 @@ func init() {
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 			}, {
+				Name:              "tpm2_r110",
+				Fixture:           "crossVersionTpm2R110",
+				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			}, {
 				Name:              "tpm2_r89",
 				Fixture:           "crossVersionTpm2R89",
 				ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
@@ -139,6 +144,11 @@ func init() {
 				ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 			}, {
+				Name:              "tpm2_r109",
+				Fixture:           "crossVersionTpm2R109",
+				ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			}, {
 				Name:              "tpm_dynamic_r96",
 				Fixture:           "crossVersionTpmDynamicR96",
 				ExtraAttr:         []string{"group:mainline"},
@@ -151,6 +161,11 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r108",
 				Fixture:           "crossVersionTpmDynamicR108",
+				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			}, {
+				Name:              "tpm_dynamic_r110",
+				Fixture:           "crossVersionTpmDynamicR110",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			}, {
@@ -201,6 +216,11 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r107",
 				Fixture:           "crossVersionTpmDynamicR107",
+				ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			}, {
+				Name:              "tpm_dynamic_r109",
+				Fixture:           "crossVersionTpmDynamicR109",
 				ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			},

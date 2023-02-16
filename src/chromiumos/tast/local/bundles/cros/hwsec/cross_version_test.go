@@ -29,13 +29,15 @@ var milestoneConfigs = []milestoneConfig{
 	// * the first version that has type set in password KeyData - R93,
 	// * Long-term Support (LTS) version - R96.
 	// * Long-term Support (LTS) version - R102.
-	// * the newest snapshotted version - R108.
+	// * Long-term Support (LTS) version - R108.
+	// * the first version with USS enabled - R110.
 	{milestone: 88, critical: true},
 	{milestone: 91, critical: true},
 	{milestone: 93, critical: true},
 	{milestone: 96, critical: true},
 	{milestone: 102, critical: true},
 	{milestone: 108, critical: true},
+	{milestone: 110, critical: true},
 	// Other versions that are not tested in CQ
 	{milestone: 89, critical: false},
 	{milestone: 90, critical: false},
@@ -51,6 +53,7 @@ var milestoneConfigs = []milestoneConfig{
 	{milestone: 105, critical: false},
 	{milestone: 106, critical: false},
 	{milestone: 107, critical: false},
+	{milestone: 109, critical: false},
 }
 
 type tpmVersion struct {
