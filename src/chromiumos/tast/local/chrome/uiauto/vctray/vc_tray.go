@@ -13,9 +13,11 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/testing"
 )
 
 // Node finders in the tray bar.
@@ -59,9 +61,31 @@ func (vcTray VCTray) ExpandPanel(ctx context.Context) error {
 		return nil
 	}
 
-	// ShowHotseat makes sure hotseat is shown in tablet mode.
-	if err := ash.ShowHotseat(ctx, vcTray.tconn); err != nil {
-		return errors.Wrap(err, "failed to show hotseat")
+	// Set shelf to never hide to force show shelf.
+	dispInfo, err := display.GetPrimaryInfo(ctx, vcTray.tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get primary display info")
+	}
+
+	origShelfBehavior, err := ash.GetShelfBehavior(ctx, vcTray.tconn, dispInfo.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to get original shelf behavior")
+	}
+
+	if origShelfBehavior != ash.ShelfBehaviorNeverAutoHide {
+		if err := ash.SetShelfBehavior(ctx, vcTray.tconn, dispInfo.ID, ash.ShelfBehaviorNeverAutoHide); err != nil {
+			return errors.Wrap(err, `failed to set shelf behavior to "never hidden"`)
+		}
+		defer func(ctx context.Context) error {
+			if err := ash.SetShelfBehavior(ctx, vcTray.tconn, dispInfo.ID, origShelfBehavior); err != nil {
+				testing.ContextLog(ctx, "Failed to revert shelf behavior")
+			}
+			return nil
+		}(ctx)
+	}
+
+	if err := ash.WaitForShelf(ctx, vcTray.tconn, 3*time.Second); err != nil {
+		return errors.Wrap(err, "shelf is not visible")
 	}
 	return vcTray.ui.DoDefaultUntil(expandButton, vcTray.ui.WithTimeout(3*time.Second).WaitUntilExists(panelSection))(ctx)
 }
