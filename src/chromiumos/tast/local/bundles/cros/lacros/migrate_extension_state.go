@@ -44,13 +44,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         extensionFiles,
-		Params: []testing.Param{{
-			Name: "primary",
-			Val:  []lacrosfixt.Option{lacrosfixt.Mode(lacros.LacrosPrimary)},
-		}, {
-			Name: "only",
-			Val:  []lacrosfixt.Option{lacrosfixt.Mode(lacros.LacrosOnly)},
-		}},
 	})
 }
 
@@ -75,8 +68,7 @@ func MigrateExtensionState(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prepare extension state: ", err)
 	}
 
-	opts := s.Param().([]lacrosfixt.Option)
-	opts = append(opts, lacrosfixt.ChromeOptions(chrome.LacrosUnpackedExtension(extDir)))
+	opts := []lacrosfixt.Option{lacrosfixt.ChromeOptions(chrome.LacrosUnpackedExtension(extDir))}
 	cr, err := migrate.Run(ctx, []chrome.Option{}, opts)
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)

@@ -37,13 +37,6 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Params: []testing.Param{{
-			Name: "primary",
-			Val:  []lacrosfixt.Option{lacrosfixt.Mode(lacros.LacrosPrimary)},
-		}, {
-			Name: "only",
-			Val:  []lacrosfixt.Option{lacrosfixt.Mode(lacros.LacrosOnly)},
-		}},
 	})
 }
 
@@ -55,7 +48,7 @@ func Migrate(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	prepareAshProfile(ctx, s, kb)
-	cr, err := migrate.Run(ctx, []chrome.Option{}, s.Param().([]lacrosfixt.Option))
+	cr, err := migrate.Run(ctx, []chrome.Option{}, []lacrosfixt.Option{})
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}

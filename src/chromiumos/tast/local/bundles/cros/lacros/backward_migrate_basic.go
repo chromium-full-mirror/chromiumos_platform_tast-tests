@@ -9,7 +9,6 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/lacros/migrate"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/testing"
 )
@@ -26,13 +25,6 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Params: []testing.Param{{
-			Name: "primary",
-			Val:  []lacrosfixt.Option{lacrosfixt.Mode(lacros.LacrosPrimary)},
-		}, {
-			Name: "only",
-			Val:  []lacrosfixt.Option{lacrosfixt.Mode(lacros.LacrosOnly)},
-		}},
 	})
 }
 
@@ -47,7 +39,7 @@ func BackwardMigrateBasic(ctx context.Context, s *testing.State) {
 }
 
 func forwardMigrate(ctx context.Context, s *testing.State) {
-	cr, err := migrate.Run(ctx, []chrome.Option{}, s.Param().([]lacrosfixt.Option))
+	cr, err := migrate.Run(ctx, []chrome.Option{}, []lacrosfixt.Option{})
 	if err != nil {
 		s.Fatal("Failed to migrate profile: ", err)
 	}
