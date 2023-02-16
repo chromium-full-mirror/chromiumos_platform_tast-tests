@@ -45,7 +45,7 @@ func init() {
 
 func NToMChromeLogin(ctx context.Context, s *testing.State) {
 	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
-	filtered := paygen.FilterChannel("stable").FilterDeltaTypes([]string{"OMAHA"})
+	filtered := paygen.FilterDeltaTypes([]string{"OMAHA"})
 
 	env, err := util.NewHwsecEnv(s.DUT())
 	if err != nil {
@@ -74,7 +74,7 @@ func NToMChromeLogin(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), ops, filtered, 3 /*deltaM*/); err != nil {
+	if err := util.NToMTest(ctx, s.DUT(), s.OutDir(), s.RPCHint(), ops, filtered, 2 /*deltaM*/); err != nil {
 		s.Fatal("Failed to run cross version test: ", err)
 	}
 }
