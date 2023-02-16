@@ -78,7 +78,7 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 }
 
 // sendRequestWithTimeout makes a call to the specified REST endpoint of TAPE with the given http method and payload.
-func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint string, timeout time.Duration, payload *bytes.Reader) (*http.Response, error) {
+func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint string, timeout time.Duration, payloadBytes []byte) (*http.Response, error) {
 	// Set the timeout of the http client and return to the original after.
 	originalTimeout := c.httpClient.Timeout
 	c.httpClient.Timeout = timeout
@@ -86,19 +86,22 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 		c.httpClient.Timeout = originalTimeout
 	}()
 
-	// Create a request.
-	req, err := http.NewRequestWithContext(ctx, method, tapeURL+endpoint, payload)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create request")
-	}
-	req.Header.Set("Content-Type", "application/json")
-
+	var err error
 	// Try to make the call 3 times as a call might fail occasionally.
 	var response *http.Response
 	for i := 0; i < 3; i++ {
+		// Create a request.
+		payload := bytes.NewReader(payloadBytes)
+		req, err := http.NewRequestWithContext(ctx, method, tapeURL+endpoint, payload)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to create request: ", err)
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
 		// Send the request.
 		response, err = c.httpClient.Do(req)
 		if err != nil {
+			testing.ContextLog(ctx, "Failed to send request: ", err)
 			continue
 		}
 		// Check if the call was successful.
@@ -141,9 +144,8 @@ func (c *client) requestAccount(ctx context.Context, endpoint string, params int
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
-	payload := bytes.NewReader(payloadBytes)
 
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, 30*time.Second, payload)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, 30*time.Second, payloadBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make request")
 	}
@@ -163,8 +165,7 @@ func (c *client) releaseAccount(ctx context.Context, account interface{}, endpoi
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	payload := bytes.NewReader(payloadBytes)
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, 30*time.Second, payload)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, 30*time.Second, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make request")
 	}
@@ -354,8 +355,7 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	payload := bytes.NewReader(payloadBytes)
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", 30*time.Second, payload)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", 30*time.Second, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make REST call")
 	}
@@ -380,8 +380,7 @@ func (c *client) Deprovision(ctx context.Context, deviceID, customerID string) e
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	payload := bytes.NewReader(payloadBytes)
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/deprovision", 60*time.Second, payload)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/deprovision", 60*time.Second, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make REST call")
 	}
