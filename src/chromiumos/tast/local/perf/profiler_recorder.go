@@ -84,8 +84,16 @@ func (t *ProfilerRecorder) Record(pv *perf.Values) {
 		Interval:  intervalName,
 	}
 
+	var total int64
 	for _, data := range t.statInst.InstructionsAtIntervals {
 		pv.Append(timeMetric, data.Timestamp.Seconds())
 		pv.Append(instructionsMetric, float64(data.Value))
+		total += data.Value
 	}
+
+	pv.Set(perf.Metric{
+		Name:      baseName + ".Total",
+		Unit:      "count",
+		Direction: perf.SmallerIsBetter,
+	}, float64(total))
 }
