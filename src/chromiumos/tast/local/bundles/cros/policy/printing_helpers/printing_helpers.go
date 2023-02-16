@@ -41,11 +41,7 @@ type SubTestCase struct {
 	TestName                string
 	ExpectedDefaultValue    string
 	ExpectedAvailableValues []string
-	// This function assumes that the print preview is open.
-	// It then fetches and returns the default value and all available values
-	// of a certain setting on the print preview window.
-	FetchValuesFunc func(ctx context.Context, s *testing.State, tconn *chrome.TestConn) SettingValues
-	Policies        []policy.Policy
+	Policies                []policy.Policy
 }
 
 // RunFeatureRestrictionTest sets up a virtual usb printer,
@@ -55,7 +51,11 @@ func RunFeatureRestrictionTest(
 	ctx context.Context,
 	s *testing.State,
 	subtestcases []SubTestCase,
-	printerAttributesFilePath string,
+	// printerAttributesFilePath set to nil implies that the default printer attributes file will be used
+	printerAttributesFilePath *string,
+	// This function assumes that the print preview is open.
+	// It then fetches and returns the default value and all available values
+	// of a certain setting on the print preview window.
 	fetchValuesFunc func(ctx context.Context, s *testing.State, tconn *chrome.TestConn) SettingValues) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -65,13 +65,21 @@ func RunFeatureRestrictionTest(
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
-	if _, err := os.Stat(printerAttributesFilePath); err != nil {
-		s.Fatal("Failed to find printer attributes file: ", err)
+	var printerAttributesOption usbprinter.Option
+	if printerAttributesFilePath != nil {
+		// Use custom printer IPP attributes file if provided
+		if _, err := os.Stat(*printerAttributesFilePath); err != nil {
+			s.Fatal("Failed to find printer attributes file: ", err)
+		}
+		printerAttributesOption = usbprinter.WithAttributes(*printerAttributesFilePath)
+	} else {
+		// Use generic IPP attributes otherwise
+		printerAttributesOption = usbprinter.WithGenericIPPAttributes()
 	}
 
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
-		usbprinter.WithAttributes(printerAttributesFilePath),
+		printerAttributesOption,
 		usbprinter.WaitUntilConfigured())
 	if err != nil {
 		s.Fatal("Failed to start IPP-over-USB printer: ", err)
@@ -150,7 +158,7 @@ func RunFeatureRestrictionTest(
 				s.Fatal("Failed to select a printer: ", err)
 			}
 
-			settingValues := param.FetchValuesFunc(ctx, s, tconn)
+			settingValues := fetchValuesFunc(ctx, s, tconn)
 
 			if param.ExpectedDefaultValue != settingValues.DefaultValue {
 				s.Fatalf(

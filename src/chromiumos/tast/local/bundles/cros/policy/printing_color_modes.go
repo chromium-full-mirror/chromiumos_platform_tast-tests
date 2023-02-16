@@ -113,7 +113,6 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 			TestName:                "default_color_unset_all_colors_allowed",
 			ExpectedDefaultValue:    "Color",
 			ExpectedAvailableValues: []string{"Color", "Black and white"},
-			FetchValuesFunc:         fetchColorModesFromPrintPreview,
 			Policies: []policy.Policy{
 				&policy.PrintingColorDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedColorModes{Val: "any"},
@@ -122,7 +121,6 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 			TestName:                "default_color_monochrome_allowed_colors_unset",
 			ExpectedDefaultValue:    "Black and white",
 			ExpectedAvailableValues: []string{"Color", "Black and white"},
-			FetchValuesFunc:         fetchColorModesFromPrintPreview,
 			Policies: []policy.Policy{
 				&policy.PrintingColorDefault{Val: "monochrome"},
 				&policy.PrintingAllowedColorModes{Stat: policy.StatusUnset},
@@ -131,7 +129,6 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 			TestName:                "default_color_color_all_colors_allowed",
 			ExpectedDefaultValue:    "Color",
 			ExpectedAvailableValues: []string{"Color", "Black and white"},
-			FetchValuesFunc:         fetchColorModesFromPrintPreview,
 			Policies: []policy.Policy{
 				&policy.PrintingColorDefault{Val: "color"},
 				&policy.PrintingAllowedColorModes{Val: "any"},
@@ -140,7 +137,6 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 			TestName:                "default_color_monochrome_is_allowed",
 			ExpectedDefaultValue:    "Black and white",
 			ExpectedAvailableValues: []string{"Black and white"},
-			FetchValuesFunc:         fetchColorModesFromPrintPreview,
 			Policies: []policy.Policy{
 				&policy.PrintingColorDefault{Val: "monochrome"},
 				&policy.PrintingAllowedColorModes{Val: "monochrome"},
@@ -149,7 +145,6 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 			TestName:                "default_color_monochrome_is_not_allowed",
 			ExpectedDefaultValue:    "Color",
 			ExpectedAvailableValues: []string{"Color"},
-			FetchValuesFunc:         fetchColorModesFromPrintPreview,
 			Policies: []policy.Policy{
 				&policy.PrintingColorDefault{Val: "monochrome"},
 				&policy.PrintingAllowedColorModes{Val: "color"},
@@ -157,6 +152,7 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 		},
 	}
 
+	printerAttributesFilePath := s.DataPath("printing_color_modes_printer_attributes.json")
 	printinghelpers.RunFeatureRestrictionTest(
-		ctx, s, subtestcases, s.DataPath("printing_color_modes_printer_attributes.json"), fetchColorModesFromPrintPreview)
+		ctx, s, subtestcases, &printerAttributesFilePath, fetchColorModesFromPrintPreview)
 }
