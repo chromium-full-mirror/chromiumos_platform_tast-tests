@@ -1,0 +1,132 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package cca provides utilities to interact with Chrome Camera App.
+package cca
+
+import (
+	"context"
+	"io/ioutil"
+	"net"
+	"os"
+	"os/user"
+	"path/filepath"
+	"time"
+
+	"chromiumos/tast/common/camera/chart"
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/common/utils"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/ssh/linuxssh"
+	"chromiumos/tast/testing"
+)
+
+type fixture struct{}
+
+func init() {
+	testing.AddFixture(&testing.Fixture{
+		Name:            "remoteCameraBox",
+		Desc:            "Set up remotely for camera box tests",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Impl:            &fixture{},
+		SetUpTimeout:    5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+	})
+}
+
+// rsaFilesMap returns a map of RSA files to copy from the host device to DUT.
+func rsaFilesMap() (map[string]string, error) {
+	fileExists := func(file string) bool {
+		_, err := os.Stat(file)
+		return !os.IsNotExist(err)
+	}
+
+	u, err := user.Current()
+	if err != nil {
+		return nil, err
+	}
+	if u.HomeDir == "" {
+		return nil, errors.New("cannot determine home directory")
+	}
+
+	fileMap := make(map[string]string, 0)
+	partnerTestingRSAFile := filepath.Join(u.HomeDir, ".ssh", "partner_testing_rsa")
+	if fileExists(partnerTestingRSAFile) {
+		fileMap[partnerTestingRSAFile] = filepath.Join(chart.SSHKeysDir, "partner_testing_rsa")
+	}
+
+	// TODO(b/260622707): Remove testing_rsa case once they are all deprecated.
+	testingRSAFile := filepath.Join(u.HomeDir, ".ssh", "testing_rsa")
+	if fileExists(testingRSAFile) {
+		fileMap[testingRSAFile] = filepath.Join(chart.SSHKeysDir, "testing_rsa")
+	}
+
+	if len(fileMap) == 0 {
+		return nil, errors.New("no required RSA files are found under ~/.ssh. Please put either `testing_rsa` or `partner_testing_rsa` under `~/.ssh`")
+	}
+	return fileMap, nil
+}
+
+func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	filesMap, err := rsaFilesMap()
+	if err != nil {
+		s.Fatal("Failed to get map of the RSA files: ", err)
+	}
+
+	// It is a workaround since currently it is not supported to pass values from remote fixture to local one.
+	// TODO(b/268150785): Remove this workaround and pass the value directly to the local fixture.
+	tempFile, err := ioutil.TempFile("", "tabletIP")
+	if err != nil {
+		s.Fatal("Failed to create temp file to save tablet host: ", err)
+	}
+	defer os.Remove(tempFile.Name())
+	defer tempFile.Close()
+	tabletIP := tabletIP(ctx, s.DUT().HostName())
+	if n, err := tempFile.Write([]byte(tabletIP)); err != nil {
+		s.Fatal("Failed to write tablet host name to temporary file: ", err)
+	} else if n != len(tabletIP) {
+		s.Fatal("Failed to write to temporary file successfully")
+	}
+	filesMap[tempFile.Name()] = chart.TabletIPInfoPath
+
+	if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), filesMap, linuxssh.DereferenceSymlinks); err != nil {
+		s.Fatal("Failed to copy RSA files to the DUT: ", err)
+	}
+	return nil
+}
+
+func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", "-rf", chart.TabletIPInfoPath).Output(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to remove tablet host info file: ", err)
+	}
+
+	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", "-rf", chart.SSHKeysDir).Output(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to remove ssh keys for camera box: ", err)
+	}
+}
+
+func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+
+func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+
+func (f *fixture) Reset(ctx context.Context) error { return nil }
+
+func tabletIP(ctx context.Context, dutHost string) string {
+	tabletHost, err := utils.CompanionDeviceHostname(dutHost, utils.CompanionSuffixTablet)
+	if err != nil {
+		// It is acceptable if it fails since the test could be run outside test without the expected host name.
+		// As a result, only collect the tablet host name if it succeed.
+		testing.ContextLog(ctx, "Did not find the host name of the tablet device. Ignore")
+		return ""
+	}
+	testing.ContextLog(ctx, "Try to look up IP from tablet host name: ", tabletHost)
+	ipAddrs, err := net.LookupIP(tabletHost)
+	if err != nil {
+		testing.ContextLog(ctx, "Did not find the IP of the tablet device. Ignore")
+		return ""
+	}
+	testing.ContextLog(ctx, "Found IP of the tablet: ", ipAddrs)
+	// Use IP so that it can find the tablet device on DUT.
+	return ipAddrs[0].String()
+}

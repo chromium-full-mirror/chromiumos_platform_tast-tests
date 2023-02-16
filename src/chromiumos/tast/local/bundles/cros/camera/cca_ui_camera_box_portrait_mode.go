@@ -20,7 +20,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:camerabox"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Data:         []string{"testing_rsa", "human_face_scene.jpg"},
+		Data:         []string{"human_face_scene.jpg"},
 		Vars:         []string{"chart"},
 		Fixture:      "ccaLaunchedInCameraBox",
 		Params: []testing.Param{{
@@ -39,7 +39,11 @@ func init() {
 // CCAUICameraBoxPortraitMode tests that portrait mode works expectedly.
 func CCAUICameraBoxPortraitMode(ctx context.Context, s *testing.State) {
 	prepareChart := s.FixtValue().(cca.FixtureData).PrepareChart
-	if err := prepareChart(ctx, s.RequiredVar("chart"), s.DataPath("testing_rsa"), s.DataPath("human_face_scene.jpg")); err != nil {
+	chartHost, ok := s.Var("chart")
+	if !ok {
+		chartHost = ""
+	}
+	if err := prepareChart(ctx, chartHost, s.DataPath("human_face_scene.jpg")); err != nil {
 		s.Fatal("Failed to prepare chart: ", err)
 	}
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true})

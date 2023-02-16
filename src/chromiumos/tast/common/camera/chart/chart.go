@@ -37,6 +37,12 @@ const DisplayDefaultLevel = -1
 // ChartReadyMsg is the key word to show display chart py works fine
 const ChartReadyMsg = "Chart is ready."
 
+// TabletIPInfoPath is the path of the tablet host info on DUT.
+const TabletIPInfoPath = "/tmp/tabletIP"
+
+// SSHKeysDir is the path of the SSH keys which will be used for camera box tests.
+const SSHKeysDir = "/usr/local/sshkeys"
+
 // Chart displays chart files on the chart tablet in a camerabox setup.
 type Chart struct {
 	// conn is the SSH connection to the chart tablet.

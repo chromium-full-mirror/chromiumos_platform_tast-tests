@@ -70,6 +70,12 @@ func TestCompanionDeviceHostnames(t *testing.T) {
 			result:     "dut1-suffix",
 			shouldFail: false,
 		},
+		{
+			host:       "dut1a",
+			suffix:     "-tablet",
+			result:     "dut1a-tablet",
+			shouldFail: false,
+		},
 	}
 	for _, tc := range testcases {
 		ret, err := CompanionDeviceHostname(tc.host, tc.suffix)

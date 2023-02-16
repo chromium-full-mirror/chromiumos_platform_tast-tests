@@ -61,7 +61,8 @@ func CompanionDeviceHostname(dutHost, suffix string) (string, error) {
 	// Companion device hostname convention: append suffix after the first sub-domain string.
 	hostname := strings.SplitN(dutHost, ".", 2)
 	// In the multidut case, hostname is in the form of <nameNN>a or <nameNN>b but the companion hostname is <nameNN><suffix>.
-	if regexp.MustCompile("\\w\\d+\\w+$").Match([]byte(hostname[0])) {
+	// One exception is devices with "-tablet" suffix. They still keep 'a' and 'b' before the suffix.
+	if regexp.MustCompile("\\w\\d+\\w+$").Match([]byte(hostname[0])) && suffix != CompanionSuffixTablet {
 		hostname[0] = strings.TrimRightFunc(hostname[0], unicode.IsLetter)
 	}
 	hostname[0] = hostname[0] + suffix

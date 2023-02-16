@@ -7,6 +7,7 @@ package cca
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -59,6 +60,7 @@ func init() {
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{launchCCAInCameraBox: true, launchCCA: true},
+		Parent:          "remoteCameraBox",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -299,7 +301,7 @@ type FixtureData struct {
 	RunTestWithApp func(context.Context, TestWithAppFunc, TestWithAppParams) error
 	// PrepareChart prepares chart by loading the given scene. It only works for
 	// CameraBox.
-	PrepareChart func(ctx context.Context, addr, keyFile, contentPath string) error
+	PrepareChart func(ctx context.Context, addr, contentPath string) error
 	// SetDebugParams sets the debug parameters for current test.
 	SetDebugParams func(params DebugParams)
 }
@@ -657,10 +659,20 @@ func (f *fixture) runTestWithApp(ctx context.Context, testFunc TestWithAppFunc, 
 	return testFunc(ctx, app)
 }
 
-func (f *fixture) prepareChart(ctx context.Context, addr, keyFile, contentPath string) (retErr error) {
+func (f *fixture) prepareChart(ctx context.Context, addr, contentPath string) (retErr error) {
+	if addr == "" {
+		if chartIP, err := tabletIP(ctx); err != nil {
+			return errors.Wrap(err, "failed to get tablet host")
+		} else if chartIP == "" {
+			return errors.New("chart device is neither found nor specified")
+		} else {
+			addr = chartIP
+		}
+	}
+
 	var sopt ssh.Options
 	ssh.ParseTarget(addr, &sopt)
-	sopt.KeyFile = keyFile
+	sopt.KeyDir = chart.SSHKeysDir
 	sopt.ConnectTimeout = 10 * time.Second
 	conn, err := ssh.New(ctx, &sopt)
 	if err != nil {
@@ -692,4 +704,20 @@ func (f *fixture) cca() *App {
 
 func (f *fixture) setDebugParams(params DebugParams) {
 	f.debugParams = params
+}
+
+func tabletIP(ctx context.Context) (string, error) {
+	fileExists := func(file string) bool {
+		_, err := os.Stat(file)
+		return !os.IsNotExist(err)
+	}
+
+	if !fileExists(chart.TabletIPInfoPath) {
+		return "", errors.New("tablet host information file does not exist on DUT")
+	}
+	rawData, err := ioutil.ReadFile(chart.TabletIPInfoPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read tablet host info")
+	}
+	return string(rawData), nil
 }
