@@ -127,7 +127,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 			// Only log the error.
 			testing.ContextLog(ctx, "Failed to clean up the document: ", err)
 		}
-		if err := cuj.CloseAllWindows(ctx, tconn); err != nil {
+		if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
 			return err
 		}
 		return nil
