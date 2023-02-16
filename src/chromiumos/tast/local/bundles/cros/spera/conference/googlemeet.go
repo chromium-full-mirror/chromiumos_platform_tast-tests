@@ -426,12 +426,10 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 				gm.SetEffect(effectOption),
 			),
 			takeScreenshot(conf.cr, conf.outDir, fmt.Sprintf("set-effect-to-%q", effectOption)),
-			// Double click to enter full screen.
-			doFullScreenAction(conf.tconn, conf.ui.DoubleClick(youText), meetTitle, true),
+			gm.EnterFullScreen,
 			// After applying new background, give it 5 seconds for viewing before applying next one.
 			uiauto.Sleep(viewingTime),
-			// Double click to exit full screen.
-			doFullScreenAction(conf.tconn, conf.ui.DoubleClick(youText), meetTitle, false),
+			gm.ExitFullScreen,
 		)
 	}
 
