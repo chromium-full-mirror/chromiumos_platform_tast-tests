@@ -48,6 +48,7 @@ message KnownNetworksControlsRequest {
     Forget = 2;
     Disconnect = 3;
     Connect = 4;
+    ShownAsShared = 5;
   }
 
   repeated string ssids = 1;

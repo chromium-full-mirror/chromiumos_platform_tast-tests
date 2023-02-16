@@ -167,8 +167,8 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS Settings and navigate to the specific page")
 	}
-	defer s.dumpUITreeWithScreenshotOnError(ctx, func() bool { return retErr != nil }, "known_networks_controls")
 	defer settings.Close(ctx)
+	defer s.dumpUITreeWithScreenshotOnError(ctx, func() bool { return retErr != nil }, "known_networks_controls")
 
 	for _, ssid := range req.Ssids {
 		settingsNodeFinder := nodewith.Ancestor(ossettings.WindowFinder)
@@ -219,6 +219,23 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 				return &emptypb.Empty{}, err
 			}
 			// The connect control clicks on the network and navigate to another page.
+			// Need to navigate back to "Known Networks" for the next iteration.
+			if err := settings.NavigateToPageURL(ctx, res.cr, pageShortURL, condition); err != nil {
+				return &emptypb.Empty{}, err
+			}
+		case wifi.KnownNetworksControlsRequest_ShownAsShared:
+			// The label will be "You are sharing this network with other users of this device" for primary user,
+			// and "This network is shared with you" for other users.
+			// Both of them indicate this network is shared.
+			r := regexp.MustCompile(`(You are sharing this network with other users of this device|This network is shared with you)`)
+
+			if err := uiauto.Combine("check network is shown as shared",
+				res.ui.LeftClick(networkItem),
+				res.ui.WaitUntilExists(settingsNodeFinder.NameRegex(r).Role(role.StaticText)),
+			)(ctx); err != nil {
+				return &emptypb.Empty{}, err
+			}
+			// The 'ShownAsShared' control clicks on the network and navigate to another page.
 			// Need to navigate back to "Known Networks" for the next iteration.
 			if err := settings.NavigateToPageURL(ctx, res.cr, pageShortURL, condition); err != nil {
 				return &emptypb.Empty{}, err
