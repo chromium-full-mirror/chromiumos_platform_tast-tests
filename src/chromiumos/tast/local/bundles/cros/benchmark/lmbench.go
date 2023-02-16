@@ -48,7 +48,8 @@ func init() {
 		Func:         LMbench,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Execute LMBench to do benchmark testing and retrieve the results",
-		Contacts:     []string{"phuang@cienet.com", "xliu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		// Disabled due to <1% pass rate over 30 days. See b/246820188
 		//Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},

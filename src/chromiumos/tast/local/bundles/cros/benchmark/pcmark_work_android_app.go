@@ -36,9 +36,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PCMarkWorkAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Desc:         "Execute PCMark Android App v3.0.4061 to do benchmark for PCMark Work and acquire test score",
-		Contacts:     []string{"alfredyu@cienet.com", "xliu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		// Purposely leave the empty Attr here. Public benchmark tests are not included in crosbolt group for now.
 		Attr:         []string{"group:crosbolt", "crosbolt_weekly"},
 		SoftwareDeps: []string{"arc", "chrome"},

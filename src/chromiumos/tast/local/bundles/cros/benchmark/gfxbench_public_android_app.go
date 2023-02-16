@@ -43,7 +43,8 @@ func init() {
 		Func:         GFXBenchPublicAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Execute GFXBench public Android App to do benchmark testing and retrieve the results",
-		Contacts:     []string{"phuang@cienet.com", "xliu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		// Purposely leave the empty Attr here. Public benchmark tests are not included in crosbolt group for now.
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome", "arc"},

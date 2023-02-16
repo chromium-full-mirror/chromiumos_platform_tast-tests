@@ -40,7 +40,8 @@ func init() {
 		Func:         CRXPRT2,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Execute Chrome extension CrXPRT 2 to do benchmark and acquire test score",
-		Contacts:     []string{"alfredyu@cienet.com", "xliu@cienet.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		// Purposely leave the empty Attr here. Public benchmark tests are not included in crosbolt group for now.
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome", "arc"},

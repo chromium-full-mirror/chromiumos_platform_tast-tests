@@ -44,9 +44,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GeekbenchPublicAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		BugComponent: "b:1024862", // ChromeOS > EngProd > Platform > SPERA
 		Desc:         "Execute Geekbench public Android App to do benchmark testing and retrieve the results",
-		Contacts:     []string{"phuang@cienet.com", "cienet-development@googlegroups.com"},
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		// Purposely leave the empty Attr here. Public benchmark tests are not included in crosbolt group for now.
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome", "arc"},
