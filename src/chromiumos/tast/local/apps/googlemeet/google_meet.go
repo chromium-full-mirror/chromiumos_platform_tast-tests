@@ -9,6 +9,7 @@ import (
 	"image"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -488,4 +489,35 @@ func GrantPermissions(ctx context.Context, br *browser.Browser) error {
 		browser.MicrophoneContentSetting,
 		browser.NotificationsContentSetting,
 	)
+}
+
+// GetParticipantsNum returns the number of meeting participants.
+func (gm *GoogleMeet) GetParticipantsNum(ctx context.Context) (int, error) {
+	ui := gm.ui
+	participantText := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetRootWebArea)
+	if err := uiauto.NamedAction("wait for the number of participants to be loaded",
+		// Some DUT models have poor performance. When joining
+		// a large conference (over 15 participants), it would take much time
+		// to render DOM elements. Set a longer timer here.
+		ui.WithTimeout(longUITimeout).WaitUntilExists(participantText),
+	)(ctx); err != nil {
+		return 0, errors.Wrap(err, "failed to wait for participant info")
+	}
+
+	node, err := ui.Info(ctx, participantText)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get participant info")
+	}
+
+	info := strings.Split(node.Name, " ")
+	if len(info) < 1 {
+		return 0, errors.New("failed to split node name")
+	}
+
+	number, err := strconv.ParseInt(info[0], 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse number of participants")
+	}
+
+	return int(number), nil
 }
