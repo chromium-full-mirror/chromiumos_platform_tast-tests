@@ -306,14 +306,14 @@ func ChameleonPerceptualDiff(ctx context.Context, imagePath1, imagePath2, outDir
 }
 
 // ChameleonSaveLogsAndOutputOnError get the logs from Chameleon and saves to chameleon_logs.txt file. If there is an error, it prints the logs to stdout as well.
-func ChameleonSaveLogsAndOutputOnError(ctx context.Context, cham chameleon.Chameleond, isError bool, outDir string) {
+func ChameleonSaveLogsAndOutputOnError(ctx context.Context, cham chameleon.Chameleond, isError func() bool, outDir string) {
 	logs, err := cham.GetChameleondLogs(ctx, chameleonLogsCursorName)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get and print Chameleon logs: ", err)
 		logs = "Failed to get and print Chameleon logs" + err.Error()
 	}
 
-	if isError {
+	if isError() {
 		testing.ContextLog(ctx, "Chameleon logs: ", logs)
 	}
 	if err := ioutil.WriteFile(filepath.Join(outDir, "chameleon_logs.txt"),

@@ -93,9 +93,7 @@ func ChameleonCheckModesForLoginLogout(ctx context.Context, s *testing.State) {
 
 	cham, err := graphics.ChameleonGetConnection(ctx)
 
-	defer func(ctx context.Context, s *testing.State, cham chameleon.Chameleond) {
-		graphics.ChameleonSaveLogsAndOutputOnError(ctx, cham, s.HasError(), s.OutDir())
-	}(ctx, s, cham)
+	defer graphics.ChameleonSaveLogsAndOutputOnError(ctx, cham, s.HasError, s.OutDir())
 
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
