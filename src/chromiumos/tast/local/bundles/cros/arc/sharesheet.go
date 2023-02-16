@@ -19,9 +19,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
+	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
 
@@ -108,6 +110,9 @@ func Sharesheet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install the APK: ", err)
 	}
 
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+
 	// Open the Files App.
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
@@ -125,6 +130,18 @@ func Sharesheet(ctx context.Context, s *testing.State) {
 		files.ClickContextMenuItem(expectedFileName, filesapp.Share),
 		crosui.LeftClick(sharesheetTargetButton),
 	)(ctx); err != nil {
+		s.Log("It fails to find the test app, try to search it from launcher")
+		kb, errkb := input.Keyboard(ctx)
+		if errkb != nil {
+			s.Log("Failed to initial keyboard: ", errkb)
+		}
+		if errApp := uiauto.Retry(3, uiauto.Combine("query",
+			launcher.Open(tconn),
+			launcher.Search(tconn, kb, appShareLabel),
+			crosui.WaitUntilExists(launcher.CreateAppSearchFinder(ctx, tconn, appShareLabel))),
+		)(ctx); errApp != nil {
+			s.Log("Failed to find the test app: ", errApp)
+		}
 		s.Fatal("Failed to open downloads and click share button: ", err)
 	}
 
