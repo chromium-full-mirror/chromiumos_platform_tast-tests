@@ -6,12 +6,16 @@ package intel
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
@@ -21,6 +25,10 @@ import (
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
+
+type chargingRateTestParam struct {
+	isIdleMode bool
+}
 
 const (
 	requiredBatteryPercent = 70
@@ -36,14 +44,27 @@ func init() {
 		Func:         MeasureChargingRate,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measuring charging rate in suspend mode (S0ix)",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		ServiceDeps:  []string{"tast.cros.power.BatteryService"},
 		SoftwareDeps: []string{"chrome", "crossystem"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      120 * time.Minute,
-	})
+
+		Params: []testing.Param{{
+			Name: "s0ix",
+			Val: chargingRateTestParam{
+				isIdleMode: false,
+			},
+			Timeout: 120 * time.Minute,
+		}, {
+			Name: "idle",
+			Val: chargingRateTestParam{
+				isIdleMode: true,
+			},
+			Timeout: 120 * time.Minute,
+		},
+		}})
 }
 
 func MeasureChargingRate(ctx context.Context, s *testing.State) {
@@ -55,6 +76,9 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
+
+	dut := s.DUT()
+	testOpts := s.Param().(chargingRateTestParam)
 
 	cl, err := rpc.Dial(ctx, h.DUT, s.RPCHint())
 	if err != nil {
@@ -127,89 +151,141 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 	}
 	defer newClient.Close(cleanupCtx, &empty.Empty{})
 
-	slpOpSetPre, pkgOpSetPre, err := powercontrol.SlpAndC10PackageValues(ctx, h.DUT)
-	if err != nil {
-		s.Fatal("Failed to get SLP counter and C10 package values before suspend-resume: ", err)
-	}
-
-	// Emulate DUT lid closing.
-	if err := h.Servo.CloseLid(ctx); err != nil {
-		s.Fatal("Failed to close DUT's lid: ", err)
-	}
-
-	testing.Poll(ctx, func(ctx context.Context) error {
-		s.Log("Checking lid state after closing lid")
-		lidState, err := h.Servo.LidOpenState(ctx)
+	if testOpts.isIdleMode {
+		brightness, err := brightnessPercent(ctx, dut)
 		if err != nil {
-			return errors.Wrap(err, "failed to check the final lid state")
+			s.Fatal("Failed to get system brightness: ", err)
 		}
-		if lidState != string(servo.LidOpenNo) {
-			return errors.Errorf("failed to check DUT lid state, got %q, want %q", lidState, servo.LidOpenNo)
 
+		if brightness != 40 {
+			if err := setBrightnessPercent(ctx, 40, dut); err != nil {
+				s.Fatal("Failed to set required brightness: ", err)
+			}
 		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
 
-	startTime := time.Now()
-	chargeBeforeSleep, err := getChargePercentage(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to get battery level: ", err)
-	}
+		if _, err := newClient.PowerSettingInIdleMode(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to perform power setting in idle mode: ", err)
+		}
 
-	// For 10 minutes, observe battery charging status.
-	s.Log("Charging DUT for 10 minutes after closing lid")
-	if err := testing.Sleep(ctx, 10*time.Minute); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
+		s.Log("Charging DUT for 1 minute when dut is idle")
+		if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
+			s.Fatal("Failed to be in idle mode: ", err)
+		}
 
-	// Check battery charge after 10 minutes.
-	chargeAfterSleep, err := getChargePercentage(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to get battery level: ", err)
-	}
-	endTime := time.Now()
-
-	totalTime := endTime.Sub(startTime) * 100 / time.Duration((chargeAfterSleep-chargeBeforeSleep)*float32(time.Minute))
-	s.Log("Total Time to Full Charge in minutes: ", totalTime)
-	if totalTime > 180 {
-		s.Fatal("Failed: Total battery charging time is more than 3 hours")
-	}
-
-	s.Logf("Waiting for battery to reach %v%%", maxBatteryPercent)
-	if err := waitForCharge(ctx, h, maxBatteryPercent); err != nil {
-		s.Fatalf("Failed to reach target %v%%, %v", maxBatteryPercent, err.Error())
-	}
-
-	// Emulate DUT lid opening.
-	if err := h.Servo.OpenLid(ctx); err != nil {
-		s.Fatal("Failed to open DUT's lid: ", err)
-	}
-	testing.Poll(ctx, func(ctx context.Context) error {
-		s.Log("Checking lid state after opening lid")
-		lidState, err := h.Servo.LidOpenState(ctx)
+		startTime := time.Now()
+		chargeBeforeSleep, err := getChargePercentage(ctx, h)
 		if err != nil {
-			return errors.Wrap(err, "failed to check the final lid state")
+			s.Fatal("Failed to get battery level: ", err)
 		}
-		if lidState != string(servo.LidOpenYes) {
-			return errors.Errorf("failed to check DUT lid state, got %q, want %q", lidState, servo.LidOpenYes)
 
+		// For 5 minutes, observe battery charging status.
+		s.Log("Charging DUT for 5 minutes when dut is idle")
+		if err := testing.Sleep(ctx, 5*time.Minute); err != nil {
+			s.Fatal("Failed to sleep: ", err)
 		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
 
-	waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-	if err := h.DUT.WaitConnect(waitCtx); err != nil {
-		s.Fatal("Failed to wait connect DUT: ", err)
-	}
+		// Check battery charge after 10 minutes.
+		chargeAfterSleep, err := getChargePercentage(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to get battery level: ", err)
+		}
+		endTime := time.Now()
 
-	slpOpSetPost, pkgOpSetPost, err := powercontrol.SlpAndC10PackageValues(ctx, h.DUT)
-	if err != nil {
-		s.Fatal("Failed to get SLP counter and C10 package values after suspend-resume: ", err)
-	}
+		totalTime := endTime.Sub(startTime) * 100 / time.Duration((chargeAfterSleep-chargeBeforeSleep)*float32(time.Minute))
+		s.Log("Total Time to Full Charge in minutes: ", totalTime)
+		if totalTime > 180 {
+			s.Fatal("Failed: Total battery charging time is more than 3 hours")
+		}
 
-	if err := powercontrol.AssertSLPAndC10(slpOpSetPre, slpOpSetPost, pkgOpSetPre, pkgOpSetPost); err != nil {
-		s.Fatal("Failed to verify SLP and C10 state values: ", err)
+		s.Logf("Waiting for battery to reach %v%%", maxBatteryPercent)
+		if err := waitForCharge(ctx, h, maxBatteryPercent); err != nil {
+			s.Fatalf("Failed to reach target %v%%, %v", maxBatteryPercent, err.Error())
+		}
+
+	} else {
+		slpOpSetPre, pkgOpSetPre, err := powercontrol.SlpAndC10PackageValues(ctx, h.DUT)
+		if err != nil {
+			s.Fatal("Failed to get SLP counter and C10 package values before suspend-resume: ", err)
+		}
+
+		// Emulate DUT lid closing.
+		if err := h.Servo.CloseLid(ctx); err != nil {
+			s.Fatal("Failed to close DUT's lid: ", err)
+		}
+
+		testing.Poll(ctx, func(ctx context.Context) error {
+			s.Log("Checking lid state after closing lid")
+			lidState, err := h.Servo.LidOpenState(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to check the final lid state")
+			}
+			if lidState != string(servo.LidOpenNo) {
+				return errors.Errorf("failed to check DUT lid state, got %q, want %q", lidState, servo.LidOpenNo)
+
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second})
+
+		startTime := time.Now()
+		chargeBeforeSleep, err := getChargePercentage(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to get battery level: ", err)
+		}
+
+		// For 10 minutes, observe battery charging status.
+		s.Log("Charging DUT for 10 minutes after closing lid")
+		if err := testing.Sleep(ctx, 10*time.Minute); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
+
+		// Check battery charge after 10 minutes.
+		chargeAfterSleep, err := getChargePercentage(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to get battery level: ", err)
+		}
+		endTime := time.Now()
+
+		totalTime := endTime.Sub(startTime) * 100 / time.Duration((chargeAfterSleep-chargeBeforeSleep)*float32(time.Minute))
+		s.Log("Total Time to Full Charge in minutes: ", totalTime)
+		if totalTime > 180 {
+			s.Fatal("Failed: Total battery charging time is more than 3 hours")
+		}
+
+		s.Logf("Waiting for battery to reach %v%%", maxBatteryPercent)
+		if err := waitForCharge(ctx, h, maxBatteryPercent); err != nil {
+			s.Fatalf("Failed to reach target %v%%, %v", maxBatteryPercent, err.Error())
+		}
+		// Emulate DUT lid opening.
+		if err := h.Servo.OpenLid(ctx); err != nil {
+			s.Fatal("Failed to open DUT's lid: ", err)
+		}
+		testing.Poll(ctx, func(ctx context.Context) error {
+			s.Log("Checking lid state after opening lid")
+			lidState, err := h.Servo.LidOpenState(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to check the final lid state")
+			}
+			if lidState != string(servo.LidOpenYes) {
+				return errors.Errorf("failed to check DUT lid state, got %q, want %q", lidState, servo.LidOpenYes)
+
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second})
+
+		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+		if err := h.DUT.WaitConnect(waitCtx); err != nil {
+			s.Fatal("Failed to wait connect DUT: ", err)
+		}
+
+		slpOpSetPost, pkgOpSetPost, err := powercontrol.SlpAndC10PackageValues(ctx, h.DUT)
+		if err != nil {
+			s.Fatal("Failed to get SLP counter and C10 package values after suspend-resume: ", err)
+		}
+
+		if err := powercontrol.AssertSLPAndC10(slpOpSetPre, slpOpSetPost, pkgOpSetPre, pkgOpSetPost); err != nil {
+			s.Fatal("Failed to verify SLP and C10 state values: ", err)
+		}
 	}
 }
 
@@ -275,4 +351,25 @@ func getChargePercentage(ctx context.Context, h *firmware.Helper) (float32, erro
 		return -1, errors.Wrap(err, "failed to get battery charge details")
 	}
 	return 100 * float32(currentMAH) / float32(maxMAH), nil
+}
+
+// brightnessPercent gets the current brightness of the system.
+func brightnessPercent(ctx context.Context, dut *dut.DUT) (float64, error) {
+	out, err := dut.Conn().CommandContext(ctx, "backlight_tool", "--get_brightness_percent").Output()
+	if err != nil {
+		return 0.0, errors.Wrap(err, "failed to execute brightness command")
+	}
+	sysBrightness, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		return 0.0, errors.Wrap(err, "failed to parse string into float64")
+	}
+	return sysBrightness, nil
+}
+
+// setBrightnessPercent sets the brightness of the system.
+func setBrightnessPercent(ctx context.Context, percent float64, dut *dut.DUT) error {
+	if err := dut.Conn().CommandContext(ctx, "backlight_tool", fmt.Sprintf("--set_brightness_percent=%f", percent)).Run(); err != nil {
+		return errors.Wrapf(err, "failed to set %f%% brightness", percent)
+	}
+	return nil
 }

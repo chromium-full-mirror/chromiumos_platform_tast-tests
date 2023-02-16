@@ -14,6 +14,10 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	pow "chromiumos/tast/local/power"
 	"chromiumos/tast/services/cros/power"
 	"chromiumos/tast/testing"
@@ -108,6 +112,45 @@ func (b *BatteryService) DrainBattery(ctx context.Context, req *power.BatteryReq
 		Timeout:  45 * time.Minute,
 	}); err != nil {
 		return nil, errors.Wrapf(err, "failed to drain battery to %.2f%%", req.MaxPercentage)
+	}
+	return &empty.Empty{}, nil
+}
+
+// PowerSettingInIdleMode provides power settings required during IDLE mode.
+func (b *BatteryService) PowerSettingInIdleMode(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if b.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	tconn, err := b.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	ui := uiauto.New(tconn)
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Power").Role(role.Link))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch os-settings Power page")
+	}
+	defer settings.Close(ctx)
+
+	idleActionWhileCharging := nodewith.Name("Idle action while charging").Role(role.ComboBoxSelect)
+	if err := ui.LeftClick(idleActionWhileCharging)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to left click on idle action while charging in combo box")
+	}
+
+	keepDisplayOnListBox := nodewith.Name("Keep display on").Role(role.ListBoxOption)
+	if err := ui.LeftClick(keepDisplayOnListBox)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to left click on keep display in list box")
+	}
+
+	idleActionOnBattery := nodewith.Name("Idle action while on battery").Role(role.ComboBoxSelect)
+	if err := ui.LeftClick(idleActionOnBattery)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to left click on idle action while on battery in combo box")
+	}
+
+	if err := ui.LeftClick(keepDisplayOnListBox)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to left click on keep display in list box")
 	}
 	return &empty.Empty{}, nil
 }

@@ -21,6 +21,9 @@ service BatteryService {
 
   // DrainBattery drains DUT battery to specific percentage.
   rpc DrainBattery (BatteryRequest) returns (google.protobuf.Empty) {}
+
+  // PowerSettingInIdleMode provides power settings required during IDLE mode.
+  rpc PowerSettingInIdleMode (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message BatteryRequest {
