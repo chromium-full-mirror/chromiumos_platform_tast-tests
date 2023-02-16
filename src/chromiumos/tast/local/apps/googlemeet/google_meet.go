@@ -296,7 +296,7 @@ func (gm *GoogleMeet) SwitchMicrophone(expectedOn bool) action.Action {
 	}
 
 	return func(ctx context.Context) error {
-		info, err := gm.ui.WithTimeout(shortUITimeout).Info(ctx, microphoneButton)
+		info, err := gm.ui.WithTimeout(mediumUITimeout).Info(ctx, microphoneButton)
 		if err != nil {
 			return errors.Wrap(err, "failed to wait for the meet microphone switch button to show")
 		}
@@ -309,18 +309,17 @@ func (gm *GoogleMeet) SwitchMicrophone(expectedOn bool) action.Action {
 		// switching on microphone should handle permission prompt.
 		// Otherwise it is straightforward to switch on/off.
 		microphoneButton = nodewith.Name(info.Name).Role(role.Button)
+		switchAction := uiauto.NamedAction(actionDesc,
+			gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(
+				microphoneButton,
+				gm.ui.WaitUntilGone(microphoneButton)))
+
 		if expectedOn {
 			return prompts.ActionAndGrantPermissionIfRequired(
-				gm.tconn, gm.conn, gm.ui.DoDefault(microphoneButton), webutil.PermissionMicrophone)(ctx)
+				gm.tconn, gm.conn, switchAction, webutil.PermissionMicrophone)(ctx)
 		}
 
-		if err := gm.ui.DoDefaultUntil(
-			microphoneButton,
-			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(microphoneButton),
-		)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to %q", actionDesc)
-		}
-		return nil
+		return switchAction(ctx)
 	}
 }
 
@@ -334,7 +333,7 @@ func (gm *GoogleMeet) SwitchVideo(expectedOn bool) action.Action {
 	}
 
 	return func(ctx context.Context) error {
-		info, err := gm.ui.WithTimeout(shortUITimeout).Info(ctx, cameraButton)
+		info, err := gm.ui.WithTimeout(mediumUITimeout).Info(ctx, cameraButton)
 		if err != nil {
 			return errors.Wrap(err, "failed to wait for the camera switch button to show")
 		}
@@ -344,23 +343,19 @@ func (gm *GoogleMeet) SwitchVideo(expectedOn bool) action.Action {
 		}
 
 		cameraButton = nodewith.Name(info.Name).Role(role.Button)
+		switchAction := uiauto.NamedAction(actionDesc,
+			gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(
+				cameraButton,
+				gm.ui.WaitUntilGone(cameraButton)))
+
 		// Switch on video should check permission status to decide whether need to handle permission prompt.
 		if expectedOn {
-			return uiauto.RetrySilently(5, uiauto.Combine("turn on the camera",
-				prompts.ActionAndGrantPermissionIfRequired(
-					gm.tconn, gm.conn, gm.ui.DoDefault(cameraButton), webutil.PermissionCamera),
-				gm.ui.WithTimeout(5*time.Second).WaitUntilGone(cameraButton)),
-			)(ctx)
+			return prompts.ActionAndGrantPermissionIfRequired(
+				gm.tconn, gm.conn, switchAction, webutil.PermissionCamera)(ctx)
 		}
 
 		// Otherwise it is straightforward to switch video.
-		if err := gm.ui.DoDefaultUntil(
-			cameraButton,
-			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(cameraButton),
-		)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to %s", actionDesc)
-		}
-		return nil
+		return switchAction(ctx)
 	}
 }
 
