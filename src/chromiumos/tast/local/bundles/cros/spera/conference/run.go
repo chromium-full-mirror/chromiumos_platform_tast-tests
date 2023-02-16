@@ -217,7 +217,20 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			}
 		}
 		if !isNoRoom {
-			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, conf.CloseConference); err != nil {
+			closeFunc := func(ctx context.Context) error {
+				if bt == browser.TypeLacros {
+					tabs, err := browser.AllTabs(ctx, bTconn)
+					if err != nil {
+						return err
+					}
+					// Leaving one tab is critical to keep the lacros-chrome process running.
+					if len(tabs) == 1 {
+						return browser.ReplaceAllTabsWithSingleNewTab(ctx, bTconn)
+					}
+				}
+				return conf.CloseConference(ctx)
+			}
+			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
 				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
 			}
 		}
