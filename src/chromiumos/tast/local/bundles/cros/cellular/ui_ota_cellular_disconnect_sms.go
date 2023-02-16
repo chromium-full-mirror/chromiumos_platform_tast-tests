@@ -1,0 +1,161 @@
+// Copyright 2023 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cellular
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/cellular"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/input"
+	"chromiumos/tast/testing"
+)
+
+// This test is only run on the cellular_single_active group. All boards in that group
+// provide the Modem.SimSlots property and have at least one provisioned SIM slot.
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         UIOtaCellularDisconnectSms,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that MT SMS is received appears as notificatoin on UI",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_sms"},
+		Fixture:      "cellular",
+		SoftwareDeps: []string{"chrome"},
+		Timeout:      10 * time.Minute,
+		VarDeps:      []string{"cellular.gaiaAccountPool"},
+		Vars:         []string{"autotest_host_info_labels"},
+	})
+}
+
+// UIOtaCellularDisconnectSms validates MT SMS while cellular disconnected and check when connected, uses google voice to send SMS.
+func UIOtaCellularDisconnectSms(ctx context.Context, s *testing.State) {
+	_, modem, err := cellular.NewHelperWithSim(ctx)
+	if err != nil {
+		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
+	}
+
+	/* a) Check cellular connection and get mobile number on dut
+	   b) Disconnect cellular connection
+	   c) Create and send SMS on google voice ui from chrome web interface
+	   d) Connect mobile connection
+	   e) Check UI notifications for SMS, verify SMS content
+	   f) Clear received SMS notification
+	*/
+
+	messageToSend := "Hello " + time.Now().Format(time.UnixDate)
+
+	if err := modem.DeleteAllMessages(ctx); err != nil {
+		s.Fatal("Failed to delete all messages: ", err)
+	}
+
+	// Device properties from host info store labels.
+	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
+	if err != nil {
+		s.Fatal("Failed to read autotest_host_info_labels: ", err)
+	}
+
+	helper, err := cellular.NewHelperWithLabels(ctx, labels)
+	if err != nil {
+		s.Fatal("Failed to create cellular.Helper: ", err)
+	}
+	iccid, err := helper.GetCurrentICCID(ctx)
+	if err != nil {
+		s.Fatal("Could not get current ICCID: ", err)
+	}
+
+	// Read modem property OwnNumber from labels.
+	phoneNumber := helper.GetLabelOwnNumber(ctx, iccid)
+	if phoneNumber == "" || len(phoneNumber) < 10 {
+		s.Fatal("Invalid OwnNumber label value")
+	}
+	if phoneNumber == "1234567890" || phoneNumber == "1111111111" {
+		s.Fatal("SMS test not applicable for this dut")
+	}
+	s.Logf("Phone number: %s to send message: %s", phoneNumber, messageToSend)
+
+	s.Log("Disconnect Cellular")
+	if _, err = helper.Disconnect(ctx); err != nil {
+		s.Fatal("Cellular Disconnect failed: ", err)
+	}
+
+	// Create cleanup context to ensure UI tree dumps correctly.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	gaiaCreds, err := chrome.PickRandomCreds(s.RequiredVar("cellular.gaiaAccountPool"))
+	if err != nil {
+		s.Fatal("Failed to parse cellular user creds: ", err)
+	}
+	uiHelper, err := cellular.NewUIHelper(ctx, gaiaCreds.User, gaiaCreds.Pass)
+	if err != nil {
+		s.Fatal("Failed to create cellular.NewUiHelper: ", err)
+	}
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, uiHelper.Tconn)
+	s.Log("open google voice web page")
+
+	// Keyboard to input key inputs.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer kb.Close()
+
+	// Create gv MO sms using google voice configured with owned test accounts.
+	gConn, err := uiHelper.GoogleVoiceLogin(ctx)
+	if err != nil {
+		s.Fatal("Failed to open Google voice website: ", err)
+	}
+	defer gConn.Close()
+	defer gConn.CloseTarget(cleanupCtx)
+
+	if gConn == nil {
+		s.Fatal("Could not create new chrome tab")
+	}
+
+	err = uiHelper.SendMessage(ctx, phoneNumber, messageToSend)
+	if err != nil {
+		s.Fatal("Failed to send message: ", err)
+	}
+
+	// Find connectable Cellular service and trigger Connect.
+	service, err := helper.FindServiceForDevice(ctx)
+	if err != nil {
+		s.Fatal("Unable to find Cellular Service for Device: ", err)
+	}
+	if isConnected, err := service.IsConnected(ctx); err != nil {
+		s.Fatal("Unable to get IsConnected for Service: ", err)
+	} else if !isConnected {
+		if _, err := helper.ConnectToDefault(ctx); err != nil {
+			s.Fatal("Unable to Connect to Service: ", err)
+		}
+	}
+
+	s.Log("Check for SMS message")
+	err = uiHelper.ValidateMessage(ctx, messageToSend)
+	if err != nil {
+		s.Fatal("Failed validation of message: ", err)
+	}
+
+	alertDialog := nodewith.Role(role.AlertDialog).ClassName("MessagePopupView").Onscreen()
+	// Click on alert dialog to close.
+	if err := uiauto.Combine("Click on alert dialog",
+		uiHelper.UI.WithTimeout(5*time.Second).WaitUntilExists(alertDialog),
+		uiHelper.UIHandler.Click(alertDialog),
+		kb.AccelAction("Ctrl+X"),
+		uiHelper.UI.WaitUntilGone(alertDialog),
+	)(ctx); err != nil {
+		s.Fatal("Failed to click on notification  dialog: ", err)
+	}
+}
