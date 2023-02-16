@@ -194,8 +194,9 @@ func (vm *VM) Command(ctx context.Context, vshArgs ...string) *testexec.Cmd {
 
 // LXCCommand runs lxc inside the VM with the specified args.
 func (vm *VM) LXCCommand(ctx context.Context, lxcArgs ...string) (string, error) {
-	envLXC := []string{"env", "LXD_DIR=/mnt/stateful/lxd", "LXD_CONF=/mnt/stateful/lxd_conf", "lxc"}
-	cmd := vm.Command(ctx, append(envLXC, lxcArgs...)...)
+	lxcCmd := "lxc " + strings.Join(lxcArgs, " ")
+	envLXC := []string{"env", "LXD_DIR=/mnt/stateful/lxd", "LXD_CONF=/mnt/stateful/lxd_conf", "bash", "-i", "-c"}
+	cmd := vm.Command(ctx, append(envLXC, lxcCmd)...)
 	result, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to run %q", strings.Join(cmd.Args, " "))
