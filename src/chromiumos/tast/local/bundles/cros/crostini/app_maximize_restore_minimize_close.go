@@ -74,6 +74,7 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 	// Anything animated like blinking cursors will break screendiffs.
 	cont.WriteFile(ctx, "~/.emacs", "(blink-cursor-mode 0)")
 	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid","workbench.startupEditor": "None", "update.mode": "none"}`)
+	cont.WriteFile(ctx, fmt.Sprintf(".audacity-data/audacity.cfg"), "[GUI]\nShowSplashScreen=0\n")
 
 	appParams := []struct {
 		// App name in the launcher and the shelf.
@@ -81,13 +82,13 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 		// App window name in the a11y tree.
 		appWindowName string
 		// Any word in the app to indicate the app is rendered onscreen.
-		// E.g., "Files" in the menu of VS Code.
+		// E.g., "File" in the menu of VS Code.
 		wordInApp string
 	}{
 		{"Emacs (GUI)", "emacs@penguin", "File"},
 		{"Visual Studio Code", "Visual Studio Code", "File"},
-		// TODO(b/205650026) Maximize button is missing in Firefox-ESR and
-		// Audacity, add these two apps once the issue is fixed.
+		{"Firefox ESR", "Mozilla Firefox", "Firefox"},
+		{"Audacity", "Audacity", "File"},
 	}
 
 	for _, appParam := range appParams {
@@ -105,9 +106,9 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 				// Wait until the window is stable.
 				uda.WaitUntilExists(uidetection.Word(appParam.wordInApp).First().WithinA11yNode(appWindow)),
 				crostini.Maximize(tconn, appWindow),
-				d.DiffWindow(ctx, fmt.Sprintf("%s_maximized", appParam.appName), screenshot.Retries(3), screenshot.SkipSetWindowState(true)),
+				d.DiffWindow(ctx, fmt.Sprintf("%s_maximized", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
 				crostini.RestoreFromMaximize(tconn, appWindow),
-				d.DiffWindow(ctx, fmt.Sprintf("%s_restored", appParam.appName), screenshot.Retries(3), screenshot.SkipSetWindowState(true)),
+				d.DiffWindow(ctx, fmt.Sprintf("%s_restored", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
 				crostini.Close(tconn, appWindow),
 				// Check the app disappears from the shelf.
 				ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appParam.appName).Role(role.Button).Visible().Ancestor(shelf)),
