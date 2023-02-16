@@ -43,7 +43,7 @@ func New(sess *driver.Session, autotestPrivateSupported bool) *Browser {
 // NewTab creates a new Google Chrome tab.
 // Lacros-Chrome initially starts with a new tab page (chrome://newtab/).
 // If this new tab page exists, use the new tab to navigate to the URL.
-func (b *Browser) NewTab(ctx context.Context, url string) (*Conn, error) {
+func (b *Browser) NewTab(ctx context.Context, url string, opts ...CreateTargetOption) (*Conn, error) {
 	targets, err := b.FindTargets(ctx, driver.MatchTargetURL("chrome://newtab/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new tab targets")
@@ -51,7 +51,7 @@ func (b *Browser) NewTab(ctx context.Context, url string) (*Conn, error) {
 	if len(targets) != 1 {
 		// If there are no new tab or there are multiple new tabs,
 		// create a new tab and return.
-		return b.NewConn(ctx, url)
+		return b.NewConn(ctx, url, opts...)
 	}
 
 	return b.NavigateToURLUsingNewTab(ctx, url)
