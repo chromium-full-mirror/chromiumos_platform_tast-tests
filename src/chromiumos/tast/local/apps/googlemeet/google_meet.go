@@ -47,6 +47,8 @@ var (
 	endMeetingButton = nodewith.Name("Leave call").Role(role.Button).Ancestor(meetRootWebArea)
 	// Use end meeting button to identify whether it is currently in a meeting.
 	inMeetingIdentifier = endMeetingButton
+
+	youText = nodewith.Name("You").Role(role.StaticText).Ancestor(meetRootWebArea)
 )
 
 // VideoNode represents the first video node in the meeting.
@@ -277,13 +279,32 @@ func (gm *GoogleMeet) Close(ctx context.Context) error {
 
 // EnterFullScreen changes setting to turn full screen mode.
 func (gm *GoogleMeet) EnterFullScreen(ctx context.Context) error {
-	fullScreenButton := nodewith.Name("Full screen").Role(role.MenuItem).Ancestor(meetRootWebArea)
+	ui := gm.ui
+	if err := ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, false, time.Second)(ctx); err != nil {
+		testing.ContextLogf(ctx, "%q is already full screen", appName)
+		return nil
+	}
 
-	return uiauto.Combine("enter full screen",
-		gm.ui.DoDefault(moreOptionsButton),
-		gm.ui.DoDefault(fullScreenButton),
-		ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, true, 5*time.Second),
-	)(ctx)
+	return ui.Retry(3, uiauto.NamedCombine("enter full screen",
+		// Double-click the "You" text to enter full screen.
+		ui.DoubleClick(youText),
+		ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, true, 10*time.Second),
+	))(ctx)
+}
+
+// ExitFullScreen changes setting to exit full screen mode.
+func (gm *GoogleMeet) ExitFullScreen(ctx context.Context) error {
+	ui := gm.ui
+	if err := ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, true, time.Second)(ctx); err != nil {
+		testing.ContextLogf(ctx, "%q has exited full screen", appName)
+		return nil
+	}
+
+	return ui.Retry(3, uiauto.NamedCombine("exit full screen",
+		// Double-click the "You" text to exit full screen.
+		ui.DoubleClick(youText),
+		ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, false, 10*time.Second),
+	))(ctx)
 }
 
 // SwitchMicrophone turns on/off the microphone on main screen.
