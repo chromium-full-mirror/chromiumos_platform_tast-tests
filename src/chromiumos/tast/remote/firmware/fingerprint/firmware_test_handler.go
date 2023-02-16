@@ -66,14 +66,13 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		return nil, errors.Wrap(err, "failed to determine if reboot is needed")
 	}
 
-	// Disable rootfs verification. It's necessary in order to disable
-	// FP updater and biod upstart job if board needs reboot after flashing
-	// or test flashes non-production firmware.
+	// Disable rootfs verification. It's necessary in order to disable biod
+	// upstart job if board needs reboot after flashing.
 	rootfsIsWritable, err := sysutil.IsRootfsWritable(ctx, t.d.RPC())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check if rootfs is writable")
 	}
-	if !rootfsIsWritable && (t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp)) {
+	if !rootfsIsWritable && t.needsRebootAfterFlashing {
 		testing.ContextLog(ctx, "Making rootfs writable")
 		// Since MakeRootfsWritable will reboot the device, we must call
 		// RPCClose/RPCDial before/after calling MakeRootfsWritable.
@@ -87,7 +86,7 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		if err := t.d.RPCDial(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to redial rpc")
 		}
-	} else if rootfsIsWritable && !(t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp)) {
+	} else if rootfsIsWritable && !t.needsRebootAfterFlashing {
 		testing.ContextLog(ctx, "WARNING: The rootfs is writable")
 	}
 
@@ -137,7 +136,7 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 
 	t.cleanupTime = timeForCleanup
 
-	if t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp) {
+	if t.needsRebootAfterFlashing {
 		// Disable biod upstart job so that it doesn't interfere with the test when
 		// we reboot.
 		testing.ContextLogf(ctx, "Disabling %s job", biodUpstartJobName)
@@ -160,7 +159,15 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 				}
 			}
 		}()
-		// Disable FP updater so that it doesn't interfere with the test when we reboot.
+
+		// Account for the additional time that rebooting adds.
+		t.cleanupTime += 3 * time.Minute
+	}
+
+	if t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp) {
+		// Disable FP updater so that it doesn't interfere with the test
+		// when we reboot. Please note that we don't need to disable
+		// rootfs verification before disabling fingerprint updater.
 		if err := DisableFPUpdater(ctx, t.d); err != nil {
 			return nil, errors.Wrap(err, "failed to disable updater")
 		}
@@ -173,9 +180,6 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 				}
 			}
 		}()
-
-		// Account for the additional time that rebooting adds.
-		t.cleanupTime += 3 * time.Minute
 	}
 
 	t.dutTempDir, err = t.DutfsClient().TempDir(ctx, "", dutTempPathPattern)
@@ -244,7 +248,7 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 		firstErr = err
 	}
 
-	if t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp) {
+	if t.needsRebootAfterFlashing {
 		if upstartService != nil {
 			// If biod upstart job disabled, re-enable it
 			resp, err := upstartService.IsJobEnabled(ctx, &platform.IsJobEnabledRequest{JobName: biodUpstartJobName})
@@ -258,16 +262,6 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 			}
 		}
 
-		// If FP updater disabled, re-enable it
-		fpUpdaterEnabled, err := IsFPUpdaterEnabled(ctx, t.d)
-		if err == nil && !fpUpdaterEnabled {
-			if err := EnableFPUpdater(ctx, t.d); err != nil && firstErr == nil {
-				firstErr = err
-			}
-		} else if err != nil && firstErr == nil {
-			firstErr = err
-		}
-
 		// Delete temporary working directory and contents
 		// If we rebooted, the directory may no longer exist.
 		tempDirExists, err := t.DutfsClient().Exists(ctx, t.dutTempDir)
@@ -277,6 +271,18 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 			}
 		} else if err != nil && firstErr == nil {
 			firstErr = errors.Wrapf(err, "failed to check existence of temp directory: %q", t.dutTempDir)
+		}
+	}
+
+	if t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp) {
+		// If FP updater disabled, re-enable it.
+		fpUpdaterEnabled, err := IsFPUpdaterEnabled(ctx, t.d)
+		if err == nil && !fpUpdaterEnabled {
+			if err := EnableFPUpdater(ctx, t.d); err != nil && firstErr == nil {
+				firstErr = err
+			}
+		} else if err != nil && firstErr == nil {
+			firstErr = err
 		}
 	}
 
