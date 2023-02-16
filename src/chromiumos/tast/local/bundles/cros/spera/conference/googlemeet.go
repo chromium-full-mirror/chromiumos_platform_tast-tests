@@ -782,35 +782,37 @@ func (conf *GoogleMeetConference) Presenting(ctx context.Context, application go
 			}
 			return nil
 		}
-
-		presentNowButton := nodewith.Name("Present now").Role(role.PopUpButton)
-		presentMode := nodewith.NameContaining("A tab").Role(role.MenuItem)
-		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(string(application))
-		presentingButton := nodewith.NameContaining("presenting").Role(role.PopUpButton)
-		shareButton := nodewith.Name("Share").Role(role.Button)
-		// There are two "Stop presenting" buttons on the screen with the same ancestor, role and name that we can't use unique finder.
-		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
-
-		// If another participant is presenting, wait for the presentation to stop.
-		checkPresentNowButton := func(ctx context.Context) error {
-			return testing.Poll(ctx, func(ctx context.Context) error {
-				if err := ui.WaitUntilExists(presentNowButton)(ctx); err == nil {
-					testing.ContextLog(ctx, `"Preset now" button is found`)
-					return nil
-				}
-				if err := ui.Exists(presentingButton)(ctx); err != nil {
-					return testing.PollBreak(errors.Wrap(err, `failed to find "Present now" button`))
-				}
-				testing.ContextLog(ctx, "Another participant is presenting now, wait for the presentation to stop")
-				return errors.New("Another participant is presenting now")
-			}, &testing.PollOptions{Timeout: longUITimeout})
-		}
 		if err := switchToTab(meetTitle)(ctx); err != nil {
 			return err
 		}
+
+		clickPresentNowButton := func(ctx context.Context) error {
+			presentNowButton := nodewith.Name("Present now").Role(role.Button)
+			presentNowPopUpButton := nodewith.Name("Present now").Role(role.PopUpButton)
+			presentingPopUpButton := nodewith.NameContaining("presenting").Role(role.PopUpButton)
+			presentButton, err := ui.FindAnyExists(ctx,
+				presentNowButton,
+				presentNowPopUpButton,
+				presentingPopUpButton)
+			if err != nil {
+				return errors.New("failed to find present button")
+			}
+			if presentButton == presentingPopUpButton {
+				testing.ContextLog(ctx, "Another participant is presenting now")
+				return errors.New("another participant is presenting now")
+			}
+
+			return ui.DoDefault(presentButton)(ctx)
+		}
+
+		presentMode := nodewith.NameContaining("A tab").Role(role.MenuItem)
+		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(string(application))
+		shareButton := nodewith.Name("Share").Role(role.Button)
+		// There may be multiple "Stop sharing" buttons, so add First() here.
+		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
+
 		return ui.Retry(retryTimes, uiauto.NamedCombine("share screen",
-			checkPresentNowButton,
-			ui.DoDefault(presentNowButton),
+			clickPresentNowButton,
 			ui.DoDefault(presentMode),
 			ui.LeftClickUntil(presentTab, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentTab.Focused())),
 			ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
