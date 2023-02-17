@@ -45,8 +45,6 @@ func init() {
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
-			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 		},
 		Impl:            fixtureImplWithFeatures([]string{}, []string{"Floss"}, true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -60,8 +58,6 @@ func init() {
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
-			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 		},
 		Impl:            fixtureImplWithFeatures([]string{"Floss"}, []string{}, true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -101,8 +97,6 @@ func init() {
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
-			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 		},
 		Impl:            &bluetoothEnabledFixt{btImpl: &bluez.BlueZ{}, isOobe: true},
 		Parent:          "oobeWithBlueZ",
@@ -116,8 +110,6 @@ func init() {
 		Contacts: []string{
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
-			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 		},
 		Impl:            &bluetoothEnabledFixt{btImpl: &floss.Floss{}, isOobe: true},
 		Parent:          "oobeWithFloss",

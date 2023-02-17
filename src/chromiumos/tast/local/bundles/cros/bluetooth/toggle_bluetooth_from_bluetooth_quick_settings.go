@@ -21,8 +21,6 @@ func init() {
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@chromium.org",
-			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
