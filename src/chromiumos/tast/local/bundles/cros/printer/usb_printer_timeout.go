@@ -29,7 +29,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"cros_internal", "cups"},
+		SoftwareDeps: []string{"cups"},
 		Data:         []string{"print_usb_ps.ppd.gz", "print_usb_to_print.pdf"},
 	})
 }

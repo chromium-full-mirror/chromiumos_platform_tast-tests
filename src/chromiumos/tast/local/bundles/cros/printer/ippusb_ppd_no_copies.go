@@ -24,7 +24,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"chrome", "cros_internal", "cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
 		Data:         []string{"ippusb_no_copies.json"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})

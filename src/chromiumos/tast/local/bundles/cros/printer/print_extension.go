@@ -40,7 +40,7 @@ func init() {
 			"paper-io_printing",
 		},
 		Data:         []string{ppdFile, goldenFile},
-		SoftwareDeps: []string{"cros_internal", "cups"},
+		SoftwareDeps: []string{"cups", "ghostscript"},
 		Params: []testing.Param{
 			{
 				Name:              "cancel",

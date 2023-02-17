@@ -23,7 +23,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"cros_internal", "cups"},
+		SoftwareDeps: []string{"cups", "ghostscript"},
 		Data:         []string{"gstoraster_input.pdf", "gstoraster_golden.pwg"},
 	})
 }

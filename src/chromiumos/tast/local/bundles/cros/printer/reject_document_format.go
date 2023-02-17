@@ -31,7 +31,7 @@ func init() {
 			"paper-io_printing",
 		},
 		Timeout:      2 * time.Minute,
-		SoftwareDeps: []string{"cros_internal", "cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"cups", "virtual_usb_printer"},
 		Data:         []string{"reject_document_format_script.textproto"},
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 	})

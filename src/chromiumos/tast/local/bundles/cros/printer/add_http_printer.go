@@ -23,7 +23,7 @@ func init() {
 		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
-		SoftwareDeps: []string{"cros_internal", "cups"},
+		SoftwareDeps: []string{"cups"},
 		Data:         []string{httpTestPPDFile},
 		Attr: []string{
 			"group:mainline",

@@ -42,7 +42,7 @@ func init() {
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Timeout:      2 * time.Minute,
-		SoftwareDeps: []string{"chrome", "cros_internal", "cups", "virtual_usb_printer"},
+		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,

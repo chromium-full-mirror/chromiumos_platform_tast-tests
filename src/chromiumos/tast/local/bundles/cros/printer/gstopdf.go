@@ -23,7 +23,10 @@ func init() {
 			"group:paper-io",
 			"paper-io_printing",
 		},
-		SoftwareDeps: []string{"cros_internal", "cups"},
+		// TODO(b/269692035): Remove cros_internal once we figure out
+		// why output from this test depends on internal build
+		// differences instead of just ghostscript.
+		SoftwareDeps: []string{"cros_internal", "cups", "ghostscript"},
 		Data:         []string{"gstopdf_input.ps", "gstopdf_golden.pdf"},
 	})
 }

@@ -48,7 +48,7 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
-		SoftwareDeps: []string{"chrome", "cros_internal", "cups"},
+		SoftwareDeps: []string{"chrome", "cups"},
 		Data:         []string{"ipp_conf_finishings.txt", "get-jobs-finishings-info.test"},
 		Params: []testing.Param{
 			{
