@@ -70,7 +70,12 @@ class PatternChecker {
      * The less the distance between two descriptors,
      * the more they are similar.
      */
-    this.flann.knnMatch(this.des1, this.des2, matches, 2);
+    try {
+      this.flann.knnMatch(this.des1, this.des2, matches, 2);
+    } catch (e) {
+      console.warn('knnMatch error:', e);
+      return false;
+    }
     for (let i = 0; i < matches.size(); ++i) {
       const match = matches.get(i);
       const dMatch1 = match.get(0);
@@ -221,9 +226,6 @@ class PatternChecker {
             y > bound[i][3]) {
           rotate = false;
         }
-      }
-      if (!(normal || rotate)) {
-        console.log(bound)
       }
       result = normal || rotate;
     }
