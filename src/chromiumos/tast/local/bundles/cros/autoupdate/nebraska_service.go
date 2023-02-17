@@ -34,29 +34,28 @@ type NebraskaService struct {
 	s *testing.ServiceState
 
 	cmd     *testexec.Cmd
-	root    string
+	tmpDir  string
 	logPath string
 }
 
 // CreateTempDir creates a temporary directory that is used by Nebraska.
-func (nebraska *NebraskaService) CreateTempDir(ctx context.Context, req *empty.Empty) (*aupb.CreateTempDirResponse, error) {
+func (n *NebraskaService) CreateTempDir(ctx context.Context, req *empty.Empty) (*aupb.CreateTempDirResponse, error) {
 	dir, err := ioutil.TempDir("", "nebraska")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temp dir")
 	}
-	nebraska.root = dir
+	n.tmpDir = dir
 
 	return &aupb.CreateTempDirResponse{Path: dir}, nil
 }
 
 // Start starts a Nebraska service instance with the given parameters.
-func (nebraska *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*aupb.StartResponse, error) {
-	root := nebraska.root
-	logPath := filepath.Join(root, "nebraska.log")
+func (n *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*aupb.StartResponse, error) {
+	logPath := filepath.Join(n.tmpDir, "nebraska.log")
 
 	// Collect the arguments.
 	args := []string{
-		"--runtime-root", root,
+		"--runtime-root", n.tmpDir,
 		"--log-file", logPath,
 	}
 
@@ -74,16 +73,16 @@ func (nebraska *NebraskaService) Start(ctx context.Context, req *aupb.StartReque
 	}
 
 	// Start the Nebraska service.
-	nebraska.cmd = testexec.CommandContext(nebraska.s.ServiceContext(), "nebraska.py", args...)
+	n.cmd = testexec.CommandContext(n.s.ServiceContext(), "nebraska.py", args...)
 
 	testing.ContextLog(ctx, "Starting Nebraska")
-	if err := nebraska.cmd.Start(); err != nil {
+	if err := n.cmd.Start(); err != nil {
 		return nil, errors.Wrap(err, "failed to start Nebraska service")
 	}
 
 	// Wait for the port file.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := os.Stat(filepath.Join(root, "port")); err != nil {
+		if _, err := os.Stat(filepath.Join(n.tmpDir, "port")); err != nil {
 			if os.IsNotExist(err) {
 				return err
 			}
@@ -95,7 +94,7 @@ func (nebraska *NebraskaService) Start(ctx context.Context, req *aupb.StartReque
 	}
 
 	// Get and check the port number.
-	port, err := ioutil.ReadFile(filepath.Join(root, "port"))
+	port, err := ioutil.ReadFile(filepath.Join(n.tmpDir, "port"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the Nebraska's port file")
 	} else if req.Port != "" && req.Port != string(port) {
@@ -109,15 +108,15 @@ func (nebraska *NebraskaService) Start(ctx context.Context, req *aupb.StartReque
 }
 
 // Stop gracefully stops the previously started Nebraska instance.
-func (nebraska *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if nebraska.cmd == nil {
+func (n *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if n.cmd == nil {
 		testing.ContextLog(ctx, "There is no Nebraska process to stop")
 		return &empty.Empty{}, nil
 	}
 
 	testing.ContextLog(ctx, "Stopping Nebraska")
 
-	if err := nebraska.cmd.Process.Signal(unix.SIGINT); err != nil {
+	if err := n.cmd.Process.Signal(unix.SIGINT); err != nil {
 		testing.ContextLog(ctx, "Failed to interrupt the Nebraska process: ", err)
 		return nil, errors.Wrap(err, "failed to interrupt the Nebraska process")
 	}
@@ -125,7 +124,7 @@ func (nebraska *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*e
 	ok := false
 	errc := make(chan error)
 	go func() {
-		errc <- nebraska.cmd.Wait(testexec.DumpLogOnError)
+		errc <- n.cmd.Wait(testexec.DumpLogOnError)
 	}()
 
 	select {
@@ -145,11 +144,18 @@ func (nebraska *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*e
 }
 
 // RemoveTempDir removes the temporary directory that was created for Nebraska.
-func (nebraska *NebraskaService) RemoveTempDir(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	testing.ContextLog(ctx, "Deleting temp dir")
-	if err := os.RemoveAll(nebraska.root); err != nil {
-		testing.ContextLogf(ctx, "Failed to delete %s: %v", nebraska.root, err)
+func (n *NebraskaService) RemoveTempDir(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if n.tmpDir == "" {
+		testing.ContextLog(ctx, "No temp diretory to remove")
+		return &empty.Empty{}, nil
 	}
+
+	testing.ContextLog(ctx, "Deleting temp dir")
+	if err := os.RemoveAll(n.tmpDir); err != nil {
+		testing.ContextLogf(ctx, "Failed to delete %s: %v", n.tmpDir, err)
+	}
+
+	n.tmpDir = ""
 
 	return &empty.Empty{}, nil
 }
