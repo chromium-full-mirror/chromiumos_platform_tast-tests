@@ -117,8 +117,7 @@ var (
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "everywhere", ipType: ipv4v6, username: "eesecure", password: "secure", auth: pap}, APNTypes: []string{typeDefault}},
 		},
 		carrierVodafoneUK: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap"}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "pp.vodafone.co.uk", username: "web", password: "web"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap"}, APNTypes: []string{typeDefault}},
 		},
 	}
 )
