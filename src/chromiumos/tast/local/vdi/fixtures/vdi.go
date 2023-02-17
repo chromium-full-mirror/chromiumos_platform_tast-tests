@@ -312,10 +312,6 @@ func (v *fixtureState) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 func (v *fixtureState) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, v.cr, "vdi_fixt_posttest_ui_tree_"+s.TestName())
 
-	if err := v.vdiConnector.CleanUpSession(ctx); err != nil {
-		s.Error("Failed at cleaning VDI session: ", err)
-	}
-
 	tconn, err := v.cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
