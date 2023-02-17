@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishIndia}),
+		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishIndia, ime.EnglishPakistan}),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -69,6 +69,12 @@ func PhysicalKeyboardBasicTyping(ctx context.Context, s *testing.State) {
 	}{
 		{
 			inputMethod:         ime.EnglishIndia,
+			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
+			expectedText:        "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
+			expectedShiftedText: "ABCDEFGHIJKLMNOPQRSTUVWXYZ)!@#$%^&*(_+{}|:\"<>?",
+		},
+		{
+			inputMethod:         ime.EnglishPakistan,
 			typeAction:          "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
 			expectedText:        "abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./",
 			expectedShiftedText: "ABCDEFGHIJKLMNOPQRSTUVWXYZ)!@#$%^&*(_+{}|:\"<>?",
