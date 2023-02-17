@@ -50,9 +50,17 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not get board: ", err)
 	}
 
+	if _, err = board.OpenTitanToolCommand(ctx, "transport", "init"); err != nil {
+		s.Fatal("Failed to reset gpio to good state: ", err)
+	}
+	testing.ContextLog(ctx, "Simulating insertion of SuzyQ")
+	if err = board.GpioApplyStrap(ctx, ti50.CcdSuzyQ); err != nil {
+		s.Fatalf("Failed to apply SuzyQ strapping: %s", err)
+	}
+
 	ccdImage, err := prepareCcdImageFile(ctx, s, f.ImagePath)
 	if err != nil {
-		s.Fatal("Prepare file: ", err)
+		s.Fatal("Prepare file '", f.ImagePath, "': ", err)
 	}
 
 	if err = board.Reset(ctx); err != nil {
@@ -82,13 +90,13 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	out, err := board.GSCToolCommand(ctx, "", "--fwver")
 	if err != nil {
 		// Report the current usb connection state on failure.
-		usbOut, err := i.Command(ctx, "usb")
-		if err != nil {
-			s.Fatal("Getting usb state: ", err)
+		usbOut, err2 := i.Command(ctx, "usb")
+		if err2 != nil {
+			s.Fatal("Getting usb state: ", err2)
 		}
 		testing.ContextLog(ctx, "USB state:")
 		testing.ContextLog(ctx, usbOut)
-		s.Fatal("Failed to read version: ", err, out)
+		s.Fatal("Failed to read version: ", err, string(out))
 	}
 
 	// Ti50 will reject updates for 60 seconds.

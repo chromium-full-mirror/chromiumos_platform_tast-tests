@@ -22,6 +22,30 @@ const (
 	TpmI2c GpioStrap = "TI50_TPM_I2C"
 )
 
+// All well known gpio straps for CCD connection status
+const (
+	// CcdDisconnected is the default, no CCD cable connected
+	CcdDisconnected GpioStrap = "CCD_DISCONNECTED"
+	// CcdSuzyQ represents a SuzyQ
+	CcdSuzyQ GpioStrap = "CCD_SUZYQ"
+	// CcdSuzyQFlipped represents a SuzyQ connected upside-down (non-functional)
+	CcdSuzyQFlipped GpioStrap = "CCD_SUZYQ_FLIPPED"
+	// CcdServo represents a ServoV4 USB-C
+	CcdServo GpioStrap = "CCD_SERVO"
+	// CcdServoFlipped represents a ServoV4 USB-C connected upside-down (servo may be able to
+	// cross the D+/D- signal wires to enable functionality)
+	CcdServoFlipped GpioStrap = "CCD_SERVO_FLIPPED"
+	// CcdServoSnk1 represents a ServoV4 SUB-C connected while the ChromeOS device acting as
+	// the power source.
+	CcdServoSnk1 GpioStrap = "CCD_SERVO_SNK1"
+	// CcdServoSnk2 represents a ServoV4 SUB-C connected while the ChromeOS device acting as
+	// the power source (1.5A).
+	CcdServoSnk2 GpioStrap = "CCD_SERVO_SNK2"
+	// CcdServoSnk3 represents a ServoV4 SUB-C connected while the ChromeOS device acting as
+	// the power source (3A).
+	CcdServoSnk3 GpioStrap = "CCD_SERVO_SNK3"
+)
+
 // All well known gpio names for ti50 image
 const (
 	// GpioTi50ResetL is reset pin to GSC (active low)
