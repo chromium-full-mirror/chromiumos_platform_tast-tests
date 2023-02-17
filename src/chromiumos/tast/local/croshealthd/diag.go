@@ -54,6 +54,9 @@ const (
 	RoutineLedLitUp                       = "led_lit_up"
 	RoutineAudioSetVolume                 = "audio_set_volume"
 	RoutineAudioSetGain                   = "audio_set_gain"
+	RoutineBluetoothPower                 = "bluetooth_power"
+	RoutineBluetoothDiscovery             = "bluetooth_discovery"
+	RoutineBluetoothScanning              = "bluetooth_scanning"
 )
 
 // List of possible routine statuses
@@ -127,6 +130,9 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 		// Any node id is fine. What we need to test is audio dbus works.
 		diagParams = append(diagParams, "--node_id=0")
 		diagParams = append(diagParams, "--gain=10")
+	} else if params.Routine == RoutineBluetoothScanning {
+		// Default runtime for Bluetooth scanning routine is 5 seconds.
+		diagParams = append(diagParams, "--length_seconds=5")
 	}
 
 	var output string
