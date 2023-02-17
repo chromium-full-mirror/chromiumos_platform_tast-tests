@@ -168,7 +168,7 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 // using a UART transport.
 func BoardTransportIsUART(ctx context.Context, d *rpcdut.RPCDUT) (bool, error) {
 	// To compare with CHROMEOS_RELEASE_BOARD in /etc/lsb-release.
-	var uartBoards = []string{"guybrush", "zork"}
+	var uartBoards = []string{"guybrush", "zork", "skyrim"}
 	hostBoard, err := reporters.New(d.DUT()).Board(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to query host board")
