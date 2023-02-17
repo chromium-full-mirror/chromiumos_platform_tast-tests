@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction on ARC",
 		Contacts: []string{
-			"vishal38785@gmail.com", // Test author
+			"arc-framework+tast@google.com",
 			"chromeos-dlp@google.com",
-			"arc-framework+tast@google.com"},
+			"vishal38785@gmail.com", // Test author
+		},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},
