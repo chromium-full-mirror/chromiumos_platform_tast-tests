@@ -38,6 +38,13 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "touchpad",
+			Val: eventStartupParams{
+				category: "touchpad",
+				duration: 3 * time.Second,
+			},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
