@@ -203,6 +203,25 @@ func (c *PolicyService) GAIAEnrollForReporting(ctx context.Context, req *ppb.GAI
 	return &empty.Empty{}, nil
 }
 
+// SAMLTestIdPEnrollUsingChrome enrolls the device using dmserver.
+func (c *PolicyService) SAMLTestIdPEnrollUsingChrome(ctx context.Context, req *ppb.SAMLTestIdPEnrollUsingChromeRequest) (*empty.Empty, error) {
+	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
+
+	cr, err := chrome.New(
+		ctx,
+		chrome.SAMLTestIdPEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.NoLogin(),
+		chrome.DMSPolicy(req.DmserverURL),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start chrome")
+	}
+
+	c.chrome = cr
+
+	return &empty.Empty{}, nil
+}
+
 // EnrollUsingChrome starts a FakeDMS insstance that serves the provided policies and
 // enrolls the device. Specified user is logged in after this function completes.
 func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUsingChromeRequest) (*empty.Empty, error) {
