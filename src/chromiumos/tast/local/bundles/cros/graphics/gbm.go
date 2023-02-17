@@ -19,6 +19,7 @@ func init() {
 		Desc:         "Exercises the GBM (Graphics Buffer Management) implementation via built-in tests",
 		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
 		Contacts: []string{
+			"chromeos-gfx@google.com",
 			"marcheu@chromium.org",
 			"hidehiko@chromium.org", // Tast port author.
 		},
