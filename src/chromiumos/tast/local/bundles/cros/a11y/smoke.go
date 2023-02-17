@@ -38,7 +38,6 @@ func init() {
 			Name:              "lacros",
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			ExtraAttr:         []string{"informational"},
 			Val:               browser.TypeLacros,
 		}, {
 			Name:              "lacros_unstable",
