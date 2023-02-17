@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/policy/nebraska"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
@@ -119,6 +120,7 @@ func init() {
 }
 
 const updateEngineLog = "/var/log/update_engine.log"
+const waitTime = 10 * time.Second
 
 // clearAndUpdate restarts update engine, clears the logs and requests an update.
 func clearAndUpdate(ctx context.Context) error {
@@ -170,73 +172,114 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(*updateEngineTestParam)
 
-	const waitTime = 10 * time.Second
-
 	// Restart update-engine after clearing policies.
 	defer upstart.RestartJob(ctx, "update-engine")
 	defer policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
 
-	// Set the policy and check that the attribute is set.
-	if err := policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues); err != nil {
-		s.Fatal("Failed to update policies: ", err)
-	}
+	s.Run(ctx, "set", func(ctx context.Context, s *testing.State) {
+		updateServer, err := nebraska.Start(ctx)
+		if err != nil {
+			s.Fatal("Failed to start nebraska: ", err)
+		}
+		defer updateServer.Stop(ctx)
 
-	if err := clearAndUpdate(ctx); err != nil {
-		s.Fatal("Failed to trigger update request: ", err)
-	}
-
-	attributeEntry := param.policyParam + "=\"" + param.testValue + "\""
-	s.Log("Waiting for the log entry to show up")
-	var dat []byte
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		if dat, err = ioutil.ReadFile("/var/log/update_engine.log"); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to read update_engine logs"))
+		if err := updateServer.ConfigureStatefulLSBRelease(); err != nil {
+			s.Fatal("Failed to configure lsb-release: ", err)
 		}
 
-		if !strings.Contains(string(dat), attributeEntry) {
-			return errors.Errorf("%q not in the update_engine logs", attributeEntry)
+		// Set the policy and check that the attribute is set.
+		if err := policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues); err != nil {
+			s.Fatal("Failed to update policies: ", err)
 		}
 
-		return nil
-	}, &testing.PollOptions{
-		Timeout: waitTime,
-	}); err != nil {
-		s.Error("Could not find expected values: ", err)
-	}
+		if err := clearAndUpdate(ctx); err != nil {
+			s.Fatal("Failed to trigger update request: ", err)
+		}
 
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "set_log.txt"), dat, 0644); err != nil {
-		s.Error("Failed to dump update_engine logs: ", err)
-	}
+		attributeEntry := param.policyParam + "=\"" + param.testValue + "\""
+		s.Log("Waiting for the log entry to show up")
+		var updateServerLog []byte
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			var err error
+			updateServerLog, err := updateServer.ReadLog(ctx)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
+			}
 
-	// Clear policies to make sure attribute is not always sent.
-	if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{}); err != nil {
-		s.Fatal("Failed to clear policies: ", err)
-	}
+			if !strings.Contains(string(updateServerLog), attributeEntry) {
+				return errors.Errorf("%q not in the update_engine logs", attributeEntry)
+			}
 
-	if err := clearAndUpdate(ctx); err != nil {
-		s.Fatal("Failed to trigger update request: ", err)
-	}
+			return nil
+		}, &testing.PollOptions{
+			Timeout: waitTime,
+		}); err != nil {
+			s.Error("Could not find expected values: ", err)
+		}
 
-	s.Log("Waiting for update_engine to have a chance to log")
-	if err := testing.Sleep(ctx, waitTime); err != nil {
-		s.Fatal("Failed to wait for messages: ", err)
-	}
+		updateEngineLog, err := ioutil.ReadFile("/var/log/update_engine.log")
+		if err != nil {
+			s.Fatal("Failed to read update_engine logs: ", err)
+		}
 
-	dat, err := ioutil.ReadFile("/var/log/update_engine.log")
-	if err != nil {
-		s.Fatal("Failed to read update_engine logs: ", err)
-	}
+		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "set_log.txt"), updateEngineLog, 0644); err != nil {
+			s.Error("Failed to dump update_engine logs: ", err)
+		}
 
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "unset_log.txt"), dat, 0644); err != nil {
-		s.Error("Failed to dump update_engine logs: ", err)
-	}
+		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "set_nebraska_log.txt"), updateServerLog, 0644); err != nil {
+			s.Error("Failed to dump nebraska logs: ", err)
+		}
+	})
 
-	if param.checkParam && strings.Contains(string(dat), param.policyParam) {
-		s.Errorf("Unexpectedly found %q in the update_engine logs", param.policyParam)
-	}
+	s.Run(ctx, "unset", func(ctx context.Context, s *testing.State) {
+		updateServer, err := nebraska.Start(ctx)
+		if err != nil {
+			s.Fatal("Failed to start nebraska: ", err)
+		}
+		defer updateServer.Stop(ctx)
 
-	if param.checkVal && strings.Contains(string(dat), param.testValue) {
-		s.Errorf("Unexpectedly found test value %q in the update_engine logs", param.testValue)
-	}
+		if err := updateServer.ConfigureStatefulLSBRelease(); err != nil {
+			s.Fatal("Failed to configure lsb-release: ", err)
+		}
+
+		// Clear policies to make sure attribute is not always sent.
+		if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{}); err != nil {
+			s.Fatal("Failed to clear policies: ", err)
+		}
+
+		if err := clearAndUpdate(ctx); err != nil {
+			s.Fatal("Failed to trigger update request: ", err)
+		}
+
+		s.Log("Waiting for update_engine to have a chance to log")
+		if err := testing.Sleep(ctx, waitTime); err != nil {
+			s.Fatal("Failed to wait for messages: ", err)
+		}
+
+		updateEngineLog, err := ioutil.ReadFile("/var/log/update_engine.log")
+		if err != nil {
+			s.Fatal("Failed to read update_engine logs: ", err)
+		}
+
+		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "unset_log.txt"), updateEngineLog, 0644); err != nil {
+			s.Error("Failed to dump update_engine logs: ", err)
+		}
+
+		updateServerLog, err := updateServer.ReadLog(ctx)
+		if err != nil {
+			s.Fatal("Failed to read nebraska logs: ", err)
+		}
+
+		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "unset_nebraska_log.txt"), updateServerLog, 0644); err != nil {
+			s.Error("Failed to dump nebraska logs: ", err)
+		}
+
+		if param.checkParam && strings.Contains(string(updateServerLog), param.policyParam) {
+			s.Errorf("Unexpectedly found %q in the nebraska logs", param.policyParam)
+		}
+
+		if param.checkVal && strings.Contains(string(updateServerLog), param.testValue) {
+			s.Errorf("Unexpectedly found test value %q in the nebraska logs", param.testValue)
+		}
+	})
 }
