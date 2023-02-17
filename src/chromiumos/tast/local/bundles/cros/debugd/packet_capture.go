@@ -17,10 +17,12 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -39,6 +41,9 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeEnrolledLoggedIn",
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceDebugPacketCaptureAllowed{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
@@ -153,6 +158,8 @@ func PacketCapture(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump_"+param.name)
+
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
@@ -252,8 +259,8 @@ func PacketCapture(ctx context.Context, s *testing.State) {
 
 			// A notification must be shown after packet captures start successfully.
 			s.Log("Checking if packet capture notification is visible")
-			if _, err = ash.WaitForNotification(ctx, tconn, 5*time.Second, ash.WaitIDContains(notificationID)); err != nil {
-				s.Error("Packet capture notification is not visible")
+			if _, err = ash.WaitForNotification(ctx, tconn, 10*time.Second, ash.WaitIDContains(notificationID)); err != nil {
+				s.Fatal("Packet capture notification is not visible: ", err)
 			}
 
 			// Perform network operation to capture packets.
@@ -277,8 +284,8 @@ func PacketCapture(ctx context.Context, s *testing.State) {
 
 			// Notification must be gone after all packet captures are stopped.
 			s.Log("Checking if packet capture notification is gone")
-			if ash.WaitUntilNotificationGone(ctx, tconn, 10*time.Second, ash.WaitIDContains(notificationID)) != nil {
-				s.Error("Notification isn't gone after stopping packet capture")
+			if ash.WaitUntilNotificationGone(ctx, tconn, 20*time.Second, ash.WaitIDContains(notificationID)) != nil {
+				s.Fatal("Notification isn't gone after stopping packet capture: ", err)
 			}
 
 			// Check output file sizes.
