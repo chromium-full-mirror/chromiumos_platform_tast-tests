@@ -7,20 +7,12 @@ package wwcb
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/testing"
-)
-
-const (
-	servoEth   = "eth0"
-	dockingEth = "eth1"
 )
 
 func init() {
@@ -58,6 +50,11 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
+	defaultEthernets, err := utils.ListEthernets(ctx, s.DUT())
+	if err != nil {
+		s.Fatal("Failed to list Ethernets: ", err)
+	}
+
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect the external display to the Dock: ", err)
 	}
@@ -69,12 +66,14 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	}
 
 	// Find Dock Ethernet on DUT.
-	if err := findInterface(ctx, s.DUT(), dockingEth); err != nil {
-		s.Fatal("Failed to find dock Ethernet interface: ", err)
+	dockEth, err := utils.FindDockEthernet(ctx, s.DUT(), defaultEthernets)
+	if err != nil {
+		s.Fatal("Failed to find Dock Ethernet: ", err)
 	}
+	testing.ContextLog(ctx, "Found the Dock Ethernet: ", dockEth)
 
 	server := "www.google.com"
-	if err := pingNetwork(ctx, s.DUT(), dockingEth, server); err != nil {
+	if err := pingNetwork(ctx, s.DUT(), dockEth, server); err != nil {
 		s.Fatal("Failed to check Dock Ethernet is enabled: ", err)
 	}
 
@@ -82,28 +81,9 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	if err := utils.ControlFixture(ctx, ethernetID, "off"); err != nil {
 		s.Fatal("Failed to disconnect Ethernet from Dock: ", err)
 	}
-	if err := pingNetwork(ctx, s.DUT(), dockingEth, server); err == nil {
+	if err := pingNetwork(ctx, s.DUT(), dockEth, server); err == nil {
 		s.Fatal("Expect the Ethernet interface in the Dock is disabled; however it is still available")
 	}
-}
-
-// findInterface finds the certain interface name from ifconfig.
-func findInterface(ctx context.Context, dut *dut.DUT, ifName string) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := fmt.Sprint(`ifconfig -s`)
-		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to find interfaces")
-		}
-
-		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-			elements := strings.Split(line, " ")
-			if elements[0] == ifName {
-				return nil
-			}
-		}
-		return errors.Errorf("Unable to find the %s interface", ifName)
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Microsecond})
 }
 
 // pingNetwork verifies whether the network interface is available or not.

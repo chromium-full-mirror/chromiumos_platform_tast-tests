@@ -52,41 +52,6 @@ func VerifyPowerStatus(ctx context.Context, dut *dut.DUT, isBatteryCharging bool
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
 
-// VerifyEthernetStatus verifies whether the Ethernet device is connected or not.
-func VerifyEthernetStatus(ctx context.Context, dut *dut.DUT, isConnected bool) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := `ls /sys/class/net | grep eth`
-		ethernets, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
-		if err != nil {
-			if isConnected {
-				return errors.Wrap(err, "failed to retrieve Ethernet devices")
-			}
-			// Consider Ethernet devices are not found as disconnected.
-			return nil
-		}
-
-		status := false
-		for _, eth := range strings.Split(strings.TrimSpace(string(ethernets)), "\n") {
-			cmd := fmt.Sprintf("cat /sys/class/net/%s/operstate", eth)
-			out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
-			if err != nil {
-				return errors.Wrap(err, "failed to retrieve Ethernet state")
-			}
-
-			if "up" == strings.TrimSpace(string(out)) {
-				status = true
-				break
-			}
-		}
-
-		if status != isConnected {
-			return errors.Errorf("unexpected Ethernet status, got: %t, want: %t", status, isConnected)
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
-}
-
 // VerifyUSBAudioConnection verifies whether the USB audio are connected or not.
 func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
@@ -163,7 +128,7 @@ func VerifyTypeADevicesCount(ctx context.Context, dut *dut.DUT, expectUSBTypeADe
 
 // VerifyPeripheralsConnection verifies whether the peripherals are connected or not.
 // It checks the following peripherals: power, external display, USB audio, Ethernet, USB Type-A devices.
-func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, expectUSBTypeADeviceNum int) error {
+func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, dockingEth string, expectUSBTypeADeviceNum int) error {
 	testing.ContextLog(ctx, "Starting verifying peripherals")
 
 	testingCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
@@ -186,12 +151,94 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 		return errors.Wrap(err, "failed to verify connection of USB audio")
 	}
 
-	if err := VerifyEthernetStatus(testingCtx, dut, isConnected); err != nil {
-		return errors.Wrap(err, "failed to verify connection of Ethernet")
+	if isConnected {
+		if err := FindInterface(ctx, dut, dockingEth); err != nil {
+			return errors.Wrap(err, "failed to find docking station Ethernet")
+		}
+	} else {
+		if err := FindInterface(ctx, dut, dockingEth); err == nil {
+			return errors.New("Expect the Ethernet interface in the Dock is not connected; however it is still found")
+		}
 	}
 
 	if err := VerifyTypeADevicesCount(testingCtx, dut, expectUSBTypeADeviceNum); err != nil {
 		return errors.Wrap(err, "failed to verify connection of USB Type-A devices")
 	}
 	return nil
+}
+
+// ListEthernets returns ethernet interface name array.
+func ListEthernets(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	cmd := fmt.Sprint(`ifconfig -s`)
+	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute ifconfig command")
+	}
+
+	var ethernets []string
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		elements := strings.Split(line, " ")
+		ethernets = append(ethernets, elements[0])
+	}
+	return ethernets, nil
+}
+
+// FindDockEthernet returns docking ethernet interface name.
+func FindDockEthernet(ctx context.Context, dut *dut.DUT, defaultEth []string) (string, error) {
+	var diff []string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		current, err := ListEthernets(ctx, dut)
+		if err != nil {
+			return err
+		}
+
+		diff = FindDifference(current, defaultEth)
+		if len(diff) != 1 {
+			return errors.Errorf("unexpected number of Ethernet detected; got %d, want 1", len(diff))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+		return "", err
+	}
+	return diff[0], nil
+}
+
+// FindDifference finds the elements in one array but no in the other.
+// i.e., Set difference of two arrays: A - B.
+func FindDifference(a, b []string) []string {
+	m := make(map[string]bool)
+
+	for _, item := range b {
+		m[item] = true
+	}
+
+	var diff []string
+	for _, item := range a {
+		if _, ok := m[item]; !ok {
+			diff = append(diff, item)
+		}
+	}
+	return diff
+}
+
+// FindInterface finds the certain interface name from ifconfig.
+func FindInterface(ctx context.Context, dut *dut.DUT, ifName string) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		cmd := fmt.Sprint(`ifconfig -s`)
+		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
+		if err != nil {
+			return errors.Wrap(err, "failed to find interfaces")
+		}
+
+		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			elements := strings.Split(line, " ")
+			if len(elements) > 0 {
+				if elements[0] == ifName {
+					return nil
+				}
+			}
+		}
+
+		return errors.Errorf("Unable to find the %s interface", ifName)
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Microsecond})
 }
