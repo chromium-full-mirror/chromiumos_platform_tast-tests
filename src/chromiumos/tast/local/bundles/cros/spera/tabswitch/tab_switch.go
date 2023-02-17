@@ -608,7 +608,7 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 				const videoHistogramName = "Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video"
 
 				videoWaitStartTime := time.Now()
-				videoHistogram, err := metrics.WaitForHistogram(ctx, tconn, videoHistogramName, shortUITimeout)
+				videoHistogram, err := metrics.WaitForHistogram(ctx, bTconn, videoHistogramName, shortUITimeout)
 				if err != nil {
 					testing.ContextLog(ctx, "Failed to wait for histogram: ", err)
 				} else {
