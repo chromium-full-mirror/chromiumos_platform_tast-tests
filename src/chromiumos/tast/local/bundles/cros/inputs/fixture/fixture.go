@@ -62,9 +62,11 @@ const (
 	// Lacros fixtures.
 	LacrosAnyVK                                     = "lacrosAnyVK"
 	LacrosAnyVKInGuest                              = "lacrosAnyVKInGuest"
+	LacrosAnyVKInGAIA                               = "lacrosAnyVKInGaia"
 	LacrosClamshellVK                               = "lacrosClamshellVK"
 	LacrosClamshellNonVK                            = "lacrosClamshellNonVK"
 	LacrosClamshellNonVKInGuest                     = "lacrosClamshellNonVKInGuest"
+	LacrosClamshellNonVKInGAIA                      = "lacrosClamshellNonVKInGaia"
 	LacrosClamshellNonVKRestart                     = "lacrosClamshellNonVKRestart"
 	LacrosClamshellNonVKWithMultiwordSuggest        = "lacrosClamshellNonVKWithMultiwordSuggest"
 	LacrosClamshellNonVKWithDiacriticsOnPKLongpress = "lacrosClamshellWithDiacriticsOnPKLongpress"
@@ -478,6 +480,36 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: LacrosClamshellNonVKInGAIA,
+		Desc: "Lacros variant: clamshell mode in gaia login with VK disabled",
+		Contacts: []string{
+			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, gaiaLogin),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: LacrosAnyVKInGAIA,
+		Desc: "Lacros variant: Any mode with VK in gaia login",
+		Contacts: []string{
+			"essential-inputs-team@google.com",
+			"xiuwen@google.com",
+		},
+		Impl:            inputsFixture(notForced, true, false, browser.TypeLacros, gaiaLogin),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"ui.gaiaPoolDefault"},
 	})
 }
 

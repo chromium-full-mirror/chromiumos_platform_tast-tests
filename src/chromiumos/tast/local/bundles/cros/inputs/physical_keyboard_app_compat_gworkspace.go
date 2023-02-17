@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-team@google.com", "essential-inputs-gardener-oncall@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
-		LacrosStatus: testing.LacrosVariantNeeded, // b:260291042 implement lacros fixture for google workspace testing
+		LacrosStatus: testing.LacrosVariantExists,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
 		Timeout:      5 * time.Minute,
@@ -46,6 +46,18 @@ func init() {
 			{
 				Name:    "slides",
 				Fixture: fixture.GoogleSlidesNonVK,
+			},
+			{
+				Name:    "docs_lacros",
+				Fixture: fixture.LacrosGoogleDocsNonVK,
+			},
+			{
+				Name:    "sheets_lacros",
+				Fixture: fixture.LacrosGoogleSheetsNonVK,
+			},
+			{
+				Name:    "slides_lacros",
+				Fixture: fixture.LacrosGoogleSlidesNonVK,
 			},
 		},
 	})

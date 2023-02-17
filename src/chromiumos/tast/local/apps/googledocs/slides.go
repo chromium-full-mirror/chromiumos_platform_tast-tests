@@ -173,7 +173,7 @@ func DeleteSlide(tconn *chrome.TestConn) action.Action {
 	leaveButton := nodewith.Name("Leave").Role(role.Button)
 	return uiauto.NamedCombine("delete slide",
 		maybeShowTheSlideMenu(tconn),
-		cuj.ExpandMenu(tconn, fileButton, menu, 482),
+		cuj.ExpandMenu(tconn, fileButton, menu, 470),
 		ui.DoDefault(moveToTrash),
 		ui.DoDefault(goToSlidesHome),
 		// When leaving the edit slide, sometimes the "Leave Site?" dialog box will pop up.
