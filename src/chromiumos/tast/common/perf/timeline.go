@@ -6,8 +6,10 @@ package perf
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"chromiumos/tast/common/async"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
 )
@@ -237,7 +239,7 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 	t.recordingValues = NewValues()
 	t.recordingStatus = make(chan error, 1)
 
-	go func() {
+	async.Run(ctx, func(ctx context.Context) {
 		var snapshotStart time.Time
 		for nextTime := t.clock.Now().Add(t.interval); ; nextTime = nextTime.Add(t.interval) {
 			now := t.clock.Now()
@@ -282,7 +284,7 @@ func (t *Timeline) StartRecording(ctx context.Context) error {
 			}
 			t.recordingValues.Merge(val)
 		}
-	}()
+	}, fmt.Sprintf("Timeline %q", t.prefix))
 
 	return nil
 }
