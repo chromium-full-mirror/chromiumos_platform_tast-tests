@@ -595,7 +595,7 @@ func (c *AndroidDevice) AcceptTetherNotification(ctx context.Context) error {
 		return errors.Wrap(err, "failed to show notifications on Android")
 	}
 
-	provideDataBtn := uiDevice.Object(ui.ResourceID("android:id/title"))
+	provideDataBtn := uiDevice.Object(ui.ResourceID("android:id/title"), ui.TextMatches("(?i)provide data connection"))
 	if err := provideDataBtn.WaitForExists(ctx, 10*time.Second); err != nil {
 		testing.ContextLog(ctx, "notification to provide data did not appear, assuming first-time setup has been completed")
 		return nil
