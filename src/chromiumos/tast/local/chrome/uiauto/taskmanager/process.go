@@ -64,6 +64,9 @@ type ChromeTab struct {
 	conn *chrome.Conn
 }
 
+// ChromeTabQuiescenceTimeout defines the maximum time duration to wait for a Chrome tab to achieve quiescence.
+const ChromeTabQuiescenceTimeout = time.Minute
+
 // NewChromeTabProcess returns an instance of ChromeTab.
 func NewChromeTabProcess(url string, browserType browser.Type) *ChromeTab {
 	return &ChromeTab{
@@ -104,7 +107,7 @@ func (tab *ChromeTab) Open(ctx context.Context, br *browser.Browser) (retErr err
 		}
 	}()
 
-	if err := webutil.WaitForQuiescence(ctx, tab.conn, time.Minute); err != nil {
+	if err := webutil.WaitForQuiescence(ctx, tab.conn, ChromeTabQuiescenceTimeout); err != nil {
 		return errors.Wrap(err, "failed to wait for web page to finish loading")
 	}
 

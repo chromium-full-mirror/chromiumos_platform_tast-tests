@@ -38,7 +38,7 @@ func init() {
 			"cienet-development@googlegroups.com",
 			"sun.tsai@cienet.com",
 		},
-		BugComponent: "b:1238037", // ChromeOS > Software > Task Manager
+		BugComponent: "crbug:UI>TaskManager",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
@@ -54,6 +54,8 @@ func init() {
 				Val:               browser.TypeLacros,
 			},
 		},
+		// There are 10 tabs to be opened.
+		Timeout: 10*taskmanager.ChromeTabQuiescenceTimeout + 2*time.Minute,
 	})
 }
 
