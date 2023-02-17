@@ -32,8 +32,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Conducts cellular performance tests between DUT and callbox using Iperf to compare actual throughput results with expected for a given network configuration",
 		Contacts: []string{
-			"jstanko@google.com",
 			"cros-connectivity@google.com",
+			"jstanko@google.com",
 		},
 		BugComponent: "b:1108821",
 		Attr:         []string{"group:cellular", "cellular_callbox"},

@@ -19,8 +19,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs a new eSIM profile on the device and then changes its nickname",
 		Contacts: []string{
-			"jstanko@google.com",
 			"cros-connectivity@google.com",
+			"jstanko@google.com",
 		},
 		BugComponent: "b:979102",
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
