@@ -100,7 +100,7 @@ func DLCService(ctx context.Context, s *testing.State) {
 				s.Fatal("Nebraska failed to start: ", err)
 			}
 			s.Log("Started Nebraska")
-			defer n.Stop(s, "single-dlc")
+			defer n.Stop(ctx, s, "single-dlc")
 
 			// Install single DLC.
 			install(ctx, s, dlctest.TestID1, n.URL)
@@ -131,7 +131,7 @@ func DLCService(ctx context.Context, s *testing.State) {
 				s.Fatal("Nebraska failed to start: ", err)
 			}
 			s.Log("Started Nebraska")
-			defer n.Stop(s, "reboot-mimic-dlc")
+			defer n.Stop(ctx, s, "reboot-mimic-dlc")
 
 			// Install DLC.
 			install(ctx, s, dlctest.TestID1, n.URL)

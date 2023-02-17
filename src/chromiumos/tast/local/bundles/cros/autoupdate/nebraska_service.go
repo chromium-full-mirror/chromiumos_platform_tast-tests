@@ -9,14 +9,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
+	"strconv"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/nebraska"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	"chromiumos/tast/testing"
 )
@@ -33,9 +32,9 @@ func init() {
 type NebraskaService struct {
 	s *testing.ServiceState
 
-	cmd     *testexec.Cmd
-	tmpDir  string
-	logPath string
+	instance *nebraska.Nebraska
+	tmpDir   string
+	logPath  string
 }
 
 // CreateTempDir creates a temporary directory that is used by Nebraska.
@@ -55,7 +54,6 @@ func (n *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*a
 
 	// Collect the arguments.
 	args := []string{
-		"--runtime-root", n.tmpDir,
 		"--log-file", logPath,
 	}
 
@@ -73,71 +71,29 @@ func (n *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*a
 	}
 
 	// Start the Nebraska service.
-	n.cmd = testexec.CommandContext(n.s.ServiceContext(), "nebraska.py", args...)
-
-	testing.ContextLog(ctx, "Starting Nebraska")
-	if err := n.cmd.Start(); err != nil {
-		return nil, errors.Wrap(err, "failed to start Nebraska service")
-	}
-
-	// Wait for the port file.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := os.Stat(filepath.Join(n.tmpDir, "port")); err != nil {
-			if os.IsNotExist(err) {
-				return err
-			}
-			return testing.PollBreak(err)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		return nil, errors.Wrap(err, "failed to find the port file")
-	}
-
-	// Get and check the port number.
-	port, err := ioutil.ReadFile(filepath.Join(n.tmpDir, "port"))
+	instance, err := nebraska.Start(n.s.ServiceContext(), n.tmpDir, args)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read the Nebraska's port file")
-	} else if req.Port != "" && req.Port != string(port) {
-		return nil, errors.Errorf("Nebraska started with wrong port; want %s, got %s", req.Port, string(port))
+		return nil, errors.Wrap(err, "failed to start Nebraska")
+	}
+	n.instance = instance
+
+	if req.Port != "" && req.Port != strconv.Itoa(instance.Port) {
+		if err := instance.Stop(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to stop Nebraska")
+		}
+		return nil, errors.Errorf("Nebraska started with wrong port; want %s, got %d", req.Port, instance.Port)
 	}
 
 	return &aupb.StartResponse{
-		Port:    string(port),
+		Port:    strconv.Itoa(n.instance.Port),
 		LogPath: logPath,
 	}, nil
 }
 
 // Stop gracefully stops the previously started Nebraska instance.
 func (n *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if n.cmd == nil {
-		testing.ContextLog(ctx, "There is no Nebraska process to stop")
-		return &empty.Empty{}, nil
-	}
-
-	testing.ContextLog(ctx, "Stopping Nebraska")
-
-	if err := n.cmd.Process.Signal(unix.SIGINT); err != nil {
-		testing.ContextLog(ctx, "Failed to interrupt the Nebraska process: ", err)
-		return nil, errors.Wrap(err, "failed to interrupt the Nebraska process")
-	}
-
-	ok := false
-	errc := make(chan error)
-	go func() {
-		errc <- n.cmd.Wait(testexec.DumpLogOnError)
-	}()
-
-	select {
-	case err := <-errc:
-		if err == nil {
-			ok = true
-		}
-	case <-ctx.Done():
-	case <-time.After(3 * time.Second):
-	}
-	if !ok {
-		testing.ContextLog(ctx, "Failed to wait until the Nebraska process stopped")
-		return nil, errors.New("failed to wait until the Nebraska process stopped")
+	if err := n.instance.Stop(ctx); err != nil {
+		return nil, err
 	}
 
 	return &empty.Empty{}, nil
