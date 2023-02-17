@@ -21,8 +21,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies adb communication works as intended",
 		Contacts: []string{
+			"arc-core@google.com",
 			"vraheja@chromium.org",
-			"arc-core@google.com"},
+		},
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		SoftwareDeps: []string{"chrome"},
