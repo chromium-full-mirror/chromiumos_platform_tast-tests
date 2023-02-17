@@ -163,8 +163,7 @@ func ChameleonSwitchMode(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to determine if plug can be used for port %s: %s", portStr, err)
 	}
 	if !shouldUsePort {
-		s.Logf("Chameleon is not plugged into port %d", port)
-		return
+		s.Fatalf("Chameleon is not plugged into port %d", port)
 	}
 	err = graphics.ChameleonPlug(ctx, cham, port)
 	if err != nil {

@@ -75,8 +75,7 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
 		}
 		if !shouldUsePort {
-			s.Logf("Chameleon is not plugged into port %d", port)
-			continue
+			s.Fatalf("Chameleon is not plugged into port %d", port)
 		}
 		if err = graphics.ChameleonPlug(ctx, cham, port); err != nil {
 			s.Fatalf("Failed to get stable video input from a physically plugged port %d: %s", port, err)
