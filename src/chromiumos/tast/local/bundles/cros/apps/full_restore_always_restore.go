@@ -68,9 +68,19 @@ func openBrowser(ctx context.Context, bt browser.Type) error {
 	// the session to proper restore later. As a short term workaround we're closing Lacros
 	// resources using CloseResources fn instead, though ideally we want to use
 	// SetUpWithNewChrome close closure when it's properly implemented.
-	cr, br, _, err := browserfixt.SetUpWithNewChrome(ctx,
-		bt,
-		lacrosfixt.NewConfig())
+	var cr *chrome.Chrome
+	var br *browser.Browser
+	var err error
+
+	// Sometimes, it fails to start Chrome.
+	// Give it a retry.
+	const retry = 2
+	for i := 0; i < retry; i++ {
+		cr, br, _, err = browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome")
 	}
@@ -94,9 +104,12 @@ func openBrowser(ctx context.Context, bt browser.Type) error {
 		return errors.Wrap(err, "failed to launch Apps Settings")
 	}
 
+	ui := uiauto.New(tconn)
+	restoreCombox := nodewith.Name("Restore apps on startup").Role(role.ComboBoxSelect)
+	alwaysRestoreOption := nodewith.Name("Always restore").Role(role.ListBoxOption)
 	if err := uiauto.Combine("set 'Always restore' Settings",
-		uiauto.New(tconn).LeftClick(nodewith.Name("Restore apps on startup").Role(role.ComboBoxSelect)),
-		uiauto.New(tconn).LeftClick(nodewith.Name("Always restore").Role(role.ListBoxOption)))(ctx); err != nil {
+		ui.LeftClickUntil(restoreCombox, ui.WaitUntilExists(alwaysRestoreOption)),
+		ui.LeftClick(alwaysRestoreOption))(ctx); err != nil {
 		return errors.Wrap(err, "failed to set 'Always restore' Settings")
 	}
 
