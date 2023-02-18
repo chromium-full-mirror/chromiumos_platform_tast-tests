@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/platform/runtimeprobe"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -24,6 +25,7 @@ func init() {
 		BugComponent: "b:606088",
 		Attr:         []string{"group:runtime_probe"},
 		SoftwareDeps: []string{"racc"},
+		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
 		Vars:         []string{"autotest_host_info_labels"},
 	})
 }

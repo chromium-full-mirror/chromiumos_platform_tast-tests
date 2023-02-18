@@ -29,6 +29,7 @@ import (
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type stringSet map[string]struct{}
@@ -84,6 +85,7 @@ func init() {
 		},
 		BugComponent: "b:606088",
 		SoftwareDeps: []string{"reboot", "racc"},
+		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
 		Attr:         []string{"group:runtime_probe"},
 	})
 }
