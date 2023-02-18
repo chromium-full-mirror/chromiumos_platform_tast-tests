@@ -29,7 +29,7 @@ func init() {
 		Func:         CPUPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini CPU performance",
-		Contacts:     []string{"cylee@chromium.org", "clumptini@google.com"},
+		Contacts:     []string{"clumptini@google.com", "cylee@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: crostini.CrostiniMinDiskSize,

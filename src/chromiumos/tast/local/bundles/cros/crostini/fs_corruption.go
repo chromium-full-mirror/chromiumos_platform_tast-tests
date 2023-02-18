@@ -52,8 +52,8 @@ func init() {
 		Desc:         "Check that fs corruption is detected correctly",
 		Contacts: []string{
 			// Crostini
-			"sidereal@google.com",
 			"clumptini+oncall@google.com",
+			"sidereal@google.com",
 			// Telemetry
 			"mutexlox@google.com",
 			"cros-telemetry@google.com",

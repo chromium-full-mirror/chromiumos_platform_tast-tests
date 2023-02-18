@@ -17,7 +17,7 @@ func init() {
 		Func:         StartupPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performance tests of Termina VM startup and container startup",
-		Contacts:     []string{"nverne@chromium.org", "clumptini@google.com"},
+		Contacts:     []string{"clumptini@google.com", "nverne@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",

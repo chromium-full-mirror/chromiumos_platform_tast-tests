@@ -22,7 +22,7 @@ func init() {
 		Func:         ResizeSpaceConstrained,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test resizing disk of Crostini from the Settings with constrained host disk space",
-		Contacts:     []string{"nverne@google.com", "clumptini+oncall@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com", "nverne@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		BugComponent: "b:1122570",

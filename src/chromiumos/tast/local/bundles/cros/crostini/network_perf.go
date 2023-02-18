@@ -32,7 +32,7 @@ func init() {
 		Func:         NetworkPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini network performance",
-		Contacts:     []string{"cylee@chromium.org", "clumptini@google.com"},
+		Contacts:     []string{"clumptini@google.com", "cylee@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: crostini.CrostiniMinDiskSize,

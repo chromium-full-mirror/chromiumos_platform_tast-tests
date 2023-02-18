@@ -21,7 +21,7 @@ func init() {
 		Func:         TaskManager,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini integration with the task manager",
-		Contacts:     []string{"davidmunro@google.com", "clumptini+oncall@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com", "davidmunro@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		BugComponent: "b:1122570",

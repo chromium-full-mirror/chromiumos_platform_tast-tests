@@ -47,8 +47,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test gedit file sharing in Terminal window",
 		Contacts: []string{
-			"ashpakov@google.com", // until Oct 2022
 			"clumptini+oncall@google.com",
+			"ashpakov@google.com", // until Oct 2022
 		},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

@@ -44,7 +44,7 @@ func init() {
 		Func:         DragDrop,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Drag and drop a file and folder in both directions between FilesApp and crostini",
-		Contacts:     []string{"joelhockey@google.com", "clumptini+oncall@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com", "joelhockey@google.com"},
 		Attr:         []string{"group:mainline"},
 		Data:         []string{dragApplet, dropApplet},
 		SoftwareDeps: []string{"chrome"},

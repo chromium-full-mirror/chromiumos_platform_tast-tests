@@ -34,7 +34,7 @@ func init() {
 		Func:         AppGeditUnshareFolder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test gedit in Terminal window",
-		Contacts:     []string{"ashpakov@google.com", "clumptini+oncall@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com", "ashpakov@google.com"},
 		Attr:         []string{"group:mainline"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host"},

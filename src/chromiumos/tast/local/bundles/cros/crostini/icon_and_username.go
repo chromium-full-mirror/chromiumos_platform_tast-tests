@@ -20,7 +20,7 @@ func init() {
 		Func:         IconAndUsername,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Terminal icon on shelf and username in Terminal window",
-		Contacts:     []string{"alvinjia@google.com", "clumptini@google.com"},
+		Contacts:     []string{"clumptini@google.com", "alvinjia@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		BugComponent: "b:1122570",

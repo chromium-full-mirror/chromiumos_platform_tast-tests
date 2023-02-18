@@ -28,7 +28,7 @@ func init() {
 		Func:         AppGeditInstallUninstall,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Install Gedit, check rendering, icons, saving and uninstall behavior",
-		Contacts:     []string{"alvinjia@google.com", "clumptini@google.com"},
+		Contacts:     []string{"clumptini@google.com", "alvinjia@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host"},
