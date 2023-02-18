@@ -130,6 +130,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, p TestParams) (retErr error) {
 		}
 		defer func(ctx context.Context) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, p.OutDir, func() bool { return recorderErr != nil }, cr, "ui_dump")
+			if err := cuj.MaximizeBrowserWindow(ctx, tconn, p.TabletMode, p.VideoCallURL); err != nil {
+				testing.ContextLog(ctx, "Failed to maximize the video call window: ", err)
+			}
 			cuj.CloseAllTabs(ctx, bTconn, p.BrowserType)
 			videoConn.Close()
 		}(cleanupCtx)
