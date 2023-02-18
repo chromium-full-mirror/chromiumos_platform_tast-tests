@@ -50,6 +50,12 @@ var (
 	inMeetingIdentifier = endMeetingButton
 
 	youText = nodewith.Name("You").Role(role.StaticText).Ancestor(meetRootWebArea)
+
+	// There may be multiple "Stop sharing" buttons, so add First() here.
+	stopSharing = nodewith.Name("Stop sharing").Role(role.Button).First()
+
+	chatButton       = nodewith.Name("Chat with everyone").Role(role.ToggleButton).Ancestor(meetRootWebArea)
+	chatPanelHeading = nodewith.Name("In-call messages").Role(role.Heading).Ancestor(meetRootWebArea)
 )
 
 // VideoNode represents the first video node in the meeting.
@@ -520,4 +526,63 @@ func (gm *GoogleMeet) GetParticipantsNum(ctx context.Context) (int, error) {
 	}
 
 	return int(number), nil
+}
+
+// ShareScreen shares screen via "A tab" and select the tab to share.
+func (gm *GoogleMeet) ShareScreen(tabName string) action.Action {
+	ui := gm.ui
+
+	clickPresentNowButton := func(ctx context.Context) error {
+		presentNowButton := nodewith.Name("Present now").Role(role.Button)
+		presentNowPopUpButton := nodewith.Name("Present now").Role(role.PopUpButton)
+		presentingPopUpButton := nodewith.NameContaining("presenting").Role(role.PopUpButton)
+		presentButton, err := ui.FindAnyExists(ctx,
+			presentNowButton,
+			presentNowPopUpButton,
+			presentingPopUpButton)
+		if err != nil {
+			return errors.New("failed to find present button")
+		}
+		if presentButton == presentingPopUpButton {
+			testing.ContextLog(ctx, "Another participant is presenting now")
+			return errors.New("another participant is presenting now")
+		}
+
+		return ui.DoDefault(presentButton)(ctx)
+	}
+
+	presentMode := nodewith.NameContaining("A tab").Role(role.MenuItem)
+	presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(tabName)
+	shareButton := nodewith.Name("Share").Role(role.Button)
+
+	return ui.Retry(3, uiauto.NamedCombine("share screen",
+		clickPresentNowButton,
+		ui.WaitUntilAnyExists(presentMode, presentTab),
+		uiauto.IfSuccessThen(ui.Exists(presentMode), ui.DoDefault(presentMode)),
+		ui.LeftClickUntil(presentTab, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentTab.Focused())),
+		ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
+		gm.closeShareScreenAlertDialog(),
+		ui.WithTimeout(longUITimeout).WaitUntilExists(stopSharing),
+	))
+}
+
+// StopShareScreen stops sharing screen.
+func (gm *GoogleMeet) StopShareScreen() action.Action {
+	ui := gm.ui
+
+	return uiauto.NamedCombine("stop sharing screen",
+		gm.closeShareScreenAlertDialog(),
+		ui.WithTimeout(mediumUITimeout).DoDefaultUntil(stopSharing, ui.WaitUntilGone(stopSharing)),
+	)
+}
+
+// closeShareScreenAlertDialog closes the alert dialog when sharing the screen.
+func (gm *GoogleMeet) closeShareScreenAlertDialog() action.Action {
+	ui := gm.ui
+	alertDialog := nodewith.Name("Your screen is still visible to others").Role(role.Alert)
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(alertDialog)
+
+	return uiauto.IfSuccessThen(
+		ui.WithTimeout(shortUITimeout).WaitUntilExists(closeButton),
+		uiauto.NamedAction("close alert dialog", ui.LeftClick(closeButton)))
 }
