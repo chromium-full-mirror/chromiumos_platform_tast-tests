@@ -21,6 +21,10 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type testParams struct {
+	chromeArgs []string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RegularBoot,
@@ -34,9 +38,21 @@ func init() {
 		Timeout:      25 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               testParams{},
 		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
+			Name:              "vm_r",
+			ExtraSoftwareDeps: []string{"android_vm_r"},
+			Val:               testParams{},
+		}, {
+			Name:              "no_guest_ureadahead_vm_r",
+			ExtraSoftwareDeps: []string{"android_vm_r"},
+			Val: testParams{
+				chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
+			},
+		}, {
+			Name:              "vm_t",
+			ExtraSoftwareDeps: []string{"android_vm_t"},
+			Val:               testParams{},
 		}},
 		VarDeps: []string{
 			"arc.perfAccountPool",
@@ -46,7 +62,8 @@ func init() {
 
 // RegularBoot steps through multiple ARC boots.
 func RegularBoot(ctx context.Context, s *testing.State) {
-	creds, err := performArcInitialBoot(ctx, s.RequiredVar("arc.perfAccountPool"))
+	params := s.Param().(testParams)
+	creds, err := performArcInitialBoot(ctx, s.RequiredVar("arc.perfAccountPool"), params.chromeArgs)
 	if err != nil {
 		s.Fatal("Failed to do initial optin: ", err)
 	}
@@ -86,16 +103,18 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 
 // performArcInitialBoot performs initial boot that includes ARC provisioning and returns GAIA
 // credentials to use for regular boot wih preserved state.
-func performArcInitialBoot(ctx context.Context, credPool string) (chrome.Creds, error) {
+func performArcInitialBoot(ctx context.Context, credPool string, chromeArgs []string) (chrome.Creds, error) {
+	// Disable ArcWindowPredictor to let chrome record the necessary histograms.
+	// TODO(b/259517082): Stop disabling ArcWindowPredictor.
+	chromeArgs = append(chromeArgs, "--disable-features=ArcWindowPredictor")
+	chromeArgs = append(chromeArgs, arc.DisableSyncFlags()...)
+
 	// Options are tuned for the fastest boot, we don't care about
 	// initial provisioning performance, which is monitored in other tests.
 	opts := []chrome.Option{
 		chrome.ARCSupported(),
 		chrome.GAIALoginPool(credPool),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags(),
-			// Disable ArcWindowPredictor to let chrome record the necessary histograms.
-			// TODO(b/259517082): Stop disabling ArcWindowPredictor.
-			"--disable-features=ArcWindowPredictor")...)}
+		chrome.ExtraArgs(chromeArgs...)}
 
 	testing.ContextLog(ctx, "Create initial Chrome")
 	cr, err := chrome.New(ctx, opts...)
