@@ -6,6 +6,7 @@ package cuj
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -16,13 +17,6 @@ import (
 	"chromiumos/tast/local/input"
 )
 
-var clickActions = map[string]func(*uiauto.Context, *nodewith.Finder) uiauto.Action{
-	"Wikipedia":     wikiClickActions,
-	"Google Help":   googleHelpClickActions,
-	"localWebsite":  localWebsiteClickActions,
-	"YouTube Music": ytMusicClickActions,
-}
-
 // makeVisibleThenClick makes the node visible then clicks it.
 func makeVisibleThenClick(ui *uiauto.Context, node *nodewith.Finder) uiauto.Action {
 	return uiauto.Combine("make the node visible then click",
@@ -32,8 +26,8 @@ func makeVisibleThenClick(ui *uiauto.Context, node *nodewith.Finder) uiauto.Acti
 	)
 }
 
-// wikiClickActions returns click actions that can be applied on the Wikipedia.
-func wikiClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
+// clickButtonsOnWikipedia returns click actions that can be applied on the Wikipedia.
+func clickButtonsOnWikipedia(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
 	toggleSidebarButton := nodewith.Name("Toggle sidebar").Role(role.Button).Ancestor(activeWindow)
 	siteNavigation := nodewith.Name("Site").Role(role.Navigation).Ancestor(activeWindow)
 	contributeText := nodewith.Name("Contribute").Role(role.StaticText).Ancestor(siteNavigation)
@@ -51,8 +45,8 @@ func wikiClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.
 	)
 }
 
-// googleHelpClickActions returns click actions that can be applied on the Google Help.
-func googleHelpClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
+// clickButtonsOnGoogleHelp returns click actions that can be applied on the Google Help.
+func clickButtonsOnGoogleHelp(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
 	mainMenuButton := nodewith.Name("Main menu").Role(role.Button).Ancestor(activeWindow)
 	closeMenuButton := nodewith.Name("Close menu").Role(role.Button).Ancestor(activeWindow)
 	textField := nodewith.NameStartingWith("Describe your issue").Role(role.TextFieldWithComboBox).Ancestor(activeWindow)
@@ -65,8 +59,8 @@ func googleHelpClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) u
 	)
 }
 
-// localWebsiteClickActions returns click actions that can be applied on the local website.
-func localWebsiteClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
+// clickButtonsOnLocalWebsite returns click actions that can be applied on the local website.
+func clickButtonsOnLocalWebsite(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
 	hideTextButton := nodewith.Name("Hide text").Role(role.Button).Ancestor(activeWindow)
 	showTextButton := nodewith.Name("Show text").Role(role.Button).Ancestor(activeWindow)
 	textField := nodewith.Name("Input your text:").Role(role.TextField).Ancestor(activeWindow)
@@ -79,8 +73,8 @@ func localWebsiteClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder)
 	)
 }
 
-// ytMusicClickActions returns click actions that can be applied on the YouTube Music.
-func ytMusicClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiauto.Action {
+// clickButtonsOnYTMusic returns click actions that can be applied on the YouTube Music.
+func clickButtonsOnYTMusic(ui *uiauto.Context, kb *input.KeyboardEventWriter) uiauto.Action {
 	// The YouTube Music window changes the name after the ad finishes, specifying the
 	// nodes with the root web area to avoid errors caused by the window name change.
 	youtubeMusicRootWebArea := nodewith.NameContaining("YouTube Music").Role(role.RootWebArea)
@@ -89,8 +83,11 @@ func ytMusicClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiau
 	backButton := nodewith.Name("Back").Role(role.Button).Ancestor(youtubeMusicRootWebArea)
 	return uiauto.NamedCombine("click search, back buttons and the search field",
 		ui.LeftClick(searchButton),
-		ui.LeftClick(backButton),
-		ui.WaitUntilExists(searchButton),
+		// Sometimes it fails to click the backButton in lacros-chrome, instead pressing "Esc" exits the search field.
+		uiauto.IfFailThen(
+			ui.LeftClickUntil(backButton, ui.WithTimeout(5*time.Second).WaitUntilExists(searchButton)),
+			uiauto.NamedAction(`press "Esc" key`, kb.AccelAction("Esc")),
+		),
 		ui.LeftClick(searchButton),
 		ui.LeftClick(searchField),
 		ui.WaitUntilExists(searchField.Focused()),
@@ -100,10 +97,12 @@ func ytMusicClickActions(ui *uiauto.Context, activeWindow *nodewith.Finder) uiau
 // GenerateEventLatency clicks buttons, types and deletes the text on the given website to generate corresponding EventLatency metrics.
 // Only Wikipedia, Google Help, YouTube Music, and the local website from spera.TabSwitch tests are supported by this function.
 func GenerateEventLatency(ctx context.Context, tconn *chrome.TestConn, webName string) error {
-	clickActions, ok := clickActions[webName]
-	if !ok {
-		return errors.Errorf("unsupported website: %s", webName)
+	window, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get active window")
 	}
+	activeWindow := nodewith.Name(window.Title).Role(role.Window).HasClass(window.Name)
+	ui := uiauto.New(tconn)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -111,20 +110,28 @@ func GenerateEventLatency(ctx context.Context, tconn *chrome.TestConn, webName s
 	}
 	defer kb.Close()
 
+	var clickButtonsOnWebsite uiauto.Action
+	switch webName {
+	case "Wikipedia":
+		clickButtonsOnWebsite = clickButtonsOnWikipedia(ui, activeWindow)
+	case "Google Help":
+		clickButtonsOnWebsite = clickButtonsOnGoogleHelp(ui, activeWindow)
+	case "localWebsite":
+		clickButtonsOnWebsite = clickButtonsOnLocalWebsite(ui, activeWindow)
+	case "YouTube Music":
+		clickButtonsOnWebsite = clickButtonsOnYTMusic(ui, kb)
+	default:
+		return errors.Errorf("unsupported website: %s", webName)
+	}
+
 	typeAndDeleteActions := uiauto.NamedCombine("type and delete the text",
 		kb.TypeAction("Chromebook"),
 		kb.AccelAction("Ctrl+A"),
 		kb.AccelAction("Backspace"),
 	)
 
-	window, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get active window")
-	}
-	activeWindow := nodewith.Name(window.Title).Role(role.Window).HasClass(window.Name)
-
 	return uiauto.Combine("click buttons then type and delete the text",
-		clickActions(uiauto.New(tconn), activeWindow),
+		clickButtonsOnWebsite,
 		typeAndDeleteActions,
 	)(ctx)
 }
