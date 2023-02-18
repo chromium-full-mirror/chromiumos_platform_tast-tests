@@ -7,6 +7,8 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -320,17 +322,23 @@ func BootMode(ctx context.Context, s *testing.State) {
 
 	// Check that DUT can boot from the main storage despite USB device attached.
 	if tc.checkBootFromMain {
-		// Ensure that mainfw_act returns A, and if not set up crossystem param
-		// for the device to boot from firmware A next time.
-		mainfwAct, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
-		if err != nil {
-			s.Fatal("Failed to get crossystem mainfw_act: ", err)
-		}
-		if mainfwAct != "A" {
-			s.Log("Current mainfw_act not set to A. Attempting to set the device to boot from A during next reboot")
-			if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fw_try_next=A").Run(); err != nil {
-				s.Fatal("Failed to set 'crossystem fw_try_next=A': ", err)
+		// Save the firmware log file for upload to Stainless at the end of the test.
+		defer func() {
+			output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+			if err != nil {
+				s.Fatal("Failed to read firmware log: ", err)
 			}
+			destPath := filepath.Join(s.OutDir(), "firmware.log")
+			if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+				s.Fatal("Failed to write firmware log: ", err)
+			}
+		}()
+
+		// Some duts failed in booting from section A, for example, bookem,
+		// drawper, and chronicler. Explicitly set 'fw_try_next' to section A,
+		// and the number of attempts to three times.
+		if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionA, 3); err != nil {
+			s.Fatal("Failed to set FW tries to A: ", err)
 		}
 
 		s.Log("Enabling USB connection to DUT")
@@ -383,7 +391,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Checking the value of mainfw_act after reboot")
-		mainfwAct, err = h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+		mainfwAct, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
 		if err != nil {
 			s.Fatal("Failed to get crossystem mainfw_act: ", err)
 		}
