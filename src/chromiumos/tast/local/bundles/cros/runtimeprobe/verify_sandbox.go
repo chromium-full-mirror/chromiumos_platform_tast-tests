@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/testing"
 )
 
@@ -115,6 +116,12 @@ func init() {
 func VerifySandbox(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(verifySandboxTestParams)
 	pc := testParam.probeConfig
+
+	// Debugd is used by runtime_probe. Check we can connect to it to make the
+	// error more specific.
+	if _, err := debugd.New(ctx); err != nil {
+		s.Fatal("Failed to connect to debugd: ", err)
+	}
 
 	res, err := getRuntimeProbeResult(ctx, pc)
 	if err != nil {
