@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 )
@@ -585,4 +586,47 @@ func (gm *GoogleMeet) closeShareScreenAlertDialog() action.Action {
 	return uiauto.IfSuccessThen(
 		ui.WithTimeout(shortUITimeout).WaitUntilExists(closeButton),
 		uiauto.NamedAction("close alert dialog", ui.LeftClick(closeButton)))
+}
+
+// TypingInChat opens chat panel and types message.
+func (gm *GoogleMeet) TypingInChat(kb *input.KeyboardEventWriter, message string) action.Action {
+	const retryTimes = 3
+	ui := gm.ui
+	chatText := nodewith.NameContaining("Send a message to everyone")
+	// There may be multiple "Send a message to everyone" fields, so add First() here.
+	chatTextField := chatText.Role(role.TextField).First()
+	openChatPanel := uiauto.NamedCombine("open chat panel",
+		ui.LeftClick(youText),
+		ui.DoDefault(chatButton),
+		// Some low end DUTs need very long time to load chat window in 49 tiles.
+		ui.WithTimeout(2*time.Minute).WaitUntilExists(chatTextField.Focusable()),
+	)
+
+	// There may be multiple "Send a message to everyone" buttons, so add First() here.
+	chatTextButton := chatText.Role(role.Button).First()
+	// There may be multiple message texts, so add First() here.
+	messageText := nodewith.NameContaining(message).Role(role.StaticText).First()
+	enterText := uiauto.NamedCombine("type message",
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(chatTextButton,
+			ui.WaitUntilExists(chatTextField.Editable().Focused())),
+		kb.TypeAction(message),
+		ui.WaitUntilExists(messageText),
+		kb.AccelAction("enter"),
+		ui.WithTimeout(longUITimeout).WaitUntilExists(messageText),
+	)
+
+	return ui.Retry(retryTimes, uiauto.Combine("open chat panel and type message",
+		ui.Retry(retryTimes, uiauto.IfSuccessThen(ui.Gone(chatPanelHeading), openChatPanel)),
+		ui.Retry(retryTimes, enterText)))
+}
+
+// CloseChatPanel closes chat panel.
+func (gm *GoogleMeet) CloseChatPanel() action.Action {
+	ui := gm.ui
+
+	return uiauto.IfSuccessThen(ui.Exists(chatPanelHeading),
+		uiauto.NamedCombine("close chat panel",
+			ui.DoDefault(chatButton),
+			ui.WithTimeout(longUITimeout).WaitUntilGone(chatPanelHeading),
+		))
 }
