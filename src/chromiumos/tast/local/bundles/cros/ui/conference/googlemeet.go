@@ -212,16 +212,18 @@ func (conf *GoogleMeetConference) TypingInChat(ctx context.Context) error {
 // SetLayoutMax sets the conference UI layout to max tiled grid.
 func (conf *GoogleMeetConference) SetLayoutMax(ctx context.Context) error {
 	return uiauto.Combine("set layout to max",
-		conf.changeLayout("Tiled"),
-		uiauto.Sleep(viewingTime), // After applying new layout, give it 5 seconds for viewing before applying next one.
+		conf.changeLayout(googlemeet.TiledLayout),
+		// After applying new layout, give it 5 seconds for viewing before applying next one.
+		uiauto.Sleep(viewingTime),
 	)(ctx)
 }
 
 // SetLayoutMin sets the conference UI layout to minimal tiled grid.
 func (conf *GoogleMeetConference) SetLayoutMin(ctx context.Context) error {
 	return uiauto.Combine("set layout to minimal",
-		conf.changeLayout("Spotlight"),
-		uiauto.Sleep(viewingTime), // After applying new layout, give it 5 seconds for viewing before applying next one.
+		conf.changeLayout(googlemeet.SpotlightLayout),
+		// After applying new layout, give it 5 seconds for viewing before applying next one.
+		uiauto.Sleep(viewingTime),
 	)(ctx)
 }
 
@@ -272,29 +274,20 @@ func (conf *GoogleMeetConference) getStableGrids(ctx context.Context) (grids []u
 }
 
 // changeLayout changes the conference UI layout.
-func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
+func (conf *GoogleMeetConference) changeLayout(layoutOption googlemeet.LayoutOption) action.Action {
 	return func(ctx context.Context) error {
 		tconn := conf.tconn
 		ui := conf.ui
+		gm := conf.gm
+
 		// Close all notifications to prevent them from covering the print button.
 		if err := ash.CloseNotifications(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to close notifications")
 		}
-		moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
-		changeLayoutItem := nodewith.Name("Change layout").Role(role.MenuItem)
-		changeLayoutPanel := nodewith.Name("Change layout").Role(role.Dialog)
-		openLayout := ui.Retry(retryTimes, uiauto.NamedCombine("open layout",
-			ui.WithTimeout(mediumUITimeout).DoDefaultUntil(moreOptions, ui.WaitUntilExists(changeLayoutItem)),
-			uiauto.NamedAction("click change layout item", ui.DoDefault(changeLayoutItem)),
-			uiauto.NamedAction("wait for change layout panel", ui.WithTimeout(longUITimeout).WaitUntilExists(changeLayoutPanel)),
-		))
-		modeNode := nodewith.Name(mode).Role(role.RadioButton)
-		selectLayout := uiauto.NamedAction("click layout "+mode,
-			ui.WithTimeout(mediumUITimeout).DoDefaultUntil(modeNode,
-				ui.WaitUntilExists(modeNode.Focused())))
-		setToMaxTiles := func(mode string) action.Action {
+
+		setToMaxTiles := func(layoutOption googlemeet.LayoutOption) action.Action {
 			return func(ctx context.Context) error {
-				if mode != "Tiled" {
+				if layoutOption != googlemeet.TiledLayout {
 					return nil
 				}
 				slider := nodewith.Name("Tiles").Role(role.Slider).First()
@@ -326,20 +319,27 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 			}
 		}
 
-		checkTiledGrids := func(mode string) action.Action {
+		checkLayoutChanged := func(ctx context.Context) error {
+			spotlightLayoutButton := nodewith.Name("Can't show you in a tile in this layout").Role(role.Button)
+			// If it's spotlight layout, this button will be displayed in its own grid.
+			if layoutOption == googlemeet.SpotlightLayout {
+				return ui.WaitUntilExists(spotlightLayoutButton)(ctx)
+			}
+
+			return ui.WaitUntilGone(spotlightLayoutButton)(ctx)
+		}
+
+		checkTiledGrids := func(layoutOption googlemeet.LayoutOption) action.Action {
 			return func(ctx context.Context) error {
-				if mode != "Tiled" {
+				if layoutOption != googlemeet.TiledLayout {
 					return nil
 				}
 
-				showInATileButton := nodewith.Name("Show in a tile").Role(role.Button)
 				// Make sure it shows in a tile.
-				if err := uiauto.NamedAction("show in a tile",
-					uiauto.IfSuccessThen(ui.Exists(showInATileButton),
-						ui.DoDefaultUntil(showInATileButton,
-							ui.WithTimeout(shortUITimeout).WaitUntilGone(showInATileButton))))(ctx); err != nil {
+				if err := gm.ShowInATile()(ctx); err != nil {
 					return err
 				}
+
 				// Check if there is more than 1 grid after changing layout to Tiled.
 				expectedGrid := 1
 				if conf.roomType == ClassRoomSize {
@@ -364,18 +364,17 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 			}
 		}
 
-		closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(changeLayoutPanel)
-		closePanel := uiauto.Combine("close change layout panel",
-			uiauto.NamedAction("press esc to close change layout panel", conf.kb.AccelAction("esc")),
-			ui.Retry(retryTimes, uiauto.IfFailThen(ui.WaitUntilGone(closeButton),
-				ui.DoDefaultUntil(closeButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton)))))
-		return uiauto.NamedCombine("change layout to "+mode,
+		changeLayout := uiauto.NamedCombine(fmt.Sprintf("change layout to %q", layoutOption),
+			gm.OpenChangeLayout,
+			gm.SetLayout(layoutOption),
+			setToMaxTiles(layoutOption),
+			uiauto.Retry(3, gm.CloseChangeLayout),
+			checkLayoutChanged)
+
+		return uiauto.Combine("change layout",
 			conf.closeNotifDialog(),
-			openLayout,
-			selectLayout,
-			setToMaxTiles(mode),
-			closePanel,
-			ui.Retry(5, checkTiledGrids(mode)),
+			ui.Retry(3, changeLayout),
+			ui.Retry(5, checkTiledGrids(layoutOption)),
 		)(ctx)
 	}
 }
