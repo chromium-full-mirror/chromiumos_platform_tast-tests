@@ -33,16 +33,8 @@ func init() {
 func Ti50RboxKeycombo(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
-	board, err := f.DevBoard(ctx, 10000, time.Second)
-	if err != nil {
-		s.Fatal("Could not get board: ", err)
-	}
-
+	board := f.DevBoard()
 	i := ti50.NewCrOSImage(board)
-
-	if _, err = board.OpenTitanToolCommand(ctx, "transport", "init"); err != nil {
-		s.Fatal("Failed to reset gpio to good state: ", err)
-	}
 
 	testing.ContextLog(ctx, "Restarting ti50 with clamshell straps")
 	if err := board.GpioApplyStrap(ctx, ti50.FfClamshell); err != nil {

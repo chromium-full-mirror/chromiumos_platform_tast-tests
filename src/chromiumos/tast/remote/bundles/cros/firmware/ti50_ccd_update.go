@@ -45,16 +45,10 @@ func init() {
 func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
-	board, err := f.DevBoard(ctx, 10000, time.Second)
-	if err != nil {
-		s.Fatal("Could not get board: ", err)
-	}
+	board := f.DevBoard()
 
-	if _, err = board.OpenTitanToolCommand(ctx, "transport", "init"); err != nil {
-		s.Fatal("Failed to reset gpio to good state: ", err)
-	}
 	testing.ContextLog(ctx, "Simulating insertion of SuzyQ")
-	if err = board.GpioApplyStrap(ctx, ti50.CcdSuzyQ); err != nil {
+	if err := board.GpioApplyStrap(ctx, ti50.CcdSuzyQ); err != nil {
 		s.Fatalf("Failed to apply SuzyQ strapping: %s", err)
 	}
 

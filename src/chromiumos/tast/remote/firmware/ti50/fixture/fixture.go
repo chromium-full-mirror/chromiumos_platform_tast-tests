@@ -29,6 +29,8 @@ const (
 	setUpTimeout    = 2 * time.Minute
 	resetTimeout    = 5 * time.Second
 	tearDownTimeout = 5 * time.Second
+	preTestTimeout  = 5 * time.Second
+	postTestTimeout = 5 * time.Second
 )
 
 func init() {
@@ -41,6 +43,8 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            Ti50,
@@ -51,6 +55,8 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
 		Parent:          Ti50Image,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -62,6 +68,8 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
 		Parent:          SystemTestAutoImage,
 	})
 }
@@ -73,15 +81,9 @@ type Value struct {
 	ImagePath string
 }
 
-// DevBoard connects to devboardsvc server and returns the DevBoard instance.
-func (v *Value) DevBoard(ctx context.Context, bufLen int, readTimeout time.Duration) (ti50.DevBoard, error) {
-	if v.devboard != nil {
-		if err := v.devboard.Close(ctx); err != nil {
-			return nil, err
-		}
-	}
-	v.devboard = remoteTi50.NewDUTControlAndreiboard(v.grpcConn, bufLen, readTimeout)
-	return v.devboard, nil
+// DevBoard returns the existing DevBoard connection instance.
+func (v *Value) DevBoard() ti50.DevBoard {
+	return v.devboard
 }
 
 type impl struct {
@@ -125,18 +127,31 @@ func (i *impl) Reset(ctx context.Context) error {
 }
 
 func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	testing.ContextLog(ctx, "Starting OTT session")
+	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 10000, time.Second)
+	// At this point, the plan is to start an opentitantool session, which could invove either
+	// starting a host emulation instance, or resetting a devboard and its debugger to a known
+	// state.
+	if _, err := i.v.devboard.OpenTitanToolCommand(ctx, "transport", "init"); err != nil {
+		if err2 := i.v.devboard.Close(ctx); err2 != nil {
+			s.Error("Failed to close devboard: ", err2)
+		}
+		i.v.devboard = nil
+		s.Fatal("Failed to reset debugger: ", err)
+	}
 }
 
 func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	testing.ContextLog(ctx, "Ending OTT session")
+	// At this point, we should end the opentitantool session, that is, stop host emulator, or
+	// disconnect from devboard.
+	if err := i.v.devboard.Close(ctx); err != nil {
+		s.Fatal("Failed to close devboard: ", err)
+	}
+	i.v.devboard = nil
 }
 
 func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
-	if i.v.devboard != nil {
-		if err := i.v.devboard.Close(ctx); err != nil {
-			s.Error("Failed to close devboard: ", err)
-		}
-		i.v.devboard = nil
-	}
 	if i.v.grpcConn != nil {
 		if err := i.v.grpcConn.Close(); err != nil {
 			s.Error("Failed to close grpc: ", err)

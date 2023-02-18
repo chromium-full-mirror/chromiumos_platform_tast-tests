@@ -33,12 +33,8 @@ func init() {
 func Ti50Demo(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
-	board, err := f.DevBoard(ctx, 4096, time.Second)
-	if err != nil {
-		s.Fatal("Could not get board: ", err)
-	}
-
-	err = board.Open(ctx)
+	board := f.DevBoard()
+	err := board.Open(ctx)
 	if err != nil {
 		s.Fatal("Open console port: ", err)
 	}

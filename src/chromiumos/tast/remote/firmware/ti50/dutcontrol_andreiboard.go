@@ -114,7 +114,7 @@ func (a *DUTControlAndreiboard) PlainCommand(ctx context.Context, cmd string, ar
 	req := &dutcontrol.CommandRequest{Command: cmd, Args: cArgs}
 	resp, err := a.client.Command(ctx, req)
 	if err != nil {
-		return nil, errors.Wrapf(err, "request %s %s", cmd, strings.Join(args, " "))
+		return nil, errors.Wrapf(err, "PlainCommand: %s %s", cmd, strings.Join(args, " "))
 	}
 	if resp.Err != "" {
 		return resp.Output, errors.Errorf("operation %s %s: %s, stderr: %s", cmd, strings.Join(args, " "), resp.Err, resp.ErrOutput)

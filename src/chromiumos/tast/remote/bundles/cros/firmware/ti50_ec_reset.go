@@ -31,18 +31,10 @@ func init() {
 func Ti50EcReset(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
-	board, err := f.DevBoard(ctx, 10000, time.Second)
-	if err != nil {
-		s.Fatal("Could not get board: ", err)
-	}
-
+	board := f.DevBoard()
 	i := ti50.NewCrOSImage(board)
 
-	if _, err = board.OpenTitanToolCommand(ctx, "transport", "init"); err != nil {
-		s.Fatal("Failed to reset gpio to good state: ", err)
-	}
-
-	_, err = board.OpenTitanToolCommand(ctx, "gpio", "monitoring", "start", string(ti50.GpioTi50ResetL), string(ti50.GpioTi50EcRstL), string(ti50.GpioTi50EcRstFet))
+	_, err := board.OpenTitanToolCommand(ctx, "gpio", "monitoring", "start", string(ti50.GpioTi50ResetL), string(ti50.GpioTi50EcRstL), string(ti50.GpioTi50EcRstFet))
 	if err != nil {
 		s.Fatal("OpenTitanToolCommand: ", err)
 	}
