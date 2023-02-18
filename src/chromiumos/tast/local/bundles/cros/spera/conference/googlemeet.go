@@ -176,36 +176,15 @@ func (conf *GoogleMeetConference) SwitchTabs(url string) action.Action {
 	}
 }
 
-// TypingInChat opens chat window and type.
+// TypingInChat opens chat window and type message.
 func (conf *GoogleMeetConference) TypingInChat(ctx context.Context) error {
 	const message = "Hello! How are you?"
-	youText := nodewith.Name("You").Role(role.StaticText).Ancestor(meetWebArea)
-	chatButton := nodewith.Name("Chat with everyone").Role(role.ToggleButton)
-	chatText := nodewith.NameContaining("Send a message to everyone")
-	chatTextButton := chatText.Role(role.Button).First()
-	chatTextField := chatText.Role(role.TextField).First()
-	messageText := nodewith.NameContaining(message).Role(role.StaticText).First()
-	messageInChatTextField := nodewith.NameContaining(message).Role(role.StaticText).Ancestor(chatTextField)
-	openChatBox := uiauto.NamedCombine("open chat box",
-		conf.ui.LeftClick(youText),
-		conf.ui.DoDefault(chatButton),
-		// Some low end DUTs need very long time to load chat window in 49 tiles.
-		conf.ui.WithTimeout(2*time.Minute).WaitUntilExists(chatTextField.Focusable()),
-	)
-	enterText := conf.ui.Retry(retryTimes, uiauto.NamedCombine("enter text",
-		conf.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(chatTextButton, conf.ui.WaitUntilExists(chatTextField.Editable().Focused())),
-		conf.kb.TypeAction(message),
-		conf.ui.WaitUntilExists(messageInChatTextField),
-		conf.kb.AccelAction("enter"),
-	))
-	return conf.ui.Retry(retryTimes, uiauto.NamedCombine("open chat window and type",
-		uiauto.IfSuccessThen(conf.ui.Gone(chatTextField.Focusable()), openChatBox),
-		enterText,
-		conf.ui.WithTimeout(longUITimeout).WaitUntilExists(messageText),
+
+	return uiauto.Combine("typing in chat",
+		conf.gm.TypingInChat(conf.kb, message),
 		uiauto.Sleep(viewingTime), // After typing, wait 5 seconds for viewing.
-		conf.ui.DoDefault(chatButton),
-		conf.ui.WithTimeout(longUITimeout).WaitUntilGone(chatTextField),
-	))(ctx)
+		conf.gm.CloseChatPanel(),
+	)(ctx)
 }
 
 // SetLayoutMax sets the conference UI layout to max tiled grid.
