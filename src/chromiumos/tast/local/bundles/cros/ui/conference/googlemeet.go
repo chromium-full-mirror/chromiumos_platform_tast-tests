@@ -422,96 +422,52 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 // Presenting creates Google Slides and Google Docs, shares screen and presents
 // the specified application to the conference.
 func (conf *GoogleMeetConference) Presenting(ctx context.Context, application googleApplication) (err error) {
-	tconn := conf.tconn
-	ui := conf.ui
+	tconn, uiHandler, roomType, gm := conf.tconn, conf.uiHandler, conf.roomType, conf.gm
 
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
 	}
+
 	switchToTab := func(tabName string) action.Action {
 		if conf.extendedDisplay {
-			return uiauto.NamedAction("switch window to "+tabName, conf.uiHandler.SwitchToAppWindowByName(chromeApp.Name, tabName))
+			return uiauto.NamedAction("switch window to "+tabName,
+				uiHandler.SwitchToAppWindowByName(chromeApp.Name, tabName))
 		}
-		return uiauto.NamedAction("switch tab to "+tabName, conf.uiHandler.SwitchToChromeTabByName(tabName))
+		return uiauto.NamedAction("switch tab to "+tabName,
+			uiHandler.SwitchToChromeTabByName(tabName))
 	}
-	alertDialog := nodewith.Name("Your screen is still visible to others").Role(role.Alert)
-	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(alertDialog)
-	closeAlertDialog := uiauto.IfSuccessThen(
-		ui.WithTimeout(shortUITimeout).WaitUntilExists(closeButton),
-		uiauto.NamedAction("close alert dialog", ui.LeftClick(closeButton)),
-	)
 
-	// shareScreen shares screen by "A Tab" and selects the tab which is going to present.
-	// If there is extended display, move conference to extended display.
 	shareScreen := func(ctx context.Context) error {
-		if conf.roomType == NoRoom {
+		if roomType == NoRoom {
 			// Share screen will automatically switch to the specified application tab.
 			// Without googlemeet, it must switch to slide tab before present slide.
 			// And present document doesn't need a switch because it is already on the document page.
 			if application == googleSlides {
 				return switchToTab(string(googleSlides))(ctx)
 			}
+
 			return nil
 		}
 
-		if err := switchToTab(meetTitle)(ctx); err != nil {
-			return err
-		}
-
-		clickPresentNowButton := func(ctx context.Context) error {
-			presentNowButton := nodewith.Name("Present now").Role(role.Button)
-			presentNowPopUpButton := nodewith.Name("Present now").Role(role.PopUpButton)
-			presentingPopUpButton := nodewith.NameContaining("presenting").Role(role.PopUpButton)
-			presentButton, err := ui.FindAnyExists(ctx,
-				presentNowButton,
-				presentNowPopUpButton,
-				presentingPopUpButton)
-			if err != nil {
-				return errors.New("failed to find present button")
-			}
-			if presentButton == presentingPopUpButton {
-				testing.ContextLog(ctx, "Another participant is presenting now")
-				return errors.New("another participant is presenting now")
-			}
-
-			return ui.DoDefault(presentButton)(ctx)
-		}
-
-		presentMode := nodewith.NameContaining("A tab").Role(role.MenuItem)
-		presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(string(application))
-		shareButton := nodewith.Name("Share").Role(role.Button)
-		// There may be multiple "Stop sharing" buttons, so add First() here.
-		stopSharing := nodewith.Name("Stop sharing").Role(role.Button).First()
-
-		return ui.Retry(retryTimes, uiauto.NamedCombine("share screen",
-			clickPresentNowButton,
-			ui.WaitUntilAnyExists(presentMode, presentTab),
-			uiauto.IfSuccessThen(ui.Exists(presentMode), ui.DoDefault(presentMode)),
-			ui.LeftClickUntil(presentTab, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentTab.Focused())),
-			ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
-			closeAlertDialog,
-			ui.WithTimeout(longUITimeout).WaitUntilExists(stopSharing),
-		))(ctx)
+		return uiauto.Combine("share screen",
+			switchToTab(meetTitle),
+			gm.ShareScreen(string(application)))(ctx)
 	}
 
 	stopPresenting := func(ctx context.Context) error {
-		if conf.roomType == NoRoom {
+		if roomType == NoRoom {
 			return nil
 		}
-		// There are two "Stop presenting" buttons on the screen with the same ancestor, role and name that we can't use unique finder.
-		stopPresentingButton := nodewith.Name("Stop presenting").Role(role.Button).Ancestor(meetWebArea).First()
-		return uiauto.NamedCombine("stop presenting",
-			switchToTab(meetTitle),
-			closeAlertDialog,
-			ui.WithTimeout(mediumUITimeout).DoDefaultUntil(stopPresentingButton, ui.WaitUntilGone(stopPresentingButton)),
-		)(ctx)
+
+		return gm.StopShareScreen()(ctx)
 	}
 
-	if err := presentApps(ctx, tconn, conf.uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
+	if err := presentApps(ctx, tconn, uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
 		application, conf.outDir, conf.extendedDisplay); err != nil {
-		return errors.Wrapf(err, "failed to present %s", string(application))
+		return errors.Wrapf(err, "failed to present %q", application)
 	}
+
 	return nil
 }
 
