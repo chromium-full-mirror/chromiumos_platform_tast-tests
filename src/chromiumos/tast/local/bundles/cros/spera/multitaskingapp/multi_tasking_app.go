@@ -177,19 +177,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 			defer recorder.StopTracing(ctx)
 		}
 
-		resources := &runResources{
-			kb:         kb,
-			topRow:     topRow,
-			ui:         ui,
-			vh:         vh,
-			uiHandler:  uiHandler,
-			browserApp: browserApp,
-		}
-
-		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
-			return errors.Wrap(err, "failed to open and switch chrome tabs")
-		}
-
 		// Given time to close chrome.
 		cleanupCtx := ctx
 		ctx, cancel = ctxutil.Shorten(ctx, 20*time.Second)
@@ -221,6 +208,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
 			}
 		}(cleanupCtx)
+
+		resources := &runResources{
+			kb:         kb,
+			topRow:     topRow,
+			ui:         ui,
+			vh:         vh,
+			uiHandler:  uiHandler,
+			browserApp: browserApp,
+		}
+		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
+			return errors.Wrap(err, "failed to open and switch chrome tabs")
+		}
 
 		if err := switchWindows(ctx, tconn, resources, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to switch windows")
