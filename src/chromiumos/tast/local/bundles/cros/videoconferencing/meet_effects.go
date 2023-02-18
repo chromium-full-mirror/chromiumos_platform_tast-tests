@@ -60,22 +60,22 @@ func init() {
 			},
 			{
 				Name:    "clamshell_pwa_lacros",
-				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "tablet_pwa_lacros",
-				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "clamshell_web_lacros",
-				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "tablet_web_lacros",
-				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
+				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},
