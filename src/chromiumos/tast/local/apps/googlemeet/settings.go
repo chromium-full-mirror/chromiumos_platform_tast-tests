@@ -20,6 +20,7 @@ import (
 
 var (
 	settingsDialog           = nodewith.Name("Settings").Role(role.Dialog).Ancestor(meetRootWebArea)
+	changeLayoutDialog       = nodewith.Name("Change layout").Role(role.Dialog).Ancestor(meetRootWebArea)
 	videoSettingsTabButton   = nodewith.Name("Video").Role(role.Tab).Ancestor(settingsDialog)
 	generalSettingsTabButton = nodewith.Name("General").Role(role.Tab).Ancestor(settingsDialog)
 	closeSettingsButton      = nodewith.Name("Close dialog").Role(role.Button).Ancestor(settingsDialog)
@@ -215,4 +216,70 @@ func (gm *GoogleMeet) SetEffectOnJoinPage(effectOption EffectOption) action.Acti
 		uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(selectAFileDialog),
 			ui.LeftClick(closeDialogButton)),
 	)
+}
+
+// OpenChangeLayout opens change layout page in GoogleMeet.
+func (gm *GoogleMeet) OpenChangeLayout(ctx context.Context) error {
+	ui := gm.ui
+	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
+	changeLayoutItem := nodewith.Name("Change layout").Role(role.MenuItem).Ancestor(meetRootWebArea)
+
+	if err := ui.Exists(changeLayoutDialog)(ctx); err == nil {
+		testing.ContextLog(ctx, "Change layout page is already opened")
+		return nil
+	}
+
+	// It takes a long time to open the change layout panel when running classroom on low-end devices.
+	// Therefore, here extend the timeout and increase the number of retry.
+	return ui.Retry(5, uiauto.NamedCombine("open Meet layout page",
+		uiauto.IfFailThen(ui.Exists(changeLayoutItem),
+			ui.WithTimeout(longUITimeout).DoDefaultUntil(moreOptions, ui.WaitUntilExists(changeLayoutItem))),
+		ui.DoDefault(changeLayoutItem),
+		ui.WithTimeout(longUITimeout).WaitUntilExists(changeLayoutDialog)),
+	)(ctx)
+}
+
+// CloseChangeLayout closes the change layout page in GoogleMeet.
+func (gm *GoogleMeet) CloseChangeLayout(ctx context.Context) error {
+	ui := gm.ui
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(changeLayoutDialog)
+
+	if err := ui.Gone(changeLayoutDialog)(ctx); err == nil {
+		testing.ContextLog(ctx, "Change layout page is already closed")
+		return nil
+	}
+
+	return uiauto.NamedAction("close change layout panel",
+		ui.WithTimeout(longUITimeout).DoDefaultUntil(closeButton, ui.WaitUntilGone(closeButton)))(ctx)
+}
+
+// LayoutOption indicates the option name of the layout that can be selected.
+type LayoutOption string
+
+const (
+	// TiledLayout is the "Tiled" layout option.
+	TiledLayout = "Tiled"
+	// SpotlightLayout is the "Spotlight" layout option.
+	SpotlightLayout = "Spotlight"
+)
+
+// SetLayout sets the layout in GoogleMeet.
+func (gm *GoogleMeet) SetLayout(layoutOption LayoutOption) action.Action {
+	ui := gm.ui
+	layoutRadioButton := nodewith.Name(string(layoutOption)).Role(role.RadioButton).Ancestor(changeLayoutDialog).Visible()
+
+	return uiauto.NamedAction(fmt.Sprintf("set layout to %q", layoutOption),
+		ui.DoDefaultUntil(layoutRadioButton,
+			ui.WithTimeout(shortUITimeout).WaitUntilExists(layoutRadioButton.Focused())))
+}
+
+// ShowInATile sets the layout shown in a tile when layout is "Tiled".
+func (gm *GoogleMeet) ShowInATile() action.Action {
+	ui := gm.ui
+	showInATileButton := nodewith.Name("Show in a tile").Role(role.Button)
+
+	return uiauto.NamedAction("show in a tile",
+		uiauto.IfSuccessThen(ui.Exists(showInATileButton),
+			ui.DoDefaultUntil(showInATileButton,
+				ui.WithTimeout(shortUITimeout).WaitUntilGone(showInATileButton))))
 }
