@@ -60,6 +60,8 @@ func VirtualKeyboardFloat(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
 	uc := s.FixtValue().(fixture.FixtData).UserContext
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "setup")
+
 	vkbCtx := vkb.NewContext(cr, tconn)
 
 	if err := vkbCtx.ShowVirtualKeyboard()(ctx); err != nil {
