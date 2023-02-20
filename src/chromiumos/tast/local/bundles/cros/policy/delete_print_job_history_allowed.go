@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/printmanagementapp"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
+	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -33,7 +34,6 @@ func init() {
 		Desc:         "Behavior of DeletePrintJobHistoryAllowed policy, checking the corresponding button state after setting the policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
-			"project-bolton@google.com",
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
@@ -72,24 +72,24 @@ func DeletePrintJobHistoryAllowed(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	for _, param := range []struct {
-		name    string
-		enabled bool                                 // enabled is the expected enabled state of the clear button.
-		value   *policy.DeletePrintJobHistoryAllowed // value is the value of the policy.
+		name                string
+		expectedRestriction restriction.Restriction              // specifies whether the button to clear history should be restricted.
+		value               *policy.DeletePrintJobHistoryAllowed // value is the value of the policy.
 	}{
 		{
-			name:    "deny",
-			enabled: false,
-			value:   &policy.DeletePrintJobHistoryAllowed{Val: false},
+			name:                "deny",
+			expectedRestriction: restriction.Disabled,
+			value:               &policy.DeletePrintJobHistoryAllowed{Val: false},
 		},
 		{
-			name:    "allow",
-			enabled: true,
-			value:   &policy.DeletePrintJobHistoryAllowed{Val: true},
+			name:                "allow",
+			expectedRestriction: restriction.None,
+			value:               &policy.DeletePrintJobHistoryAllowed{Val: true},
 		},
 		{
-			name:    "unset",
-			enabled: true,
-			value:   &policy.DeletePrintJobHistoryAllowed{Stat: policy.StatusUnset},
+			name:                "unset",
+			expectedRestriction: restriction.None,
+			value:               &policy.DeletePrintJobHistoryAllowed{Stat: policy.StatusUnset},
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
@@ -148,15 +148,8 @@ func DeletePrintJobHistoryAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to cancel the print job: ", err)
 			}
 
-			// Check whether clear button exists and is enabled.
-			clearButton := nodewith.Name("Clear all history").Role(role.Button)
-			clearButtonEnabled := nodewith.ClassName("delete-enabled")
-			enabled := uiauto.Combine("Check clear button activity ",
-				uia.WaitUntilExists(clearButton),
-				uia.WaitUntilExists(clearButtonEnabled))(ctx) == nil
-
-			if enabled != param.enabled {
-				s.Errorf("Unexpected existence of print history clear button found: got %t; want %t", enabled, param.enabled)
+			if err := uia.CheckRestriction(printmanagementapp.PrintManagementDeleteHistoryButton, param.expectedRestriction)(ctx); err != nil {
+				s.Fatal("Failed to check that the clear history button is in an expected restriction state: ", err)
 			}
 		})
 	}

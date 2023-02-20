@@ -31,8 +31,8 @@ var printManagementHistoryLabel = nodewith.Name("History").Role(role.StaticText)
 // printManagementPrintJobEntry is used to find all print job entries.
 var printManagementPrintJobEntry = nodewith.ClassName("list-item flex-center")
 
-// printManagementDeleteHistoryButton is used to delete printing history.
-var printManagementDeleteHistoryButton = nodewith.Name("Clear all history").Role(role.Button)
+// PrintManagementDeleteHistoryButton is used to delete printing history.
+var PrintManagementDeleteHistoryButton = nodewith.Name("Clear all history").Role(role.Button)
 
 // printManagementDeleteConfirmButton is used to confirm deleting printing
 // history.
@@ -57,12 +57,12 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (*PrintManagementApp, e
 // ClearHistory returns an action that clears the print job history.
 func (p *PrintManagementApp) ClearHistory() uiauto.Action {
 	return uiauto.Combine("clear print job history",
-		p.ui.WithTimeout(5*time.Second).WaitUntilExists(printManagementDeleteHistoryButton),
+		p.ui.WithTimeout(5*time.Second).WaitUntilExists(PrintManagementDeleteHistoryButton),
 		// There may not be any jobs in the history, in which case the confirm
 		// dialog won't appear.  Only try and click it if it appears.
 		uiauto.IfSuccessThen(p.VerifyHistoryLabel(),
 			uiauto.Combine("clear print job history and confirm",
-				p.ui.LeftClick(printManagementDeleteHistoryButton),
+				p.ui.LeftClick(PrintManagementDeleteHistoryButton),
 				p.ui.WithTimeout(5*time.Second).WaitUntilExists(printManagementDeleteConfirmButton),
 				p.ui.LeftClick(printManagementDeleteConfirmButton),
 				p.ui.EnsureGoneFor(printManagementPrintJobEntry, 20*time.Second))),
