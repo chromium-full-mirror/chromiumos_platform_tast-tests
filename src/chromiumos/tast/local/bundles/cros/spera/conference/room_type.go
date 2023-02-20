@@ -8,10 +8,8 @@ package conference
 type RoomType int
 
 const (
-	// NoRoom means not joining google meet when running the test.
-	NoRoom RoomType = iota
 	// TwoRoomSize creates a conference room with 2 participants.
-	TwoRoomSize
+	TwoRoomSize RoomType = iota
 	// SmallRoomSize creates a conference room with 5 participants.
 	SmallRoomSize
 	// LargeRoomSize creates a conference room with 16 participants.
@@ -22,7 +20,6 @@ const (
 
 // GoogleMeetRoomParticipants defines room size for Google meet cuj.
 var GoogleMeetRoomParticipants = map[RoomType]int{
-	NoRoom:        0,
 	TwoRoomSize:   2,
 	SmallRoomSize: 6,
 	LargeRoomSize: 16,

@@ -145,7 +145,6 @@ var webSource = cuj.GoogleWebSource
 
 func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.MeetScenarioRequest) (*empty.Empty, error) {
 	roomType := conference.RoomType(req.RoomType)
-	isNoRoom := roomType == conference.NoRoom
 	meet, err := conference.GetGoogleMeetConfig(ctx, s.s, roomType)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get meet config")
@@ -215,7 +214,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 				// Nothing to clean up at the end of Google Meet conference.
 				return nil
 			}
-			if !isNoRoom && roomURL == "" {
+			if roomURL == "" {
 				return "", nil, errors.New("the conference invite link is empty")
 			}
 			return roomURL, cleanup, nil
@@ -245,14 +244,6 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 			return errors.Wrap(err, "failed to run Google Meet conference")
 		}
 		return nil
-	}
-	if isNoRoom {
-		// Without Google Meet, there is no need to assign a meet url.
-		if err := run(ctx, ""); err != nil {
-			testing.ContextLogf(ctx, "Failed to run conference: %+v", err)
-			return nil, err
-		}
-		return &empty.Empty{}, nil
 	}
 
 	runWithMeetUrls := func(ctx context.Context) error {

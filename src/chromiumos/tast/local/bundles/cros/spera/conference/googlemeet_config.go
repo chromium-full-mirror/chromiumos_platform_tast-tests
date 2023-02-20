@@ -29,10 +29,6 @@ type GoogleMeetConfig struct {
 
 // GetGoogleMeetConfig returns an object that contains the Google meet configuration.
 func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType RoomType) (GoogleMeetConfig, error) {
-	// If roomType is NoRoom, an empty object is returned.
-	if roomType == NoRoom {
-		return GoogleMeetConfig{}, nil
-	}
 	const (
 		defaultMeetRetryTimeout  = 40 * time.Minute
 		defaultMeetRetryInterval = 2 * time.Minute

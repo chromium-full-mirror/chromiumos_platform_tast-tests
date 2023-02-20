@@ -129,18 +129,16 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 	if err := recorder.AddCollectedMetrics(bTconn, bt, cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	isNoRoom := roomType == NoRoom
+
 	isPlus := tier == cuj.Plus || (tier == cuj.Advanced && roomType == ClassRoomSize)
 	isPremium := tier == cuj.Premium || (tier == cuj.Advanced && roomType == LargeRoomSize)
 	meetTimeout := 50 * time.Second
-	if isNoRoom {
-		meetTimeout = 70 * time.Second
-	} else if isPlus {
+	if isPlus {
 		meetTimeout = 140 * time.Second
 	} else if isPremium {
 		meetTimeout = 3 * time.Minute
 	}
-	if !isNoRoom && collectWebRTCInternals {
+	if collectWebRTCInternals {
 		webRTCInternalsConn, err := cuj.OpenWebRTCInternals(ctx, tconn, br)
 		if err != nil {
 			return err
@@ -165,25 +163,23 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			errc <- graphics.MeasureGPUCounters(gpuCtx, meetTimeout, pv)
 		}()
 
-		if !isNoRoom {
-			if err := conf.Join(ctx, inviteLink); err != nil {
-				return err
-			}
-			// Basic steps:
-			// 1. Set the layout to max tiled grid. (Google meet: "Tiled", Zoom: "Gallery")
-			// 2. Switch to another tab (wikipedia) and back to meeting.
-			// 3. Use video and audio control buttons.
-			// 4. Open chat window and type.
-			// 5. Set the layout to a minimal tiled grid. (Google meet: "Spotlight", Zoom: "Speacker View")
-			if err := uiauto.Combine("basic actions",
-				conf.SetLayoutMax,
-				conf.SwitchTabs(url),
-				conf.VideoAudioControl,
-				conf.TypingInChat,
-				conf.SetLayoutMin,
-			)(ctx); err != nil {
-				return err
-			}
+		if err := conf.Join(ctx, inviteLink); err != nil {
+			return err
+		}
+		// Basic steps:
+		// 1. Set the layout to max tiled grid. (Google meet: "Tiled", Zoom: "Gallery")
+		// 2. Switch to another tab (wikipedia) and back to meeting.
+		// 3. Use video and audio control buttons.
+		// 4. Open chat window and type.
+		// 5. Set the layout to a minimal tiled grid. (Google meet: "Spotlight", Zoom: "Speacker View")
+		if err := uiauto.Combine("basic actions",
+			conf.SetLayoutMax,
+			conf.SwitchTabs(url),
+			conf.VideoAudioControl,
+			conf.TypingInChat,
+			conf.SetLayoutMin,
+		)(ctx); err != nil {
+			return err
 		}
 
 		// Plus and premium tier.
@@ -198,7 +194,7 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 		}
 
 		// Premium tier.
-		if !isNoRoom && isPremium {
+		if isPremium {
 			if err := conf.BackgroundChange(ctx); err != nil {
 				return err
 			}
@@ -206,7 +202,7 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to generate ADF")
 		}
-		if !isNoRoom && collectWebRTCInternals {
+		if collectWebRTCInternals {
 			participants, err := conf.GetParticipants(ctx)
 			if err != nil {
 				return err
@@ -216,24 +212,24 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 				return errors.Wrap(err, "failed to report WebRTC internals")
 			}
 		}
-		if !isNoRoom {
-			closeFunc := func(ctx context.Context) error {
-				if bt == browser.TypeLacros {
-					tabs, err := browser.AllTabs(ctx, bTconn)
-					if err != nil {
-						return err
-					}
-					// Leaving one tab is critical to keep the lacros-chrome process running.
-					if len(tabs) == 1 {
-						return browser.ReplaceAllTabsWithSingleNewTab(ctx, bTconn)
-					}
+
+		closeFunc := func(ctx context.Context) error {
+			if bt == browser.TypeLacros {
+				tabs, err := browser.AllTabs(ctx, bTconn)
+				if err != nil {
+					return err
 				}
-				return conf.CloseConference(ctx)
+				// Leaving one tab is critical to keep the lacros-chrome process running.
+				if len(tabs) == 1 {
+					return browser.ReplaceAllTabsWithSingleNewTab(ctx, bTconn)
+				}
 			}
-			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
-				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
-			}
+			return conf.CloseConference(ctx)
 		}
+		if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
+			testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
+		}
+
 		// Wait for meetTimeout expires in goroutine and get GPU result.
 		if err := <-errc; err != nil {
 			return errors.Wrap(err, "failed to collect GPU counters")

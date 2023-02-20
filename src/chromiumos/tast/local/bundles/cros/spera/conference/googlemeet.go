@@ -397,37 +397,18 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 // Presenting creates Google Slides and Google Docs, shares screen and presents
 // the specified application to the conference.
 func (conf *GoogleMeetConference) Presenting(ctx context.Context, application googleApplication) (err error) {
-	tconn, uiHandler, roomType, gm := conf.tconn, conf.uiHandler, conf.roomType, conf.gm
+	tconn, uiHandler, gm := conf.tconn, conf.uiHandler, conf.gm
 
 	switchToTab := func(tabName string) action.Action {
 		return uiauto.NamedAction("switch tab to "+tabName,
 			uiHandler.SwitchToChromeTabByName(tabName))
 	}
 
-	shareScreen := func(ctx context.Context) error {
-		if roomType == NoRoom {
-			// Share screen will automatically switch to the specified application tab.
-			// Without googlemeet, it must switch to slide tab before present slide.
-			// And present document doesn't need a switch because it is already on the document page.
-			if application == googleSlides {
-				return switchToTab(string(googleSlides))(ctx)
-			}
+	shareScreen := uiauto.Combine("share screen",
+		switchToTab(meetTitle),
+		gm.ShareScreen(string(application)))
 
-			return nil
-		}
-
-		return uiauto.Combine("share screen",
-			switchToTab(meetTitle),
-			gm.ShareScreen(string(application)))(ctx)
-	}
-
-	stopPresenting := func(ctx context.Context) error {
-		if roomType == NoRoom {
-			return nil
-		}
-
-		return gm.StopShareScreen()(ctx)
-	}
+	stopPresenting := gm.StopShareScreen()
 
 	if err := presentApps(ctx, tconn, uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
 		application, conf.outDir); err != nil {
