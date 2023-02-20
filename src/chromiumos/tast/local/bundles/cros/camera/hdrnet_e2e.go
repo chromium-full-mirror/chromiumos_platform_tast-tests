@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/camera/features"
 	"chromiumos/tast/local/camera/histogramutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -51,6 +52,9 @@ func HDRnetE2E(ctx context.Context, s *testing.State) {
 		{"testVideoRecording", testVideoRecording},
 	} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
+		if err := upstart.EnsureJobRunning(subTestCtx, "cros-camera"); err != nil {
+			s.Fatal("Failed to start cros-camera service: ", err)
+		}
 		s.Run(subTestCtx, t.name, func(ctx context.Context, s *testing.State) {
 			if err := runSubTest(ctx, func(ctx context.Context, app *cca.App) error {
 				return t.testFunc(ctx, app, tconn)

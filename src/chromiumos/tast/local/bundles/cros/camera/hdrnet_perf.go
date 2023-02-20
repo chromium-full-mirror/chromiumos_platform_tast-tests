@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/camera/testpage"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -217,6 +218,9 @@ func HDRnetPerf(ctx context.Context, s *testing.State) {
 		for _, t := range testCases {
 			subTestCtx, cancel := context.WithTimeout(ctx, subtestTimeout)
 			name := fmt.Sprintf("%s-%s", r.name, t.name)
+			if err := upstart.EnsureJobRunning(subTestCtx, "cros-camera"); err != nil {
+				s.Fatal("Failed to start cros-camera service: ", err)
+			}
 			s.Run(subTestCtx, name, func(cts context.Context, s *testing.State) {
 				// Override controls must be set before we open the camera device.
 				if err := overrideFeatureConfigs(subTestCtx, &t.override); err != nil {
