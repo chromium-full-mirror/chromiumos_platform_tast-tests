@@ -179,7 +179,7 @@ func (app *MicrosoftWebOffice) CreateSpreadsheet(ctx context.Context, cr *chrome
 	// So check the dialog before and after login.
 	if err := uiauto.Combine("wait for sample sheet content appears",
 		app.skipUpdatingTermsDialog(),
-		app.checkSignIn,
+		app.signIn,
 		app.ui.WaitUntilExists(canvas),
 	)(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to wait sample sheet content appears")
@@ -520,35 +520,39 @@ func (app *MicrosoftWebOffice) maybeCloseOneDriveTab(tabName string) action.Acti
 	}
 }
 
-// checkSignIn checks if it is signed in, if not, try to sign in.
-func (app *MicrosoftWebOffice) checkSignIn(ctx context.Context) error {
-	testing.ContextLog(ctx, "Check if already signed in")
-
-	// If the account manager exists, it means it has been logged in. Skip the login procedure.
+// signIn signs in to Microsoft Office account.
+func (app *MicrosoftWebOffice) signIn(ctx context.Context) error {
+	// There are four different sign in scenarios:
+	// 1. On the Excel page, only signInButton exists.
+	// 2. If the website does not cache account information, both signInButton and signInLink will be displayed on the homepage.
+	// 3. If the website does cache account information, only signInLink will be displayed on the homepage.
+	// 4. The website redirect to the sign-in page when navigating to the spreadsheet.
 	accountManager := nodewith.NameContaining("Account manager for").Role(role.Button)
-	if err := app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(accountManager)(ctx); err != nil {
-		// There are three different sign in scenarios:
-		// 1. On the Excel page, only signInButton exists.
-		// 2. If the website does not cache account information, both signInButton and signInLink will be displayed on the homepage.
-		// 3. If the website does cache account information, only signInLink will be displayed on the homepage.
-		msLoginWebArea := nodewith.NameContaining("Login | Microsoft").Role(role.RootWebArea)
-		signInButton := nodewith.Name("Sign in").Role(role.Button).Ancestor(excelWebArea)
-		signInLink := nodewith.Name("Sign in to your account").Role(role.Link).Ancestor(msLoginWebArea)
+	msLoginWebArea := nodewith.NameContaining("Login | Microsoft").Role(role.RootWebArea)
+	signInLink := nodewith.Name("Sign in to your account").Role(role.Link).Ancestor(msLoginWebArea)
+	signInButton := nodewith.Name("Sign in").Role(role.Button).Ancestor(excelWebArea)
+	oneDriveWebArea := nodewith.Name("OneDrive").Role(role.RootWebArea)
+	signInHeading := nodewith.Name("Sign in").Role(role.Heading).Ancestor(oneDriveWebArea)
+
+	signInStateNode, err := app.ui.FindAnyExists(ctx, accountManager, signInLink, signInButton, signInHeading)
+	if err != nil {
+		return errors.Wrap(err, "failed to find sign in state node")
+	}
+
+	// The account manager indicates the user has been logged in. Skip the login procedure.
+	if signInStateNode == accountManager {
+		testing.ContextLog(ctx, "Account has been logged in")
+		return nil
+	}
+
+	// Clicking at the signInStateNode to navigate to the sign-in page if the website is not redirected.
+	if signInStateNode != signInHeading {
 		securityHeading := nodewith.Name("Is your security info still accurate?").Role(role.Heading)
 		looksGoodButton := nodewith.Name("Looks good!").Role(role.Button)
-		if err := uiauto.NamedCombine("enter sign in process",
-			uiauto.IfSuccessThen(
-				app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(excelWebArea),
-				app.ui.DoDefaultUntil(
-					signInButton,
-					app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(signInButton)),
-			),
-			uiauto.IfSuccessThen(
-				app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(msLoginWebArea),
-				app.ui.DoDefaultUntil(
-					signInLink,
-					app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(signInLink)),
-			),
+		if err := uiauto.NamedCombine("navigate to sign-in page",
+			app.ui.DoDefaultUntil(
+				signInStateNode,
+				app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(signInStateNode)),
 			uiauto.IfSuccessThen(
 				app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(securityHeading),
 				app.uiHdl.Click(looksGoodButton),
@@ -556,25 +560,8 @@ func (app *MicrosoftWebOffice) checkSignIn(ctx context.Context) error {
 		)(ctx); err != nil {
 			return err
 		}
-
-		accountLocked := nodewith.Name("Your account has been locked").Role(role.StaticText)
-		// If the message exists, it means the account has been locked. We can only recover it manually.
-		if err := app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(accountLocked)(ctx); err != nil {
-			return uiauto.NamedCombine("sign in to Microsoft web",
-				app.signIn,
-				app.ui.WaitUntilExists(accountManager),
-			)(ctx)
-		}
-
-		return errors.New("failed to sign in to microsoft office, your account has been locked")
 	}
 
-	testing.ContextLog(ctx, "Account has been logged in")
-	return nil
-}
-
-// signIn signs in to Microsoft Office account.
-func (app *MicrosoftWebOffice) signIn(ctx context.Context) error {
 	accountField := nodewith.NameContaining("Enter your email").Role(role.TextField)
 	enterAccount := uiauto.NamedCombine("enter the account",
 		app.ui.DoDefaultUntil(accountField, app.ui.Exists(accountField.Focused())),
@@ -595,20 +582,27 @@ func (app *MicrosoftWebOffice) signIn(ctx context.Context) error {
 
 	accountList := nodewith.Name("Pick an account").Role(role.List)
 	accountButton := nodewith.NameContaining(app.username).Role(role.Button).Ancestor(accountList)
-	// If we have logged in before, sometimes it will show a "Pick an account" list.
-	if err := uiauto.IfSuccessThen(
-		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(accountButton),
-		app.uiHdl.Click(accountButton),
-	)(ctx); err != nil {
-		return err
+	accountLocked := nodewith.Name("Your account has been locked").Role(role.StaticText)
+	accountNode, err := app.ui.FindAnyExists(ctx, accountField, accountManager, accountButton, accountLocked)
+	if err != nil {
+		return errors.Wrap(err, "failed to find account node")
 	}
 
-	// If we select the account option in the "Pick an account" list, there is no need to fill in the account field.
-	if err := uiauto.IfSuccessThen(
-		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(accountField),
-		enterAccount,
-	)(ctx); err != nil {
-		return err
+	// After clicking the sign-in node, four situations might happen:
+	// 1. No account is cached, and the account field appears.
+	// 2. Multiple accounts are cached, and the "Pick an account" list appears.
+	// 3. One account is cached, the account manager appears and the sign-in is skipped.
+	// 4. The account is locked and required manually recover.
+	var goThroughAccountPage uiauto.Action
+	switch accountNode {
+	case accountField:
+		goThroughAccountPage = enterAccount
+	case accountButton:
+		goThroughAccountPage = app.uiHdl.Click(accountButton)
+	case accountManager:
+		return nil
+	case accountLocked:
+		return errors.New("failed to sign in to microsoft office, your account has been locked")
 	}
 
 	// Check and skip the dialog at the end of sign in action.
@@ -619,8 +613,9 @@ func (app *MicrosoftWebOffice) signIn(ctx context.Context) error {
 	staySignInYesButton := nodewith.Name("Yes").Role(role.Button).Ancestor(msAccountWebArea).Focusable()
 	closeButton := nodewith.Name("Close first run experience").Role(role.Button)
 
-	// Sometimes it will login directly without entering password.
-	return uiauto.Combine("enter password and skip dialog",
+	return uiauto.Combine("sign in and skip dialog",
+		goThroughAccountPage,
+		// Sometimes it will sign in directly without entering password.
 		uiauto.IfSuccessThen(
 			app.ui.WaitUntilExists(passwordField),
 			// Sometimes entering the password fails on the first try. Retry to ensure correctly enter the password.
@@ -635,6 +630,7 @@ func (app *MicrosoftWebOffice) signIn(ctx context.Context) error {
 		uiauto.IfSuccessThen(
 			app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(closeButton),
 			app.uiHdl.Click(closeButton)),
+		app.ui.WaitUntilExists(accountManager),
 	)(ctx)
 }
 
@@ -754,7 +750,7 @@ func (app *MicrosoftWebOffice) openOneDrive(ctx context.Context) (*chrome.Conn, 
 	gotItButton := nodewith.Name("Got it").Role(role.Button)
 
 	if err := uiauto.Combine("check if already signed in and navigate to OneDrive",
-		app.checkSignIn,
+		app.signIn,
 		navigateToOneDrive,
 		app.reload(myFiles, func(ctx context.Context) error { return nil }),
 		uiauto.IfSuccessThen(app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(closeDialog), app.uiHdl.Click(closeDialog)),
@@ -1001,10 +997,19 @@ func (app *MicrosoftWebOffice) selectRangeWithNameBox() action.Action {
 func (app *MicrosoftWebOffice) selectRangeWithGoTo(ctx context.Context) error {
 	rangeText := nodewith.Name("Range:").Role(role.TextField).Editable()
 	rangeTextFocused := rangeText.Focused()
-	// Pressing Ctrl+G will open the "Go To" box.
-	// Sometimes key events are typed but the UI does not respond. Retry to alert dialog does appear.
-	if err := app.ui.WithInterval(time.Second).RetryUntil(app.kb.AccelAction("Ctrl+G"),
-		app.ui.WithTimeout(3*time.Second).WaitUntilExists(rangeText))(ctx); err != nil {
+	// Clicking web area before pressing shortcut to ensure not focusing on a text field.
+	// After pressing Ctrl+G, two scenarios might happen:
+	// 1. If focusing on a text field, the find box appears.
+	// 2. Otherwise, the "Go To" box appears.
+	openGoToWithShortcut := uiauto.NamedCombine(`open "Go To" with shortcut`,
+		app.uiHdl.Click(excelWebArea),
+		app.kb.AccelAction("Ctrl+G"),
+	)
+	// Sometimes key events are typed but the UI does not respond. Retry to ensure the dialog does appear.
+	if err := app.ui.WithInterval(time.Second).RetryUntil(
+		openGoToWithShortcut,
+		app.ui.WithTimeout(3*time.Second).WaitUntilExists(rangeText),
+	)(ctx); err != nil {
 		testing.ContextLog(ctx, "Opening with panel due to ", err.Error())
 
 		home := nodewith.Name("Home").Role(role.Tab)
@@ -1026,12 +1031,26 @@ func (app *MicrosoftWebOffice) selectRangeWithGoTo(ctx context.Context) error {
 
 // selectBox selects the specified cell using the name box.
 func (app *MicrosoftWebOffice) selectBox(box string) action.Action {
-	return uiauto.NamedCombine(fmt.Sprintf("select box %q", box),
-		app.selectRangeWithNameBox(),
+	navigateToBox := uiauto.Combine("navigate to box",
 		app.kb.AccelAction("Ctrl+A"), // Make sure to clear the content and re-input.
 		app.kb.TypeAction(box),
 		app.kb.AccelAction("Enter"),
 	)
+
+	nameBoxFocused := nodewith.NameContaining("Name Box").Role(role.TextFieldWithComboBox).Focused()
+	selectBoxWithNameBox := uiauto.Combine(fmt.Sprintf(`select box %q with "Name Box"`, box),
+		app.selectRangeWithNameBox(),
+		navigateToBox,
+		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(nameBoxFocused),
+	)
+
+	goToDialog := nodewith.Name("Go to").Role(role.Dialog)
+	selectBoxWithGoToBox := uiauto.Combine(fmt.Sprintf(`select box %q with "Go to" box`, box),
+		app.selectRangeWithGoTo,
+		navigateToBox,
+		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilGone(goToDialog),
+	)
+	return uiauto.IfFailThen(selectBoxWithNameBox, selectBoxWithGoToBox)
 }
 
 // getBoxValue gets the value of the specified box.
