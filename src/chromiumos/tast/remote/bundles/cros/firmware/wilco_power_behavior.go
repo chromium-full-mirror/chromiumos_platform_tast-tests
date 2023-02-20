@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -151,6 +150,11 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		}
 	}
 	if tc.checkLidState {
+		defer func() {
+			if err := h.Servo.OpenLid(ctx); err != nil {
+				s.Fatal("Failed to ensure lid open at the end of test: ", err)
+			}
+		}()
 		// Close and then open DUT's lid.
 		for _, expState := range []string{"no", "yes"} {
 			s.Logf("Setting lid open to %s and checking for lid state", expState)
@@ -160,18 +164,34 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 				}
 				return nil
 			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-				// We suspect that if charger remained shut, opening the lid might fail.
-				// Document the value of vbus power to check if charger is connected.
-				checkCharger := func() string {
-					value, err := h.Servo.GetFloat(ctx, servo.VBusPower)
+				// On a number of lab sarien devices from dut_pool_quota, we saw that
+				// the lid_open control did not return the correct state that it was
+				// set to. Specifically, lid_open was set to 'no', but the checked value
+				// was 'yes'. A similar situation was mentioned in ticket b:134830532.
+				// To avoid mistakenly failing the test, attempt a press on the power
+				// button. If in reality the lid was closed, the dut would not wake up.
+				if expState == "no" {
+					currentState, err := h.Servo.GetString(ctx, servo.LidOpen)
 					if err != nil {
-						s.Log("Error in reading vbus power value: ", err)
-						return "unknown"
+						s.Fatal("Failed to get lid open state: ", err)
 					}
-					return fmt.Sprintf("%v", value)
+					if currentState == "yes" {
+						s.Logf("Pressing power button for %s seconds to wake DUT", servo.Dur(h.Config.HoldPwrButtonPowerOn))
+						if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+							s.Fatal("Failed to press power button: ", err)
+						}
+						s.Log("Sleeping for 90 seconds")
+						if err := testing.Sleep(ctx, 90*time.Second); err != nil {
+							s.Fatal("Failed to sleep: ", err)
+						}
+						s.Log("Checking if DUT woke up from a press on power button")
+						if !h.DUT.Connected(ctx) {
+							s.Log("Found DUT disconnected, continuing the test")
+							continue
+						}
+					}
 				}
-				vbusPower := checkCharger()
-				s.Fatalf("While setting and checking for the lid state, got vbus power %s: %v", vbusPower, err)
+				s.Fatal("While setting and checking for the lid state: ", err)
 			}
 		}
 	}
