@@ -12,8 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -21,6 +19,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
+	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
 
@@ -303,55 +302,30 @@ func Fio(ctx context.Context, s *testing.State) {
 
 	logFile := filepath.Join(s.OutDir(), "serial.log")
 
-	numCPU := runtime.NumCPU()
-
-	// Increase the max open file limit as the benchmark creates a lot of files.
-	args := []string{
-		"--nofile=262144",
-		"crosvm", "run",
-		"-c", strconv.Itoa(numCPU),
-		"-m", "1024",
-		"-s", td,
-		"--shared-dir", "/:root:type=fs:cache=always",
-		"--serial", fmt.Sprintf("type=file,num=1,console=true,path=%s", logFile),
-	}
-
 	p := s.Param().(param)
 	kind := p.kind
 	job := p.job
 
+	var storageOpt vm.Option
+
 	var tag string
 	if kind == "block" {
 		tag = "/dev/vda"
-		args = append(args, "--rwdisk", block)
+		storageOpt = vm.RWDisks(block)
 	} else if kind == "virtiofs" || kind == "virtiofs_dax" {
 		tag = "shared"
-		args = append(args, "--shared-dir",
-			fmt.Sprintf("%s:%s:type=fs:cache=auto:timeout=1:writeback=true:dax=%t",
-				shared, tag, kind == "virtiofs_dax"))
+		storageOpt = vm.SharedDir(vm.SharedDirParam{
+			Src: shared, Tag: tag, FsType: "fs", Cache: "auto", Timeout: 1, Writeback: true, DAX: kind == "virtiofs_dax"})
 	} else if kind == "p9" {
 		tag = "shared"
-		args = append(args, "--shared-dir", fmt.Sprintf("%s:%s", shared, tag))
+		storageOpt = vm.SharedDir(vm.SharedDirParam{
+			Src: shared, Tag: tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})
+
 	} else {
 		s.Fatal("Unknown storage device type: ", err)
 	}
 
 	fioOutput := filepath.Join(s.OutDir(), "fio-output.json")
-
-	params := []string{
-		"root=root",
-		"rootfstype=virtiofs",
-		"rw",
-		fmt.Sprintf("init=%s", s.DataPath(runFio)),
-		"--",
-		kind,
-		tag,
-		td,
-		fioOutput,
-		s.DataPath(job),
-	}
-
-	args = append(args, "-p", strings.Join(params, " "), data.Kernel)
 
 	output, err := os.Create(filepath.Join(s.OutDir(), "crosvm.log"))
 	if err != nil {
@@ -359,15 +333,48 @@ func Fio(ctx context.Context, s *testing.State) {
 	}
 	defer output.Close()
 
+	ps := vm.NewCrosvmParams(
+		data.Kernel,
+		vm.NumCpus(uint(runtime.NumCPU())),
+		vm.MemSize(1024),
+		vm.Socket(td),
+		vm.SharedDir(
+			vm.SharedDirParam{
+				Src:       "/",
+				Tag:       "/dev/root",
+				FsType:    "fs",
+				Cache:     "always",
+				Timeout:   5,
+				Writeback: false,
+				DAX:       false,
+			}),
+		vm.KernelArgs([]string{
+			"root=root",
+			"rootfstype=virtiofs",
+			"rw",
+			fmt.Sprintf("init=%s", s.DataPath(runFio)),
+			"--",
+			kind,
+			tag,
+			td,
+			fioOutput,
+			s.DataPath(job),
+		}...),
+		vm.SerialOutput(logFile),
+		storageOpt,
+	)
+
+	// Increase the max open file limit as the benchmark creates a lot of files.
+	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)
+
+	cmd := testexec.CommandContext(ctx, "prlimit", args...)
+	cmd.Stdout = output
+	cmd.Stderr = output
+
 	// Drop host caches before starting crosvm
 	if err := disk.DropCaches(ctx); err != nil {
 		s.Fatal("Failed to drop caches: ", err)
 	}
-
-	s.Log("Running fio")
-	cmd := testexec.CommandContext(ctx, "prlimit", args...)
-	cmd.Stdout = output
-	cmd.Stderr = output
 
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to run crosvm: ", err)

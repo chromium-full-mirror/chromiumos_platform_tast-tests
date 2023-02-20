@@ -49,7 +49,16 @@ func setupCrosvmCmd(ctx context.Context, kernel, serialLog, script string, scrip
 
 	ps := vm.NewCrosvmParams(
 		kernel,
-		vm.SharedDir("/", "/dev/root", "fs", "always"),
+		vm.SharedDir(
+			vm.SharedDirParam{
+				Src:       "/",
+				Tag:       "/dev/root",
+				FsType:    "fs",
+				Cache:     "always",
+				Timeout:   5,
+				Writeback: false,
+				DAX:       false,
+			}),
 		vm.DisableSandbox(),
 		vm.KernelArgs(kernParams...),
 		vm.SerialOutput(serialLog),

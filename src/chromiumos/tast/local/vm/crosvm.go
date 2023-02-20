@@ -27,15 +27,19 @@ type Crosvm struct {
 	stdout     *os.File      // stdout for cmd; uses os.File to set a read dealine
 }
 
-type sharedDirParam struct {
-	src    string
-	tag    string
-	fsType string
-	cache  string
+// SharedDirParam holds parameters for a shared directory.
+type SharedDirParam struct {
+	Src       string
+	Tag       string
+	FsType    string
+	Cache     string
+	Timeout   uint
+	Writeback bool
+	DAX       bool
 }
 
-func (p *sharedDirParam) toArg() string {
-	return fmt.Sprintf("%s:%s:type=%s:cache=%s", p.src, p.tag, p.fsType, p.cache)
+func (p *SharedDirParam) toArg() string {
+	return fmt.Sprintf("%s:%s:type=%s:cache=%s:timeout=%d:writeback=%t:dax=%t", p.Src, p.Tag, p.FsType, p.Cache, p.Timeout, p.Writeback, p.DAX)
 }
 
 // CrosvmParams - Parameters for starting a crosvm instance.
@@ -43,13 +47,14 @@ type CrosvmParams struct {
 	vmKernel       string           // path to the VM kernel image
 	vmBios         string           // path to a BIOS file for the VM
 	numCpus        uint             // Number of CPUs to expose to the VM
+	memSize        uint             // Amount of guest memory in MiB
 	useBiosFile    bool             // Set to true to boot CrosVM with BIOS
 	rootfsPath     string           // optional path to the VM rootfs
 	diskPaths      []string         // paths that will be mounted read only
 	rwDiskPaths    []string         // paths that will be mounted read/write
 	socketPath     string           // path to the VM control socket
 	kernelArgs     []string         // string arguments to be passed to the VM kernel
-	sharedDirs     []sharedDirParam // array of configuration of a directory to be shared with the VM
+	sharedDirs     []SharedDirParam // array of configuration of a directory to be shared with the VM
 	serialOutput   string           // path to a file where serial output will be written
 	vhostUserNet   []string         // paths to sockets that vhost-user-net devices will use
 	disableSandbox bool             // whether or not the sandbox is disabled
@@ -94,9 +99,9 @@ func KernelArgs(args ...string) Option {
 }
 
 // SharedDir sets a config for directory to be shared with the VM.
-func SharedDir(src, tag, fsType, cache string) Option {
+func SharedDir(param SharedDirParam) Option {
 	return func(p *CrosvmParams) {
-		p.sharedDirs = append(p.sharedDirs, sharedDirParam{src, tag, fsType, cache})
+		p.sharedDirs = append(p.sharedDirs, param)
 	}
 }
 
@@ -125,6 +130,13 @@ func DisableSandbox() Option {
 func NumCpus(numbercpus uint) Option {
 	return func(p *CrosvmParams) {
 		p.numCpus = numbercpus
+	}
+}
+
+// MemSize allows one to set the amount of the guest memory in MiB.
+func MemSize(memsize uint) Option {
+	return func(p *CrosvmParams) {
+		p.memSize = memsize
 	}
 }
 
@@ -162,6 +174,14 @@ func NewCrosvmParamsBIOS(bios string, opts ...Option) *CrosvmParams {
 func (p *CrosvmParams) ToArgs() []string {
 	args := []string{"run"}
 
+	if p.numCpus > 1 {
+		args = append(args, "--cpus", strconv.FormatUint((uint64(p.numCpus)), 10))
+	}
+
+	if p.memSize > 0 {
+		args = append(args, "--mem", strconv.FormatUint(uint64(p.memSize), 10))
+	}
+
 	if p.socketPath != "" {
 		args = append(args, "--socket", p.socketPath)
 	}
@@ -198,12 +218,10 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, "--bios", p.vmBios)
 	} else {
 		args = append(args, "-p", strings.Join(p.kernelArgs, " "))
+		// The kernel path must come at the end.
 		args = append(args, p.vmKernel)
 	}
 
-	if p.numCpus > 1 {
-		args = append(args, "--cpus", strconv.FormatUint((uint64(p.numCpus)), 10))
-	}
 	return args
 }
 

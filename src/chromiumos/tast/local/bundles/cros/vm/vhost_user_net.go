@@ -88,7 +88,16 @@ func getCrosvmCmd(ctx context.Context, kernel, serialLog, sock, script string, s
 
 	ps := vm.NewCrosvmParams(
 		kernel,
-		vm.SharedDir("/", "/dev/root", "fs", "always"),
+		vm.SharedDir(
+			vm.SharedDirParam{
+				Src:       "/",
+				Tag:       "/dev/root",
+				FsType:    "fs",
+				Cache:     "always",
+				Timeout:   5,
+				Writeback: false,
+				DAX:       false,
+			}),
 		vm.VhostUserNet(sock),
 		vm.KernelArgs(kernParams...),
 		vm.SerialOutput(serialLog),
