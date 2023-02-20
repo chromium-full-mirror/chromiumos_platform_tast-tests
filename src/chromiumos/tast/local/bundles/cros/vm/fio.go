@@ -7,19 +7,17 @@ package vm
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
+	"chromiumos/tast/local/bundles/cros/vm/storage"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
-	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
 
@@ -284,48 +282,33 @@ func Fio(ctx context.Context, s *testing.State) {
 	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.Fio.")
 	defer os.RemoveAll(ud)
 
-	shared := filepath.Join(ud, "shared")
-	if err := os.Mkdir(shared, 0755); err != nil {
-		s.Fatal("Failed to create shared directory: ", err)
-	}
-
-	block := filepath.Join(ud, "block")
-	f, err := os.Create(block)
-	if err != nil {
-		s.Fatal("Failed to create block device file: ", err)
-	}
-	defer f.Close()
-
-	if err := f.Truncate(8 * 1024 * 1024 * 1024); err != nil {
-		s.Fatal("Failed to set block device file size: ", err)
-	}
-
-	logFile := filepath.Join(s.OutDir(), "serial.log")
-
 	p := s.Param().(param)
 	kind := p.kind
 	job := p.job
+	fioOutput := filepath.Join(s.OutDir(), "fio-output.json")
 
-	var storageOpt vm.Option
-
-	var tag string
-	if kind == "block" {
-		tag = "/dev/vda"
-		storageOpt = vm.RWDisks(block)
-	} else if kind == "virtiofs" || kind == "virtiofs_dax" {
-		tag = "shared"
-		storageOpt = vm.SharedDir(vm.SharedDirParam{
-			Src: shared, Tag: tag, FsType: "fs", Cache: "auto", Timeout: 1, Writeback: true, DAX: kind == "virtiofs_dax"})
-	} else if kind == "p9" {
-		tag = "shared"
-		storageOpt = vm.SharedDir(vm.SharedDirParam{
-			Src: shared, Tag: tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})
-
-	} else {
-		s.Fatal("Unknown storage device type: ", err)
+	opt, err := storage.NewOption(kind)
+	if err != nil {
+		s.Fatal("Failed to create storage option: ", err)
 	}
 
-	fioOutput := filepath.Join(s.OutDir(), "fio-output.json")
+	scriptArgs := []string{
+		opt.Kind,
+		opt.Tag,
+		td,
+		fioOutput,
+		s.DataPath(job),
+	}
+
+	ps, err := storage.GenCrosvmCmd(td, ud, s.OutDir(), data.Kernel, s.DataPath(runFio), opt, scriptArgs)
+	if err != nil {
+		s.Fatal("Failed to construct crosvm command: ", err)
+	}
+
+	// Increase the max open file limit as the benchmark creates a lot of files.
+	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)
+
+	cmd := testexec.CommandContext(ctx, "prlimit", args...)
 
 	output, err := os.Create(filepath.Join(s.OutDir(), "crosvm.log"))
 	if err != nil {
@@ -333,41 +316,6 @@ func Fio(ctx context.Context, s *testing.State) {
 	}
 	defer output.Close()
 
-	ps := vm.NewCrosvmParams(
-		data.Kernel,
-		vm.NumCpus(uint(runtime.NumCPU())),
-		vm.MemSize(1024),
-		vm.Socket(td),
-		vm.SharedDir(
-			vm.SharedDirParam{
-				Src:       "/",
-				Tag:       "/dev/root",
-				FsType:    "fs",
-				Cache:     "always",
-				Timeout:   5,
-				Writeback: false,
-				DAX:       false,
-			}),
-		vm.KernelArgs([]string{
-			"root=root",
-			"rootfstype=virtiofs",
-			"rw",
-			fmt.Sprintf("init=%s", s.DataPath(runFio)),
-			"--",
-			kind,
-			tag,
-			td,
-			fioOutput,
-			s.DataPath(job),
-		}...),
-		vm.SerialOutput(logFile),
-		storageOpt,
-	)
-
-	// Increase the max open file limit as the benchmark creates a lot of files.
-	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)
-
-	cmd := testexec.CommandContext(ctx, "prlimit", args...)
 	cmd.Stdout = output
 	cmd.Stderr = output
 
