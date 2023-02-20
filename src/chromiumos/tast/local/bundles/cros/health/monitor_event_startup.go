@@ -5,8 +5,10 @@
 package health
 
 import (
+	"bytes"
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/testexec"
@@ -54,6 +56,8 @@ func MonitorEventStartup(ctx context.Context, s *testing.State) {
 	categoryArg := "--category=" + testParam.category
 	durationArg := "--length_seconds=" + strconv.Itoa(int(testParam.duration/time.Second))
 	monitorCmd := testexec.CommandContext(ctx, "cros-health-tool", "event", categoryArg, durationArg)
+	var stderrBuf bytes.Buffer
+	monitorCmd.Stderr = &stderrBuf
 
 	start := time.Now()
 	if err := monitorCmd.Run(); err != nil {
@@ -61,7 +65,10 @@ func MonitorEventStartup(ctx context.Context, s *testing.State) {
 	}
 
 	elapsed := time.Since(start)
-	if elapsed < testParam.duration {
-		s.Fatalf("Failed to monitor for %v seconds", testParam.duration)
+	stderr := string(stderrBuf.Bytes())
+	// It's possible that cros_healthd can't find the evdev target. In this case, "EvdevUtil can't find target" will be reported.
+	// This test focuses on catching the seccomp policy error or other crash, so "EvdevUtil can't find target" is fine.
+	if !strings.Contains(stderr, "EvdevUtil can't find target") && elapsed < testParam.duration {
+		s.Fatalf("Failed to monitor for %v seconds: %s", testParam.duration, stderr)
 	}
 }
