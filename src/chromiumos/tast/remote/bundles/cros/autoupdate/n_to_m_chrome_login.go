@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome", "auto_update_stable"},
+		HardwareDeps: hwdep.D(util.HwsecRepresentativeModels),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.autoupdate.NebraskaService",
