@@ -201,57 +201,71 @@ func (app *MicrosoftWebOffice) CreateSpreadsheet(ctx context.Context, cr *chrome
 		return "", errors.Wrap(err, "failed to check if the file already exists")
 	}
 
-	copyFromExistingSheet := func(ctx context.Context) error {
-		checkCopiedData := func(ctx context.Context) error {
+	waitForRangeSelected := func(ctx context.Context) error {
+		// Two columns should be selected: one contains the numbers and the other contains the sum of the numbers.
+		const expectedColumnSelectedNumber = 2
+		// The class of the selected excel column changes from "ewrch-col-nosel" to "ewrch-col-cellsel".
+		excelColumnSelected := nodewith.Role(role.GenericContainer).HasClass("ewrch-col-cellsel").Ancestor(excelWebArea)
+		start := time.Now()
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			excelColumnSelectedInfo, err := app.ui.NodesInfo(ctx, excelColumnSelected)
+			if err != nil {
+				return errors.Wrap(err, "failed to get nodes info")
+			}
+			columnSelectedNumber := len(excelColumnSelectedInfo)
+			if columnSelectedNumber != expectedColumnSelectedNumber {
+				return errors.Errorf("got wrong selected columns number: got %d, want %d", columnSelectedNumber, expectedColumnSelectedNumber)
+			}
+			testing.ContextLog(ctx, "Range selected in ", time.Since(start))
+			return nil
+		}, &testing.PollOptions{Timeout: defaultUIWaitTime})
+	}
+
+	waitForCopiedData := func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
 			data, err := getClipboardText(ctx, app.tconn)
 			if err != nil {
 				return err
 			}
-			if lines := strings.Fields(data); len(lines) != 100 && !strings.HasPrefix(data, "1") {
-				return errors.New("incorrect pasted content")
+			lines := strings.Fields(data)
+			if len(lines) != 100 && !strings.HasPrefix(data, "1") {
+				return errors.New("incorrect copied content")
 			}
 			return nil
-		}
-		selectAll := uiauto.Combine("select all",
-			app.kb.AccelAction("Ctrl+A"),
-			uiauto.Sleep(dataWaitTime), // Given time to select all data.
-			app.kb.AccelAction("Ctrl+C"),
-			uiauto.Sleep(dataWaitTime), // Given time to copy data.
-		)
-		copyAll := uiauto.NamedCombine("copy all data",
-			app.selectBox("A1"),
-			selectAll,
-			uiauto.IfFailThen(checkCopiedData, uiauto.Combine("select range with Go To",
-				app.selectRangeWithGoTo,
-				app.kb.TypeAction("A1"),
-				app.kb.AccelAction("Enter"),
-				selectAll,
-			)),
-		)
-		return uiauto.Combine("copy from existing spreadsheet",
-			app.openBlankDocument(excel),
-			app.uiHdl.SwitchToChromeTabByName(excelTab),
-			app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(canvas),
-			copyAll,
-		)(ctx)
+		}, &testing.PollOptions{Timeout: defaultUIWaitTime})
 	}
 
-	pasteIntoNewSheet := uiauto.Combine("paste into newly created spreadsheet",
+	copyAll := uiauto.Combine("copy all",
+		app.selectBox("A1"),
+		app.kb.AccelAction("Ctrl+A"),
+		waitForRangeSelected,
+		app.kb.AccelAction("Ctrl+C"),
+		waitForCopiedData,
+	)
+
+	copyFromExistingSheet := uiauto.NamedCombine("copy from existing spreadsheet",
+		app.openBlankDocument(excel),
+		app.uiHdl.SwitchToChromeTabByName(excelTab),
+		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(canvas),
+		copyAll,
+	)
+
+	pasteIntoNewSheet := uiauto.NamedCombine("paste into newly created spreadsheet",
 		app.uiHdl.SwitchToChromeTabByName("Book"),
 		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(canvas),
 		app.selectBox("A1"),
-		uiauto.Sleep(dataWaitTime), // Given time to select box.
 		app.kb.AccelAction("Ctrl+V"),
-		uiauto.Sleep(dataWaitTime), // Given time to paste data.
+		waitForRangeSelected,
+		app.checkFormula("A1", "1"),
 		app.selectBox("H1"),
 		app.kb.TypeAction(sheetText),
 		app.kb.AccelAction("Enter"),
 	)
 
 	if err = uiauto.Combine("create the example spreadsheet",
-		uiauto.NamedAction("copy from existing spreadsheet", copyFromExistingSheet),
-		uiauto.NamedAction("paste into newly created spreadsheet", pasteIntoNewSheet),
-		uiauto.NamedAction("rename the spreadsheet", app.renameDocument(sheetName)),
+		copyFromExistingSheet,
+		pasteIntoNewSheet,
+		app.renameDocument(sheetName),
 	)(ctx); err != nil {
 		return "", err
 	}
@@ -1061,22 +1075,13 @@ func (app *MicrosoftWebOffice) editBoxValue(ctx context.Context, box, value stri
 }
 
 // checkFormula checks if the formula is correct.
-func (app *MicrosoftWebOffice) checkFormula(ctx context.Context, box, value string) error {
-	if err := app.selectBox(box)(ctx); err != nil {
-		return err
-	}
-
+func (app *MicrosoftWebOffice) checkFormula(box, value string) uiauto.Action {
 	formulaBar := nodewith.Name("formula bar").Role(role.TextField).Editable()
-	formulaBarText := nodewith.Role(role.StaticText).FinalAncestor(formulaBar)
-	node, err := app.ui.Info(ctx, formulaBarText)
-	if err != nil {
-		return err
-	}
-	if node.Name != value {
-		return errors.Errorf("failed to verify the formula name, got %s, want %s", node.Name, value)
-	}
-
-	return nil
+	formulaBarText := nodewith.Name(value).Role(role.StaticText).FinalAncestor(formulaBar)
+	return uiauto.NamedCombine("check formula",
+		app.selectBox(box),
+		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(formulaBarText),
+	)
 }
 
 // closeHelpPanel closes the "Help" panel if it exists.
@@ -1226,33 +1231,18 @@ func (app *MicrosoftWebOffice) closeTab(title string) action.Action {
 
 // renameDocument renames the document with the specified file name.
 func (app *MicrosoftWebOffice) renameDocument(fileName string) uiauto.Action {
-	return func(ctx context.Context) error {
-		renameButton := nodewith.NameContaining("Saved to OneDrive").Role(role.Button)
-		fileNameTextField := nodewith.NameContaining("File Name").Role(role.TextField)
-		checkFileName := func(ctx context.Context) error {
-			if err := app.uiHdl.Click(renameButton)(ctx); err != nil {
-				return err
-			}
-			node, err := app.ui.Info(ctx, fileNameTextField)
-			if err != nil {
-				return err
-			}
-			if node.Value != fileName {
-				return errors.Errorf("file name is incorrect: got: %s; want: %s", node.Value, fileName)
-			}
-			return nil
-		}
-		return app.ui.Retry(retryTimes, uiauto.Combine("rename the document: "+fileName,
-			uiauto.IfSuccessThen(app.ui.Gone(fileNameTextField),
-				app.uiHdl.ClickUntil(renameButton, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(fileNameTextField))),
-			app.uiHdl.ClickUntil(fileNameTextField, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(fileNameTextField.Focused())),
-			app.kb.AccelAction("Ctrl+A"),
-			uiauto.Sleep(dataWaitTime), // Given time to select all data.
-			app.kb.TypeAction(sheetName),
-			app.kb.AccelAction("Enter"),
-			checkFileName,
-		))(ctx)
-	}
+	renameButton := nodewith.NameContaining("Saved to OneDrive").Role(role.Button)
+	fileNameTextField := nodewith.NameContaining("File Name").Role(role.TextField)
+	renamedRootWebArea := nodewith.NameContaining(fileName).Role(role.RootWebArea)
+	return app.ui.Retry(retryTimes, uiauto.NamedCombine("rename the document: "+fileName,
+		uiauto.IfSuccessThen(app.ui.Gone(fileNameTextField),
+			app.uiHdl.ClickUntil(renameButton, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(fileNameTextField))),
+		app.uiHdl.ClickUntil(fileNameTextField, app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(fileNameTextField.Focused())),
+		app.kb.AccelAction("Ctrl+A"),
+		app.kb.TypeAction(fileName),
+		app.kb.AccelAction("Enter"),
+		app.ui.WithTimeout(defaultUIWaitTime).WaitUntilExists(renamedRootWebArea),
+	))
 }
 
 // removeDocument removes the document with the specified file name.
