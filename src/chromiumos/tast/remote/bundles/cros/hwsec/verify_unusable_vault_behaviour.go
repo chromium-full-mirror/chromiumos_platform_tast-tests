@@ -22,7 +22,7 @@ func init() {
 		Func: VerifyUnusableVaultBehaviour,
 		Desc: "Verifies that the vault is destroyed if unusable",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"dlunev@chromium.org",
 		},
 		BugComponent: "b:1188704",

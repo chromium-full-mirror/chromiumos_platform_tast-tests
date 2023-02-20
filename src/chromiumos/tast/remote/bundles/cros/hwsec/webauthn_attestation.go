@@ -34,7 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that WebAuthn under each mode provides correct attestation",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"hcyang@google.com",
 			"chromeos-faft@google.com",
 		},

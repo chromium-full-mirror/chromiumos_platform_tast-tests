@@ -30,7 +30,7 @@ func init() {
 		Func: RecreateUserVaultTPM1,
 		Desc: "Verifies that for TPMv1.2 devices, cryptohome recreates user's vault directory when the TPM is re-owned",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

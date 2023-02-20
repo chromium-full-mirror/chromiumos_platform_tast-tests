@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Create snapshot of login-related data, which will be used in hwsec.CrossVersionLogin to mock the login data in older version (see go/cros-cross-version-login-testing)",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
 		BugComponent: "b:1188704",

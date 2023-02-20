@@ -43,7 +43,7 @@ func init() {
 			},
 		}},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"chenyian@google.com",
 		},
 		BugComponent: "b:1188704",

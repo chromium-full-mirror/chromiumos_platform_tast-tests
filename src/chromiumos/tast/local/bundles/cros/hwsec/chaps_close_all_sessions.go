@@ -20,7 +20,7 @@ func init() {
 		Func: ChapsCloseAllSessions,
 		Desc: "Verifies that the behaviour of C_CloseAllSessions() in libchaps is correct",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

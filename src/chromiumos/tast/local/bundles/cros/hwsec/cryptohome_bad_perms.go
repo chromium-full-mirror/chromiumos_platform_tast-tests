@@ -21,7 +21,7 @@ func init() {
 		Func: CryptohomeBadPerms,
 		Desc: "Tests Cryptohome's ability to detect directories with bad permissions or ownership in the mount path of a home directory",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"yich@chromium.org",
 		},
 		BugComponent: "b:1188704",

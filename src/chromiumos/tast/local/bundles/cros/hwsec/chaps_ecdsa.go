@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies PKCS#1 v1.5 works with ECDSA keys (sign, verify) in chaps",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

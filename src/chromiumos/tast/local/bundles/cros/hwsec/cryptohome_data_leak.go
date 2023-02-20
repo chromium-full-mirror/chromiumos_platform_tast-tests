@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify decrypted user data is cleared after end of session",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"sarthakkukreti@chromium.org", // Original autotest author
 			"chingkang@google.com",        // Tast port author
 		},

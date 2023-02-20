@@ -42,7 +42,7 @@ func init() {
 		Func: CryptohomeCorruptedKeys,
 		Desc: "Checks that the mount and keys works when part of the vaultkeys corrupted",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",

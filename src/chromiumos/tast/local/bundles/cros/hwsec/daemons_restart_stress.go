@@ -20,7 +20,7 @@ func init() {
 		Func: DaemonsRestartStress,
 		Desc: "Verifies that restarting hwsec daemons wouldn't cause problems",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"yich@chromium.org",
 		},
 		BugComponent: "b:1188704",

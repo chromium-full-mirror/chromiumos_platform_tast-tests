@@ -34,7 +34,7 @@ func init() {
 		Desc: "Verify auth failures are logged as expected",
 		Contacts: []string{
 			"cros-telemetry@google.com",
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
 		BugComponent: "b:1032705",

@@ -24,7 +24,7 @@ func init() {
 		Func: AccountDiskUsage,
 		Desc: "Verifies that GetAccountDiskUsage API works as expected",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

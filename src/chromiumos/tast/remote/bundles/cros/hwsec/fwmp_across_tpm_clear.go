@@ -19,7 +19,7 @@ func init() {
 		Func: FWMPAcrossTPMClear,
 		Desc: "Verifies that FirmwareManagementParameters are working correctly across TPM clear",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",

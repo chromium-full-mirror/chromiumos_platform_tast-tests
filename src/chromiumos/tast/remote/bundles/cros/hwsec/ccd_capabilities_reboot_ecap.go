@@ -31,7 +31,7 @@ func init() {
 		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"mvertescher@google.com",
 		},
 		BugComponent: "b:1188704",

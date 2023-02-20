@@ -20,7 +20,7 @@ func init() {
 		Func: UnmountAll,
 		Desc: "Verifies that cryptohome's Unmount() API works correctly by unmounting all user's home directory",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

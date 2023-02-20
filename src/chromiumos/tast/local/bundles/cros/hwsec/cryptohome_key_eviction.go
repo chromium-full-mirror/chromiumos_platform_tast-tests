@@ -20,7 +20,7 @@ func init() {
 		Func: CryptohomeKeyEviction,
 		Desc: "Ensures that the cryptohome properly manages key eviction from the tpm",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",

@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that WebAuthn PIN lockouts after too many attempts and fallbacks to password",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"hcyang@google.com",
 		},
 		BugComponent: "b:1188704",

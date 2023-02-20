@@ -34,7 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that WebAuthn using PIN succeeds",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"hcyang@google.com",
 			"martinkr@chromium.org",
 		},

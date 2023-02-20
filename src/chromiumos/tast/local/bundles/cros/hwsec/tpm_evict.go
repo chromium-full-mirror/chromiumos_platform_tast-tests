@@ -21,7 +21,7 @@ func init() {
 		Desc: "Tests the TPM under low-resource conditions",
 		Attr: []string{"group:mainline", "informational"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"chenyian@google.com",
 		},
 		BugComponent: "b:1188704",

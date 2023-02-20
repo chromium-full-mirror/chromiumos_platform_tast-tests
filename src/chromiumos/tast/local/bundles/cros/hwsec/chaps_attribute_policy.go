@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Verifies Chaps Attribute policy works as intended",
 		Attr:         []string{"group:mainline"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

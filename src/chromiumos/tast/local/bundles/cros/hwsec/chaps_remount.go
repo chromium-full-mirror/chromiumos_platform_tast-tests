@@ -30,7 +30,7 @@ func init() {
 		Desc: "Verifies chaps works correctly after remount",
 		Attr: []string{"group:mainline", "informational"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",

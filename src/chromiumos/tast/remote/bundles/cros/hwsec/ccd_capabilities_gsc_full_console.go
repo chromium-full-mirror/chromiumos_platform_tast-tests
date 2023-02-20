@@ -27,7 +27,7 @@ func init() {
 		Desc: "Test to verify GscFullConsole locks out restricted console commands",
 		Attr: []string{"group:firmware", "group:hwsec", "firmware_cr50"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"mvertescher@google.com",
 			"chromeos-faft@google.com",
 		},

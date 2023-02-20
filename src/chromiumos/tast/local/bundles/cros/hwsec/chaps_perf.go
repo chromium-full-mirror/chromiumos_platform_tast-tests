@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Chaps performance test that includes key import, key sign operation performance measure",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

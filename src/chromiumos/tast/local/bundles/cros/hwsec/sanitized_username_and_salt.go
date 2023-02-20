@@ -22,7 +22,7 @@ func init() {
 		Func: SanitizedUsernameAndSalt,
 		Desc: "Verifies that sanitized username is the same across various ways to calculate it, and check that system salt is valid",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

@@ -28,7 +28,7 @@ func init() {
 		Func: KeysetTiedToTPM1,
 		Desc: "Verifies that, for TPMv1.2 devices, the keyset is tied to TPM regardless of when it's created and if a reboot happens",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

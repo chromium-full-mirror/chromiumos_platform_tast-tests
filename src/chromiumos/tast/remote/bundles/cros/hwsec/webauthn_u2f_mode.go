@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that WebAuthn under u2f mode succeeds in different configurations",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"hcyang@google.com",
 			"chromeos-faft@google.com",
 		},

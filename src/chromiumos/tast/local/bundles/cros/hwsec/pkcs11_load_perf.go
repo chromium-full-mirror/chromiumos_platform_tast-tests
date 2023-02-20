@@ -25,7 +25,7 @@ func init() {
 		Desc: "Test pkcs11 load performance",
 		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"chenyian@google.com",
 		},
 		BugComponent: "b:1188704",

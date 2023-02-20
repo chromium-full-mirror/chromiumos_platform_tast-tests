@@ -28,7 +28,7 @@ func init() {
 		Func: DictionaryAttackLockoutResetTPM1,
 		Desc: "Verifies that for TPMv1.2 devices, dictionary attack counter functions correctly and can be reset",
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",

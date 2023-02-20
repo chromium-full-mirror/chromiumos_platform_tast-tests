@@ -28,7 +28,7 @@ func init() {
 		Desc: "Test to verify OverrideWP CCD capability controls access to the `wp` console command",
 		Attr: []string{"group:firmware", "group:hwsec", "firmware_cr50"},
 		Contacts: []string{
-			"cros-hwsec@chromium.org",
+			"cros-hwsec@google.com",
 			"mvertescher@google.com",
 			"chromeos-faft@google.com",
 		},
