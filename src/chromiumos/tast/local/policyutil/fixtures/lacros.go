@@ -113,6 +113,22 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacros,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.LacrosEnrolledLoggedIn,
+		Desc:     "Fixture for a running FakeDMS with lacros on enrolled device",
+		Contacts: []string{"nedol@google.com", "chromeos-commercial-printing@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return lacrosfixt.NewConfig().Opts()
+			},
+		},
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.PersistentLacrosEnrolled,
+	})
 }
 
 type policyRealUserFixture struct {
