@@ -26,7 +26,6 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/typecutils"
 	"chromiumos/tast/local/ui/cujrecorder"
 	pb "chromiumos/tast/services/cros/spera"
 	"chromiumos/tast/testing"
@@ -215,17 +214,6 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 			}
 		}
 
-		if req.ExtendedDisplay {
-			// Unset mirrored display so two displays can show different information.
-			if err := typecutils.SetMirrorDisplay(ctx, tconn, false); err != nil {
-				return errors.Wrap(err, "failed to unset mirror display")
-			}
-			expectedDisplayMode := display.DisplayMode{Height: 1080, RefreshRate: 60}
-			if err := display.CheckExtendedDisplay(tconn, expectedDisplayMode)(ctx); err != nil {
-				return errors.Wrap(err, "failed to check extended display")
-			}
-		}
-
 		prepare := func(ctx context.Context) (string, conference.Cleanup, error) {
 			cleanup := func(ctx context.Context) (err error) {
 				// Nothing to clean up at the end of Google Meet conference.
@@ -239,7 +227,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 
 		// Creates a Google Meet conference instance which implements conference.Conference methods
 		// which provides conference operations.
-		gmcli := conference.NewGoogleMeetConference(cr, tconn, kb, uiHandler, bt, roomType, meet, outDir, tabletMode, req.ExtendedDisplay)
+		gmcli := conference.NewGoogleMeetConference(cr, tconn, kb, uiHandler, bt, roomType, meet, outDir, tabletMode)
 		defer gmcli.End(cleanupCtx)
 		// Shorten context a bit to allow for cleanup if Run fails.
 		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)

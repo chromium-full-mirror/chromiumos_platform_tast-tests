@@ -11,7 +11,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/apps/googlemeet"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -42,7 +41,6 @@ type GoogleMeetConference struct {
 	gm                         *googlemeet.GoogleMeet
 	outDir                     string
 	tabletMode                 bool
-	extendedDisplay            bool
 	networkLostCount           int
 	participantsNumber         int
 }
@@ -51,20 +49,19 @@ var _ Conference = (*GoogleMeetConference)(nil)
 
 // NewGoogleMeetConference creates Google Meet conference room instance which implements Conference interface.
 func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, uiHandler cuj.UIActionHandler,
-	bt browser.Type, roomType RoomType, meetConfig GoogleMeetConfig, outDir string, tabletMode, extendedDisplay bool) *GoogleMeetConference {
+	bt browser.Type, roomType RoomType, meetConfig GoogleMeetConfig, outDir string, tabletMode bool) *GoogleMeetConference {
 	ui := uiauto.New(tconn)
 	return &GoogleMeetConference{
-		cr:              cr,
-		tconn:           tconn,
-		kb:              kb,
-		ui:              ui,
-		uiHandler:       uiHandler,
-		bt:              bt,
-		roomType:        roomType,
-		meetConfig:      meetConfig,
-		tabletMode:      tabletMode,
-		extendedDisplay: extendedDisplay,
-		outDir:          outDir,
+		cr:         cr,
+		tconn:      tconn,
+		kb:         kb,
+		ui:         ui,
+		uiHandler:  uiHandler,
+		bt:         bt,
+		roomType:   roomType,
+		meetConfig: meetConfig,
+		tabletMode: tabletMode,
+		outDir:     outDir,
 	}
 }
 
@@ -402,16 +399,7 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 func (conf *GoogleMeetConference) Presenting(ctx context.Context, application googleApplication) (err error) {
 	tconn, uiHandler, roomType, gm := conf.tconn, conf.uiHandler, conf.roomType, conf.gm
 
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "could not find the Chrome app")
-	}
-
 	switchToTab := func(tabName string) action.Action {
-		if conf.extendedDisplay {
-			return uiauto.NamedAction("switch window to "+tabName,
-				uiHandler.SwitchToAppWindowByName(chromeApp.Name, tabName))
-		}
 		return uiauto.NamedAction("switch tab to "+tabName,
 			uiHandler.SwitchToChromeTabByName(tabName))
 	}
@@ -442,7 +430,7 @@ func (conf *GoogleMeetConference) Presenting(ctx context.Context, application go
 	}
 
 	if err := presentApps(ctx, tconn, uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
-		application, conf.outDir, conf.extendedDisplay); err != nil {
+		application, conf.outDir); err != nil {
 		return errors.Wrapf(err, "failed to present %q", application)
 	}
 

@@ -158,10 +158,8 @@ func (conf *ZoomConference) Presenting(ctx context.Context, application googleAp
 		conf.zm.ShareScreen(appName))
 	stopPresenting := conf.zm.StopShareScreen()
 
-	// Present on internal display by default.
-	presentOnExtendedDisplay := false
 	if err := presentApps(ctx, conf.tconn, conf.uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
-		application, conf.outDir, presentOnExtendedDisplay); err != nil {
+		application, conf.outDir); err != nil {
 		return errors.Wrapf(err, "failed to present %s", appName)
 	}
 	return nil
