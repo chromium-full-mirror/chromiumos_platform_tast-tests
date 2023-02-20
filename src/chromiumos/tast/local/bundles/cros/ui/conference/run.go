@@ -22,24 +22,38 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// Cleanup releases the resources which the case used.
-type Cleanup func(context.Context) error
-
-// Prepare prepares conference room link before testing.
-type Prepare func(context.Context) (string, Cleanup, error)
+// TestParams stores data common to the tests run in this package.
+type TestParams struct {
+	Cr              *chrome.Chrome
+	Conf            Conference
+	Tier            cuj.Tier
+	BrowserType     browser.Type
+	RoomType        RoomType
+	MeetLink        string
+	OutDir          string
+	TraceConfigPath string
+	TabletMode      bool
+}
 
 // Run runs the specified user scenario in conference room with different CUJ tiers.
-func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepare, tier cuj.Tier, outDir, traceConfigPath string, tabletMode bool, bt browser.Type, roomType RoomType) (retErr error) {
+func Run(ctx context.Context, params *TestParams) (retErr error) {
+	var (
+		cr              = params.Cr
+		conf            = params.Conf
+		tier            = params.Tier
+		browserType     = params.BrowserType
+		roomType        = params.RoomType
+		meetLink        = params.MeetLink
+		outDir          = params.OutDir
+		traceConfigPath = params.TraceConfigPath
+		tabletMode      = params.TabletMode
+	)
+
 	// Shorten context a bit to allow for cleanup.
 	cleanUpCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	inviteLink, cleanup, err := prepare(ctx)
-	if err != nil {
-		return err
-	}
-	defer cleanup(cleanUpCtx)
 	// Dump the UI tree to the service/faillog subdirectory.
 	// Don't dump directly into outDir
 	// because it might be overridden by the test faillog after pulled back to remote server.
@@ -51,7 +65,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 	}
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, bt)
+	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, browserType)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
@@ -63,7 +77,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create Test API connection for %v browser", bt)
+		return errors.Wrapf(err, "failed to create Test API connection for %v browser", browserType)
 	}
 	// Give 10 seconds to set initial settings. It is critical to ensure
 	// cleanupSetting can be executed with a valid context so it has its
@@ -91,10 +105,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 		return errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanUpRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
+	if err := cuj.AddPerformanceCUJMetrics(browserType, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if err := recorder.AddCollectedMetrics(bTconn, bt, cujrecorder.WebRTCMetrics()...); err != nil {
+	if err := recorder.AddCollectedMetrics(bTconn, browserType, cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 	isNoRoom := roomType == NoRoom
@@ -128,7 +142,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, conf Conference, prepare Prepar
 		if !isNoRoom {
 			// Only premium tier need to change background to blur at the beginning.
 			toBlur := tier == cuj.Premium
-			if err := conf.Join(ctx, inviteLink, toBlur); err != nil {
+			if err := conf.Join(ctx, meetLink, toBlur); err != nil {
 				return err
 			}
 			// Basic steps:

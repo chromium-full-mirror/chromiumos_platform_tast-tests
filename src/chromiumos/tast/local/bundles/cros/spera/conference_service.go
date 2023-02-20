@@ -112,10 +112,10 @@ func chromeArgsWithFileCameraInput(fileName string) []string {
 
 // newConferenceChrome returns a new Chrome instance with custom options for confernce cuj,
 // including setting whether to use fake camera and lacros browser.
-func newConferenceChrome(ctx context.Context, accountPool, cameraVideoPath string, bt browser.Type) (cr *chrome.Chrome, err error) {
+func newConferenceChrome(ctx context.Context, accountPool, cameraVideoPath string, browserType browser.Type) (cr *chrome.Chrome, err error) {
 	opts := confereceChromeOpts(accountPool, cameraVideoPath)
 	lacrosCfg := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("WebUITabStrip")))
-	cr, err = browserfixt.NewChrome(ctx, bt, lacrosCfg, opts...)
+	cr, err = browserfixt.NewChrome(ctx, browserType, lacrosCfg, opts...)
 	if err != nil {
 		return cr, errors.Wrap(err, "failed to restart Chrome")
 	}
@@ -145,7 +145,7 @@ var webSource = cuj.GoogleWebSource
 
 func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.MeetScenarioRequest) (*empty.Empty, error) {
 	roomType := conference.RoomType(req.RoomType)
-	meet, err := conference.GetGoogleMeetConfig(ctx, s.s, roomType)
+	meet, err := conference.GetGoogleMeetConfig(ctx, s.s)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get meet config")
 	}
@@ -161,16 +161,16 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 	if ok && strings.ToLower(v) == string(cuj.ExternalWebSource) {
 		webSource = cuj.ExternalWebSource
 	}
-	run := func(ctx context.Context, roomURL string) error {
+	run := func(ctx context.Context, meetLink string) error {
 		accountPool, ok := s.s.Var("ui.cujAccountPool")
 		if !ok {
 			return errors.New("failed to get variable ui.cujAccountPool")
 		}
-		bt := browser.TypeAsh
+		browserType := browser.TypeAsh
 		if req.IsLacros {
-			bt = browser.TypeLacros
+			browserType = browser.TypeLacros
 		}
-		cr, err := newConferenceChrome(ctx, accountPool, req.CameraVideoPath, bt)
+		cr, err := newConferenceChrome(ctx, accountPool, req.CameraVideoPath, browserType)
 		if err != nil {
 			return errors.Wrap(err, "failed to new Chrome")
 		}
@@ -209,20 +209,9 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 			}
 		}
 
-		prepare := func(ctx context.Context) (string, conference.Cleanup, error) {
-			cleanup := func(ctx context.Context) (err error) {
-				// Nothing to clean up at the end of Google Meet conference.
-				return nil
-			}
-			if roomURL == "" {
-				return "", nil, errors.New("the conference invite link is empty")
-			}
-			return roomURL, cleanup, nil
-		}
-
 		// Creates a Google Meet conference instance which implements conference.Conference methods
 		// which provides conference operations.
-		gmcli := conference.NewGoogleMeetConference(cr, tconn, kb, uiHandler, bt, roomType, meet, outDir, tabletMode)
+		gmcli := conference.NewGoogleMeetConference(cr, tconn, kb, uiHandler, browserType, roomType, outDir, tabletMode)
 		defer gmcli.End(cleanupCtx)
 		// Shorten context a bit to allow for cleanup if Run fails.
 		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
@@ -230,51 +219,44 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 		testParams := &conference.TestParams{
 			Cr:                     cr,
 			Conf:                   gmcli,
-			Prepare:                prepare,
 			Tier:                   cuj.Tier(req.Tier),
-			Bt:                     bt,
+			WebSource:              webSource,
+			BrowserType:            browserType,
 			RoomType:               roomType,
+			MeetLink:               meetLink,
 			OutDir:                 outDir,
 			TraceConfigPath:        traceConfigPath,
 			TabletMode:             tabletMode,
 			CollectWebRTCInternals: meet.CollectWebRTCInternals,
-			WebSource:              webSource,
 		}
 		if err := conference.Run(ctx, testParams); err != nil {
 			return errors.Wrap(err, "failed to run Google Meet conference")
 		}
+
 		return nil
 	}
 
-	runWithMeetUrls := func(ctx context.Context) error {
-		if meet.BondEnabled {
-			cleanupCtx := ctx
-			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-			defer cancel()
-			meetlink, cleanupBond, err := generateMeetLinkViaBond(ctx, meet, roomType)
-			if err != nil {
-				return &conference.BondError{Err: errors.Wrap(err, "failed to create meet link via BOND API")}
-			}
-			defer cleanupBond(cleanupCtx)
-			meet.URLs = []string{meetlink}
+	runWithMeetLinkViaBond := func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		meetLink, cleanupBond, err := generateMeetLinkViaBond(ctx, meet, roomType)
+		if err != nil {
+			return &conference.BondError{Err: errors.Wrap(err, "failed to create meet link via BOND API")}
 		}
-		var err error
-		for _, url := range meet.URLs {
-			testing.ContextLog(ctx, "URL to be tested in the meet url list: ", url)
-			err = run(ctx, url)
-			if err == nil {
-				return nil
-			}
-			if !conference.IsParticipantError(err) {
-				return err
-			}
+		defer cleanupBond(cleanupCtx)
+
+		if err := run(ctx, meetLink); err != nil {
+			return err
 		}
-		return err
+
+		return nil
 	}
 	// If meet.RetryTimeout equal to 0, don't do any retry.
 	if meet.RetryTimeout == 0 {
 		testing.ContextLog(ctx, "Start running meet scenario")
-		if err := runWithMeetUrls(ctx); err != nil {
+		if err := runWithMeetLinkViaBond(ctx); err != nil {
 			testing.ContextLogf(ctx, "Failed to run conference: %+v", err) // Print error with stack trace.
 			return nil, err
 		}
@@ -284,7 +266,7 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 	var lastError error
 	startTime := time.Now()
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := runWithMeetUrls(ctx); err != nil {
+		if err := runWithMeetLinkViaBond(ctx); err != nil {
 			elapsedTime := time.Now().Sub(startTime)
 			if elapsedTime < meet.RetryTimeout {
 				// Record the complete run result if the failure is not because of timeout.

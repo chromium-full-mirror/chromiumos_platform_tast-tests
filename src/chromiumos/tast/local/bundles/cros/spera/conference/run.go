@@ -23,21 +23,15 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// Cleanup releases the resources which the case used.
-type Cleanup func(context.Context) error
-
-// Prepare prepares conference room link before testing.
-type Prepare func(context.Context) (string, Cleanup, error)
-
 // TestParams stores data common to the tests run in this package.
 type TestParams struct {
 	Cr                     *chrome.Chrome
 	Conf                   Conference
-	Prepare                Prepare
 	Tier                   cuj.Tier
-	Bt                     browser.Type
-	RoomType               RoomType
 	WebSource              cuj.WebSourceType
+	BrowserType            browser.Type
+	RoomType               RoomType
+	MeetLink               string
 	OutDir                 string
 	TraceConfigPath        string
 	TabletMode             bool
@@ -45,33 +39,29 @@ type TestParams struct {
 }
 
 // Run runs the specified user scenario in conference room with different CUJ tiers.
-func Run(ctx context.Context, p *TestParams) (retErr error) {
+func Run(ctx context.Context, params *TestParams) (retErr error) {
 	var (
-		cr                     = p.Cr
-		conf                   = p.Conf
-		prepare                = p.Prepare
-		tier                   = p.Tier
-		bt                     = p.Bt
-		roomType               = p.RoomType
-		outDir                 = p.OutDir
-		traceConfigPath        = p.TraceConfigPath
-		tabletMode             = p.TabletMode
-		collectWebRTCInternals = p.CollectWebRTCInternals
+		cr                     = params.Cr
+		conf                   = params.Conf
+		tier                   = params.Tier
+		browserType            = params.BrowserType
+		roomType               = params.RoomType
+		meetLink               = params.MeetLink
+		outDir                 = params.OutDir
+		traceConfigPath        = params.TraceConfigPath
+		tabletMode             = params.TabletMode
+		collectWebRTCInternals = params.CollectWebRTCInternals
 	)
 	url := cuj.WikipediaURL
-	if p.WebSource == cuj.GoogleWebSource {
+	if params.WebSource == cuj.GoogleWebSource {
 		url = cuj.GoogleHelpChromeURL
 	}
+
 	// Shorten context a bit to allow for cleanup.
 	cleanUpCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	inviteLink, cleanup, err := prepare(ctx)
-	if err != nil {
-		return err
-	}
-	defer cleanup(cleanUpCtx)
 	// Dump the UI tree to the service/faillog subdirectory.
 	// Don't dump directly into outDir
 	// because it might be overridden by the test faillog after pulled back to remote server.
@@ -83,7 +73,7 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 	}
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, bt)
+	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, browserType)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
@@ -95,8 +85,9 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create Test API connection for %v browser", bt)
+		return errors.Wrapf(err, "failed to create Test API connection for %v browser", browserType)
 	}
+
 	// Give 10 seconds to set initial settings. It is critical to ensure
 	// cleanupSetting can be executed with a valid context so it has its
 	// own cleanup context from other cleanup functions. This is to avoid
@@ -123,21 +114,23 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 		return errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanUpRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
+
+	if err := cuj.AddPerformanceCUJMetrics(browserType, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if err := recorder.AddCollectedMetrics(bTconn, bt, cujrecorder.WebRTCMetrics()...); err != nil {
+	if err := recorder.AddCollectedMetrics(bTconn, browserType, cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 
-	isPlus := tier == cuj.Plus || (tier == cuj.Advanced && roomType == ClassRoomSize)
-	isPremium := tier == cuj.Premium || (tier == cuj.Advanced && roomType == LargeRoomSize)
+	isAdvanced := tier == cuj.Advanced
+	isGridRoom := roomType == GridRoomSize
 	meetTimeout := 50 * time.Second
-	if isPlus {
+	if isAdvanced {
 		meetTimeout = 140 * time.Second
-	} else if isPremium {
+	} else if isAdvanced && isGridRoom {
 		meetTimeout = 3 * time.Minute
 	}
+
 	if collectWebRTCInternals {
 		webRTCInternalsConn, err := cuj.OpenWebRTCInternals(ctx, tconn, br)
 		if err != nil {
@@ -145,6 +138,7 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 		}
 		defer webRTCInternalsConn.Close()
 	}
+
 	pv := perf.NewValues()
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Start tracing now.
@@ -163,16 +157,16 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			errc <- graphics.MeasureGPUCounters(gpuCtx, meetTimeout, pv)
 		}()
 
-		if err := conf.Join(ctx, inviteLink); err != nil {
+		if err := conf.Join(ctx, meetLink); err != nil {
 			return err
 		}
-		// Basic steps:
+		// Essential steps:
 		// 1. Set the layout to max tiled grid. (Google meet: "Tiled", Zoom: "Gallery")
 		// 2. Switch to another tab (wikipedia) and back to meeting.
 		// 3. Use video and audio control buttons.
 		// 4. Open chat window and type.
 		// 5. Set the layout to a minimal tiled grid. (Google meet: "Spotlight", Zoom: "Speacker View")
-		if err := uiauto.Combine("basic actions",
+		if err := uiauto.Combine("essential actions",
 			conf.SetLayoutMax,
 			conf.SwitchTabs(url),
 			conf.VideoAudioControl,
@@ -182,10 +176,12 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			return err
 		}
 
-		// Plus and premium tier.
-		if isPlus || isPremium {
+		// Advanced tier presents Google apps.
+		// Class room presents Google Slides
+		// Grid room presents Google Docs.
+		if isAdvanced {
 			application := googleSlides
-			if isPremium {
+			if isGridRoom {
 				application = googleDocs
 			}
 			if err := conf.Presenting(ctx, application); err != nil {
@@ -193,8 +189,8 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 			}
 		}
 
-		// Premium tier.
-		if isPremium {
+		// If it's an Advanced tier and a grid room, change the background.
+		if isAdvanced && isGridRoom {
 			if err := conf.BackgroundChange(ctx); err != nil {
 				return err
 			}
@@ -214,7 +210,7 @@ func Run(ctx context.Context, p *TestParams) (retErr error) {
 		}
 
 		closeFunc := func(ctx context.Context) error {
-			if bt == browser.TypeLacros {
+			if browserType == browser.TypeLacros {
 				tabs, err := browser.AllTabs(ctx, bTconn)
 				if err != nil {
 					return err

@@ -38,7 +38,6 @@ type GoogleMeetConference struct {
 	bt                         browser.Type
 	gm                         *googlemeet.GoogleMeet
 	roomType                   RoomType
-	meetConfig                 GoogleMeetConfig
 	outDir                     string
 	tabletMode                 bool
 	extendedDisplay            bool
@@ -49,7 +48,7 @@ var _ Conference = (*GoogleMeetConference)(nil)
 
 // NewGoogleMeetConference creates Google Meet conference room instance which implements Conference interface.
 func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, uiHandler cuj.UIActionHandler,
-	bt browser.Type, roomType RoomType, meetConfig GoogleMeetConfig, outDir string, tabletMode, extendedDisplay bool) *GoogleMeetConference {
+	bt browser.Type, roomType RoomType, outDir string, tabletMode, extendedDisplay bool) *GoogleMeetConference {
 	ui := uiauto.New(tconn)
 	return &GoogleMeetConference{
 		cr:              cr,
@@ -59,7 +58,6 @@ func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *inpu
 		uiHandler:       uiHandler,
 		bt:              bt,
 		roomType:        roomType,
-		meetConfig:      meetConfig,
 		tabletMode:      tabletMode,
 		extendedDisplay: extendedDisplay,
 		outDir:          outDir,

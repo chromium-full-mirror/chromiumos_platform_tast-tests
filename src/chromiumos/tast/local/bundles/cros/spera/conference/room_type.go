@@ -12,17 +12,15 @@ const (
 	TwoRoomSize RoomType = iota
 	// SmallRoomSize creates a conference room with 5 participants.
 	SmallRoomSize
-	// LargeRoomSize creates a conference room with 16 participants.
-	LargeRoomSize
-	// ClassRoomSize creates a conference room with 35/49 participants.
+	// GridRoomSize creates a conference room with 16 participants.
+	GridRoomSize
+	// ClassRoomSize creates a conference room with 35 participants.
 	ClassRoomSize
 )
 
 // GoogleMeetRoomParticipants defines room size for Google meet cuj.
 var GoogleMeetRoomParticipants = map[RoomType]int{
-	TwoRoomSize:   2,
-	SmallRoomSize: 6,
-	LargeRoomSize: 16,
+	GridRoomSize:  16,
 	ClassRoomSize: 35,
 }
 
@@ -30,6 +28,4 @@ var GoogleMeetRoomParticipants = map[RoomType]int{
 var ZoomRoomParticipants = map[RoomType]int{
 	TwoRoomSize:   2,
 	SmallRoomSize: 5,
-	LargeRoomSize: 16,
-	ClassRoomSize: 38,
 }

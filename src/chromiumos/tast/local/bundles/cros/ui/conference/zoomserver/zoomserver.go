@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/ui/conference"
 	"chromiumos/tast/testing"
 )
 
@@ -41,7 +40,7 @@ type responseData struct {
 // When Zoom proxy receives "createaio" request, it would create a Zoom conference on specified remote
 // server with participants via Chrome Devtools Protocols. And "endaio" means close the conference
 // which opened by "createaio".
-func CreateConference(ctx context.Context, roomSize int, sessionToken, host string) (room string, cleanup conference.Cleanup, err error) {
+func CreateConference(ctx context.Context, roomSize int, sessionToken, host string) (room string, cleanup func(context.Context) error, err error) {
 	const retryCount = 3
 	var data *responseData
 	// Create a Zoom conference on remote server dynamically and get conference room

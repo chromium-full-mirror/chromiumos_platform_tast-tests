@@ -38,7 +38,7 @@ func init() {
 				Timeout: 50*time.Minute + conference.CPUIdleTimeout,
 				Val: conference.TestParameters{
 					Tier:     conference.Essential,
-					RoomType: conference.LargeRoomSize,
+					RoomType: conference.GridRoomSize,
 				},
 			},
 			{
@@ -46,7 +46,7 @@ func init() {
 				Timeout: 50*time.Minute + conference.CPUIdleTimeout,
 				Val: conference.TestParameters{
 					Tier:     conference.Advanced,
-					RoomType: conference.LargeRoomSize,
+					RoomType: conference.GridRoomSize,
 				},
 			},
 			{
@@ -71,7 +71,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: conference.TestParameters{
 					Tier:     conference.Essential,
-					RoomType: conference.LargeRoomSize,
+					RoomType: conference.GridRoomSize,
 					IsLacros: true,
 				},
 			},
@@ -81,7 +81,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val: conference.TestParameters{
 					Tier:     conference.Advanced,
-					RoomType: conference.LargeRoomSize,
+					RoomType: conference.GridRoomSize,
 					IsLacros: true,
 				},
 			},

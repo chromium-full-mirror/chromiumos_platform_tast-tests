@@ -37,7 +37,6 @@ type GoogleMeetConference struct {
 	displayAllParticipantsTime time.Duration
 	bt                         browser.Type
 	roomType                   RoomType
-	meetConfig                 GoogleMeetConfig
 	gm                         *googlemeet.GoogleMeet
 	outDir                     string
 	tabletMode                 bool
@@ -49,7 +48,7 @@ var _ Conference = (*GoogleMeetConference)(nil)
 
 // NewGoogleMeetConference creates Google Meet conference room instance which implements Conference interface.
 func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, uiHandler cuj.UIActionHandler,
-	bt browser.Type, roomType RoomType, meetConfig GoogleMeetConfig, outDir string, tabletMode bool) *GoogleMeetConference {
+	bt browser.Type, roomType RoomType, outDir string, tabletMode bool) *GoogleMeetConference {
 	ui := uiauto.New(tconn)
 	return &GoogleMeetConference{
 		cr:         cr,
@@ -59,7 +58,6 @@ func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *inpu
 		uiHandler:  uiHandler,
 		bt:         bt,
 		roomType:   roomType,
-		meetConfig: meetConfig,
 		tabletMode: tabletMode,
 		outDir:     outDir,
 	}
@@ -92,9 +90,7 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err er
 	checkParticipantsNum := func(ctx context.Context) error {
 		// Each room type has a different number of participants:
 		// - Class size room: >= 35 participants
-		// - Large size room: 16 ~ 17 participants
-		// - Small size room: 6 ~ 7 participants
-		// - One to one room: 2
+		// - Grid size room: 16 ~ 17 participants
 		expectedNumber := GoogleMeetRoomParticipants[conf.roomType]
 		number, err := conf.gm.GetParticipantsNum(ctx)
 		if err != nil {
@@ -108,13 +104,9 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err er
 			if number < expectedNumber {
 				return ParticipantError(errors.Wrapf(err, "the number of participants got %d; want at least %d", number, expectedNumber))
 			}
-		case SmallRoomSize, LargeRoomSize:
+		case GridRoomSize:
 			if number != expectedNumber && number != expectedNumber+1 {
 				return ParticipantError(errors.Wrapf(err, "the number of participants got %d; want %d ~ %d", number, expectedNumber, expectedNumber+1))
-			}
-		case TwoRoomSize:
-			if number != expectedNumber {
-				return ParticipantError(errors.Wrapf(err, "the number of participants got %d; want %d", number, expectedNumber))
 			}
 		}
 		testing.ContextLog(ctx, "Current participants number: ", number)
