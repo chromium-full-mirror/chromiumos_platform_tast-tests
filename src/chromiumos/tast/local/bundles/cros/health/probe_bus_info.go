@@ -31,6 +31,8 @@ type busInfoTestParams struct {
 	checkThunderbolt bool
 	// Workaround for b/200837194 to skip checking PCI ProgIf field.
 	checkProgIf bool
+	// Workaround for b/269829393 to skip checking PCI SubDeviceID fields.
+	checkSubDeviceID bool
 }
 
 func init() {
@@ -52,12 +54,14 @@ func init() {
 			Val: busInfoTestParams{
 				checkThunderbolt: false,
 				checkProgIf:      false,
+				checkSubDeviceID: false,
 			},
 		}, {
 			Name: "thunderbolt",
 			Val: busInfoTestParams{
 				checkThunderbolt: true,
 				checkProgIf:      false,
+				checkSubDeviceID: false,
 			},
 			ExtraData:         []string{"testcert.p12"},
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
@@ -68,6 +72,16 @@ func init() {
 			Val: busInfoTestParams{
 				checkThunderbolt: false,
 				checkProgIf:      true,
+				checkSubDeviceID: false,
+			},
+		}, {
+			// TODO(b/269829393).
+			Name:      "subdeviceid",
+			ExtraAttr: []string{"informational"},
+			Val: busInfoTestParams{
+				checkThunderbolt: false,
+				checkProgIf:      false,
+				checkSubDeviceID: true,
 			},
 		}},
 	})
@@ -169,7 +183,7 @@ func ProbeBusInfo(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	if err := validatePCIDevices(ctx, pciDevs, testParam.checkProgIf); err != nil {
+	if err := validatePCIDevices(ctx, pciDevs, testParam); err != nil {
 		s.Fatal("PCI validation failed: ", err)
 	}
 	if err := validateUSBDevices(ctx, usbDevs); err != nil {
@@ -180,7 +194,7 @@ func ProbeBusInfo(ctx context.Context, s *testing.State) {
 
 // validatePCIDevices validates the PCI devices with the expected PCI
 // devices extracted by the "lspci" command.
-func validatePCIDevices(ctx context.Context, devs []types.BusDevice, checkProgIf bool) error {
+func validatePCIDevices(ctx context.Context, devs []types.BusDevice, testParam busInfoTestParams) error {
 	var got []pci.Device
 	for _, d := range devs {
 		pciBusInfo := d.BusInfo.PCIBusInfo
@@ -207,8 +221,12 @@ func validatePCIDevices(ctx context.Context, devs []types.BusDevice, checkProgIf
 			ProgIf:      fmt.Sprintf("%02x", pciBusInfo.ProgIfID),
 			Driver:      pciBusInfo.Driver,
 		}
-		if !checkProgIf {
+		if !testParam.checkProgIf {
 			pd.ProgIf = "(skip)"
+		}
+		if !testParam.checkSubDeviceID {
+			pd.SubVendorID = nil
+			pd.SubDeviceID = nil
 		}
 		got = append(got, pd)
 	}
@@ -217,9 +235,13 @@ func validatePCIDevices(ctx context.Context, devs []types.BusDevice, checkProgIf
 	if err != nil {
 		return errors.Wrap(err, "failed to get expected devices")
 	}
-	if !checkProgIf {
-		for i := range exp {
+	for i := range exp {
+		if !testParam.checkProgIf {
 			exp[i].ProgIf = "(skip)"
+		}
+		if !testParam.checkSubDeviceID {
+			exp[i].SubVendorID = nil
+			exp[i].SubDeviceID = nil
 		}
 	}
 	if d := cmp.Diff(exp, got); d != "" {
