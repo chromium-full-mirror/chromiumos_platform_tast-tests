@@ -20,6 +20,7 @@ const (
 	DeviceTrustEnabled                    = "device_trust_enabled"
 	Enrollment                            = "enrollment"
 	EnrollmentKiosk                       = "enrollment_kiosk"
+	EnrollmentSAML                        = "enrollment_saml"
 	ImprivataSharedKiosk                  = "imprivata_shared_kiosk"
 	ImprivataSingleUser                   = "imprivata_single_user"
 	Reporting                             = "reporting"
