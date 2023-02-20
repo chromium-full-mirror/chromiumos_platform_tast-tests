@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/taskmanager"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/testing"
 )
@@ -61,27 +62,28 @@ func init() {
 func TaskManager(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
+	ui := uiauto.New(tconn)
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	// Use a shortened context for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
-	defer uiauto.StopAndSaveOnError(ctx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
-	tastkManager := nodewith.Name("Task Manager").ClassName("TaskManagerView").First()
-	crostiniEntry := nodewith.Name("Linux Virtual Machine: termina").Ancestor(tastkManager).First()
-	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("open Task Manager and look for Crostini",
-		// Press Search + Esc to launch task manager
-		ui.WithInterval(time.Second).RetryUntil(keyboard.AccelAction("Search+Esc"), ui.WaitUntilExists(tastkManager)),
+	tm := taskmanager.New(tconn, keyboard)
 
-		// Click the task manager.
-		ui.LeftClick(tastkManager),
+	if err := tm.Open(ctx); err != nil {
+		s.Fatal("Failed to open Task Manager: ", err)
+	}
+	defer tm.Close(cleanupCtx, tconn)
 
-		// Focus on Crostini entry.
-		ui.WaitUntilExists(crostiniEntry),
+	crostiniProcessName := "Linux Virtual Machine: termina"
 
-		// Exit task manager.
-		keyboard.AccelAction("Ctrl+W"))(ctx); err != nil {
-		s.Fatal("Failed to test Crostini in Task Manager: ", err)
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(taskmanager.FindProcess().Name(crostiniProcessName).First())(ctx); err != nil {
+		s.Fatalf("Failed to find process %q in task manager: %v", crostiniProcessName, err)
 	}
 }
