@@ -15,7 +15,6 @@ import "google/protobuf/empty.proto";
 // The number will be deleted after deleting the old service.
 service ConferenceService2 {
   rpc RunGoogleMeetScenario(MeetScenarioRequest) returns (google.protobuf.Empty);
-  rpc RunZoomScenario(MeetScenarioRequest) returns (google.protobuf.Empty);
 }
 
 message MeetScenarioRequest {

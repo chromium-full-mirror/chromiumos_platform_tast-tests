@@ -17,7 +17,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/spera/conference"
-	"chromiumos/tast/local/bundles/cros/spera/conference/zoomserver"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -73,9 +72,6 @@ func init() {
 			// The total timeout and inteval when trying different URLs if one fails.
 			"spera.meet_url_retry_timeout",
 			"spera.meet_url_retry_interval",
-			// Zoom meet bot server address.
-			"spera.zoom_bot_server",
-			"spera.zoom_bot_token",
 
 			// Optional. Expecting "google", "external", default is "google".
 			"spera.Conference.web_source",
@@ -318,110 +314,6 @@ func (s *ConferenceService) RunGoogleMeetScenario(ctx context.Context, req *pb.M
 		testing.ContextLogf(ctx, "Failed to run conference: %+v", err) // Print error with stack trace.
 		return nil, err
 	}
-	return &empty.Empty{}, nil
-}
-
-func (s *ConferenceService) RunZoomScenario(ctx context.Context, req *pb.MeetScenarioRequest) (*empty.Empty, error) {
-	roomType := conference.RoomType(req.RoomType)
-
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return nil, errors.New("failed to get outdir from context")
-	}
-	accountPool, ok := s.s.Var("ui.cujAccountPool")
-	if !ok {
-		return nil, errors.New("failed to get variable ui.cujAccountPool")
-	}
-	host, ok := s.s.Var("spera.zoom_bot_server")
-	if !ok {
-		return nil, errors.New("failed to get variable spera.zoom_bot_server")
-	}
-
-	sessionToken, ok := s.s.Var("spera.zoom_bot_token")
-	if !ok {
-		return nil, errors.New("failed to get variable spera.zoom_bot_token")
-	}
-	traceConfigPath := ""
-	if collect, ok := s.s.Var("spera.collectTrace"); ok && collect == "enable" {
-		traceConfigPath = tmpDir + "/" + cujrecorder.SystemTraceConfigFile
-	}
-
-	v, ok := s.s.Var("spera.Conference.web_source")
-	if ok && strings.ToLower(v) == string(cuj.ExternalWebSource) {
-		webSource = cuj.ExternalWebSource
-	}
-
-	testing.ContextLog(ctx, "Start zoom meet scenario")
-	bt := browser.TypeAsh
-	if req.IsLacros {
-		bt = browser.TypeLacros
-	}
-	cr, err := newConferenceChrome(ctx, accountPool, req.CameraVideoPath, bt)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to new Chrome")
-	}
-	account := cr.Creds().User
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to test API")
-	}
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize keyboard input")
-	}
-	defer kb.Close()
-	cleanupCtx := ctx
-	ctx, cancelTablet := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancelTablet()
-
-	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.s.Var, "spera.cuj_mode")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to enable tablet mode")
-	}
-	defer resetTabletMode(cleanupCtx)
-
-	var uiHandler cuj.UIActionHandler
-	if tabletMode {
-		cleanup, err := display.RotateToLandscape(ctx, tconn)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to rotate display to landscape")
-		}
-		defer cleanup(cleanupCtx)
-		if uiHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
-			return nil, errors.Wrap(err, "failed to create tablet action handler")
-		}
-	} else {
-		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
-			return nil, errors.Wrap(err, "failed to create clamshell action handler")
-		}
-	}
-	zmcli := conference.NewZoomConference(cr, tconn, kb, uiHandler, tabletMode, roomType, account, outDir)
-	defer zmcli.End(cleanupCtx)
-
-	roomSize := conference.ZoomRoomParticipants[roomType] - 1
-	prepare := func(ctx context.Context) (string, conference.Cleanup, error) {
-		return zoomserver.CreateConference(ctx, roomSize, sessionToken, host)
-	}
-	// Shorten context a bit to allow for cleanup if Run fails.
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-	testParams := &conference.TestParams{
-		Cr:              cr,
-		Conf:            zmcli,
-		Prepare:         prepare,
-		Tier:            cuj.Tier(req.Tier),
-		Bt:              bt,
-		RoomType:        roomType,
-		OutDir:          outDir,
-		TraceConfigPath: traceConfigPath,
-		TabletMode:      tabletMode,
-		WebSource:       webSource,
-	}
-	if err := conference.Run(ctx, testParams); err != nil {
-		return nil, errors.Wrap(err, "failed to run Zoom conference")
-	}
-
 	return &empty.Empty{}, nil
 }
 
