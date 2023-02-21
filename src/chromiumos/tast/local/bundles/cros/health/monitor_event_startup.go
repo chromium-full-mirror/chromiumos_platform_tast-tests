@@ -54,6 +54,13 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "sd_card",
+			Val: eventStartupParams{
+				category: "sd_card",
+				duration: 3 * time.Second,
+			},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
