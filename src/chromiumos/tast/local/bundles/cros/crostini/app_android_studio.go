@@ -129,7 +129,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	ud := uidetection.NewDefault(tconn).WithScreenshotResizing()
 	if err := uiauto.Combine("Create a new project with defaults",
 		// Two-letter words normally need an exact match.
-		ud.LeftClick(uidetection.Word("OK").ExactMatch()),
+		ud.LeftClick(uidetection.Word("O?K", uidetection.RegexMode(true)).First()),
 		// The initialization process may take longer than the default timeout 60s.
 		ud.WithTimeout(2*time.Minute).LeftClick(uidetection.TextBlock(strings.Split("Don't send", " "))),
 		ud.LeftClick(nextButton),
