@@ -98,7 +98,7 @@ func FastPairSavedDevicesAddAndRemoveInitialPair(ctx context.Context, s *testing
 	}
 
 	// Re-open the Saved Devices subpage on both DUTs to refresh the results and confirm the device was added.
-	if err := confirmSavedDevicesStateBothDUTs(ctx, fv, []string{"Autotest Test Device"} /*deviceNames*/); err != nil {
+	if err := confirmSavedDevicesStateBothDUTs(ctx, fv, []string{fastPairDevice.AdvertisedName()} /*deviceNames*/); err != nil {
 		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)
 	}
 

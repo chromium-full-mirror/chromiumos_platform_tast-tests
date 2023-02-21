@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
-		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BTTestService", "tast.cros.ui.ChromeUIService"},
 		Fixture:      "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
 		Timeout:      3 * time.Minute,
 		Vars:         []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
@@ -96,19 +96,16 @@ func FastPairForgetDevice(ctx context.Context, s *testing.State) {
 	}
 
 	// Re-open the Saved Devices subpage to refresh the results and confirm the device was added.
+	deviceName := fastPairDevice.AdvertisedName()
 	if _, err := fv.BTS.ConfirmSavedDevicesState(ctx, &pb.ConfirmSavedDevicesStateRequest{
 		DeviceNames: []string{
-			"Autotest Test Device",
+			deviceName,
 		},
 	}); err != nil {
 		s.Fatal("Failed to confirm the state of the Saved Devices subpage: ", err)
 	}
 
 	// Open the Bluetooth Settings page and forget the device.
-	// TODO(b/263980939): It's unexpected that the device name for the fake device is
-	// "FAST_PAIR_REF". Investigate why the Raspberry Pi fake device has this name and
-	// pass in the same device as above here.
-	var deviceName = fastPairDevice.AdvertisedName()
 	if _, err := fv.BTS.ForgetBluetoothDevice(ctx, &pb.ForgetBluetoothDeviceRequest{
 		DeviceName: deviceName,
 	}); err != nil {
