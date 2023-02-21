@@ -302,8 +302,11 @@ func (gm *GoogleMeet) SwitchVideo(expectedOn bool) action.Action {
 		cameraButton = nodewith.Name(info.Name).Role(role.Button)
 		// Switch on video should check permission status to decide whether need to handle permission prompt.
 		if expectedOn {
-			return prompts.ActionAndGrantPermissionIfRequired(
-				gm.tconn, gm.conn, gm.ui.DoDefault(cameraButton), webutil.PermissionCamera)(ctx)
+			return uiauto.RetrySilently(5, uiauto.Combine("turn on the camera",
+				prompts.ActionAndGrantPermissionIfRequired(
+					gm.tconn, gm.conn, gm.ui.DoDefault(cameraButton), webutil.PermissionCamera),
+				gm.ui.WithTimeout(5*time.Second).WaitUntilGone(cameraButton)),
+			)(ctx)
 		}
 
 		// Otherwise it is straightforward to switch video.

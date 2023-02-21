@@ -72,10 +72,16 @@ func SetupTestConfig(ctx context.Context, cameraType UseCameraType) error {
 	return nil
 }
 
+// FakeCameraImageConfig represents the config of the path to a real image.
+type FakeCameraImageConfig struct {
+	Path string `json:"path,omitempty"`
+}
+
 // FakeCameraConfig represents the config for a single camera for fake HAL.
 type FakeCameraConfig struct {
-	ID        int  `json:"id"`
-	Connected bool `json:"connected"`
+	ID        int                    `json:"id"`
+	Connected bool                   `json:"connected"`
+	Frames    *FakeCameraImageConfig `json:"frames,omitempty"`
 	// TODO(pihsun): Add other fields
 }
 

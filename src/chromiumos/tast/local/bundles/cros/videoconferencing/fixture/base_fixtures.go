@@ -22,14 +22,14 @@ import (
 
 // List of fixture names for video conferencing testing.
 const (
-	LoggedIn                    = "mlLoggedIn"
-	GAIALoggedIn                = "mlGaiaLoggedIn"
-	GAIALoggedInClamshell       = "mlGAIALoggedInClamshell"
-	GAIALoggedInTablet          = "mlGAIALoggedInTablet"
-	GAIALoggedInLacros          = "mlGaiaLoggedInLacros"
-	GAIALoggedInLacrosClamshell = "mlGAIALoggedInLacrosClamshell"
-	GAIALoggedInLacrosTablet    = "mlGAIALoggedInLacrosTablet"
-	NoLoggedIn                  = "mlNoLoggedIn"
+	LoggedIn                    = "loggedInForVideoConferencing"
+	GAIALoggedIn                = "gaiaLoggedInForVideoConferencing"
+	GAIALoggedInClamshell       = "gaiaLoggedInClamshellForVideoConferencing"
+	GAIALoggedInTablet          = "gaiaLoggedInTabletForVideoConferencing"
+	GAIALoggedInLacros          = "gaiaLoggedInLacrosForVideoConferencing"
+	GAIALoggedInLacrosClamshell = "gaiaLoggedInLacrosClamshellForVideoConferencing"
+	GAIALoggedInLacrosTablet    = "gaiaLoggedInLacrosTabletForVideoConferencing"
+	NoLoggedIn                  = "noLoggedInForVideoConferencing"
 )
 
 const (
@@ -43,7 +43,7 @@ func init() {
 		Name: LoggedIn,
 		Desc: "A fixture with fake user logged in",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Impl:            baseSetupFixture(browser.TypeAsh, nil),
@@ -58,7 +58,7 @@ func init() {
 		Name: GAIALoggedIn,
 		Desc: "A fixture with GAIA user logged in",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
@@ -76,7 +76,7 @@ func init() {
 		Name: GAIALoggedInClamshell,
 		Desc: "A fixture with GAIA user logged in",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
@@ -97,7 +97,7 @@ func init() {
 		Name: GAIALoggedInTablet,
 		Desc: "A fixture with GAIA user logged in",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
@@ -118,7 +118,7 @@ func init() {
 		Name: GAIALoggedInLacros,
 		Desc: "A fixture with GAIA user logged in Lacros",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
@@ -138,7 +138,7 @@ func init() {
 		Name: GAIALoggedInLacrosClamshell,
 		Desc: "A fixture with GAIA user logged in Lacros in clamshell mode",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
@@ -159,7 +159,7 @@ func init() {
 		Name: GAIALoggedInLacrosTablet,
 		Desc: "A fixture with GAIA user logged in Lacros in tablet mode",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
@@ -180,7 +180,7 @@ func init() {
 		Name: NoLoggedIn,
 		Desc: "A fixture with no user logged in",
 		Contacts: []string{
-			"chromeos-platform-ml-accelerators@google.com",
+			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
