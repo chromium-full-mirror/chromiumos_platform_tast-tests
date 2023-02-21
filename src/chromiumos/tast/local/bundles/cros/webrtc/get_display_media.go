@@ -42,6 +42,19 @@ func init() {
 			Name:    "tab",
 			Val:     "browser",
 			Fixture: "chromeTabCapture",
+		}, {
+			Name:              "monitor_zero_copy",
+			Val:               "monitor",
+			Fixture:           "chromeZeroCopyScreenCapture",
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		}, {
+			Name:    "window_zero_copy",
+			Val:     "window",
+			Fixture: "chromeZeroCopyWindowCapture",
+		}, {
+			Name:    "tab_zero_copy",
+			Val:     "browser",
+			Fixture: "chromeZeroCopyTabCapture",
 		}},
 	})
 }

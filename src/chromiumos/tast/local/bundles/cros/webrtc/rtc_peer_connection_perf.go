@@ -292,6 +292,21 @@ func init() {
 				Fixture:           "chromeScreenCapture",
 			},
 			{
+				Name: "vp8_hw_capture_monitor_zero_copy",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "VP8",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					DisplayMediaType:  peerconnection.CaptureMonitor,
+					BrowserType:       browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
+				Fixture:           "chromeZeroCopyScreenCapture",
+			},
+			{
 				Name: "vp8_hw_capture_window",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -306,6 +321,20 @@ func init() {
 				Fixture:           "chromeWindowCapture",
 			},
 			{
+				Name: "vp8_hw_capture_window_zero_copy",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "VP8",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					DisplayMediaType:  peerconnection.CaptureWindow,
+					BrowserType:       browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
+				Fixture:           "chromeZeroCopyWindowCapture",
+			},
+			{
 				Name: "vp8_hw_capture_tab",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -318,6 +347,20 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
 				Fixture:           "chromeTabCapture",
+			},
+			{
+				Name: "vp8_hw_capture_tab_zero_copy",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "VP8",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					DisplayMediaType:  peerconnection.CaptureTab,
+					BrowserType:       browser.TypeAsh,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
+				Fixture:           "chromeZeroCopyTabCapture",
 			},
 			{
 				Name: "vp9_hw_svc_l1t2",

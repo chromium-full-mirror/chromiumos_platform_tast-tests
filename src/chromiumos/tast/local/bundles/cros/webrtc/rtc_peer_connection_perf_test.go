@@ -57,6 +57,13 @@ const (
 	outOfProcessVE                      // Out-of-process video encoding.
 )
 
+type captureSourceType struct {
+	displayMediaType   peerconnection.DisplayMediaType
+	zeroCopyTabCapture bool
+}
+
+var cameraCapture = captureSourceType{displayMediaType: "", zeroCopyTabCapture: false}
+
 var k180p = graphics.Size{Width: 320, Height: 180}
 var k270p = graphics.Size{Width: 480, Height: 270}
 var k360p = graphics.Size{Width: 640, Height: 360}
@@ -64,31 +71,32 @@ var k720p = graphics.Size{Width: 1280, Height: 720}
 var k1080p = graphics.Size{Width: 1920, Height: 1080}
 
 func genFixture(verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	useSvc bool, displayMediaType peerconnection.DisplayMediaType, browserType browser.Type, testOption rtcPerfTestOOPOption) string {
+	useSvc bool, captureSource captureSourceType, browserType browser.Type, testOption rtcPerfTestOOPOption) string {
 	if browserType == browser.TypeLacros {
 		if verifyEncoderMode != peerconnection.VerifyHWEncoderUsed ||
 			verifyDecoderMode != peerconnection.VerifyHWDecoderUsed ||
-			useSvc || displayMediaType != "" || testOption != noTestOption {
+			useSvc || captureSource.displayMediaType != "" || testOption != noTestOption {
 			panic("lacros testing does not currently support the requested options")
 		}
 		return "chromeVideoLacrosWithFakeWebcam"
 	}
-	if displayMediaType != "" {
+	if captureSource != cameraCapture {
 		if verifyEncoderMode != peerconnection.VerifyHWEncoderUsed ||
 			verifyDecoderMode != peerconnection.VerifyHWDecoderUsed ||
 			useSvc || testOption != noTestOption {
 			panic("display capture testing does not currently support the requested options")
 		}
-		switch displayMediaType {
-		case peerconnection.CaptureMonitor:
-			return "chromeScreenCapture"
-		case peerconnection.CaptureWindow:
-			return "chromeWindowCapture"
-		case peerconnection.CaptureTab:
-			return "chromeTabCapture"
-		default:
-			panic(fmt.Sprintf("unknown displayMediaType: %v", displayMediaType))
+		var captureFixtureMap = map[peerconnection.DisplayMediaType]map[bool]string{
+			peerconnection.CaptureMonitor: map[bool]string{false: "chromeScreenCapture", true: "chromeZeroCopyScreenCapture"},
+			peerconnection.CaptureWindow:  map[bool]string{false: "chromeWindowCapture", true: "chromeZeroCopyWindowCapture"},
+			peerconnection.CaptureTab:     map[bool]string{false: "chromeTabCapture", true: "chromeZeroCopyTabCapture"},
 		}
+
+		captureFixture, found := captureFixtureMap[captureSource.displayMediaType][captureSource.zeroCopyTabCapture]
+		if !found {
+			panic(fmt.Sprintf("unknown displayMediaType: %v", captureSource.displayMediaType))
+		}
+		return captureFixture
 	}
 	if useSvc {
 		if verifyDecoderMode != peerconnection.VerifyHWDecoderUsed ||
@@ -122,8 +130,7 @@ func genFixture(verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncode
 
 func genTestName(codec string, resolution graphics.Size,
 	verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	svc string, simulcastHwEncs []bool, displayMediaType peerconnection.DisplayMediaType,
-	browserType browser.Type, testOption rtcPerfTestOOPOption) string {
+	svc string, simulcastHwEncs []bool, captureSource captureSourceType, browserType browser.Type, testOption rtcPerfTestOOPOption) string {
 	testName := codec
 	switch resolution {
 	case k180p:
@@ -165,14 +172,19 @@ func genTestName(codec string, resolution graphics.Size,
 		}
 	}
 
-	if displayMediaType != "" {
-		switch displayMediaType {
+	if captureSource != cameraCapture {
+		switch captureSource.displayMediaType {
 		case peerconnection.CaptureMonitor:
 			testName += "_capture_monitor"
 		case peerconnection.CaptureWindow:
 			testName += "_capture_window"
 		case peerconnection.CaptureTab:
 			testName += "_capture_tab"
+		default:
+			panic(fmt.Sprintf("unknown DisplayMediaType: %v", captureSource.displayMediaType))
+		}
+		if captureSource.zeroCopyTabCapture {
+			testName += "_zero_copy"
 		}
 	}
 	if browserType == browser.TypeLacros {
@@ -285,15 +297,15 @@ func genParamsData(codec string, resolution graphics.Size,
 
 func genRtcPerfTestSourceData(codec string, resolution graphics.Size,
 	verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	svc string, simulcastHWEncs []bool, displayMediaType peerconnection.DisplayMediaType,
+	svc string, simulcastHWEncs []bool, captureSource captureSourceType,
 	browserType browser.Type, testOption rtcPerfTestOOPOption) rtcPerfTestSourceData {
 	return rtcPerfTestSourceData{
 		Name: genTestName(codec, resolution, verifyDecoderMode, verifyEncoderMode,
-			svc, simulcastHWEncs, displayMediaType, browserType, testOption),
+			svc, simulcastHWEncs, captureSource, browserType, testOption),
 		ParamData: genParamsData(codec, resolution, verifyDecoderMode, verifyEncoderMode,
-			svc, simulcastHWEncs, displayMediaType, browserType),
+			svc, simulcastHWEncs, captureSource.displayMediaType, browserType),
 		SoftwareDeps: genSoftwareDeps(codec, verifyDecoderMode, verifyEncoderMode, browserType),
-		Fixture:      genFixture(verifyDecoderMode, verifyEncoderMode, svc != "", displayMediaType, browserType, testOption),
+		Fixture:      genFixture(verifyDecoderMode, verifyEncoderMode, svc != "", captureSource, browserType, testOption),
 	}
 }
 
@@ -315,7 +327,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			}
 			param := genRtcPerfTestSourceData(codec, k720p,
 				verifyDecoderMode[hardware], verifyEncoderMode[hardware],
-				"", nil, "", browser.TypeAsh, noTestOption)
+				"", nil, cameraCapture, browser.TypeAsh, noTestOption)
 			params = append(params, param)
 		}
 	}
@@ -324,7 +336,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		for _, resolution := range []graphics.Size{k720p, k360p} {
 			param := genRtcPerfTestSourceData(codec, resolution,
 				peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-				"", nil, "", browser.TypeLacros, noTestOption)
+				"", nil, cameraCapture, browser.TypeLacros, noTestOption)
 			params = append(params, param)
 		}
 	}
@@ -332,39 +344,42 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 	for _, codec := range []string{"h264", "vp8", "vp9"} {
 		param := genRtcPerfTestSourceData(codec, k720p,
 			peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-			"", nil, "", browser.TypeAsh, outOfProcessVE)
+			"", nil, cameraCapture, browser.TypeAsh, outOfProcessVE)
 		params = append(params, param)
 	}
 	// VP9 1080p.
 	for _, hardware := range []bool{false, true} {
 		param := genRtcPerfTestSourceData("vp9", k1080p,
 			verifyDecoderMode[hardware], verifyEncoderMode[hardware],
-			"", nil, "", browser.TypeAsh, noTestOption)
+			"", nil, cameraCapture, browser.TypeAsh, noTestOption)
 		params = append(params, param)
 	}
 	// vp9_1080p_sw_enc.
 	param := genRtcPerfTestSourceData("vp9", k1080p,
 		peerconnection.VerifyHWDecoderUsed, peerconnection.VerifySWEncoderUsed,
-		"", nil, "", browser.TypeAsh, noTestOption)
+		"", nil, cameraCapture, browser.TypeAsh, noTestOption)
 	// This is a special case in which HWEncodeVP9 is dropped even if we require to use a vp9 hardware decoder.
 	param.SoftwareDeps = []string{caps.HWDecodeVP9}
 	params = append(params, param)
 
 	// VP8 display capture.
 	for _, displayMediaType := range []peerconnection.DisplayMediaType{peerconnection.CaptureMonitor, peerconnection.CaptureWindow, peerconnection.CaptureTab} {
-		param := genRtcPerfTestSourceData("vp8", k720p,
-			peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-			"", nil, displayMediaType, browser.TypeAsh, noTestOption)
-		if displayMediaType == peerconnection.CaptureMonitor {
-			param.HardwareDeps = "hwdep.InternalDisplay()"
+		for _, zeroCopyTabCapture := range []bool{false, true} {
+			captureSource := captureSourceType{displayMediaType: displayMediaType, zeroCopyTabCapture: zeroCopyTabCapture}
+			param := genRtcPerfTestSourceData("vp8", k720p,
+				peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
+				"", nil, captureSource, browser.TypeAsh, noTestOption)
+			if displayMediaType == peerconnection.CaptureMonitor {
+				param.HardwareDeps = "hwdep.InternalDisplay()"
+			}
+			params = append(params, param)
 		}
-		params = append(params, param)
 	}
 	// VP9 SVC.
 	for _, svc := range []string{"L1T2", "L1T3", "L3T3_KEY"} {
 		param := genRtcPerfTestSourceData("vp9", k720p,
 			peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-			svc, nil, "", browser.TypeAsh, noTestOption)
+			svc, nil, cameraCapture, browser.TypeAsh, noTestOption)
 		params = append(params, param)
 	}
 	// VP8|VP9 hw multi.
@@ -419,7 +434,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				param := genRtcPerfTestSourceData(codec, resolution,
 					peerconnection.VerifyHWDecoderUsed,
 					verifyEncoderMode[hwEnc],
-					"", nil, "", browser.TypeAsh, noTestOption)
+					"", nil, cameraCapture, browser.TypeAsh, noTestOption)
 				params = append(params, param)
 			}
 		}
@@ -460,7 +475,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 
 			param := genRtcPerfTestSourceData("vp8", resolution,
 				peerconnection.VerifyHWDecoderUsed, verifyEncoderMode,
-				"", hwEncs, "", browser.TypeAsh, noTestOption)
+				"", hwEncs, cameraCapture, browser.TypeAsh, noTestOption)
 			if minResOnlySwEnc {
 				param.SoftwareDeps = append(param.SoftwareDeps, "vaapi")
 				param.Fixture = "chromeVideoWithFakeWebcamAndEnableVaapiVideoMinResolution"
@@ -473,7 +488,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		for _, hardware := range []bool{false, true} {
 			param := genRtcPerfTestSourceData("vp9", resolution,
 				peerconnection.VerifyHWDecoderUsed, verifyEncoderMode[hardware],
-				"L2T3_KEY", nil, "", browser.TypeAsh, noTestOption)
+				"L2T3_KEY", nil, cameraCapture, browser.TypeAsh, noTestOption)
 			param.HardwareDeps = "hwdep.SupportsVP9KSVCHWDecoding()"
 			params = append(params, param)
 		}
