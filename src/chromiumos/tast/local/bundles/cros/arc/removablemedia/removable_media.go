@@ -198,5 +198,8 @@ func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrom
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join(arc.RemovableMediaUUID, testFile))},
 		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
-	storage.TestOpenWithAndroidApp(ctx, s, a, cr, d, config, expectations)
+
+	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expectations); err != nil {
+		s.Fatal("Failed to open file with Android app: ", err)
+	}
 }

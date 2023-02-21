@@ -59,14 +59,18 @@ func MyFiles(ctx context.Context, s *testing.State) {
 	}
 	myFilesPath := cryptohomeUserPath + "/MyFiles"
 
-	testARCToCros(ctx, s, a, myFilesPath)
+	if err := testARCToCros(ctx, s, a, myFilesPath); err != nil {
+		s.Fatal("Android -> CrOS failed: ", err)
+	}
 
-	testCrosToARC(ctx, s, a, cr, d, myFilesPath)
+	if err := testCrosToARC(ctx, a, cr, d, myFilesPath); err != nil {
+		s.Fatal("CrOS -> Android failed: ", err)
+	}
 }
 
 // testARCToCros checks whether a file put in the Android MyFiles directory
 // appears in the ChromeOS MyFiles directory.
-func testARCToCros(ctx context.Context, s *testing.State, a *arc.ARC, myFilesPath string) {
+func testARCToCros(ctx context.Context, s *testing.State, a *arc.ARC, myFilesPath string) error {
 	const (
 		filename    = "capybara.jpg"
 		androidPath = "/storage/" + arc.MyFilesUUID + "/" + filename
@@ -75,9 +79,7 @@ func testARCToCros(ctx context.Context, s *testing.State, a *arc.ARC, myFilesPat
 
 	testing.ContextLog(ctx, "Testing Android -> CrOS")
 
-	if err := testPushToARCAndReadFromCros(ctx, a, s.DataPath(filename), androidPath, crosPath); err != nil {
-		s.Fatal("Android -> CrOS failed: ", err)
-	}
+	return testPushToARCAndReadFromCros(ctx, a, s.DataPath(filename), androidPath, crosPath)
 }
 
 // testPushToARCAndReadFromCros pushes the content of sourcePath (in ChromeOS)
@@ -120,7 +122,7 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 
 // testCrosToARC checks whether a file put in the ChromeOS MyFiles directory
 // can be read by Android apps.
-func testCrosToARC(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) {
+func testCrosToARC(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) error {
 	config := storage.TestConfig{DirPath: myFilesPath, DirName: "My files", DirTitle: "Files - My files",
 		CreateTestFile: true, FileName: "storage.txt"}
 
@@ -131,5 +133,8 @@ func testCrosToARC(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome
 		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join(arc.MyFilesUUID, config.FileName))},
 		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
 
-	storage.TestOpenWithAndroidApp(ctx, s, a, cr, d, config, expectations)
+	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expectations); err != nil {
+		return errors.Wrap(err, "failed to open file with Android app")
+	}
+	return nil
 }

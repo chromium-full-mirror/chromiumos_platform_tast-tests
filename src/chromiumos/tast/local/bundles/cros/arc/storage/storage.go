@@ -87,7 +87,7 @@ type TestConfig struct {
 // Downloads, MyFiles etc, using the test android app, ArcFileReaderTest. The app will display
 // the respective Action, URI and FileContent on its UI, to be validated against our
 // expected values.
-func TestOpenWithAndroidApp(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig, expectations []Expectation) {
+func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig, expectations []Expectation) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -96,7 +96,7 @@ func TestOpenWithAndroidApp(ctx context.Context, s *testing.State, a *arc.ARC, c
 
 	testing.ContextLog(ctx, "Installing ArcFileReaderTest app")
 	if err := a.Install(ctx, arc.APKPath(testAppPath)); err != nil {
-		s.Fatal("Failed to install ArcFileReaderTest app: ", err)
+		return errors.Wrap(err, "failed to install ArcFileReaderTest app")
 	}
 
 	if config.CreateTestFile {
@@ -107,7 +107,7 @@ func TestOpenWithAndroidApp(ctx context.Context, s *testing.State, a *arc.ARC, c
 		if fileNotExist {
 			testing.ContextLog(ctx, "Setting up a test file")
 			if err := ioutil.WriteFile(testFileLocation, []byte(ExpectedFileContent), 0666); err != nil {
-				s.Fatalf("Failed to create test file %s: %s", testFileLocation, err)
+				return errors.Wrapf(err, "failed to create test file %s", testFileLocation)
 			}
 		}
 		if !config.KeepFile {
@@ -116,23 +116,24 @@ func TestOpenWithAndroidApp(ctx context.Context, s *testing.State, a *arc.ARC, c
 	}
 
 	if err := a.WaitIntentHelper(ctx); err != nil {
-		s.Fatal("Failed to wait for ARC Intent Helper: ", err)
+		return errors.Wrap(err, "failed to wait for ARC Intent Helper")
 	}
 
 	files, err := openFilesApp(ctx, cr)
 	if err != nil {
-		s.Fatal("Failed to open Files App: ", err)
+		return errors.Wrap(err, "failed to open Files App")
 	}
 	defer files.Close(cleanupCtx)
 
 	if err := openWithReaderApp(ctx, files, config); err != nil {
-		s.Fatal("Could not open file with ArcFileReaderTest: ", err)
+		return errors.Wrap(err, "could not open file with ArcFileReaderTest")
 	}
 	defer a.Command(cleanupCtx, "am", "force-stop", testAppID).Run(testexec.DumpLogOnError)
 
 	if err := validateResult(ctx, d, expectations); err != nil {
-		s.Fatal("ArcFileReaderTest's data is invalid: ", err)
+		return errors.Wrap(err, "ArcFileReaderTest's data is invalid")
 	}
+	return nil
 }
 
 // openFilesApp opens the Files App and returns a pointer to it.

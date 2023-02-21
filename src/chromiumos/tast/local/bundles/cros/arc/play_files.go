@@ -90,7 +90,7 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Testing CrOS -> Android")
-	if err := testCrosToAndroid(ctx, s, cr, tconn, a); err != nil {
+	if err := testCrosToAndroid(ctx, cr, tconn, a); err != nil {
 		s.Fatal("CrOS -> Android failed: ", err)
 	}
 
@@ -103,14 +103,14 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 // testCrosToAndroid checks whether 1) the contents of Play files can be
 // manipulated through the Files app, and 2) the results of the manipulations
 // are properly reflected on the Android side.
-func testCrosToAndroid(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
+func testCrosToAndroid(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
 	const filename = "storage.txt"
 
 	if err := testCopyToPlayfiles(ctx, cr, tconn, a, filename); err != nil {
 		return errors.Wrapf(err, "failed to copy %s to Play files", filename)
 	}
 
-	if err := testOpenInPlayfiles(ctx, s, cr, a, filename); err != nil {
+	if err := testOpenInPlayfiles(ctx, cr, a, filename); err != nil {
 		return errors.Wrapf(err, "failed to open %s in Play files", filename)
 	}
 
@@ -193,7 +193,7 @@ func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn,
 }
 
 // testOpenInPlayfiles opens a file in Play files with an Android app.
-func testOpenInPlayfiles(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *arc.ARC, filename string) error {
+func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename string) error {
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize UI Automator")
@@ -204,9 +204,7 @@ func testOpenInPlayfiles(ctx context.Context, s *testing.State, cr *chrome.Chrom
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join("external_files", "Pictures", filename))},
 		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
-	storage.TestOpenWithAndroidApp(ctx, s, a, cr, d, config, expectations)
-
-	return nil
+	return storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expectations)
 }
 
 // testDeleteFromPlayfiles deletes a file in Play files through the Files app.
