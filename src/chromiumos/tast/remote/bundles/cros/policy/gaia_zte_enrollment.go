@@ -13,18 +13,18 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/exec"
 	"chromiumos/tast/remote/gaiaenrollment"
-	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	ps "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/testing"
 )
 
-const gaiaZTEEnrollmentTimeout = 7 * time.Minute
+const gaiaZTEEnrollmentTimeout = 4 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -38,6 +38,7 @@ func init() {
 		Attr:         []string{"group:dmserver-zteenrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.tape.Service", "tast.cros.hwsec.OwnershipService", "tast.cros.graphics.ScreenshotService"},
+		Fixture:      fixture.CleanOwnership,
 		Timeout:      7 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
@@ -108,24 +109,16 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set rlz date: ", err)
 	}
 
-	defer func(ctx context.Context) {
-		if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
-			s.Error("Failed to reset TPM after test: ", err)
-		}
-	}(ctx)
-
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	// Shorten deadline to leave time separately for logging and cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
-
-	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
-		s.Fatal("Failed to reset TPM: ", err)
-	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
-	defer cl.Close(ctx)
+	defer cl.Close(cleanupCtx)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -135,7 +128,7 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 
 		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: "enrollmentError"})
 	}
-	defer captureScreenshotOnError(ctx, s.HasError)
+	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
 	pc := ps.NewPolicyServiceClient(cl.Conn)
 
@@ -149,7 +142,7 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
-	defer accManager.CleanUp(ctx)
+	defer accManager.CleanUp(cleanupCtx)
 
 	if _, err := pc.GAIAZTEEnrollUsingChrome(ctx, &ps.GAIAZTEEnrollUsingChromeRequest{
 		DmserverURL: dmServerURL,
@@ -157,12 +150,12 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to ZTE enroll using chrome: ", err)
 	}
-	defer pc.StopChrome(ctx, &empty.Empty{})
+	defer pc.StopChrome(cleanupCtx, &empty.Empty{})
 
 	// Deprovision the DUT at the end of the test.
 	defer func(ctx context.Context) {
 		if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID); err != nil {
 			s.Fatal("Failed to deprovision device: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 }

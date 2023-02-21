@@ -10,8 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
@@ -40,7 +40,8 @@ func init() {
 			"tast.cros.policy.PolicyService",
 			"tast.cros.graphics.ScreenshotService",
 		},
-		Timeout: 7 * time.Minute,
+		Fixture: fixture.CleanOwnership,
+		Timeout: 4 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "autopush_flexorgs",
@@ -64,24 +65,16 @@ func GAIAFlexorgsEnrollment(ctx context.Context, s *testing.State) {
 	password := s.RequiredVar(param.password)
 	dmServerURL := param.dmserver
 
-	defer func(ctx context.Context) {
-		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-			s.Error("Failed to reset TPM after test: ", err)
-		}
-	}(ctx)
-
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	// Shorten deadline to leave time separately for logging and cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
-
-	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-		s.Fatal("Failed to reset TPM: ", err)
-	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
-	defer cl.Close(ctx)
+	defer cl.Close(cleanupCtx)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -91,7 +84,7 @@ func GAIAFlexorgsEnrollment(ctx context.Context, s *testing.State) {
 
 		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: "enrollmentError"})
 	}
-	defer captureScreenshotOnError(ctx, s.HasError)
+	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
 	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
 
@@ -102,5 +95,5 @@ func GAIAFlexorgsEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
-	defer policyClient.StopChrome(ctx, &empty.Empty{})
+	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
 }

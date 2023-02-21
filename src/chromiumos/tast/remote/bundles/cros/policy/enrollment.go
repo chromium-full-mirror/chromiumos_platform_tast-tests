@@ -11,9 +11,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/rpc"
 	pspb "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/testing"
@@ -35,29 +35,22 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
 		},
-		Timeout: 7 * time.Minute,
+		Fixture: fixture.CleanOwnership,
+		Timeout: 4 * time.Minute,
 	})
 }
 
 func Enrollment(ctx context.Context, s *testing.State) {
-	defer func(ctx context.Context) {
-		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-			s.Error("Failed to reset TPM after test: ", err)
-		}
-	}(ctx)
-
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	// Shorten deadline to leave time separately for logging and cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
-
-	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-		s.Fatal("Failed to reset TPM: ", err)
-	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
-	defer cl.Close(ctx)
+	defer cl.Close(cleanupCtx)
 
 	pJSON, err := json.Marshal(policy.NewBlob())
 	if err != nil {
@@ -71,5 +64,5 @@ func Enrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
-	defer policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{})
+	defer policyClient.StopChromeAndFakeDMS(cleanupCtx, &empty.Empty{})
 }
