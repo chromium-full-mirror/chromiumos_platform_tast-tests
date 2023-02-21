@@ -110,7 +110,8 @@ func TestCrossVersionParams(t *testing.T) {
 
 			var attr []string
 			if config.critical {
-				attr = []string{"group:mainline"}
+				// Temporarily disable critical because of splitting tests.
+				attr = []string{"group:mainline", "informational"}
 			} else {
 				attr = []string{"group:hwsec", "hwsec_nightly"}
 			}
@@ -137,5 +138,6 @@ func TestCrossVersionParams(t *testing.T) {
     ExtraSoftwareDeps: {{ .ExtraSoftwareDeps | fmt }},
     {{ end }}
   }, {{ end }}`, params)
-	genparams.Ensure(t, "cross_version_login.go", code)
+	genparams.Ensure(t, "cross_version_auth_factor.go", code)
+	genparams.Ensure(t, "cross_version_chrome_login.go", code)
 }

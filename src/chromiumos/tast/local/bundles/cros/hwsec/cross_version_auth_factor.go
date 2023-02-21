@@ -13,7 +13,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/fixture"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
@@ -21,13 +20,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionLogin,
+		Func:         CrossVersionAuthFactor,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies login functionality across the version",
+		Desc:         "Verifies functionality of auth factors across the version",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
+		// ChromeOS > Platform > System > Hardware Security > HwSec AP
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:hw_agnostic"},
 		// TODO(b/249934249): Add the gsc version test after we enabled the ti50-emulator.
@@ -46,7 +46,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r88",
 				Fixture:           "crossVersionTpm2R88",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r89",
@@ -61,7 +61,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r91",
 				Fixture:           "crossVersionTpm2R91",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r92",
@@ -71,7 +71,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r93",
 				Fixture:           "crossVersionTpm2R93",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r94",
@@ -81,7 +81,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r96",
 				Fixture:           "crossVersionTpm2R96",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r97",
@@ -111,7 +111,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r102",
 				Fixture:           "crossVersionTpm2R102",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r103",
@@ -141,7 +141,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r108",
 				Fixture:           "crossVersionTpm2R108",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r109",
@@ -151,12 +151,12 @@ func init() {
 			}, {
 				Name:              "tpm2_r110",
 				Fixture:           "crossVersionTpm2R110",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r96",
 				Fixture:           "crossVersionTpmDynamicR96",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r97",
@@ -186,7 +186,7 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r102",
 				Fixture:           "crossVersionTpmDynamicR102",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r103",
@@ -216,7 +216,7 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r108",
 				Fixture:           "crossVersionTpmDynamicR108",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r109",
@@ -226,7 +226,7 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r110",
 				Fixture:           "crossVersionTpmDynamicR110",
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},
 		},
@@ -407,57 +407,6 @@ func prepareChallengeAuth(ctx context.Context, lf hwsec.LogFunc, config *util.Cr
 	return cleanup, nil
 }
 
-// testConfig verifies the login functionality of specific auth config from CrossVersionLoginConfig.
-func testConfig(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
-	// Exercise the regular login flow as driven by Chrome Login Screen, to catch
-	// any regressions in APIs between Cryptohomed and Chrome.
-	// This part of the test is only possible when the snapshot contains mountable
-	// user data and not just keysets (see cross_version_login_data.go for
-	// details).
-	if config.VaultFSType != util.NoVaultFS {
-		if err := testConfigViaChrome(ctx, config); err != nil {
-			return errors.Wrap(err, "failed to test config via Chrome")
-		}
-	}
-
-	// Test various aspects of the Cryptohome D-Bus API as well.
-	if err := testConfigViaCryptohome(ctx, lf, cryptohome, config); err != nil {
-		return errors.Wrap(err, "failed to test config via Cryptohome")
-	}
-
-	return nil
-}
-
-// testConfigViaChrome verifies the login functionality via Chrome Login Screen.
-func testConfigViaChrome(ctx context.Context, config *util.CrossVersionLoginConfig) error {
-	authConfig := config.AuthConfig
-	username := authConfig.Username
-
-	// The smart card authentication is not currently supported in this subtest,
-	// as it'd require loading fake smart card middleware extensions in Chrome.
-	if authConfig.AuthType != hwsec.PassAuth {
-		return nil
-	}
-
-	// Check password login.
-	opts := []chrome.Option{
-		chrome.FakeLogin(chrome.Creds{User: username, Pass: authConfig.Password}),
-		chrome.KeepState(),
-	}
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		return errors.Wrap(err, "failed to log in with password")
-	}
-	// TODO(b/237120336): Check cryptohome was not recreated, by reading some file
-	// that was previously put into the snapshot.
-	if err := cr.Close(ctx); err != nil {
-		return errors.Wrap(err, "failed to log out after password login")
-	}
-	// TODO(b/237120336): Check PIN login as well.
-
-	return nil
-}
-
 // testConfigViaCryptohome verifies the login functionality by making requests
 // via Cryptohome CLI.
 func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
@@ -589,7 +538,7 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 	return nil
 }
 
-func CrossVersionLogin(ctx context.Context, s *testing.State) {
+func CrossVersionAuthFactor(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	helper, err := hwseclocal.NewHelper(cmdRunner)
 	if err != nil {
@@ -599,7 +548,7 @@ func CrossVersionLogin(ctx context.Context, s *testing.State) {
 
 	fixtureData := s.FixtValue().(*fixture.CrossVersionLoginFixture)
 	for _, config := range fixtureData.ConfigList {
-		if err := testConfig(ctx, s.Logf, cryptohome, &config); err != nil {
+		if err := testConfigViaCryptohome(ctx, s.Logf, cryptohome, &config); err != nil {
 			s.Fatalf("Failed to test auth type %d: %v", config.AuthConfig.AuthType, err)
 		}
 	}
