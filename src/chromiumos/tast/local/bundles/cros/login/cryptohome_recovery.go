@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/hwsec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/login/userutil"
 	"chromiumos/tast/local/chrome"
@@ -56,8 +57,22 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 
 	var creds chrome.Creds
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	helper, err := hwseclocal.NewHelper(cmdRunner)
+	if err != nil {
+		s.Fatal("Failed to create hwsec local helper: ", err)
+	}
+	// Enable the UserSecretStash experiment.
+	cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
+	if err != nil {
+		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
+	}
+	defer cleanupUSSExperiment(cleanupCtx)
 
 	// Log in and log out to create a user pod on the login screen.
 	func() {
@@ -69,14 +84,14 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 		creds = cr.Creds()
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
 			s.Fatal("Failed to connect Test API: ", err)
 		}
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 		oobeConn, err := cr.WaitForOOBEConnection(ctx)
 		if err != nil {
@@ -145,13 +160,13 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome on the login screen: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tLoginConn)
 
 	if err := enterInvalidPassword(ctx, tLoginConn, creds); err != nil {
 		s.Fatal("Failed to enter invalid password: ", err)
