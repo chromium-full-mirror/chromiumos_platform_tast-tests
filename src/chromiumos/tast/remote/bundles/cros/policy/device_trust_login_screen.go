@@ -118,7 +118,7 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 
 		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: "deviceTrustLoginError"})
 	}
-	defer captureScreenshotOnError(ctx, s.HasError)
+	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
 	// Waiting for prior deprovisionings to be finished.
 	// TODO(b:259513140): Add deterministic waiting on server side.
@@ -129,7 +129,7 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password}); err != nil {
 		s.Fatal("Remote call Enroll() failed: ", err)
 	}
-	defer service.StopChrome(ctx, &empty.Empty{})
+	defer service.StopChrome(cleanupCtx, &empty.Empty{})
 
 	// Deprovision the DUT at the end of the test.
 	defer func(ctx context.Context) {
