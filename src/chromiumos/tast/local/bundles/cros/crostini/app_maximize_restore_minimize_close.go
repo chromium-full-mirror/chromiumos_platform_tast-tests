@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
@@ -91,6 +93,14 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 		{"Audacity", "Audacity", "File"},
 	}
 
+	resetNormalWindowState := func(ctx context.Context) error {
+		window, err := ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "unable to find focused window")
+		}
+		return ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateNormal)
+	}
+
 	for _, appParam := range appParams {
 		uda := uidetection.NewDefault(tconn).WithTimeout(time.Minute)
 		ui := uiauto.New(tconn)
@@ -105,6 +115,8 @@ func AppMaximizeRestoreMinimizeClose(ctx context.Context, s *testing.State) {
 				launcher.SearchAndLaunchWithQuery(tconn, keyboard, appParam.appName, appParam.appName),
 				// Wait until the window is stable.
 				uda.WaitUntilExists(uidetection.Word(appParam.wordInApp).First().WithinA11yNode(appWindow)),
+				// Some apps (e.g, Firefox) may launch in maximized window by default on certain devices.
+				resetNormalWindowState,
 				crostini.Maximize(tconn, appWindow),
 				d.DiffWindow(ctx, fmt.Sprintf("%s_maximized", appParam.appName), screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
 				crostini.RestoreFromMaximize(tconn, appWindow),
