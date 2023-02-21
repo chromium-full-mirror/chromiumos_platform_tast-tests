@@ -10,6 +10,7 @@ async function start(
   let constraints = {audio : false, video : {width : width, height : height}};
   if (displayMediaType !== '') {
     constraints.video.displaySurface = displayMediaType;
+    constraints.selfBrowserSurface = "include";
   }
 
   localPeerConnection.onicecandidate = e =>

@@ -14,7 +14,8 @@ function start(surface) {
       video: {
         displaySurface: surface
       },
-      audio: false
+      audio: false,
+      selfBrowserSurface: "include",
     };
 
     navigator.mediaDevices.getDisplayMedia(displayMediaOptions)
