@@ -29,6 +29,9 @@ const (
 
 	// This URL has a background color that switches between orange and blue at 60fps.
 	colorChangeURL = "https://petermcneeleychromium.github.io/color_change_60fps/index.html"
+
+	// This URL plays a 180p video that is expanded to 720p pixels.
+	videoPlaybackURL = "https://petermcneeleychromium.github.io/video_60fps_fake_720p_loop/index.html"
 )
 
 type debugLacrosTest struct {
@@ -77,6 +80,21 @@ func init() {
 			Val: debugLacrosTest{
 				browserType: browser.TypeLacros,
 				windowURL:   colorChangeURL,
+			},
+			Fixture: "lacrosPerf",
+		}, {
+			Name: "video_playback_ash",
+			Val: debugLacrosTest{
+				browserType: browser.TypeAsh,
+				windowURL:   videoPlaybackURL,
+			},
+			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
+		}, {
+			Name:              "video_playback_lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: debugLacrosTest{
+				browserType: browser.TypeLacros,
+				windowURL:   videoPlaybackURL,
 			},
 			Fixture: "lacrosPerf",
 		}},
