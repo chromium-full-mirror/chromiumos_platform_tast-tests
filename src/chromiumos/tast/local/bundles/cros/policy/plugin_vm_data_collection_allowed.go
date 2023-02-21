@@ -27,8 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of PluginVmDataCollectionAllowed policy",
 		Contacts: []string{
-			"okalitova@chromium.org", // Test author
+			"parallels-cros@google.com",
+			"timloh@google.com",
 		},
+		BugComponent: "b:327040", // ChromeOS > External > Parallels
 		SoftwareDeps: []string{"chrome", "plugin_vm"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
