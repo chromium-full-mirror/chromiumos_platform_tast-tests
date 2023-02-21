@@ -7,7 +7,6 @@ package network
 import (
 	"bytes"
 	"context"
-	"net"
 	"time"
 
 	"chromiumos/tast/common/testexec"
@@ -222,23 +221,23 @@ func waitUntilNATIptablesConfigured(ctx context.Context) error {
 
 // connectToVPN creates a VPN server and connects to it.
 // On success, the caller is responsible to cleanup the created server and VPN connection.
-func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, httpsCerts *certs.Certs) (server *env.Env, conn *vpn.Connection, err error) {
-	var serverIPv4Subnet, serverIPv6Subnet *net.IPNet
-	serverIPv4Subnet, err = pool.AllocNextIPv4Subnet()
+func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, httpsCerts *certs.Certs) (*env.Env, *vpn.Connection, error) {
+	serverIPv4Subnet, err := pool.AllocNextIPv4Subnet()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to allocate v4 subnet")
 	}
-	serverIPv6Subnet, err = pool.AllocNextIPv6Subnet()
+	serverIPv6Subnet, err := pool.AllocNextIPv6Subnet()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to allocate v6 subnet")
 	}
-	server, err = dns.NewServer(ctx, "vpnserver", serverIPv4Subnet, serverIPv6Subnet, router, httpsCerts)
+	server, err := dns.NewServer(ctx, "vpnserver", serverIPv4Subnet, serverIPv6Subnet, router, httpsCerts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to set up server env")
 	}
 
+	success := false
 	defer func() {
-		if err == nil {
+		if success {
 			return
 		}
 		if err := server.Cleanup(ctx); err != nil {
@@ -247,10 +246,11 @@ func connectToVPN(ctx context.Context, pool *subnet.Pool, router *env.Env, https
 	}()
 
 	// Connect to VPN.
-	conn, err = vpn.StartConnection(ctx, server, vpn.TypeL2TPIPsec)
+	conn, err := vpn.StartConnection(ctx, server, vpn.TypeL2TPIPsec)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to start VPN connection")
 	}
 
+	success = true
 	return server, conn, nil
 }
