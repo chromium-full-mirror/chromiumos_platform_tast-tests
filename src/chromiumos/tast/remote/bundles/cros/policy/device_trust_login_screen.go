@@ -22,8 +22,9 @@ import (
 const deviceTrustEnrollmentTimeout = 7 * time.Minute
 
 type userParam struct {
-	poolID        string
-	loginPossible bool
+	poolID         string
+	expectedIdPURL string
+	loginPossible  bool
 }
 
 func init() {
@@ -57,14 +58,16 @@ func init() {
 		Params: []testing.Param{{
 			Name: "host_allowed",
 			Val: userParam{
-				poolID:        tape.DeviceTrustEnabled,
-				loginPossible: true,
+				poolID:         tape.DeviceTrustEnabled,
+				expectedIdPURL: "https://cbe-integrationtesting-sandbox.uc.r.appspot.com",
+				loginPossible:  true,
 			},
 		}, {
 			Name: "host_not_allowed",
 			Val: userParam{
-				poolID:        tape.DeviceTrustDisabled,
-				loginPossible: false,
+				poolID:         tape.DeviceTrustDisabled,
+				expectedIdPURL: "https://www.example.com",
+				loginPossible:  false,
 			},
 		}},
 		Timeout:      7 * time.Minute,
@@ -75,6 +78,8 @@ func init() {
 func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	param := s.Param().(userParam)
 	poolID := param.poolID
+	expectedIdPURL := param.expectedIdPURL
+	signinProfileTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
@@ -120,13 +125,9 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	}
 	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
-	// Waiting for prior deprovisionings to be finished.
-	// TODO(b:259513140): Add deterministic waiting on server side.
-	testing.Sleep(ctx, 1*time.Minute)
-
 	service := enterpriseconnectors.NewDeviceTrustServiceClient(cl.Conn)
 	s.Log("Enrolling device")
-	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password}); err != nil {
+	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password, ExpectedIdPURL: expectedIdPURL, SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
 		s.Fatal("Remote call Enroll() failed: ", err)
 	}
 	defer service.StopChrome(cleanupCtx, &empty.Empty{})
@@ -138,7 +139,7 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if _, err := service.LoginWithFakeIdP(ctx, &enterpriseconnectors.LoginWithFakeIdPRequest{SigninProfileTestExtensionManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey")}); err != nil {
+	if _, err := service.LoginWithFakeIdP(ctx, &enterpriseconnectors.LoginWithFakeIdPRequest{SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
 		s.Fatal("Remote call LoginWithFakeIdP() failed: ", err)
 	}
 

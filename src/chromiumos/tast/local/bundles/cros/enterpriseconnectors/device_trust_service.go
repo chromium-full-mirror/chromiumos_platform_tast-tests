@@ -12,12 +12,14 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/enterpriseconnectors/signals"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/policyutil"
 	pb "chromiumos/tast/services/cros/enterpriseconnectors"
 	"chromiumos/tast/testing"
 )
@@ -54,11 +56,51 @@ func (service *DeviceTrustService) Enroll(ctx context.Context, req *pb.EnrollReq
 	opts = append(opts, chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.User, Pass: req.Pass}))
 	opts = append(opts, chrome.DMSPolicy(sandboxDMServer))
 	opts = append(opts, chrome.NoLogin())
+	opts = append(opts, chrome.LoadSigninProfileExtension(req.SigninProfileTestExtensionManifestKey))
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}
 	defer cr.Close(ctx)
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating login test API connection failed")
+	}
+
+	// Verify that the policy DeviceLoginScreenContextAwareAccessSignalsAllowlist was applied correctly by the device trust connector.
+	testing.ContextLog(ctx, "Verifying policy DeviceLoginScreenContextAwareAccessSignalsAllowlist")
+	po := &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 1 * time.Second}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := policyutil.Refresh(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to refresh enterprise policies")
+		}
+
+		dps, err := policyutil.PoliciesFromDUT(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch policies from DUT")
+		}
+
+		expected := &policy.DeviceLoginScreenContextAwareAccessSignalsAllowlist{Val: []string{req.ExpectedIdPURL}}
+		actual, ok := dps.Chrome[expected.Name()]
+		if !ok {
+			return errors.New("policy DeviceLoginScreenContextAwareAccessSignalsAllowlist was not set on DUT")
+		}
+
+		// Compare policy value.
+		actualUnmarshaled, err := expected.UnmarshalAs(actual.ValueJSON)
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal the policy value")
+		}
+
+		if !expected.Equal(actualUnmarshaled) {
+			return errors.Errorf("unexpected value for DeviceLoginScreenContextAwareAccessSignalsAllowlist = got %q, want %q", actualUnmarshaled, expected.Val)
+		}
+
+		return nil
+	}, po); err != nil {
+		return nil, errors.Wrap(err, "failed to verify policy DeviceLoginScreenContextAwareAccessSignalsAllowlist")
+	}
 
 	return &empty.Empty{}, nil
 }

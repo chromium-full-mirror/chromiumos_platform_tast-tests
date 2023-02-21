@@ -9,6 +9,8 @@ option go_package = "chromiumos/tast/services/cros/enterpriseconnectors";
 message EnrollRequest {
   string user = 1;
   string pass = 2;
+  string expectedIdPURL = 3;
+  string signinProfileTestExtensionManifestKey = 4;
 }
 
 message LoginWithFakeIdPRequest {
