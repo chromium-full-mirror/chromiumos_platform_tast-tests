@@ -40,19 +40,15 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               testParams{},
 		}, {
-			Name:              "vm_r",
-			ExtraSoftwareDeps: []string{"android_vm_r"},
+			Name:              "vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               testParams{},
 		}, {
-			Name:              "no_guest_ureadahead_vm_r",
-			ExtraSoftwareDeps: []string{"android_vm_r"},
+			Name:              "no_guest_ureadahead_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParams{
 				chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
 			},
-		}, {
-			Name:              "vm_t",
-			ExtraSoftwareDeps: []string{"android_vm_t"},
-			Val:               testParams{},
 		}},
 		VarDeps: []string{
 			"arc.perfAccountPool",
