@@ -30,8 +30,6 @@ type igtResultSummary struct {
 	skipped int // number of skipped subtests
 }
 
-var igtSubtestResultRegex = regexp.MustCompile("^Subtest (.*): ([A-Z]+)")
-
 // IgtExecuteTests executes the IGT binary of the an IgtTest. If the test has a subtest, it executes it as well. Otherwise, it executes the entire test.
 func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *exec.ExitError, error) {
 	exePath := filepath.Join("/usr/local/libexec/igt-gpu-tools", testOpt.Exe)
@@ -55,17 +53,20 @@ func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *e
 }
 
 func igtSummarizeLog(f *os.File) (r igtResultSummary, failedSubtests []string) {
+	var igtSubtestResultRegex = regexp.MustCompile("^(?:Subtest (.*): )?([A-Z]+)")
+
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		if m := igtSubtestResultRegex.FindStringSubmatch(scanner.Text()); m != nil {
-			subtestName := m[1]
 			result := m[2]
 			switch result {
 			case "SKIP":
 				r.skipped++
 			case "FAIL":
 				r.failed++
-				failedSubtests = append(failedSubtests, subtestName)
+				if subtestName := m[1]; subtestName != "" {
+					failedSubtests = append(failedSubtests, subtestName)
+				}
 			case "SUCCESS":
 				r.passed++
 			}
