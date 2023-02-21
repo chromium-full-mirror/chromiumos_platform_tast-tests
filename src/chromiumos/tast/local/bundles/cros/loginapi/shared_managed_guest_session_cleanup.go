@@ -74,10 +74,10 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 
 	accountID := "foo@managedchrome.com"
 
-	// ID for Google Keep extension. Note this extension is arbitrarily chosen
+	// ID for Chromebook Recovery Utility app. Note this app is arbitrarily chosen
 	// and is used to test the
 	// RestrictedManagedGuestSessionExtensionCleanupExemptList policy.
-	googleKeepExtensionID := "lpcaedmchfhocbbapmcbpinfpgnhiddi"
+	testAppID := "jndclpdbaamdhonoechobihbbiimdgai"
 	// ID for the Test API extension.
 	testAPIExtensionID := "behllobkkfkfnphdnhnkndlbkcpglgmj"
 
@@ -87,7 +87,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		mgs.Accounts(accountID),
 		mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
 			&policy.ExtensionInstallForcelist{
-				Val: []string{mgs.InSessionExtensionID, googleKeepExtensionID},
+				Val: []string{mgs.InSessionExtensionID, testAppID},
 			},
 			&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{
 				Val: []string{mgs.InSessionExtensionID, testAPIExtensionID},
@@ -159,15 +159,15 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed watch for screen lock: ", err)
 	}
 
-	googleKeepBGURL := chrome.ExtensionBackgroundPageURL(googleKeepExtensionID)
-	googleKeepConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(googleKeepBGURL))
+	testAppBGURL := chrome.ExtensionBackgroundPageURL(testAppID)
+	testAppConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(testAppBGURL))
 	if err != nil {
-		s.Fatal("Failed to connect to Google Keep background page: ", err)
+		s.Fatal("Failed to connect to test app background page: ", err)
 	}
-	defer googleKeepConn.Close()
+	defer testAppConn.Close()
 
-	// Store arbitrary data in localStorage of the Google Keep extension.
-	if err := googleKeepConn.Eval(ctx, `new Promise((resolve, reject) => {
+	// Store arbitrary data in localStorage of the test app.
+	if err := testAppConn.Eval(ctx, `new Promise((resolve, reject) => {
 		chrome.storage.local.set({foo: 1}, () => {
 			if (chrome.runtime.lastError) {
 				reject(new Error(chrome.runtime.lastError.message));
@@ -176,7 +176,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 			resolve();
 		});
 	})`, nil); err != nil {
-		s.Fatal("Failed to set localStorage for Google Keep: ", err)
+		s.Fatal("Failed to set localStorage for test app: ", err)
 	}
 
 	// Open a non-trivial webpage that takes longer to unload.
@@ -262,20 +262,20 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("In-session extension conn closed unexpectedly: ", err)
 	}
 
-	// Cleanup should have closed the Google Keep extension connection.
-	if err := checkConnIsAlive(ctx, googleKeepConn); err == nil {
-		s.Fatal("Google Keep extension conn was not closed: ", err)
+	// Cleanup should have closed the test app connection.
+	if err := checkConnIsAlive(ctx, testAppConn); err == nil {
+		s.Fatal("Test app conn was not closed: ", err)
 	}
 
-	// Create new connection for Google Keep since the old one was closed.
-	googleKeepConn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(googleKeepBGURL))
+	// Create new connection for the test app since the old one was closed.
+	testAppConn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(testAppBGURL))
 	if err != nil {
-		s.Fatal("Failed to connect to Google Keep background page: ", err)
+		s.Fatal("Failed to connect to test app background page: ", err)
 	}
-	defer googleKeepConn2.Close()
+	defer testAppConn2.Close()
 
 	// Check that localStorage is cleared.
-	if err := googleKeepConn2.Eval(ctx, `new Promise((resolve, reject) => {
+	if err := testAppConn2.Eval(ctx, `new Promise((resolve, reject) => {
 		chrome.storage.local.get((data) => {
 			if (chrome.runtime.lastError) {
 				reject(new Error(chrome.runtime.lastError.message));
@@ -288,7 +288,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 			resolve();
 		});
 	})`, nil); err != nil {
-		s.Fatal("Local storage for Google Keep was not cleared: ", err)
+		s.Fatal("Local storage for test app was not cleared: ", err)
 	}
 
 	// Cleanup should have closed all open browser windows.
