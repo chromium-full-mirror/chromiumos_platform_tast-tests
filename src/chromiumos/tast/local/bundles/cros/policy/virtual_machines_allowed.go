@@ -28,8 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that installing Crostini is allowed only when VirtualMachinesAllowed policy is enabled",
 		Contacts: []string{
-			"janagrill@google.com", // Test author
+			"clumptini+oncall@google.com", // Crostini
+			"nverne@google.com",
 		},
+		BugComponent: "b:1122570", // ChromeOS > Software > GuestOS > Crostini
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
