@@ -142,20 +142,17 @@ func writeLXCLogs(ctx context.Context, dir string, machine *vm.VM) {
 	defer f.Close()
 
 	f.WriteString("lxc info and lxc.log:\n")
-	cmd := machine.Command(ctx, "sh", "-c", "LXD_DIR=/mnt/stateful/lxd LXD_CONF=/mnt/stateful/lxd_conf lxc info penguin --show-log")
-	cmd.Stdout = f
-	cmd.Stderr = f
-	err = cmd.Run()
+
+	result, err := machine.LXCCommandCombined(ctx, "info penguin --show-log")
 	if err != nil {
 		testing.ContextLog(ctx, "Error getting lxc logs: ", err)
 	}
+	f.WriteString(string(result) + "\n")
 
 	f.WriteString("\n\nconsole.log:\n")
-	cmd = machine.Command(ctx, "sh", "-c", "LXD_DIR=/mnt/stateful/lxd  LXD_CONF=/mnt/stateful/lxd_conf lxc console penguin --show-log")
-	cmd.Stdout = f
-	cmd.Stderr = f
-	err = cmd.Run()
+	result, err = machine.LXCCommandCombined(ctx, "console penguin --show-log")
 	if err != nil {
 		testing.ContextLog(ctx, "Error getting boot logs: ", err)
 	}
+	f.WriteString(string(result) + "\n")
 }
