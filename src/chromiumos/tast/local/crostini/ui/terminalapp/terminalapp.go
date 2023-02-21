@@ -146,6 +146,17 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 	return ta, nil
 }
 
+// dismissLeaveAppDialogIfShown dimisses the "Leave app?" dialog if shown.
+func (ta *TerminalApp) dismissLeaveAppDialogIfShown() uiauto.Action {
+	return uiauto.IfSuccessThen(
+		ta.ui.WithTimeout(time.Second).WaitUntilExists(terminalLeaveButton),
+		ta.ui.LeftClickUntil(
+			terminalLeaveButton,
+			ta.ui.WithTimeout(time.Second).WaitUntilGone(terminalLeaveButton),
+		),
+	)
+}
+
 // SetUpSSHConnection sets up a ssh connection to chronos@localhost.
 func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 	cmd := "chronos@localhost -o StrictHostKeyChecking=no " + sshArgs
@@ -186,7 +197,7 @@ func (ta *TerminalApp) DeleteSSHConnection(name string) uiauto.Action {
 		uiauto.Combine("delete ssh link "+name,
 			ta.ui.LeftClick(nodewith.Name("Options").Role(role.Button)),
 			ta.ui.LeftClick(nodewith.Name("Remove").Role(role.StaticText)),
-			ta.ui.LeftClick(nodewith.Name("OK").Role(role.Button)),
+			ta.ui.LeftClick(nodewith.Name("OK").Role(role.Button).Ancestor(nodewith.Role(role.Dialog))),
 			ta.ui.WaitUntilGone(l),
 		))
 }
@@ -205,6 +216,7 @@ func (ta *TerminalApp) ExitSSH() uiauto.Action {
 		ta.RunSSHCommand("exit"),
 		ta.ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`Connection to \S+ closed.`)).Role(role.StaticText).First()),
 		ta.Kb.AccelAction("Esc"),
+		ta.dismissLeaveAppDialogIfShown(),
 		ta.Kb.AccelAction("Ctrl+Shift+W"),
 	)
 }
@@ -337,13 +349,7 @@ func (ta *TerminalApp) Exit(keyboard *input.KeyboardEventWriter) uiauto.Action {
 func (ta *TerminalApp) Close() uiauto.Action {
 	return uiauto.Combine("close Terminal window",
 		ta.ClickShelfMenuItem("Close"),
-		uiauto.IfSuccessThen(
-			ta.ui.WithTimeout(time.Second).WaitUntilExists(terminalLeaveButton),
-			ta.ui.LeftClickUntil(
-				terminalLeaveButton,
-				ta.ui.WithTimeout(time.Second).WaitUntilGone(rootWindow),
-			),
-		),
+		ta.dismissLeaveAppDialogIfShown(),
 		ta.ui.WithTimeout(time.Minute).WaitUntilGone(rootWindow))
 }
 
@@ -394,14 +400,7 @@ func (ta *TerminalApp) ClickNthTabUntilNodeExists(n int, finder *nodewith.Finder
 func (ta *TerminalApp) ClickNthTabCloseButton(n int) uiauto.Action {
 	return uiauto.Combine(fmt.Sprintf("clicking the tab close button (n=%d)", n),
 		ta.ui.LeftClick(nodewith.ClassName("TabCloseButton").Nth(n)),
-		uiauto.IfSuccessThen(
-			ta.ui.WithTimeout(time.Second).WaitUntilExists(terminalLeaveButton),
-			// It looks like we need to click it a few times.
-			ta.ui.LeftClickUntil(
-				terminalLeaveButton,
-				ta.ui.WithTimeout(time.Second).WaitUntilGone(terminalLeaveButton),
-			),
-		),
+		ta.dismissLeaveAppDialogIfShown(),
 	)
 }
 
