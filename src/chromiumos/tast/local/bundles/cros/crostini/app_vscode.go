@@ -7,7 +7,6 @@ package crostini
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -146,7 +145,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	)
 
 	ui := uiauto.New(tconn)
-	appWindow := nodewith.NameRegex(regexp.MustCompile("Visual Studio Code")).Role(role.Window).First()
+	appWindow := nodewith.NameContaining("Visual Studio Code").Role(role.Window).First()
 	appWindowUnsaved := nodewith.NameStartingWith(fmt.Sprintf("● %s - Visual Studio Code", testNewFile)).Role(role.Window).First()
 	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - Visual Studio Code", testSavedFile)).Role(role.Window).First()
 
@@ -165,10 +164,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 		// Launch Visual Studio Code.
 		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testNewFile)),
 		// Wait until the window is stable.
-		// b/252698065: it always fail to find "File" on model jinlon, find "Terminal" instead.
-		uiauto.IfFailThen(
-			uda.WaitUntilExists(uidetection.Word("File")),
-			uda.WaitUntilExists(uidetection.Word("Terminal"))),
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow)),
 		// Left click the app window header to focus.
 		// Do not click the center of the app window, which may unexpectedly
 		// set the theme, see http://b/264336806.
@@ -184,7 +180,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	// File -> Save As -> Type file name -> Save.
 	// This corresponds to step 5 at https://testtracker.googleplex.com/testplans/testcase/detail/4163083?id=18920&revision=232.
 	saveFile := uiauto.Combine("save file from save as... dialouge",
-		uda.LeftClick(uidetection.Word("File")),
+		uda.LeftClick(uidetection.Word("File").WithinA11yNode(appWindow)),
 		// "Save Workspace As...", "Save", and "Save As..." match the criteria, choose the third one.
 		uda.LeftClick(uidetection.Word("Save").Nth(2)),
 		uda.WaitUntilExists(uidetection.Word("Desktop").WithinA11yNode(saveAsWindow)),
@@ -201,7 +197,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 		ui.LeftClick(appWindowUnsaved),
 		// Sometimes the first character got lost if input immediately.
 		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("File")),
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow)),
 		keyboard.TypeAction(testString),
 		saveFile,
 		ui.WaitUntilExists(appWindowSaved),
