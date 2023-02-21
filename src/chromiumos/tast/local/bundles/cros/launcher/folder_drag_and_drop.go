@@ -38,12 +38,12 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Val:     launcher.TestCase{TabletMode: false},
-			Fixture: "chromeLoggedInWith100FakeAppsNoAppSort",
+			Fixture: "chromeLoggedInWith100FakeApps",
 		}, {
 			Name:              "tablet_mode",
 			Val:               launcher.TestCase{TabletMode: true},
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-			Fixture:           "chromeLoggedInWith100FakeAppsNoAppSort",
+			Fixture:           "chromeLoggedInWith100FakeApps",
 		}},
 	})
 }

@@ -90,35 +90,6 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// TODO(crbug.com/1351225): Move tests from this fixture to chromeLoggedInWith100FakeApps.
-	// This fixture used to force-enable productivity launcher. Several tests seem to use it for
-	// that reason and likely don't depend on app sorting behavior.
-	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWith100FakeAppsNoAppSort,
-		Desc:     "Logged into a user session with 100 fake apps and app sorting disabled",
-		Contacts: []string{"jamescook@chromium.org"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{DisableFeatures("LauncherAppSort")}, nil
-		}),
-		Parent:          "install100Apps",
-		SetUpTimeout:    LoginTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWith100FakeAppsAppSort,
-		Desc:     "Logged into a user session with 100 fake apps and app sorting enabled",
-		Contacts: []string{"andrewxu@chromium.org"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("LauncherAppSort")}, nil
-		}),
-		Parent:          "install100Apps",
-		SetUpTimeout:    LoginTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithCalendarView,
 		Desc:     "Logged into a session with Gaia user where CalendarView is enabled",

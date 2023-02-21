@@ -18,10 +18,6 @@ const (
 	ChromeLoggedInWith100FakeApps = "chromeLoggedInWith100FakeApps"
 	// Logged into a user session with 100 fake apps and the passthrough command decoder enabled.
 	ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder = "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder"
-	// Logged into a user session with 100 fake apps and app sorting disabled.
-	ChromeLoggedInWith100FakeAppsNoAppSort = "chromeLoggedInWith100FakeAppsNoAppSort"
-	// Logged into a user session with 100 fake apps and app sorting enabled.
-	ChromeLoggedInWith100FakeAppsAppSort = "chromeLoggedInWith100FakeAppsAppSort"
 	// Logged into a session with Gaia user where CalendarView is enabled.
 	ChromeLoggedInWithCalendarView = "chromeLoggedInWithCalendarView"
 	// Logged into a session with Gaia user where there are events set up to join Hangout meetings.

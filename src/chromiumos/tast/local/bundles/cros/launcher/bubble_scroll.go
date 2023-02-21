@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -42,7 +41,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWith100FakeAppsNoAppSort",
+		Fixture:      "chromeLoggedInWith100FakeApps",
 	})
 }
 
@@ -72,23 +71,28 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 	// On failure, take the screenshot before the above cleanup() happens.
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	// Get the expected browser, which might be "Chromium" on unbranded builds.
-	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to find the chrome app: ", err)
-	}
-
-	// Wait for the chrome icon in the main apps grid (not recent apps) to stabilize.
-	appsGrid := nodewith.HasClass(launcher.BubbleAppsGridViewClass)
-	chromeItem := nodewith.HasClass(launcher.ExpandedItemsClass).
-		Ancestor(appsGrid).Name(chromeApp.Name)
 	ui := uiauto.New(tconn)
-	if err := ui.WaitForLocation(chromeItem)(ctx); err != nil {
-		s.Fatal("Failed to wait for Chrome item location to be idle: ", err)
+	appsGrid := nodewith.HasClass(launcher.BubbleAppsGridViewClass)
+	// Find the first app list item in the root apps grid (not recent apps).
+	appListItems, err := ui.NodesInfo(ctx, nodewith.ClassName(launcher.ExpandedItemsClass).Ancestor(appsGrid))
+	if err != nil {
+		s.Fatal("Unable to get app list item nodes: ", err)
+	}
+	if len(appListItems) == 0 {
+		s.Fatal("List of app list items empty")
 	}
 
-	// Chrome icon should be onscreen by default.
-	if err := waitUntilOnscreen(ctx, ui, chromeItem); err != nil {
+	// Create the node finder for the app icon whose visibility will be tested to
+	// verify that the app list view scrolled.
+	testItem := nodewith.HasClass(launcher.ExpandedItemsClass).
+		Ancestor(appsGrid).Name(appListItems[0].Name)
+
+	// Make sure that the test item location has stabilized, and verify the icon
+	// is initially on screen.
+	if err := ui.WaitForLocation(testItem)(ctx); err != nil {
+		s.Fatal("Failed to wait for test item location to be idle: ", err)
+	}
+	if err := waitUntilOnscreen(ctx, ui, testItem); err != nil {
 		s.Fatal("Chrome item not onscreen at test start: ", err)
 	}
 
@@ -120,8 +124,8 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 	}
 
 	// Chrome icon should move offscreen.
-	if err := waitUntilOffscreen(ctx, ui, chromeItem); err != nil {
-		s.Fatal("Chrome item not offscreen after touch scroll up: ", err)
+	if err := waitUntilOffscreen(ctx, ui, testItem); err != nil {
+		s.Fatal("Test item not offscreen after touch scroll up: ", err)
 	}
 
 	// Swipe down in the reverse direction.
@@ -129,9 +133,9 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to swipe down: ", err)
 	}
 
-	// Chrome icon should move back onscreen.
-	if err := waitUntilOnscreen(ctx, ui, chromeItem); err != nil {
-		s.Fatal("Chrome item not onscreen after touch scroll down: ", err)
+	// Test icon should move back onscreen.
+	if err := waitUntilOnscreen(ctx, ui, testItem); err != nil {
+		s.Fatal("Test item not onscreen after touch scroll down: ", err)
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -164,9 +168,9 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to drag scroll thumb down from %v to %v: %v", dragStart, dragEnd, err)
 	}
 
-	// Chrome icon should scroll offscreen.
-	if err := waitUntilOffscreen(ctx, ui, chromeItem); err != nil {
-		s.Fatal("Chrome item did not scroll offscreen: ", err)
+	// Test icon should scroll offscreen.
+	if err := waitUntilOffscreen(ctx, ui, testItem); err != nil {
+		s.Fatal("Test item did not scroll offscreen: ", err)
 	}
 
 	// Drag scroll thumb up to the top by doing the same drag in reverse.
@@ -174,9 +178,9 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to drag scroll thumb up from %v to %v: %v", dragEnd, dragStart, err)
 	}
 
-	// Chrome item should scroll back onscreen.
-	if err := waitUntilOnscreen(ctx, ui, chromeItem); err != nil {
-		s.Fatal("Chrome item did not scroll back onscreen: ", err)
+	// Test item should scroll back onscreen.
+	if err := waitUntilOnscreen(ctx, ui, testItem); err != nil {
+		s.Fatal("Test item did not scroll back onscreen: ", err)
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -193,9 +197,9 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to send up key: ", err)
 	}
 
-	// Chrome icon should scroll offscreen.
-	if err := waitUntilOffscreen(ctx, ui, chromeItem); err != nil {
-		s.Fatal("Chrome item did not scroll offscreen with keyboard: ", err)
+	// Test icon should scroll offscreen.
+	if err := waitUntilOffscreen(ctx, ui, testItem); err != nil {
+		s.Fatal("Test item did not scroll offscreen with keyboard: ", err)
 	}
 
 	// Highlight recent apps by pressing the down key twice.
@@ -206,9 +210,9 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to send down key again: ", err)
 	}
 
-	// Chrome icon should be onscreen again.
-	if err := waitUntilOnscreen(ctx, ui, chromeItem); err != nil {
-		s.Fatal("Chrome item did not scroll onscreen with keyboard: ", err)
+	// Test icon should be onscreen again.
+	if err := waitUntilOnscreen(ctx, ui, testItem); err != nil {
+		s.Fatal("Test item did not scroll onscreen with keyboard: ", err)
 	}
 }
 

@@ -50,7 +50,7 @@ func init() {
 		BugComponent: "b:1288352",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWith100FakeAppsNoAppSort",
+		Fixture:      "chromeLoggedInWith100FakeApps",
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  launcher.TestCase{TabletMode: false},
