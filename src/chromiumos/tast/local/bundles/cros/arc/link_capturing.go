@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	arcui "chromiumos/tast/common/android/ui"
@@ -129,6 +130,9 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 	if err := arcDevice.Install(ctx, arc.APKPath(testApk)); err != nil {
 		s.Fatal("Failed installing the APK: ", err)
 	}
+
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	// Enable link capturing on the ARC side. Automatically verifying the link
 	// (as per https://developer.android.com/training/app-links/verify-site-associations)
