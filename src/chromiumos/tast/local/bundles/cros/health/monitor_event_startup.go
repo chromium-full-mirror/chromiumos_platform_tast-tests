@@ -47,6 +47,13 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "hdmi",
+			Val: eventStartupParams{
+				category: "hdmi",
+				duration: 3 * time.Second,
+			},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
