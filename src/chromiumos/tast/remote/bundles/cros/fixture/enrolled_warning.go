@@ -1,0 +1,47 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package fixture
+
+import (
+	"context"
+
+	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/remote/policyutil"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         EnrolledWarning,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Showing errors of failed attempts in enrolled fixture",
+		Contacts: []string{
+			"cros-engprod-muc@google.com",
+			"gabormagda@google.com", // Test author
+		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
+		Params: []testing.Param{{
+			Name:      "mainline",
+			ExtraAttr: []string{"group:mainline", "informational"},
+		}, {
+			Name:      "golden",
+			ExtraAttr: []string{"group:golden_tier"},
+		}, {
+			Name:      "complementary",
+			ExtraAttr: []string{"group:complementary"},
+		}},
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Fixture:      fixture.Enrolled,
+	})
+}
+
+func EnrolledWarning(ctx context.Context, s *testing.State) {
+	// TODO(b/243629567): Remove this test when the workarounds from the enrolled fixture
+	// are removed.
+	errs := s.FixtValue().(*policyutil.FixtData).Errors()
+	for _, err := range errs {
+		s.Error("Failed enrollment attempt in the Enrolled fixture: ", err)
+	}
+}

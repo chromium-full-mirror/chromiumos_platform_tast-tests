@@ -58,6 +58,17 @@ type enrolledFixt struct {
 	fdmsDir string
 }
 
+// FixtData holds information made available to tests that specify this Fixture.
+type FixtData struct {
+	// errors contains the errors of the enrollment attempts.
+	errors []error
+}
+
+// Errors implements the fixture.WithErrors interface.
+func (f FixtData) Errors() []error {
+	return f.errors
+}
+
 func dumpVPDContent(ctx context.Context, d *dut.DUT) ([]byte, error) {
 	out, err := d.Conn().CommandContext(ctx, "vpd", "-i", "RW_VPD", "-l").Output(ssh.DumpLogOnError)
 	if err != nil {
@@ -163,6 +174,7 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}()
 
+	// TODO(b/243629567): Remove the retries when the fixture is stable enough.
 	for tries := 1; tries < 5; tries++ {
 		// Make sure we have enough time to perform enrollment.
 		// This helps differentiate real issues from timeout hitting different components.
@@ -198,7 +210,9 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}
 
-	return nil
+	return &FixtData{
+		errors: errs,
+	}
 }
 
 func (e *enrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
