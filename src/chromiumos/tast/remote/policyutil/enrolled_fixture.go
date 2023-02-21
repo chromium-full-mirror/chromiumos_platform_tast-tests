@@ -188,15 +188,14 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 
 		if err := enroll(enrollCtx, attemptDir, s.DUT(), s.RPCHint(), e.fdmsDir); err != nil {
+			s.Logf("Attempt %d failed", tries)
 			errs = append(errs, err)
 		} else {
 			// When the enrollment is successful, there is no need to retry again.
+			s.Logf("Attempt %d succeded", tries)
+			ok = true
 			break
 		}
-	}
-
-	if len(errs) == 0 {
-		ok = true
 	}
 
 	return nil
