@@ -47,12 +47,13 @@ const (
 
 // Context provides functionalities for image-based UI automation.
 type Context struct {
-	tconn              *chrome.TestConn
-	detector           *uiDetector
-	pollOpts           testing.PollOptions
-	options            *Options
-	screenshotStrategy ScreenshotStrategy
-	resizingEnabled    bool
+	tconn                        *chrome.TestConn
+	detector                     *uiDetector
+	pollOpts                     testing.PollOptions
+	options                      *Options
+	screenshotStrategy           ScreenshotStrategy
+	resizingEnabled              bool
+	disableDynamicElementMasking bool
 }
 
 // New returns a new UI Detection automation instance.
@@ -127,6 +128,15 @@ func (uda *Context) WithScreenshotStrategy(s ScreenshotStrategy) *Context {
 func (uda *Context) WithScreenshotResizing() *Context {
 	c := uda.copy()
 	c.resizingEnabled = true
+	return c
+}
+
+// DisableDynamicElementMasking returns a new Context that disables masking dynamic
+// elements: date, time, network status and power status.
+// ONLY USE THIS when intentionally doing detection in these regions.
+func (uda *Context) DisableDynamicElementMasking() *Context {
+	c := uda.copy()
+	c.disableDynamicElementMasking = true
 	return c
 }
 

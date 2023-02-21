@@ -20,6 +20,8 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
@@ -129,10 +131,16 @@ func drawRectangle(img draw.Image, color color.Color, x1, y1, x2, y2 int) draw.I
 }
 
 // takeScreenshot takes a screenshot in PNG format.
-func takeScreenshot(ctx context.Context, tconn *chrome.TestConn, boundingBox coords.Rect) (image.Image, error) {
+func takeScreenshot(ctx context.Context, tconn *chrome.TestConn, boundingBox coords.Rect, scaleFactor float64, disableMaskDynamics bool) (image.Image, error) {
 	uncropped, err := screenshot.CaptureChromeImageWithTestAPI(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to take the screenshot")
+	}
+	if !disableMaskDynamics {
+		uncropped, err = maskDynamics(ctx, tconn, uncropped, scaleFactor)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to mask dynamic elements in screenshot")
+		}
 	}
 
 	cropped, err := crop(uncropped, boundingBox)
@@ -145,7 +153,7 @@ func takeScreenshot(ctx context.Context, tconn *chrome.TestConn, boundingBox coo
 
 // takeStableScreenshot takes a stable screenshot in PNG format that doesn't
 // change between two polls.
-func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts testing.PollOptions, boundingBox coords.Rect) (image.Image, error) {
+func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts testing.PollOptions, boundingBox coords.Rect, scaleFactor float64, disableMaskDynamics bool) (image.Image, error) {
 	var currentScreen image.Image
 	var lastScreen image.Image
 	start := time.Now()
@@ -155,6 +163,12 @@ func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts 
 		uncropped, err := screenshot.CaptureChromeImageWithTestAPI(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to take immediate screenshot")
+		}
+		if !disableMaskDynamics {
+			uncropped, err = maskDynamics(ctx, tconn, uncropped, scaleFactor)
+			if err != nil {
+				return errors.Wrap(err, "failed to mask dynamic elements in screenshot")
+			}
 		}
 		currentScreen, err = crop(uncropped, boundingBox)
 		if err != nil {
@@ -175,6 +189,43 @@ func takeStableScreenshot(ctx context.Context, tconn *chrome.TestConn, pollOpts 
 		return nil, errors.Wrap(err, "failed to take stable screenshot")
 	}
 	return currentScreen, nil
+}
+
+func maskDynamics(ctx context.Context, tconn *chrome.TestConn, screenshot image.Image, scaleFactor float64) (image.Image, error) {
+	maskedScreenshot := image.NewRGBA(screenshot.Bounds())
+	draw.Draw(maskedScreenshot, screenshot.Bounds(), screenshot, image.Point{}, draw.Src)
+	var err error
+
+	for _, node := range []*nodewith.Finder{
+		nodewith.HasClass("TimeView").Ancestor(nodewith.HasClass("DateTray")).Onscreen(),
+		nodewith.HasClass("TimeView").Ancestor(nodewith.HasClass("UnifiedSystemTray")).Onscreen(),
+		nodewith.HasClass("NetworkTrayView").Ancestor(nodewith.HasClass("UnifiedSystemTray")).Onscreen(),
+		nodewith.HasClass("PowerTrayView").Ancestor(nodewith.HasClass("UnifiedSystemTray")).Onscreen(),
+	} {
+		maskedScreenshot, err = maskA11yNode(ctx, tconn, maskedScreenshot, node, scaleFactor)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to mask node: %s", node.Pretty())
+		}
+	}
+	return maskedScreenshot, nil
+}
+
+func maskA11yNode(ctx context.Context, tconn *chrome.TestConn, screenshot *image.RGBA, node *nodewith.Finder, scaleFactor float64) (*image.RGBA, error) {
+	coordinatesDP, err := uiauto.New(tconn).ImmediateLocation(ctx, node)
+	if err != nil {
+		// Do not mask if the node is not onscreen.
+		if nodewith.IsNodeNotFoundErr(err) {
+			return screenshot, nil
+		}
+		return nil, err
+	}
+	coordinatesPX := coords.ConvertBoundsFromDPToPX((*coordinatesDP), scaleFactor)
+	bounds := image.Rectangle{
+		Min: image.Point(coordinatesPX.TopLeft()),
+		Max: image.Point(coordinatesPX.BottomRight()),
+	}
+	draw.Draw(screenshot, bounds, &image.Uniform{color.Black}, image.Point{}, draw.Src)
+	return screenshot, nil
 }
 
 // encodePNG converts an image.Image to a PNG.

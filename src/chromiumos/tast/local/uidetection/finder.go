@@ -298,12 +298,12 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 
 	switch uda.screenshotStrategy {
 	case StableScreenshot:
-		image, err = takeStableScreenshot(ctx, uda.tconn, uda.pollOpts, boundingBox)
+		image, err = takeStableScreenshot(ctx, uda.tconn, uda.pollOpts, boundingBox, scaleFactor, uda.disableDynamicElementMasking)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to take stable screenshot")
 		}
 	case ImmediateScreenshot:
-		image, err = takeScreenshot(ctx, uda.tconn, boundingBox)
+		image, err = takeScreenshot(ctx, uda.tconn, boundingBox, scaleFactor, uda.disableDynamicElementMasking)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to take screenshot")
 		}
