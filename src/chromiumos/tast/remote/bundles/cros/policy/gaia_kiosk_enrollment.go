@@ -57,16 +57,17 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	dmServerURL := param.DMServer
 	poolID := param.PoolID
 
-	// Shorten deadline to leave time for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
-	defer cancel()
-
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 			s.Error("Failed to reset TPM after test: ", err)
 		}
-	}(cleanupCtx)
+	}(ctx)
+
+	// Shorten deadline to leave time separately for resetting the TPM and for logging and cleanup.
+	cleanupCtx, cleanupCancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cleanupCancel()
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
+	defer cancel()
 
 	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 		s.Fatal("Failed to reset TPM: ", err)
@@ -86,7 +87,7 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 
 		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: "enrollmentError"})
 	}
-	defer captureScreenshotOnError(ctx, s.HasError)
+	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
 	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
 	kc := kspb.NewKioskServiceClient(cl.Conn)
@@ -123,7 +124,7 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
-	defer policyClient.StopChrome(ctx, &empty.Empty{})
+	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
 
 	// Deprovision the DUT at the end of the test.
 	defer func(ctx context.Context) {

@@ -56,15 +56,17 @@ func GAIABytebotEnrollment(ctx context.Context, s *testing.State) {
 	dmServerURL := param.DMServer
 	poolID := param.PoolID
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
-	defer cancel()
-
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
 			s.Error("Failed to reset TPM after test: ", err)
 		}
-	}(cleanupCtx)
+	}(ctx)
+
+	// Shorten deadline to leave time separately for resetting the TPM and for logging and cleanup.
+	cleanupCtx, cleanupCancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cleanupCancel()
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
+	defer cancel()
 
 	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
 		s.Fatal("Failed to reset TPM: ", err)
@@ -82,7 +84,7 @@ func GAIABytebotEnrollment(ctx context.Context, s *testing.State) {
 			return
 		}
 
-		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: "enrollmentError"})
+		screenshotService.CaptureScreenshot(cleanupCtx, &graphics.CaptureScreenshotRequest{FilePrefix: "enrollmentError"})
 	}
 	defer captureScreenshotOnError(ctx, s.HasError)
 
@@ -108,7 +110,7 @@ func GAIABytebotEnrollment(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
-	defer policyClient.StopChrome(ctx, &empty.Empty{})
+	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
 
 	pJSON, err := policy.MarshalList([]policy.Policy{
 		&policy.PluginVmUserId{Stat: policy.StatusSet, Val: "********"},
