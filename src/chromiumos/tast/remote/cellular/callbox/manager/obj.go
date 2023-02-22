@@ -8,18 +8,54 @@ import (
 	"fmt"
 )
 
-// ConfigureCallboxRequestBody is the request body for ConfigureCallbox requests.
-type ConfigureCallboxRequestBody struct {
-	Callbox       string   `json:"callbox,omitempty"`
-	Hardware      string   `json:"hardware,omitempty"`
-	CellularType  string   `json:"cellular_type,omitempty"`
-	ParameterList []string `json:"parameter_list,omitempty"`
+// Band represents a RAT frequency band.
+type Band string
+
+// NewBand returns a Band given an integer band number.
+func NewBand(band int) Band {
+	return Band(fmt.Sprintf("%d", band))
 }
 
-// BeginSimulationRequestBody is the request body for BeginSimulation requests.
-type BeginSimulationRequestBody struct {
-	Callbox string `json:"callbox,omitempty"`
-}
+// Bandwidth represents the carrier bandwidth to set on the callbox.
+type Bandwidth string
+
+// Supported bandwidths.
+const (
+	Bandwidth1MHz  = "1.4"
+	Bandwidth2MHz  = "2"
+	Bandwidth5Mhz  = "5"
+	Bandwidth10MHz = "10"
+	Bandwidth15MHz = "15"
+	Bandwidth20MHz = "20"
+)
+
+// CallboxHardware represents the type of callbox that the DUT is connected to.
+type CallboxHardware string
+
+// Supported callbox hardware types.
+const (
+	CallboxHardwareCMW = "CMW"
+)
+
+// CellularTechnology represents cellular network technology.
+type CellularTechnology string
+
+const (
+	// CellularTechnologyLTE represents an LTE cellular network.
+	CellularTechnologyLTE CellularTechnology = "LTE"
+	// CellularTechnologyWCDMA represents a WCDMA cellular network.
+	CellularTechnologyWCDMA CellularTechnology = "WCDMA"
+)
+
+// MimoMode represents a cellular MIMO configuration.
+type MimoMode string
+
+// Supported MIMO modes.
+const (
+	MimoMode1x1 MimoMode = "1x1"
+	MimoMode2x2 MimoMode = "2x2"
+	MimoMode4x4 MimoMode = "4x4"
+)
 
 // RxPower is a predefined callbox Rx (downlink) power level in dBm.
 // Note: the CallboxManager expects RxPower to be passed as a string.
@@ -43,11 +79,19 @@ func NewRxPower(power float64) RxPower {
 	return RxPower(fmt.Sprintf("%f", power))
 }
 
-// ConfigureRxPowerRequestBody is the request body for ConfigureRxPower requests.
-type ConfigureRxPowerRequestBody struct {
-	Callbox string  `json:"callbox,omitempty"`
-	Power   RxPower `json:"pdl,omitempty"`
-}
+// TransmissionMode represents the MIMO transmission scheme to use in the downlink.
+type TransmissionMode string
+
+// Supported transmission modes.
+const (
+	TransmissionMode1 = "1"
+	TransmissionMode2 = "2"
+	TransmissionMode3 = "3"
+	TransmissionMode4 = "4"
+	TransmissionMode5 = "5"
+	TransmissionMode6 = "6"
+	TransmissionMode7 = "7"
+)
 
 // TxPower is a predefined callbox Tx (uplink) power level in dBm.
 // Note: the CallboxManager expects TxPower to be passed as a string.
@@ -67,6 +111,94 @@ const (
 // NewTxPower returns a TxPower from an exact value in dBm.
 func NewTxPower(power float64) TxPower {
 	return TxPower(fmt.Sprintf("%f", power))
+}
+
+// CellConfiguration represents the configuration options for a cellular base station.
+// If multiple are provided, each configuration will be applied to the primary and secondary
+// carriers in a carrier aggregation scenario, respectively.
+type CellConfiguration struct {
+	Band             Band             `json:"band,omitempty"`
+	Bandwidth        Bandwidth        `json:"bw,omitempty"`
+	Mimo             MimoMode         `json:"mimo,omitempty"`
+	RxPower          RxPower          `json:"pdl,omitempty"`
+	TxPower          TxPower          `json:"pul,omitempty"`
+	TransmissionMode TransmissionMode `json:"tm,omitempty"`
+}
+
+// CellOption represents a configuration option for a base station cell/component carrier.
+type CellOption func(opt *CellConfiguration)
+
+// BandOption configures the cell frequency band.
+func BandOption(band int) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.Band = NewBand(band)
+	}
+}
+
+// BandwidthOption configures the cell bandwidth.
+func BandwidthOption(bw Bandwidth) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.Bandwidth = bw
+	}
+}
+
+// AntennaOption configures the cell MIMO and transmission mode.
+func AntennaOption(mimo MimoMode, tm TransmissionMode) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.Mimo = mimo
+		opt.TransmissionMode = tm
+	}
+}
+
+// RxPowerOption configures the cell downlink power.
+func RxPowerOption(power RxPower) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.RxPower = power
+	}
+}
+
+// TxPowerOption configures the cell uplink power.
+func TxPowerOption(power TxPower) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.TxPower = power
+	}
+}
+
+// NewLteCellConfiguration returns a default configuration for an LTE cell with the optional overrides.
+func NewLteCellConfiguration(options ...CellOption) CellConfiguration {
+	config := CellConfiguration{
+		Band:             NewBand(2),
+		Bandwidth:        Bandwidth20MHz,
+		Mimo:             MimoMode2x2,
+		TransmissionMode: TransmissionMode3,
+		RxPower:          LteRxPowerExcellent,
+		TxPower:          LteTxPowerMax,
+	}
+
+	for _, opt := range options {
+		opt(&config)
+	}
+
+	return config
+}
+
+// ConfigureCallboxRequestBody is the request body for ConfigureCallbox requests.
+type ConfigureCallboxRequestBody struct {
+	Callbox      string              `json:"callbox,omitempty"`
+	Hardware     CallboxHardware     `json:"hardware,omitempty"`
+	CellularType CellularTechnology  `json:"cellular_type,omitempty"`
+	Parameters   []CellConfiguration `json:"configuration,omitempty"`
+}
+
+// BeginSimulationRequestBody is the request body for BeginSimulation requests.
+type BeginSimulationRequestBody struct {
+	Callbox string `json:"callbox,omitempty"`
+}
+
+// ConfigureRxPowerRequestBody is the request body for ConfigureRxPower requests.
+type ConfigureRxPowerRequestBody struct {
+	Callbox string  `json:"callbox,omitempty"`
+	Power   RxPower `json:"pdl,omitempty"`
 }
 
 // ConfigureTxPowerRequestBody is the request body for ConfigureTxPower requests.
@@ -221,16 +353,6 @@ type StopTxMeasurementRequestBody struct {
 type CloseTxMeasurementRequestBody struct {
 	Callbox string `json:"callbox,omitempty"`
 }
-
-// CellularTechnology is a callbox cellular technology.
-type CellularTechnology string
-
-const (
-	// CellularTechnologyLTE represents an LTE callbox network.
-	CellularTechnologyLTE CellularTechnology = "LTE"
-	// CellularTechnologyWCDMA represents a WCDMA callbox network.
-	CellularTechnologyWCDMA CellularTechnology = "WCDMA"
-)
 
 // HandoverRequestBody is the request body for an inter/intra-RAT handover.
 type HandoverRequestBody struct {

@@ -34,15 +34,10 @@ func AssertSMS(ctx context.Context, s *testing.State) {
 	dutConn := s.DUT().Conn()
 	tf := s.FixtValue().(*manager.TestFixture)
 	if err := tf.ConnectToCallbox(ctx, dutConn, &manager.ConfigureCallboxRequestBody{
-		Hardware:     "CMW",
-		CellularType: "LTE",
-		ParameterList: []string{
-			"band", "2",
-			"bw", "20",
-			"mimo", "2x2",
-			"tm", "1",
-			"pul", "0",
-			"pdl", "high",
+		Hardware:     manager.CallboxHardwareCMW,
+		CellularType: manager.CellularTechnologyLTE,
+		Parameters: []manager.CellConfiguration{
+			manager.NewLteCellConfiguration(),
 		},
 	}); err != nil {
 		s.Fatal("Failed to initialize cellular connection: ", err)

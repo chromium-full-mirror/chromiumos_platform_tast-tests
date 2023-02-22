@@ -48,15 +48,10 @@ func init() {
 					// perform test at max LTE power
 					testPower: 24.5,
 					startingOptions: &manager.ConfigureCallboxRequestBody{
-						Hardware:     "CMW",
-						CellularType: "LTE",
-						ParameterList: []string{
-							"band", "3",
-							"bw", "20",
-							"mimo", "2x2",
-							"tm", "3",
-							"pul", "0",
-							"pdl", "excellent",
+						Hardware:     manager.CallboxHardwareCMW,
+						CellularType: manager.CellularTechnologyLTE,
+						Parameters: []manager.CellConfiguration{
+							manager.NewLteCellConfiguration(),
 						},
 					},
 				},

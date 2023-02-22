@@ -47,15 +47,11 @@ func init() {
 				Name: "mimo2x2",
 				Val: iperfTestCase{
 					callboxOpts: &manager.ConfigureCallboxRequestBody{
-						Hardware:     "CMW",
-						CellularType: "LTE",
-						ParameterList: []string{
-							"band", "2",
-							"bw", "20",
-							"mimo", "2x2",
-							"tm", "3",
-							"pul", "0",
-							"pdl", "high",
+						Hardware:     manager.CallboxHardwareCMW,
+						CellularType: manager.CellularTechnologyLTE,
+						Parameters: []manager.CellConfiguration{
+							manager.NewLteCellConfiguration(
+								manager.AntennaOption(manager.MimoMode2x2, manager.TransmissionMode3)),
 						},
 					},
 					iperfConfigurations: []iperfTestCaseConfiguration{

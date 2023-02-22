@@ -41,15 +41,13 @@ func init() {
 				Name: "lte_wcdma",
 				Val: interRatTestCase{
 					startingOptions: &manager.ConfigureCallboxRequestBody{
-						Hardware:     "CMW",
-						CellularType: "LTE",
-						ParameterList: []string{
-							"band", "2",
-							"bw", "20",
-							"mimo", "2x2",
-							"tm", "3",
-							"pul", "0",
-							"pdl", "excellent",
+						Hardware:     manager.CallboxHardwareCMW,
+						CellularType: manager.CellularTechnologyLTE,
+						Parameters: []manager.CellConfiguration{
+							manager.NewLteCellConfiguration(
+								manager.BandOption(2),
+								manager.BandwidthOption(manager.Bandwidth20MHz),
+							),
 						},
 					},
 					handovers: []manager.HandoverRequestBody{
