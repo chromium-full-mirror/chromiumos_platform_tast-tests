@@ -23,7 +23,7 @@ import (
 
 // FirmwareTest provides a common framework for fingerprint firmware tests.
 type FirmwareTest struct {
-	d                        *rpcdut.RPCDUT
+	dut                      *rpcdut.RPCDUT
 	servo                    *servo.Proxy
 	fpBoard                  fp.BoardName
 	firmwareFile             FirmwareFile
@@ -36,13 +36,13 @@ type FirmwareTest struct {
 // NewFirmwareTest creates and initializes a new fingerprint firmware test.
 // enableHWWP indicates whether the test should enable hardware write protect.
 // enableSWWP indicates whether the test should enable software write protect.
-func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir string, firmwareFile *FirmwareFile, enableHWWP, enableSWWP bool) (firmwareTest *FirmwareTest, initError error) {
-	pxy, err := servo.NewProxy(ctx, servoSpec, d.KeyFile(), d.KeyDir())
+func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir string, firmwareFile *FirmwareFile, enableHWWP, enableSWWP bool) (firmwareTest *FirmwareTest, initError error) {
+	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to servo")
 	}
 
-	t := &FirmwareTest{d: d, servo: pxy}
+	t := &FirmwareTest{dut: dut, servo: pxy}
 	// Close servo connection when this function is going to return an error.
 	defer func() {
 		if initError != nil {
@@ -50,25 +50,25 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		}
 	}()
 
-	t.fpBoard, err = Board(ctx, t.d)
+	t.fpBoard, err = Board(ctx, t.dut)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get fingerprint board")
 	}
 
 	t.firmwareFile = *firmwareFile
 	if firmwareFile.KeyType == KeyTypeMp {
-		if err := ValidateBuildFwFile(ctx, t.d, t.fpBoard, firmwareFile.FilePath); err != nil {
+		if err := ValidateBuildFwFile(ctx, t.dut, t.fpBoard, firmwareFile.FilePath); err != nil {
 			return nil, errors.Wrap(err, "failed to validate MP build firmware file")
 		}
 	}
-	t.needsRebootAfterFlashing, err = NeedsRebootAfterFlashing(ctx, t.d)
+	t.needsRebootAfterFlashing, err = NeedsRebootAfterFlashing(ctx, t.dut)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to determine if reboot is needed")
 	}
 
 	// Disable rootfs verification. It's necessary in order to disable biod
 	// upstart job if board needs reboot after flashing.
-	rootfsIsWritable, err := sysutil.IsRootfsWritable(ctx, t.d.RPC())
+	rootfsIsWritable, err := sysutil.IsRootfsWritable(ctx, t.dut.RPC())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check if rootfs is writable")
 	}
@@ -76,14 +76,14 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		testing.ContextLog(ctx, "Making rootfs writable")
 		// Since MakeRootfsWritable will reboot the device, we must call
 		// RPCClose/RPCDial before/after calling MakeRootfsWritable.
-		if err := t.d.RPCClose(ctx); err != nil {
+		if err := t.dut.RPCClose(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to close rpc")
 		}
 		// Rootfs must be writable in order to disable the upstart job.
-		if err := sysutil.MakeRootfsWritable(ctx, t.d.DUT(), t.d.RPCHint()); err != nil {
+		if err := sysutil.MakeRootfsWritable(ctx, t.dut.DUT(), t.dut.RPCHint()); err != nil {
 			return nil, errors.Wrap(err, "failed to make rootfs writable")
 		}
-		if err := t.d.RPCDial(ctx); err != nil {
+		if err := t.dut.RPCDial(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to redial rpc")
 		}
 	} else if rootfsIsWritable && !t.needsRebootAfterFlashing {
@@ -123,13 +123,13 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 	// TODO(b/183123775): Remove when bug is fixed.
 	// Turning off a display can kill USB on some platforms (dragonair).
 	// Ask powerd to keep the display on and prevent it from screen dimming.
-	needDisableScreenDimming, err := DUTModelIsInList(ctx, t.d, []string{"dragonair", "dratini"})
+	needDisableScreenDimming, err := DUTModelIsInList(ctx, t.dut, []string{"dragonair", "dratini"})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to determine if disabling screen dimming is needed")
 	}
 	if needDisableScreenDimming {
 		testing.ContextLog(ctx, "Asking powerd to disable screen dimming and keep the display on")
-		if err := t.d.Conn().CommandContext(ctx, "set_power_policy", "--dim_wake_lock=1", "--screen_wake_lock=1").Run(ssh.DumpLogOnError); err != nil {
+		if err := t.dut.Conn().CommandContext(ctx, "set_power_policy", "--dim_wake_lock=1", "--screen_wake_lock=1").Run(ssh.DumpLogOnError); err != nil {
 			return nil, errors.Wrap(err, "failed to disable screen dimming")
 		}
 	}
@@ -168,14 +168,14 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 		// Disable FP updater so that it doesn't interfere with the test
 		// when we reboot. Please note that we don't need to disable
 		// rootfs verification before disabling fingerprint updater.
-		if err := DisableFPUpdater(ctx, t.d); err != nil {
+		if err := DisableFPUpdater(ctx, t.dut); err != nil {
 			return nil, errors.Wrap(err, "failed to disable updater")
 		}
 		// Enable FP updater when this function is going to return an error.
 		defer func() {
 			if initError != nil {
 				testing.ContextLog(ctx, "NewFirmwareTest failed, let's re-enable FP updater")
-				if err := EnableFPUpdater(ctx, d); err != nil {
+				if err := EnableFPUpdater(ctx, dut); err != nil {
 					testing.ContextLog(ctx, "Failed to re-enable FP updater: ", err)
 				}
 			}
@@ -188,16 +188,16 @@ func NewFirmwareTest(ctx context.Context, d *rpcdut.RPCDUT, servoSpec, outDir st
 	}
 
 	// Check FPMCU state and reflash if needed. Remove SWWP if needed.
-	if err := InitializeKnownState(ctx, t.d, outDir, pxy, t.fpBoard, t.firmwareFile, t.needsRebootAfterFlashing, !enableSWWP); err != nil {
+	if err := InitializeKnownState(ctx, t.dut, outDir, pxy, t.fpBoard, t.firmwareFile, t.needsRebootAfterFlashing, !enableSWWP); err != nil {
 		return nil, errors.Wrap(err, "initializing known state failed")
 	}
 
 	// Double check our work in the previous step.
-	if err := CheckValidFlashState(ctx, t.d, t.fpBoard, t.firmwareFile); err != nil {
+	if err := CheckValidFlashState(ctx, t.dut, t.fpBoard, t.firmwareFile); err != nil {
 		return nil, err
 	}
 
-	if err := InitializeHWAndSWWriteProtect(ctx, t.d, pxy, t.fpBoard, enableHWWP, enableSWWP); err != nil {
+	if err := InitializeHWAndSWWriteProtect(ctx, t.dut, pxy, t.fpBoard, enableHWWP, enableSWWP); err != nil {
 		return nil, errors.Wrap(err, "initializing write protect failed")
 	}
 
@@ -216,9 +216,9 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 	// while reconnecting to DUT). In this case we should attempt to connect
 	// to the DUT. When connecting fails, we shouldn't proceed because
 	// without healthy connection there is nothing we can do.
-	if !t.d.RPCConnected(ctx) {
+	if !t.dut.RPCConnected(ctx) {
 		testing.ContextLog(ctx, "Reconnecting to the DUT")
-		if err := t.d.Connect(ctx); err != nil {
+		if err := t.dut.Connect(ctx); err != nil {
 			return errors.Wrap(err, "failed to connect to DUT")
 		}
 	}
@@ -226,17 +226,17 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 	var firstErr error
 
 	// Always flash MP firmware during clean up.
-	firmwareFile, err := NewMPFirmwareFile(ctx, t.d)
+	firmwareFile, err := NewMPFirmwareFile(ctx, t.dut)
 	if err != nil {
 		firstErr = err
 	}
-	if err := ReimageFPMCU(ctx, t.d, t.servo, firmwareFile.FilePath, t.needsRebootAfterFlashing); err != nil {
+	if err := ReimageFPMCU(ctx, t.dut, t.servo, firmwareFile.FilePath, t.needsRebootAfterFlashing); err != nil {
 		// ReimageFPMCU reboots the DUT at least once. Sometimes after
 		// reboot, the connection to the DUT is broken. In this case
 		// we should return error now, because further executing will
 		// result in nil pointer dereference, because RPC connection is
 		// not available.
-		if !t.d.RPCConnected(ctx) {
+		if !t.dut.RPCConnected(ctx) {
 			return errors.Wrap(err, "lost connection to the DUT")
 		}
 		firstErr = err
@@ -276,9 +276,9 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 
 	if t.needsRebootAfterFlashing || (t.firmwareFile.KeyType != KeyTypeMp) {
 		// If FP updater disabled, re-enable it.
-		fpUpdaterEnabled, err := IsFPUpdaterEnabled(ctx, t.d)
+		fpUpdaterEnabled, err := IsFPUpdaterEnabled(ctx, t.dut)
 		if err == nil && !fpUpdaterEnabled {
-			if err := EnableFPUpdater(ctx, t.d); err != nil && firstErr == nil {
+			if err := EnableFPUpdater(ctx, t.dut); err != nil && firstErr == nil {
 				firstErr = err
 			}
 		} else if err != nil && firstErr == nil {
@@ -297,7 +297,7 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 
 // DUT gets the RPCDUT.
 func (t *FirmwareTest) DUT() *rpcdut.RPCDUT {
-	return t.d
+	return t.dut
 }
 
 // Servo gets the servo proxy.
@@ -307,12 +307,12 @@ func (t *FirmwareTest) Servo() *servo.Proxy {
 
 // RPCClient gets the RPC client.
 func (t *FirmwareTest) RPCClient() *rpc.Client {
-	return t.d.RPC()
+	return t.dut.RPC()
 }
 
 // UpstartService gets the upstart service client.
 func (t *FirmwareTest) UpstartService(ctx context.Context) (platform.UpstartServiceClient, error) {
-	if !t.d.RPCConnected(ctx) {
+	if !t.dut.RPCConnected(ctx) {
 		return nil, errors.New("RPC connection is not available")
 	}
 	return platform.NewUpstartServiceClient(t.RPCClient().Conn), nil
@@ -431,47 +431,47 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 }
 
 // IsFPUpdaterEnabled returns true if the fingerprint updater is enabled.
-func IsFPUpdaterEnabled(ctx context.Context, d *rpcdut.RPCDUT) (bool, error) {
-	if !d.RPCConnected(ctx) {
+func IsFPUpdaterEnabled(ctx context.Context, dut *rpcdut.RPCDUT) (bool, error) {
+	if !dut.RPCConnected(ctx) {
 		return false, errors.New("RPC connection is not available")
 	}
 
-	fs := dutfs.NewClient(d.RPC().Conn)
+	fs := dutfs.NewClient(dut.RPC().Conn)
 	disabled, err := fs.Exists(ctx, disableFpUpdaterPath)
 	return !disabled, err
 }
 
 // EnableFPUpdater enables the fingerprint updater if it is disabled.
-func EnableFPUpdater(ctx context.Context, d *rpcdut.RPCDUT) error {
-	if !d.RPCConnected(ctx) {
+func EnableFPUpdater(ctx context.Context, dut *rpcdut.RPCDUT) error {
+	if !dut.RPCConnected(ctx) {
 		return errors.New("RPC connection is not available")
 	}
 
-	fs := dutfs.NewClient(d.RPC().Conn)
+	fs := dutfs.NewClient(dut.RPC().Conn)
 	testing.ContextLog(ctx, "Enabling the fingerprint updater")
 	if err := fs.Remove(ctx, disableFpUpdaterPath); err != nil {
 		return errors.Wrapf(err, "failed to remove %q", disableFpUpdaterPath)
 	}
 	// Sync filesystem to make sure that FP updater is enabled correctly.
-	if err := d.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
+	if err := dut.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to sync DUT")
 	}
 	return nil
 }
 
 // DisableFPUpdater disables the fingerprint updater if it is enabled.
-func DisableFPUpdater(ctx context.Context, d *rpcdut.RPCDUT) error {
-	if !d.RPCConnected(ctx) {
+func DisableFPUpdater(ctx context.Context, dut *rpcdut.RPCDUT) error {
+	if !dut.RPCConnected(ctx) {
 		return errors.New("RPC connection is not available")
 	}
 
-	fs := dutfs.NewClient(d.RPC().Conn)
+	fs := dutfs.NewClient(dut.RPC().Conn)
 	testing.ContextLog(ctx, "Disabling the fingerprint updater")
 	if err := fs.WriteFile(ctx, disableFpUpdaterPath, nil, 0); err != nil {
 		return errors.Wrapf(err, "failed to create %q", disableFpUpdaterPath)
 	}
 	// Sync filesystem to make sure that FP updater is disabled correctly.
-	if err := d.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
+	if err := dut.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to sync DUT")
 	}
 	return nil
