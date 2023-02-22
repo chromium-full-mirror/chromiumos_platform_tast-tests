@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/ui"
@@ -161,11 +164,11 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	}
 	switch initValue {
 	case 0:
-		s.Log("Keyboard initial backlight value is 0, attempting to increase the light to at least 40 percent before test")
-		err = adjustKBBacklight(ctx, h, s.DUT(), 40, 15*time.Second, kbLightUp, "increasing")
+		s.Log("Keyboard initial backlight value is 0, attempting to increase the light to at least 30 percent before test")
+		err = adjustKBBacklight(ctx, h, s.DUT(), 30, 15*time.Second, kbLightUp, "increasing")
 	case 100:
-		s.Log("Keyboard initial backlight value is 100, attempting to decrease the light to at leaset 40 percent before test")
-		err = adjustKBBacklight(ctx, h, s.DUT(), 40, 15*time.Second, kbLightDown, "decreasing")
+		s.Log("Keyboard initial backlight value is 100, attempting to decrease the light to at leaset 30 percent before test")
+		err = adjustKBBacklight(ctx, h, s.DUT(), 30, 15*time.Second, kbLightDown, "decreasing")
 	}
 	if err != nil {
 		if _, ok := err.(*timeoutError); ok {
@@ -175,12 +178,50 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 		}
 	}
 
+	// Nightfury and Kohaku have their keyboard backlight brightness constrained
+	// to the limits specified in keyboard-backlight-user-steps. Declare the default min,
+	// and max brightness values as 0 and 100 respectively, but switch to the ones in
+	// keyboard-backlight-user-steps if they are available.
+	var (
+		minBrightness = 0
+		maxBrightness = 100
+	)
+	// Connect to the RPC service on the DUT.
+	if err := h.RequireRPCClient(ctx); err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	userStepConfigPath := "/run/chromeos-config/v1/power/keyboard-backlight-user-steps"
+	exists, err := fs.Exists(ctx, userStepConfigPath)
+	if err != nil {
+		s.Fatalf("Failed to check for the existence of %s: %v", userStepConfigPath, err)
+	}
+	if exists {
+		out, err := h.Reporter.CatFileLines(ctx, userStepConfigPath)
+		if err != nil {
+			s.Fatalf("Failed to read %s: %v", userStepConfigPath, err)
+		}
+		if len(out) != 0 {
+			sort.Strings(out)
+			max, err := strconv.ParseFloat(out[len(out)-1], 64)
+			if err != nil {
+				s.Fatal("Failed to parse for max value: ", err)
+			}
+			min, err := strconv.ParseFloat(out[0], 64)
+			if err != nil {
+				s.Fatal("Failed to parse for min value: ", err)
+			}
+			maxBrightness = int(max)
+			minBrightness = int(min)
+		}
+	}
+
 	kbBacklightTesting := make(map[int]string, 2)
-	kbBacklightTesting[0] = kbLightDown
-	kbBacklightTesting[100] = kbLightUp
+	kbBacklightTesting[minBrightness] = kbLightDown
+	kbBacklightTesting[maxBrightness] = kbLightUp
 
 	for extremeValue, key := range kbBacklightTesting {
-		s.Logf("-----Adjusting keyboard backlight till %d percent-----", extremeValue)
+		s.Logf("-----Adjusting keyboard backlight till level %d -----", extremeValue)
 		if err := adjustKBBacklight(ctx, h, s.DUT(), extremeValue, 15*time.Second, key, ""); err != nil {
 			s.Fatal("Failed to adjust keyboard backlight: ", err)
 		}
