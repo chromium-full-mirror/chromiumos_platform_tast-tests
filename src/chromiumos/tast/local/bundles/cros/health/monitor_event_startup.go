@@ -61,6 +61,13 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "touchscreen",
+			Val: eventStartupParams{
+				category: "touchscreen",
+				duration: 3 * time.Second,
+			},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
