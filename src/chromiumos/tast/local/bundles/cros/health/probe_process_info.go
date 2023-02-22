@@ -60,7 +60,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for single process info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Timeout:      1 * time.Minute,
