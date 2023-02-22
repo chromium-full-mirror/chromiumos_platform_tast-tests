@@ -414,30 +414,6 @@ func TestLockScreen(ctx context.Context, userName, userPassword, wrongPassword, 
 	return nil
 }
 
-// TestLockScreenPin tests that wrong PIN is not verified and correct PIN is verified on lock screen.
-func TestLockScreenPin(ctx context.Context, userName, secret, wrongSecret, keyLabel string, client *hwsec.CryptohomeClient) error {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-
-	accepted, err := cryptohome.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, secret))
-	if err != nil {
-		return errors.New("unexpected error during unlock with correct pin")
-	}
-	if !accepted {
-		return errors.New("correct pin rejected during unlock")
-	}
-
-	accepted, err = cryptohome.CheckVault(ctx, keyLabel, hwsec.NewPassAuthConfig(userName, wrongSecret))
-	if err == nil {
-		return errors.New("wrong pin check succeeded when it shouldn't")
-	}
-	if accepted {
-		return errors.New("wrong pin check returned true despite an error")
-	}
-
-	return nil
-}
-
 // MountAndVerify tests that after a successful mount with AuthSession, the testFile still exists.
 // Note: Caller takes care of the unmount operation
 func MountAndVerify(ctx context.Context, userName, authSessionID string, ecryptFs bool) error {

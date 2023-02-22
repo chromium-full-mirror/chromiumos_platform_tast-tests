@@ -120,7 +120,7 @@ func cleanupVault(ctx context.Context, utility *hwsec.CryptohomeClient) (returne
 	return returnedErr
 }
 
-// checkVaultWorks will check that the vault specified by username, both passwords and pin (if supported) works in both mounting and unlock (CheckKeyEx).
+// checkVaultWorks will check that the vault specified by username, both passwords and pin (if supported) works in both mounting and unlock.
 func checkVaultWorks(ctx context.Context, utility *hwsec.CryptohomeClient, keyInfos []keyInfo) error {
 	for _, info := range keyInfos {
 		if err := utility.WithAuthSession(ctx, info.username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
@@ -142,12 +142,20 @@ func checkVaultWorks(ctx context.Context, utility *hwsec.CryptohomeClient, keyIn
 			return errors.Wrapf(err, "failed to mount with %s", info.keyLabel)
 		}
 
+		if info.lowEntropy {
+			if result, err := utility.CheckPinVault(ctx, info.keyLabel, hwsec.NewPassAuthConfig(info.username, info.password)); !result {
+				return errors.Wrapf(err, "failed to check pin key with %s", info.keyLabel)
+			}
+		} else {
+			if result, err := utility.CheckVault(ctx, info.keyLabel, hwsec.NewPassAuthConfig(info.username, info.password)); !result {
+				return errors.Wrapf(err, "failed to check password key with %s", info.keyLabel)
+			}
+		}
+
 		if err := utility.UnmountAll(ctx); err != nil {
 			return errors.Wrap(err, "failed to unmount vault")
 		}
-		if result, _ := utility.CheckVault(ctx, info.keyLabel, hwsec.NewPassAuthConfig(info.username, info.password)); !result {
-			return errors.Errorf("failed to check key with %s", info.keyLabel)
-		}
+
 	}
 
 	return nil
@@ -287,7 +295,7 @@ func LockToSingleUserMountUntilReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmount first user's vault after locking: ", err)
 	}
 
-	// The first user's vault should still work (CheckKeyEx and MountEx).
+	// The first user's vault should still work (MountEx).
 	if err := checkVaultWorks(ctx, utility, keyInfos1); err != nil {
 		s.Fatal("The first user's vault doesn't work after locking: ", err)
 	}
