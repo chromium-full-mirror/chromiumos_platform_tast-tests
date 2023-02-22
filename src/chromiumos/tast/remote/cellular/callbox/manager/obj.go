@@ -167,7 +167,7 @@ func TxPowerOption(power TxPower) CellOption {
 // NewLteCellConfiguration returns a default configuration for an LTE cell with the optional overrides.
 func NewLteCellConfiguration(options ...CellOption) CellConfiguration {
 	config := CellConfiguration{
-		Band:             NewBand(2),
+		Band:             NewBand(3),
 		Bandwidth:        Bandwidth20MHz,
 		Mimo:             MimoMode2x2,
 		TransmissionMode: TransmissionMode3,

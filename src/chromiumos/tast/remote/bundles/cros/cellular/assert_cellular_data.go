@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AssertCellularData,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Asserts that cellular data works. The test establishes a connection to the appropriate CMW500 callbox. Then it asserts that the cellular data connection provided to it matches the data connection provided by ethernet. Any differences are considered an error. If the cellular data connection is not provided, the second curl will throw an exception",
+		Desc:         "Verifies that the DUT is able to establish a data connection under various RAT scenarios",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "latware@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_callbox"},
@@ -24,6 +24,73 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{
+			{
+				// names are defined <tech>_<#CCs>_<MIMO>_<CA BANDS>
+				Name: "lte_cc1_x1_b3",
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMW,
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode1x1, manager.TransmissionMode1),
+						),
+					},
+				},
+			},
+			{
+				Name: "lte_cc1_x2_b3",
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMW,
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode2x2, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name: "lte_cc2_x1x1_b3b7",
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMW,
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode1x1, manager.TransmissionMode1),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(7),
+							manager.AntennaOption(manager.MimoMode1x1, manager.TransmissionMode1),
+						),
+					},
+				},
+			},
+			{
+				Name: "lte_cc3_x1x1x1_b3b7b20",
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMW,
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode1x1, manager.TransmissionMode1),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(7),
+							manager.AntennaOption(manager.MimoMode1x1, manager.TransmissionMode1),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(20),
+							manager.AntennaOption(manager.MimoMode1x1, manager.TransmissionMode1),
+						),
+					},
+				},
+			},
+		},
 	})
 }
 
@@ -31,13 +98,8 @@ func AssertCellularData(ctx context.Context, s *testing.State) {
 	testURL := "google.com"
 	dutConn := s.DUT().Conn()
 	tf := s.FixtValue().(*manager.TestFixture)
-	if err := tf.ConnectToCallbox(ctx, dutConn, &manager.ConfigureCallboxRequestBody{
-		Hardware:     manager.CallboxHardwareCMW,
-		CellularType: manager.CellularTechnologyLTE,
-		Parameters: []manager.CellConfiguration{
-			manager.NewLteCellConfiguration(),
-		},
-	}); err != nil {
+	tc := s.Param().(*manager.ConfigureCallboxRequestBody)
+	if err := tf.ConnectToCallbox(ctx, dutConn, tc); err != nil {
 		s.Fatal("Failed to initialize cellular connection: ", err)
 	}
 
