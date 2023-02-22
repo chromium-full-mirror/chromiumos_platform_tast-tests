@@ -55,29 +55,43 @@ func init() {
 	})
 }
 
-// areColorChannelsClose returns true if `a` and `b` are less than 5% apart. Despite being uint32, both `a` and `b` must be in the range [0, 2^16 - 1] as required by `color.Color`.
-func areColorChannelsClose(a, b uint32) bool {
-	return (math.Abs(float64(a)-float64(b)) / 0xffff) < 0.05
+// The minimum amount that `low` values must be lower than `high` values.
+const minimumDiff uint32 = 20
+
+// lowLessThanHigh tests that every value in `low` is smaller than every value in `high`
+func lowLessThanHigh(low, high []uint32) bool {
+	var maxLow uint32 = 0
+	for _, value := range low {
+		if value > maxLow {
+			maxLow = value
+		}
+	}
+
+	var minHigh uint32 = math.MaxUint32
+	for _, value := range high {
+		if value < minHigh {
+			minHigh = value
+		}
+	}
+	return maxLow+minimumDiff <= minHigh
 }
 
-// isFirstValueDominant returns true if x >> y and y ~= z. This is useful for determining if a color is visually dominated by one channel, ie red, green, or blue.
-func isFirstValueDominant(x, y, z uint32) bool {
-	return x > y && !areColorChannelsClose(x, y) && areColorChannelsClose(y, z)
-}
-
-func isRed(c color.Color) bool {
+// isRedBlue tests that green channel is at least `minimumDiff` less than red and blue.
+func isRedBlue(c color.Color) bool {
 	r, g, b, _ := c.RGBA()
-	return isFirstValueDominant(r, g, b)
+	return lowLessThanHigh([]uint32{g}, []uint32{r, b})
 }
 
-func isGreen(c color.Color) bool {
+// isGreenBlue tests that red channel is at least `minimumDiff` less than green and blue.
+func isGreenBlue(c color.Color) bool {
 	r, g, b, _ := c.RGBA()
-	return isFirstValueDominant(g, r, b)
+	return lowLessThanHigh([]uint32{r}, []uint32{g, b})
 }
 
+// isBlue tests that red and green channel are at least `minimumDiff` less than blue.
 func isBlue(c color.Color) bool {
 	r, g, b, _ := c.RGBA()
-	return isFirstValueDominant(b, g, r)
+	return lowLessThanHigh([]uint32{r, g}, []uint32{b})
 }
 
 func saveLockscreenJpg(outdir string, image image.Image) error {
@@ -92,11 +106,11 @@ func saveLockscreenJpg(outdir string, image image.Image) error {
 }
 
 // LockscreenWallpaper verifies that a reference red, green, blue wallpaper can be seen in blurred form when the screen is locked.
-// TODO(b/264906039) update this test when DarkLightModeKMeansColor launches.
+// The dominant extracted color is blue, so all colors will be shifted towards blue.
 func LockscreenWallpaper(ctx context.Context, s *testing.State) {
-	// Using fixture may leave the DUT in a locked state that affects the tests
-	// that follow in the same fixture.
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("DarkLightModeKMeansColor"))
+	// Using fixture may leave the DUT in a locked state that affects the tests that follow in the same fixture.
+	// Use `chrome.New` so that other tests are unaffected if this test fails.
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -147,7 +161,7 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set new wallpaper: ", err)
 	}
 
-	// Lock the screen
+	// Lock the screen.
 	if err := lockscreen.Lock(ctx, tconn); err != nil {
 		s.Fatal("Failed to lock the screen: ", err)
 	}
@@ -174,7 +188,11 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 	green := lockscreenImage.At(upperRight.X, upperRight.Y)
 	blue := lockscreenImage.At(bottomCenter.X, bottomCenter.Y)
 
-	if !isRed(red) || !isGreen(green) || !isBlue(blue) {
+	// The test wallpaper is divided into three parts of red, green, or blue. All three are shifted towards blue because
+	// blue is the largest region in the image, so system UI should do color extraction and shift the lockscreen towards blue.
+	// Verify that a pixel sampled from the red area is red+blue, a pixel sampled from the green area is green+blue,
+	// and a pixel sampled from the blue area is very blue.
+	if !isRedBlue(red) || !isGreenBlue(green) || !isBlue(blue) {
 		if err = saveLockscreenJpg(s.OutDir(), lockscreenImage); err != nil {
 			s.Error("Failed to save debug lockscreen image: ", err)
 		}
