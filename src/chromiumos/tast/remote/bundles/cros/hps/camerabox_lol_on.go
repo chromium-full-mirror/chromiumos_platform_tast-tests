@@ -46,7 +46,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.HPS()),
 		SoftwareDeps: []string{"hps", "chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.hps.HpsService"},
-		Vars:         []string{"tablet"},
+		Vars:         []string{"chart"},
 		Params: []testing.Param{
 			{
 				Name: "no_presence",

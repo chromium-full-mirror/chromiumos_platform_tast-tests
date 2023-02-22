@@ -44,7 +44,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.HPS()),
 		SoftwareDeps: []string{"hps", "chrome", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.hps.HpsService"},
-		Vars:         []string{"tablet", "grpcServerPort"},
+		Vars:         []string{"chart"},
 		Params: []testing.Param{
 			{
 				Name: "off",
@@ -83,7 +83,7 @@ func CameraboxSPA(ctx context.Context, s *testing.State) {
 		s.Fatal("Error creating HpsContext: ", err)
 	}
 
-	// Connecting to the other tablet that will render the picture.
+	// Connecting to the chart tablet that will render the picture.
 	ctxForCleanupDisplayChart := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	hostPaths, displayChart, err := utils.SetupDisplay(ctx, s)

@@ -40,12 +40,7 @@ func SetupDisplay(ctx context.Context, s *testing.State) (map[string]chart.NameP
 	}
 
 	// Connecting to the other tablet that will render the picture.
-	var chartAddr string
-	if altAddr, ok := s.Var("tablet"); ok {
-		chartAddr = altAddr
-	}
-
-	c, hostPaths, err := chart.New(ctx, s.DUT(), chartAddr, s.OutDir(), filePaths)
+	c, hostPaths, err := chart.New(ctx, s.DUT(), s.RequiredVar("chart"), s.OutDir(), filePaths)
 	if err != nil {
 		return make(map[string]chart.NamePath), &chart.Chart{}, errors.Wrap(err, "failed to send the files")
 	}
