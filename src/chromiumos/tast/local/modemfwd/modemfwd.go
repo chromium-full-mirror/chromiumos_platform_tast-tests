@@ -32,6 +32,8 @@ const (
 	JobName = "modemfwd"
 	// DisableAutoUpdatePref disables auto update on modemfwd
 	DisableAutoUpdatePref = "/var/lib/modemfwd/disable_auto_update"
+	// PowerOverrideLockFilePath is taken while flashing the firmware.
+	PowerOverrideLockFilePath = "/run/lock/power_override/modemfwd.lock"
 	// PurgeDlcsDelay is the time modemfwd waits until it starts cleaning up the DLCs
 	PurgeDlcsDelay = 2 * time.Minute
 )
@@ -382,4 +384,22 @@ func getQrtrNodes(ctx context.Context) (map[int]*qrtrNode, error) {
 	}
 
 	return nodes, nil
+}
+
+// CheckAndWaitForFlashToComplete returns an error if PowerOverrideLock file
+// is held for more than 5 minutes.
+func CheckAndWaitForFlashToComplete(ctx context.Context) error {
+	if err := testing.Poll(ctx, func(context.Context) error {
+		if _, err := os.Stat(PowerOverrideLockFilePath); err == nil {
+			testing.ContextLog(ctx, "ModemFwd still flashing firmware")
+			return errors.New("ModemFwd still flashing firmware")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  5 * time.Minute,
+		Interval: 10 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "Timed out while waiting for modem flash to complete")
+	}
+	return nil
 }

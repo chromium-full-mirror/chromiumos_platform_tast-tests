@@ -125,11 +125,12 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := cellular.EnsureUptime(ctx, uptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
 	}
-	if err := cellular.EnsureDaemonUptime(ctx, modemfwd.JobName, uptimeBeforeTest); err != nil {
-		s.Fatalf("Failed to wait for %q uptime: %s", modemfwd.JobName, err)
-	}
 	if err := cellular.SetShillVerboseLogging(ctx); err != nil {
 		s.Fatal("Failed to set shill's logging config to verbose: ", err)
+	}
+	// Before stopping modemfwd, check and wait for modemfwd to idle.
+	if err := waitForModemFwdToIdle(ctx); err != nil {
+		s.Fatal("Could not confirm if ModemFwd is idle: ", err)
 	}
 	if f.sf == nil {
 		var err error
@@ -307,4 +308,23 @@ func stopJob(ctx context.Context, job string) (bool, error) {
 	}
 	return true, nil
 
+}
+
+func waitForModemFwdToIdle(ctx context.Context) error {
+	if err := cellular.EnsureDaemonUptime(ctx, modemfwd.JobName, uptimeBeforeTest); err != nil {
+		return errors.Wrapf(err, "failed to wait for %v uptime", modemfwd.JobName)
+	}
+	// Before stopping modemfwd, check and wait for flash to complete.
+	if err := modemfwd.CheckAndWaitForFlashToComplete(ctx); err != nil {
+		return errors.Wrap(err, "failed to confirm if modem flash is complete")
+	}
+
+	// Wait for modem to be exported by ModemManager.
+	if _, err := modemmanager.NewModem(ctx); err != nil && cellular.ModemHelperPathExists() {
+		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
+		if err := cellular.RestartModemWithHelper(ctx); err != nil {
+			return errors.Wrap(err, "failed to restart modem")
+		}
+	}
+	return nil
 }
