@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -18,52 +18,57 @@ import (
 	ap "chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
-	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 )
 
-const networkPassphrase = "fourwordsalluppercase"
+const passphrase = "fourwordsalluppercase"
 
-type networkSecurity struct {
+type securityStruct struct {
 	secured bool
 	factory security.ConfigFactory
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConnectFromQuickSettings,
+		Func:         ConnectFromOsSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that a user can connect to WiFi from the Quick Settings",
+		Desc:         "Verifies that a user can connect to WiFi from ChromeOS Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"chadduffin@google.com",
+			"tjohnsonkanu@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
-			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 			"tast.cros.inputs.KeyboardService",
 			"tast.cros.ui.AutomationService",
 			wificell.TFServiceName,
+			wifiutil.FaillogServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixtWithCapture",
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		Requirements: []string{
+			tdreq.WiFiProcPassFW,
+			tdreq.WiFiProcPassAVL,
+			tdreq.WiFiProcPassAVLBeforeUpdates,
+			tdreq.WiFiProcPassMatfunc,
+			tdreq.WiFiProcPassMatfuncBeforeUpdates,
+		},
 		Params: []testing.Param{{
 			Name: "open",
-			Val: networkSecurity{
+			Val: securityStruct{
 				secured: false,
 				factory: base.NewConfigFactory(),
 			},
 		}, {
 			Name: "secured",
-			Val: networkSecurity{
+			Val: securityStruct{
 				secured: true,
 				factory: wpa.NewConfigFactory(
-					networkPassphrase,
+					passphrase,
 					wpa.Mode(wpa.ModePureWPA),
 					wpa.Ciphers(wpa.CipherTKIP),
 				),
@@ -72,9 +77,9 @@ func init() {
 	})
 }
 
-func ConnectFromQuickSettings(ctx context.Context, s *testing.State) {
+func ConnectFromOsSettings(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
-	p := s.Param().(networkSecurity)
+	p := s.Param().(securityStruct)
 
 	apInterface, err := tf.ConfigureAP(ctx, []ap.Option{
 		ap.Mode(ap.Mode80211a),
@@ -102,59 +107,67 @@ func ConnectFromQuickSettings(ctx context.Context, s *testing.State) {
 
 	chrome := ui.NewChromeServiceClient(rpcClient.Conn)
 	os := ossettings.NewOsSettingsServiceClient(rpcClient.Conn)
-	qs := quicksettings.NewQuickSettingsServiceClient(rpcClient.Conn)
 	uiautomation := ui.NewAutomationServiceClient(rpcClient.Conn)
+	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
+
+	defer rpcClient.Close(ctx)
+	defer os.Close(ctx, &emptypb.Empty{})
+	defer chrome.Close(ctx, &emptypb.Empty{})
+	defer wifiutil.DumpUITreeWithScreenshotToFile(ctx, rpcClient.Conn, s.HasError, "ui_tree")
 
 	if _, err = chrome.New(ctx, &ui.NewRequest{
 		LoginMode: ui.LoginMode_LOGIN_MODE_GUEST_LOGIN,
 	}); err != nil {
 		s.Fatal("Failed to open Chrome on the DUT: ", err)
 	}
-	if _, err = qs.NavigateToNetworkDetailedView(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to navigate to the detailed Network within Quick Settings: ", err)
+
+	if err := wifiClient.SetWifiEnabled(ctx, true); err != nil {
+		s.Fatal("Failed to enable Wi-Fi using Shill: ", err)
 	}
 
-	networkFinder := &ui.Finder{
+	req := &ossettings.OpenNetworkDetailPageRequest{
+		NetworkName: ssid,
+		NetworkType: ossettings.OpenNetworkDetailPageRequest_WIFI,
+	}
+
+	if _, err := os.OpenNetworkDetailPage(ctx, req); err != nil {
+		s.Fatal("Failed to to open network page: ", err)
+	}
+
+	isSecured := s.Param().(securityStruct).secured
+	buttonName := "Connect"
+
+	if isSecured {
+		buttonName = "Configure"
+	}
+
+	connectButtonNode := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_NameContaining{NameContaining: ssid}},
-			{Value: &ui.NodeWith_First{First: true}},
+			{Value: &ui.NodeWith_NameContaining{NameContaining: buttonName}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
 		},
 	}
 	if _, err := uiautomation.LeftClick(
-		ctx, &ui.LeftClickRequest{Finder: networkFinder}); err != nil {
-		s.Fatal("Failed to click the network button: ", err)
+		ctx, &ui.LeftClickRequest{Finder: connectButtonNode}); err != nil {
+		s.Fatal("Failed to click the connect button: ", err)
 	}
 
-	if s.Param().(networkSecurity).secured {
-		if err := wifiutil.ConfigureWifiNetwork(ctx, uiautomation, rpcClient.Conn, networkPassphrase, "Connect"); err != nil {
+	if isSecured {
+		if err := wifiutil.ConfigureWifiNetwork(ctx, uiautomation, rpcClient.Conn, passphrase, "Save"); err != nil {
 			s.Fatal("Failed to configure wifi network: ", err)
-		}
-
-		if _, err = qs.NavigateToNetworkDetailedView(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to navigate to the detailed Network within Quick Settings: ", err)
 		}
 	}
 
 	networkConnectedStateFinder := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_NameContaining{NameContaining: "Connected"}},
-			{Value: &ui.NodeWith_HasClass{HasClass: "UnfocusableLabel"}},
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: networkFinder}},
+			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
+
 	if _, err := uiautomation.WaitUntilExists(
 		ctx, &ui.WaitUntilExistsRequest{Finder: networkConnectedStateFinder}); err != nil {
 		s.Fatal("Failed to find the network connected state: ", err)
-	}
-
-	if _, err = os.Close(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to close OS Settings: ", err)
-	}
-	if _, err = chrome.Close(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to close Chrome on the DUT: ", err)
-	}
-	if err = rpcClient.Close(ctx); err != nil {
-		s.Fatal("Failed to close RPC client: ", err)
 	}
 }

@@ -274,3 +274,40 @@ func setTextField(ctx context.Context, uiauto ui.AutomationServiceClient, keyboa
 
 	return nil
 }
+
+// ConfigureWifiNetwork fills out the network configuration dialog for a secure WiFi network.
+// This method expects the network configuration dialog to already be open before being called.
+func ConfigureWifiNetwork(ctx context.Context, uiautomation ui.AutomationServiceClient, conn *grpc.ClientConn, passphrase, connectButtonName string) error {
+	passwordFieldFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_NameContaining{NameContaining: "Password"}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TEXT_FIELD}},
+		},
+	}
+
+	if _, err := uiautomation.LeftClick(
+		ctx, &ui.LeftClickRequest{Finder: passwordFieldFinder}); err != nil {
+		return errors.Wrap(err, "failed to click password field")
+	}
+
+	kb := inputs.NewKeyboardServiceClient(conn)
+
+	if _, err := kb.Type(ctx, &inputs.TypeRequest{
+		Key: passphrase,
+	}); err != nil {
+		return errors.Wrap(err, "failed to enter the password for the Wi-Fi network")
+	}
+
+	connectButtonFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_NameContaining{NameContaining: connectButtonName}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+		},
+	}
+
+	if _, err := uiautomation.LeftClick(
+		ctx, &ui.LeftClickRequest{Finder: connectButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to click the connect button")
+	}
+	return nil
+}
