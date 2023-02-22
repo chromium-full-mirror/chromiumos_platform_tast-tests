@@ -130,7 +130,7 @@ func InitFixture(ctx context.Context) error {
 			for _, s := range res {
 				if len(s) > fixtureIDLen && strings.Count(s[0:15], "_") == 2 && strings.Count(s[0:15], " ") == 0 {
 					serial := s[0:15]
-					fixtureID := fmt.Sprintf("test fixture id: %s => port: %s \n", serial, port)
+					fixtureID := fmt.Sprintf("test fixture id: %s => port: %s", serial, port)
 					testing.ContextLog(ctx, fixtureID)
 
 					uid, found := fixtureUID[serial]
@@ -208,4 +208,18 @@ func PrintAllFixture(ctx context.Context) {
 		s := fmt.Sprintf("print all fixture id: %s => port: %s \n", uid, port)
 		testing.ContextLog(ctx, s)
 	}
+}
+
+// GetOnlineDisplayFixture is for getting online display fixture
+func GetOnlineDisplayFixture() map[string]string {
+
+	displayFixtureOnline := make(map[string]string)
+
+	for uid, port := range fixtureOnline {
+		if fixtureIsDisplay[uid] {
+			displayFixtureOnline[uid] = port
+		}
+	}
+
+	return displayFixtureOnline
 }
