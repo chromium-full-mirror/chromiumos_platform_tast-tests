@@ -38,6 +38,11 @@ func init() {
 			pci.SearchFlag(&policy.PrintersBulkAllowlist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.PrintersBulkBlocklist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.PrintersBulkConfiguration{}, pci.VerifiedFunctionalityJS),
+			{
+				Key: "feature_id",
+				// Test printer configuration user policies (COM_FOUND_CUJ7_TASK3_WF1).
+				Value: "screenplay-87696fca-4b8c-410d-a5f7-b2b5f1391eb3",
+			},
 		},
 	})
 }
