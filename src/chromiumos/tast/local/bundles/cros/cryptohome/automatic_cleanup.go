@@ -84,7 +84,7 @@ func AutomaticCleanup(ctx context.Context, s *testing.State) {
 	}
 
 	// Remount the second user
-	if err := cryptohome.CreateVault(ctx, user2, password); err != nil {
+	if err := cryptohome.MountVault(ctx, user2, password); err != nil {
 		s.Fatal("Failed to remount user vault: ", err)
 	}
 

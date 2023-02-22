@@ -150,7 +150,7 @@ func UserTimestamp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmount user vault: ", err)
 	}
 
-	if err := cryptohome.CreateVault(ctx, user2, password); err != nil {
+	if err := cryptohome.MountVault(ctx, user2, password); err != nil {
 		s.Fatal("Failed to remount user vault: ", err)
 	}
 
