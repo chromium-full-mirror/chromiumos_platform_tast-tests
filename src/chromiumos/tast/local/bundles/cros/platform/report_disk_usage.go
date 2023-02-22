@@ -30,15 +30,11 @@ func init() {
 		Func:         ReportDiskUsage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Reports available disk space in the root filesystem",
-		// Owner of this config is temporarily set to the Healthmon team. We should
-		// find new owners for it.
-		//
-		// TODO(b/230679272): find new owners and update this config.
-		Contacts: []string{"chromeos-performance-eng@google.com"},
+		Contacts:     []string{"cros-telemetry@google.com", "ejcaruso@google.com"},
+		BugComponent: "b:1175318", // ChromeOS > Data > Engineering > Image Size
 		// chromeos-assets is not available on devices without Chrome, require chrome
 		SoftwareDeps: []string{"chrome"},
-		// b/267781987: Disable unclaimed Tast tests
-		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 	})
 }
 
