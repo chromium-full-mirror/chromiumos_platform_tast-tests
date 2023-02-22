@@ -118,7 +118,6 @@ func CUJLacrosCommonMetricConfigs() []MetricConfig {
 func CUJBrowserCommonMetricConfigs() []MetricConfig {
 	return append(BrowserCommonMetricConfigs(),
 		// Other metrics to monitor.
-		NewCustomMetricConfig("MPArch.RWH_TabSwitchPaintDuration", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Media.DroppedFrameCount", "count", perf.SmallerIsBetter),
 		NewCustomMetricConfig("PageLoad.InteractiveTiming.FirstInputDelay4", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("SessionRestore.ForegroundTabFirstPaint4", "ms", perf.SmallerIsBetter),
