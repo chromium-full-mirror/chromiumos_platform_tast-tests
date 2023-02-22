@@ -11,6 +11,7 @@ import (
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/upstart"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
@@ -42,13 +43,18 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 		return nil, errors.Wrap(err, "failed to connect to servo")
 	}
 
+	// Reserve 5 seconds for cleanup when this function fails.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	t := &FirmwareTest{dut: dut, servo: pxy}
 	// Close servo connection when this function is going to return an error.
-	defer func() {
+	defer func(ctx context.Context) {
 		if initError != nil {
 			t.servo.Close(ctx)
 		}
-	}()
+	}(cleanupCtx)
 
 	t.fpBoard, err = Board(ctx, t.dut)
 	if err != nil {
@@ -100,7 +106,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 		biodUpstartJobName,
 	})
 	// Start daemons when this function is going to return an error.
-	defer func() {
+	defer func(ctx context.Context) {
 		if initError != nil {
 			testing.ContextLog(ctx, "NewFirmwareTest failed, restore daemon state")
 
@@ -114,7 +120,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 				testing.ContextLog(ctx, "Failed to restart daemons: ", err)
 			}
 		}
-	}()
+	}(cleanupCtx)
 	// Check if daemons were stopped correctly.
 	if err != nil {
 		return nil, err
@@ -144,7 +150,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 			return nil, errors.Wrap(err, "failed to disable biod upstart job")
 		}
 		// Enable biod service when this function is going to return an error.
-		defer func() {
+		defer func(ctx context.Context) {
 			if initError != nil {
 				testing.ContextLog(ctx, "NewFirmwareTest failed, let's re-enable biod upstart job")
 
@@ -158,7 +164,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 					testing.ContextLog(ctx, "Failed to re-enable biod upstart job: ", err)
 				}
 			}
-		}()
+		}(cleanupCtx)
 
 		// Account for the additional time that rebooting adds.
 		t.cleanupTime += 3 * time.Minute
@@ -172,14 +178,14 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 			return nil, errors.Wrap(err, "failed to disable updater")
 		}
 		// Enable FP updater when this function is going to return an error.
-		defer func() {
+		defer func(ctx context.Context) {
 			if initError != nil {
 				testing.ContextLog(ctx, "NewFirmwareTest failed, let's re-enable FP updater")
 				if err := EnableFPUpdater(ctx, dut); err != nil {
 					testing.ContextLog(ctx, "Failed to re-enable FP updater: ", err)
 				}
 			}
-		}()
+		}(cleanupCtx)
 	}
 
 	t.dutTempDir, err = t.DutfsClient().TempDir(ctx, "", dutTempPathPattern)
@@ -209,8 +215,13 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 func (t *FirmwareTest) Close(ctx context.Context) error {
 	testing.ContextLog(ctx, "Tearing down")
 
+	// Reserve 1 second for closing servo connection.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
 	// Always close servo connection no matter what happens.
-	defer t.servo.Close(ctx)
+	defer t.servo.Close(cleanupCtx)
 
 	// The test can fail when DUT is disconnected (e.g. context timeout
 	// while reconnecting to DUT). In this case we should attempt to connect
