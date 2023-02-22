@@ -30,7 +30,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/scanapp"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/local/printing/cups"
 	"chromiumos/tast/local/printing/document"
 	"chromiumos/tast/local/printing/ippusbbridge"
 	"chromiumos/tast/local/printing/usbprinter"
@@ -435,9 +434,6 @@ func RunAppSettingsTests(ctx context.Context, s *testing.State, cr *chrome.Chrom
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	if err = cups.RestartPrintingSystem(ctx); err != nil {
-		s.Fatal("Failed to restart printing system: ", err)
-	}
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithDescriptors(scannerParams.Descriptors),
 		usbprinter.WithAttributes(scannerParams.Attributes),

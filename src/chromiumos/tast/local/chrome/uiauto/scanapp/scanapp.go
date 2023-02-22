@@ -22,7 +22,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
-	"chromiumos/tast/local/printing/cups"
 	"chromiumos/tast/local/printing/ippusbbridge"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
@@ -349,9 +348,6 @@ func GetScan(pattern string) (string, error) {
 
 // StartPrinter sets up the virtual printer. Caller should call printer.Stop.
 func StartPrinter(ctx context.Context, tconn *chrome.TestConn) (*usbprinter.Printer, error) {
-	if err := cups.RestartPrintingSystem(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to reset printing system")
-	}
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
 		usbprinter.WithGenericIPPAttributes(),

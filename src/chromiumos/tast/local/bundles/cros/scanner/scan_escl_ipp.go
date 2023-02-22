@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/printing/cups"
 	"chromiumos/tast/local/printing/ippusbbridge"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
@@ -97,10 +96,6 @@ func ScanESCLIPP(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := cups.RestartPrintingSystem(ctx); err != nil {
-		s.Fatal("Failed to restart printing system: ", err)
-	}
-
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
 		usbprinter.WithGenericIPPAttributes(),
@@ -115,9 +110,6 @@ func ScanESCLIPP(ctx context.Context, s *testing.State) {
 			s.Error("Failed to stop printer: ", err)
 		}
 	}(cleanupCtx)
-	if err := cups.RestartPrintingSystem(ctx); err != nil {
-		s.Fatal("Failed to restart printing system: ", err)
-	}
 
 	var deviceName string
 	if testOpt.Network {

@@ -198,7 +198,7 @@ func Scan(ctx context.Context, s *testing.State) {
 func setUpDocumentScanExtension(ctx context.Context, s *testing.State, extDir string) (string, error) {
 	for _, name := range []string{"manifest.json", "background.js", "scan.html", "scan.js", "scan.css"} {
 		if err := fsutil.CopyFile(s.DataPath(name), filepath.Join(extDir, name)); err != nil {
-			return "", errors.Wrapf(err, "failed to copy file %q: %v", name, err)
+			return "", errors.Wrapf(err, "failed to copy file %q", name)
 		}
 	}
 

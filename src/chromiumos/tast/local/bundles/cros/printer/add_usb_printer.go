@@ -7,7 +7,6 @@ package printer
 import (
 	"context"
 
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
 )
@@ -30,10 +29,6 @@ func init() {
 }
 
 func AddUSBPrinter(ctx context.Context, s *testing.State) {
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
-
 	pr, err := usbprinter.Start(ctx,
 		usbprinter.WithDescriptors("usb_printer.json"))
 	if err != nil {

@@ -22,7 +22,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/printmanagementapp"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
 )
@@ -74,9 +73,6 @@ func Print(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	s.Log("Installing printer")
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
 
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),

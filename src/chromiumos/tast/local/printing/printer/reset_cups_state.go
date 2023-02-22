@@ -7,14 +7,50 @@ package printer
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/testing"
 )
+
+// checkDebugd makes sure debugd is running and responding to printer setup requests.  It does this
+// by requesting a printer setup with an invalid PPD and making sure the returned error indicates a
+// PPD problem rather than a debugd or d-bus problem.
+func checkDebugd(ctx context.Context) error {
+	// debugd should be very quick when things are working, so use a much shorter timeout.
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if err := upstart.EnsureJobRunning(ctx, "debugd"); err != nil {
+		testing.ContextLogf(ctx, "debugd not running: %q", err)
+		return err
+	}
+	d, err := debugd.New(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to debugd")
+	}
+	result, err := d.CupsAddManuallyConfiguredPrinter(ctx, "DebugdPrinterProbe", "", []byte(""))
+	if err != nil {
+		return errors.Wrap(err, "failed to call debugd.CupsAddManuallyConfiguredPrinter")
+	} else if result != debugd.CUPSInvalidPPD {
+		return errors.Wrapf(err, "unexpected response from debugd: got %s; want %s",
+			result, debugd.CUPSInvalidPPD)
+	}
+
+	return nil
+}
 
 // ResetCups removes the privileged directories for cupsd.
 // If cupsd is running, this stops it.
 func ResetCups(ctx context.Context) error {
+	// Make sure debugd is running - users will need this to add a printer after resetting CUPS.
+	if err := checkDebugd(ctx); err != nil {
+		return errors.Wrap(err, "debugd probe failed")
+	}
+
 	if err := upstart.StopJob(ctx, "cupsd"); err != nil {
 		return err
 	}

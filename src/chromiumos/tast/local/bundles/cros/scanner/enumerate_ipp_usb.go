@@ -9,7 +9,6 @@ import (
 	"regexp"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
-	"chromiumos/tast/local/printing/cups"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
 	"chromiumos/tast/testing"
@@ -55,10 +54,6 @@ func isMatchingScanner(scanner *lpb.ScannerInfo, devInfo usbprinter.DevInfo) boo
 // calls lorgnette's ListScanners, and checks to see if the device was listed in the response.
 func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo) {
 	s.Logf("Checking if %s is listed", info.name)
-
-	if err := cups.RestartPrintingSystem(ctx); err != nil {
-		s.Fatal("Failed to restart printing system: ", err)
-	}
 
 	printer, err := usbprinter.Start(ctx, info.options...)
 	if err != nil {

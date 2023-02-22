@@ -11,7 +11,6 @@ import (
 	"os"
 	"strings"
 
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
 )
@@ -53,10 +52,6 @@ func getPPDMap(ctx context.Context, printerName string) (map[string]string, erro
 // ppdAttributes map. If there are any differences in values between the
 // generated PPD and ppdAttributes for the same key, then the test will fail.
 func RunIPPUSBPPDTest(ctx context.Context, s *testing.State, attributes string, ppdAttributes map[string]string) {
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
-
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
 		usbprinter.WithAttributes(attributes),

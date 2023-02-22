@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/printer/usbprintertests"
 	"chromiumos/tast/local/printing/lp"
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
 	"chromiumos/tast/local/usbutil"
@@ -113,10 +112,6 @@ func MultiFunctionPrinter(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(tmpDir)
 	recordPath := filepath.Join(tmpDir, "printed.pdf")
-
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
 
 	pr, err := usbprinter.Start(ctx, []usbprinter.Option{
 		usbprinter.WithDescriptors("ippusb_printer_plus_storage.json"),

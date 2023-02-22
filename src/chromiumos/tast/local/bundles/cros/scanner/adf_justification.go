@@ -12,7 +12,6 @@ import (
 	"os"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
-	"chromiumos/tast/local/printing/cups"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
 	"chromiumos/tast/testing"
@@ -99,10 +98,6 @@ func ADFJustification(ctx context.Context, s *testing.State) {
 // performs a scan, and compares the XOffset of the scan versus the expected calculated value.
 func runJustificationTest(ctx context.Context, s *testing.State, params scannerParams) {
 	s.Log("Performing scan on ", params.name)
-
-	if err := cups.RestartPrintingSystem(ctx); err != nil {
-		s.Fatal("Failed to restart printing system: ", err)
-	}
 
 	tmpDir, err := ioutil.TempDir("", "tast.scanner.ADFJustification.")
 	if err != nil {

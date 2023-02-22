@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/printing/document"
 	"chromiumos/tast/local/printing/lp"
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
 )
@@ -40,10 +39,6 @@ type PrintJobSetup struct {
 // expected printer output.
 func RunPrintTest(ctx context.Context, s *testing.State,
 	opts []usbprinter.Option, ppd string, job PrintJobSetup) {
-
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
 
 	pr, err := usbprinter.Start(ctx, opts...)
 	if err != nil {

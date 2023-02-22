@@ -19,7 +19,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/printing/document"
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
 )
@@ -84,10 +83,6 @@ func Print(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(tmpDir)
 	recordPath := filepath.Join(tmpDir, "record.pdf")
-
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
 
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
