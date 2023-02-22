@@ -29,8 +29,10 @@ var authErrorRegex = regexp.MustCompile(`Your.* password couldn't be verified. T
 // AuthErrorFinder is the finder for the authentication error shown on the first failure.
 var AuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(authErrorRegex).ClassName("LoginErrorBubble")
 
+var consecutiveAuthErrorRegex = regexp.MustCompile(`Your.* password still couldn't be verified.*`)
+
 // ConsecutiveAuthErrorFinder is the finder for the authentication error shown on the consecutive failures.
-var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameStartingWith("Your PIN or password still couldn't be verified. Note: If you recently changed your password, use your old password. Your new password will be applied once you sign out.").ClassName("LoginErrorBubble")
+var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(consecutiveAuthErrorRegex).ClassName("LoginErrorBubble")
 
 // SmartLockArrowButtonFinder is the finder for the button that needs to be clicked to complete authentication with Smart Lock.
 var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone. Tap or click to enter.").ClassName("ArrowButtonView")
