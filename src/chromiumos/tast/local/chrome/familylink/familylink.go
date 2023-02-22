@@ -8,6 +8,7 @@ package familylink
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -542,4 +543,15 @@ func maybeSelectParentFromDropdown(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to select parent account in dropdown")
 	}
 	return nil
+}
+
+// GetSystemClockLocation returns the timezone of DUT.
+func GetSystemClockLocation() (*time.Location, error) {
+	// The `localtime` is string with timezone e.g. "/usr/share/zoneinfo/America/New_York"
+	localtime, err := os.Readlink("/var/lib/timezone/localtime")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get timezone info")
+	}
+	timezone := strings.TrimPrefix(localtime, "/usr/share/zoneinfo/")
+	return time.LoadLocation(timezone)
 }

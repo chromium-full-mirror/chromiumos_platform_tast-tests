@@ -60,20 +60,24 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 	now := time.Now()
 	bedTimeDuration := time.Minute
 	timeBeforeLocked := 30 * time.Second
-	startAt := now.Add(timeBeforeLocked)
-	endAt := startAt.Add(bedTimeDuration)
+	location, err := familylink.GetSystemClockLocation()
+	if err != nil {
+		s.Fatal("Get system clock location failed: ", err)
+	}
+	startAt := now.Add(timeBeforeLocked).In(location)
+	endAt := startAt.Add(bedTimeDuration).In(location)
 
 	usageLimitPolicy := familylink.CreateUsageTimeLimitPolicy()
 	bedTimeLimitEntry := &policy.UsageTimeLimitValueTimeWindowLimitEntries{
 		EffectiveDay:      strings.ToUpper(startAt.Weekday().String()),
 		LastUpdatedMillis: strconv.FormatInt(now.Unix(), 10 /*base*/),
 		EndsAt: &policy.UsageTimeLimitValueTimeWindowLimitEntriesEndsAt{
-			Hour:   endAt.Local().Hour(),
-			Minute: endAt.Local().Minute(),
+			Hour:   endAt.Hour(),
+			Minute: endAt.Minute(),
 		},
 		StartsAt: &policy.UsageTimeLimitValueTimeWindowLimitEntriesStartsAt{
-			Hour:   startAt.Local().Hour(),
-			Minute: startAt.Local().Minute(),
+			Hour:   startAt.Hour(),
+			Minute: startAt.Minute(),
 		},
 	}
 
@@ -92,6 +96,7 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 	pb.PolicyUser = s.FixtValue().(familylink.HasPolicyUser).PolicyUser()
 	pb.AddPolicies(policies)
 
+	s.Logf("Setting a bed time limit policy with weekday=%v, startAt=%v, endAt=%v", startAt.Weekday(), startAt, endAt)
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
 		s.Fatal("Failed to serve policies: ", err)
 	}

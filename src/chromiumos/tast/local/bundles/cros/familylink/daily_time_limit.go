@@ -56,6 +56,11 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
+	location, err := familylink.GetSystemClockLocation()
+	if err != nil {
+		s.Fatal("Get system clock location failed: ", err)
+	}
+
 	now := time.Now()
 	usageLimitPolicy := familylink.CreateUsageTimeLimitPolicy()
 
@@ -66,10 +71,10 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 	// to be 1m after daily limit ends and the screen is locked (which is
 	// 2m after logged in) without changing the system clock. Family Link users
 	// have restrictions to prevent manipulating the system clock.
-	reset := now.Add(resetInMin)
+	reset := now.Add(resetInMin).In(location)
 	usageLimitPolicy.Val.TimeUsageLimit.ResetAt = &policy.UsageTimeLimitValueTimeUsageLimitResetAt{
-		Hour:   reset.Local().Hour(),
-		Minute: reset.Local().Minute(),
+		Hour:   reset.Hour(),
+		Minute: reset.Minute(),
 	}
 
 	dailyLimitEntry := &policy.RefTimeUsageLimitEntry{
@@ -83,7 +88,8 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 	// This line calculate which date in the week should be set limit on base on `reset`
 	// and set this date with `dailyLimitEntry`.
 	oneDayBackward := -time.Hour * 24
-	switch weekday := reset.Add(oneDayBackward).Weekday(); weekday {
+	weekday := reset.Add(oneDayBackward).Weekday()
+	switch weekday {
 	case time.Sunday:
 		usageLimitPolicy.Val.TimeUsageLimit.Sunday = &policy.UsageTimeLimitValueTimeUsageLimitSunday{
 			LastUpdatedMillis: dailyLimitEntry.LastUpdatedMillis,
@@ -128,6 +134,7 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 	pb.PolicyUser = s.FixtValue().(familylink.HasPolicyUser).PolicyUser()
 	pb.AddPolicies(policies)
 
+	s.Logf("Setting a daily time limit policy with weekday=%v, reset=%v, quotaMins=%v", weekday, reset, dailyLimitEntry.UsageQuotaMins)
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
 		s.Fatal("Failed to serve policies: ", err)
 	}
