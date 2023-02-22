@@ -30,7 +30,9 @@ import (
 const runManyFiles string = "run-manyfiles.py"
 
 type manyFilesParams struct {
-	kind string
+	kind     string
+	cache    string
+	caseFold bool
 }
 
 func init() {
@@ -56,7 +58,31 @@ func init() {
 			{
 				Name: "virtiofs",
 				Val: manyFilesParams{
-					kind: "virtiofs",
+					kind:  "virtiofs",
+					cache: "auto",
+				},
+			},
+			{
+				Name: "virtiofs_casefold",
+				Val: manyFilesParams{
+					kind:     "virtiofs",
+					cache:    "auto",
+					caseFold: true,
+				},
+			},
+			{
+				Name: "virtiofs_cached",
+				Val: manyFilesParams{
+					kind:  "virtiofs",
+					cache: "always",
+				},
+			},
+			{
+				Name: "virtiofs_cached_casefold",
+				Val: manyFilesParams{
+					kind:     "virtiofs",
+					cache:    "always",
+					caseFold: true,
 				},
 			},
 		},
@@ -84,7 +110,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	defer os.RemoveAll(ud)
 
 	p := s.Param().(manyFilesParams)
-	opt, err := storage.NewOption(p.kind)
+	opt, err := storage.NewOption(p.kind, p.cache, p.caseFold)
 	if err != nil {
 		s.Fatal("Failed to create storage option: ", err)
 	}

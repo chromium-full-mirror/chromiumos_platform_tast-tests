@@ -36,10 +36,11 @@ type SharedDirParam struct {
 	Timeout   uint
 	Writeback bool
 	DAX       bool
+	CaseFold  bool
 }
 
 func (p *SharedDirParam) toArg() string {
-	return fmt.Sprintf("%s:%s:type=%s:cache=%s:timeout=%d:writeback=%t:dax=%t", p.Src, p.Tag, p.FsType, p.Cache, p.Timeout, p.Writeback, p.DAX)
+	return fmt.Sprintf("%s:%s:type=%s:cache=%s:timeout=%d:writeback=%t:dax=%t:ascii_casefold=%t", p.Src, p.Tag, p.FsType, p.Cache, p.Timeout, p.Writeback, p.DAX, p.CaseFold)
 }
 
 // SerialIOPath contains file names used for serial input and output.

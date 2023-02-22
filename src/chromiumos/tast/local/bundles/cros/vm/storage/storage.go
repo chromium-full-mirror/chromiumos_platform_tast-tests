@@ -20,18 +20,22 @@ const VirtioFSCacheTimeoutSecond = 1
 
 // Option holds parameters for a guest storage.
 type Option struct {
-	Kind string
-	Tag  string
+	Kind     string
+	Tag      string
+	cache    string
+	caseFold bool
 }
 
 // NewOption creates a new instance of Option.
-func NewOption(kind string) (Option, error) {
+func NewOption(kind, cache string, caseFold bool) (Option, error) {
 	var opt Option
 	opt.Kind = kind
 	if kind == "block" {
 		opt.Tag = "/dev/vda"
 	} else if kind == "virtiofs" || kind == "virtiofs_dax" || kind == "p9" {
 		opt.Tag = "shared"
+		opt.cache = cache
+		opt.caseFold = caseFold
 	} else {
 		return opt, errors.Errorf("invalid storage kind: %v", kind)
 	}
@@ -67,13 +71,14 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 		storageOpt = vm.RWDisks(block)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
-			Src: shared, Tag: opt.Tag, FsType: "fs", Cache: "auto", Timeout: VirtioFSCacheTimeoutSecond, Writeback: true, DAX: opt.Kind == "virtiofs_dax"})
+			Src: shared, Tag: opt.Tag, FsType: "fs", Cache: opt.cache, Timeout: VirtioFSCacheTimeoutSecond, Writeback: true, DAX: opt.Kind == "virtiofs_dax", CaseFold: opt.caseFold})
 	} else if opt.Kind == "p9" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
 			Src: shared, Tag: opt.Tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})
 	} else {
 		return nil, errors.Wrap(err, "unknown storage device type")
 	}
+
 	kernelArgs := []string{
 		"root=root",
 		"rootfstype=virtiofs",
