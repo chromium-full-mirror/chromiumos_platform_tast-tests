@@ -30,7 +30,7 @@ func init() {
 			"joelhockey@chromium.org",
 		},
 		BugComponent: "b:1122570",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }
