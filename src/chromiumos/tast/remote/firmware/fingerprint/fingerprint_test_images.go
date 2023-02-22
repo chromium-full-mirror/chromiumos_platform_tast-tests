@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/errors"
@@ -396,26 +397,8 @@ func readFMAPSection(ctx context.Context, futilityPath, firmwareFilePath string,
 	}, nil
 }
 
-// GenerateTestFirmwareImages generates a set of test firmware images from the firmware that is on the DUT.
-func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, futilityPath, keyFilePath string, fpBoard fp.BoardName, buildFWFile, dutTempDir string) (ret TestImages, retErr error) {
-	testing.ContextLog(ctx, "Creating temp dir")
-	serverTmpDir, err := ioutil.TempDir("", "*")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create temp dir")
-	}
-	defer os.RemoveAll(serverTmpDir)
-
-	testing.ContextLog(ctx, "Copying firmware from DUT to host")
-	serverFWFilePath := filepath.Join(serverTmpDir, filepath.Base(buildFWFile))
-	if err := linuxssh.GetFile(ctx, d.Conn(), buildFWFile, serverFWFilePath, linuxssh.DereferenceSymlinks); err != nil {
-		return nil, errors.Wrap(err, "failed to get file")
-	}
-
-	origFWFileCopy := filepath.Join(serverTmpDir, string(fpBoard)+".bin")
-	if err := fsutil.CopyFile(serverFWFilePath, origFWFileCopy); err != nil {
-		return nil, errors.Wrap(err, "failed to copy original firmware file")
-	}
-
+// generateImages generates various test images from provided file using futility. Please note that the function works on host.
+func generateImages(ctx context.Context, futilityPath, keyFilePath, origFWFileCopy string, fpBoard fp.BoardName) (ret TestImages, retErr error) {
 	devKeyPair, err := createKeyPairFromRSAKey(ctx, futilityPath, keyFilePath, string(fpBoard)+" dev key")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create key pair")
@@ -468,7 +451,7 @@ func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, futilityP
 		return nil, errors.Wrap(err, "failed to generate image with corrupt last byte")
 	}
 
-	images := TestImages{
+	return TestImages{
 		TestImageTypeOriginal:         &TestImageData{Path: origFWFileCopy},
 		TestImageTypeDev:              &TestImageData{Path: devFilePath},
 		TestImageTypeCorruptFirstByte: &TestImageData{Path: corruptFirstBytePath},
@@ -476,6 +459,36 @@ func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, futilityP
 		TestImageTypeDevRollbackZero:  &TestImageData{Path: rollbackZeroFilePath},
 		TestImageTypeDevRollbackOne:   &TestImageData{Path: rollbackOneFilePath},
 		TestImageTypeDevRollbackNine:  &TestImageData{Path: rollbackNineFilePath},
+	}, nil
+}
+
+// GenerateTestFirmwareImages generates a set of test firmware images from the firmware that is on the DUT.
+func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, futilityPath, keyFilePath string, fpBoard fp.BoardName, buildFWFile, dutTempDir string) (ret TestImages, retErr error) {
+	testing.ContextLog(ctx, "Creating temp dir")
+	serverTmpDir, err := ioutil.TempDir("", "*")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create temp dir")
+	}
+	defer os.RemoveAll(serverTmpDir)
+
+	testing.ContextLog(ctx, "Copying firmware from DUT to host")
+	serverFWFilePath := filepath.Join(serverTmpDir, filepath.Base(buildFWFile))
+	if err := linuxssh.GetFile(ctx, d.Conn(), buildFWFile, serverFWFilePath, linuxssh.DereferenceSymlinks); err != nil {
+		return nil, errors.Wrap(err, "failed to get file")
+	}
+
+	origFWFileCopy := filepath.Join(serverTmpDir, string(fpBoard)+".bin")
+	if err := fsutil.CopyFile(serverFWFilePath, origFWFileCopy); err != nil {
+		return nil, errors.Wrap(err, "failed to copy original firmware file")
+	}
+
+	// Use separate context when generating test images. The context will
+	// help to detect issues with slow 'futility'.
+	generateCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	images, err := generateImages(generateCtx, futilityPath, keyFilePath, origFWFileCopy, fpBoard)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate test images on host")
 	}
 
 	filesToCopy := make(map[string]string)
