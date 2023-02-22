@@ -24,7 +24,7 @@ func init() {
 		Func:         CCAUIImageExif,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies captured imaging metadata information on EXIF, using userfacing camera",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",

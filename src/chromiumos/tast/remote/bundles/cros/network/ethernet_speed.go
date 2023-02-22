@@ -37,7 +37,8 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Data:         []string{"testing_rsa"},
 		ServiceDeps:  []string{"tast.cros.network.EthernetService", "tast.cros.wifi.ShillService"},
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
 			Name: "native",

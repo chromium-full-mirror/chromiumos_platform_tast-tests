@@ -26,7 +26,7 @@ func init() {
 		Func:         CCAUICaptureOperation,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies capturing of images, video using user-facing and back-facing camera stress test",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
 		Params: []testing.Param{{
@@ -85,7 +85,7 @@ func init() {
 			Val:     cameraStressTestParams{cca.FacingBack, 720, false},
 			Timeout: 60 * time.Minute,
 		}},
-		BugComponent: "b:978428",
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 	})
 }
 

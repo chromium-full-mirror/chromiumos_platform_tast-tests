@@ -43,8 +43,8 @@ func init() {
 		Desc: "Flash EC using flashrom and enable disable EC SW sync",
 		Contacts: []string{
 			"chromeos-faft@google.com",
+			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
-			"intel-chrome-system-automation-team@intel.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"flashrom"},

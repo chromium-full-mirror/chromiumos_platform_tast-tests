@@ -35,12 +35,14 @@ import (
 // DUT ------> C-Switch(device that performs hot plug-unplug) ----> External Type-C HDMI display.
 // Command to execute: tast run -var=typec.cSwitchPort=<cswitch_port_ID> \
 // -var=typec.domainIP=localhost:9000 <DUT_IP> typec.AudioSwitchOnboardSpeakerToHDMIHotplug.quick
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioSwitchOnboardSpeakerToHDMIHotplug,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies local audio playback through default app, switch audio playback between internal-speaker and HDMI display",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:typec"},
 		Vars:         []string{"typec.cSwitchPort", "typec.domainIP"},

@@ -34,8 +34,8 @@ func init() {
 		Func:         S0ixStabilityCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies S0ix stability with suspend-resume",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),

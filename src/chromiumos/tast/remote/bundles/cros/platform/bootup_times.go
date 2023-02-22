@@ -43,8 +43,8 @@ func init() {
 		Func:         BootupTimes,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot performance test after reboot, powerbutton and lid close open",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
-		BugComponent: "b:253998684",
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		// Disabled due to 98%-99% failure rate and preventing other tests from running. TODO(b/242478571): fix and re-enable.
 		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

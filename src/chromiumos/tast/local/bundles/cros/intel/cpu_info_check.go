@@ -20,8 +20,8 @@ func init() {
 		Func:         CPUInfoCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies CPU info test",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:253998684",
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("rex")),
 	})

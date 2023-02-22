@@ -24,12 +24,12 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyFastLidCloseOpen,
 		Desc:         "To verify Fast lid close open multiple times",
-		BugComponent: "b:167191",
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Vars:         []string{"power.iterations"},
 		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
 		Fixture:      fixture.NormalMode,
 	})
 }

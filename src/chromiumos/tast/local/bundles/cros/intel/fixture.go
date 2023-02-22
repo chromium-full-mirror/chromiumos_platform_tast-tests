@@ -18,7 +18,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeLoggedInRootfsRemoved",
 		Desc:            "Removes rootfs verification, if required reboots the DUT and return logged into user session",
-		Contacts:        []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:        []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		Impl:            &loggedIn{},
 		Parent:          "rootfsRemovedFixture",
 		SetUpTimeout:    5 * time.Minute,

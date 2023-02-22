@@ -25,7 +25,8 @@ func init() {
 		Func:         RecModeTime,
 		Desc:         "Test to ensure boot to recovery mode time is consistently less than 5 seconds",
 		SoftwareDeps: []string{"crossystem", "flashrom"},
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		Fixture:      fixture.DevMode,
 		Timeout:      10 * time.Minute,
 	})

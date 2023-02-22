@@ -16,7 +16,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BTPairMonoheadsetManual,
 		Desc:         "Verify bluetooth mono-headset pair",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"bluetooth.monoHeadset"},
 		Fixture:      "chromeLoggedIn",

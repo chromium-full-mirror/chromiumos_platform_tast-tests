@@ -40,8 +40,8 @@ func init() {
 		Func:         ExtendedDisplayColdboot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies extended display functionality before and after performing cold boot",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),

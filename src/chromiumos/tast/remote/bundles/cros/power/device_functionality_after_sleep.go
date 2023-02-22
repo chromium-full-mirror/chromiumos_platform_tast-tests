@@ -45,8 +45,8 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:157291",
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
 			Name:    "lid_close_open_with_usb2",

@@ -36,7 +36,8 @@ func init() {
 		Func:         HotplugUSBHeadsetAudioPlayback,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback with USB type-C headset hotplug",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"volumeDown.txt", "volumeUp.txt"},

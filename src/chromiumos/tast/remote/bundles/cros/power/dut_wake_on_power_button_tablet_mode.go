@@ -27,8 +27,8 @@ func init() {
 		Func:         DUTWakeOnPowerButtonTabletMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies waking DUT from S0ix using power button press in tabletmode",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),

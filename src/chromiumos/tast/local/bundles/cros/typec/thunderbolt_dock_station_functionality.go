@@ -38,7 +38,8 @@ func init() {
 		Func:         ThunderboltDockStationFunctionality,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Thunderbolt dock station functionality with various devices connected",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json", "testcert.p12"},

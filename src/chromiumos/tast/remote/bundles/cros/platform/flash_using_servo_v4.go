@@ -28,7 +28,8 @@ func init() {
 		Func:         FlashUsingServoV4,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "System should support flashing ec/coreboot using Servo v4",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"servo"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.security.BootLockboxService"},

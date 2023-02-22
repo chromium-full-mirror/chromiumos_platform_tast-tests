@@ -42,7 +42,8 @@ func init() {
 		Func:         TouchSuspendResume,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Touchscreen: suspend-resume with operation for 10 cycles",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"canvas.html"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.X86()),

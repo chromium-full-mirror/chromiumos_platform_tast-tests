@@ -34,7 +34,7 @@ func init() {
 		Func: ShutdownMode, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies that system comes back after power button press and poweroff",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com",
+			"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},

@@ -26,9 +26,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeUSBCDisplay,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies suspend-resume with USB type-C display functionality check",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Vars:         []string{"servo"},
@@ -201,7 +202,7 @@ func extDisplayDetection(ctx context.Context, dut *dut.DUT, numberOfDisplays int
 		}
 		matchedString := displayInfoRe.FindAllString(string(out), -1)
 		if actual := len(matchedString); actual != numberOfDisplays {
-			return errors.Errorf("Unexpected number of external display: want %d, actual %d", numberOfDisplays, actual)
+			return errors.Errorf("unexpected number of external display: want %d, actual %d", numberOfDisplays, actual)
 		}
 		return nil
 	}, &testing.PollOptions{

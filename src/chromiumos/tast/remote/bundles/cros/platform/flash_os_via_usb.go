@@ -22,7 +22,8 @@ func init() {
 		Func:         FlashOSViaUSB,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Flash OS through USB 3.0 and boot with Local storage",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Fixture:      fixture.DevMode,
 		Timeout:      20 * time.Minute,

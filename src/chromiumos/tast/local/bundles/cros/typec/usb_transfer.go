@@ -25,7 +25,8 @@ func init() {
 		Func:         USBTransfer,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test USB type-A 2.0/ type-C 3.0 Pendrive detection and RW",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "usb2",

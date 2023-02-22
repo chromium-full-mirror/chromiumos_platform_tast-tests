@@ -24,7 +24,8 @@ func init() {
 		Func:         WebstoreAppInstallUninstall,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Chrome webstore app install uninstall",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{

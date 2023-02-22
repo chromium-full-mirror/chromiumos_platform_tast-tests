@@ -35,8 +35,8 @@ func init() {
 		Func:         SuspendResumeDisplayFunctionalityAfterWake,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies display connect via TBT dongle and then connect TBT dongle at suspend mode, and check functionality after the wake",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:253998684",
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:typec"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},

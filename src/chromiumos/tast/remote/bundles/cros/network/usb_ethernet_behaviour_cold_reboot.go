@@ -28,7 +28,8 @@ func init() {
 		Func:         UsbEthernetBehaviourColdReboot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "USB type-C/type-A to Ethernet adapter behaves properly when device cold reboots",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.network.EthernetService"},
 		Fixture:      fixture.NormalMode,

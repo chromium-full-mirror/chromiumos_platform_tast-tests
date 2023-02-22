@@ -28,7 +28,8 @@ type extendedDisplayFunctionTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ExtendedDisplayFunctionality, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies type-C extended display functionality before and after performing cold boot and warm boot",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),

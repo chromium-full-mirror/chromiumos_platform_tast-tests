@@ -17,7 +17,7 @@ func init() {
 		Func:         CCAUIPreviewLongTakePhoto,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Preview Camera for 1 hour and take photo",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunched",
 		Timeout:      62 * time.Minute, // Timeout for long duration.

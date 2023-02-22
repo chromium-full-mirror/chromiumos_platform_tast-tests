@@ -21,7 +21,8 @@ func init() {
 		Func:         APBrowseInternet,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "WiFi AP connect and browse internet",
-		Contacts:     []string{"cros-network-health-team@google.com", "pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"cros-network-health-team@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{},
 		Vars:         []string{"wifissid", "wifipassword"},

@@ -27,10 +27,10 @@ func init() {
 		Func:         TimeTakenSuspendResume,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Time Taken to suspend and resume for S0ix",
-		BugComponent: "b:167191",
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts: []string{
+			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
-			"intel-chrome-system-automation-team@intel.com",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
@@ -90,11 +90,10 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 	actualValue := strings.TrimSpace(string(configValue))
 	const expectedValue = "0"
 	if actualValue != expectedValue {
-		s.Fatalf(
-			"Failed to be in S0ix state; expected PowerdConfig value %s; got %s",
+		s.Fatalf("Failed to be in S0ix state; expected PowerdConfig value %s; got %s",
 			expectedValue,
-			actualValue,
-		)
+			actualValue)
+
 	}
 
 	slpOpSetPre := cmdOutput(slpS0Cmd)
@@ -112,11 +111,10 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 
 	slpOpSetPost := cmdOutput(slpS0Cmd)
 	if slpOpSetPre == slpOpSetPost {
-		s.Fatalf(
-			"SLP counter value %q must be different than the value noted most recently %q",
+		s.Fatalf("SLP counter value %q must be different than the value noted most recently %q",
 			slpOpSetPre,
-			slpOpSetPost,
-		)
+			slpOpSetPost)
+
 	}
 	if slpOpSetPost == "0" {
 		s.Fatal("SLP counter value must be non-zero, noted is: ", slpOpSetPost)
@@ -128,11 +126,10 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 	}
 	pkgOpSetPost := matchSetPost[1]
 	if pkgOpSetPre == pkgOpSetPost {
-		s.Fatalf(
-			"Package C10 value %q must be different than value noted most recently %q",
+		s.Fatalf("Package C10 value %q must be different than value noted most recently %q",
 			pkgOpSetPre,
-			pkgOpSetPost,
-		)
+			pkgOpSetPost)
+
 	}
 	if pkgOpSetPost == "0x0" || pkgOpSetPost == "0" {
 		s.Fatal("Package C10 should be non-zero, but got: ", pkgOpSetPost)
@@ -165,13 +162,12 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 	}
 
 	if sd > suspendTime || rd > resumeTime {
-		s.Fatalf(
-			"Failed : Suspend or Resume duration is greater than expected; got suspend time %v, want suspend time %v, got resume time %v, want resume time %v",
+		s.Fatalf("Failed : Suspend or Resume duration is greater than expected; got suspend time %v, want suspend time %v, got resume time %v, want resume time %v",
 			sd,
 			suspendTime,
 			rd,
-			resumeTime,
-		)
+			resumeTime)
+
 	}
 }
 
@@ -208,11 +204,10 @@ func readSuspendResumeDuration(
 		}
 		return nil
 	}, &pollOpts); err != nil {
-		return 0.0, 0.0, errors.Wrapf(
-			err,
+		return 0.0, 0.0, errors.Wrapf(err,
 			"failed to check existence of a new last_resume_timings file within %v",
-			pollOpts.Timeout,
-		)
+			pollOpts.Timeout)
+
 	}
 
 	b, err := ioutil.ReadFile(lastResumeTimingsFile)

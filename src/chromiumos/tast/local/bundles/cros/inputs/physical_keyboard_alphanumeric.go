@@ -28,7 +28,8 @@ func init() {
 		Func:         PhysicalKeyboardAlphanumeric,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Physical Keyboard alphanumeric keys are Functional",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ClamshellNonVK,

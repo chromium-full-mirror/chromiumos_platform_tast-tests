@@ -69,8 +69,10 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HdmiAdapterSuspendResume,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB type-C single port adapter functionality with suspend-resume cycles",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			"power.chameleon_addr",         // Only needed when using chameleon board as extended display.

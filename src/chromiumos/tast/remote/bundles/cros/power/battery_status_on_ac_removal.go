@@ -27,8 +27,8 @@ func init() {
 		Func:         BatteryStatusOnACRemoval,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Battery status and stop charging upon removal of AC",
-		BugComponent: "b:167191",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.power.BatteryService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),

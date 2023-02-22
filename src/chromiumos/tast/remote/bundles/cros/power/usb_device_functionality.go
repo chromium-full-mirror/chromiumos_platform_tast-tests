@@ -33,8 +33,8 @@ func init() {
 		Func:         USBDeviceFunctionality,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB device functionality before and after cold boot",
-		BugComponent: "b:167191",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},

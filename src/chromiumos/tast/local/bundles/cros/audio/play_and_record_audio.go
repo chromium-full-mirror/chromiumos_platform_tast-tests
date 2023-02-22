@@ -30,7 +30,7 @@ func init() {
 		Func:         PlayAndRecordAudio,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Play local audio file and record it simultaneously. Then play the recorded audio and verify if it routes through expected audio node",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:875484",
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		SoftwareDeps: []string{"chrome"},

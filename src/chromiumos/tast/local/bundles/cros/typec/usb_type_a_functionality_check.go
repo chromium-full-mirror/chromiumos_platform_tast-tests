@@ -60,8 +60,8 @@ func init() {
 		Func:         USBTypeAFunctionalityCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB type-A device functionality check with consecutive hotplug-unplug using c-switch",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:157291",
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"c.txt", "h.txt", "r.txt", "o.txt", "m.txt", "e.txt"},

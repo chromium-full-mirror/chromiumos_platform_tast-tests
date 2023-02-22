@@ -32,8 +32,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
 			"chromeos-faft@google.com",
+			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
-			"intel-chrome-system-automation-team@intel.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"flashrom", "chrome"},

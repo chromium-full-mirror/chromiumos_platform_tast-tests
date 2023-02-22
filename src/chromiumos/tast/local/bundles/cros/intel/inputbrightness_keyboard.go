@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verifies system Brightness increase and decrease through onboard keyboard",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts: []string{
-			"intel-chrome-system-automation-team@intel.com",
+			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",
 		},
 		SoftwareDeps: []string{"chrome"},

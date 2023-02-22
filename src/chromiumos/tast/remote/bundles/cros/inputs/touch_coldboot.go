@@ -27,7 +27,8 @@ func init() {
 		Func:         TouchColdboot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Touchscreen: Cold boot (S0-S5) with operation for 10 cycles",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.inputs.TouchscreenService"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.X86()),

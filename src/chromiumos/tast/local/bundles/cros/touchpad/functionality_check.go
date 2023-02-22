@@ -30,7 +30,8 @@ func init() {
 		Func:         FunctionalityCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Touchpad primary button clicks",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Touchpad(), hwdep.FormFactor(hwdep.Convertible)),

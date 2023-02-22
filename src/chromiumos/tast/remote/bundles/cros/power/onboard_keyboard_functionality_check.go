@@ -37,8 +37,8 @@ func init() {
 		Func:         OnboardKeyboardFunctionalityCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies on-board keyboard functionality check with suspend-resume and coldboot operation",
-		BugComponent: "b:167191",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
 		VarDeps:      []string{"servo"},

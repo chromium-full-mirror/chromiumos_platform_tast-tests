@@ -39,8 +39,8 @@ func init() {
 		Func:         USBHIDDeviceSuspendResume,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB HID devices functionality with suspend-resume",
-		BugComponent: "b:167191",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		VarDeps:      []string{"servo"},

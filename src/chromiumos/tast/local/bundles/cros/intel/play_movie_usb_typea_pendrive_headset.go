@@ -34,7 +34,7 @@ func init() {
 		Func:         PlayMovieUsbTypeaPendriveHeadset,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Play movie in USB type-A pen drive with USB type-A HS",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"bear-320x240.h264.mp4"},

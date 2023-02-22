@@ -24,8 +24,8 @@ func init() {
 		Func:         HdmiSuspendResume,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies HDMI native port functionality with suspend-resume cycles",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		// Disabled due to <1% pass rate over 30 days. See b/241943556
 		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

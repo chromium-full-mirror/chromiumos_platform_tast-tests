@@ -40,8 +40,8 @@ func init() {
 		Func:         SystemPeripheralsFunctionalityCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies connected peripherals detection before and after power operations",
-		BugComponent: "b:167191",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		VarDeps:      []string{"servo"},

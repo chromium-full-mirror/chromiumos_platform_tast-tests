@@ -31,11 +31,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Plays YouTube video and performs basic user actions. Also checks for significant video frame drops and if the audio is being routed through expected device",
 		Contacts: []string{
+			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
 			"andrescj@google.com",
-			"intel-chrome-system-automation-team@intel.com",
 			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},

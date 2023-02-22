@@ -31,7 +31,8 @@ func init() {
 		Func:         TBTDockGatkexUSB4,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies test TBT Docking station on USB4 gatkex card TBT port via USB4 port using 40G passive cable",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:typec"},
 		Data:         []string{"test_config.json", "testcert.p12", "bear-320x240.h264.mp4", "video.html", "playback.js"},

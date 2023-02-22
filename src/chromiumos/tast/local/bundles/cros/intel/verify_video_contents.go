@@ -50,7 +50,7 @@ func init() {
 		Func:         VerifyVideoContents,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies different widevine secure content using shaka player",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInRootfsRemoved",

@@ -40,7 +40,8 @@ func init() {
 		Func:         YoutubeStreamHDMIDisplay,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verifies Youtube stream with 4K display and checks display functionalities on HDMI monitor connected on USB type-C port",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"testcert.p12"},
 		Vars:         []string{"ui.cSwitchPort", "ui.domainIP"},

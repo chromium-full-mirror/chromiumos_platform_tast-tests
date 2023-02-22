@@ -32,11 +32,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Plays YouTube video streaming and checks if the audio is being routed through onboard speaker",
 		Contacts: []string{
+			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
 			"andrescj@google.com",
-			"intel-chrome-system-automation-team@intel.com",
 			"chromeos-gfx-video@google.com",
 		},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

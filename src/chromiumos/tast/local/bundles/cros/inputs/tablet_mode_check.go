@@ -25,7 +25,8 @@ func init() {
 		Func:         TabletModeCheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies tablet mode functionality with checking input devices behavior",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{},
 		Fixture:      "chromeLoggedIn",

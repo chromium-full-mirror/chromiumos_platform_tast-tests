@@ -32,7 +32,8 @@ func init() {
 		Func:         EnableDisableBluetoothWithAudioPlay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback over BT speaker while performing bluetooth enable and disable",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"bluetooth.btDeviceName"},
 		Fixture:      "chromeLoggedIn",

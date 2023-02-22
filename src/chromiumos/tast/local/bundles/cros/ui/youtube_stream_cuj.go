@@ -27,7 +27,8 @@ func init() {
 		Func:         YoutubeStreamCUJ,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Plays YouTube video of different quality and checks for any frame drops and if the audio is routing through expected device",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "andrescj@google.com", "intel-chrome-system-automation-team@intel.com", "chromeos-gfx-video@google.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com", "andrescj@google.com", "chromeos-gfx-video@google.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},

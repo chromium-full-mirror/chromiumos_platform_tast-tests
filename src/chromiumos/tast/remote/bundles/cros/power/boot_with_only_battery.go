@@ -25,8 +25,8 @@ func init() {
 		Func:         BootWithOnlyBattery,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies DUT boots with battery after unplugging AC power supply",
-		BugComponent: "b:167191",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Vars:         []string{"servo"},

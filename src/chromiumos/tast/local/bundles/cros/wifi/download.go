@@ -32,7 +32,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Download,
 		Desc:         "Downloads a file from internet using WiFi",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Attr:         []string{},

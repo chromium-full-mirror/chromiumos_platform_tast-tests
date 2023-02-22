@@ -45,7 +45,8 @@ func init() {
 		Func:         SATAStorage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a single SATA Storage exists and is recognized by the system",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 	})
 }

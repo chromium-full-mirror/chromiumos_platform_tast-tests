@@ -28,7 +28,8 @@ func init() {
 		Func:         AudioSwitchOnboardSpeakerToBTSpeakerManual,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback switching from onboard speaker to BT speaker",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Vars:         []string{"bluetooth.btDeviceName"},

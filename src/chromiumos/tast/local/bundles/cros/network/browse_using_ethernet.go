@@ -23,7 +23,8 @@ func init() {
 		Func:         BrowseUsingEthernet,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Browse using ethernet LAN",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{

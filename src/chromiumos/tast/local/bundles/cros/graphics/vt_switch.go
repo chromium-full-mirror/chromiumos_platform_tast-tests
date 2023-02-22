@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"intel-chrome-system-automation-team@intel.com",
+			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
 			"syedfaaiz@google.com",
 		},

@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors.
+// Copyright 2022 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,7 +23,8 @@ func init() {
 		Func:         BootViaUSB,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies if DUT can boot from USB Type-C pen drive",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,

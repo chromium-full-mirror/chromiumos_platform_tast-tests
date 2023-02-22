@@ -38,7 +38,8 @@ func init() {
 		Func:         TBTDisplayVideoPlaybackStress,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Youtube video playback on TBT display for long duration ",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json", "testcert.p12"},

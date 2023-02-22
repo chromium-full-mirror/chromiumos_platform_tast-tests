@@ -43,7 +43,7 @@ func init() {
 		Func:         VolumeControl,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change the volume using keyboard keys",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:875484",
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),

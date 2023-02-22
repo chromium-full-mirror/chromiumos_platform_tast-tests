@@ -28,7 +28,8 @@ func init() {
 		Func:         ChargingThroughTypec,
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checking device charging status after USB4/TBT dock hot plug-unplug",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json"},

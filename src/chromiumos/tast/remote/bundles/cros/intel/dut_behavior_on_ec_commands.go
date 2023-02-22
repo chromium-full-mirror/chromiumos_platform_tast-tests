@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors.
+// Copyright 2022 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -26,7 +26,8 @@ func init() {
 		Func:         DUTBehaviorOnECCommands,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies DUT behavior on executing various EC commands",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),

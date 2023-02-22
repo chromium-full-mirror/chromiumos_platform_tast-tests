@@ -22,8 +22,8 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SystemWakeOnPowerbtnPress, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Test waking DUT from S0ix using power button stress",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Vars:         []string{"servo"},

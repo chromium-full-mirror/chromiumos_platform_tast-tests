@@ -24,7 +24,8 @@ func init() {
 		Func:         UIToggleFromWIFISettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enable and disable WiFi from ChromeOS Settings UI",
-		Contacts:     []string{"cros-network-health-team@google.com", "pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"cros-network-health-team@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "informational", "group:intel-gating"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

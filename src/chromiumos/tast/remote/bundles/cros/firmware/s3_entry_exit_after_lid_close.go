@@ -35,8 +35,8 @@ func init() {
 		Desc: "Verifies DUT S3 entry exit after Lid close and open",
 		Contacts: []string{
 			"chromeos-faft@google.com",
+			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",
-			"intel-chrome-system-automation-team@intel.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"chrome"},

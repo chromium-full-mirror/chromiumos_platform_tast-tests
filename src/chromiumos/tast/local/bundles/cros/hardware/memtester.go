@@ -35,10 +35,10 @@ func init() {
 		Func:         Memtester,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "This test starts Single / Dual processes of memtester and runs for given iterations",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
-		BugComponent: "b:157291",
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Params: []testing.Param{{
 			Name:    "single_quick",
 			Val:     memtesterParams{mode: single, memoryUsage: 0.50, iteration: 1},

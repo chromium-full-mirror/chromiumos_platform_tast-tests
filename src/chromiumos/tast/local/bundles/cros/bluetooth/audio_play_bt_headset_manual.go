@@ -27,7 +27,8 @@ func init() {
 		Func:         AudioPlayBtHeadsetManual,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback over BT headset",
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"bluetooth.btHeadset"},
 		Fixture:      "chromeLoggedIn",

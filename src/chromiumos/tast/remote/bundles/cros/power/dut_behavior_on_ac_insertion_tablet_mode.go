@@ -26,8 +26,8 @@ func init() {
 		Func:         DUTBehaviorOnACInsertionTabletMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that system comes back from sleep after AC insertion in tabletmode",
-		BugComponent: "b:167191",
-		Contacts:     []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Vars:         []string{"servo"},

@@ -49,7 +49,7 @@ func init() {
 		Func:         SecurityVerifyType1HDCP,
 		Desc:         "Verifies security verification of Type 1 content on HDCP 1.4 compatible panel in extended/mirror mode",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInRootfsRemoved",
