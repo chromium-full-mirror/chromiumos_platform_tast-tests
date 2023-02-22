@@ -57,12 +57,15 @@ const (
 	// postTestTimeout is the time allowed for gather various logs if needed.
 	postTestTimeout = webRTCLogsGatherTimeout + arcLogsGatherTimeout
 
+	// setUpTimeout is the time to set up chrome and arc.
+	setUpTimeout = chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute
 	resetTimeout = 30 * time.Second
 
 	webRTCEventLogCommandFlag = "--webrtc-event-logging=/tmp"
 	webRTCEventLogFilePattern = "/tmp/event_log_*.log"
 
-	fakeCameraFileName = "1080p_camera_video.mjpeg"
+	highResFakeCameraFileName = "1080p_camera_video.mjpeg"
+	lowResFakeCameraFileName  = "720p_camera_video.mjpeg"
 )
 
 // isLocalVar is a runtime variable that specifies whether to skip
@@ -105,6 +108,14 @@ var docsBlockerFiles = []string{
 
 // DocsBlocker extension ID.
 var docsBlockerExtensionID = "lanldddoamfhbgpgmmlckdklilaggblp"
+
+// EnableRealCameraVar is a runtime variable that specifies
+// whether to enable real camera if the fixture uses a fake camera.
+var EnableRealCameraVar = testing.RegisterVarString(
+	"cuj.enableRealCamera",
+	"",
+	"A boolean string (true/false) signifying whether to enable real camera if the fixture uses a fake camera",
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -156,7 +167,7 @@ func init() {
 		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -177,7 +188,7 @@ func init() {
 			useEnterprisePool: true,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -199,7 +210,7 @@ func init() {
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
 		},
 		Parent:          "cpuIdleForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -213,10 +224,33 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            append(docsBlockerFiles, fakeCameraFileName),
-		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeAsh, fakeCamera: true},
+		Data: append(docsBlockerFiles, highResFakeCameraFileName),
+		Impl: &loggedInToCUJUserFixture{
+			bt:                 browser.TypeAsh,
+			keepState:          true,
+			fakeCamera:         true,
+			fakeCameraFileName: highResFakeCameraFileName},
 		Parent:          "cpuIdleForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateWithLowResFakeCamera",
+		Desc: "The CUJ test fixture which keeps login state and uses low resolution fake camera",
+		Contacts: []string{
+			"jane.yang@cienet.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data: append(docsBlockerFiles, lowResFakeCameraFileName),
+		Impl: &loggedInToCUJUserFixture{
+			bt:                 browser.TypeAsh,
+			keepState:          true,
+			fakeCamera:         true,
+			fakeCameraFileName: lowResFakeCameraFileName},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
@@ -231,7 +265,7 @@ func init() {
 		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -253,7 +287,7 @@ func init() {
 			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
 		},
 		Parent:          "cpuIdleForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -267,10 +301,34 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            append(docsBlockerFiles, fakeCameraFileName),
-		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeLacros, fakeCamera: true},
+		Data: append(docsBlockerFiles, highResFakeCameraFileName),
+		Impl: &loggedInToCUJUserFixture{
+			bt:                 browser.TypeLacros,
+			keepState:          true,
+			fakeCamera:         true,
+			fakeCameraFileName: highResFakeCameraFileName,
+		},
 		Parent:          "cpuIdleForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateLacrosWithLowResFakeCamera",
+		Desc: "Fixture keeping login status, used low resolution fake camera for lacros variation of CUJ tests",
+		Contacts: []string{
+			"jane.yang@cienet.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data: append(docsBlockerFiles, lowResFakeCameraFileName),
+		Impl: &loggedInToCUJUserFixture{
+			bt:                 browser.TypeLacros,
+			keepState:          true,
+			fakeCamera:         true,
+			fakeCameraFileName: lowResFakeCameraFileName},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
@@ -326,7 +384,7 @@ func init() {
 			bt:              browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -346,7 +404,7 @@ func init() {
 			bt:              browser.TypeLacros,
 		},
 		Parent:          "cpuIdleForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -369,7 +427,7 @@ func init() {
 			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -393,7 +451,7 @@ func init() {
 			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -708,9 +766,10 @@ type loggedInToCUJUserFixture struct {
 	keepState       bool
 	chromeExtraOpts []chrome.Option
 	// bt describes what type of browser this fixture should use
-	bt                browser.Type
-	useEnterprisePool bool
-	fakeCamera        bool
+	bt                 browser.Type
+	useEnterprisePool  bool
+	fakeCamera         bool
+	fakeCameraFileName string
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -751,15 +810,14 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		} else {
 			opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
 		}
-
-		if f.fakeCamera {
+		if f.fakeCamera && strings.ToLower(EnableRealCameraVar.Value()) != "true" {
 			fakeCameraOpts := []string{
 				// See https://webrtc.github.io/webrtc-org/testing/.
 				// Feed a test pattern to getUserMedia() instead of live camera input.
 				// The default fps of fake device is 20.
 				"--use-fake-device-for-media-stream",
 				// Feed a Y4M/MJPEG test file to getUserMedia() instead of live camera input.
-				"--use-file-for-fake-video-capture=" + s.DataPath(fakeCameraFileName),
+				"--use-file-for-fake-video-capture=" + s.DataPath(f.fakeCameraFileName),
 			}
 			opts = append(opts, chrome.ExtraArgs(fakeCameraOpts...))
 		}
