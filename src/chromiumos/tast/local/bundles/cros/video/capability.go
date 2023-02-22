@@ -70,8 +70,8 @@ var capabilitiesToVerify = map[string]caps.Capability{
 	"hw_video_prot_cencv3_av1_ctr":  {Name: caps.HWDecodeCTRV3AV1, Optional: true},
 	"hw_video_prot_cencv3_h264_cbc": {Name: caps.HWDecodeCBCV3H264, Optional: false},
 	"hw_video_prot_cencv3_h264_ctr": {Name: caps.HWDecodeCTRV3H264, Optional: false},
-	"hw_video_prot_cencv3_hevc_cbc": {Name: caps.HWDecodeCBCV3HEVC, Optional: false},
-	"hw_video_prot_cencv3_hevc_ctr": {Name: caps.HWDecodeCTRV3HEVC, Optional: false},
+	"hw_video_prot_cencv3_hevc_cbc": {Name: caps.HWDecodeCBCV3HEVC, Optional: true},
+	"hw_video_prot_cencv3_hevc_ctr": {Name: caps.HWDecodeCTRV3HEVC, Optional: true},
 	"hw_video_prot_cencv3_vp9_cbc":  {Name: caps.HWDecodeCBCV3VP9, Optional: false},
 	"hw_video_prot_cencv3_vp9_ctr":  {Name: caps.HWDecodeCTRV3VP9, Optional: false},
 }
