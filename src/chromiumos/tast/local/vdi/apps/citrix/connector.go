@@ -158,7 +158,7 @@ func (c *Connector) SearchAndOpenApplication(ctx context.Context, appName string
 func (c *Connector) ResetSearch(ctx context.Context) error {
 	testing.ContextLog(ctx, "Citrix: cleaning search")
 	// Check that result was actually triggered.
-	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"See", "more", "results"}))(ctx); err != nil {
+	if err := c.detector.WithTimeout(uiDetectionTimeout).WithScreenshotResizing().WaitUntilExists(uidetection.TextBlock([]string{"See", "more", "results"}))(ctx); err != nil {
 		return errors.Wrap(err, "search results view is not visible")
 	}
 	// Citrix, after executed search and the app was opened and then closed

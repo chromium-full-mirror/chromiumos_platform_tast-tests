@@ -97,7 +97,7 @@ func CloseApp(ctx context.Context, s *testing.State) {
 
 	appTitleBar := uidetection.TextBlock(s.Param().(closeAppParams).AppOpenText).First()
 	isOpened := func(ctx context.Context) error {
-		if err := uidetector.WithTimeout(60 * time.Second).WaitUntilExists(appTitleBar)(ctx); err != nil {
+		if err := uidetector.WithTimeout(60 * time.Second).WithScreenshotResizing().WaitUntilExists(appTitleBar)(ctx); err != nil {
 			s.Fatal("fail: ", err)
 		}
 		return nil
@@ -112,7 +112,7 @@ func CloseApp(ctx context.Context, s *testing.State) {
 	closeMenuItem := uidetection.Word("Close").First()
 	if err := ui.RetryUntil(
 		uiauto.Combine("close notepad",
-			uidetector.RightClick(appTitleBar),
+			uidetector.WithScreenshotResizing().RightClick(appTitleBar),
 			uidetector.WithTimeout(10*time.Second).WaitUntilExists(closeMenuItem),
 			uidetector.LeftClick(closeMenuItem),
 		),
