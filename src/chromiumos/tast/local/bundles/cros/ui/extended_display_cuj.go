@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/ui/conference"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
@@ -23,9 +24,12 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
+const googleMeet = "Google Meet"
+
 type extendedDisplayCUJParam struct {
 	tier        cuj.Tier
 	app         string
+	roomType    conference.RoomType
 	browserType browser.Type
 }
 
@@ -34,8 +38,12 @@ func init() {
 		// TODO (b/242590511): Deprecated after moving all performance cuj test cases to chromiumos/tast/local/bundles/cros/spera directory.
 		Func:         ExtendedDisplayCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test video entertainment with extended display",
-		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "chicheny@google.com"},
+		Desc:         "Test video entertainment and google meet with extended display",
+		Contacts: []string{
+			"chromeos-perf-reliability-eng@google.com",
+			"cienet-development@googlegroups.com",
+			"chicheny@google.com",
+		},
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
@@ -44,6 +52,11 @@ func init() {
 			"ui.chameleon_addr",         // Only needed when using chameleon board as extended display.
 			"ui.chameleon_display_port", // The port connected as extended display. Default is 3.
 			"ui.collectTrace",           // Optional. Expecting "enable" or "disable", default is "disable".
+			// Credentials for BOND API.
+			"ui.meet_bond_key",
+			// Optional. The total timeout and inteval when bond api fails.
+			"ui.meet_retry_timeout",
+			"ui.meet_retry_interval",
 		},
 		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
@@ -60,10 +73,38 @@ func init() {
 				Timeout:           12 * time.Minute,
 				Fixture:           "loggedInAndKeepStateLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
-
 				Val: extendedDisplayCUJParam{
 					tier:        cuj.Basic, // Extended display plus tier test uses basic tier test of video CUJ.
 					app:         youtube.YoutubeWeb,
+					browserType: browser.TypeLacros,
+				},
+			},
+			{
+				Name:    "premium_meet_large",
+				Fixture: "loggedInAndKeepStateWithLowResFakeCamera",
+				Timeout: 50 * time.Minute,
+				Val: extendedDisplayCUJParam{
+					// This is a premium test case for extended display CUJ.
+					// But this case just calls Google Meet "plus" case, so the given tier
+					// is "plus" instead of "premium".
+					tier:        cuj.Plus,
+					app:         googleMeet,
+					roomType:    conference.LargeRoomSize,
+					browserType: browser.TypeAsh,
+				},
+			},
+			{
+				Name:              "premium_lacros_meet_large",
+				Fixture:           "loggedInAndKeepStateLacrosWithLowResFakeCamera",
+				Timeout:           50 * time.Minute,
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: extendedDisplayCUJParam{
+					// This is a premium test case for extended display CUJ.
+					// But this case just calls Google Meet "plus" case, so the given tier
+					// is "plus" instead of "premium".
+					tier:        cuj.Plus,
+					app:         googleMeet,
+					roomType:    conference.LargeRoomSize,
 					browserType: browser.TypeLacros,
 				},
 			},
@@ -77,7 +118,6 @@ func init() {
 func ExtendedDisplayCUJ(ctx context.Context, s *testing.State) {
 	p := s.Param().(extendedDisplayCUJParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	a := s.FixtValue().(cuj.FixtureData).ARC
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -160,31 +200,54 @@ func ExtendedDisplayCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer uiHandler.Close()
 
-	param := s.Param().(extendedDisplayCUJParam)
-
 	traceConfigPath := ""
 	if collect, ok := s.Var("ui.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
 
-	testResources := youtube.TestResources{
-		Cr:        cr,
-		Tconn:     tconn,
-		Bt:        p.browserType,
-		A:         a,
-		Kb:        kb,
-		UIHandler: uiHandler,
-	}
-	testParams := youtube.TestParams{
-		Tier:            param.tier,
-		App:             param.app,
-		OutDir:          s.OutDir(),
-		TabletMode:      tabletMode,
-		ExtendedDisplay: true,
-		TraceConfigPath: traceConfigPath,
-	}
+	param := s.Param().(extendedDisplayCUJParam)
 
-	if err := youtube.Run(ctx, testResources, testParams); err != nil {
-		s.Fatal("Failed to do video cuj testing: ", err)
+	if param.app == googleMeet {
+		meetConfig, err := conference.GetGoogleMeetConfig(ctx, s, param.roomType)
+		if err != nil {
+			s.Fatal("Failed to get meet config: ", err)
+		}
+
+		testParams := &conference.TestParams{
+			Cr:              cr,
+			Tier:            param.tier,
+			BrowserType:     param.browserType,
+			RoomType:        param.roomType,
+			OutDir:          s.OutDir(),
+			TraceConfigPath: traceConfigPath,
+			TabletMode:      tabletMode,
+			ExtendedDisplay: true,
+		}
+
+		if err := conference.RunWithGoogleConfig(ctx, tconn, meetConfig, testParams); err != nil {
+			s.Fatal("Failed to run google meet with extended display: ", err)
+		}
+	} else {
+		a := s.FixtValue().(cuj.FixtureData).ARC
+		testResources := youtube.TestResources{
+			Cr:        cr,
+			Tconn:     tconn,
+			Bt:        p.browserType,
+			A:         a,
+			Kb:        kb,
+			UIHandler: uiHandler,
+		}
+		testParams := youtube.TestParams{
+			Tier:            param.tier,
+			App:             param.app,
+			OutDir:          s.OutDir(),
+			TabletMode:      tabletMode,
+			ExtendedDisplay: true,
+			TraceConfigPath: traceConfigPath,
+		}
+
+		if err := youtube.Run(ctx, testResources, testParams); err != nil {
+			s.Fatal("Failed to run youtube web with extended display: ", err)
+		}
 	}
 }

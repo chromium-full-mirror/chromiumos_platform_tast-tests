@@ -1,1 +1,0 @@
-../../../../../local/bundles/cros/ui/conference/room_type.go

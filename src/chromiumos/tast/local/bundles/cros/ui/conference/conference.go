@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 )
@@ -23,6 +24,16 @@ const (
 	shortUITimeout  = 3 * time.Second  // Used for situations where UI response are faster.
 	viewingTime     = 5 * time.Second  // Used to view the effect after clicking application.
 )
+
+// TestParameters defines the test parameters for conference.
+type TestParameters struct {
+	// RoomType defines the conference room type.
+	RoomType RoomType
+	// Tier defines the test tier: basic, plus, or premium.
+	Tier cuj.Tier
+	// BrowserType defines the browser type is Lacros or Ash.
+	BrowserType browser.Type
+}
 
 // Conference contains user's operation when enter a confernece room.
 type Conference interface {

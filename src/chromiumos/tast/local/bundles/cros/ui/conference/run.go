@@ -6,18 +6,20 @@ package conference
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/bond"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/graphics"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
@@ -33,6 +35,7 @@ type TestParams struct {
 	OutDir          string
 	TraceConfigPath string
 	TabletMode      bool
+	ExtendedDisplay bool
 }
 
 // Run runs the specified user scenario in conference room with different CUJ tiers.
@@ -54,10 +57,7 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Dump the UI tree to the service/faillog subdirectory.
-	// Don't dump directly into outDir
-	// because it might be overridden by the test faillog after pulled back to remote server.
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, filepath.Join(outDir, "service"), func() bool { return retErr != nil }, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -226,4 +226,161 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	}
 
 	return nil
+}
+
+// RunWithGoogleConfig runs google meet testing with google meet config.
+func RunWithGoogleConfig(ctx context.Context, tconn *chrome.TestConn, meetConfig GoogleMeetConfig, p *TestParams) error {
+	var uiHandler cuj.UIActionHandler
+	var err error
+
+	if p.TabletMode {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		cleanup, err := display.RotateToLandscape(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to rotate display to landscape")
+		}
+		defer cleanup(cleanupCtx)
+		if uiHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to create tablet action handler")
+		}
+	} else {
+		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to create clamshell action handler")
+		}
+	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize keyboard input")
+	}
+	defer kb.Close()
+
+	run := func(ctx context.Context, meetLink string) error {
+		cleanupGoogleMeetCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+
+		// Creates a Google Meet conference instance which implements conference.Conference methods
+		// which provides conference operations.
+		gmcli := NewGoogleMeetConference(p.Cr, tconn, kb, uiHandler, p.BrowserType, p.RoomType, p.OutDir, p.TabletMode, p.ExtendedDisplay)
+		defer gmcli.End(cleanupGoogleMeetCtx)
+
+		p.Conf = gmcli
+		p.MeetLink = meetLink
+
+		if err := Run(ctx, p); err != nil {
+			return errors.Wrap(err, "failed to run Google Meet conference")
+		}
+
+		return nil
+	}
+
+	runWithMeetLinkViaBond := func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		meetLink, cleanupBond, err := generateMeetLinkViaBond(ctx, meetConfig, p.RoomType)
+		if err != nil {
+			return &BondError{Err: errors.Wrap(err, "failed to create meet link via BOND API")}
+		}
+		defer cleanupBond(cleanupCtx)
+
+		return run(ctx, meetLink)
+	}
+
+	if p.RoomType == NoRoom {
+		// Without Google Meet, there is no need to assign a meet url.
+		if err := run(ctx, ""); err != nil {
+			return errors.Wrap(err, "failed to run no room")
+		}
+		return nil
+	}
+	// If meet.RetryTimeout equal to 0, don't do any retry.
+	if meetConfig.RetryTimeout == 0 {
+		testing.ContextLog(ctx, "Start running meet scenario")
+		if err := runWithMeetLinkViaBond(ctx); err != nil {
+			return errors.Wrap(err, "failed to run google meet")
+		}
+	}
+
+	var lastError error
+	startTime := time.Now()
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := runWithMeetLinkViaBond(ctx); err != nil {
+			elapsedTime := time.Now().Sub(startTime)
+			if elapsedTime < meetConfig.RetryTimeout {
+				// Record the complete run result if the failure is not because of timeout.
+				lastError = err
+			}
+			if IsParticipantError(err) || IsBondError(err) {
+				testing.ContextLogf(ctx, "Wait %v and try to run meet scenario again; caused by error: %v", meetConfig.RetryInterval, err)
+				return err
+			}
+			return testing.PollBreak(err) // Break if error is not participant number related.
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: meetConfig.RetryTimeout, Interval: meetConfig.RetryInterval}); err != nil {
+		// Return test failure reason of last complete run.
+		if lastError != nil {
+			err = lastError
+		}
+		return errors.Wrap(err, "failed to run google meet")
+	}
+
+	return nil
+}
+
+func generateMeetLinkViaBond(ctx context.Context, meet GoogleMeetConfig, roomType RoomType) (meetLink string, cleanup func(ctx context.Context), err error) {
+	var (
+		bondConn        *bond.Client
+		bondMeetingCode string
+		numFailures     int
+	)
+	cleanupfunc := func(ctx context.Context) {
+		if bondConn != nil {
+			if bondMeetingCode != "" {
+				bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
+			}
+			bondConn.Close()
+		}
+	}
+	// Connect.
+	bondConn, err = bond.NewClient(ctx, bond.WithCredsJSON(meet.BondCreds), bond.WithExternalEndpoint())
+	if err != nil {
+		return "", cleanupfunc, errors.Wrap(err, "BOND API2: Failed to connect")
+	}
+	defer func(ctx context.Context) {
+		if err != nil {
+			bondConn.Close()
+		}
+	}(ctx)
+
+	// Create room with bots.
+	botsDuration := 60 * time.Minute // one hour long by default.
+	deadline, ok := ctx.Deadline()
+	if ok {
+		botsDuration = deadline.Add(90 * time.Second).Sub(time.Now())
+	}
+	numBots := GoogleMeetRoomParticipants[roomType] - 1 // one of participants is the test itself
+	bondMeetingCode, numFailures, err = bondConn.CreateConferenceWithBots(ctx, numBots, botsDuration)
+	defer func(ctx context.Context) {
+		if err != nil {
+			bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
+		}
+	}(ctx)
+
+	if err != nil || numFailures > 0 {
+		return "", cleanupfunc, errors.Wrapf(err, "BOND API2: %d bots failed to connect", numFailures)
+	}
+	testing.ContextLogf(ctx, "BOND API2: Created conference: %+v and added %d bots for the duration of %v", bondMeetingCode, numBots, botsDuration)
+
+	// Make the room created by BOND the first one to try.
+	meetLink = "https://meet.google.com/" + bondMeetingCode
+
+	return meetLink, cleanupfunc, nil
 }

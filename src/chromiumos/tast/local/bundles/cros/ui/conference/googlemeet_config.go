@@ -21,7 +21,7 @@ type GoogleMeetConfig struct {
 }
 
 // GetGoogleMeetConfig returns an object that contains the Google meet configuration.
-func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType RoomType) (GoogleMeetConfig, error) {
+func GetGoogleMeetConfig(ctx context.Context, s *testing.State, roomType RoomType) (GoogleMeetConfig, error) {
 	// If roomType is NoRoom, an empty object is returned.
 	if roomType == NoRoom {
 		return GoogleMeetConfig{}, nil
@@ -45,20 +45,20 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState, roomType 
 		return time.Duration(val) * time.Minute, nil
 	}
 
-	meetRetryTimeout, err := varToDuration("ui.meet_url_retry_timeout", defaultMeetRetryTimeout)
+	meetRetryTimeout, err := varToDuration("ui.meet_retry_timeout", defaultMeetRetryTimeout)
 	if err != nil {
 		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryTimeout)
 	}
 
-	meetRetryInterval, err := varToDuration("ui.meet_url_retry_interval", defaultMeetRetryInterval)
+	meetRetryInterval, err := varToDuration("ui.meet_retry_interval", defaultMeetRetryInterval)
 	if err != nil {
 		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryInterval)
 	}
 	testing.ContextLogf(ctx, "Retry vars: meetRetryTimeout %v, meetRetryInterval %v", meetRetryTimeout, meetRetryInterval)
 
-	bondCreds, ok := s.Var("ui.GoogleMeetCUJ.bond_key")
+	bondCreds, ok := s.Var("ui.meet_bond_key")
 	if !ok || len(bondCreds) < 1 {
-		return GoogleMeetConfig{}, errors.New("ui.GoogleMeetCUJ.bond_key is not set")
+		return GoogleMeetConfig{}, errors.New("ui.meet_bond_key is not set")
 	}
 
 	return GoogleMeetConfig{
