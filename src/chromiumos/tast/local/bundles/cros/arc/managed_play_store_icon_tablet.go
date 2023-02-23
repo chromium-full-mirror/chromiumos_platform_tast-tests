@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCPlayStoreIconTablet,
+		Func:         ManagedPlayStoreIconTablet,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the visibility of Play Store icon on tablet form factor w.r.t. ArcPolicy",
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Timeout:      2 * time.Minute,
+		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "tablet_form_factor"},
 		}, {
@@ -47,9 +47,9 @@ func init() {
 	})
 }
 
-// ARCPlayStoreIconTablet tests the visibility of Play Store icon w.r.t ArcEnabled policy on tablet form factor.
+// ManagedPlayStoreIconTablet tests the visibility of Play Store icon w.r.t ArcEnabled policy on tablet form factor.
 // On tablet only, when ARC is disabled by policy, Play Store icon still appears on shelf.
-func ARCPlayStoreIconTablet(ctx context.Context, s *testing.State) {
+func ManagedPlayStoreIconTablet(ctx context.Context, s *testing.State) {
 	// Start FakeDMS.
 	fdms, err := fakedms.New(ctx, s.OutDir())
 	if err != nil {

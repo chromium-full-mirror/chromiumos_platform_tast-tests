@@ -35,7 +35,6 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/diagnostics"
 	_ "chromiumos/tast/local/bundles/cros/dlp"
 	_ "chromiumos/tast/local/bundles/cros/documentscanapi"
-	_ "chromiumos/tast/local/bundles/cros/enterprise"
 	_ "chromiumos/tast/local/bundles/cros/enterpriseconnectors"
 	_ "chromiumos/tast/local/bundles/cros/example"
 	_ "chromiumos/tast/local/bundles/cros/factory"

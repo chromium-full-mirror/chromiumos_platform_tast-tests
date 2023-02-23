@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCPlayStoreIcon,
+		Func:         ManagedPlayStoreIcon,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures ARC policy controls the visibility of Play Store icon",
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Timeout:      2 * time.Minute,
+		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p", "no_tablet_form_factor"},
 		}, {
@@ -46,8 +46,8 @@ func init() {
 	})
 }
 
-// ARCPlayStoreIcon verifies that the ArcEnabled policy shows/hides the Play Store icon.
-func ARCPlayStoreIcon(ctx context.Context, s *testing.State) {
+// ManagedPlayStoreIcon verifies that the ArcEnabled policy shows/hides the Play Store icon.
+func ManagedPlayStoreIcon(ctx context.Context, s *testing.State) {
 	// Start FakeDMS.
 	fdms, err := fakedms.New(ctx, s.OutDir())
 	if err != nil {

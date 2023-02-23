@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCProvisioning,
+		Func:         ManagedProvisioning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A functional test that verifies provisioning flow for managed user",
 		Contacts: []string{
@@ -64,8 +64,8 @@ func init() {
 	})
 }
 
-// ARCProvisioning verifies that ARC can successfully provision with a managed account.
-func ARCProvisioning(ctx context.Context, s *testing.State) {
+// ManagedProvisioning verifies that ARC can successfully provision with a managed account.
+func ManagedProvisioning(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout         = 4 * time.Minute
 		provisioningTimeout = 3 * time.Minute

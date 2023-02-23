@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
@@ -24,9 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCBlockedAppInstall,
+		Func:         ManagedPlayBlockedAppUninstall,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that blocked apps cannot be installed in Play Store",
+		Desc:         "Checks that blocked apps are removed if they are installed",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
@@ -42,7 +41,6 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_p", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm",
@@ -62,14 +60,11 @@ func init() {
 	})
 }
 
-// ARCBlockedAppInstall Verifies that blocked app cannot be installed.
-func ARCBlockedAppInstall(ctx context.Context, s *testing.State) {
+// ManagedPlayBlockedAppUninstall force-installs an app and ensures it is removed if blocked by policy.
+func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 	const (
-		bootTimeout           = 4 * time.Minute
-		installButtonText     = "install"
-		testPackage           = "com.google.android.calculator"
-		defaultUITimeout      = 1 * time.Minute
-		appUnavailableMessage = "Your administrator has not given you access to this item."
+		bootTimeout = 4 * time.Minute
+		testPackage = "com.google.android.calculator"
 	)
 
 	packages := []string{testPackage}
@@ -86,20 +81,11 @@ func ARCBlockedAppInstall(ctx context.Context, s *testing.State) {
 	}
 	login := chrome.GAIALogin(creds)
 
-	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
-	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
-	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-	defer cancel()
-
-	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled)
 	if err != nil {
 		rl.Exit("setup fake policy server", err)
 	}
-	defer fdms.Stop(cleanupCtx)
+	defer fdms.Stop(ctx)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		cr, err := chrome.New(
@@ -112,57 +98,50 @@ func ARCBlockedAppInstall(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
 		}
-		defer cr.Close(cleanupCtx)
-
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return rl.Retry("create test API connection", err)
-		}
+		defer cr.Close(ctx)
 
 		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}
-		defer a.Close(cleanupCtx)
+		defer a.Close(ctx)
 
 		if err := arcent.ConfigureProvisioningLogs(ctx, a); err != nil {
 			return rl.Exit("configure provisioning logs", err)
 		}
 
-		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
-			return s.HasError() || retErr != nil
-		}, a, filepath.Join(s.OutDir(), fmt.Sprintf("bugreport_%d.zip", rl.Attempts)))
-
 		if err := arcent.WaitForProvisioning(ctx, a, rl.Attempts); err != nil {
 			return rl.Retry("wait for provisioning", err)
 		}
 
-		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+		defer cancel()
+
+		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
 			return s.HasError() || retErr != nil
-		})
+		}, a, filepath.Join(s.OutDir(), fmt.Sprintf("bugreport_%d.zip", rl.Attempts)))
 
-		d, err := a.NewUIDevice(ctx)
-		if err != nil {
-			return rl.Exit("initialize UI Automator", err)
-		}
-		defer d.Close(cleanupCtx)
-
-		if err := arcent.EnsurePlayStoreNotEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
-			return rl.Exit("verify Play Store is not empty", err)
+		if err := a.WaitForPackages(ctx, packages); err != nil {
+			return rl.Retry("wait for packages", err)
 		}
 
-		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) error {
-			if err := arcent.WaitForAppUnavailableMessage(ctx, d, time.Minute); err == nil {
-				return nil
-			}
+		s.Log("Changing the policy to block the installed app")
+		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
+		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
-			return errors.New("App unavailable message not found")
-		}, 5*time.Minute); err != nil {
-			return rl.Exit("confirm unavailability", err)
+		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
+			return rl.Exit("update policies", err)
+		}
+
+		s.Log("Waiting for packages to uninstall")
+		if err := arcent.WaitForUninstall(ctx, a, testPackage); err != nil {
+			return rl.Exit("package not uninstalled", err)
 		}
 
 		return nil
 	}, nil); err != nil {
-		s.Fatal("Blocked app install test failed: ", err)
+		s.Fatal("Blocked app uninstall test failed: ", err)
 	}
 }

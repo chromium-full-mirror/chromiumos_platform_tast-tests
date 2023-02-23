@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
@@ -23,9 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCPlayStoreModeBlocklist,
+		Func:         ManagedPlayBlockedAppInstall,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that apps are shown when Play Store mode is blocklist",
+		Desc:         "Checks that blocked apps cannot be installed in Play Store",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
@@ -61,12 +62,17 @@ func init() {
 	})
 }
 
-// ARCPlayStoreModeBlocklist Verifies that apps are shown when Play Store mode is blocklist.
-func ARCPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
+// ManagedPlayBlockedAppInstall Verifies that blocked app cannot be installed.
+func ManagedPlayBlockedAppInstall(ctx context.Context, s *testing.State) {
 	const (
-		bootTimeout      = 4 * time.Minute
-		defaultUITimeout = 1 * time.Minute
+		bootTimeout           = 4 * time.Minute
+		installButtonText     = "install"
+		testPackage           = "com.google.android.calculator"
+		defaultUITimeout      = 1 * time.Minute
+		appUnavailableMessage = "Your administrator has not given you access to this item."
 	)
+
+	packages := []string{testPackage}
 
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
@@ -80,7 +86,7 @@ func ARCPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
 	}
 	login := chrome.GAIALogin(creds)
 
-	arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
+	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
 	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
@@ -145,8 +151,18 @@ func ARCPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
 			return rl.Exit("verify Play Store is not empty", err)
 		}
 
+		if err := arcent.PollAppPageState(ctx, tconn, a, testPackage, func(ctx context.Context) error {
+			if err := arcent.WaitForAppUnavailableMessage(ctx, d, time.Minute); err == nil {
+				return nil
+			}
+
+			return errors.New("App unavailable message not found")
+		}, 5*time.Minute); err != nil {
+			return rl.Exit("confirm unavailability", err)
+		}
+
 		return nil
 	}, nil); err != nil {
-		s.Fatal("Play Store mode blocklist test failed: ", err)
+		s.Fatal("Blocked app install test failed: ", err)
 	}
 }

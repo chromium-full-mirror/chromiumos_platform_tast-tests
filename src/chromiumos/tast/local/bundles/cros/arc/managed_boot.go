@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
@@ -24,7 +25,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCBoot,
+		Func:         ManagedBoot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC is booted when policy is set",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
@@ -35,6 +36,9 @@ func init() {
 		Timeout:      4 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -61,8 +65,8 @@ func init() {
 	})
 }
 
-// ARCBoot verifies that ARC boots when enabled in policy and does not boot when disabled in policy.
-func ARCBoot(ctx context.Context, s *testing.State) {
+// ManagedBoot verifies that ARC boots when enabled in policy and does not boot when disabled in policy.
+func ManagedBoot(ctx context.Context, s *testing.State) {
 	expectEnabled := s.Param().(bool)
 
 	creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))

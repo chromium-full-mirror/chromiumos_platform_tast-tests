@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCAvailableAppInstall,
+		Func:         ManagedPlayAvailableAppInstall,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that available apps can be installed in Play Store",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
@@ -54,8 +54,8 @@ func init() {
 	})
 }
 
-// ARCAvailableAppInstall verifies that allow-listed app can be installed in Play Store.
-func ARCAvailableAppInstall(ctx context.Context, s *testing.State) {
+// ManagedPlayAvailableAppInstall verifies that allow-listed app can be installed in Play Store.
+func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout      = 4 * time.Minute
 		testPackage      = "com.google.android.calculator"

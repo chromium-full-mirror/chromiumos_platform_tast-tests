@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
@@ -27,7 +28,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCForcedAppInstall,
+		Func:         ManagedPlayForcedAppInstall,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC is launched when policy is set",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
@@ -38,6 +39,9 @@ func init() {
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcent.LoginPoolVar,
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -64,13 +68,13 @@ func init() {
 	})
 }
 
-// ARCForcedAppInstall runs the app force install test:
+// ManagedPlayForcedAppInstall runs the app force install test:
 // - login with managed account,
 // - check that ARC is launched by user policy,
 // - check that chrome://policy page shows ArcEnabled and ArcPolicy force-installed apps list,
 // - check that force-installed by policy Android packages are installed,
 // - check that force-installed Android packages cannot be uninstalled.
-func ARCForcedAppInstall(ctx context.Context, s *testing.State) {
+func ManagedPlayForcedAppInstall(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout = 4 * time.Minute
 		testPackage = "com.google.android.calculator"

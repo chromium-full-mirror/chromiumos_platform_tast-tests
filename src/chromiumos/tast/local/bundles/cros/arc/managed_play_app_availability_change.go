@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -23,9 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCAvailableAppUninstall,
+		Func:         ManagedPlayAppAvailabilityChange,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that an available app can be uninstalled",
+		Desc:         "Checks that an app availability change is reflected in Play Store",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
@@ -61,8 +61,8 @@ func init() {
 	})
 }
 
-// ARCAvailableAppUninstall verifies that an available app can be uninstalled.
-func ARCAvailableAppUninstall(ctx context.Context, s *testing.State) {
+// ManagedPlayAppAvailabilityChange verifies that app availability change is reflected in the Play Store.
+func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout = 4 * time.Minute
 		testPackage = "com.google.android.calculator"
@@ -75,7 +75,6 @@ func ARCAvailableAppUninstall(ctx context.Context, s *testing.State) {
 		Logf:        s.Logf}
 
 	packages := []string{testPackage}
-	attempts := 1
 
 	creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 	if err != nil {
@@ -87,7 +86,12 @@ func ARCAvailableAppUninstall(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled)
+	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable)
+	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeAllowList
+	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+
+	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 	if err != nil {
 		rl.Exit("setup fake policy server", err)
 	}
@@ -100,7 +104,7 @@ func ARCAvailableAppUninstall(ctx context.Context, s *testing.State) {
 			chrome.ARCSupported(),
 			chrome.UnRestrictARCCPU(),
 			chrome.DMSPolicy(fdms.URL),
-			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+			chrome.ExtraArgs(append(arc.DisableSyncFlags(), "--vmodule=arc_policy_bridge=1")...))
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
 		}
@@ -116,22 +120,35 @@ func ARCAvailableAppUninstall(ctx context.Context, s *testing.State) {
 			return rl.Exit("configure provisioning logs", err)
 		}
 
-		if err := arcent.WaitForProvisioning(ctx, a, attempts); err != nil {
+		if err := arcent.WaitForProvisioning(ctx, a, rl.Attempts); err != nil {
 			return rl.Retry("wait for provisioning", err)
-		}
-
-		installCtx, cancel := context.WithTimeout(ctx, arcent.InstallTimeout)
-		defer cancel()
-		if err := a.WaitForPackages(installCtx, packages); err != nil {
-			return rl.Retry("wait for packages", err)
 		}
 
 		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
 			return s.HasError() || retErr != nil
 		}, a, filepath.Join(s.OutDir(), fmt.Sprintf("bugreport_%d.zip", rl.Attempts)))
 
-		s.Log("Changing the policy to make the app available")
-		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable)
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return rl.Exit("created UIAutomator", err)
+		}
+		defer d.Close(cleanupCtx)
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			rl.Exit("create test API Connection", err)
+		}
+
+		// In Play Store mode set to AllowList only available and force-installed apps show.
+		// Since there is only single available app in the policy, catalog will be non-empty.
+		if err := arcent.EnsurePlayStoreNotEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
+			return rl.Exit("verify Play Store is not empty", err)
+		}
+
+		s.Log("Changing the policy to block the available app")
+
+		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
+		arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeAllowList
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
@@ -139,10 +156,25 @@ func ARCAvailableAppUninstall(ctx context.Context, s *testing.State) {
 			return rl.Exit("update policies", err)
 		}
 
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			return arcent.EnsurePackagesUninstall(ctx, cr, a, packages, true)
-		}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: 1 * time.Second})
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
+			return s.HasError() || retErr != nil
+		})
+
+		playEmptyCtx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+		// Since the only app in the policy is now blocked, the Play Store catalog should be empty.
+		if err := arcent.EnsurePlayStoreEmpty(playEmptyCtx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err == nil {
+			s.Log("Blocked app no longer visible")
+			return
+		}
+
+		// Blocked app should either not install or immediately uninstall after installation.
+		if err := arcent.ValidateBlockedAppInstall(ctx, tconn, a, d, testPackage, 5*time.Minute); err != nil {
+			return rl.Exit("validate auto-uninstall", err)
+		}
+
+		return nil
 	}, nil); err != nil {
-		s.Fatal("Available app uninstall test failed: ", err)
+		s.Fatal("Availability transition test failed: ", err)
 	}
 }

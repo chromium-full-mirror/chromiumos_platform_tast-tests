@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package enterprise
+package arc
 
 import (
 	"context"
@@ -31,7 +31,7 @@ const arcInstallLoggingTestTimeout = 13 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCInstallLogging,
+		Func:         ManagedAppInstallLogging,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that log is uploaded after forced app installation in ARC",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
@@ -87,13 +87,13 @@ const (
 	unknown                 eventType = "UNKNOWN"
 )
 
-// ARCInstallLogging runs the install event logging test:
+// ManagedAppInstallLogging runs the install event logging test:
 // - login with managed account from an account pool,
 // - check that ARC is launched by user policy,
 // - check ArcEnabled is true and test app is set to force-installed by policy,
 // - check that the test app is installed,
 // - verify all expected install events are logged.
-func ARCInstallLogging(ctx context.Context, s *testing.State) {
+func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	const (
 		testPackage         = "com.google.android.calculator"
 		poolID              = "arc_logging_test"
