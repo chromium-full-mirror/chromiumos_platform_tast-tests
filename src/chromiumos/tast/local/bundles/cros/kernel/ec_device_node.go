@@ -22,10 +22,10 @@ func init() {
 			"kmshelton@google.com", // Original test author
 		},
 		BugComponent: "b:167278",
-		// TODO(b/196858433): Don't assume that /dev/cros_ec should exist on all devices.  A small part of the support
-		// matrix does not have a CrOS EC, so this test won't be ready for mainline until the long tail of the support
-		// matrix is accounted for (may need boxster EC data in-place to do this, see b/173741162).
-		Attr: []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
+		//  A software dep is used here over hwdep.ChromeEC(), because the hwdep relies on the device node's
+		//  existence (see src/platform/tast/src/chromiumos/tast/internal/crosbundle/hardware.go).
+		SoftwareDeps: []string{"chromeos_ec_firmware"},
 	})
 }
 
