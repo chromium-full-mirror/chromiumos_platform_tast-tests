@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -173,5 +174,22 @@ func FPSThrottle(ctx context.Context, s *testing.State) {
 		if math.Min(pluggedInRefreshRate, rePluggedRefreshRate)/math.Max(pluggedInRefreshRate, rePluggedRefreshRate) < sameRateThreshold {
 			s.Fatalf("Refresh rate did not recover when re-plugged: %f != %f", pluggedInRefreshRate, rePluggedRefreshRate)
 		}
+
+		pv := perf.NewValues()
+		defer func() {
+			if err := pv.Save(s.OutDir()); err != nil {
+				s.Error("Failed to save perf data: ", err)
+			}
+		}()
+		pv.Set(perf.Metric{
+			Name:      "plugged_in",
+			Unit:      "fps",
+			Direction: perf.BiggerIsBetter,
+		}, float64(pluggedInRefreshRate))
+		pv.Set(perf.Metric{
+			Name:      "unplugged",
+			Unit:      "fps",
+			Direction: perf.BiggerIsBetter,
+		}, float64(unpluggedRefreshRate))
 	}
 }
