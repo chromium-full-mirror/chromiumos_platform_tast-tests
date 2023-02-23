@@ -32,8 +32,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GAIA Enroll a device and verify device login/logout events, device lock/unlock and user added events",
 		Contacts: []string{
-			"albertojuarez@google.com", // Test owner
 			"cros-reporting-team@google.com",
+			"albertojuarez@google.com", // Test owner
 		},
 		BugComponent: "b:817866", // ChromeOS Server Projects > Enterprise Management > Reporting
 		Attr:         []string{"group:dmserver-enrollment-daily", "group:enterprise-reporting"},
