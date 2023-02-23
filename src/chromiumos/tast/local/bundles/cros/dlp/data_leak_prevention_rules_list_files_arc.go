@@ -6,8 +6,6 @@ package dlp
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -111,10 +109,6 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 	defer keyboard.Close()
 
-	// Setup test HTTP server.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	// Update the policy.
@@ -167,13 +161,6 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
 
-	// Open the local page with the file to download.
-	conn, err := br.NewConn(ctx, server.URL+"/download.html")
-	if err != nil {
-		s.Fatal("Failed to open browser: ", err)
-	}
-	defer conn.Close()
-
 	// Close all prior notifications.
 	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
 		s.Fatal("Failed to close notifications: ", err)
@@ -182,9 +169,8 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	// Start interacting with the UI.
 	ui := uiauto.New(tconnAsh)
 
-	// The file name is also the ID of the link elements, download it.
-	if err := conn.Eval(ctx, `document.getElementById('data.txt').click()`, nil); err != nil {
-		s.Fatal("Failed to execute JS expression: ", err)
+	if err := files.DownloadFile(ctx, tconnAsh, br, s.DataFileSystem()); err != nil {
+		s.Fatal("Failed to download file: ", err)
 	}
 
 	// Open the Files app.
@@ -194,44 +180,38 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 	defer filesApp.Close(cleanupCtx)
 
-	const dlFileName = "data.txt"
-
-	// Check that the file was downloaded.
-	if err := uiauto.Combine("Ensure file was downloaded",
-		filesApp.OpenDownloads(),
-		filesApp.WaitForFile(dlFileName),
-	)(ctx); err != nil {
-		s.Fatal("File should have been downloaded, but wasn't: ", err)
+	if err := filesApp.OpenDownloads()(ctx); err != nil {
+		s.Fatal("Failed to open Downloads: ", err)
 	}
 
-	if err := isFileManaged(ctx, ui, tconnAsh, keyboard, apps.FilesSWA.ID, dlFileName, true); err != nil {
+	if err := isFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, true); err != nil {
 		s.Error("File isn't managed when it should be: ", err)
 	}
 
-	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, apps.FilesSWA.ID, dlFileName); err != nil {
+	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to paste the file to Play files: ", err)
 	}
 
-	if err := cancelPaste(ctx, ui, tconnAsh, keyboard, apps.FilesSWA.ID, dlFileName); err != nil {
+	if err := cancelPaste(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to cancel the paste: ", err)
 	}
 
-	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, apps.FilesSWA.ID, dlFileName); err != nil {
+	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to paste the file to Play files: ", err)
 	}
 
-	if err := proceedWithPaste(ctx, ui, tconnAsh, keyboard, apps.FilesSWA.ID, dlFileName); err != nil {
+	if err := proceedWithPaste(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to proceed the paste: ", err)
 	}
 
-	if err := isFileManaged(ctx, ui, tconnAsh, keyboard, apps.FilesSWA.ID, dlFileName, false); err != nil {
+	if err := isFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, false); err != nil {
 		s.Error("File is managed when it shouldn't be: ", err)
 	}
 }
 
 // pasteFileToPlayfiles pastes a file to Play files/Pictures and checks that a DLP warning dialog appears.
-func pasteFileToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filesAppID, filename string) error {
-	filesApp, err := filesapp.App(ctx, tconn, filesAppID)
+func pasteFileToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filename string) error {
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
@@ -246,8 +226,8 @@ func pasteFileToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome
 }
 
 // proceedWithPaste selects the proceed option in the DLP warning dialog. Assumes that Files App is opened in the correct directory.
-func proceedWithPaste(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filesAppID, filename string) error {
-	filesApp, err := filesapp.App(ctx, tconn, filesAppID)
+func proceedWithPaste(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filename string) error {
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
@@ -267,8 +247,8 @@ func proceedWithPaste(ctx context.Context, ui *uiauto.Context, tconn *chrome.Tes
 }
 
 // cancelPaste selects the cancel option in the DLP warning dialog. Assumes that Files App is opened in the correct directory.
-func cancelPaste(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filesAppID, filename string) error {
-	filesApp, err := filesapp.App(ctx, tconn, filesAppID)
+func cancelPaste(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filename string) error {
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
@@ -288,12 +268,12 @@ func cancelPaste(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn
 }
 
 // isFileManaged checks if a file is managed based on whether it has an "Admin policy" context menu item. Assumes that Files App is opened in the correct directory.
-func isFileManaged(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filesAppID, filename string, isManaged bool) error {
+func isFileManaged(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, filename string, isManaged bool) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
-	filesApp, err := filesapp.App(ctx, tconn, filesAppID)
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}

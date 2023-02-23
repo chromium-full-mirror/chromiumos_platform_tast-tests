@@ -272,47 +272,18 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 	defer closeTabsFunc(cleanupCtx, tconnBrowser)
 
-	// Open the local page with the file to download.
-	conn, err := br.NewConn(ctx, server.URL+"/download.html")
-	if err != nil {
-		s.Fatal("Failed to open browser: ", err)
-	}
-	defer conn.Close()
-
-	s.Log("Opened the browser")
-
 	// Close all prior notifications.
 	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
 		s.Fatal("Failed to close notifications: ", err)
 	}
 
-	// The file name is also the ID of the link elements, download it.
-	if err := conn.Eval(ctx, `document.getElementById('data.txt').click()`, nil); err != nil {
-		s.Fatal("Failed to execute JS expression: ", err)
+	if err := files.DownloadFile(ctx, tconnAsh, br, s.DataFileSystem()); err != nil {
+		s.Fatal("Failed to download file: ", err)
 	}
-
-	const dlFileName = "data.txt"
-
-	// Wait for the notification about downloaded file.
-	ntfctn, err := ash.WaitForNotification(
-		ctx,
-		tconnAsh,
-		3*time.Minute,
-		ash.WaitIDContains("notification-ui-manager"),
-		ash.WaitMessageContains(dlFileName),
-	)
-	if err != nil {
-		s.Fatalf("Failed to wait for notification with title %q: %v", "", err)
-	}
-	if ntfctn.Title != "Download complete" {
-		s.Fatal("Download should be allowed, but wasn't. Notification: ", ntfctn)
-	}
-
-	s.Log("Downloaded the file")
 
 	// Create the virtual USB device.
 	if err := setupVirtualUSBDevice(ctx); err != nil {
-		s.Fatal("Fail to setup virtual USB device: ", err)
+		s.Fatal("Failed to setup virtual USB device: ", err)
 	}
 	defer cleanupVirtualUSBDevice(ctx)
 
@@ -333,10 +304,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err := filesApp.OpenDownloads()(ctx); err != nil {
 		s.Fatal("Failed to open Downloads folder: ", err)
 	}
-	if err := filesApp.SelectFile(dlFileName)(ctx); err != nil {
-		s.Fatal("Failed to select downloaded file: ", err)
-	}
-	if err := filesApp.CopyFileToClipboard(dlFileName)(ctx); err != nil {
+	if err := filesApp.CopyFileToClipboard(files.DlFileName)(ctx); err != nil {
 		s.Fatal("Failed to copy downloaded file to the clipboard: ", err)
 	}
 	if err := filesApp.OpenUSBDriveWithName("UNTITLED")(ctx); err != nil {
@@ -360,11 +328,11 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 
 	if appliedRestriction == restrictionlevel.WarnCancelled || appliedRestriction == restrictionlevel.Blocked {
-		if err := filesApp.EnsureFileGone(dlFileName, 10*time.Second)(ctx); err != nil {
+		if err := filesApp.EnsureFileGone(files.DlFileName, 10*time.Second)(ctx); err != nil {
 			s.Error("File was copied while it shouldn't: ", err)
 		}
 	} else {
-		if err := filesApp.WaitForFile(dlFileName)(ctx); err != nil {
+		if err := filesApp.WaitForFile(files.DlFileName)(ctx); err != nil {
 			s.Error("File was not copied while it should: ", err)
 		}
 	}
