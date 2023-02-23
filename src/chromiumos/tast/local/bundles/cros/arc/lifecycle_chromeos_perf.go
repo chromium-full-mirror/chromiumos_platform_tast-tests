@@ -22,8 +22,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launch many memory hogging tabs, and count how many are killed",
 		Contacts: []string{
-			"cwd@chromium.org",
 			"arcvm-eng@google.com",
+			"cwd@chromium.org",
 		},
 		// ChromeOS > Platform > Virtualization > VM Technology
 		BugComponent: "b:930563",
