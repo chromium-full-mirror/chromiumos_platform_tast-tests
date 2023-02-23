@@ -194,7 +194,7 @@ func (f *aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	if f.Channels != 0 {
 		// Restart CRAS, in case the UCM for aloop was already loaded.
-		if err := RestartCras(ctx); err != nil {
+		if _, err := RestartCras(ctx); err != nil {
 			s.Fatal("Cannot restart CRAS: ", err)
 		}
 	}

@@ -210,8 +210,13 @@ func CrasPerf(ctx context.Context, s *testing.State) {
 
 		// Stop CRAS to make sure the audio device won't be occupied.
 		s.Log("Restarting CRAS")
-		if err := audio.RestartCras(ctx); err != nil {
+		if _, err := audio.RestartCras(ctx); err != nil {
 			s.Fatal("Failed to restart CRAS: ", err)
+		}
+
+		// Any device being available means CRAS is ready.
+		if err := audio.WaitForDevice(ctx, audio.OutputStream|audio.InputStream); err != nil {
+			s.Fatal("Failed to wait for any output or input device: ", err)
 		}
 
 		proc, err := procutil.FindUnique(procutil.ByExe(crasPath))

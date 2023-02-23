@@ -46,7 +46,7 @@ func (crasStoppedFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 }
 
 func (crasStoppedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := RestartCras(ctx); err != nil {
+	if _, err := RestartCras(ctx); err != nil {
 		s.Fatal("Cannot restart cras: ", err)
 	}
 }

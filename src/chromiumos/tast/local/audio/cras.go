@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -59,6 +60,21 @@ func NewCras(ctx context.Context) (*Cras, error) {
 		return nil, err
 	}
 	return &Cras{obj}, nil
+}
+
+// RestartCras restarts CRAS and wait for it to be online.
+func RestartCras(ctx context.Context) (*Cras, error) {
+	testing.ContextLog(ctx, "Restarting CRAS")
+	if err := upstart.RestartJob(ctx, "cras"); err != nil {
+		return nil, err
+	}
+
+	// Wait for CRAS to be online.
+	cras, err := NewCras(ctx)
+	if err == nil {
+		testing.ContextLog(ctx, "CRAS restarted")
+	}
+	return cras, err
 }
 
 // CrasNode contains the metadata of Node in Cras.

@@ -26,7 +26,7 @@ func init() {
 }
 
 func FloopBasic(ctx context.Context, s *testing.State) {
-	if err := audio.RestartCras(ctx); err != nil {
+	if _, err := audio.RestartCras(ctx); err != nil {
 		s.Fatal("Cannot restart CRAS: ", err)
 	}
 
