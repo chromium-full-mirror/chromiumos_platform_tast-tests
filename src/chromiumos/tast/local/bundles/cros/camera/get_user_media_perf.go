@@ -152,10 +152,11 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Run tests for 20 seconds per resolution.
-	results := getusermedia.RunGetUserMedia(ctx, s, ci, 20*time.Second, getusermedia.NoVerboseLogging)
-
-	if !s.HasError() {
-		// Set and upload frame statistics below.
-		results.SetPerf(p)
+	results, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, 20*time.Second, getusermedia.NoVerboseLogging)
+	if err != nil {
+		s.Fatal("Failed to call getUserMedia(): ", err)
 	}
+	// Set and upload frame statistics below.
+	results.SetPerf(p)
+
 }

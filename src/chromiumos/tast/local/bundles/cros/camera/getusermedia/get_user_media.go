@@ -166,55 +166,56 @@ type ChromeInterface interface {
 // duration specifies how long video capturing will run for each resolution.
 // If verbose is true, video drivers' verbose messages will be enabled.
 // verbose must be false for performance tests.
-func RunGetUserMedia(ctx context.Context, s *testing.State, cr ChromeInterface,
-	duration time.Duration, verbose VerboseLoggingMode) cameraResults {
+func RunGetUserMedia(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface,
+	duration time.Duration, verbose VerboseLoggingMode) (cameraResults, error) {
 	if verbose == VerboseLogging {
 		vl, err := logging.NewVideoLogger()
 		if err != nil {
-			s.Fatal("Failed to set values for verbose logging")
+			return nil, errors.New("failed to set values for verbose logging")
 		}
 		defer vl.Close()
 	}
 
 	var results cameraResults
 	var logs []string
-	RunTest(ctx, s, cr, "web_api.html", fmt.Sprintf("testGetUserMedia(%d)", duration/time.Second), &results, &logs)
+	err := RunTest(ctx, fileSystem, cr, "web_api.html", fmt.Sprintf("testGetUserMedia(%d)", duration/time.Second), &results, &logs)
 
-	s.Logf("Results: %+v", results)
+	testing.ContextLogf(ctx, "Results: %+v", results)
 
 	for _, result := range results {
 		if len(result.Errors) != 0 {
 			for _, msg := range result.Errors {
-				s.Errorf("%dx%d: %s", result.Width, result.Height, msg)
+				return nil, errors.Errorf("%dx%d: %s", result.Width, result.Height, msg)
 			}
 		}
 
 		if err := result.FrameStats.CheckTotalFrames(); err != nil {
-			s.Errorf("%dx%d was not healthy: %v", result.Width, result.Height, err)
+			return nil, errors.Wrapf(err, "%dx%d was not healthy", result.Width, result.Height)
 		}
 		// Only check the percentage of broken and black frames if we are
 		// running under QEMU, see crbug.com/898745.
 		if vm.IsRunningOnVM() {
 			if err := result.FrameStats.CheckBrokenFrames(); err != nil {
-				s.Errorf("%dx%d was not healthy: %v", result.Width, result.Height, err)
+				return nil, errors.Wrapf(err, "%dx%d was not healthy", result.Width, result.Height)
 			}
 		}
 	}
 
-	if s.HasError() {
-		s.Log("Logs collected from JS:")
+	if err != nil {
+		testing.ContextLog(ctx, "Logs collected from JS:")
 		for _, log := range logs {
-			s.Log(log)
+			testing.ContextLog(ctx, log)
 		}
+		return nil, err
 	}
 
-	return results
+	return results, nil
 }
 
 // RunImageCaptureAPI run a test in /data/web_api.html.
 // If verbose is true, video drivers' verbose messages will be enabled.
 // verbose must be false for performance tests.
-func RunImageCaptureAPI(ctx context.Context, s *testing.State, cr ChromeInterface,
+func RunImageCaptureAPI(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface,
 	verbose VerboseLoggingMode) error {
 	if verbose == VerboseLogging {
 		vl, err := logging.NewVideoLogger()
@@ -226,9 +227,9 @@ func RunImageCaptureAPI(ctx context.Context, s *testing.State, cr ChromeInterfac
 
 	var results cameraResults
 	var logs []string
-	RunTest(ctx, s, cr, "web_api.html", fmt.Sprintf("testImageCaptureAPI()"), &results, &logs)
+	err := RunTest(ctx, fileSystem, cr, "web_api.html", fmt.Sprintf("testImageCaptureAPI()"), &results, &logs)
 
-	s.Logf("Results: %+v", results)
+	testing.ContextLogf(ctx, "Results: %+v", results)
 
 	for _, result := range results {
 		if len(result.Errors) != 0 {
@@ -238,11 +239,12 @@ func RunImageCaptureAPI(ctx context.Context, s *testing.State, cr ChromeInterfac
 		}
 	}
 
-	if s.HasError() {
-		s.Log("Logs collected from JS:")
+	if err != nil {
+		testing.ContextLog(ctx, "Logs collected from JS:")
 		for _, log := range logs {
-			s.Log(log)
+			testing.ContextLog(ctx, log)
 		}
+		return err
 	}
 
 	return nil

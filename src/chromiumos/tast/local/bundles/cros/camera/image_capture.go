@@ -68,7 +68,7 @@ func ImageCapture(ctx context.Context, s *testing.State) {
 		ci = s.PreValue().(*chrome.Chrome)
 	}
 
-	if err := getusermedia.RunImageCaptureAPI(ctx, s, ci, getusermedia.VerboseLogging); err != nil {
+	if err := getusermedia.RunImageCaptureAPI(ctx, s.DataFileSystem(), ci, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to run ImageCapture API: ", err)
 	}
 }
