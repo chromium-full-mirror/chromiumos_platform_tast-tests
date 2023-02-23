@@ -47,22 +47,34 @@ sysctl -w kernel.panic_on_warn=1
 dmesg --clear
 `
 
-var boardArchMapping = map[string]string{
-	"octopus":  "amd64",
-	"dedede":   "amd64",
-	"nautilus": "amd64",
-	"guybrush": "amd64",
-	"brya":     "amd64",
-	"trogdor":  "arm64",
-	// syzkaller binaries built for strongbad are 32 bit.
-	"strongbad": "arm",
-	// syzkaller binaries built for Mediatek platforms are 32 bit.
-	"kukui": "arm",
+const (
+	arm   = "arm"
+	arm64 = "arm64"
+	amd64 = "amd64"
+)
+
+type targetArch struct {
+	user   string
+	kernel string
+}
+
+var boardArchMapping = map[string]targetArch{
+	"octopus":  {amd64, amd64},
+	"dedede":   {amd64, amd64},
+	"nautilus": {amd64, amd64},
+	"guybrush": {amd64, amd64},
+	"brya":     {amd64, amd64},
+
+	"strongbad": {arm, arm64},
+	"kukui":     {arm, arm64},
+
+	"trogdor":   {arm64, arm64},
+	"herobrine": {arm64, arm64},
+
 	// b/242131739: Jacuzzi and Cherry are for local testing at the moment.
 	// The test is not enabled in the lab yet.
-	"jacuzzi":   "arm",
-	"cherry":    "arm",
-	"herobrine": "arm64",
+	"jacuzzi": {arm, arm64},
+	"cherry":  {arm, arm64},
 }
 
 // dutConfig represents information related to the DUT configuration;
@@ -279,6 +291,12 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to create temp configfile: ", err)
 	}
 
+	target := fmt.Sprintf("linux/%v/%v", syzArch.kernel, syzArch.user)
+	if syzArch.kernel == syzArch.user {
+		target = fmt.Sprintf("linux/%v", syzArch.kernel)
+	}
+	s.Log("Target: ", target)
+
 	// Create syzkaller configuration file.
 	// Generating reproducers is unlikely to work as :
 	// [1] Corpus is not shared across two runs of the test.
@@ -286,7 +304,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 	// Hence, set Reproduce:false.
 	config := syzkallerConfig{
 		Name:      board,
-		Target:    fmt.Sprintf("linux/%v", syzArch),
+		Target:    target,
 		Reproduce: false,
 		HTTP:      fmt.Sprintf("%v:%v", syzManagerHost, syzManagerPort),
 		Workdir:   syzkallerWorkdir,
@@ -506,21 +524,24 @@ func findKernelCommit(ctx context.Context, d *dut.DUT) (string, error) {
 	return commit[1:], nil
 }
 
-func findSyzkallerBoardAndArch(ctx context.Context, d *dut.DUT) (board, arch string, err error) {
-	board, err = reporters.New(d).Board(ctx)
+func findSyzkallerBoardAndArch(ctx context.Context, d *dut.DUT) (string, targetArch, error) {
+	board, err := reporters.New(d).Board(ctx)
 	if err != nil {
-		return "", "", errors.Wrap(err, "unable to find board")
+		return "", targetArch{}, errors.Wrap(err, "unable to find board")
 	}
 	if _, ok := boardArchMapping[board]; !ok {
-		return "", "", errors.Wrapf(err, "unexpected board: %v", board)
+		return "", targetArch{}, errors.Wrapf(err, "unexpected board: %v", board)
 	}
 	return board, boardArchMapping[board], nil
 }
 
-func fetchFuzzArtifacts(ctx context.Context, d *dut.DUT, artifactsDir, syzArch string) error {
-	binDir := fmt.Sprintf("bin/linux_%v", syzArch)
-	if err := os.MkdirAll(filepath.Join(artifactsDir, binDir), 0755); err != nil {
-		return err
+func fetchFuzzArtifacts(ctx context.Context, d *dut.DUT, artifactsDir string, syzArch targetArch) error {
+	binDirUser := fmt.Sprintf("bin/linux_%v", syzArch.user)
+	binDirKern := fmt.Sprintf("bin/linux_%v", syzArch.kernel)
+	for _, binDir := range []string{binDirUser, binDirKern} {
+		if err := os.MkdirAll(filepath.Join(artifactsDir, binDir), 0755); err != nil {
+			return err
+		}
 	}
 
 	// Get syz-manager, syz-fuzzer, syz-execprog and syz-executor from the DUT image.
@@ -528,10 +549,20 @@ func fetchFuzzArtifacts(ctx context.Context, d *dut.DUT, artifactsDir, syzArch s
 		return err
 	}
 
-	// syz-manager expects (syz-executor,syz-fuzzer,syz-execprog) to be at <artifactsDir>/linux_<arch>/syz-*.
-	artifacts := []string{"syz-fuzzer", "syz-executor", "syz-execprog"}
-	for _, artifact := range artifacts {
-		if err := linuxssh.GetFile(ctx, d.Conn(), filepath.Join("/usr/local/bin", artifact), filepath.Join(artifactsDir, binDir, artifact), linuxssh.PreserveSymlinks); err != nil {
+	// syz-manager expects syz-executor to be at <artifactsDir>/linux_<syzArch.user>/syz-executor.
+	// syz-manager expects {syz-fuzzer,syz-execprog} to be at <artifactsDir>/linux_<syzArch.kernel>/syz-{fuzzer,execprog}.
+	artifacts := []struct {
+		binary string
+		dir    string
+	}{
+		{"syz-executor", binDirUser},
+		{"syz-fuzzer", binDirKern},
+		{"syz-execprog", binDirKern},
+	}
+	for _, a := range artifacts {
+		src := filepath.Join("/usr/local/bin", a.binary)
+		dest := filepath.Join(artifactsDir, a.dir, a.binary)
+		if err := linuxssh.GetFile(ctx, d.Conn(), src, dest, linuxssh.PreserveSymlinks); err != nil {
 			return err
 		}
 	}
