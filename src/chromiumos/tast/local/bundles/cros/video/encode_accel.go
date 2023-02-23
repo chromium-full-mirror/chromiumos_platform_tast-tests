@@ -29,7 +29,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EncodeAccel,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies hardware encode acceleration by running the video_encode_accelerator_tests binary",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",

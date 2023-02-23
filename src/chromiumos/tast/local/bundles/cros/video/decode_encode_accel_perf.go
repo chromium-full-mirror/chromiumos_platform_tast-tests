@@ -28,7 +28,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DecodeEncodeAccelPerf,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Simulates video chat performance by simultaneously decoding and encoding a 30fps 1080p video",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
