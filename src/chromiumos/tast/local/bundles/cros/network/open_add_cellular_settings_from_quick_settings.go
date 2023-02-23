@@ -27,8 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the add cellular button in Quick Settings",
 		Contacts: []string{
-			"hsuregan@google.com",
 			"cros-connectivity@google.com",
+			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},

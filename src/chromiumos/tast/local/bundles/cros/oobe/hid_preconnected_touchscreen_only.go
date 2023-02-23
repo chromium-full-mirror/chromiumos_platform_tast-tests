@@ -20,8 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that OOBE HID Detection screen is shown with the correct devices enabled on touchscreen devices",
 		Contacts: []string{
-			"andrewdear@google.com",
 			"cros-connectivity@google.com",
+			"andrewdear@google.com",
 		},
 		BugComponent: "b:1131776",
 		VarDeps: []string{

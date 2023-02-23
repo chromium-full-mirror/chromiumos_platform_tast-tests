@@ -33,8 +33,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that SIM PIN locking is disabled when the SIM lock policy is applied",
 		Contacts: []string{
-			"hsuregan@google.com",
 			"cros-connectivity@google.com",
+			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},

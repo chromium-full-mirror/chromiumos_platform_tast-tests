@@ -26,8 +26,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a PIN locked SIM can only be unlocked by the correct PIN, and then subsequently connected to",
 		Contacts: []string{
-			"hsuregan@google.com",
 			"cros-connectivity@google.com",
+			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},

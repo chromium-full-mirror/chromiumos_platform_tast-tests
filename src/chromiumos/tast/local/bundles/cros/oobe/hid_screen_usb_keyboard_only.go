@@ -23,8 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that a single usb keyboard device can be connected in OOBE HID Detection screen",
 		Contacts: []string{
-			"tjohnsonkanu@google.com",
 			"cros-connectivity@google.com",
+			"tjohnsonkanu@google.com",
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",

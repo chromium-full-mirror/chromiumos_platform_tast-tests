@@ -22,8 +22,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that when autoconnect is disabled, when mobile data is turned off then back on, the previously connected network does not autoconnect",
 		Contacts: []string{
-			"hsuregan@google.com",
 			"cros-connectivity@google.com",
+			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},

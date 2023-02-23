@@ -20,8 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that OOBE HID Detection screen is skipped on non-applicable devices",
 		Contacts: []string{
-			"andrewdear@google.com",
 			"cros-connectivity@google.com",
+			"andrewdear@google.com",
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",

@@ -24,8 +24,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that SIM Lock in Settings PIN locks and unlocks the SIM",
 		Contacts: []string{
-			"hsuregan@google.com",
 			"cros-connectivity@google.com",
+			"hsuregan@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
