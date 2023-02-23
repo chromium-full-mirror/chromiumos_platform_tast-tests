@@ -177,7 +177,7 @@ func PhysicalKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) 
 				err = googledocs.DeleteCellValue(ctx, tconn)
 			}
 			if err != nil {
-				s.Errorf("Failed to clean up for %s", appRootWebAreaName)
+				s.Logf("Failed to clean up for %s with error %v", appRootWebAreaName, err)
 			}
 		}
 	}

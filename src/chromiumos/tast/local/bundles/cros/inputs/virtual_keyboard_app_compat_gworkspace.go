@@ -97,6 +97,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 					vkbCtx.TapKeyIgnoringCase("h"),
 					vkbCtx.TapAccentKey("e", "é"),
 					vkbCtx.TapKeys(strings.Split("llo", "")),
+					vkbCtx.TapHideVitrualKeyboardButton(),
 					util.VerifyTextToBe(tconn, nil, "Héllo", util.VerifyInScreenshot),
 				),
 			},
@@ -108,7 +109,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 				Steps: uiauto.Combine("testing typing, user type text English",
 					vkbCtx.TapKeyIgnoringCase("e"),
 					vkbCtx.TapKeys(strings.Split("nglish", "")),
-					vkbCtx.HideVirtualKeyboard(),
+					vkbCtx.TapHideVitrualKeyboardButton(),
 					util.VerifyTextToBe(tconn, nil, "English", util.VerifyInScreenshot),
 				),
 			},
@@ -138,10 +139,9 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 				}
 
 			case "Google Slides":
-				cursorText := nodewith.ClassName("cursor-text").Role(role.GenericContainer)
-				textContent := nodewith.Role(role.Group).ClassName("sketchy-text-content").Ancestor(cursorText).First()
+				notesField := nodewith.Role(role.Complementary).Name("Speaker notes")
 
-				if err := vkbCtx.TapScreenTriggerVK(touchCtx, tconn, textContent)(ctx); err != nil {
+				if err := vkbCtx.TapScreenTriggerVK(touchCtx, tconn, notesField)(ctx); err != nil {
 					s.Fatal("Failed to trigger vk in google slides: ", err)
 				}
 
@@ -178,7 +178,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 				err = googledocs.DeleteCellValue(ctx, tconn)
 			}
 			if err != nil {
-				s.Logf("Failed to clean up for %s", appRootWebAreaName) // it won't affect test itself.
+				s.Logf("Failed to clean up for %s with error %v", appRootWebAreaName, err) // it won't affect test itself.
 			}
 		}
 	}

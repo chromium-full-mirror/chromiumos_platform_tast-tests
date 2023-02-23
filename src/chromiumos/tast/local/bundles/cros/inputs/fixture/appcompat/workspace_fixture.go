@@ -67,7 +67,7 @@ type WorkspaceFixtData struct {
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: GoogleDocsWithVK,
-		Desc: "Open google docs for testing in any mode with VK enabled",
+		Desc: "Open google docs for testing with VK enabled",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
@@ -273,14 +273,6 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 	if f.appName == googleSheets {
 		if err := googledocs.ChangeSheetFontSize(f.tconn, "12")(ctx); err != nil {
 			s.Fatal("Failed to set font size for google sheets")
-		}
-	}
-
-	// google slide has to make title field or text field editable first
-	// otherwise, user cannot typing anything
-	if f.appName == googleSlides {
-		if err := googledocs.ActivateTitleField(f.tconn)(ctx); err != nil {
-			s.Fatal("Failed to activate slides title field")
 		}
 	}
 }
