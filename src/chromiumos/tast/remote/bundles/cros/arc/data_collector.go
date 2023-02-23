@@ -326,8 +326,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		initialPackLog = "initial_pack.log"
 
 		// Name of the pack in case of initial boot inside VM.
-		// TODO(b/183648019): Once VM ureadahead flow is stable, remove this and
-		// change vm_initial_pack -> initial_pack.
 		vmInitialPack = "vm_initial_pack"
 
 		// Name of the log for pack in case of initial boot inside VM.
