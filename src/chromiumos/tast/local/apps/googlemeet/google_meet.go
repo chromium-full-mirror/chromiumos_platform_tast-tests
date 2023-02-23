@@ -43,12 +43,14 @@ var (
 	meetRootWebArea = nodewith.NameContaining(appName).Role(role.RootWebArea)
 
 	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetRootWebArea)
-	videoNode         = nodewith.Role(role.Video).Ancestor(meetRootWebArea)
 
 	endMeetingButton = nodewith.Name("Leave call").Role(role.Button).Ancestor(meetRootWebArea)
 	// Use end meeting button to identify whether it is currently in a meeting.
 	inMeetingIdentifier = endMeetingButton
 )
+
+// VideoNode represents the first video node in the meeting.
+var VideoNode = nodewith.Role(role.Video).First().Ancestor(meetRootWebArea)
 
 // GoogleMeet represents a type of GoogleMeet meeting instance.
 type GoogleMeet struct {
@@ -380,7 +382,7 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 
 // ScreenshotCanvas takes screenshot of the canvas via Javascript.
 func (gm *GoogleMeet) ScreenshotCanvas(ctx context.Context, cr *chrome.Chrome) (image.Image, error) {
-	videoNodeInfo, err := gm.ui.Info(ctx, videoNode)
+	videoNodeInfo, err := gm.ui.Info(ctx, VideoNode)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get video node info")
 	}

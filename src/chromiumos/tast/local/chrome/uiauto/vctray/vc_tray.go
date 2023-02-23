@@ -129,11 +129,6 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 	}
 }
 
-// TODO(b/267709319): Add on/off params to switch functions
-// once the status can be checked in accessibility.
-
-// TODO(b/267709155): Add returnToApp support.
-
 // SwitchPortraitRelighting switches on/off the Portrait Relighting option.
 func (vcTray VCTray) SwitchPortraitRelighting() action.Action {
 	return vcTray.ui.DoDefault(portraitRelightingButton)
@@ -167,4 +162,17 @@ func (vcTray VCTray) ReturnToApp(appName string) action.Action {
 
 		return vcTray.ui.DoDefault(appFinder)(ctx)
 	}
+}
+
+// SetCameraEffects is a high level wrapper to setup camera effects from main screen.
+// It expands vcTray and set both background blur and portrait relighting then collapse the vcTray.
+func (vcTray VCTray) SetCameraEffects(backgroundBlur BackgroundBlurLevel, portraitRelighting bool) action.Action {
+	return uiauto.Combine("configure camera effects via mcpanel",
+		vcTray.ExpandPanel,
+		vcTray.SetBackgroundBlur(backgroundBlur),
+		// TODO(b/267709319): Add on/off params to switch functions
+		// once the status can be checked in accessibility. It is currently blocked by b/266476993.
+		// vcTray.SwitchPortraitRelighting(),
+		vcTray.CollapsePanel,
+	)
 }

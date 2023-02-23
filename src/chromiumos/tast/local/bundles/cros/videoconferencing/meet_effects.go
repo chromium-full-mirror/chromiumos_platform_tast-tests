@@ -6,6 +6,7 @@ package videoconferencing
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -13,10 +14,12 @@ import (
 	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -31,7 +34,7 @@ func init() {
 			"shengjun@chromium.org",
 		},
 		BugComponent: "b:187682",
-		Timeout:      3 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Attr: []string{
 			"group:mainline", "informational", "group:ml_service",
 		},
@@ -79,6 +82,11 @@ func init() {
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},
+		// Each parameterized test contains multiple subtests.
+		// Using -var "subtests" to make it possible limiting the subtests to run.
+		// e.g. tast run -var=subtests=backgroundblur_off_portraitrelighting_off
+		// <dut> videoconferencing.MeetEffects.clamshell_web
+		Vars: append(screenshot.ScreenDiffVars, "subtests"),
 	})
 }
 
@@ -135,16 +143,70 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	if err := uiauto.Combine("configure effects via mcpanel",
-		vcTray.ExpandPanel,
-		vcTray.SetBackgroundBlur(vctray.BackgroundBlurFull),
-		vcTray.SwitchPortraitRelighting(),
-		vcTray.CollapsePanel,
-	)(ctx); err != nil {
-		s.Fatal("Failed to configure effects: ", err)
+	// Run subtests to verify video effects are correctly applied.
+	// Note: Golden images can be found at https://cros-tast-gold.skia.org/list?corpus=videoconferencing.
+	subTests := []struct {
+		name               string
+		backgroundBlur     vctray.BackgroundBlurLevel
+		portraitRelighting bool
+	}{
+		{
+			name:               "backgroundblur_off_portraitrelighting_off",
+			backgroundBlur:     vctray.BackgroundBlurOff,
+			portraitRelighting: false,
+		},
+		{
+			name:               "backgroundblur_light_portraitrelighting_off",
+			backgroundBlur:     vctray.BackgroundBlurLight,
+			portraitRelighting: false,
+		},
+		{
+			name:               "backgroundblur_full_portraitrelighting_off",
+			backgroundBlur:     vctray.BackgroundBlurFull,
+			portraitRelighting: false,
+		},
+		// TODO(b/267709319): Add screen tests with portrait relighting on.
 	}
 
-	if err := gm.EnterFullScreen(ctx); err != nil {
-		s.Fatal("Failed to enter full screen: ", err)
+	enabledSubtests := make(map[string]struct{})
+	subtestsVar, ok := s.Var("subtests")
+	if ok {
+		testing.ContextLog(ctx, "Enabled subtests: ", subtestsVar)
+		for _, subTest := range strings.Split(subtestsVar, ",") {
+			enabledSubtests[subTest] = struct{}{}
+		}
+	}
+
+	for _, subTest := range subTests {
+		// Check whether this subtest is enabled in the test var.
+		if len(enabledSubtests) > 0 {
+			if _, ok := enabledSubtests[subTest.name]; !ok {
+				continue
+			}
+		}
+
+		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
+			if err := vcTray.SetCameraEffects(subTest.backgroundBlur, subTest.portraitRelighting)(ctx); err != nil {
+				s.Fatalf("Failed to set camera effects to BackgroundBlur %v; PortraitRelighting %v: %v",
+					subTest.backgroundBlur, subTest.portraitRelighting, err)
+			}
+
+			d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
+				screenshot.Config{
+					DefaultOptions: screenshot.Options{
+						WindowState: ash.WindowStateDefault,
+					},
+				})
+			if err != nil {
+				s.Fatal("Failed to start screen differ: ", err)
+			}
+			defer d.DieOnFailedDiffs()
+			if err := d.Diff(ctx, subTest.name, googlemeet.VideoNode,
+				screenshot.Retries(5),
+				screenshot.RetryInterval(time.Second),
+			)(ctx); err != nil {
+				s.Fatal("Failed the skia gold diff: ", err)
+			}
+		})
 	}
 }
