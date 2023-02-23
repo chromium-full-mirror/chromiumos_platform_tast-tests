@@ -30,10 +30,10 @@ func init() {
 		// ChromeOS > Software > System Services > Serviceability > Diagnostics
 		BugComponent: "b:1131925",
 		Contacts: []string{
+			"cros-peripherals@google.com",
 			"ashleydp@google.com",
 			"zentaro@google.com",
 			"menghuan@google.com",
-			"cros-peripherals@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

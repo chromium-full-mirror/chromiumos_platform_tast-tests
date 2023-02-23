@@ -24,12 +24,12 @@ func init() {
 		// ChromeOS > Software > System Services > Serviceability > Diagnostics
 		BugComponent: "b:1131925",
 		Contacts: []string{
+			"cros-peripherals@google.com",
 			"dpad@google.com",
 			"jeff.lin@cienet.com",
 			"xliu@cienet.com",
 			"ashleydp@google.com",
 			"zentaro@google.com",
-			"cros-peripherals@google.com",
 		},
 		Fixture:      "diagnosticsPrepForInputDiagnostics",
 		Attr:         []string{"group:mainline", "informational"},
