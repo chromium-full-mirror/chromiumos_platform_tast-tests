@@ -32,8 +32,8 @@ func init() {
 		Desc:         "Checks behavior of CalendarIntegrationEnabled policy, check if event list is shown based on value of the policy",
 		BugComponent: "b:1129862",
 		Contacts: []string{
-			"crmullins@google.com",
 			"dp-chromeos-eng@google.com",
+			"crmullins@google.com",
 		},
 		Attr:         []string{"group:commercial_limited"},
 		SoftwareDeps: []string{"chrome"},
