@@ -649,6 +649,17 @@ func testFunction(
 		}); err != nil {
 			return errors.Wrap(err, "failed to wait")
 		}
+		s.Log("Sleep for 10 seconds to let session settle and save restore data")
+		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep for 10 seconds")
+		}
+
+		// Ash.LoginAnimation.Duration.* are reported only a few frames
+		// after the animation end. Trigger next system UI animation
+		// to push the metrics through.
+		if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
+			return errors.Wrap(err, "failed to enter the overview mode")
+		}
 		return nil
 	}
 
@@ -976,7 +987,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 							pv,
 							hists,
 						); err != nil {
-							return err
+							return errors.Wrap(err, "storeHistograms failed")
 						}
 						return logout(ctx, cr, l)
 					}); err != nil {
