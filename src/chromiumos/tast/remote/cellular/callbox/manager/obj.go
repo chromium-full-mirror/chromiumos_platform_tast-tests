@@ -5,6 +5,7 @@
 package manager
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -113,16 +114,40 @@ func NewTxPower(power float64) TxPower {
 	return TxPower(fmt.Sprintf("%f", power))
 }
 
+// DRXConfiguration represents a cell's discontinuous reception settings.
+type DRXConfiguration struct {
+	OnDuration             int
+	InactiveDuration       int
+	RetransmissionDuration int
+	LongCycle              int
+	LongCycleOffset        int
+}
+
+// MarshalJSON marshalls DRXConfiguration as a JSON byte array.
+func (d DRXConfiguration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(
+		// callbox controllers expect DRX to be passed as an array of values.
+		[]int{
+			d.OnDuration,
+			d.InactiveDuration,
+			d.RetransmissionDuration,
+			d.LongCycle,
+			d.LongCycleOffset,
+		},
+	)
+}
+
 // CellConfiguration represents the configuration options for a cellular base station.
 // If multiple are provided, each configuration will be applied to the primary and secondary
 // carriers in a carrier aggregation scenario, respectively.
 type CellConfiguration struct {
-	Band             Band             `json:"band,omitempty"`
-	Bandwidth        Bandwidth        `json:"bw,omitempty"`
-	Mimo             MimoMode         `json:"mimo,omitempty"`
-	RxPower          RxPower          `json:"pdl,omitempty"`
-	TxPower          TxPower          `json:"pul,omitempty"`
-	TransmissionMode TransmissionMode `json:"tm,omitempty"`
+	Band             Band              `json:"band,omitempty"`
+	Bandwidth        Bandwidth         `json:"bw,omitempty"`
+	Mimo             MimoMode          `json:"mimo,omitempty"`
+	RxPower          RxPower           `json:"pdl,omitempty"`
+	TxPower          TxPower           `json:"pul,omitempty"`
+	TransmissionMode TransmissionMode  `json:"tm,omitempty"`
+	DRX              *DRXConfiguration `json:"drx,omitempty"`
 }
 
 // CellOption represents a configuration option for a base station cell/component carrier.
@@ -161,6 +186,13 @@ func RxPowerOption(power RxPower) CellOption {
 func TxPowerOption(power TxPower) CellOption {
 	return func(opt *CellConfiguration) {
 		opt.TxPower = power
+	}
+}
+
+// DRXOption configures the cell discontinuous reception settings.
+func DRXOption(DRX *DRXConfiguration) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.DRX = DRX
 	}
 }
 
