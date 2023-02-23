@@ -36,11 +36,12 @@ func init() {
 		Params: []testing.Param{
 			// Stable subset of boards.
 			{
-				Name:      "dataoffline_hidden_png5kb",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
-				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				Name:              "dataoffline_hidden_png5kb",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
 				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
 					// Companion DUT 1 dependency.
@@ -49,13 +50,42 @@ func init() {
 				ExtraAttr: []string{"cross-device-remote_cq"},
 			},
 
-			// Unstable subset of boards.
+			// Unstable subset of boards (sender).
 			{
-				Name:      "dataoffline_hidden_png5kb_unstable",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
-				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraData: []string{"small_png.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				Name:              "dataoffline_hidden_png5kb_unstable_sender",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
+				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
+				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
+					// Companion DUT 1 dependency.
+					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.BGScanningStableSkipModels...)),
+				},
+			},
+			// Unstable subset of boards (receiver).
+			{
+				Name:              "dataoffline_hidden_png5kb_unstable_receiver",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
+				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
+					// Companion DUT 1 dependency.
+					"cd1": hwdep.D(hwdep.Model(crossdevice.BGScanningUnstableModels...)),
+				},
+			},
+			// Unstable subset of boards (both).
+			{
+				Name:              "dataoffline_hidden_png5kb_unstable_both",
+				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
+				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
+				ExtraData:         []string{"small_png.zip"},
+				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
 				// TODO(b/225966067): Replace with companion DUT HWDep for background scanning.
 				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
 					// Companion DUT 1 dependency.
