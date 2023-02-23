@@ -78,6 +78,23 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+			{
+				Name:    "kraken",
+				Fixture: "loggedInToCUJUser",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+				},
+			},
+			{
+				Name:    "lacros_kraken",
+				Fixture: "loggedInToCUJUserLacros",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
 		},
 	})
 }

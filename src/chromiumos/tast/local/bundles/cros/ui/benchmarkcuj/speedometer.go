@@ -7,9 +7,11 @@ package benchmarkcuj
 import (
 	"context"
 
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto"
 )
 
 // SpeedometerInfo contains the information for running Speedometer Benchmark.
@@ -19,10 +21,12 @@ var SpeedometerInfo = benchmarkInfo{
 	benchmarkURL:   "https://browserbench.org/Speedometer2.1/",
 	benchmarkRun:   RunSpeedometer,
 	benchmarkScore: RetrieveSpeedometerScore,
+	unit:           "runs/min",
+	direction:      perf.BiggerIsBetter,
 }
 
 // RunSpeedometer runs the Speedometer test.
-func RunSpeedometer(ctx context.Context, benchmarkConn *chrome.Conn) error {
+func RunSpeedometer(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context) error {
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
 		// Overwrite this function to include the resolve statement at the end.

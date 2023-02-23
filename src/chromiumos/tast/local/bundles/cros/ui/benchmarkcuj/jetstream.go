@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -27,13 +27,14 @@ var JetStreamInfo = benchmarkInfo{
 	benchmarkSetUp: SetUpJetStream,
 	benchmarkRun:   RunJetStream,
 	benchmarkScore: RetrieveJetStreamScore,
+	unit:           "score",
+	direction:      perf.BiggerIsBetter,
 }
 
 // SetUpJetStream prepares the start state for Jetstream to run.
-func SetUpJetStream(ctx context.Context, tconn *browser.TestConn) error {
+func SetUpJetStream(ctx context.Context, ac *uiauto.Context) error {
 	// Wait for up to 2 minutes for JetStream to load resources.
 	startButton := nodewith.Name("Start Test").ClassName("button").Role(role.Link)
-	ac := uiauto.New(tconn)
 	if err := ac.WithTimeout(2 * time.Minute).WaitUntilExists(startButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to load JetStream resources")
 	}
@@ -41,7 +42,7 @@ func SetUpJetStream(ctx context.Context, tconn *browser.TestConn) error {
 }
 
 // RunJetStream runs the JetStream test.
-func RunJetStream(ctx context.Context, benchmarkConn *chrome.Conn) error {
+func RunJetStream(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context) error {
 	if err := benchmarkConn.Eval(ctx, `
 		JetStream.start();
 	`, nil); err != nil {

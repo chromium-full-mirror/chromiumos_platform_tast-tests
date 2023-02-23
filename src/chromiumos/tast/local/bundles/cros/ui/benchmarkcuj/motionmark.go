@@ -7,9 +7,11 @@ package benchmarkcuj
 import (
 	"context"
 
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto"
 )
 
 const motionMarkPrefix = "MotionMark."
@@ -21,10 +23,12 @@ var MotionMarkInfo = benchmarkInfo{
 	benchmarkURL:   "https://browserbench.org/MotionMark1.2/",
 	benchmarkRun:   RunMotionMark,
 	benchmarkScore: RetrieveMotionMarkScore,
+	unit:           "score",
+	direction:      perf.BiggerIsBetter,
 }
 
 // RunMotionMark runs the MotionMark test.
-func RunMotionMark(ctx context.Context, benchmarkConn *chrome.Conn) error {
+func RunMotionMark(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context) error {
 	if err := benchmarkConn.Eval(ctx, `
 	new Promise(resolve => {
 		benchmarkRunnerClient.didFinishLastIteration = function() {
