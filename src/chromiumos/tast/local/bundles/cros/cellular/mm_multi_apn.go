@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MMMultiApn,
 		Desc:         "Verifies that Modem Manager supports multiple concurrent APN connections(multiplex)",
-		Contacts:     []string{"andrewlassalle@google.com", "chromeos-cellular-team@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Fixture:      "cellularModemManager",
