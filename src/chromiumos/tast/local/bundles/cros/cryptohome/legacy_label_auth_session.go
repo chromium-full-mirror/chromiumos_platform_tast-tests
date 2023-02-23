@@ -17,6 +17,10 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type testParam struct {
+	keyDataEnabled bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: LegacyLabelAuthSession,
@@ -27,7 +31,16 @@ func init() {
 		},
 		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline"},
-		Timeout:      60 * time.Second,
+		Params: []testing.Param{
+			{
+				Name: "with_key_data",
+				Val:  testParam{keyDataEnabled: true},
+			}, {
+				Name: "without_key_data",
+				Val:  testParam{keyDataEnabled: false},
+			},
+		},
+		Timeout: 60 * time.Second,
 	})
 }
 
@@ -70,7 +83,8 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	}
 
 	// Create persistent user with a vault keyset that has an empty label.
-	if err := testTool.CreateVaultKeyset(ctx, userName /*keyDataLabel=*/, "", userPassword /*enableKeyData=*/, true); err != nil {
+	keyDataEnabled := s.Param().(testParam).keyDataEnabled
+	if err := testTool.CreateVaultKeyset(ctx, userName /*keyDataLabel=*/, "", userPassword, keyDataEnabled); err != nil {
 		s.Fatal("Failed to create VaultKeyset: ", err)
 	}
 	defer cryptohome.RemoveVault(cleanupCtx, userName)
