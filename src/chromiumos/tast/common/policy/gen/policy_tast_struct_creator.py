@@ -137,6 +137,7 @@ type ONCIPsec struct {
 type ONCCellular struct {
 \tICCID\tstring\t`json:"ICCID"`
 \tSMDPAddress\tstring\t`json:"SMDPAddress"`
+\tAllowRoaming\tbool\t`json:"AllowRoaming"`
 }
 
 type ONCNetworkConfiguration struct {

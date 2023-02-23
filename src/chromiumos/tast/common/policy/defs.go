@@ -26567,8 +26567,9 @@ type ONCIPsec struct {
 }
 
 type ONCCellular struct {
-	ICCID       string `json:"ICCID"`
-	SMDPAddress string `json:"SMDPAddress"`
+	ICCID        string `json:"ICCID"`
+	SMDPAddress  string `json:"SMDPAddress"`
+	AllowRoaming bool   `json:"AllowRoaming"`
 }
 
 type ONCNetworkConfiguration struct {
