@@ -122,6 +122,8 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			kb.TypeAction("g"),
 			// Save binding.
 			uda.Tap(uidetection.Word("Save")),
+			// Waiting for focus update.
+			uiauto.Sleep(gio.WaitForFocusUpdateTime),
 			// Verify original "m" binding doesn't exist anymore (i.e. the current "m"
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.MoveOverlayButton(kb, "g", &params),
@@ -140,6 +142,8 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			kb.TypeAction("m"),
 			// Save binding.
 			uda.Tap(uidetection.Word("Save")),
+			// Waiting for focus update.
+			uiauto.Sleep(gio.WaitForFocusUpdateTime),
 			// Verify original "m" binding doesn't exist anymore (i.e. the current "m"
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.TapOverlayButton(kb, "m", &params, gio.BotTap),
