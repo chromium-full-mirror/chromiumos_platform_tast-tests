@@ -29,8 +29,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Copy and paste text between Notepad VDI application and native text editor application",
 		Contacts: []string{
-			"hendrich@google.com", // Test author
 			"cros-engprod-muc@google.com",
+			"hendrich@google.com", // Test author
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Attr:         []string{},

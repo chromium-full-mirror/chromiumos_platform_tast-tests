@@ -36,6 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of WebAppInstallForceList policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
 			"phweiss@google.com",        // Test author of customization test cases
 		},
