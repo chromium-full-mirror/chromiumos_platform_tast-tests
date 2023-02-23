@@ -49,11 +49,11 @@ POLICY_SCHEMA_TEMPLATE = """
 ///////////////////////////////////////////////////////////////////////////////
 
 {additional_structs_string}
-func (p *{self.name}) Schema2JSON(updateMask []string) ([]byte, error) {{
+func (p *{self.name}) Schema2JSON(updateMask []string, additionalTargetKeys interface{{}}) ([]byte, error) {{
 \tif len(updateMask) == 0 {{
 \t\tupdateMask = []string{{{path_str}}}
 \t}}
-\treturn marshalJSON("{self.uri}", p, updateMask)
+\treturn marshalJSON("{self.uri}", p, updateMask, additionalTargetKeys)
 }}
 """
 
@@ -143,6 +143,9 @@ def parse_values(definition, messages, suffix, duplication_set):
       continue
     if first_message:
       message['name'] = message['name'] + suffix
+    # Special handling for NetworkDetails as we have multiple different ones.
+    if message['name'] == "NetworkDetails":
+      message['name'] = message['name'] + suffix.removeprefix("Networks")
     if message['name'] in duplication_set:
       continue
     duplication_set.add(message['name'])
@@ -176,6 +179,9 @@ def parse_values(definition, messages, suffix, duplication_set):
           duplication_set.add(field['typeName'])
       elif field['type'] == 'TYPE_MESSAGE':
         type_name = field['typeName']
+        # Special handling for NetworkDetails as above.
+        if type_name == "NetworkDetails":
+          type_name = type_name + suffix.removeprefix("Networks")
       else:
         type_name = TYPES_SCHEMA_TO_GO[field['type']]
       struct_str += f'{type_name} `json:"{field["name"]}"`\n'

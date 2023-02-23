@@ -36,6 +36,8 @@ const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleap
 // UpdatePolicy is used to identify which policies need to updated for a test.
 type UpdatePolicy int
 
+// EnablAll and DisableAll enable/disable all reporting.
+// Custom enables reporting with an allowlist.
 const (
 	EnableAll UpdatePolicy = iota
 	DisableAll
@@ -48,7 +50,7 @@ type VerifyEventTypeCallback func(InputEvent) bool
 
 // Interface for calling methods in tape.client.
 type tapeClient interface {
-	SetPolicy(context.Context, tape.PolicySchema, []string, string) error
+	SetPolicy(context.Context, tape.PolicySchema, []string, interface{}, string) error
 }
 
 // PruneEvents reduces the events response to only memory events after test began.
@@ -135,7 +137,7 @@ func DisableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requ
 		AllowToUpdateDeviceAttribute: false,
 	}
 
-	if err := client.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, requestID); err != nil {
+	if err := client.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, nil, requestID); err != nil {
 		return errors.Wrap(err, "failed to disable the AllowToUpdateDeviceAttribute policy")
 	}
 	return nil
@@ -152,11 +154,11 @@ func SleepWithContextLog(ctx context.Context, minutes int) error {
 }
 
 // SetTelemetryPolicies makes a call to the DMServer API to update the policies of a device.
-func SetTelemetryPolicies(ctx context.Context, client tapeClient, requestID string, updatePolicy UpdatePolicy, allowlist []string, skipAssetIdScreen bool) error {
+func SetTelemetryPolicies(ctx context.Context, client tapeClient, requestID string, updatePolicy UpdatePolicy, allowlist []string, skipAssetIDScreen bool) error {
 	// Make the device skip the asset id screen for enrollment.
-	if skipAssetIdScreen {
+	if skipAssetIDScreen {
 		if err := DisableUpdatingDeviceAttribute(ctx, client, requestID); err != nil {
-			return errors.Wrap(err, "Failed to set the asset policy: ")
+			return errors.Wrap(err, "failed to set the asset policy")
 		}
 	}
 
@@ -178,15 +180,15 @@ func SetTelemetryPolicies(ctx context.Context, client tapeClient, requestID stri
 	}
 
 	// Change the UpdateMask depending on the changes needed.
-	updateMask := []string{}
+	var updateMask []string
 	if updatePolicy == Custom && len(allowlist) > 0 {
 		updateMask = []string{"reportingTelemetryBehavior", "reportTelemetryCustomAllowlist"}
 	} else {
 		updateMask = []string{"reportingTelemetryBehavior"}
 	}
 
-	if err := client.SetPolicy(ctx, policy, updateMask, requestID); err != nil {
-		return errors.Wrap(err, "Failed to set the policy: ")
+	if err := client.SetPolicy(ctx, policy, updateMask, nil, requestID); err != nil {
+		return errors.Wrap(err, "failed to set the policy")
 	}
 	return nil
 }

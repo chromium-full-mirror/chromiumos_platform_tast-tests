@@ -23,7 +23,8 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const tapeURL = "https://tape-307412.ey.r.appspot.com/"
+// const tapeURL = "https://tape-307412.ey.r.appspot.com/"
+const tapeURL = "https://additionaltargetkeys-dot-tape-307412.ey.r.appspot.com/"
 const tapeAudience = "770216225211-ihjn20dlehf94m9l4l5h0b0iilvd1vhc.apps.googleusercontent.com"
 
 // client is created with NewClient and holds a *http.Client struct with an oauth token
@@ -339,9 +340,13 @@ type setPolicyRequest struct {
 // explicitly set in the policySchema to be overwritten by default values. When
 // an empty slice is passed all fields will be used.
 // The strings for the updateMask are equal to the field names of the
-// policySchema struct starting with a lowercase letter.
-func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updateMask []string, requestID string) error {
-	schemaJSONString, err := policySchema.Schema2JSON(updateMask)
+// policySchema struct starting with a lowercase letter. The
+// additionalTargetKeys are key value pairs to identify other target resources
+// for the policy, e.g. for modifying networks the network_id of the network
+// that will be modified has to be provided in the additionalTargetKeys in the
+// form of {network_id: "myNetworkID"}.
+func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updateMask []string, additionalTargetKeys interface{}, requestID string) error {
+	schemaJSONString, err := policySchema.Schema2JSON(updateMask, additionalTargetKeys)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal policy schema")
 	}

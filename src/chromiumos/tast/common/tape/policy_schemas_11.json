@@ -4217,5 +4217,68 @@
       }, 
       "schemaName": "chrome.devices.DeviceReportXdrEvents", 
       "policyDescription": "Report extended detection and response (XDR) events."
+    },
+    {
+      "definition": {
+        "messageType": [
+          {
+            "field": [
+              {
+                "label": "LABEL_OPTIONAL", 
+                "type": "TYPE_BOOL", 
+                "name": "deskApiThirdPartyAccessEnabled", 
+                "number": 1
+              }, 
+              {
+                "label": "LABEL_REPEATED", 
+                "type": "TYPE_STRING", 
+                "name": "deskApiThirdPartyAllowlist", 
+                "number": 2
+              }
+            ], 
+            "name": "DeskApi"
+          }
+        ]
+      }, 
+      "name": "customers/C02gxaaci/policySchemas/chrome.users.DeskApi", 
+      "fieldDescriptions": [
+        {
+          "field": "deskApiThirdPartyAccessEnabled", 
+          "defaultValue": false, 
+          "knownValueDescriptions": [
+            {
+              "description": "Enable Desk API for third-party ChromeOS desk control.", 
+              "value": "true"
+            }, 
+            {
+              "description": "Do not enable Desk API for third-party ChromeOS desk control.", 
+              "value": "false"
+            }
+          ], 
+          "description": "N/A"
+        }, 
+        {
+          "field": "deskApiThirdPartyAllowlist", 
+          "fieldDependencies": [
+            {
+              "sourceFieldValue": "true", 
+              "sourceField": "deskApiThirdPartyAccessEnabled"
+            }
+          ], 
+          "description": "Enable Desk API for a list of third-party domains.", 
+          "inputConstraint": "Each string field in the list should be formatted in the format 'url filter'.", 
+          "name": "Enable Desk API for a list of third-party domains."
+        }
+      ], 
+      "categoryTitle": "Desk API", 
+      "validTargetResources": [
+        "ORG_UNIT", 
+        "GROUP"
+      ], 
+      "policyApiLifecycle": {
+        "policyApiLifecycleStage": "API_DEVELOPMENT"
+      }, 
+      "schemaName": "chrome.users.DeskApi", 
+      "policyDescription": "Desk API for third-party ChromeOS desk control."
     }
 ]

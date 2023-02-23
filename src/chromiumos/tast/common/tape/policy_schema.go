@@ -19,7 +19,8 @@ type requests struct {
 // policyTargetKey is part of the requests struct and holds the orgunit in which a policy
 // will be set.
 type policyTargetKey struct {
-	TargetResource string `json:"targetResource"`
+	TargetResource       string      `json:"targetResource"`
+	AdditionalTargetKeys interface{} `json:"additionalTargetKeys"`
 }
 
 // policyValue is part of the requests struct and holds the uri to the PolicySchema and the values
@@ -38,7 +39,7 @@ type updateMask struct {
 // concrete policy schemas in this package must implement this interface.
 type PolicySchema interface {
 	// Schema2JSON creates the JSON representation of the PolicySchema used in a setPolicy call on the TAPE server.
-	Schema2JSON([]string) ([]byte, error)
+	Schema2JSON([]string, interface{}) ([]byte, error)
 }
 
 // marshalJSON creates a json with a request to set a PolicySchema.
@@ -46,14 +47,18 @@ type PolicySchema interface {
 // the PolicySchema will be set to are taken from policySchema which is a
 // struct representation of the PolicySchema that will be set. updatePaths is a
 // list of parameters indicating the parameters that will be changed by the
-// request.
-func marshalJSON(policySchemaURI string, policySchema PolicySchema, updatePaths []string) ([]byte, error) {
+// request. The additionalTargetKeys are key value pairs to identify other
+// target resources for the policy, e.g. for modifying networks the network_id
+// of the network that will be modified has to be provided in the
+// additionalTargetKeys in the form of {network_id: "myNetworkID"}.
+func marshalJSON(policySchemaURI string, policySchema PolicySchema, updatePaths []string, additionalTargetKeys interface{}) ([]byte, error) {
 	return json.Marshal(&struct {
 		Requests requests `json:"requests"`
 	}{
 		Requests: requests{
 			PolicyTargetKey: policyTargetKey{
-				TargetResource: "",
+				TargetResource:       "",
+				AdditionalTargetKeys: additionalTargetKeys,
 			},
 			PolicyValue: policyValue{
 				PolicySchema: policySchemaURI,

@@ -193,3 +193,11 @@ func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, c
 	}
 	return nil
 }
+
+// Additional target keys for policies.
+
+// NetworkKey is an additionalTargetKey for network related policies. It takes
+// a network_id to identify the network that is being modified with the policy.
+type NetworkKey struct {
+	NetworkID string `json:"network_id"`
+}
