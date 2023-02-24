@@ -760,7 +760,7 @@ func (c *Container) CheckSnapshot(ctx context.Context, snapshotName string) (boo
 	// List the snapshots.
 	result, err := c.VM.LXCCommand(ctx, "list", "penguin", "--format", "json")
 	if err != nil {
-		return false, errors.Wrap(err, "failed to list snapshot")
+		return false, errors.Wrapf(err, "failed to list snapshot, stdout: %s", result)
 	}
 
 	// The first level of the list result is an array.

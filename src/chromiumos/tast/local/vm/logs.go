@@ -6,9 +6,11 @@ package vm
 
 import (
 	"context"
+	"encoding/base64"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"chromiumos/tast/errors"
@@ -25,23 +27,42 @@ type LogReader struct {
 	reader  *syslog.LineReader
 }
 
-// NewLogReaderForVM creates a new LogReader which can be used to save the
-// daemon-store logs from a running VM.
-func NewLogReaderForVM(ctx context.Context, vmName, user string) (*LogReader, error) {
+// TrySaveAllVMLogs tries to save all VM logs.
+func TrySaveAllVMLogs(ctx context.Context, user, dir string) error {
 	ownerID, err := cryptohome.UserHash(ctx, user)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	path := "/run/daemon-store/crosvm/" + ownerID + "/log/" + GetEncodedName(vmName) + ".log"
+	// Wait 1s for the files to be available.
+	testing.Sleep(ctx, time.Second)
 
-	// Only wait 1 second for the log file to exist, don't want to hang until
-	// timeout if it doesn't exist, instead we continue.
-	reader, err := syslog.NewLineReader(ctx, path, true,
-		&testing.PollOptions{Timeout: 1 * time.Second})
+	logDir := "/run/daemon-store/crosvm/" + ownerID + "/log/"
+	logFiles, err := os.ReadDir(logDir)
 	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "failed to read logs in /run/daemon-store/crosvm/")
 	}
-	return &LogReader{vmName, ownerID, reader}, nil
+
+	for _, file := range logFiles {
+		if !strings.Contains(file.Name(), ".log") {
+			continue
+		}
+		fileName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+		decodedName, err := base64.URLEncoding.WithPadding(base64.StdPadding).DecodeString(fileName)
+		if err != nil {
+			return errors.Wrapf(err, "failed to decode log file name: %s", fileName)
+		}
+		vmName := string(decodedName)
+		reader, err := syslog.NewLineReader(ctx, filepath.Join(logDir, file.Name()), true,
+			&testing.PollOptions{Timeout: 1 * time.Second})
+		if err != nil {
+			return errors.Wrapf(err, "failed to start a new LineReader that reports log messages for %s", vmName)
+		}
+		logReader := &LogReader{vmName, ownerID, reader}
+		if err := logReader.TrySaveLogs(ctx, dir); err != nil {
+			return errors.Wrapf(err, "failed to save log for %s", vmName)
+		}
+	}
+	return nil
 }
 
 // Close closes the underlying syslog.LineReader.
