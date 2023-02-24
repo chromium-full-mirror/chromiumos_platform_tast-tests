@@ -42,43 +42,23 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{
 			{
-				Name:    "clamshell_pwa",
-				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
+				Name:    "pwa",
+				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
-				Name:    "tablet_pwa",
-				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
-			},
-			{
-				Name:    "clamshell_web",
-				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
+				Name:    "web",
+				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
-				Name:    "tablet_web",
-				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
-			},
-			{
-				Name:    "clamshell_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
+				Name:    "pwa_lacros",
+				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
-				Name:    "tablet_pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
-			},
-			{
-				Name:    "clamshell_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
-			},
-			{
-				Name:    "tablet_web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled,
+				Name:    "web_lacros",
+				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},

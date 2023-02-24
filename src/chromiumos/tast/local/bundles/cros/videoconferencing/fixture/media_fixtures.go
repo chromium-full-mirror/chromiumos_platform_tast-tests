@@ -29,10 +29,11 @@ const (
 
 // List of fixture names for ML service testing.
 const (
-	LoggedInWithFakeHALAndEffectsEnabled      = "loggedInWithFakeHALAndEffectsEnabled"
-	LoggedInWithFakeHALAndEffectsDisabled     = "loggedInWithFakeHALAndEffectsDisabled"
-	GAIALoggedInWithFakeHALAndEffectsEnabled  = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
-	GAIALoggedInWithFakeHALAndEffectsDisabled = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
+	LoggedInWithFakeHALAndEffectsEnabled           = "loggedInWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsDisabled          = "loggedInWithFakeHALAndEffectsDisabled"
+	GAIALoggedInWithFakeHALAndEffectsEnabled       = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
+	GAIALoggedInWithFakeHALAndEffectsDisabled      = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
+	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
 
 	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
 	GAIALoggedInTabletWithFakeHALAndEffectsEnabled          = "gaiaLoggedInTabletWithFakeHALAndEffectsEnabled"
@@ -144,6 +145,23 @@ func init() {
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsDisabled),
 		Parent:          GAIALoggedIn,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
+		Desc: "A fixture with gaia user logged in Lacros using fake HAL camera with platform effects enabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Parent:          GAIALoggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
