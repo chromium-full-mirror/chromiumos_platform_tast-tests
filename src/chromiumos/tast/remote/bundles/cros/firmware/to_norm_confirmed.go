@@ -25,12 +25,9 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable", "firmware_usb"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
-		// To-do: Some DUTs (i.e. Strongbad) showed behavior of KeyboardDevSwitcher at
-		// boot up, even though they are detachables. We're checking for params that
-		// could potentially serve as a filter to identify DUT's mode switcher type.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 		Fixture:      fixture.DevMode,
 		Timeout:      30 * time.Minute,
 	})

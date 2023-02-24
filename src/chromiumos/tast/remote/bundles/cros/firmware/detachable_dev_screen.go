@@ -31,7 +31,7 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable", "firmware_usb"},
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
@@ -43,6 +43,8 @@ func init() {
 		}, {
 			Name:    "dev_options",
 			Timeout: 60 * time.Minute,
+			// The dev_options screen doesn't exist on the menu_switcher ui.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 			Val: devFwParam{
 				devFwScreenName: "devOptions",
 			},
@@ -74,6 +76,7 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 	}
 
 	devWarningScreen := []testCase{
+		// Todo: scan firmware log for the 'debug info' menu selection.
 		{"warningScreenPowerOff", false, fwCommon.BootModeDev, "G3"},
 		{"volumeUp", true, fwCommon.BootModeUSBDev, "S0"},
 		{"volumeDown", false, fwCommon.BootModeDev, "S0"},
@@ -81,6 +84,18 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 		{"spaceEnter", false, fwCommon.BootModeDev, "G3"},
 		{"ctrlD", false, fwCommon.BootModeDev, "S0"},
 		{"ctrlU", true, fwCommon.BootModeUSBDev, "S0"},
+	}
+	devWarningScreenMS := []testCase{
+		// Todo: scan firmware log for the 'Advanced options' menu selection.
+		{"warningScreenPowerOffMS", false, fwCommon.BootModeDev, "G3"},
+		{"volumeUp", true, fwCommon.BootModeUSBDev, "S0"},
+		{"volumeDown", false, fwCommon.BootModeDev, "S0"},
+		{"powerButtonLong", false, fwCommon.BootModeDev, "G3"},
+		{"spaceEnter", false, fwCommon.BootModeDev, "S0"},
+		{"ctrlD", false, fwCommon.BootModeDev, "S0"},
+		{"ctrlU", true, fwCommon.BootModeUSBDev, "S0"},
+		{"bootFromUSBMS", true, fwCommon.BootModeUSBDev, "S0"},
+		{"bootFromInternal", false, fwCommon.BootModeDev, "S0"},
 	}
 	devOptions := []testCase{
 		{"bootFromUSB", true, fwCommon.BootModeUSBDev, "S0"},
@@ -92,7 +107,14 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 	var testSteps []testCase
 	switch args.devFwScreenName {
 	case "devWarningScreen":
-		testSteps = devWarningScreen
+		switch h.Config.ModeSwitcherType {
+		case "tablet_detachable_switcher":
+			testSteps = devWarningScreen
+		case "menu_switcher":
+			testSteps = devWarningScreenMS
+		default:
+			s.Fatalf("Got unexpected mode switcher type: %s", h.Config.ModeSwitcherType)
+		}
 	case "devOptions":
 		testSteps = devOptions
 	}
@@ -178,20 +200,24 @@ func testTrigger(ctx context.Context, h *firmware.Helper, trigger string) error 
 	case "ctrlU":
 		err = h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab)
 	case "volumeUp":
-		err = h.Servo.SetInt(ctx, servo.VolumeUpHold, 3000)
+		err = h.Servo.SetInt(ctx, servo.VolumeUpHold, 5000)
 	case "volumeDown":
-		err = h.Servo.SetInt(ctx, servo.VolumeDownHold, 3000)
+		err = h.Servo.SetInt(ctx, servo.VolumeDownHold, 5000)
 	case "powerButtonLong":
 		testing.ContextLogf(ctx, "Pressing power button for %s", h.Config.HoldPwrButtonNoPowerdShutdown)
 		err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonNoPowerdShutdown))
 	case "warningScreenPowerOff":
 		err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab)
+	case "warningScreenPowerOffMS":
+		// Traverse the menu and select the option 'power off' on the menu_switcher ui.
+		err = nTimesTraverseSelect(ctx, h, servo.VolumeDownHold, 3, "Power Off")
 	case "spaceEnter":
 		// Pressing space & enter boots the dut to normal mode if its
-		// firmware screen uses KeyboardDevSwitcher. On detachables,
+		// firmware screen uses KeyboardDevSwitcher. On tablet_detachable_switcher,
 		// this combination would power the dut off because pressing
 		// space triggers nothing, and pressing enter selects the default
-		// menu option 'power off'.
+		// menu option 'power off'. On the menu_switcher ui, the default highlighted menu
+		// option would be 'boot from internal disk', which would boot the dut to S0.
 		testing.ContextLog(ctx, "Pressing SPACE")
 		err = h.Servo.PressKey(ctx, " ", servo.DurTab)
 		testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
@@ -200,6 +226,8 @@ func testTrigger(ctx context.Context, h *firmware.Helper, trigger string) error 
 		err = h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab)
 	case "bootFromUSB":
 		err = nTimesTraverseSelect(ctx, h, servo.VolumeUpHold, 1, "Boot From USB")
+	case "bootFromUSBMS":
+		err = nTimesTraverseSelect(ctx, h, servo.VolumeDownHold, 1, "Boot From USB")
 	case "bootFromInternal":
 		err = nTimesTraverseSelect(ctx, h, servo.VolumeUpHold, 0, "Boot From Internal Disk")
 	case "devOptionsPowerOff":
