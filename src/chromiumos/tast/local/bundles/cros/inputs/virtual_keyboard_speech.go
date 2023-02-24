@@ -81,6 +81,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags(voiceTestIMEsNewData),
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})
