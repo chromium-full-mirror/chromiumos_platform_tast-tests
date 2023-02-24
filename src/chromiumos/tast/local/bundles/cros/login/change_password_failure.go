@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/local/bundles/cros/login/userutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
+	"chromiumos/tast/local/chrome/userutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
