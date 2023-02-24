@@ -26,6 +26,11 @@ type TextParams struct {
 	// For example "string" and "sting" is the same match if MaxEditDistance=1.
 	// NOTE: this param is applicable only if RegexMode is False.
 	MaxEditDistance int32
+	// SpecifiedWordsOnly indicates whether a TextBlock must only contain the
+	// specified words to be considered a match.
+	// For example, a query for "Recommended for" will not match the detected
+	// block "Recommended for you" if SpecifiedWordsOnly is true.
+	SpecifiedWordsOnly bool
 }
 
 // DefaultTextParams return params with default values.
@@ -51,4 +56,9 @@ func DisableApproxMatch(disableApproxMatch bool) TextParam {
 // MaxEditDistance controls the MaxEditDistance param.
 func MaxEditDistance(maxEditDistance int32) TextParam {
 	return func(o *TextParams) { o.MaxEditDistance = maxEditDistance }
+}
+
+// SpecifiedWordsOnly controls the SpecifiedWordsOnly param.
+func SpecifiedWordsOnly(specifiedWordsOnly bool) TextParam {
+	return func(o *TextParams) { o.SpecifiedWordsOnly = specifiedWordsOnly }
 }

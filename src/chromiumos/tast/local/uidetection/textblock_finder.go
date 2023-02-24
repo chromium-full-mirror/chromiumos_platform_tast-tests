@@ -28,6 +28,7 @@ func TextBlock(words []string, paramList ...TextParam) *Finder {
 				RegexMode:          textParams.RegexMode,
 				DisableApproxMatch: textParams.DisableApproxMatch,
 				MaxEditDistance:    &textParams.MaxEditDistance,
+				SpecifiedWordsOnly: textParams.SpecifiedWordsOnly,
 			},
 		},
 	}
