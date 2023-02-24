@@ -790,7 +790,8 @@ func (conf *GoogleMeetConference) Presenting(ctx context.Context, application go
 
 		return ui.Retry(retryTimes, uiauto.NamedCombine("share screen",
 			clickPresentNowButton,
-			ui.DoDefault(presentMode),
+			ui.WaitUntilAnyExists(presentMode, presentTab),
+			uiauto.IfSuccessThen(ui.Exists(presentMode), ui.DoDefault(presentMode)),
 			ui.LeftClickUntil(presentTab, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentTab.Focused())),
 			ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),
 			closeAlertDialog,
