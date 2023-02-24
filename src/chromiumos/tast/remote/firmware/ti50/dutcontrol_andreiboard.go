@@ -26,7 +26,10 @@ const (
 )
 
 var (
-	gpioOutput = regexp.MustCompile("value: (true|false)")
+	// gpioOutput specifies the output format of OpenTitanTool. Quotes are part of the output
+	// after we started passing in --format=json flag. The ? for the quotes could be dropped once
+	// the newer docker images are used everywhere
+	gpioOutput = regexp.MustCompile("\"?value\"?: (true|false)")
 )
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
