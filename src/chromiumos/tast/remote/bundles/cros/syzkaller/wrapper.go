@@ -33,6 +33,10 @@ const (
 
 	// syzUnknownEnabled is an error string to look out for in the fuzzer run logs.
 	syzUnknownEnabled = "unknown enabled syscall"
+
+	// syzNewInput is an informational string indicating that a new fuzz input was
+	// found.
+	syzNewInput = "new input from vm-0 for syscall "
 )
 
 // A global runtime variable to indicate the test is running locally.
@@ -408,18 +412,8 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		done <- true
 	}
 
-	logs, err := ioutil.ReadFile(logFile.Name())
-	if err != nil {
-		s.Fatalf("Unable to read logfile at [%v]: %v", logFile.Name(), err)
-	}
-	var unknown []string
-	for _, line := range strings.Split(string(logs), "\n") {
-		if strings.Contains(line, syzUnknownEnabled) {
-			unknown = append(unknown, line)
-		}
-	}
-	if len(unknown) != 0 {
-		s.Fatal("Unsupported enabled syscall[s] found: ", unknown)
+	if err := logValidity(logFile.Name()); err != nil {
+		s.Fatal("Error found in logfile: ", err)
 	}
 
 	if !runLocal {
@@ -649,4 +643,35 @@ func runPeriodic(ctx context.Context, d *dut.DUT, done chan bool, cfg *periodicC
 		// Poll is not used as device might reboot during fuzzing.
 		testing.Sleep(ctx, time.Duration(cfg.Periodicity)*time.Second)
 	}
+}
+
+func logValidity(fname string) error {
+	logs, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return errors.Wrapf(err, "unable to read logfile at [%v]", fname)
+	}
+
+	lines := strings.Split(string(logs), "\n")
+	if len(lines) < 2 {
+		return errors.New("logfile unexpectedly empty")
+	}
+
+	var unknown []string
+	var newInpFound bool
+	for _, line := range lines {
+		if strings.Contains(line, syzUnknownEnabled) {
+			unknown = append(unknown, line)
+		}
+		if strings.Contains(line, syzNewInput) {
+			newInpFound = true
+		}
+	}
+	if len(unknown) != 0 {
+		return errors.Errorf("unsupported enabled syscall[s] found: [%v]", unknown)
+	}
+	if !newInpFound {
+		return errors.New("no new input found in fuzzing run")
+	}
+
+	return nil
 }
