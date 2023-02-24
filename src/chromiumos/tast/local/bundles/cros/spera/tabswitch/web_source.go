@@ -125,6 +125,8 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GoogleWorkspaceBusinessURL, newPageInfo(cuj.Advanced, googleWorkspace, `/business`, `/new-business`, `/products/drive`)},
 	{cuj.GoogleWorkspaceResourcesURL, newPageInfo(cuj.Advanced, googleWorkspace, `/resources`, `/working-remotely`, `/products/sheets`)},
 	{cuj.GoogleWorkspaceGmailURL, newPageInfo(cuj.Advanced, googleWorkspace, `/products/gmail`, `/products/chat`, `/products/admin`)},
+	{cuj.GoogleWorkspaceDriveURL, newPageInfo(cuj.Advanced, googleWorkspace, `/products/drive`, `/enterprise`, `/industries/healthcare`)},
+	{cuj.GoogleWorkspaceIntegrationsURL, newPageInfo(cuj.Advanced, googleWorkspace, `/integrations`, `/training`, `/industries/technology`)},
 
 	{cuj.GoogleStoreURL, newPageInfo(cuj.Essential, googleStore, `/`, `/ideas`, `/cart`)},
 	{cuj.GoogleStorePhonesURL, newPageInfo(cuj.Essential, googleStore, `/category/phones`, `/category/earbuds`, `/cart`)},
@@ -143,12 +145,8 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GoogleNonprofitsEligibilityURL, newPageInfo(cuj.Advanced, googleNonprofits, `/eligibility`, `/offerings/youtube-nonprofit-program`, `/resources/faq`)},
 	{cuj.GoogleNonprofitsSuccessStoriesURL, newPageInfo(cuj.Advanced, googleNonprofits, `/success-stories`, `/resources/faq`)},
 	{cuj.GoogleNonprofitsWorkspaceURL, newPageInfo(cuj.Advanced, googleNonprofits, `/offerings/workspace/`, `/offerings/google-ad-grants`, `/resources/faq`)},
-
-	{cuj.GooglePlayBooksURL, newPageInfo(cuj.Advanced, googlePlay, `/books`, `/wishlist`, `/FAMILY`)},
-	{cuj.GooglePlayKidsURL, newPageInfo(cuj.Advanced, googlePlay, `/apps/category/FAMILY`, `/store/apps/category/FAMILY?age=AGE_RANGE1`, `/games`)},
-	{cuj.GooglePlayGameURL, newPageInfo(cuj.Advanced, googlePlay, `/games`, `/store/games?device=tablet`, `/apps`)},
-	{cuj.GooglePlayAppsURL, newPageInfo(cuj.Advanced, googlePlay, `/apps`, `/store/apps?device=tablet`, `/movies`)},
-	{cuj.GooglePlayMoviesURL, newPageInfo(cuj.Advanced, googlePlay, `/movies`, `/TV`, `/books`)},
+	{cuj.GoogleNonprofitsGoogleAdGrantsURL, newPageInfo(cuj.Advanced, googleNonprofits, `/offerings/google-ad-grants`, `/resources/faq`, `/eligibility`)},
+	{cuj.GoogleNonprofitsGoogleEarthAndMapsURL, newPageInfo(cuj.Advanced, googleNonprofits, `/offerings/google-earth-and-maps`, `/success-stories`, `/resources/how-to-guide`)},
 
 	{cuj.GoogleFinanceURL, newPageInfo(cuj.Advanced, googleFinance, `/`, `/markets/indexes`)},
 	{cuj.GoogleFinanceIndexesURL, newPageInfo(cuj.Advanced, googleFinance, `/markets/indexes`, `/markets/most-active`, `/markets/gainers`)},
@@ -160,6 +158,7 @@ var googleWebsitesTargets = []tabTarget{
 	{cuj.GooglePolicyPrivacyURL, newPageInfo(cuj.Advanced, googlePolicy, `privacy`, `faq`, `technologies`)},
 	{cuj.GooglePolicyFAQURL, newPageInfo(cuj.Advanced, googlePolicy, `faq`, `technologies`, `terms`)},
 	{cuj.GooglePolicyTechnologiesURL, newPageInfo(cuj.Advanced, googlePolicy, `technologies`, `terms`, `faq`)},
+	{cuj.GooglePolicyTermsURL, newPageInfo(cuj.Advanced, googlePolicy, `terms`, `/`, `privacy`)},
 }
 
 // externalWebsitesTargets defines external websites as browse tab targets.

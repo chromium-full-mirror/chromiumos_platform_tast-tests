@@ -118,28 +118,24 @@ const (
 	GoogleNonprofitsURL = "https://www.google.com/intl/en-US/nonprofits/"
 	// GoogleNonprofitsEligibilityURL specifies the URL for Google Nonprofits' eligibility page.
 	GoogleNonprofitsEligibilityURL = "https://www.google.com/intl/en-US/nonprofits/eligibility"
+	// GoogleNonprofitsGoogleAdGrantsURL specifies the URL for Google Nonprofits' google ad grants page.
+	GoogleNonprofitsGoogleAdGrantsURL = "https://www.google.com/nonprofits/offerings/google-ad-grants/"
+	// GoogleNonprofitsGoogleEarthAndMapsURL specifies the URL for Google Nonprofits' google earth and maps page.
+	GoogleNonprofitsGoogleEarthAndMapsURL = "https://www.google.com/nonprofits/offerings/google-earth-and-maps/"
 	// GoogleNonprofitsProductHelpURL specifies the URL for Google Nonprofits' product help page.
 	GoogleNonprofitsProductHelpURL = "https://www.google.com/intl/en-US/nonprofits/resources/product-help"
 	// GoogleNonprofitsSuccessStoriesURL specifies the URL for Google Nonprofits' success stories page.
 	GoogleNonprofitsSuccessStoriesURL = "https://www.google.com/intl/en-US/nonprofits/success-stories"
 	// GoogleNonprofitsWorkspaceURL specifies the URL for Google Nonprofits' workspace page.
 	GoogleNonprofitsWorkspaceURL = "https://www.google.com/nonprofits/offerings/workspace/"
-	// GooglePlayAppsURL specifies the URL for Google Play's apps page.
-	GooglePlayAppsURL = "https://play.google.com/store/apps?gl=US"
-	// GooglePlayBooksURL specifies the URL for Google Play's books page.
-	GooglePlayBooksURL = "https://play.google.com/store/books?gl=US"
-	// GooglePlayGameURL specifies the URL for Google Play's game page.
-	GooglePlayGameURL = "https://play.google.com/store/games?gl=US"
-	// GooglePlayKidsURL specifies the URL for Google Play's kids page.
-	GooglePlayKidsURL = "https://play.google.com/store/apps/category/FAMILY?gl=US"
-	// GooglePlayMoviesURL specifies the URL for Google Play's movies page.
-	GooglePlayMoviesURL = "https://play.google.com/store/movies?gl=US"
 	// GooglePolicyURL specifies the URL for Google Policy's home page.
 	GooglePolicyURL = "https://policies.google.com/"
 	// GooglePolicyPrivacyURL specifies the URL for Google Policy's privacy page.
 	GooglePolicyPrivacyURL = "https://policies.google.com/privacy"
 	// GooglePolicyTechnologiesURL specifies the URL for Google Policy's technologies page.
 	GooglePolicyTechnologiesURL = "https://policies.google.com/technologies"
+	// GooglePolicyTermsURL specifies the URL for Google Policy's terms page.
+	GooglePolicyTermsURL = "https://policies.google.com/terms"
 	// GooglePolicyFAQURL specifies the URL for Google Policy's FAQ page.
 	GooglePolicyFAQURL = "https://policies.google.com/faq"
 	// GoogleStoreURL specifies the URL for Google Store's home page.
@@ -156,8 +152,12 @@ const (
 	GoogleWorkspaceURL = "https://workspace.google.com/intl/en/"
 	// GoogleWorkspaceBusinessURL specifies the URL for Google Workspace's business page.
 	GoogleWorkspaceBusinessURL = "https://workspace.google.com/intl/en/business"
+	// GoogleWorkspaceDriveURL specifies the URL for Google Workspace's drive page.
+	GoogleWorkspaceDriveURL = "https://workspace.google.com/intl/en/products/drive/"
 	// GoogleWorkspaceFAQURL specifies the URL for Google Workspace's FAQ page.
 	GoogleWorkspaceFAQURL = "https://workspace.google.com/intl/en/faq"
+	// GoogleWorkspaceIntegrationsURL specifies the URL for Google Workspace's integrations page.
+	GoogleWorkspaceIntegrationsURL = "https://workspace.google.com/intl/en/integrations/"
 	// GoogleWorkspacePricingURL specifies the URL for Google Workspace's pricing page.
 	GoogleWorkspacePricingURL = "https://workspace.google.com/intl/en/pricing"
 	// GoogleWorkspaceResourcesURL specifies the URL for Google Workspace's resources page.
