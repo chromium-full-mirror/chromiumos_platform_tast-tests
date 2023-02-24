@@ -16,6 +16,7 @@ import (
 
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/common/tape"
+	"chromiumos/tast/common/utils"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/log"
@@ -721,7 +722,13 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 				dutHostname, fixtureVarBTPeers, exampleTastCall)
 		}
 		for i := 0; i < requiredBTPeers; i++ {
-			btpeerHosts[i] = fmt.Sprintf("%s-btpeer%d", dutHostname, i+1)
+			btpeerNum := i + 1
+			btpeerHostnameSuffix := fmt.Sprintf("-btpeer%d", btpeerNum)
+			btpeerHostname, err := utils.CompanionDeviceHostname(s.DUT().HostName(), btpeerHostnameSuffix)
+			if err != nil {
+				return errors.Wrapf(err, "failed to build companion device hostname for btpeer%d", btpeerNum)
+			}
+			btpeerHosts[i] = btpeerHostname
 		}
 	}
 
