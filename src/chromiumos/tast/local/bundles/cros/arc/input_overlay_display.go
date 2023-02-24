@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"input-overlay-menu-close.png", "input-overlay-menu-switch.png", "input-overlay-menu.png"},
-		Fixture:      "arcBootedWithInputOverlay",
+		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_p"},

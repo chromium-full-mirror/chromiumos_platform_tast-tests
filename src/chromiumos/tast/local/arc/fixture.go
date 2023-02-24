@@ -268,18 +268,18 @@ func init() {
 
 	// arcBootedWithInputOverlay is a fixture similar to arcBooted but with the input overlay flag enabled.
 	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithInputOverlay",
+		Name: "arcBootedWithInputOverlayAlphaV2",
 		Desc: "ARC is booted with the input overlay flag enabled",
 		Contacts: []string{
+			"arc-app-dev@google.com",
 			"pjlee@google.com",
 			"cuicuiruan@google.com",
-			"arc-app-dev@google.com",
 		},
 		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ARCEnabled(),
 				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs("--enable-features=ArcInputOverlay"),
+				chrome.ExtraArgs("--enable-features=ArcInputOverlayAlphaV2"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,

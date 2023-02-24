@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:767470",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithInputOverlay",
+		Fixture:      "arcBooted",
 		Data:         inputlatency.AndroidData(),
 		Params: []testing.Param{
 			{
