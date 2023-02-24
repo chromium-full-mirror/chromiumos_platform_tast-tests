@@ -39,8 +39,8 @@ func init() {
 		Desc:         "Test that Adaptive Charging functionality works correctly",
 		BugComponent: "b:167191",
 		Contacts: []string{
-			"dbasehore@google.com",               // test author
 			"chromeos-platform-power@google.com", // CrOS platform power developers
+			"dbasehore@google.com",               // test author
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

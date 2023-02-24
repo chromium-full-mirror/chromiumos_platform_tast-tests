@@ -24,8 +24,8 @@ func init() {
 		Desc:         "Verify that freeze on suspend works with FUSE",
 		BugComponent: "b:167191",
 		Contacts: []string{
-			"dbasehore@google.com",
 			"chromeos-platform-power@google.com",
+			"dbasehore@google.com",
 		},
 		// This test doesn't run well in VMs. See b/180868425.
 		SoftwareDeps: []string{
