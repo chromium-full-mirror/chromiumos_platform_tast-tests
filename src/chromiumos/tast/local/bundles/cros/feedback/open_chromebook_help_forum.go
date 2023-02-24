@@ -30,7 +30,7 @@ func init() {
 			"cros-feedback-app@google.com",
 			"xiangdongkong@google.com",
 		},
-		BugComponent: "b:185624798",
+		BugComponent: "b:1033360", // ChromeOS > Data > Engineering > Feedback
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
