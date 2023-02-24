@@ -10,14 +10,20 @@ import (
 )
 
 // GpioStrap represents a certain preset gpio configuration
-type GpioStrap interface {
-	StrapName() string
-}
+type GpioStrap string
 
-// Gpio represents a gpio that Open Titan Tool can read or write to
-type Gpio interface {
-	GpioName() string
-}
+// GpioName represents a gpio that Open Titan Tool can read or write to
+type GpioName string
+
+// GpioEdge represent either rising or falling
+type GpioEdge string
+
+const (
+	// GpioEdgeRising represents a rising edge
+	GpioEdgeRising GpioEdge = "Rising"
+	// GpioEdgeFalling represents a falling edge
+	GpioEdgeFalling GpioEdge = "Falling"
+)
 
 // DevBoard is the generic interface for development boards.
 type DevBoard interface {
@@ -42,7 +48,7 @@ type DevBoard interface {
 	// GpioApplyStrap applies a known gpio strap setting
 	GpioApplyStrap(ctx context.Context, strap GpioStrap) error
 	// GpioWrite sets a known gpio pin value
-	GpioWrite(ctx context.Context, gpio Gpio, val bool) error
+	GpioWrite(ctx context.Context, gpio GpioName, val bool) error
 	// GpioRead gets the value of a known gpio
-	GpioRead(ctx context.Context, gpio Gpio) (val bool, err error)
+	GpioRead(ctx context.Context, gpio GpioName) (val bool, err error)
 }

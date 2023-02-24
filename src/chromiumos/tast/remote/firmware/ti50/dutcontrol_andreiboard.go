@@ -149,19 +149,19 @@ func (a *DUTControlAndreiboard) Reset(ctx context.Context) error {
 
 // GpioApplyStrap applies a known gpio strap setting
 func (a *DUTControlAndreiboard) GpioApplyStrap(ctx context.Context, strap common.GpioStrap) error {
-	_, err := a.PlainCommand(ctx, "gpio", "apply", strap.StrapName())
+	_, err := a.PlainCommand(ctx, "gpio", "apply", string(strap))
 	return err
 }
 
 // GpioWrite sets a known gpio pin value
-func (a *DUTControlAndreiboard) GpioWrite(ctx context.Context, gpio common.Gpio, val bool) error {
-	_, err := a.PlainCommand(ctx, "gpio", "write", gpio.GpioName(), strconv.FormatBool(val))
+func (a *DUTControlAndreiboard) GpioWrite(ctx context.Context, gpio common.GpioName, val bool) error {
+	_, err := a.PlainCommand(ctx, "gpio", "write", string(gpio), strconv.FormatBool(val))
 	return err
 }
 
 // GpioRead gets the value of a known gpio
-func (a *DUTControlAndreiboard) GpioRead(ctx context.Context, gpio common.Gpio) (val bool, err error) {
-	output, err := a.PlainCommand(ctx, "gpio", "read", gpio.GpioName())
+func (a *DUTControlAndreiboard) GpioRead(ctx context.Context, gpio common.GpioName) (val bool, err error) {
+	output, err := a.PlainCommand(ctx, "gpio", "read", string(gpio))
 	if err != nil {
 		return val, err
 	}

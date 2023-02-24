@@ -46,7 +46,7 @@ func Ti50RboxKeycombo(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Restarting ti50 with clamshell straps")
 	if err := board.GpioApplyStrap(ctx, ti50.FfClamshell); err != nil {
-		s.Fatalf("Failed to set %s form factor: %s", ti50.FfClamshell.StrapName(), err)
+		s.Fatalf("Failed to set %s form factor: %s", ti50.FfClamshell, err)
 	}
 	if err := board.Reset(ctx); err != nil {
 		s.Fatal("Failed to reset: ", err)
