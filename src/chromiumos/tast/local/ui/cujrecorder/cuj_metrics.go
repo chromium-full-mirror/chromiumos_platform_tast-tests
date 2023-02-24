@@ -139,3 +139,25 @@ func CUJBrowserCommonMetricConfigs() []MetricConfig {
 func CUJAnyChromeCommonMetricConfigs() []MetricConfig {
 	return AnyChromeCommonMetricConfigs()
 }
+
+// GetShortenedPerformanceMetrics returns a list of Ash metrics and a list
+// of browser metrics that are highly important in tracking the performance
+// of a device.
+func GetShortenedPerformanceMetrics() ([]string, []string) {
+	return []string{
+			// Ash Metrics.
+
+			// Smoothness.
+			"Ash.Smoothness.PercentDroppedFrames_1sWindow2",
+		}, []string{
+			// Browser metrics.
+
+			// Blink input latency.
+			"EventLatency.KeyPressed.TotalLatency",
+			"EventLatency.TotalLatency",
+			"EventLatency.MousePressed.TotalLatency",
+
+			// Graphics smoothness.
+			"Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video",
+		}
+}

@@ -25,26 +25,28 @@ import (
 // was first called, except for the location of the mouse. This function
 // assumes that when it is called, the device is not in overview mode.
 // This function also assumes that at least 1 window is opened at the
-// time of the function call.
+// time of the function call. Lastly, this function assumes that the
+// system tray is visible.
 //
 // The action consists of opening and closing the system tray, entering
 // overview mode, dragging a window preview around, and exiting
 // overview mode.
 func DoAshWorkflows(ctx context.Context, tconn *chrome.TestConn, pc pointer.Context) error {
-	// Check the type of |pc|, because we only move the pointer to a
-	// UI element we wish to interact with if it is a mouse pointer. If
-	// |pc| is a touch pointer, interacting with a UI element involves
-	// physically moving a hand, which is not a device input.
-	var touch bool
-	switch pc.(type) {
-	case nil:
-		return errors.New("pointer context is nil")
-	case *pointer.MouseContext:
-		touch = false
-	case *pointer.TouchContext:
-		touch = true
-	default:
-		return errors.New("unrecognized pointer context type")
+	if err := DoOverviewWorkflow(ctx, tconn, pc); err != nil {
+		return errors.Wrap(err, "failed to interact with a window in overview mode")
+	}
+
+	if err := DoSystemTrayWorkflow(ctx, tconn, pc); err != nil {
+		return errors.Wrap(err, "failed to interact with system tray")
+	}
+	return nil
+}
+
+// DoSystemTrayWorkflow opens and closes the system tray.
+func DoSystemTrayWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointer.Context) error {
+	touch, err := isTablet(pc)
+	if err != nil {
+		return err
 	}
 
 	// Open and close the system tray bubble.
@@ -53,14 +55,14 @@ func DoAshWorkflows(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 	systemTrayContainer := nodewith.HasClass("SystemTrayContainer")
 	ac := uiauto.New(tconn)
 
-	if !touch {
-		if err := ac.MouseMoveTo(systemTray, 500*time.Millisecond)(ctx); err != nil {
-			return errors.Wrap(err, "failed to move mouse to the system tray")
-		}
-	}
-
-	if err := uiauto.Combine(
+	return uiauto.Combine(
 		"open and close the status tray",
+		func(ctx context.Context) error {
+			if !touch {
+				return ac.MouseMoveTo(systemTray, 500*time.Millisecond)(ctx)
+			}
+			return nil
+		},
 		pc.Click(systemTray),
 		ac.WaitUntilExists(systemTrayContainer),
 		// Add a fixed sleep to simulate a user looking for the button that
@@ -68,7 +70,15 @@ func DoAshWorkflows(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 		uiauto.Sleep(500*time.Millisecond),
 		pc.Click(systemTray),
 		ac.WaitUntilGone(systemTrayContainer),
-	)(ctx); err != nil {
+	)(ctx)
+}
+
+// DoOverviewWorkflow enters overview mode, drags the first window
+// to the left and to the right, and exits overview mode. This function
+// assumes at least 1 window is opened at the time of the function call.
+func DoOverviewWorkflow(ctx context.Context, tconn *chrome.TestConn, pc pointer.Context) error {
+	touch, err := isTablet(pc)
+	if err != nil {
 		return err
 	}
 
@@ -108,7 +118,7 @@ func DoAshWorkflows(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 
 		// Sleep to give a fixed amount of time for the preview to
 		// stabilize. A fixed value helps keep the overall duration of
-		// DoAshWorkflows relatively consistent.
+		// DoOverviewWorkflow relatively consistent.
 		uiauto.Sleep(time.Second),
 	)(ctx); err != nil {
 		return err
@@ -118,4 +128,18 @@ func DoAshWorkflows(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 		return errors.Wrap(err, "failed to exit overview mode")
 	}
 	return nil
+}
+
+func isTablet(pc pointer.Context) (bool, error) {
+	switch pc.(type) {
+	case nil:
+		return false, errors.New("pointer context is nil")
+	case *pointer.MouseContext:
+		return false, nil
+	case *pointer.TouchContext:
+		return true, nil
+	default:
+		return false, errors.New("unrecognized pointer context type")
+	}
+
 }

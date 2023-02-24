@@ -258,6 +258,8 @@ type Recorder struct {
 	// annotationCount is the number of annotations that have been added
 	// to this recorder.
 	annotationCount int
+
+	takingSnapshot bool
 }
 
 // RecorderOptions contains options to control the recorder setup.
@@ -1267,6 +1269,104 @@ func (r *Recorder) SaveHistograms(outDir string) error {
 		}
 	}
 	return saveJSONFile(histogramFileName, allRecords)
+}
+
+// StartSnapshot takes a snapshot of the given Ash and browser metrics, in order
+// to compare them later. This function returns a snapshot stop function that must
+// be called before calling StartSnapshot again. This stop function takes a new
+// snapshot of the Ash and browser metrics, and saves the diff between the metrics.
+// These metrics are saved under the original metric name prepended with |prefix|.
+//
+// For example, if we wanted to StartSnapshot for "EventLatency.TotalLatency", we
+// would do the following:
+//
+// stopSnapshot, err := recorder.StartSnapshot(ctx, "MyPrefix", []string{}, []string{"EventLatency.TotalLatency"})
+// ... test code
+// err := stopSnapshot(ctx)
+//
+// After the test has been completed, there would be a new metric added to
+// results-chart.json called "MyPrefix.EventLatency.TotalLatency". This metric would
+// be the average "EventLatency.TotalLatency" between the start/stop snapshot.
+//
+// StartSnapshot only works if all metrics within |ashMetrics| and |browserMetrics|
+// were added to the recorder prior to recorder.Run, either using AddCollectedMetric
+// or AddCommonMetrics.
+func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics, browserMetrics []string) (func(ctx context.Context) error, error) {
+	if r.takingSnapshot {
+		return nil, errors.New("existing snapshot already in progress")
+	}
+	r.takingSnapshot = true
+
+	// If we have more than 1 tconn saved, then the browser metrics
+	// must be Lacros based.
+	bt := browser.TypeAsh
+	if len(r.tconns) > 1 {
+		bt = browser.TypeLacros
+	}
+
+	// Get the initial Ash/Browser histograms.
+	ashHists, err := metrics.GetHistograms(ctx, r.tconns[browser.TypeAsh], ashMetrics)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get initial Ash snapshot histograms")
+	}
+
+	browserHists, err := metrics.GetHistograms(ctx, r.tconns[bt], browserMetrics)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get initial browser snapshot histograms")
+	}
+
+	// Return the stop function that compares a new snapshot with the initial
+	// snapshot, and saves the new metrics in r.pv.
+	return func(ctx context.Context) error {
+		// Take new snapshots of the given metrics.
+		newAshHists, err := metrics.GetHistograms(ctx, r.tconns[browser.TypeAsh], ashMetrics)
+		if err != nil {
+			return errors.Wrap(err, "failed to get final Ash snapshot histograms")
+		}
+
+		newBrowserHists, err := metrics.GetHistograms(ctx, r.tconns[bt], browserMetrics)
+		if err != nil {
+			return errors.Wrap(err, "failed to get final Browser snapshot histograms")
+		}
+
+		// Get the histogram diffs from when StartSnapshot was called.
+		ashDiff, err := metrics.DiffHistograms(ashHists, newAshHists)
+		if err != nil {
+			return errors.Wrapf(err, "failed to diff old and new Ash histograms for snapshot, old had length %d; new had length %d", len(ashHists), len(newAshHists))
+		}
+
+		browserDiff, err := metrics.DiffHistograms(browserHists, newBrowserHists)
+		if err != nil {
+			return errors.Wrapf(err, "failed to diff old and new browser histograms for snapshot, old had length %d; new had length %d", len(browserHists), len(newBrowserHists))
+		}
+
+		// For each metric and its corresponding browser type, create
+		// a new record with the new histogram diff.
+		browserTypes := []browser.Type{browser.TypeAsh, bt}
+		for i, diffs := range [][]*metrics.Histogram{ashDiff, browserDiff} {
+			for _, hist := range diffs {
+				metric, ok := r.records[browserTypes[i]][hist.Name]
+				if !ok {
+					return errors.Wrapf(err, "metric %q is not being recorded by the recorder", hist.Name)
+				}
+
+				newRecord := &record{
+					config:     metric.config,
+					totalCount: hist.TotalCount(),
+					Sum:        hist.Sum,
+					Buckets:    hist.Buckets,
+				}
+
+				// Save the new histogram with the existing histogram name
+				// prefixed with |prefix|.
+				newRecord.saveMetric(r.pv, prefix+hist.Name)
+			}
+		}
+
+		r.takingSnapshot = false
+
+		return nil
+	}, nil
 }
 
 // histsWithSamples returns the names of the histograms that have at least one sample.
