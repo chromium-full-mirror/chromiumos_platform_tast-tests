@@ -25,8 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that toggling Capslock updates the RGB backlight",
 		Contacts: []string{
-			"jimmyxgong@chromium.org",
 			"cros-peripherals@google.com",
+			"jimmyxgong@chromium.org",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",

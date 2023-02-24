@@ -24,8 +24,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the caps lock keys do not change colors when SetCapsLockState is called from a zoned keyboard",
 		Contacts: []string{
-			"michaelcheco@google.com",
 			"cros-peripherals@google.com",
+			"michaelcheco@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",
