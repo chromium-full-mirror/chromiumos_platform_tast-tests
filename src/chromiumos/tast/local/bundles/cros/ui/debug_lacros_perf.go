@@ -45,7 +45,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		// TODO(https://crbug.com/1401138): Evaluate the long-term utility
 		Desc:         "Temporary tests to help debug lacros performance issues",
-		Contacts:     []string{"erikchen@chromium.org", "chromeos-perfmetrics-eng@google.com"},
+		Contacts:     []string{"chromeos-perfmetrics-eng@google.com", "erikchen@chromium.org"},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
