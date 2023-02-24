@@ -38,8 +38,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example test for the enterprise rollback update using Nebraska and test images",
 		Contacts: []string{
-			"gabormagda@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"gabormagda@google.com", // Test author
 		},
 		BugComponent: "b:1031231",
 		Attr:         []string{}, // Manual execution only.

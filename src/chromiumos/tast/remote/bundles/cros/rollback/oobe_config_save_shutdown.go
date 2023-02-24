@@ -23,9 +23,9 @@ func init() {
 		Desc:         "Check that oobe_config_save runs successfully on reboot",
 		Contacts: []string{
 			// DO NOT modify these tests without approval from a test contact.
+			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com", // Test author
 			"crisguerrero@chromium.com",
-			"chromeos-commercial-remote-management@google.com",
 		},
 		BugComponent: "b:1031231",
 		Attr:         []string{"group:mainline", "informational"},
