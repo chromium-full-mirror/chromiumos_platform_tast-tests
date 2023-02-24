@@ -239,9 +239,7 @@ func clickBrowserLinkAndVerify(ctx context.Context, tconn *chrome.TestConn, br *
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	link := nodewith.Name("In-scope link").Role(role.Link)
 
-	return uiauto.Combine("click link and verify result",
-		ui.LeftClick(link),
-		verifier)(ctx)
+	return ui.LeftClickUntil(link, verifier)(ctx)
 }
 
 // clickAndroidLinkAndVerify clicks a link in Android, then calls verifier to
@@ -298,7 +296,7 @@ func changeLinkCapturingSetting(ctx context.Context, tconn *chrome.TestConn, cr 
 		settingRadioButton = nodewith.Name(linkCapturingOpenInApp).Role(role.RadioButton)
 	}
 
-	if err := ui.LeftClick(settingRadioButton)(ctx); err != nil {
+	if err := ui.LeftClickUntil(settingRadioButton, ui.WaitUntilCheckedState(settingRadioButton, true))(ctx); err != nil {
 		// Dump UI tree before OS Settings closes to help diagnose timeouts.
 		faillog.DumpUITreeToFile(ctx, outDir, tconn, "app_management_ui_tree.txt")
 		return err
