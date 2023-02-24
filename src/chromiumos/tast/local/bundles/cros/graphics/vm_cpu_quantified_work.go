@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type statisticsType int64
@@ -67,7 +68,7 @@ func init() {
 		Data:         []string{"CROSVM.fd"},
 		Attr:         []string{"group:graphics"},
 		SoftwareDeps: []string{"vm_host"},
-
+		HardwareDeps: hwdep.D(hwdep.X86()),
 		// This test does not do GPU work, but add this fixture anyway.
 		Fixture: "gpuWatchHangs",
 
