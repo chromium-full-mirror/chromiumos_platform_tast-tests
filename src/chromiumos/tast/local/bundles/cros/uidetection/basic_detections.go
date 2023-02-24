@@ -57,13 +57,12 @@ func init() {
 	})
 }
 
-func setDefaultWallpaper(ui *uiauto.Context) uiauto.Action {
-	const defaultWallpaper = "Default Wallpaper"
-	return uiauto.Combine("switch to the default wallaper",
+func setSolidWhiteWallpaper(ui *uiauto.Context) uiauto.Action {
+	return uiauto.Combine("switch to a solid white wallpaper",
 		wallpaper.OpenWallpaperPicker(ui),
-		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
-		wallpaper.SelectImage(ui, defaultWallpaper),
-		wallpaper.WaitForWallpaperWithName(ui, defaultWallpaper),
+		wallpaper.SelectCollection(ui, constants.SolidColorsCollection),
+		wallpaper.SelectImage(ui, constants.WhiteWallpaperName),
+		wallpaper.WaitForWallpaperWithName(ui, constants.WhiteWallpaperName),
 		wallpaper.CloseWallpaperPicker(),
 	)
 }
@@ -99,8 +98,6 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "basic_detections")
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
@@ -159,7 +156,9 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := setDefaultWallpaper(ui)(ctx); err != nil {
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "basic_detections")
+
+	if err := setSolidWhiteWallpaper(ui)(ctx); err != nil {
 		s.Fatal("Failed to switch to the default wallpaper: ", err)
 	}
 
