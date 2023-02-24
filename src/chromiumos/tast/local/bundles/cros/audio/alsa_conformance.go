@@ -82,6 +82,8 @@ var mergeThresholdSize480Models = []string{
 	"volta",
 	"volteer2",
 	"voxel",
+	"yaviks",
+	"yavikso",
 	"xivu",
 	"xivu360",
 	"zavala",
