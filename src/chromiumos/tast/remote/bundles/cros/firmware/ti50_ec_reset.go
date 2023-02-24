@@ -19,8 +19,8 @@ func init() {
 		Desc:    "Test workaround for EC double reset",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
-			"jbk@chromium.org",             // Test Author
-			"chromeos-firmware@google.com", // CrOS Firmware Developers
+			"chromeos-faft@google.com", // CrOS Firmware Developers
+			"jbk@chromium.org",         // Test Author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
