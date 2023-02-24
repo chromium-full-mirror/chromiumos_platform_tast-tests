@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/bundles/cros/camera/getusermedia"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -30,7 +29,6 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
-		Data:         append(getusermedia.DataFiles(), "web_api.html"),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityJS),
 		},
