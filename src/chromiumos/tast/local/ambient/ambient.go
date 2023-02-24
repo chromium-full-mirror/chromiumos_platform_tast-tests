@@ -150,7 +150,7 @@ func OpenAmbientSubpage(ctx context.Context, ui *uiauto.Context) error {
 
 // toggleAmbientMode returns an action to toggle ambient mode in ambient subpage.
 func toggleAmbientMode(currentMode string, ui *uiauto.Context) uiauto.Action {
-	toggleAmbientButton := nodewith.Role(role.ToggleButton).Name(currentMode)
+	toggleAmbientButton := nodewith.Role(role.ToggleButton)
 	return uiauto.Combine(fmt.Sprintf("toggle ambient mode - %s", currentMode),
 		ui.WaitUntilExists(toggleAmbientButton),
 		ui.LeftClick(toggleAmbientButton))
