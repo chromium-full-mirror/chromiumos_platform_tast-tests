@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
@@ -35,7 +36,15 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
-		Timeout:      5 * time.Minute,
+		Timeout:      6 * time.Minute,
+		Params: []testing.Param{{
+			Name: "connected_before_suspend",
+			Val:  false, // disconnect
+		},
+			{
+				Name: "disconnected_before_suspend",
+				Val:  true, //disconnect
+			}},
 	})
 }
 
@@ -89,6 +98,16 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 
 	if err := mdp.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.ConnectedStatus)(ctx); err != nil {
 		s.Fatal("Failed to verify network is connected: ", err)
+	}
+
+	if s.Param().(bool) {
+		if err := uiauto.Combine("Disconnect the network",
+			mdp.LeftClick(ossettings.DisconnectButton),
+			mdp.WaitUntilExists(ossettings.DisconnectedStatus),
+		)(ctx); err != nil {
+			s.Fatal("Failed to disconnect the network: ", err)
+		}
+		s.Log("Disconnect successfully")
 	}
 
 	if err := power.SuspendAndResume(ctx, cr, 15*time.Second); err != nil {
