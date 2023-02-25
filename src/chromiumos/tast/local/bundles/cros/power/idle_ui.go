@@ -151,4 +151,7 @@ func IdleUI(ctx context.Context, s *testing.State) {
 		s.Error("Failed saving perf data: ", err)
 	}
 
+	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p); err != nil {
+		s.Error("Failed to generate power_log.json and/or save perf data for crosbolt: ", err)
+	}
 }
