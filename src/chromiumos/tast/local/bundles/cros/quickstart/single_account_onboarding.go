@@ -18,9 +18,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Quick Start onboarding flow with one user account on the phone",
 		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
 			"jasonrhee@chromium.org",
 			"chromeos-sw-engprod@google.com",
-			"chromeos-cross-device-eng@google.com",
 		},
 		BugComponent: "b:1155263",
 		// Attr:         []string{"group:cross-device"},
