@@ -42,6 +42,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that OOM kill by kernel is detected correctly",
 		Contacts: []string{
+			"clumptini+oncall@google.com",
 			// Crosvm
 			"drmasquatch@google.com",
 			// Telemetry
