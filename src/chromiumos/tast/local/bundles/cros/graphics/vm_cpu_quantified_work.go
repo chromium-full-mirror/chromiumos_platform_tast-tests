@@ -122,8 +122,9 @@ func init() {
 			},
 		},
 		Contacts: []string{
+			"chromeos-gaming-core@google.com",
 			"mrisaacb@google.com",
-			"chromeos-gaming-core@google.com"}})
+		}})
 }
 
 // extractIterations takes crosvm's stdout
