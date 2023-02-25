@@ -27,8 +27,8 @@ func init() {
 		Desc:         "Tests that a client can send a 30-bit buffer to exo",
 		BugComponent: "b:1021073", // ChromeOS > Platform > Graphics > Compositor
 		Contacts: []string{
-			"mrfemi@google.com",
 			"chromeos-gfx-compositor@google.com",
+			"mrfemi@google.com",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		Fixture:      "chromeGraphicsHDR",
