@@ -20,8 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Cellular quick settings are not shown in non cellular devices",
 		Contacts: []string{
-			"nikhilcn@chromium.org",
 			"cros-connectivity@google.com",
+			"nikhilcn@chromium.org",
 		},
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},

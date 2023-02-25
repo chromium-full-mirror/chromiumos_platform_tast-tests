@@ -19,8 +19,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Cellular can be enabled and disabled from the OS Settings",
 		Contacts: []string{
-			"nikhilcn@chromium.org",
 			"cros-connectivity@google.com",
+			"nikhilcn@chromium.org",
 		},
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},

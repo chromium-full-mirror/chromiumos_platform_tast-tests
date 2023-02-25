@@ -28,8 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the policy that only allows managed cellular networks",
 		Contacts: []string{
-			"nikhilcn@google.com",
 			"cros-connectivity@google.com",
+			"nikhilcn@google.com",
 		},
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},

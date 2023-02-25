@@ -23,8 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks the roaming label status on a roaming and non roaming SIM",
 		Contacts: []string{
-			"nikhilcn@chromium.org",
 			"cros-connectivity@google.com",
+			"nikhilcn@chromium.org",
 		},
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
