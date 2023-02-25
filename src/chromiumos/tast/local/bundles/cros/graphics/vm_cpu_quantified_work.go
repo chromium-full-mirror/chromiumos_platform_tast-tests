@@ -234,7 +234,7 @@ func VMCPUQuantifiedWork(ctx context.Context, s *testing.State) {
 	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)); err != nil {
 		testing.ContextLog(ctx, "Unable get cool machine using setting: ", err)
 		if _, err := cpu.WaitUntilCoolDown(ctx,
-			cpu.CoolDownConfig{PollTimeout: 1 * time.Minute,
+			cpu.CoolDownConfig{PollTimeout: 2 * time.Minute,
 				PollInterval:         2 * time.Second,
 				TemperatureThreshold: 60000,
 				CoolDownMode:         cpu.CoolDownPreserveUI}); err != nil {
@@ -318,4 +318,16 @@ func VMCPUQuantifiedWork(ctx context.Context, s *testing.State) {
 	if len(params.recordedIntervals) > 0 {
 		insertIntervalsIntoPerf(pv, extractedValues, params.recordedIntervals)
 	}
+
+	// Do another cooldown attempt to get a temperature reading post test execution
+	// 15 second timeout, 1 second poll interval
+	if _, err := cpu.WaitUntilCoolDown(ctx,
+		cpu.CoolDownConfig{PollTimeout: 15 * time.Second,
+			PollInterval:         1 * time.Second,
+			TemperatureThreshold: 60000,
+			CoolDownMode:         cpu.CoolDownPreserveUI}); err != nil {
+		// Log cooldown failure
+		s.Log("CPU could not cool down in time alloted: ", err)
+	}
+
 }
