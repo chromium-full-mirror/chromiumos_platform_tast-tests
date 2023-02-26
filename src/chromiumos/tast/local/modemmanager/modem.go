@@ -815,40 +815,47 @@ func (m *Modem) GetFirstDataBearer(ctx context.Context, modem *Modem) (dbus.Obje
 	return bearerPath, nil
 }
 
-// GetFirstConnectedBearer gets the apn information of the first connected bearer.
-func (m *Modem) GetFirstConnectedBearer(ctx context.Context, modem *Modem) (map[string]interface{}, error) {
+// GetPropertiesOfFirstConnectedBearer gets the |Properties| value of the first connected bearer.
+func (m *Modem) GetPropertiesOfFirstConnectedBearer(ctx context.Context) (map[string]interface{}, error) {
+	propsGet := m.getFirstConnectedBearer(ctx).Get(mmconst.BearerPropertyProperties)
+	if propsGet.err != nil {
+		return nil, errors.Wrap(propsGet.err, "failed to read bearer properties")
+	}
+	// The bearer's |Properties| value mostly contains the APN information.
+	props, ok := propsGet.iface.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("failed to parse bearer properties")
+	}
+	return props, nil
+}
+
+// getFirstConnectedBearer gets the first connected bearer. This function returns a |Properties| value
+// defined in modemmanager/dbus_helper.go, so it should not be made public to not expose the |dbus_helpers.go| types.
+func (m *Modem) getFirstConnectedBearer(ctx context.Context) Properties {
 	modemPath := ObjectPath{dbus.ObjectPath(m.String()), nil}
 	bearerPaths := modemPath.GetPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface).
 		GetProperties(ctx).
 		GetObjectPaths(mmconst.ModemPropertyBearers)
 
 	if bearerPaths.err != nil {
-		return nil, errors.Wrap(bearerPaths.err, "failed to read Bearer paths")
+		return Properties{nil, errors.Wrap(bearerPaths.err, "failed to read Bearer paths")}
 	}
 	for _, opath := range bearerPaths.objectPaths {
 		bearerPath := ObjectPath{opath, nil}
 		bearerProps := bearerPath.GetPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerBearerInterface).
 			GetProperties(ctx)
 		if bearerProps.err != nil {
-			return nil, errors.Wrap(bearerProps.err, "failed to read bearer properties")
+			return Properties{nil, errors.Wrap(bearerProps.err, "failed to read bearer properties")}
 		}
 		connected, err := bearerProps.properties.GetBool(mmconst.BearerPropertyConnected)
 		if err != nil {
-			return nil, errors.Wrap(err, "missing connected property")
+			return Properties{nil, errors.Wrap(err, "missing connected property")}
 		}
 		if connected == true {
-			apnPropsGet, err := bearerProps.properties.Get(mmconst.BearerPropertyProperties)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to read bearer properties")
-			}
-			bearerProps, ok := apnPropsGet.(map[string]interface{})
-			if !ok {
-				return nil, errors.New("failed to parse bearer properties")
-			}
-			return bearerProps, nil
+			return bearerProps
 		}
 	}
-	return nil, nil
+	return Properties{nil, nil}
 }
 
 // DeleteAllBearers deletes all data bearers.

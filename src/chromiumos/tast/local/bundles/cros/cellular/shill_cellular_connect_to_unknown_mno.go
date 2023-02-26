@@ -116,7 +116,7 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Error getting Attach APN properties: ", err)
 	}
-	connectApn, err := modem.GetFirstConnectedBearer(ctx, modem)
+	connectApn, err := modem.GetPropertiesOfFirstConnectedBearer(ctx)
 	if err != nil {
 		s.Fatal("Error getting Connect APN properties: ", err)
 	}
