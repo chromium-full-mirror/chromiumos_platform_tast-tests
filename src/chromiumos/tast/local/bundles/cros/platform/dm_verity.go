@@ -14,10 +14,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     DMVerity,
-		Desc:     "Verify dm-verity reports IO errors on bad data",
-		Contacts: []string{"hidehiko@chromium.org"},
-		Timeout:  4 * time.Minute,
+		Func:         DMVerity,
+		Desc:         "Verify dm-verity reports IO errors on bad data",
+		Contacts:     []string{"chromeos-storage@chromium.org"},
+		BugComponent: "b:974567",
+		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"dmverity_stable"},
