@@ -56,8 +56,13 @@ const (
 
 // ModemManager1.Bearer properties
 const (
+	BearerPropertyBearerType      = "BearerType"
 	BearerPropertyConnected       = "Connected"
 	BearerPropertyConnectionError = "ConnectionError"
+	BearerPropertyInterface       = "Interface"
+	BearerPropertyIP4Config       = "Ip4Config"
+	BearerPropertyIP6Config       = "Ip6Config"
+	BearerPropertyMultiplexed     = "Multiplexed"
 	BearerPropertyProperties      = "Properties"
 	// APN related properties
 	BearerPropertyAllowRoaming = "allow-roaming"
@@ -68,6 +73,13 @@ const (
 	BearerPropertyMultiplex    = "multiplex"
 	BearerPropertyPassword     = "password"
 	BearerPropertyUser         = "user"
+	// IPConfig related properties
+	BearerPropertyIPMethod  = "method"
+	BearerPropertyIPAddress = "address"
+	BearerPropertyIPPrefix  = "prefix"
+	BearerPropertyIPDns1    = "dns1"
+	BearerPropertyIPGateway = "gateway"
+	BearerPropertyIPMtu     = "mtu"
 )
 
 // BearerAllowedAuth Allowed authentication types from Modemmanager-enums.h
