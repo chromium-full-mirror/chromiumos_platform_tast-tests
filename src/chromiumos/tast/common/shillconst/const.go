@@ -114,6 +114,7 @@ const (
 	ManagerPropertyProhibitedTechnologies = "ProhibitedTechnologies"
 	ManagerPropertyServices               = "Services"
 	ManagerPropertyServiceCompleteList    = "ServiceCompleteList"
+	ManagerPropertyTetheringAllowed       = "TetheringAllowed"
 	ManagerPropertyGlobalFTEnabled        = "WiFi.GlobalFTEnabled"
 	ManagerPropertyScanAllowRoam          = "WiFi.ScanAllowRoam"
 	ManagerPropertyDOHProviders           = "DNSProxyDOHProviders"
@@ -409,4 +410,11 @@ const (
 	AlwaysOnVPNModeOff        = "off"
 	AlwaysOnVPNModeStrict     = "strict"
 	AlwaysOnVPNModeBestEffort = "best-effort"
+)
+
+// CheckTetheringReadiness status.
+const (
+	TetheringReadinessNotAllowed                  = "not_allowed"
+	TetheringReadinessReady                       = "ready"
+	TetheringReadinessUpstreamNetworkNotAvailable = "upstream_network_not_available"
 )

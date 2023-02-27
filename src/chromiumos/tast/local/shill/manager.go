@@ -790,3 +790,24 @@ func (m *Manager) WaitForDefaultService(ctx context.Context, svc *Service) error
 	}
 	return nil
 }
+
+// CheckTetheringReadiness returns the tethering readiness status.
+func (m *Manager) CheckTetheringReadiness(ctx context.Context) (string, error) {
+	ctx, st := timing.Start(ctx, "m.CheckTetheringReadiness")
+	defer st.End()
+
+	var status string
+	if err := m.Call(ctx, "CheckTetheringReadiness").Store(&status); err != nil {
+		return "", err
+	}
+
+	return status, nil
+}
+
+// SetTetheringAllowed sets the TetheringAllowed property.
+func (m *Manager) SetTetheringAllowed(ctx context.Context, allowed bool) error {
+	if err := m.SetProperty(ctx, shillconst.ManagerPropertyTetheringAllowed, allowed); err != nil {
+		return errors.Wrapf(err, "failed to set tethering allowed to %t", allowed)
+	}
+	return nil
+}
