@@ -34,6 +34,13 @@ func init() {
 			"tast.cros.rollback.EnterpriseRollbackService",
 		},
 		Timeout: 10 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key:   "feature_id",
+			Value: "screenplay-7e91d2bb-7abf-441f-a31f-72d2d49bf029",
+		}, {
+			Key:   "feature_id",
+			Value: "screenplay-0623ac53-18d4-46f2-b0fa-43850d93dd37",
+		}},
 	})
 }
 
