@@ -40,9 +40,10 @@ func init() {
 }
 
 func LauncherApps(ctx context.Context, s *testing.State) {
-	const (
-		pkgName = "com.google.android.apps.dynamite"
-	)
+
+	pkgName := "com.google.android.calculator"
+	appName := apps.Calculator.Name
+	appID := apps.Calculator.ID
 
 	// Setup Chrome.
 	cr, err := chrome.New(
@@ -84,17 +85,17 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 
 	// Check the newly downloaded app in Launcher.
 	// TODO(b/210702593): Replace with LaunchAndWaitForAppOpen once fixed.
-	if err := launcher.LaunchApp(tconn, apps.Chat.Name)(ctx); err != nil {
+	if err := launcher.LaunchApp(tconn, appName)(ctx); err != nil {
 		s.Fatal("Failed to launch: ", err)
 	}
 
 	ui := uiauto.New(tconn)
-	chatButton := nodewith.Name(apps.Chat.Name).ClassName("ash/ShelfAppButton")
-	if err := ui.WaitUntilExists(chatButton)(ctx); err != nil {
-		s.Fatal("Failed to find Google Chat in Shelf: ", err)
+	appButton := nodewith.Name(appName).ClassName("ash/ShelfAppButton")
+	if err := ui.WaitUntilExists(appButton)(ctx); err != nil {
+		s.Fatal("Failed to find app in Shelf: ", err)
 	}
 
-	if err := apps.Close(ctx, tconn, apps.Chat.ID); err != nil {
+	if err := apps.Close(ctx, tconn, appID); err != nil {
 		s.Fatal("Failed to close: ", err)
 	}
 
@@ -113,7 +114,7 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the app icon is not visible in Launcher and the app fails to launch.
-	if err := launcher.LaunchApp(tconn, apps.Chat.Name)(ctx); err == nil {
+	if err := launcher.LaunchApp(tconn, appName)(ctx); err == nil {
 		s.Fatal("Installed app remained in launcher after play store disabled")
 	}
 }
