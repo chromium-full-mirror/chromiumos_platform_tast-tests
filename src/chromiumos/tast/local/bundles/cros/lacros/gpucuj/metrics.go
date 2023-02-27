@@ -256,7 +256,7 @@ var metricMap = map[string]metricInfo{
 		direction: perf.SmallerIsBetter,
 		uma:       true,
 	},
-	"total_power": {
+	"package_power": {
 		unit:      "joules",
 		direction: perf.SmallerIsBetter,
 		uma:       false,
