@@ -32,6 +32,9 @@ const maxGAIAEnterpriseEnrollmentRetries = 3
 // succeed.
 const gaiaEnterpriseEnrollmentTimeout = 3 * time.Minute
 
+// oobeScreenWatitingTime is the time to wait for an oobe screen to load and be ready for testing.
+const oobeScreenWaitingTime = 30 * time.Second
+
 // domainRe is a regex used to obtain the domain (without top level domain)
 // out of an email string.
 // e.g. a@managedchrome.com -> [a@managedchrome.com managedchrome] and
@@ -300,7 +303,25 @@ func performGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg
 			return testing.PollBreak(err)
 		}
 
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.isReadyForTesting()"); err == nil {
+		const successScreenShownJS = "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.isReadyForTesting()"
+		const attributeScreenShownJS = "OobeAPI.screens.EnterpriseEnrollmentScreen.attributeStep.isReadyForTesting()"
+		const attributeOrSuccessScreenShownJS = successScreenShownJS + "||" + attributeScreenShownJS
+
+		// In case we end up on the attribute screen, skip it.
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, attributeOrSuccessScreenShownJS, oobeScreenWaitingTime); err == nil {
+			var onAttributeScreen bool
+			if err := oobeConn.Eval(ctx, attributeScreenShownJS, &onAttributeScreen); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to check if on success screen"))
+			}
+
+			if onAttributeScreen {
+				if err := oobeConn.Eval(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.attributeStep.clickSkip()", nil); err != nil {
+					return testing.PollBreak(errors.Wrap(err, "failed to click the attribute skip button"))
+				}
+			}
+		}
+
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, successScreenShownJS, oobeScreenWaitingTime); err == nil {
 			if err := oobeConn.Eval(ctx, "OobeAPI.screens.EnterpriseEnrollmentScreen.successStep.clickNext()", nil); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to click the enrollment done button"))
 			}
