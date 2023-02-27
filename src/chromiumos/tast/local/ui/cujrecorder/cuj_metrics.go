@@ -13,8 +13,8 @@ import "chromiumos/tast/common/perf"
 func CUJAshCommonMetricConfigs() []MetricConfig {
 	return append(AshCommonMetricConfigs(),
 		// Memory Metrics.
-		NewCustomMetricConfig("ChromeOS.CWP.PSIMemPressure.Full", "percent", perf.SmallerIsBetter),
-		NewCustomMetricConfig("ChromeOS.CWP.PSIMemPressure.Some", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("ChromeOS.CWP.PSIMemPressure.Full", "percentx100", perf.SmallerIsBetter),
+		NewCustomMetricConfig("ChromeOS.CWP.PSIMemPressure.Some", "percentx100", perf.SmallerIsBetter),
 		NewCustomMetricConfig("ChromeOS.Zram.ComprDataSizeMB", "MB", perf.SmallerIsBetter),
 		NewCustomMetricConfig("ChromeOS.Zram.CompressedSizePct", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Platform.SwapInDaily", "pages", perf.SmallerIsBetter),
