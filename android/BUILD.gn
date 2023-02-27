@@ -48,6 +48,8 @@ group("all") {
     "ArcMulticastForwarderTest:ArcMulticastForwarderTest",
     "ArcMultiDisplayTest:ArcMultiDisplayTest",
     "ArcNotificationTest:ArcNotificationTest",
+    "ArcPasspointTest:ArcPasspointTest_P",
+    "ArcPasspointTest:ArcPasspointTest_R",
     "ArcPerAppDensityTest:ArcPerAppDensityTest",
     "ArcPipTest:ArcPipTest",
     "ArcPipVideoTest:ArcPipVideoTest",
