@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/typec/setup"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/local/typecutils"
@@ -27,7 +28,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TbtHotplugUnplug,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "TBT device enumeration check after hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		// Disabled due to <1% pass rate over 30 days. See b/246820340
@@ -36,7 +37,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{testConfig, "testcert.p12"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP", "ui.signinProfileTestExtensionManifestKey"},
-		HardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel")),
+		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
 		Params: []testing.Param{{
 			Val: 1,
 			// Disabled due to <1% pass rate over 30 days. See b/241943435
