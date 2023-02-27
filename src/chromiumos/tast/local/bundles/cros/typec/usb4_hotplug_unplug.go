@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/typec/setup"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/testing"
@@ -21,7 +22,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Usb4HotplugUnplug,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "USB4 device enumeration check after hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
@@ -29,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},
-		HardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel")),
+		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
 		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{{
 			Val: 1,
