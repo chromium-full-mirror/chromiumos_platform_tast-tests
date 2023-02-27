@@ -44,7 +44,6 @@ const (
 	deviceTargetVersionSelectorVal = "0,1626155736-"
 	deviceTargetVersionPrefixVal   = "1000."
 	deviceReleaseLtsTagVal         = "lts"
-	deviceChannelVal               = "beta-channel"
 )
 
 func init() {
@@ -91,6 +90,10 @@ func init() {
 				policyParam:  "ltstag",
 				checkParam:   true,
 			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key:   "feature_id",
+				Value: "screenplay-6e042833-6078-4ca2-ae09-ff808c5db446",
+			}},
 		}, {
 			Name: "device_rollback_to_target_version",
 			Val: &updateEngineTestParam{
@@ -102,15 +105,46 @@ func init() {
 				policyParam: "rollback_allowed",
 			},
 		}, {
-			Name: "device_channel",
+			Name: "device_channel_stable",
 			Val: &updateEngineTestParam{
 				policyValues: []policy.Policy{
-					&policy.ChromeOsReleaseChannel{Val: deviceChannelVal},
+					&policy.ChromeOsReleaseChannel{Val: "stable-channel"},
 					&policy.ChromeOsReleaseChannelDelegated{Val: false},
 				},
-				testValue:   deviceChannelVal,
+				testValue:   "stable-channel",
 				policyParam: "track",
 			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key:   "feature_id",
+				Value: "screenplay-d3df997c-ae2f-471e-9d3b-b33d8df6cb92",
+			}, {
+				Key:   "feature_id",
+				Value: "screenplay-fdbbf9e6-564f-4a6c-97d3-43c899c5d2e4",
+			}},
+		}, {
+			Name: "device_channel_beta",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Val: "beta-channel"},
+					&policy.ChromeOsReleaseChannelDelegated{Val: false},
+				},
+				testValue:   "beta-channel",
+				policyParam: "track",
+			},
+		}, {
+			Name: "device_channel_dev",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Val: "dev-channel"},
+					&policy.ChromeOsReleaseChannelDelegated{Val: false},
+				},
+				testValue:   "dev-channel",
+				policyParam: "track",
+			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key:   "feature_id",
+				Value: "screenplay-ffe64e90-9827-4dde-8f66-ac0143a9b71b",
+			}},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceTargetVersionSelector{}, pci.VerifiedFunctionalityOS),
