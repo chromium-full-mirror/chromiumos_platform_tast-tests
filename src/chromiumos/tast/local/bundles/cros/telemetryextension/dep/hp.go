@@ -13,6 +13,7 @@ import (
 //
 // Also manually added next models:
 //   - agah
+//   - gladios
 //   - joxer
 //   - joxton
 //   - vell
@@ -48,6 +49,7 @@ var hpModelList = []string{
 	"esche",
 	"gimble",
 	"giygas",
+	"gladios",
 	"gumboz",
 	"habokay",
 	"haboki",
