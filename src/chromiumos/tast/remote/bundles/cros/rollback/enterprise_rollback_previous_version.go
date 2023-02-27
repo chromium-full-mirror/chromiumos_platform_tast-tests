@@ -48,7 +48,7 @@ func init() {
 				Key: "feature_id",
 				// Configure rollback on a device and ensure that it is correctly
 				// rolled back and data preserved (rollback_target: n-1).
-				Value: "screenplay-bfed9fb8-c904-4cbb-aa6a-917b71aad4dd",
+				Value: "screenplay-072c8c85-d280-472c-a99a-04cc689565ed",
 			}},
 		}, {
 			Name: "rollback_2_versions",
@@ -59,7 +59,7 @@ func init() {
 				Key: "feature_id",
 				// Configure rollback on a device and ensure that it is correctly
 				// rolled back and data preserved (rollback_target: n-2).
-				Value: "screenplay-1288b024-ca3e-4581-b0bc-d09299a552b3",
+				Value: "screenplay-6f3f655c-5fa3-4d04-b513-50c049a9d762",
 			}},
 		}, {
 			Name: "rollback_3_versions",
@@ -70,7 +70,7 @@ func init() {
 				Key: "feature_id",
 				// Configure rollback on a device and ensure that it is correctly
 				// rolled back and data preserved (rollback_target: n-3).
-				Value: "screenplay-3fffe816-a79c-4c27-8c08-7783563f38fa",
+				Value: "screenplay-02406ce4-6923-4d51-8a1d-cfbf5a07eb63",
 			}},
 		},
 		},
