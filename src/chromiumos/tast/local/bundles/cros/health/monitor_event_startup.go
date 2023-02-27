@@ -68,6 +68,13 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "stylus_garage",
+			Val: eventStartupParams{
+				category: "stylus_garage",
+				duration: 3 * time.Second,
+			},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
