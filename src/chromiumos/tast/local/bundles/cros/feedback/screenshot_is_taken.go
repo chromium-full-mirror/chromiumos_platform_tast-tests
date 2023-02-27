@@ -69,7 +69,9 @@ func ScreenshotIsTaken(ctx context.Context, s *testing.State) {
 	// Verify clicking screenshot will open screenshot diaglog.
 	screenshotCheckBox := nodewith.Name("Screenshot").Role(role.CheckBox).Ancestor(
 		feedbackRootNode)
-	screenshotImg := nodewith.Role(role.Image).Ancestor(feedbackRootNode)
+	previewScreenshotButton := nodewith.Name("Preview Screenshot").Role(
+		role.Button).Ancestor(feedbackRootNode)
+	screenshotImg := nodewith.Role(role.Image).Ancestor(previewScreenshotButton)
 	screenshotDialog := nodewith.Role(role.Dialog).Ancestor(feedbackRootNode).First()
 
 	if err := uiauto.Combine("Verify screenshot exists",
