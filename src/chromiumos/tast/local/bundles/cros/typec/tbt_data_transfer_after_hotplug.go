@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/typec/setup"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/local/typecutils"
@@ -30,7 +31,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TbtDataTransferAfterHotplug,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "TBT data tarnsfer after hot plug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
@@ -38,7 +39,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		Vars:         []string{"typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP", "ui.signinProfileTestExtensionManifestKey"},
-		HardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel")),
+		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
 		Timeout:      5 * time.Minute,
 	})
 }
