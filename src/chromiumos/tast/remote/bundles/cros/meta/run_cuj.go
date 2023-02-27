@@ -60,9 +60,10 @@ var premiumTests = append(plusTests,
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     RunCUJ,
-		Desc:     "Run CUJ tests with specified iterations and retries",
-		Contacts: []string{"xliu@cienet.com", "cienet-development@googlegroups.com"},
+		Func:         RunCUJ,
+		Desc:         "Run CUJ tests with specified iterations and retries",
+		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@cienet.com", "abergman@google.com"},
+		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		Vars: []string{
 			"variablesfile", // Mandatory. The varsfile that will be used to call the CUJ test.
 			"iteration",     // Optional. If given, it overrides the default value.
