@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/testing"
 )
@@ -160,6 +162,16 @@ var (
 	LowStorageDialogManageButton = UIComponent{"low storage manage storage button", []string{"#view-low-storage-dialog button.dialog-negative-button"}}
 	// LowStorageWarning is the warning nudge displayed while recording on device with low storage.
 	LowStorageWarning = UIComponent{"low storage warning nudge", []string{"#nudge"}}
+)
+
+var (
+	// A11yRootNode represents the root node of Camera app in A11y tree.
+	A11yRootNode = nodewith.Name("Camera").Role(role.RootWebArea)
+	// A11yCanvasNode represents the canvas node in A11y tree.
+	A11yCanvasNode = nodewith.Role(role.Canvas).Ancestor(A11yRootNode)
+	// DocumentScanAvailableToast is the toast message
+	// notifying user about new document scanning feature is available.
+	DocumentScanAvailableToast = nodewith.Name("Document scan available").Ancestor(A11yRootNode)
 )
 
 // Option is the option for toggling state.

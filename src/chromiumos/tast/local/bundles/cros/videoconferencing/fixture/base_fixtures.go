@@ -22,14 +22,17 @@ import (
 
 // List of fixture names for video conferencing testing.
 const (
-	LoggedIn                    = "loggedInForVideoConferencing"
+	LoggedIn       = "loggedInForVideoConferencing"
+	LoggedInLacros = "loggedInLacrosForVideoConferencing"
+
 	GAIALoggedIn                = "gaiaLoggedInForVideoConferencing"
 	GAIALoggedInClamshell       = "gaiaLoggedInClamshellForVideoConferencing"
 	GAIALoggedInTablet          = "gaiaLoggedInTabletForVideoConferencing"
 	GAIALoggedInLacros          = "gaiaLoggedInLacrosForVideoConferencing"
 	GAIALoggedInLacrosClamshell = "gaiaLoggedInLacrosClamshellForVideoConferencing"
 	GAIALoggedInLacrosTablet    = "gaiaLoggedInLacrosTabletForVideoConferencing"
-	NoLoggedIn                  = "noLoggedInForVideoConferencing"
+
+	NoLoggedIn = "noLoggedInForVideoConferencing"
 )
 
 const (
@@ -74,7 +77,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name: GAIALoggedInClamshell,
-		Desc: "A fixture with GAIA user logged in",
+		Desc: "A fixture with GAIA user logged in forcing clamshell mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
@@ -95,7 +98,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name: GAIALoggedInTablet,
-		Desc: "A fixture with GAIA user logged in",
+		Desc: "A fixture with GAIA user logged in forcing tablet mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
@@ -107,6 +110,21 @@ func init() {
 				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
 			}, nil
 		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInLacros,
+		Desc: "A fixture with fake user logged in Lacros",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Impl:            baseSetupFixture(browser.TypeLacros, nil),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

@@ -29,12 +29,17 @@ const (
 
 // List of fixture names for ML service testing.
 const (
-	LoggedInWithFakeHALAndEffectsEnabled           = "loggedInWithFakeHALAndEffectsEnabled"
-	LoggedInWithFakeHALAndEffectsDisabled          = "loggedInWithFakeHALAndEffectsDisabled"
+	// Fixtures with fake login.
+	LoggedInWithFakeHALAndEffectsEnabled       = "loggedInWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsDisabled      = "loggedInWithFakeHALAndEffectsDisabled"
+	LoggedInLacrosWithFakeHALAndEffectsEnabled = "loggedInLacrosWithFakeHALAndEffectsEnabled"
+
+	// Fixtures using GAIA login without specifying device mode.
 	GAIALoggedInWithFakeHALAndEffectsEnabled       = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
 	GAIALoggedInWithFakeHALAndEffectsDisabled      = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
 	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
 
+	// Fixtures using GAIA login and specifying device mode.
 	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
 	GAIALoggedInTabletWithFakeHALAndEffectsEnabled          = "gaiaLoggedInTabletWithFakeHALAndEffectsEnabled"
 	GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosClamshellWithFakeHALAndEffectsEnabled"
@@ -119,6 +124,23 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInLacrosWithFakeHALAndEffectsEnabled,
+		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects enabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Parent:          LoggedInLacros,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: GAIALoggedInWithFakeHALAndEffectsEnabled,
 		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
@@ -153,23 +175,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-		Desc: "A fixture with gaia user logged in Lacros using fake HAL camera with platform effects enabled",
-		Contacts: []string{
-			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
-		},
-		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedInLacros,
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 		Desc: "A fixture with gaia user logged in clamshell mode using fake HAL camera with platform effects enabled",
 		Contacts: []string{
@@ -196,6 +201,23 @@ func init() {
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
 		Parent:          GAIALoggedInTablet,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
+		Desc: "A fixture with gaia user logged in Lacros using fake HAL camera with platform effects enabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Parent:          GAIALoggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
