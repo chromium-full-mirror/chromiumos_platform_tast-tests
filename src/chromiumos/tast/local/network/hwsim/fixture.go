@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -33,7 +34,8 @@ type ShillSimulatedWiFi struct {
 	// interfaces.
 	AP []string
 	// ARC's handle. This is only added when using the fixture "arcBooted".
-	ARC *arc.ARC
+	ARC    *arc.ARC
+	Chrome *chrome.Chrome
 }
 
 type fixture struct {
@@ -200,6 +202,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 	if s.ParentValue() != nil {
 		fixt.ARC = s.ParentValue().(*arc.PreData).ARC
+		fixt.Chrome = s.ParentValue().(*arc.PreData).Chrome
 	}
 	return fixt
 }
