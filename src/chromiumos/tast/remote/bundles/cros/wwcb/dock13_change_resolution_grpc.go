@@ -24,7 +24,7 @@ func init() {
 		Func:         Dock13ChangeResolutionGRPC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change Resolution being displayed on external monitor",
-		Contacts:     []string{"flin@google.com", "allion-wwcb@allion.corp-partner.google.com", "newmanliu19020@allion.corp-partner.google.com"},
+		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112",
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},

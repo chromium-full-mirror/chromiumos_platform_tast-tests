@@ -26,7 +26,7 @@ func init() {
 		Func:         Dock3UsbChargingGRPC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test power charging via a powered Dock over USB-C",
-		Contacts:     []string{"flin@google.com", "allion-wwcb@allion.corp-partner.google.com", "newmanliu19020@allion.corp-partner.google.com"},
+		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112",
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},

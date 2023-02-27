@@ -32,7 +32,7 @@ func init() {
 		Func:         Dock2PersistentGRPC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Windows persistent settings for dual display through a Dock",
-		Contacts:     []string{"allion-wwcb@allion.corp-partner.google.com", "flin@google.com", "newmanliu19020@allion.corp-partner.google.com"},
+		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112",
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},

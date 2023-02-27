@@ -24,7 +24,7 @@ func init() {
 		Func:         Dock17CloseLidGRPC,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that display resolution is still okay after lid close & windows are all still displayed",
-		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com", "newmanliu19020@allion.corp-partner.google.com"},
+		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112",
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
