@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package wifi
+package arc
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func init() {
 		Desc:     "Test if wifi network can be correctly created in shill",
 		Contacts: []string{"cros-networking@google.com", "chuweih@google.com"},
 		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:239783278",
+		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome", "arc"},
