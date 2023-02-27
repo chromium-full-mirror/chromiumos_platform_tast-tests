@@ -318,7 +318,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		DUTConfig: dutConfig{
 			Targets:       []string{d.HostName()},
 			TargetDir:     "/usr/local/tmp",
-			TargetReboot:  true,
+			TargetReboot:  false,
 			StartupScript: startupScript,
 			Pstore:        true,
 		},
