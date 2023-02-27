@@ -24,7 +24,7 @@ func init() {
 		Func:         Enrollment,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enroll a device without checking policies",
-		BugComponent: "b:1111632",
+		BugComponent: "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author
@@ -37,6 +37,15 @@ func init() {
 		},
 		Fixture: fixture.CleanOwnership,
 		Timeout: 4 * time.Minute,
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Enroll an unmanaged device to an OU to ensure that correct
+			//  policies are applied on the device and then move the same
+			// device to another OU to ensure that policies are correctly
+			// updated on the device.
+			// enrollment_type = manual
+			Value: "screenplay-e3feb0c8-a73b-4974-acf6-310348498e62",
+		}},
 	})
 }
 
