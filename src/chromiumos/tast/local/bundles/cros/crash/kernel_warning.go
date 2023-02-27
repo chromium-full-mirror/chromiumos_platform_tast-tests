@@ -42,7 +42,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
 			Val:               crash.RealConsent,
-			Fixture:           fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
+			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
 		}, {
 			Name: "mock_consent",
 			Val:  crash.MockConsent,
@@ -50,20 +50,18 @@ func init() {
 			Name:              "real_consent_per_user_on",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
-			// No Pre because we must manually log in and out to chrome
+			// No fixture because we must manually log in and out to chrome
 			// on two accounts.
-			Val:     crash.RealConsentPerUserOn,
-			Fixture: fixture.CleanOwnership,
+			Val: crash.RealConsentPerUserOn,
 			// This test performs 2 logins.
 			Timeout: 2*chrome.LoginTimeout + time.Minute,
 		}, {
 			Name:              "real_consent_per_user_off",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			ExtraAttr:         []string{"informational"},
-			// No Pre because we must manually log in and out to chrome
+			// No fixture because we must manually log in and out to chrome
 			// on two accounts.
-			Val:     crash.RealConsentPerUserOff,
-			Fixture: fixture.CleanOwnership,
+			Val: crash.RealConsentPerUserOff,
 			// This test performs 2 logins.
 			Timeout: 2*chrome.LoginTimeout + time.Minute,
 		}},

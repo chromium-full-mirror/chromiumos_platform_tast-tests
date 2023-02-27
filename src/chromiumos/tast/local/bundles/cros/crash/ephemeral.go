@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -52,7 +51,6 @@ func init() {
 				consent:      false,
 				consentType:  crash.RealConsent,
 			},
-			Fixture:           fixture.CleanOwnership,
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 		}, {
 			Name: "post_oobe_with_consent",

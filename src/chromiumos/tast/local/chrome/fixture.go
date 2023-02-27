@@ -266,21 +266,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.CleanOwnershipChromeLoggedIn,
-		Desc:     "Ownership cleaned, logged into a user session",
-		Contacts: []string{"nya@chromium.org", "oka@chromium.org"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return nil, nil
-		}),
-		SetUpTimeout:    LoginTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-		Parent:          fixture.CleanOwnership,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
-		Desc:     "Ownership cleaned, logged into a user session with flags to enable verbose logging about consent",
+		Name:     fixture.ChromeLoggedInVerboseConsentLogs,
+		Desc:     "Logged into a user session with flags to enable verbose logging about consent",
 		Contacts: []string{"cwd@chromium.org"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{ExtraArgs("--vmodule=*stats_reporting_controller*=1,*autotest_private_api*=1,*owner_pending_setting_controller*=1")}, nil
@@ -288,7 +275,6 @@ func init() {
 		SetUpTimeout:    LoginTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
-		Parent:          fixture.CleanOwnership,
 	})
 }
 

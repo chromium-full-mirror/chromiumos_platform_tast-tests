@@ -33,7 +33,6 @@ func TestTimeout(t *gotesting.T) {
 		// necessary to extend the timeout, so skip them.
 		if t.Pre == arc.Booted() ||
 			t.Fixture == "arcBooted" ||
-			t.Fixture == "cleanOwnershipArcBooted" ||
 			t.Fixture == "arcBootedInTabletMode" {
 			return false
 		}

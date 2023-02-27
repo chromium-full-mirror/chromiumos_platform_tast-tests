@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
@@ -309,27 +308,6 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: ResetTimeout,
 		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "cleanOwnershipArcBooted",
-		Desc: "Ownership is cleared, ARC is booted",
-		Contacts: []string{
-			"cros-hwsec@google.com",
-			"arcvm-eng-team@google.com",
-			"miersh@google.com",
-		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-		Parent:          fixture.CleanOwnership,
 	})
 }
 

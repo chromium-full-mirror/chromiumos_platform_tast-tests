@@ -14,7 +14,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	commoncrash "chromiumos/tast/common/crash"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
@@ -41,7 +40,6 @@ func init() {
 			"tast.cros.crash.FixtureService",
 			"tast.cros.baserpc.FileSystem",
 		},
-		Fixture: fixture.CleanOwnership,
 	})
 }
 

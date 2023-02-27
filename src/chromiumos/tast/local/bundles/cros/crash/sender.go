@@ -39,7 +39,7 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			Val:               crash.RealConsent,
-			Fixture:           fixture.CleanOwnershipChromeLoggedInVerboseConsentLogs,
+			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
 		}, {
 			Name:    "mock_consent",
 			Fixture: "chromeLoggedIn",

@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/session"
@@ -32,7 +31,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		// This test performs 2 logins.
 		Timeout: 2*chrome.LoginTimeout + time.Minute,
-		Fixture: fixture.CleanOwnership,
 	})
 }
 

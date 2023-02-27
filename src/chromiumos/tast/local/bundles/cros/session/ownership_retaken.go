@@ -15,7 +15,6 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -43,7 +42,6 @@ func init() {
 		BugComponent: "b:1207311",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.CleanOwnership,
 	})
 }
 

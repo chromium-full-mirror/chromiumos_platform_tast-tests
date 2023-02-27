@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/bundles/cros/login/userutil"
 	"chromiumos/tast/local/chrome"
@@ -41,8 +40,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 		},
-		Fixture: fixture.CleanOwnership,
-		Attr:    []string{"group:mainline"},
+		Attr: []string{"group:mainline"},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
 			"ui.signinProfileTestExtensionManifestKey",

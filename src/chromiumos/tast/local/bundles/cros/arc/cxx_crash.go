@@ -29,26 +29,23 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
+		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"android_p", "metrics_consent"},
 			Val:               crash.RealConsent,
-			Fixture:           "cleanOwnershipArcBooted",
 		}, {
 			Name:              "mock_consent",
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val:               crash.MockConsent,
-			Fixture:           "arcBooted",
 		}, {
 			Name:              "real_consent_vm",
 			ExtraSoftwareDeps: []string{"android_vm", "metrics_consent"},
 			Val:               crash.RealConsent,
-			Fixture:           "cleanOwnershipArcBooted",
 		}, {
 			Name:              "mock_consent_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               crash.MockConsent,
-			Fixture:           "arcBooted",
 		}},
 	})
 }

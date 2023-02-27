@@ -18,7 +18,6 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 
 	commoncrash "chromiumos/tast/common/crash"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -55,7 +54,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// Some of these tests verify crash_sender behavior, so only run on internal builds.
 		SoftwareDeps: []string{"cros_internal"},
-		Fixture:      fixture.CleanOwnership,
 		Params: []testing.Param{{
 			Name: "reporter_startup",
 			Val: userCrashParams{

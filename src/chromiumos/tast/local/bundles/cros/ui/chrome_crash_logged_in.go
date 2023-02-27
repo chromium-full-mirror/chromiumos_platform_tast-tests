@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/ui/chromecrash"
 	"chromiumos/tast/local/chrome"
@@ -41,7 +40,6 @@ func init() {
 				handler: chromecrash.Breakpad,
 				consent: crash.RealConsent,
 			},
-			Fixture:           fixture.CleanOwnership,
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"breakpad", "metrics_consent"},
 		}, {
@@ -60,7 +58,6 @@ func init() {
 				handler: chromecrash.Crashpad,
 				consent: crash.RealConsent,
 			},
-			Fixture:           fixture.CleanOwnership,
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
 		}, {
@@ -90,7 +87,6 @@ func init() {
 				// real consent variant.
 				restartChrome: true,
 			},
-			Fixture:           fixture.CleanOwnership,
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"breakpad", "metrics_consent"},
 			// This test performs 2 logins.
@@ -111,7 +107,6 @@ func init() {
 				handler: chromecrash.Crashpad,
 				consent: crash.RealConsent,
 			},
-			Fixture:           fixture.CleanOwnership,
 			ExtraAttr:         []string{"group:mainline"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
 		}, {

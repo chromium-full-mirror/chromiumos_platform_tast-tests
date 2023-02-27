@@ -30,26 +30,23 @@ func init() {
 		BugComponent: "b:153255",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Name:              "mock_consent",
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val:               crash.MockConsent,
-			Fixture:           "arcBooted",
 		}, {
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"android_p", "metrics_consent"},
 			Val:               crash.RealConsent,
-			Fixture:           "cleanOwnershipArcBooted",
 		}, {
 			Name:              "vm_mock_consent",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               crash.MockConsent,
-			Fixture:           "arcBooted",
 		}, {
 			Name:              "vm_real_consent",
 			ExtraSoftwareDeps: []string{"android_vm", "metrics_consent"},
 			Val:               crash.RealConsent,
-			Fixture:           "cleanOwnershipArcBooted",
 		}},
 	})
 }
