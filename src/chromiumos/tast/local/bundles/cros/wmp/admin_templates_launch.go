@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/apps"
@@ -45,8 +46,13 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Data:         []string{"admin_desk_template.json"},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.PreconfiguredDeskTemplates{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.DeskTemplatesEnabled{}, pci.VerifiedFunctionalityUI),
+		},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromeAdminDeskTemplatesLoggedIn,
+			Fixture:   fixture.ChromeAdminDeskTemplatesLoggedIn,
+			ExtraAttr: []string{"group:criticalstaging"},
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
