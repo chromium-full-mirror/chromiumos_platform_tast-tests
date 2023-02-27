@@ -79,6 +79,10 @@ func init() {
 				checkParam:   true,
 				checkVal:     true,
 			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key:   "feature_id",
+				Value: "screenplay-5f27f0ec-9865-4b66-babe-4114811d2617",
+			}},
 		}, {
 			Name: "device_release_lts_tag",
 			Val: &updateEngineTestParam{
