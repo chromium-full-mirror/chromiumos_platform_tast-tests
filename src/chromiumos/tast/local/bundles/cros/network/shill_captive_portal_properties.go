@@ -20,10 +20,11 @@ type captivePortalProperties struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     ShillCaptivePortalProperties,
-		Desc:     "Verifies that properties related to Captive portal are the expected values",
-		Contacts: []string{"cros-network-health-team@google.com", "michaelrygiel@google.com"},
-		Attr:     []string{"group:mainline"},
+		BugComponent: "b:1166446",
+		Func:         ShillCaptivePortalProperties,
+		Desc:         "Verifies that properties related to Captive portal are the expected values",
+		Contacts:     []string{"cros-network-health-team@google.com", "michaelrygiel@google.com"},
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name: "ethernet_online_with_no_captive_portal",
 			Val: &captivePortalProperties{
