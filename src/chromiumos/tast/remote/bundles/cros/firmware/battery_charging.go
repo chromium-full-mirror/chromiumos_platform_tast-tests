@@ -374,12 +374,15 @@ func checkECChgState(ctx context.Context, h *firmware.Helper) error {
 		reBatterySeemsDisconnected = `battery\S*disconnected = (\S*)`
 		reBatteryRemoved           = `battery\S*removed = (\S*)`
 	)
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		return errors.Wrap(err, "failed to send 'chan save' to EC")
+	}
 	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 		return errors.Wrap(err, "failed to send 'chan 0' to EC")
 	}
 	defer func() error {
-		if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-			return errors.Wrap(err, "failed to send 'chan 0xffffffff' to EC")
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+			return errors.Wrap(err, "failed to send 'chan restore' to EC")
 		}
 		return nil
 	}()

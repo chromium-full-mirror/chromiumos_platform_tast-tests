@@ -319,6 +319,9 @@ func pressShortcut(ctx context.Context, h *firmware.Helper, actionKey string) er
 
 // grepKbLightGPIO accepts a list of gpio names, and logs their values if found.
 func grepKbLightGPIO(ctx context.Context, h *firmware.Helper, gpios []string) error {
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		return errors.Wrap(err, "failed to send 'chan save' to EC")
+	}
 	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 		return errors.Wrap(err, "failed to send 'chan 0' to EC")
 	}
@@ -339,8 +342,8 @@ func grepKbLightGPIO(ctx context.Context, h *firmware.Helper, gpios []string) er
 			testing.ContextLogf(ctx, "Did not find gpio: %s", name)
 		}
 	}
-	if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-		return errors.Wrap(err, "failed to send 'chan 0xffffffff' to EC")
+	if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+		return errors.Wrap(err, "failed to send 'chan restore' to EC")
 	}
 	return nil
 }

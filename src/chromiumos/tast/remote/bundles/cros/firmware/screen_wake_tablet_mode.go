@@ -640,13 +640,6 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	// Towards the beginning of the test, sending 'chan 0xffffffff' helps
-	// with reading information later from the ec console, for example,
-	// during checkAndRunTabletMode.
-	if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-		s.Fatal("Failed to send 'chan 0xffffffff' to ec: ", err)
-	}
-
 	// Check from a list of names that might be relevant to DUT's screen based on
 	// the ec code, and if one exists, save it for future use in verifying screen state.
 	possibleNames := []firmware.GpioName{
@@ -761,14 +754,12 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	if scannKeyboard != nil && h.Config.HasKeyboard {
 		// Read information from keyboard scan state.
 		// Note: detachables do not seem to support the ksstate command.
+		if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+			s.Fatal("Failed to send 'chan save' to EC: ", err)
+		}
 		if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 			s.Fatal("Failed to send 'chan 0' to EC: ", err)
 		}
-		defer func() {
-			if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-				s.Fatal("Failed to send 'chan 0xffffffff' to EC: ", err)
-			}
-		}()
 
 		keyboardStateOut, err := h.Servo.RunECCommandGetOutput(ctx, "ksstate", []string{`Keyboard scan disable mask:(\s+\w+)`})
 		if err != nil {
@@ -777,6 +768,9 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		keyboardStateStr := keyboardStateOut[0][1]
 		s.Logf("Keyboard scan disable mask value:%s", keyboardStateStr)
 
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+			s.Fatal("Failed to send 'chan restore' to EC: ", err)
+		}
 		// Emulate pressing a keyboard key.
 		if err := h.Servo.ECPressKey(ctx, "<enter>"); err != nil {
 			s.Fatal("Failed to type key: ", err)

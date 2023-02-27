@@ -47,13 +47,16 @@ func ECADC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		s.Fatal("Failed to send 'chan save' to EC: ", err)
+	}
 	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 		s.Fatal("Failed to send 'chan 0' to EC: ", err)
 	}
 
 	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-			s.Fatal("Failed to send 'chan 0xffffffff' to EC: ", err)
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+			s.Fatal("Failed to send 'chan restore' to EC: ", err)
 		}
 	}()
 

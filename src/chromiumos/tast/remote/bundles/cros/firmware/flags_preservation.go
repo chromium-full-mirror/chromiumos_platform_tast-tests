@@ -519,12 +519,15 @@ func checkMaxChargerPower(ctx context.Context, h *firmware.Helper) error {
 // checkChgstateBatt runs ec command 'chgstate' and collects information
 // from the battery section.
 func checkChgstateBatt(ctx context.Context, h *firmware.Helper, attr string) (string, error) {
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		return "unknown", errors.Wrap(err, "failed to send 'chan save' to EC")
+	}
 	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 		return "unknown", errors.Wrap(err, "failed to send 'chan 0' to EC")
 	}
 	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-			testing.ContextLog(ctx, "Failed to send 'chan 0xffffffff' to EC: ", err)
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+			testing.ContextLog(ctx, "Failed to send 'chan restore' to EC: ", err)
 		}
 	}()
 	match := `batt.*:((\n|.)*?is_present = \S*)[\n\r]`
@@ -542,12 +545,15 @@ func checkChgstateBatt(ctx context.Context, h *firmware.Helper, attr string) (st
 
 // grepGpio runs ec command 'gpioget' to check for a gpio's value.
 func grepGpio(ctx context.Context, h *firmware.Helper, name string) (string, error) {
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		return "unknown", errors.Wrap(err, "failed to send 'chan save' to EC")
+	}
 	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 		return "unknown", errors.Wrap(err, "failed to send 'chan 0' to EC")
 	}
 	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-			testing.ContextLog(ctx, "Failed to send 'chan 0xffffffff' to EC: ", err)
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+			testing.ContextLog(ctx, "Failed to send 'chan restore' to EC: ", err)
 		}
 	}()
 	match := fmt.Sprintf(`(?i)(0|1)[^\n\r]*\s%s`, name)

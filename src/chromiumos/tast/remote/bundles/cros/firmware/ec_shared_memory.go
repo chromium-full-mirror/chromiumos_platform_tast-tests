@@ -38,12 +38,16 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		s.Fatal("Failed to reset channel: ", err)
+	}
+
 	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
 		s.Fatal("Failed to reset channel: ", err)
 	}
 
 	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
 			s.Fatal("Failed to reset channel: ", err)
 		}
 	}()

@@ -55,10 +55,6 @@ func BatteryChargeDuringShutdown(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
-		s.Fatal("Failed to send 'chan 0' to EC: ", err)
-	}
-
 	origPdRole, err := h.Servo.GetPDRole(ctx)
 	if err != nil {
 		s.Fatal("Failed to retrieve original USB PD role for Servo: ", err)
@@ -85,9 +81,6 @@ func BatteryChargeDuringShutdown(ctx context.Context, s *testing.State) {
 			if err := firmware.BootDutViaPowerPress(ctx, h, dut); err != nil {
 				s.Fatal("Failed to power on DUT at cleanup: ", err)
 			}
-		}
-		if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-			s.Fatal("Failed to send 'chan 0xffffffff' to EC: ", err)
 		}
 		s.Log("Getting back to original USB PD role")
 		if err := h.Servo.SetPDRole(ctx, origPdRole); err != nil {

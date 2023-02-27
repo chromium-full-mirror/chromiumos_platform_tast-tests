@@ -270,10 +270,6 @@ func getECBatteryStatus(ctx context.Context, h *firmware.Helper) (*ecBatteryStat
 		return nil, errors.Wrap(err, "failed to parse battery charge as int")
 	}
 
-	if err := h.Servo.RunECCommand(ctx, "chan 0xffffffff"); err != nil {
-		return nil, errors.Wrap(err, "failed to send 'chan 0xffffffff' to EC")
-	}
-
 	if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
 		return nil, errors.Wrap(err, "failed to send 'chan restore' to EC")
 	}

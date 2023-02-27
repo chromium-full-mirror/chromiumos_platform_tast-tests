@@ -180,6 +180,7 @@ func (s *Servo) RunECCommand(ctx context.Context, cmd string) error {
 }
 
 // RunECCommandGetOutput runs the given command on the EC on the device and returns the output matching patterns.
+// It is recommended to send "chan save", "chan 0" just before and "chan restore" afterwards to prevent other logging from interrupting your command.
 func (s *Servo) RunECCommandGetOutput(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
 	err := s.SetStringList(ctx, ECUARTRegexp, patterns)
 	if err != nil {
