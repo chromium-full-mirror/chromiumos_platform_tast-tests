@@ -52,12 +52,23 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
+				Name:      "lacros_citrix",
+				Fixture:   fixture.LacrosCitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
+			},
+			{
 				Name:    "vmware",
 				Fixture: fixture.VmwareLaunched,
 			},
 			{
 				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
+			},
+
+			{
+				Name:      "kiosk_lacros_citrix",
+				Fixture:   fixture.KioskLacrosCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			// b/207122370
@@ -69,6 +80,11 @@ func init() {
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
+			},
+			{
+				Name:      "mgs_lacros_citrix",
+				Fixture:   fixture.MgsLacrosCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{

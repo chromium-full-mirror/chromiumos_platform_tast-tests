@@ -55,6 +55,15 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
+				Name:    "lacros_citrix",
+				Fixture: fixture.LacrosCitrixLaunched,
+				Val: desktopData{
+					DesktopName:   "WindowsServer2019",
+					RunDialogKeys: "Search+R",
+				},
+				ExtraAttr: []string{"group:vdi_limited"},
+			},
+			{
 				Name:    "vmware",
 				Fixture: fixture.VmwareLaunched,
 				Val: desktopData{
@@ -65,6 +74,15 @@ func init() {
 			{
 				Name:    "mgs_citrix",
 				Fixture: fixture.MgsCitrixLaunched,
+				Val: desktopData{
+					DesktopName:   "WindowsServer2019",
+					RunDialogKeys: "Search+R",
+				},
+				ExtraAttr: []string{"group:vdi_limited"},
+			},
+			{
+				Name:    "mgs_lacros_citrix",
+				Fixture: fixture.MgsLacrosCitrixLaunched,
 				Val: desktopData{
 					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
