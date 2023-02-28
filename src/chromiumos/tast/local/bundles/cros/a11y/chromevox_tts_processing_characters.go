@@ -77,7 +77,7 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable spoken feedback: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, false); err != nil {
+		if err := a11y.ClearFeature(ctx, tconn, a11y.SpokenFeedback); err != nil {
 			s.Error("Failed to disable spoken feedback: ", err)
 		}
 	}(cleanupCtx)

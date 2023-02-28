@@ -55,7 +55,7 @@ func SelectToSpeak(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Select-to-Speak: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SelectToSpeak, false); err != nil {
+		if err := a11y.ClearFeature(ctx, tconn, a11y.SelectToSpeak); err != nil {
 			s.Error("Failed to disable Select-to-Speak: ", err)
 		}
 	}(cleanupCtx)

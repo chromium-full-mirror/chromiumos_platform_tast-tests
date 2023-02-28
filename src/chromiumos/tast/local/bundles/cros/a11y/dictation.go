@@ -58,7 +58,7 @@ func Dictation(ctx context.Context, s *testing.State) {
 
 	// Ensure Dictation is off at the end of this test.
 	defer func(ctx context.Context) {
-		if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.Dictation, false); err != nil {
+		if err := a11y.ClearFeature(ctx, tconn, a11y.Dictation); err != nil {
 			s.Fatal("Failed to disable Dictation: ", err)
 		}
 	}(cleanupCtx)

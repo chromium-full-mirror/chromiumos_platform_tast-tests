@@ -87,7 +87,7 @@ line 3</textarea>`)
 		s.Fatal("Failed to enable spoken feedback: ", err)
 	}
 	defer func() {
-		if err := a11y.SetFeatureEnabled(cleanupCtx, tconn, a11y.SpokenFeedback, false); err != nil {
+		if err := a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback); err != nil {
 			s.Error("Failed to disable spoken feedback: ", err)
 		}
 	}()

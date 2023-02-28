@@ -100,7 +100,7 @@ func testMaximizedWindow(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.DockedMagnifier, true); err != nil {
 		return errors.Wrap(err, "failed to enable Docked Magnifier feature")
 	}
-	defer a11y.SetFeatureEnabled(cleanupCtx, tconn, a11y.DockedMagnifier, false)
+	defer a11y.ClearFeature(cleanupCtx, tconn, a11y.DockedMagnifier)
 	if err := checkWindowBoundsAndContentForMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		return errors.Wrap(err, "failed to verify window bounds and content resize properly after enabling Docked Magnifier")
 	}

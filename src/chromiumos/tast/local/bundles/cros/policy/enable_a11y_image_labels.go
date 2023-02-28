@@ -172,7 +172,7 @@ func setUpChromeVox(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 		return nil, mergeCleanups(cleanups), errors.Errorf("failed to enable ChromeVox: %s", err)
 	}
 	cleanups = append(cleanups, func(cleanupCtx context.Context) error {
-		if err := a11y.SetFeatureEnabled(cleanupCtx, tconn, a11y.SpokenFeedback, false); err != nil {
+		if err := a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback); err != nil {
 			return errors.Errorf("failed to disable ChromeVox: %s", err)
 		}
 		return nil

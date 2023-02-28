@@ -68,7 +68,7 @@ func Autoclick(ctx context.Context, s *testing.State) {
 	// If useAutoclick is false, then we should simply click the "yes" button
 	// to close the dialog.
 	deactivateAutoclick := func(ctx context.Context, useAutoclick bool) error {
-		if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.Autoclick, false); err != nil {
+		if err := a11y.ClearFeature(ctx, tconn, a11y.Autoclick); err != nil {
 			return errors.Wrap(err, "failed to disable autoclick")
 		}
 

@@ -45,12 +45,26 @@ const (
 	SwitchAccess    Feature = "switchAccess"
 )
 
-// SetFeatureEnabled sets the specified accessibility feature enabled/disabled using the provided connection to the extension.
+// SetFeatureEnabled forcibly enables/disables the specified accessibility
+// feature using the provided connection to the extension.
+// NOTE: This can have the side effect of disabling UI elements such as toggles
+// through which the user can normally control the feature.
+// NOTE: This should be used together with a deferred call to ClearFeature.
 func SetFeatureEnabled(ctx context.Context, tconn *chrome.TestConn, feature Feature, enable bool) error {
 	if err := tconn.Call(ctx, nil, `(feature, enable) => {
       return tast.promisify(tast.bind(chrome.accessibilityFeatures[feature], "set"))({value: enable});
     }`, feature, enable); err != nil {
 		return errors.Wrapf(err, "failed to toggle %v to %t", feature, enable)
+	}
+	return nil
+}
+
+// ClearFeature effectively undoes previous SetFeatureEnabled calls for the given feature.
+func ClearFeature(ctx context.Context, tconn *chrome.TestConn, feature Feature) error {
+	if err := tconn.Call(ctx, nil, `(feature) => {
+      return tast.promisify(tast.bind(chrome.accessibilityFeatures[feature], "clear"))({});
+    }`, feature); err != nil {
+		return errors.Wrapf(err, "failed to clear %v", feature)
 	}
 	return nil
 }

@@ -137,7 +137,7 @@ func RunTest(ctx context.Context, s *testing.State, activities []TestActivity, f
 		s.Fatal("Failed to enable spoken feedback: ", err)
 	}
 	defer func() {
-		if err := a11y.SetFeatureEnabled(cleanupCtx, tconn, a11y.SpokenFeedback, false); err != nil {
+		if err := a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback); err != nil {
 			s.Fatal("Failed to disable spoken feedback: ", err)
 		}
 	}()

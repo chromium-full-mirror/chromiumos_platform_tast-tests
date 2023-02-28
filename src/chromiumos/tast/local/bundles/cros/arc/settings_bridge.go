@@ -66,7 +66,7 @@ func checkAndroidAccessibility(ctx context.Context, a *arc.ARC, enable bool) err
 func disableAccessibilityFeatures(ctx context.Context, tconn *chrome.TestConn, features []a11y.Feature) error {
 	var failedFeatures []string
 	for _, feature := range features {
-		if err := a11y.SetFeatureEnabled(ctx, tconn, feature, false); err != nil {
+		if err := a11y.ClearFeature(ctx, tconn, feature); err != nil {
 			failedFeatures = append(failedFeatures, string(feature))
 			testing.ContextLogf(ctx, "Failed disabling %s: %v", feature, err)
 		}
