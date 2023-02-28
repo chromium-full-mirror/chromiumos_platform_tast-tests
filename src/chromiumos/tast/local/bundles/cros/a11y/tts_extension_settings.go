@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -53,6 +55,21 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Mute the device to avoid noisiness.
+	ctxCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	if err := crastestclient.Mute(ctx); err != nil {
+		s.Fatal("Failed to mute: ", err)
+	}
+	defer cancel()
+	defer crastestclient.Unmute(ctxCleanup)
+
+	// Force-enable ChromeVox for the duration of this test.
+	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
+		s.Fatal("Failed to enable ChromeVox: ", err)
+	}
+	defer a11y.ClearFeature(ctxCleanup, tconn, a11y.SpokenFeedback)
+
 	ui := uiauto.New(tconn)
 	ttsLink := nodewith.NameStartingWith("Text-to-Speech").Role(role.Link)
 
@@ -63,7 +80,6 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		settingsWindowTitle: "ChromeVox Options",
 		openSettings: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
 			return uiauto.Combine("open ChromeVox settings",
-				ui.DoDefault(nodewith.Name("ChromeVox").Role(role.ToggleButton)),
 				ui.DoDefault(nodewith.Name("ChromeVox settings").Role(role.Link)),
 			)(ctx)
 		},
