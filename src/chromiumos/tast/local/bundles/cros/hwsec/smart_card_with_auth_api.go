@@ -37,7 +37,7 @@ func init() {
 		Func: SmartCardWithAuthAPI,
 		Desc: "Checks that Smart Cards work with AuthSession, AuthFactor and USS",
 		Contacts: []string{
-			"cryptohome-core@chromium.org",
+			"cryptohome-core@google.com",
 			"thomascedeno@google.com", // Test author
 		},
 		BugComponent: "b:1088399",

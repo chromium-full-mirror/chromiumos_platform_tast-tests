@@ -24,7 +24,7 @@ func init() {
 		Func: CryptohomeAuthFactorValidity,
 		Desc: "Checks that the AuthFactor APIs work in various TPM states",
 		Contacts: []string{
-			"cryptohome-core@chromium.org",
+			"cryptohome-core@google.com",
 			"jadmanski@chromium.org", // Test author
 		},
 		BugComponent: "b:1088399",
