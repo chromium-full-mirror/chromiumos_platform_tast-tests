@@ -206,7 +206,11 @@ func TestLockScreenIdle(
 	return uiauto.Combine("start, hide, and restart ambient mode",
 		lockScreen(ctx, tconn),
 		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
-		hideAmbientMode(tconn, ui),
+		hideAmbientMode(tconn, ui, mouseMove),
+		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+		hideAmbientMode(tconn, ui, mouseClick),
+		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+		hideAmbientMode(tconn, ui, keyboardClick),
 		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
 	)(ctx)
 }
@@ -310,11 +314,11 @@ func showMediaStringInScreensaver(ctx context.Context, ui *uiauto.Context) error
 	return nil
 }
 
-// hideAmbientMode returns an action to move the mouse to escape from ambient mode
-// and return to lockscreen.
+// hideAmbientMode returns an action to break from ambient mode and return to lockscreen.
 func hideAmbientMode(
 	tconn *chrome.TestConn,
 	ui *uiauto.Context,
+	hideMethod func(context.Context, *uiauto.Context) error,
 ) uiauto.Action {
 	return func(ctx context.Context) error {
 		container := nodewith.ClassName("LockScreenAmbientModeContainer").Role(role.Window)
@@ -322,9 +326,7 @@ func hideAmbientMode(
 			return errors.Wrap(err, "failed to find lock screen ambient mode container")
 		}
 
-		// Move the mouse a small amount. Ambient mode should turn off. Session
-		// should still be locked.
-		if err := moveMouse(ctx); err != nil {
+		if err := hideMethod(ctx, ui); err != nil {
 			return err
 		}
 
@@ -341,9 +343,9 @@ func hideAmbientMode(
 	}
 }
 
-// moveMouse moves the mouse a small amount. Ambient mode should turn off. Session
+// mouseMove moves the mouse a small amount. Ambient mode should turn off. Session
 // should still be locked.
-func moveMouse(ctx context.Context) error {
+func mouseMove(ctx context.Context, ui *uiauto.Context) error {
 	mouse, err := input.Mouse(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get mouse")
@@ -358,5 +360,27 @@ func moveMouse(ctx context.Context) error {
 		return errors.Wrap(err, "failed to move mouse")
 	}
 
+	return nil
+}
+
+// mouseClick triggers a mouse click event to exit ambient mode.
+func mouseClick(ctx context.Context, ui *uiauto.Context) error {
+	if err := ui.MouseClickAtLocation(0, coords.Point{X: 200, Y: 200})(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+// keyboardClick triggers a keyboard click event to exit ambient mode.
+func keyboardClick(ctx context.Context, ui *uiauto.Context) error {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer kb.Close()
+
+	if err := kb.TypeAction("a")(ctx); err != nil {
+		return err
+	}
 	return nil
 }
