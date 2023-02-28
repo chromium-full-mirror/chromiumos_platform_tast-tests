@@ -417,7 +417,7 @@ func GetStorageType(ctx context.Context) string {
 		testing.ContextLog(ctx, "Failed to get storage type")
 		return ""
 	}
-	return path.Base(string(readResult))
+	return strings.TrimSpace(path.Base(string(readResult)))
 }
 
 func hasScreen(ctx context.Context) bool {

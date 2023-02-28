@@ -7,6 +7,7 @@ package power
 import (
 	"context"
 	"io/ioutil"
+	"math"
 	"os"
 	"path"
 	"strconv"
@@ -191,6 +192,29 @@ func ReadSystemPower(ctx context.Context, devPath string) (float64, error) {
 	// voltage_now and current_now reports their value in micro unit
 	// so adjust this to match with Watt.
 	return supplyVoltage * supplyCurrent * 1e-12, nil
+}
+
+// ReadBatterySize returns the size of battery in Wh.
+func ReadBatterySize(ctx context.Context, devPath string) (float64, error) {
+	var result float64
+	if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full_design"); err == nil {
+		// Battery reports energy type data.
+		result = readBattery
+	} else {
+		// Battery reports charge type data.
+		chargeFullDesign, err := ReadBatteryProperty(ctx, devPath, "charge_full_design")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		voltageNominal, err := ReadBatteryProperty(ctx, devPath, "voltage_min_design")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		result = chargeFullDesign * voltageNominal * 1e-12
+	}
+	return math.Round(result), nil
 }
 
 // ReadBatteryProperty reads the battery property file content from the given
