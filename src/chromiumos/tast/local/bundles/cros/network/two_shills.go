@@ -16,10 +16,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     TwoShills,
-		Desc:     "Verifies that an attempt to spawn a second instance of shill while an instance is already running will fail",
-		Contacts: []string{"deanliao@google.com", "cros-networking@google.com"},
-		Attr:     []string{"group:mainline"},
+		BugComponent: "b:1166446",
+		Func:         TwoShills,
+		Desc:         "Verifies that an attempt to spawn a second instance of shill while an instance is already running will fail",
+		Contacts: []string{
+			"cros-network-health-team@google.com", // Network Health team
+			"deanliao@google.com",                 // Test author
+			"cros-networking@google.com",
+		},
+		Attr: []string{"group:mainline"},
 	})
 }
 
