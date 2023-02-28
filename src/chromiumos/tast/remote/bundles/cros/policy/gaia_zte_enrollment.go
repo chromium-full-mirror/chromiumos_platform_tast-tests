@@ -33,8 +33,8 @@ func init() {
 		Desc:         "ZTE GAIA Enroll a device without checking policies",
 		BugComponent: "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Contacts: []string{
-			"rzakarian@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"rzakarian@google.com", // Test author
 		},
 		Attr:         []string{"group:dmserver-zteenrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
