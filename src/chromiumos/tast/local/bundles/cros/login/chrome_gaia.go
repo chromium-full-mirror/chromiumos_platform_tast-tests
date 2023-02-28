@@ -20,7 +20,6 @@ func init() {
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"bohdanty@google.com",
-			"tast-owners@google.com",
 			"cros-oac@google.com",
 			"chromeos-sw-engprod@google.com",
 		},

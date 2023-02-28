@@ -17,10 +17,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     RemoteTimeout,
 		Desc:     "Always times out",
-		Contacts: []string{"tast-owners@google.com"},
+		Contacts: []string{"tast-core@google.com"},
 		Timeout:  timeout,
-		// ChromeOS > Test > Harness > Tast > Framework
-		BugComponent: "b:1034754",
+		// ChromeOS > Test > Harness > Tast > Examples
+		BugComponent: "b:1034522",
 	})
 }
 
