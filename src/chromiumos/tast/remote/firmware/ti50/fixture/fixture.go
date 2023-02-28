@@ -103,9 +103,19 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if err := i.dialGrpc(ctx); err != nil {
 		s.Fatal("dial grpc: ", err)
 	}
+	board := remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 0, 0*time.Second)
+	defer board.Close(ctx)
 
-	if err := i.flashImage(ctx); err != nil {
-		s.Fatal("flash image: ", err)
+	imagePath := ""
+	var fwConfigJsons []string
+	if i.imageValue != nil {
+		imagePath = i.imageValue.ImagePath()
+		fwConfigJsons = i.imageValue.FwConfigPaths()
+	}
+
+	testing.ContextLog(ctx, "Setting up image: ", imagePath)
+	if err := board.Setup(ctx, imagePath, fwConfigJsons); err != nil {
+		s.Fatal("Setup: ", err)
 	}
 
 	i.v.ImagePath = i.imageValue.ImagePath()
@@ -128,16 +138,16 @@ func (i *impl) Reset(ctx context.Context) error {
 
 func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Starting OTT session")
-	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 100000, time.Second)
+	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 10000, time.Second)
 	// At this point, the plan is to start an opentitantool session, which could invove either
 	// starting a host emulation instance, or resetting a devboard and its debugger to a known
 	// state.
-	if _, err := i.v.devboard.OpenTitanToolCommand(ctx, "transport", "init"); err != nil {
+	if err := i.v.devboard.StartSession(ctx); err != nil {
 		if err2 := i.v.devboard.Close(ctx); err2 != nil {
 			s.Error("Failed to close devboard: ", err2)
 		}
 		i.v.devboard = nil
-		s.Fatal("Failed to reset debugger: ", err)
+		s.Fatal("Failed to start session: ", err)
 	}
 }
 
@@ -145,6 +155,9 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Ending OTT session")
 	// At this point, we should end the opentitantool session, that is, stop host emulator, or
 	// disconnect from devboard.
+	if err := i.v.devboard.EndSession(ctx); err != nil {
+		s.Error("Failed to end session: ", err)
+	}
 	if err := i.v.devboard.Close(ctx); err != nil {
 		s.Fatal("Failed to close devboard: ", err)
 	}
@@ -165,34 +178,6 @@ func (i *impl) String() string {
 		return DevBoardService + "_" + i.imageValue.ImageType()
 	}
 	return DevBoardService
-}
-
-// flashImage flashes the fixture's image onto the board.
-func (i *impl) flashImage(ctx context.Context) error {
-	if i.imageValue == nil {
-		return nil
-	}
-
-	f := i.imageValue.ImagePath()
-	if f == "" {
-		return nil
-	}
-
-	board := remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 0, 0*time.Second)
-	defer board.Close(ctx)
-
-	testing.ContextLog(ctx, "Flash image: ", f)
-	if err := board.FlashImage(ctx, f); err != nil {
-		return err
-	}
-
-	/*testing.ContextLog(ctx, "Initial board reset")
-	if err := board.Reset(ctx); err != nil {
-		return err
-	}
-	*/
-
-	return nil
 }
 
 // dialGrpc connects to the devboardsvc host.

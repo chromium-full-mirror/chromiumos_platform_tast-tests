@@ -67,6 +67,64 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeou
 	return &DUTControlAndreiboard{client: dutControlClient, Andreiboard: ab}
 }
 
+// Setup will tell the devboard service which binary image and configuration we want to use.
+func (a *DUTControlAndreiboard) Setup(ctx context.Context, image string, fwConfs []string) (err error) {
+	req := &dutcontrol.SetupRequest{}
+	if image != "" {
+		imageBytes, err := ioutil.ReadFile(image)
+		if err != nil {
+			return errors.Wrapf(err, "reading image file %q", image)
+		}
+		req.FlashImage = &dutcontrol.File{FileName: image, Contents: imageBytes}
+	}
+
+	req.ConfFiles = []*dutcontrol.File{}
+	for _, conf := range fwConfs {
+		confBytes, err := ioutil.ReadFile(conf)
+		if err != nil {
+			return errors.Wrapf(err, "reading conf file %q", conf)
+		}
+		req.ConfFiles = append(req.ConfFiles, &dutcontrol.File{FileName: conf, Contents: confBytes})
+	}
+
+	resp, err := a.client.Setup(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "Setup request")
+	}
+	if resp.Err != "" {
+		return errors.Errorf("Setup operation failed: %s", resp.Err)
+	}
+	return nil
+}
+
+// StartSession will initialize the devboard and debugger to a known state.
+func (a *DUTControlAndreiboard) StartSession(ctx context.Context) (err error) {
+	req := &dutcontrol.StartSessionRequest{}
+
+	resp, err := a.client.StartSession(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "StartSession request")
+	}
+	if resp.Err != "" {
+		return errors.Errorf("StartSession operation failed: %s", resp.Err)
+	}
+	return nil
+}
+
+// EndSession will tear down host emulation (probably do nothing for devboards).
+func (a *DUTControlAndreiboard) EndSession(ctx context.Context) (err error) {
+	req := &dutcontrol.EndSessionRequest{}
+
+	resp, err := a.client.EndSession(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "EndSession request")
+	}
+	if resp.Err != "" {
+		return errors.Errorf("EndSession operation failed: %s", resp.Err)
+	}
+	return nil
+}
+
 // FlashImage flashes image at the specified path on localhost to the board.
 func (a *DUTControlAndreiboard) FlashImage(ctx context.Context, image string) (err error) {
 	imageBytes, err := ioutil.ReadFile(image)

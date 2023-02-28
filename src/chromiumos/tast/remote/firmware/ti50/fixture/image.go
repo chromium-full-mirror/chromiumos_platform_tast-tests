@@ -22,6 +22,10 @@ const (
 	// BuildURL is the arg name for the directory of the gs build or full path of the image (local or in gs).
 	BuildURL = "buildurl"
 
+	// FwConfigJSON is the arg name for the json configuration file (for use in case buildurl
+	// specifies a single .bin file, rather than a directory).
+	FwConfigJSON = "fw_configjson"
+
 	// Ti50Image fixture downloads the ti50 image bin.
 	Ti50Image = "ti50Image"
 
@@ -46,7 +50,7 @@ func init() {
 		Desc:            "Provides access to a Ti50 image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            &imageImpl{image: Ti50Image},
-		Vars:            []string{BuildURL},
+		Vars:            []string{BuildURL, FwConfigJSON},
 		SetUpTimeout:    imageDownloadTimeout,
 		TearDownTimeout: imageDeleteTimeout,
 	})
@@ -55,16 +59,17 @@ func init() {
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            &imageImpl{image: SystemTestAutoImage},
-		Vars:            []string{BuildURL},
+		Vars:            []string{BuildURL, FwConfigJSON},
 		SetUpTimeout:    imageDownloadTimeout,
 		TearDownTimeout: imageDeleteTimeout,
 	})
 }
 
-// ImageValue provides access to a image binary.
+// ImageValue provides access to a image binary along with json configuration files.
 type ImageValue struct {
-	imagePath string
-	imageType string
+	imagePath   string
+	imageType   string
+	configPaths []string
 }
 
 // ImagePath returns the path to the image binary.
@@ -77,6 +82,11 @@ func (v *ImageValue) ImageType() string {
 	return v.imageType
 }
 
+// FwConfigPaths returns the list of json FW configuration files to use with the image.
+func (v *ImageValue) FwConfigPaths() []string {
+	return v.configPaths
+}
+
 type imageImpl struct {
 	image      string
 	downloaded bool
@@ -87,7 +97,12 @@ func (i *imageImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{}
 	url, _ := s.Var(BuildURL)
 	i.v = &ImageValue{imageType: i.image}
 
-	if err := i.downloadImage(ctx, url); err != nil {
+	var confs []string
+	if conf, ok := s.Var(FwConfigJSON); ok {
+		confs = append(confs, conf)
+	}
+
+	if err := i.downloadImage(ctx, url, confs); err != nil {
 		s.Fatal("download image: ", err)
 	}
 
@@ -118,7 +133,7 @@ func (i *imageImpl) String() string {
 
 // downloadImage downloads the image from google storage if necessary.
 // inputURL can be a local file, a gs file, or a gs build folder.
-func (i *imageImpl) downloadImage(ctx context.Context, inputURL string) error {
+func (i *imageImpl) downloadImage(ctx context.Context, inputURL string, configPaths []string) error {
 	if i.image == "" {
 		return nil
 	}
@@ -126,6 +141,7 @@ func (i *imageImpl) downloadImage(ctx context.Context, inputURL string) error {
 	if inputURL == "" {
 		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, i)
 		i.v.imagePath = ""
+		i.v.configPaths = configPaths
 		return nil
 	}
 
@@ -166,10 +182,14 @@ func (i *imageImpl) downloadImage(ctx context.Context, inputURL string) error {
 			return errors.Wrapf(err, "download %q", fullURL)
 		}
 		i.v.imagePath = f.Name()
+		// TODO: Figure out how to fetch FW config json files from build folder, in case
+		// the command line argument is not present.
+		i.v.configPaths = configPaths
 		i.downloaded = true
 		return nil
 	}
 
 	i.v.imagePath = inputURL
+	i.v.configPaths = configPaths
 	return nil
 }
