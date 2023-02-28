@@ -131,6 +131,9 @@ func WaitForAuthError(ctx context.Context, tconn *chrome.TestConn, timeout time.
 // TypePassword enters the given password (without submitting). Refer to PasswordFieldFinder for username options.
 // It doesn't make any assumptions about the password being correct, so callers should verify the login/lock state afterwards.
 func TypePassword(ctx context.Context, tconn *chrome.TestConn, username, password string, kb *input.KeyboardEventWriter) error {
+	if st, err := WaitState(ctx, tconn, func(st State) bool { return st.ReadyForPassword }, 3*uiTimeout); err != nil {
+		return errors.Wrapf(err, "failed to wait for screen to be ready for password (last status %+v)", st)
+	}
 	field, err := PasswordFieldFinder(username)
 	if err != nil {
 		return err
@@ -154,9 +157,6 @@ func TypePassword(ctx context.Context, tconn *chrome.TestConn, username, passwor
 
 // EnterPassword types password with carriage return at the end.
 func EnterPassword(ctx context.Context, tconn *chrome.TestConn, username, password string, kb *input.KeyboardEventWriter) error {
-	if st, err := WaitState(ctx, tconn, func(st State) bool { return st.ReadyForPassword }, 3*uiTimeout); err != nil {
-		return errors.Wrapf(err, "failed to wait for screen to be ready for password (last status %+v)", st)
-	}
 	return TypePassword(ctx, tconn, username, password+"\n", kb)
 }
 
