@@ -98,10 +98,10 @@ func LogoutCleanup(ctx context.Context, s *testing.State) {
 		// owned by chronos.
 		cmds = append(cmds,
 			testexec.CommandContext(
-				ctx, "su", "chronos", "-c", "while :; do sleep 30 ; done"),
+				ctx, "sudo", "-u", "chronos", "--", "sh", "-c", "while :; do sleep 30; done"),
 			// Create a test process that ignores SIGTEREM (15).
 			testexec.CommandContext(
-				ctx, "su", "chronos", "-c", "trap 15; while :; do sleep 30 ; done"))
+				ctx, "sudo", "-u", "chronos", "--", "sh", "-c", "trap 15; while :; do sleep 30; done"))
 		for _, cmd := range cmds {
 			if err := cmd.Start(); err != nil {
 				s.Fatal("Failed to start command: ", err)
