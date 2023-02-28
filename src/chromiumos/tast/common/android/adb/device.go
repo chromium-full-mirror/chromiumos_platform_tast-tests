@@ -734,3 +734,26 @@ func (d *Device) GetSurfaceLatency(ctx context.Context, surface string) (string,
 func (d *Device) ClearState(ctx context.Context, surface string) error {
 	return d.ShellCommand(ctx, "dumpsys", "SurfaceFlinger", "--latency-clear", surface).Run(testexec.DumpLogOnError)
 }
+
+// DumpUIOnError dumps the UIAutomator tree and saves it to the specified outdir on error.
+func (d *Device) DumpUIOnError(ctx context.Context, outdir string, hasError func() bool) error {
+	if !hasError() {
+		return nil
+	}
+	if err := d.ShellCommand(ctx, "uiautomator", "dump").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to dump the UI")
+	}
+	if err := d.PullFile(ctx, "/sdcard/window_dump.xml", outdir); err != nil {
+		return errors.Wrap(err, "failed to save UIAutomator dump")
+	}
+	return nil
+}
+
+// ShowTouches enables the setting to show touches in the UI.
+func (d *Device) ShowTouches(ctx context.Context, enable bool) error {
+	b := "0"
+	if enable {
+		b = "1"
+	}
+	return d.ShellCommand(ctx, "settings", "put", "system", "show_touches", b).Run(testexec.DumpLogOnError)
+}

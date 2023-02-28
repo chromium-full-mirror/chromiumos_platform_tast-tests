@@ -213,6 +213,11 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	}
 	if len(gmsVersions) < 2 {
 		s.Log("Single GMSCore version detected, phone was recently factory restored. Attempting GMSCore update")
+		defer func() {
+			if err := adbDevice.DumpUIOnError(ctx, s.OutDir(), s.HasError); err != nil {
+				s.Log("Failed to save UIAutomator dump: ", err)
+			}
+		}()
 		if err := adbDevice.ForceGMSCoreUpdate(ctx); err != nil {
 			s.Fatal("Failed to force a GMSCore update: ", err)
 		}
@@ -221,6 +226,9 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 			return errors.Wrap(err, "failed to connect to the UI Automator server")
 		}
 		defer uiDevice.Close(ctx)
+		if err := adbDevice.ShowTouches(ctx, true); err != nil {
+			s.Log("Failed to enable show_touches setting: ", err)
+		}
 		updateBtn := uiDevice.Object(ui.DescriptionContains("Update"))
 		if err := testing.Poll(ctx, func(context.Context) error {
 			if err := updateBtn.Exists(ctx); err == nil { // button is present
