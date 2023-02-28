@@ -36,7 +36,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "projectorLogin",
 		Desc:     "Regular user login with Projector feature flag enabled",
-		Contacts: []string{"tobyhuang@chromium.org", "cros-projector@google.com"},
+		Contacts: []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
@@ -79,7 +79,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "projectorUnicornLogin",
 		Desc:     "Supervised Family Link user login with Unicorn account and fakeDMS policy setup for Projector tests",
-		Contacts: []string{"tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts: []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
@@ -108,27 +108,23 @@ func init() {
 	// Managed user login requires fakeDMS to work.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "projectorEduLogin",
-		Desc:     "Managed EDU user login with fakeDMS policy setup for Projector tests",
-		Contacts: []string{"tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
+		Desc:     "Managed user login with fakeDMS setup for Projector tests",
+		Contacts: []string{"cros-projector+tast@google.com", "xiqiruan@chromium.org"},
 		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chromeFlags,
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("projector.eduEmail"),
-					Pass: s.RequiredVar("projector.eduPassword"),
-				}),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			}, nil
 		}),
 		Vars: []string{
-			"projector.eduEmail",
-			"projector.eduPassword",
+			"ui.gaiaPoolDefault",
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
-		Parent:          fixture.PersistentProjectorEDU,
+		Parent:          fixture.FakeDMS,
 	})
 }
 

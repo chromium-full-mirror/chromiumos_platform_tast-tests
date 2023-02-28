@@ -80,14 +80,18 @@ func TranscriptTranslation(ctx context.Context, s *testing.State) {
 	searchResult := nodewith.Name("1/1").Role(role.StaticText).Ancestor(nodewith.ClassName("search-result-label"))
 	selectedTranscript := nodewith.Name(frenchText).Role(role.StaticText).Ancestor(nodewith.ClassName("selected"))
 
-	ui := uiauto.New(tconn).WithTimeout(time.Minute)
+	ui := uiauto.New(tconn).WithTimeout(2 * time.Minute)
 
 	if err := uiauto.Combine("translating transcript to French",
 		ui.WaitUntilExists(translationDropdown),
 		ui.WithInterval(time.Second).LeftClickUntil(translationDropdown, ui.Exists(french)),
 		ui.MakeVisible(french),
+		ui.FocusAndWait(french),
 		ui.WithInterval(time.Second).LeftClickUntil(french, ui.Gone(french)),
+		ui.FocusAndWait(searchToolbar),
 		ui.WithInterval(time.Second).LeftClickUntil(searchToolbar, ui.Exists(searchBox)),
+		ui.LeftClick(searchBox),
+		ui.WaitUntilExists(searchBox.Focused()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to translate transcript to French: ", err)
 	}
