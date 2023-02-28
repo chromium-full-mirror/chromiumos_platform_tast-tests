@@ -39,6 +39,7 @@ import (
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 const (
@@ -57,7 +58,7 @@ type loginPerfTestParam struct {
 	checkTabletMode  bool             // Whether to check the Tablet mode in addition to the Clamshell mode.
 	bt               browser.Type     // browser.{TypeAsh/TypeLacros}
 	lacrosSelection  lacros.Selection // lacros.{Omaha,Rootfs}
-	lacrosMode       lacros.Mode      // lacros.{LacrosPrimary,LacrosSideBySide}
+	lacrosMode       lacros.Mode      // lacros.{LacrosPrimary,LacrosOnly}
 	preloadLacros    bool             // Whether to enable LacrosLaunchAtLoginScreen feature
 	dropCaches       bool             // Whether to drop block caches before starting test.
 }
@@ -107,8 +108,9 @@ func init() {
 				true,  // dropCaches
 			},
 		}, {
-			Name:      "lacros_chrome_root_fs_primary",
-			ExtraAttr: []string{"group:cuj"},
+			Name:              "lacros_chrome_root_fs_primary",
+			ExtraAttr:         []string{"group:cuj"},
+			ExtraSoftwareDeps: []string{"lacros"},
 			Val: loginPerfTestParam{
 				true, // checkArcAllModes
 				true, // checkTabletMode
@@ -119,8 +121,9 @@ func init() {
 				false, // dropCaches
 			},
 		}, {
-			Name:      "lacros_chrome_root_fs_primary_cold_boot",
-			ExtraAttr: []string{"group:cuj"},
+			Name:              "lacros_chrome_root_fs_primary_cold_boot",
+			ExtraAttr:         []string{"group:cuj"},
+			ExtraSoftwareDeps: []string{"lacros"},
 			Val: loginPerfTestParam{
 				false, // checkArcAllModes
 				false, // checkTabletMode
@@ -131,8 +134,9 @@ func init() {
 				true,  // dropCaches
 			},
 		}, {
-			Name:      "lacros_chrome_root_fs_primary_enable_preload",
-			ExtraAttr: []string{"group:cuj"},
+			Name:              "lacros_chrome_root_fs_primary_enable_preload",
+			ExtraAttr:         []string{"group:cuj"},
+			ExtraSoftwareDeps: []string{"lacros"},
 			Val: loginPerfTestParam{
 				false, // checkArcAllModes
 				false, // checkTabletMode
@@ -143,8 +147,9 @@ func init() {
 				false, // dropCaches
 			},
 		}, {
-			Name:      "lacros_chrome_root_fs_primary_enable_preload_cold_boot",
-			ExtraAttr: []string{"group:cuj"},
+			Name:              "lacros_chrome_root_fs_primary_enable_preload_cold_boot",
+			ExtraAttr:         []string{"group:cuj"},
+			ExtraSoftwareDeps: []string{"lacros"},
 			Val: loginPerfTestParam{
 				false, // checkArcAllModes
 				false, // checkTabletMode
@@ -155,40 +160,17 @@ func init() {
 				true, // dropCaches
 			},
 		}, {
-			Name:      "lacros_chrome_root_fs_side_by_side",
-			ExtraAttr: []string{"group:cuj"},
-			Val: loginPerfTestParam{
-				true, // checkArcAllModes
-				true, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
-				lacros.LacrosSideBySide,
-				false, // preloadLacros
-				false, // dropCaches
-			},
-		}, {
 			Name: "lacros_chrome_omaha_primary",
 			// Disabled per b/246818834.
-			ExtraAttr: []string{},
+			ExtraAttr:         []string{},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */)),
+			ExtraSoftwareDeps: []string{"lacros"},
 			Val: loginPerfTestParam{
 				true, // checkArcAllModes
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Omaha,
 				lacros.LacrosPrimary,
-				false, // preloadLacros
-				false, // dropCaches
-			},
-		}, {
-			Name: "lacros_chrome_omaha_side_by_side",
-			// Disabled per b/246818834.
-			ExtraAttr: []string{},
-			Val: loginPerfTestParam{
-				true, // checkArcAllModes
-				true, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Omaha,
-				lacros.LacrosSideBySide,
 				false, // preloadLacros
 				false, // dropCaches
 			},

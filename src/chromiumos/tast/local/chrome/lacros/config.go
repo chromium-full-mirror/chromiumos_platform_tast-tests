@@ -48,9 +48,10 @@ const (
 type Mode string
 
 // Valid values for Mode.
+// LacrosSideBySide is no longer supported in Tast, while it is still served
+// for developers in Chrome.
 const (
-	LacrosSideBySide Mode = "LacrosSideBySide"
-	LacrosPrimary    Mode = "LacrosPrimary"
-	LacrosOnly       Mode = "LacrosOnly"
-	NotSpecified     Mode = "NotSpecified"
+	LacrosPrimary Mode = "LacrosPrimary"
+	LacrosOnly    Mode = "LacrosOnly"
+	NotSpecified  Mode = "NotSpecified"
 )

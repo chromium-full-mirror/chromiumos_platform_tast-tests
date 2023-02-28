@@ -261,8 +261,6 @@ func toLacrosConfig(req *pb.NewRequest) (lcfg *lacrosfixt.Config, err error) {
 	switch req.GetLacros().GetMode() {
 	case pb.Lacros_MODE_UNSPECIFIED:
 		mode = lacros.NotSpecified
-	case pb.Lacros_MODE_SIDEBYSIDE:
-		mode = lacros.LacrosSideBySide
 	case pb.Lacros_MODE_PRIMARY:
 		mode = lacros.LacrosPrimary
 	case pb.Lacros_MODE_ONLY:

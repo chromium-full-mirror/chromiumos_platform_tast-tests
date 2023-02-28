@@ -133,9 +133,10 @@ enum LoginMode {
 // selection of whether rootfs or stateful is used.
 message Lacros {
   // Mode is whether Lacros is enabled as a primary browser or else.
+  // MODE_SIDEBYSIDE = 1 is no longer supported in Tast, while it is still served
+  // for developers in Chrome.
   enum Mode {
     MODE_UNSPECIFIED = 0;
-    MODE_SIDEBYSIDE = 1;
     MODE_PRIMARY = 2;
     MODE_ONLY = 3;
     MODE_DISABLED = 4;    // disable Lacros

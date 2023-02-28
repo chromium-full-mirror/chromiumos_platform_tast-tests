@@ -46,7 +46,7 @@ func BrowserWithNewChrome(ctx context.Context, s *testing.State) {
 		{browser.TypeAsh, lacrosfixt.NewConfig()},    // LacrosConfig is a no-op for ash-chrome.
 		{browser.TypeLacros, lacrosfixt.NewConfig()}, // default config
 		{browser.TypeLacros, lacrosfixt.NewConfig(
-			lacrosfixt.Selection(lacros.Rootfs), lacrosfixt.Mode(lacros.LacrosSideBySide))}, // custom config
+			lacrosfixt.Selection(lacros.Rootfs), lacrosfixt.KeepAlive(true))}, // custom config
 	} {
 		bt := param.bt
 		cfg := param.cfg
