@@ -24,7 +24,7 @@ func init() {
 			"jettrink@chromium.org",
 		},
 		SoftwareDeps: []string{"unibuild"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
