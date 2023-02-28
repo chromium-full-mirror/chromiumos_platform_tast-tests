@@ -28,6 +28,7 @@ func init() {
 		SoftwareDeps: []string{"cups"},
 		Attr: []string{
 			"group:mainline",
+			"informational",
 			"group:paper-io",
 			"paper-io_printing",
 		},
