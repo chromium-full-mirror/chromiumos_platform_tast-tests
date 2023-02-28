@@ -31,33 +31,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// filesArcWarnPolicy is a DLP policy that warns when transferring a file to Play files or any URL.
-var filesArcWarnPolicy = []policy.Policy{&policy.DataLeakPreventionRulesList{
-	Val: []*policy.DataLeakPreventionRulesListValue{
-		{
-			Name:        "Warn before transferring a confidential file to Play files",
-			Description: "User should be warned before transferring a confidential file to Play files",
-			Sources: &policy.DataLeakPreventionRulesListValueSources{
-				Urls: []string{
-					"*",
-				},
-			},
-			Destinations: &policy.DataLeakPreventionRulesListValueDestinations{
-				Components: []string{
-					"ARC",
-				},
-			},
-			Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
-				{
-					Class: "FILES",
-					Level: "WARN",
-				},
-			},
-		},
-	},
-},
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListFilesArc,
@@ -76,15 +49,16 @@ func init() {
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),
 		},
 		Params: []testing.Param{
 			{
 				Name:              "arc_container",
-				Fixture:           fixture.ChromeEnrolledLoggedInARC,
+				Fixture:           fixture.ChromePolicyLoggedInARC,
 				ExtraSoftwareDeps: []string{"android_p"},
 			}, {
 				Name:              "arc_vm",
-				Fixture:           fixture.ChromeEnrolledLoggedInARC,
+				Fixture:           fixture.ChromePolicyLoggedInARC,
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},
 		},
@@ -96,6 +70,10 @@ func init() {
 }
 
 func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) {
+	const (
+		bootTimeout = 4 * time.Minute
+	)
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -112,12 +90,39 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	// Update the policy.
-	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, filesArcWarnPolicy); err != nil {
-		s.Fatal("Failed to serve and verify policy: ", err)
+	filesArcWarnPolicies := []policy.Policy{&policy.DataLeakPreventionRulesList{
+		Val: []*policy.DataLeakPreventionRulesListValue{
+			{
+				Name:        "Warn before transferring a confidential file to Play files",
+				Description: "User should be warned before transferring a confidential file to Play files",
+				Sources: &policy.DataLeakPreventionRulesListValueSources{
+					Urls: []string{
+						"*",
+					},
+				},
+				Destinations: &policy.DataLeakPreventionRulesListValueDestinations{
+					Components: []string{
+						"ARC",
+					},
+				},
+				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
+					{
+						Class: "FILES",
+						Level: "WARN",
+					},
+				},
+			},
+		},
+	},
+		&policy.ArcEnabled{Val: true, Stat: policy.StatusSet},
+	}
+
+	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, filesArcWarnPolicies); err != nil {
+		s.Fatal("Failed to serve and verify policies: ", err)
 	}
 
 	if err := files.ClearDownloads(ctx, cr); err != nil {
-		s.Fatal("Failed to clear Downloads directory: ", err)
+		s.Error("Failed to clear Downloads directory: ", err)
 	}
 
 	tconnAsh, err := cr.TestAPIConn(ctx)
@@ -132,16 +137,11 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
 
 	// Setup Arc.
-	a, err := arc.New(ctx, s.OutDir())
+	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
 	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
+		s.Fatal("Failed to start ARC by policy: ", err)
 	}
 	defer a.Close(cleanupCtx)
-
-	// Wait for the volume to mount. Needed to access Play files.
-	if err := arc.WaitForARCSDCardVolumeMount(ctx, a); err != nil {
-		s.Fatal("Failed to wait for the sdcard volume to be mounted in ARC: ", err)
-	}
 
 	// Create Browser.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
@@ -166,9 +166,6 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to close notifications: ", err)
 	}
 
-	// Start interacting with the UI.
-	ui := uiauto.New(tconnAsh)
-
 	if err := files.DownloadFile(ctx, tconnAsh, br, s.DataFileSystem()); err != nil {
 		s.Fatal("Failed to download file: ", err)
 	}
@@ -183,6 +180,9 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	if err := filesApp.OpenDownloads()(ctx); err != nil {
 		s.Fatal("Failed to open Downloads: ", err)
 	}
+
+	// Start interacting with the UI.
+	ui := uiauto.New(tconnAsh)
 
 	if err := isFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, true); err != nil {
 		s.Error("File isn't managed when it should be: ", err)
