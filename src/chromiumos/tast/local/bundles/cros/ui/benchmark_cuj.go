@@ -13,6 +13,8 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const defaultTimeout = 15 * time.Minute
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BenchmarkCUJ,
@@ -25,10 +27,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:    "speedometer",
+				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
@@ -37,6 +39,7 @@ func init() {
 			},
 			{
 				Name:    "lacros_speedometer",
+				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
@@ -46,6 +49,7 @@ func init() {
 			},
 			{
 				Name:    "motionmark",
+				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
@@ -54,6 +58,7 @@ func init() {
 			},
 			{
 				Name:    "lacros_motionmark",
+				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
@@ -63,6 +68,7 @@ func init() {
 			},
 			{
 				Name:    "jetstream",
+				Timeout: 25 * time.Minute,
 				Fixture: "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
@@ -71,6 +77,7 @@ func init() {
 			},
 			{
 				Name:    "lacros_jetstream",
+				Timeout: 25 * time.Minute,
 				Fixture: "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
@@ -80,6 +87,7 @@ func init() {
 			},
 			{
 				Name:    "kraken",
+				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
@@ -88,6 +96,7 @@ func init() {
 			},
 			{
 				Name:    "lacros_kraken",
+				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
