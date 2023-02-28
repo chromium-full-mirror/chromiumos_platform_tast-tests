@@ -18,7 +18,6 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
-	conciergepb "chromiumos/system_api/vm_concierge_proto"
 	"chromiumos/tast/caller"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
@@ -82,11 +81,9 @@ type ContainerType struct {
 // Container encapsulates a container running in a VM.
 type Container struct {
 	// VM is the VM in which this container is running.
-	VM                 *VM
-	containerName      string // name of the container
-	username           string // username of the container's primary user
-	hostPrivateKey     string // private key to use when doing sftp to container
-	containerPublicKey string // known_hosts for doing sftp to container
+	VM            *VM
+	containerName string // name of the container
+	username      string // username of the container's primary user
 }
 
 // locked is used to prevent creation of a container while the precondition is being used.
@@ -373,58 +370,46 @@ func (c *Container) GetIPv4Address(ctx context.Context) (ip string, err error) {
 	return findIPv4(string(out))
 }
 
-func (c *Container) getContainerSSHKeys(ctx context.Context) error {
-	if len(c.hostPrivateKey) > 0 && len(c.containerPublicKey) > 0 {
-		return nil
-	}
-	_, conciergeObj, err := dbusutil.Connect(ctx, conciergeName, conciergePath)
-	if err != nil {
-		return err
-	}
-	resp := &conciergepb.ContainerSshKeysResponse{}
-	if err := dbusutil.CallProtoMethod(ctx, conciergeObj, conciergeInterface+".GetContainerSshKeys",
-		&conciergepb.ContainerSshKeysRequest{
+func (c *Container) sftpVsockPort(ctx context.Context) (uint32, error) {
+	resp := &cpb.GetGarconSessionInfoResponse{}
+	if err := dbusutil.CallProtoMethod(ctx, c.VM.Concierge.ciceroneObj, ciceroneInterface+".GetGarconSessionInfo",
+		&cpb.GetGarconSessionInfoRequest{
 			VmName:        c.VM.name,
 			ContainerName: c.containerName,
-			CryptohomeId:  c.VM.Concierge.ownerID,
+			OwnerId:       c.VM.Concierge.ownerID,
 		}, resp); err != nil {
-		return err
+		return 0, err
 	}
 
-	c.hostPrivateKey = resp.HostPrivateKey
-	c.containerPublicKey = resp.ContainerPublicKey
-	return nil
+	return resp.SftpVsockPort, nil
 }
 
 // sftpCommand executes an SFTP command to perform a file transfer with the container.
 // sftpCmd is any sftp command to be batch executed by sftp "-b" option.
 func (c *Container) sftpCommand(ctx context.Context, sftpCmd string) error {
-	if err := c.getContainerSSHKeys(ctx); err != nil {
-		return errors.Wrap(err, "failed to get container ssh keys")
-	}
-
-	ip, err := c.GetIPv4Address(ctx)
+	sftpVsockPort, err := c.sftpVsockPort(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get container IP address")
+		return errors.Wrap(err, "failed to get container sftp port")
 	}
 
-	// Create temp dir to store sftp keys and command.
+	// Create temp dir to store sftp command and vsock adapter script.
+	// The adapter script is required to use sftp over vsock.
 	// Though we can also pipe the commands to sftp via stdin, errors are not reflected on the
 	// exit code of the sftp process. The exit code of "sftp -b" honors errors.
 	dir, err := ioutil.TempDir("", "tast_vm_sftp_")
 	if err != nil {
-		return errors.Wrap(err, "failed to create temp dir for sftp keys and command")
+		return errors.Wrap(err, "failed to create temp dir for sftp")
 	}
 	defer os.RemoveAll(dir)
-	privateKeyFile := filepath.Join(dir, "private_key")
-	knownHostsFile := filepath.Join(dir, "known_hosts")
+
+	sftpAdapter := fmt.Sprintf(`#!/bin/sh
+exec socat stdio vsock-connect:%d:%d
+`, c.VM.ContextID, sftpVsockPort)
+
+	sftpAdapterFile := filepath.Join(dir, "sftp_adapter")
 	cmdFile := filepath.Join(dir, "cmd")
-	if err := ioutil.WriteFile(privateKeyFile, []byte(c.hostPrivateKey), 0600); err != nil {
-		return errors.Wrap(err, "failed to write identity to temp file")
-	}
-	knownHosts := fmt.Sprintf("[%s]:2222 %s", ip, c.containerPublicKey)
-	if err := ioutil.WriteFile(knownHostsFile, []byte(knownHosts), 0644); err != nil {
-		return errors.Wrap(err, "failed to write known_hosts to temp file")
+	if err := ioutil.WriteFile(sftpAdapterFile, []byte(sftpAdapter), 0755); err != nil {
+		return errors.Wrap(err, "failed to write sftp adapter script")
 	}
 	if err := ioutil.WriteFile(cmdFile, []byte(sftpCmd), 0644); err != nil {
 		return errors.Wrap(err, "failed to write sftp command to temp file")
@@ -432,11 +417,9 @@ func (c *Container) sftpCommand(ctx context.Context, sftpCmd string) error {
 
 	sftpArgs := []string{
 		"-b", cmdFile,
-		"-i", privateKeyFile,
-		"-o", "UserKnownHostsFile=" + knownHostsFile,
-		"-P", "2222",
 		"-r",
-		c.username + "@" + ip,
+		"-S", sftpAdapterFile,
+		"container", // This is ignored by the sftp adapter script
 	}
 	cmd := testexec.CommandContext(ctx, "sftp", sftpArgs...)
 	if err := cmd.Run(); err != nil {
