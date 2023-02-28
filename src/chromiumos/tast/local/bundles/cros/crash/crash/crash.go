@@ -204,7 +204,7 @@ func RunCrasherProcess(ctx context.Context, cr *chrome.Chrome, opts CrasherOptio
 	}
 	var command []string
 	if opts.Username != "root" {
-		command = []string{"su", opts.Username, "-c"}
+		command = []string{"sudo", "-u", opts.Username, "--"}
 	}
 	basename := filepath.Base(opts.CrasherPath)
 	// Use only the first 15 characters of the basename since the kernel
@@ -235,7 +235,7 @@ func RunCrasherProcess(ctx context.Context, cr *chrome.Chrome, opts CrasherOptio
 		return nil, errors.Wrap(err, "failed to execute crasher")
 	}
 
-	// Get the PID from the output, since |crasher.pid| may be su's PID.
+	// Get the PID from the output, since |crasher.pid| may be sudo's PID.
 	m := pidRegex.FindStringSubmatch(out)
 	if m == nil {
 		return nil, errors.Errorf("no PID found in output: %s", out)
