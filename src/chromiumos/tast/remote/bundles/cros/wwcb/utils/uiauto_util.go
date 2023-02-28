@@ -1,0 +1,144 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package utils used to do some component excution function.
+package utils
+
+import (
+	"context"
+	"fmt"
+	"path/filepath"
+	"time"
+
+	"chromiumos/tast/dut"
+	"chromiumos/tast/errors"
+	inputspb "chromiumos/tast/services/cros/inputs"
+	"chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/ssh/linuxssh"
+	"chromiumos/tast/testing"
+)
+
+// VideoFile is a file to play to use webcam to check.
+const VideoFile = "video.mp4"
+
+// MyFilesPath is an absolute path on DUT.
+const MyFilesPath = "/home/chronos/user/MyFiles/"
+
+// PushFileToDUT copies the specified fileName from the test's data folder to the DUT's remoteDir.
+// Returns the path of the file on the DUT on success.
+func PushFileToDUT(ctx context.Context, s *testing.State, dut *dut.DUT, fileName, remoteDir string) (string, error) {
+	remotePath := filepath.Join(remoteDir, fileName)
+	testing.ContextLog(ctx, "Copy the file to remote data path: ", remotePath)
+	if _, err := linuxssh.PutFiles(ctx, dut.Conn(), map[string]string{
+		s.DataPath(fileName): remotePath,
+	}, linuxssh.DereferenceSymlinks); err != nil {
+		return "", errors.Wrapf(err, "failed to send data to remote data path %v", remotePath)
+	}
+	return remotePath, nil
+}
+
+// OpenMediaFileOnFilesapp clicks the file and open it on Filesapp.
+func OpenMediaFileOnFilesapp(ctx context.Context, uiautoSvc ui.AutomationServiceClient, videoName string) error {
+	filesWindowFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: "Files - My files"}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+
+	fileNameFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
+			{Value: &ui.NodeWith_Name{Name: videoName}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: filesWindowFinder}},
+		},
+	}
+
+	filesOpenButtonFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			{Value: &ui.NodeWith_Name{Name: "Open"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: filesWindowFinder}},
+		},
+	}
+
+	galleryWindowName := fmt.Sprintf("Gallery - %s", videoName)
+	galleryWindowFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: galleryWindowName}},
+		},
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: filesWindowFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for FilesApp showing on screen")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: fileNameFinder}); err != nil {
+		return errors.Wrap(err, "failed to click on the video filename")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: filesOpenButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to click on the open button")
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryWindowFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for Gallery window showing on screen")
+	}
+
+	return nil
+}
+
+// ClickOnPlayButton clicks button to play the file on Gallery.
+func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient) error {
+	galleryPlayButtonFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TOGGLE_BUTTON}},
+			{Value: &ui.NodeWith_Name{Name: "Toggle play pause"}},
+		},
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryPlayButtonFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for play button to show")
+	}
+
+	info, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: galleryPlayButtonFinder})
+	if err != nil {
+		return errors.Wrap(err, "failed to get play button info")
+	}
+
+	if info.NodeInfo.Checked == ui.Checked_CHECKED_FALSE {
+		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: galleryPlayButtonFinder}); err != nil {
+			return errors.Wrap(err, "failed to click on play button")
+		}
+	}
+	return nil
+}
+
+// CloseWindow closes the certain window using keyboard accelerators.
+func CloseWindow(ctx context.Context, keyboardSvc inputspb.KeyboardServiceClient, uiautoSvc ui.AutomationServiceClient, windowName string) error {
+	windowFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: windowName}},
+		},
+	}
+
+	//Use keyboard shortcut to close app.
+	if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: "Ctrl+W"}); err != nil {
+		return errors.Wrap(err, "failed to type Ctrl+W")
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if res, _ := uiautoSvc.IsNodeFound(ctx, &ui.IsNodeFoundRequest{Finder: windowFinder}); res.Found {
+			return errors.Errorf("failed to close %s window", windowName)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 3 * time.Second}); err != nil {
+		return err
+	}
+
+	return nil
+}
