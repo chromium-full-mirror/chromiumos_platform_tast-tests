@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that VM Battery exists",
 		Contacts:     []string{"arc-eng@google.com", "mhiramat@google.com"},
-		BugComponent: "b:261675578",
+		BugComponent: "b:930563",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
