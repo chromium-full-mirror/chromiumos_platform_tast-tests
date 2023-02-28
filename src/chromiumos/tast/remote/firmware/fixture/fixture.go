@@ -178,31 +178,28 @@ func newFixture(mode common.BootMode, forceDev, copyTastFiles bool) testing.Fixt
 	}
 }
 
-func (i *impl) noECSync(s *testing.FixtState) (bool, error) {
-	noECSync := false
-	noECSyncStr, ok := s.Var("firmware.no_ec_sync")
+func (i *impl) varToBool(s *testing.FixtState, varName string) (bool, error) {
+	value := false
+	valueStr, ok := s.Var(varName)
 	if ok {
 		var err error
-		noECSync, err = strconv.ParseBool(noECSyncStr)
+		value, err = strconv.ParseBool(valueStr)
 		if err != nil {
-			return false, errors.Errorf("invalid value for var firmware.no_ec_sync: got %q, want true/false", noECSyncStr)
+			return false, errors.Errorf("invalid value for var %v: got %q, want true/false", varName, valueStr)
 		}
 	}
-	return noECSync, nil
+	return value, nil
 }
 
 // SetUp is called by the framework to set up the environment with possibly heavy-weight
 // operations.
 func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	noSSHVar, ok := s.Var("noSSH")
-	i.disallowSSH = false
-	if ok {
-		forbidSSH, err := strconv.ParseBool(noSSHVar)
-		if err != nil {
-			s.Fatalf("Invalid value for var noSSH: got %q, want true/false", noSSHVar)
-		}
-		i.disallowSSH = forbidSSH
+	var err error
+	i.disallowSSH, err = i.varToBool(s, "noSSH")
+	if err != nil {
+		s.Fatal("noSSH: ", err)
 	}
+
 	s.Log("Creating a new firmware Helper instance for fixture: ", i.String())
 	i.initHelper(ctx, s)
 
@@ -219,7 +216,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_SWITCH_ON, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)
 		}
 	}
-	noECSync, err := i.noECSync(s)
+	noECSync, err := i.varToBool(s, "firmware.no_ec_sync")
 	if err != nil {
 		s.Fatal("ECSync: ", err)
 	}
@@ -241,11 +238,9 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
 		skipFlashUSB := false
-		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
-			skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
-			if err != nil {
-				s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
-			}
+		skipFlashUSB, err = i.varToBool(s, "firmware.skipFlashUSB")
+		if err != nil {
+			s.Fatal("SkipFlashUSB: ", err)
 		}
 		cs := s.CloudStorage()
 		if skipFlashUSB {
