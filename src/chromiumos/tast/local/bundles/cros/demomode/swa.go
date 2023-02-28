@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -91,12 +92,15 @@ func SWA(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to wait until Demo App exists")
 		}
 
-		// Verify app is fullscreen (Attract Loop) by checking that the toolbar
-		// is not present
-		s.Log("Confirming that app is in fullscreen mode")
-		toolbar := nodewith.Role(role.Toolbar).Ancestor(demoApp)
-		if err := ui.WaitUntilGone(toolbar)(ctx); err != nil {
-			return errors.Wrap(err, "failed to confirm that the toolbar is not present")
+		s.Log("Confirming that app is in fullscreen Attract Loop mode")
+		if err := ash.WaitForFullscreenConditionWithTitle(tconn, "Demo Mode App", true, 10*time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
+		}
+
+		// Confirm that Highlights content is not yet shown.
+		navigation := nodewith.Role(role.Navigation).Name("Home navigation")
+		if err := ui.WaitUntilGone(navigation)(ctx); err != nil {
+			return errors.Wrap(err, "failed to confirm that no navigation elements are present")
 		}
 
 		pc := pointer.NewMouse(tconn)
@@ -112,10 +116,13 @@ func SWA(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to drag mouse across screen")
 		}
 
-		// Assert that app is now windowed by presence of toolbar.
-		s.Log("Waiting for windowed Highlights mode")
-		if err := ui.WaitUntilExists(toolbar)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for the toolbar to be present")
+		s.Log("Confirming that app is in windowed Highlights mode")
+		if err := ash.WaitForFullscreenConditionWithTitle(tconn, "Demo Mode App", false, 10*time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
+		}
+		// Confirm that basic Highlights content is shown by presence of named navigation node.
+		if err := ui.WaitUntilExists(navigation)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for Highlights navigation node to be present")
 		}
 
 		return nil
