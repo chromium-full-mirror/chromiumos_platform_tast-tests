@@ -22,7 +22,7 @@ func init() {
 			"kmshelton@google.com", // Original test author
 		},
 		BugComponent: "b:167278",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		//  A software dep is used here over hwdep.ChromeEC(), because the hwdep relies on the device node's
 		//  existence (see src/platform/tast/src/chromiumos/tast/internal/crosbundle/hardware.go).
 		SoftwareDeps: []string{"chromeos_ec_firmware"},
