@@ -129,7 +129,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 			uiauto.Retry(5, uiauto.NamedCombine(
 				"Show password and validate text",
 				ui.DoDefault(nodewith.Name("Show password")),
-				ud.WithScreenshotResizing().WaitUntilExists(passwordText),
+				ud.WaitUntilExists(passwordText),
 			)),
 		),
 		uc,
