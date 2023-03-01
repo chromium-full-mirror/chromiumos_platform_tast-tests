@@ -36,7 +36,7 @@ func init() {
 		Func:         VariationSmoke,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Lacros doesn't crash and basic web content rendering is functional when loading a given variations seed",
-		Contacts:     []string{"lacros-team@google.com", "chromeos-sw-engprod@google.com", "yjt@google.com"},
+		Contacts:     []string{"lacros-team@google.com", "chromeos-sw-engprod@google.com"},
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
