@@ -16,6 +16,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/dut"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/hypervisor"
 	"chromiumos/tast/rpc"
 	crash_service "chromiumos/tast/services/cros/crash"
@@ -37,24 +39,36 @@ func init() {
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			Val: testParams{
-				consent:  crash_service.SetUpCrashTestRequest_REAL_CONSENT,
-				panicCmd: kernelPanicCmd,
-				execName: "kernel",
+				consent:    crash_service.SetUpCrashTestRequest_REAL_CONSENT,
+				panicCmd:   kernelPanicCmd,
+				execName:   "kernel",
+				earlyCrash: false,
 			},
 		}, {
 			Name: "mock_consent",
 			Val: testParams{
-				consent:  crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
-				panicCmd: kernelPanicCmd,
-				execName: "kernel",
+				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+				panicCmd:   kernelPanicCmd,
+				execName:   "kernel",
+				earlyCrash: false,
 			},
 		}, {
 			Name:              "hypervisor",
 			ExtraSoftwareDeps: []string{"manatee"},
 			Val: testParams{
-				consent:  crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
-				panicCmd: hypervisorPanicCmd,
-				execName: "hypervisor",
+				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+				panicCmd:   hypervisorPanicCmd,
+				execName:   "hypervisor",
+				earlyCrash: false,
+			},
+		}, {
+			Name:      "early_crash",
+			ExtraAttr: []string{"informational"},
+			Val: testParams{
+				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+				panicCmd:   "", // We reboot to cause a panic for the early panic.
+				execName:   "kernel",
+				earlyCrash: true,
 			},
 		}},
 		Timeout: 10 * time.Minute,
@@ -62,9 +76,38 @@ func init() {
 }
 
 type testParams struct {
-	consent  crash_service.SetUpCrashTestRequest_ConsentType
-	panicCmd string
-	execName string
+	consent    crash_service.SetUpCrashTestRequest_ConsentType
+	panicCmd   string
+	execName   string
+	earlyCrash bool
+}
+
+const (
+	lsbPath      = "/etc/lsb-release"
+	lsbSavedPath = "/var/lib/crash_reporter/lsb-release"
+)
+
+// messUpLsbRelease overwrites 5-digit version numbers in the saved lsb-release with invalid version values (99999),
+// so that we can determine which lsb-release crash-reporter used to generate the .meta file.
+func messUpLsbRelease(ctx context.Context, d *dut.DUT) error {
+	// Find any string of 5 digits after an equals sign, and replace
+	// them with "99999" to create a saved lsb-release with different
+	// version values.
+	const regex = `s/^(.*)=[0-9]{5}(\b.*)$/\1=99999\2/`
+	if out, err := d.Conn().CommandContext(ctx, "/bin/sed", "-i", "-E", regex, lsbSavedPath).CombinedOutput(); err != nil {
+		testing.ContextLogf(ctx, "Failed to edit lsb-release: %s", out)
+		return errors.Wrap(err, "failed to edit lsb-release")
+	}
+	return nil
+}
+
+// restoreLsbRelease restores the saved lsb-release with the copy from /etc.
+func restoreLsbRelease(ctx context.Context, d *dut.DUT) error {
+	if out, err := d.Conn().CommandContext(ctx, "/bin/cp", lsbPath, lsbSavedPath).CombinedOutput(); err != nil {
+		testing.ContextLogf(ctx, "Failed to rstore lsb-release: %s", out)
+		return errors.Wrap(err, "failed to restore lsb-release")
+	}
+	return nil
 }
 
 // Run the triggering command in the background to avoid the DUT potentially going down before
@@ -138,24 +181,48 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 		s.Logf("WARNING: Failed to log info message: %s", out)
 	}
 
-	// Sync filesystem to minimize impact of the panic on other tests
-	if out, err := d.Conn().CommandContext(ctx, "sync").CombinedOutput(); err != nil {
-		s.Log("Invoking 'sync' failed: ", err)
-		s.Fatalf("Failed to sync filesystems: %s", out)
+	if err := messUpLsbRelease(ctx, d); err != nil {
+		s.Error("Couldn't set up lsb-release: ", err)
 	}
+	defer func() {
+		// Crash reporter *should* reset the lsb-release copy automatically when it runs the boot collector.
+		// However, in case it does not, manually copy the file.
+		if err := restoreLsbRelease(cleanupCtx, d); err != nil {
+			s.Error("Couldn't restore lsb-release: ", err)
+		}
+	}()
 
-	// Trigger a panic. We run the command with nohup so that the command is not
-	// affected by disconnection. The command should report success before panicking.
-	if err := d.Conn().CommandContext(ctx, "nohup", "sh", "-c", crash.panicCmd).Run(); err != nil {
-		s.Fatal("Failed to panic DUT: ", err)
+	if crash.earlyCrash {
+		// Create a file indicating that we should crash early in boot, before the boot collector runs.
+		if out, err := d.Conn().CommandContext(ctx, "/usr/bin/touch", "/mnt/stateful_partition/unencrypted/preserve/crash-kernel-early").CombinedOutput(); err != nil {
+			s.Fatalf("Couldn't create crash-kernel-early: %v. %s", err, out)
+		}
+
+		// Shortly after the reboot, the device should panic.
+		if err := d.Reboot(ctx); err != nil {
+			s.Fatal("Couldn't reboot dut: ", err)
+		}
+	} else {
+
+		// Sync filesystem to minimize impact of the panic on other tests
+		if out, err := d.Conn().CommandContext(ctx, "sync").CombinedOutput(); err != nil {
+			s.Log("Invoking 'sync' failed: ", err)
+			s.Fatalf("Failed to sync filesystems: %s", out)
+		}
+
+		// Trigger a panic. We run the command with nohup so that the command is not
+		// affected by disconnection. The command should report success before panicking.
+		if err := d.Conn().CommandContext(ctx, "nohup", "sh", "-c", crash.panicCmd).Run(); err != nil {
+			s.Fatal("Failed to panic DUT: ", err)
+		}
+
+		s.Log("Waiting for DUT to become unreachable")
+
+		if err := d.WaitUnreachable(ctx); err != nil {
+			s.Fatal("Failed to wait for DUT to become unreachable: ", err)
+		}
+		s.Log("DUT became unreachable (as expected)")
 	}
-
-	s.Log("Waiting for DUT to become unreachable")
-
-	if err := d.WaitUnreachable(ctx); err != nil {
-		s.Fatal("Failed to wait for DUT to become unreachable: ", err)
-	}
-	s.Log("DUT became unreachable (as expected)")
 
 	// When we lost the connection, these connections broke.
 	cl.Close(ctx)
@@ -198,6 +265,8 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 	execNameRegexp := regexp.MustCompile("(?m)^exec_name=" + crash.execName + "$")
 	badSigRegexp := regexp.MustCompile("sig=kernel-.+-00000000")
 	goodSigRegexp := regexp.MustCompile("sig=kernel-.+-[[:xdigit:]]{8}")
+	savedVersionRegexp := regexp.MustCompile(`ver=99999\.`)
+	savedLsbRegexp := regexp.MustCompile(`upload_var_lsb-release=99999\.`)
 	for _, match := range res.Matches {
 		if !strings.HasSuffix(match.Regex, ".meta") {
 			continue
@@ -221,6 +290,24 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 			s.Error("Found all zero signature in meta file ", match.Files[0])
 		} else if !goodSigRegexp.Match(f) {
 			s.Error("Couldn't find unique signature in meta file ", match.Files[0])
+		}
+
+		if crash.earlyCrash {
+			// Should not have used saved lsb, but /etc/
+			if savedVersionRegexp.Match(f) {
+				s.Error("Found wrong version in meta file ", match.Files[0])
+			}
+			if savedLsbRegexp.Match(f) {
+				s.Error("Found wrong lsb-release in meta file ", match.Files[0])
+			}
+		} else {
+			// Should have used saved lsb, and not /etc/
+			if !savedVersionRegexp.Match(f) {
+				s.Error("Found wrong version in meta file ", match.Files[0])
+			}
+			if !savedLsbRegexp.Match(f) {
+				s.Error("Found wrong lsb-release in meta file ", match.Files[0])
+			}
 		}
 	}
 
