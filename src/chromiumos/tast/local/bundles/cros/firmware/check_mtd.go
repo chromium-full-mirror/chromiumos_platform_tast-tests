@@ -18,9 +18,9 @@ func init() {
 		Func: CheckMTD,
 		Desc: "Verifies that mtd0 exists on ARM devices",
 		Contacts: []string{
-			"cros-flashrom-team@chromium.org", // CrOS Flashrom Maintainer
-			"chromeos-firmware@google.com",    // CrOS Firmware Developers
-			"eizan@chromium.org",              // Test Author
+			"cros-flashrom-team@google.com", // CrOS Flashrom Maintainer
+			"chromeos-firmware@google.com",  // CrOS Firmware Developers
+			"eizan@chromium.org",            // Test Author
 		},
 		BugComponent: "b:750299", // ChromeOS > Platform > Enablement > Firmware > Flashrom
 		Attr:         []string{"group:flashrom"},
