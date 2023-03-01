@@ -19,8 +19,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that writing system logs succeeds",
 		Contacts: []string{
-			"cros-network-health-team@chromium.org", // Team alias
-			"stevenjb@chromium.org",                 // Test author
+			"cros-network-health-team@google.com", // Team alias
+			"stevenjb@chromium.org",               // Test author
 		},
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
