@@ -259,13 +259,15 @@ func fbc(ctx context.Context) error {
 	return nil
 }
 
-// psr checks that we can get into PSR.
+// psr checks that we can get into PSR if device support it.
 func psr(ctx context.Context) error {
 	psrPath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_edp_psr_status",
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to found valid psr path")
+		// PSR is display specific feature, simply let it pass.
+		testing.ContextLog(ctx, "Failed to find valid psr path: ", err)
+		return nil
 	}
 	kernelVersion, _, err := sysutil.KernelVersionAndArch()
 	if err != nil {
