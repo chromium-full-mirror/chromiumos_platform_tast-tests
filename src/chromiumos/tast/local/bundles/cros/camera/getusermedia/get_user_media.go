@@ -56,20 +56,6 @@ func DataFiles() []string {
 	}
 }
 
-// RunDecodeAccelUsedJPEG tests that the HW JPEG decoder is used in a GetUserMedia().
-// The test fails if bucketValue on histogramName does not count up.
-func RunDecodeAccelUsedJPEG(ctx context.Context, s *testing.State, getUserMediaFilename, streamName, histogramName string, bucketValue int64) {
-	vl, err := logging.NewVideoLogger()
-	if err != nil {
-		s.Fatal("Failed to set values for verbose logging")
-	}
-	defer vl.Close()
-
-	if err := openPageAndCheckBucket(ctx, s.DataFileSystem(), getUserMediaFilename, s.DataPath(streamName), histogramName, bucketValue); err != nil {
-		s.Fatal("Failed: ", err)
-	}
-}
-
 // openPageAndCheckBucket opens getUserMediaFilename, and uses GetUserMedia() to
 // stream streamFile. Then it verifies that bucketValue on histogramName counts
 // up in the end of the test.
