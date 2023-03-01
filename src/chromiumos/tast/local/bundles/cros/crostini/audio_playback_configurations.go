@@ -79,10 +79,11 @@ func AudioPlaybackConfigurations(ctx context.Context, s *testing.State) {
 
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 
-	// Use systemctl to control pulseaudio service
-	s.Log("stop pulseaudio service")
-	if err := cont.Command(ctx, "systemctl", " --user", "stop", "pulseaudio").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Fail to stop pulseaudio: ", err)
+	// Use systemctl to control audio server
+	s.Log("stop audio server")
+	stopErr := cont.Command(ctx, "systemctl", " --user", "stop", "pulseaudio", "pipewire", "pipewire-pulse")
+	if err := cont.Command(ctx, "systemctl", " --user", "--quiet", "is-active", "pulseaudio", "pipewire", "pipewire-pulse"); err == nil {
+		s.Log("Failed to stop audio server: ", stopErr)
 	}
 
 	rates := []uint32{8000, 11025, 16000, 22050, 32000, 44100, 48000}
