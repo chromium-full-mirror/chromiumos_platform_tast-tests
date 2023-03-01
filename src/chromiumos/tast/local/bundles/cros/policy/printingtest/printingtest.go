@@ -23,7 +23,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/strcmp"
 	"chromiumos/tast/testing"
@@ -62,11 +61,6 @@ func RunFeatureRestrictionTest(
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	s.Log("Installing printer")
-	if err := printer.ResetCups(ctx); err != nil {
-		s.Fatal("Failed to reset cupsd: ", err)
-	}
-
 	var printerAttributesOption usbprinter.Option
 	if printerAttributesFilePath != nil {
 		// Use custom printer IPP attributes file if provided
@@ -78,6 +72,8 @@ func RunFeatureRestrictionTest(
 		// Use generic IPP attributes otherwise
 		printerAttributesOption = usbprinter.WithGenericIPPAttributes()
 	}
+
+	s.Log("Installing printer")
 
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
