@@ -16,12 +16,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/login/userutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/chrome/uiauto/state"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/upstart"
@@ -108,15 +104,10 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.enableRecoveryToggle()", nil); err != nil {
 			s.Fatal("Failed to enable recovery toggle on the consolidated consent screen: ", err)
 		}
-
-		ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-		focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
-		if err := uiauto.Combine("Click accept on the consolidated consent screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.clickAcceptButton()", nil); err != nil {
 			s.Fatal("Failed to click consolidated consent screen accept button: ", err)
 		}
+
 		if err := waitForRecoverySetup(ctx, oobeConn); err != nil {
 			s.Fatal("Failed to wait for recovery setup to be finished: ", err)
 		}
@@ -203,10 +194,10 @@ func waitForRecoverySetup(ctx context.Context, oobeConn *chrome.Conn) error {
 		return errors.Wrap(err, "failed to advance to the TOS screen")
 	}
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible()"); err != nil {
-		return errors.Wrap(err, "failed to wait for the consolidated consent screen to be visible")
+		return errors.Wrap(err, "failed to wait for the recovery setup screen to be visible")
 	}
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible()"); err != nil {
-		return errors.Wrap(err, "failed to wait for the consolidated consent screen to be visible")
+		return errors.Wrap(err, "failed to wait for the recovery setup screen to not be visible")
 	}
 
 	return nil
