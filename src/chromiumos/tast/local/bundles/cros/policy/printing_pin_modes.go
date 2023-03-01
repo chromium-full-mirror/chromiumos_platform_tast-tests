@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	printinghelpers "chromiumos/tast/local/bundles/cros/policy/printing_helpers"
+	"chromiumos/tast/local/bundles/cros/policy/printingtest"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -61,7 +61,7 @@ func init() {
 	})
 }
 
-func fetchPINModesValuesFromPrintPreview(ctx context.Context, s *testing.State, tconn *chrome.TestConn) printinghelpers.SettingValues {
+func fetchPINModesValuesFromPrintPreview(ctx context.Context, s *testing.State, tconn *chrome.TestConn) printingtest.SettingValues {
 	enableUserPINCheckBox := nodewith.Role(role.CheckBox).Name("Enable user pin")
 	ui := uiauto.New(tconn)
 	nodeInfo, err := ui.Info(ctx, enableUserPINCheckBox)
@@ -99,7 +99,7 @@ func fetchPINModesValuesFromPrintPreview(ctx context.Context, s *testing.State, 
 		}
 	}
 
-	return printinghelpers.SettingValues{
+	return printingtest.SettingValues{
 		DefaultValue:    defaultEnabledUserPINValue,
 		AvailableValues: availableEnabledUserPINValue,
 	}
@@ -107,7 +107,7 @@ func fetchPINModesValuesFromPrintPreview(ctx context.Context, s *testing.State, 
 }
 
 func PrintingPINModes(ctx context.Context, s *testing.State) {
-	subtestcases := []printinghelpers.SubTestCase{
+	subtestcases := []printingtest.SubTestCase{
 		{
 			TestName:                "default_pin_allowed_pin_x1",
 			ExpectedDefaultValue:    "true",
@@ -116,6 +116,7 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Val: "pin"},
 				&policy.PrintingAllowedPinModes{Val: "pin"},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_unset_allowed_unset",
@@ -125,6 +126,7 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedPinModes{Stat: policy.StatusUnset},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_pin_allowed_unset",
@@ -134,6 +136,7 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Val: "pin"},
 				&policy.PrintingAllowedPinModes{Stat: policy.StatusUnset},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_unset_allowed_any",
@@ -143,6 +146,7 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedPinModes{Val: "any"},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_no_pin_allowed_any",
@@ -152,6 +156,7 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Val: "no_pin"},
 				&policy.PrintingAllowedPinModes{Val: "any"},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_pin_allowed_pin",
@@ -161,6 +166,7 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Val: "pin"},
 				&policy.PrintingAllowedPinModes{Val: "pin"},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_no_pin_allowed_pin",
@@ -170,10 +176,10 @@ func PrintingPINModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingPinDefault{Val: "no_pin"},
 				&policy.PrintingAllowedPinModes{Val: "pin"},
 			},
+			FetchValuesFunc: fetchPINModesValuesFromPrintPreview,
 		},
 	}
 
 	printerAttributesFilePath := s.DataPath("printing_pin_modes_printer_attributes.json")
-	printinghelpers.RunFeatureRestrictionTest(
-		ctx, s, subtestcases, &printerAttributesFilePath, fetchPINModesValuesFromPrintPreview)
+	printingtest.RunFeatureRestrictionTest(ctx, s, subtestcases, &printerAttributesFilePath)
 }

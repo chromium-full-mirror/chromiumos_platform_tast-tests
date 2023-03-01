@@ -9,7 +9,7 @@ import (
 
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	printinghelpers "chromiumos/tast/local/bundles/cros/policy/printing_helpers"
+	"chromiumos/tast/local/bundles/cros/policy/printingtest"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -61,7 +61,7 @@ func init() {
 }
 
 // fetchColorModesFromPrintPreview assumes that the print preview dialog is open
-func fetchColorModesFromPrintPreview(ctx context.Context, s *testing.State, tconn *chrome.TestConn) printinghelpers.SettingValues {
+func fetchColorModesFromPrintPreview(ctx context.Context, s *testing.State, tconn *chrome.TestConn) printingtest.SettingValues {
 	ui := uiauto.New(tconn)
 	colorSelection := nodewith.Role(role.ComboBoxSelect).Name("Color")
 	nodeInfo, err := ui.Info(ctx, colorSelection)
@@ -101,14 +101,14 @@ func fetchColorModesFromPrintPreview(ctx context.Context, s *testing.State, tcon
 		}
 	}
 
-	return printinghelpers.SettingValues{
+	return printingtest.SettingValues{
 		DefaultValue:    defaultColor,
 		AvailableValues: availableColors,
 	}
 }
 
 func PrintingColorModes(ctx context.Context, s *testing.State) {
-	subtestcases := []printinghelpers.SubTestCase{
+	subtestcases := []printingtest.SubTestCase{
 		{
 			TestName:                "default_color_unset_all_colors_allowed",
 			ExpectedDefaultValue:    "Color",
@@ -117,6 +117,7 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingColorDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedColorModes{Val: "any"},
 			},
+			FetchValuesFunc: fetchColorModesFromPrintPreview,
 		}, {
 			TestName:                "default_color_monochrome_allowed_colors_unset",
 			ExpectedDefaultValue:    "Black and white",
@@ -125,6 +126,7 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingColorDefault{Val: "monochrome"},
 				&policy.PrintingAllowedColorModes{Stat: policy.StatusUnset},
 			},
+			FetchValuesFunc: fetchColorModesFromPrintPreview,
 		}, {
 			TestName:                "default_color_color_all_colors_allowed",
 			ExpectedDefaultValue:    "Color",
@@ -133,6 +135,7 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingColorDefault{Val: "color"},
 				&policy.PrintingAllowedColorModes{Val: "any"},
 			},
+			FetchValuesFunc: fetchColorModesFromPrintPreview,
 		}, {
 			TestName:                "default_color_monochrome_is_allowed",
 			ExpectedDefaultValue:    "Black and white",
@@ -141,6 +144,7 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingColorDefault{Val: "monochrome"},
 				&policy.PrintingAllowedColorModes{Val: "monochrome"},
 			},
+			FetchValuesFunc: fetchColorModesFromPrintPreview,
 		}, {
 			TestName:                "default_color_monochrome_is_not_allowed",
 			ExpectedDefaultValue:    "Color",
@@ -149,10 +153,10 @@ func PrintingColorModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingColorDefault{Val: "monochrome"},
 				&policy.PrintingAllowedColorModes{Val: "color"},
 			},
+			FetchValuesFunc: fetchColorModesFromPrintPreview,
 		},
 	}
 
 	printerAttributesFilePath := s.DataPath("printing_color_modes_printer_attributes.json")
-	printinghelpers.RunFeatureRestrictionTest(
-		ctx, s, subtestcases, &printerAttributesFilePath, fetchColorModesFromPrintPreview)
+	printingtest.RunFeatureRestrictionTest(ctx, s, subtestcases, &printerAttributesFilePath)
 }

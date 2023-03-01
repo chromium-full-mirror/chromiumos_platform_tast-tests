@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package printinghelpers includes helper functions for printing tast tests
-package printinghelpers
+// Package printingtest includes helper functions for printing tast tests.
+package printingtest
 
 import (
 	"context"
@@ -36,12 +36,18 @@ type SettingValues struct {
 	AvailableValues []string
 }
 
+// FetchValuesFunction assumes that the print preview is open.
+// It then fetches and returns the default value and all available values
+// of a certain setting on the print preview window.
+type FetchValuesFunction = func(ctx context.Context, s *testing.State, tconn *chrome.TestConn) SettingValues
+
 // SubTestCase is used to parameterize printer subtest case
 type SubTestCase struct {
 	TestName                string
 	ExpectedDefaultValue    string
 	ExpectedAvailableValues []string
 	Policies                []policy.Policy
+	FetchValuesFunc         FetchValuesFunction
 }
 
 // RunFeatureRestrictionTest sets up a virtual usb printer,
@@ -52,11 +58,7 @@ func RunFeatureRestrictionTest(
 	s *testing.State,
 	subtestcases []SubTestCase,
 	// printerAttributesFilePath set to nil implies that the default printer attributes file will be used
-	printerAttributesFilePath *string,
-	// This function assumes that the print preview is open.
-	// It then fetches and returns the default value and all available values
-	// of a certain setting on the print preview window.
-	fetchValuesFunc func(ctx context.Context, s *testing.State, tconn *chrome.TestConn) SettingValues) {
+	printerAttributesFilePath *string) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -158,7 +160,7 @@ func RunFeatureRestrictionTest(
 				s.Fatal("Failed to select a printer: ", err)
 			}
 
-			settingValues := fetchValuesFunc(ctx, s, tconn)
+			settingValues := param.FetchValuesFunc(ctx, s, tconn)
 
 			if param.ExpectedDefaultValue != settingValues.DefaultValue {
 				s.Fatalf(

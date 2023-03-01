@@ -9,7 +9,7 @@ import (
 
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	printinghelpers "chromiumos/tast/local/bundles/cros/policy/printing_helpers"
+	"chromiumos/tast/local/bundles/cros/policy/printingtest"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -59,7 +59,7 @@ func init() {
 	})
 }
 
-func fetchBackgroundGraphicsValuesFromPrintPreview(ctx context.Context, s *testing.State, tconn *chrome.TestConn) printinghelpers.SettingValues {
+func fetchBackgroundGraphicsValuesFromPrintPreview(ctx context.Context, s *testing.State, tconn *chrome.TestConn) printingtest.SettingValues {
 	ui := uiauto.New(tconn)
 	if err := printpreview.ExpandMoreSettings(ctx, tconn); err != nil {
 		s.Error("Failed to expand more settings: ", err)
@@ -82,14 +82,14 @@ func fetchBackgroundGraphicsValuesFromPrintPreview(ctx context.Context, s *testi
 		availableBackgroundGraphicsValue = []string{defaultBackgroundGraphicsValue}
 	}
 
-	return printinghelpers.SettingValues{
+	return printingtest.SettingValues{
 		DefaultValue:    defaultBackgroundGraphicsValue,
 		AvailableValues: availableBackgroundGraphicsValue,
 	}
 }
 
 func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
-	subtestcases := []printinghelpers.SubTestCase{
+	subtestcases := []printingtest.SubTestCase{
 		{
 			TestName:                "default_unset_allowed_unset",
 			ExpectedDefaultValue:    "false",
@@ -98,6 +98,7 @@ func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingBackgroundGraphicsDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedBackgroundGraphicsModes{Stat: policy.StatusUnset},
 			},
+			FetchValuesFunc: fetchBackgroundGraphicsValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_unset_allowed_any",
@@ -107,6 +108,7 @@ func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingBackgroundGraphicsDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedBackgroundGraphicsModes{Val: "any"},
 			},
+			FetchValuesFunc: fetchBackgroundGraphicsValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_unset_allowed_enabled",
@@ -116,6 +118,7 @@ func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingBackgroundGraphicsDefault{Stat: policy.StatusUnset},
 				&policy.PrintingAllowedBackgroundGraphicsModes{Val: "enabled"},
 			},
+			FetchValuesFunc: fetchBackgroundGraphicsValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_enabled_allowed_unset",
@@ -125,6 +128,7 @@ func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingBackgroundGraphicsDefault{Val: "enabled"},
 				&policy.PrintingAllowedBackgroundGraphicsModes{Stat: policy.StatusUnset},
 			},
+			FetchValuesFunc: fetchBackgroundGraphicsValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_enabled_allowed_enabled",
@@ -134,6 +138,7 @@ func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingBackgroundGraphicsDefault{Val: "enabled"},
 				&policy.PrintingAllowedBackgroundGraphicsModes{Val: "enabled"},
 			},
+			FetchValuesFunc: fetchBackgroundGraphicsValuesFromPrintPreview,
 		},
 		{
 			TestName:                "default_enabled_allowed_disabled",
@@ -143,9 +148,9 @@ func PrintingBackgroundGraphicsModes(ctx context.Context, s *testing.State) {
 				&policy.PrintingBackgroundGraphicsDefault{Val: "enabled"},
 				&policy.PrintingAllowedBackgroundGraphicsModes{Val: "disabled"},
 			},
+			FetchValuesFunc: fetchBackgroundGraphicsValuesFromPrintPreview,
 		},
 	}
 
-	printinghelpers.RunFeatureRestrictionTest(
-		ctx, s, subtestcases, nil /* printerAttributesFilePath */, fetchBackgroundGraphicsValuesFromPrintPreview)
+	printingtest.RunFeatureRestrictionTest(ctx, s, subtestcases, nil /* printerAttributesFilePath */)
 }
