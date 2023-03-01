@@ -35,7 +35,7 @@ func PlayFileByPortType(ctx context.Context, chameleond chameleon.Chameleond, to
 
 	portID, err := chameleond.FetchSupportedPortIDByType(ctx, portType, 0)
 	if err != nil {
-		return errors.Wrap(err, "failed to get port id of audio USB in port")
+		return errors.Wrapf(err, "failed to get port id of portType: %s", portType.String())
 	}
 	_, err = chameleond.ProbeOutputs(ctx)
 	if err != nil {

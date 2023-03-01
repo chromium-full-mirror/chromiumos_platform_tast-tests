@@ -50,7 +50,7 @@ func ExampleChameleonUSB(ctx context.Context, s *testing.State) {
 	s.Log("Start playing from chameleon")
 	playbackDuration := 10 * time.Second
 	if err = withchameleon.PlayFileByPortType(ctx, chameleond, token, audioPortType, playbackDuration); err != nil {
-		s.Fatal("Failed to playFileByPortType: ", token, audioPortType, err)
+		s.Fatalf("Failed to playFileByPortType %s with token %s: %v", audioPortType, token, err)
 	}
 
 }
