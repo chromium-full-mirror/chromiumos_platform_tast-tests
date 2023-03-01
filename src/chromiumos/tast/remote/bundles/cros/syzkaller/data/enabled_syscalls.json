@@ -20,7 +20,7 @@
 	{
 		"driver": "i915(CONFIG_DRM_I915)",
 		"boards": ["octopus", "nautilus", "dedede"],
-		"startup_cmds": ["ln -s /dev/dri/card0 /dev/i915"],
+		"startup_cmds": ["rm -rf /dev/i915 && ln -s /dev/dri/card0 /dev/i915"],
 		"syscalls": [
 			"openat$i915",
 			"ioctl$DRM_IOCTL_I915_GETPARAM",
@@ -403,7 +403,7 @@
 	{
 		"driver": "bifrost(CONFIG_MALI_MIDGARD)",
 		"boards": ["kukui"],
-		"startup_cmds": ["if [ -f /dev/mali0 ]; then ln -s /dev/mali0 /dev/bifrost; fi"],
+		"startup_cmds": ["if [ -f /dev/mali0 ]; then rm -rf /dev/bifrost && ln -s /dev/mali0 /dev/bifrost; fi"],
 		"syscalls": [
 			"openat$mali",
 			"mmap$bifrost",
@@ -458,7 +458,7 @@
 	{
 		"driver": "IMGPowerVR(CONFIG_DRM_POWERVR_ROGUE_1_13)",
 		"boards": ["elm"],
-		"startup_cmds": ["ln -s /dev/dri/card1 /dev/img-rogue"],
+		"startup_cmds": ["rm -rf /dev/img-rogue && ln -s /dev/dri/card1 /dev/img-rogue"],
 		"syscalls": [
 			"openat$img_rogue",
 			"ioctl$DRM_IOCTL_PVR_SRVKM_CMD_PVRSRV_BRIDGE_CACHE_CACHEOPEXEC",
@@ -635,7 +635,7 @@
 	{
 		"driver": "freedreno(CONFIG_DRM_MSM)",
 		"boards": ["trogdor", "strongbad"],
-		"startup_cmds": ["ln -s /dev/dri/card1 /dev/msm"],
+		"startup_cmds": ["rm -rf /dev/msm && ln -s /dev/dri/card1 /dev/msm"],
 		"syscalls": [
 			"openat$msm",
 			"ioctl$DRM_IOCTL_MSM_GET_PARAM",
@@ -776,7 +776,7 @@
 	},
 	{
 		"driver": "virtio-net(CONFIG_VIRTIO_NET)",
-		"exclude_boards": ["kukui", "jacuzzi", "cherry"],
+		"boards": ["NONE"],
 		"syscalls": [
 			"openat$vnet",
 			"openat$vsock",
@@ -824,7 +824,7 @@
 	},
 	{
 		"driver": "media-controller(CONFIG_MEDIA_CONTROLLER)",
-		"exclude_boards": ["herobrine"],
+		"boards": ["kukui", "strongbad", "trogdor"],
 		"syscalls": [
 			"syz_open_dev$media",
 			"ioctl$MEDIA_IOC_DEVICE_INFO",
