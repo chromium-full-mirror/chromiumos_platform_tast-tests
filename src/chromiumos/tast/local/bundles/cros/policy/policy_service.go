@@ -124,6 +124,7 @@ func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *
 	cr, err := chrome.New(
 		ctx,
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.SkipAutoEnrollmentCheck(),
 		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.DMSPolicy(req.DmserverURL),
 	)
@@ -143,6 +144,7 @@ func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIA
 	cr, err := chrome.New(
 		ctx,
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.SkipAutoEnrollmentCheck(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
 	)
@@ -182,6 +184,7 @@ func (c *PolicyService) GAIAEnrollForReporting(ctx context.Context, req *ppb.GAI
 	var opts []chrome.Option
 
 	opts = append(opts, chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}))
+	opts = append(opts, chrome.SkipAutoEnrollmentCheck())
 	if req.SkipLogin {
 		opts = append(opts, chrome.NoLogin())
 	} else {
@@ -210,6 +213,7 @@ func (c *PolicyService) SAMLTestIdPEnrollUsingChrome(ctx context.Context, req *p
 	cr, err := chrome.New(
 		ctx,
 		chrome.SAMLTestIdPEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
+		chrome.SkipAutoEnrollmentCheck(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
 	)
@@ -305,6 +309,7 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 	}
 
 	opts = append(opts, chrome.FakeEnterpriseEnroll(chrome.Creds{User: user, Pass: "test0000"}))
+	opts = append(opts, chrome.SkipAutoEnrollmentCheck())
 	if req.SkipLogin {
 		opts = append(opts, chrome.NoLogin())
 	} else {

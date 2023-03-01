@@ -310,6 +310,9 @@ func (c *Config) FieldTrialConfig() string { return c.m.FieldTrialConfig }
 // EnableHDR returns true if --force-color-profile should be disabled.
 func (c *Config) EnableHDR() bool { return c.m.EnableHDR }
 
+// SkipAutoEnrollmentCheck returns true if the auto enrollment check is skipped during OOBE.
+func (c *Config) SkipAutoEnrollmentCheck() bool { return c.m.SkipAutoEnrollmentCheck }
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -370,6 +373,7 @@ type MutableConfig struct {
 	EnableStackSampledMetrics       bool       `reuse_match:"true"`
 	FieldTrialConfig                string     `reuse_match:"true"`
 	EnableHDR                       bool       `reuse_match:"false"`
+	SkipAutoEnrollmentCheck         bool       `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
