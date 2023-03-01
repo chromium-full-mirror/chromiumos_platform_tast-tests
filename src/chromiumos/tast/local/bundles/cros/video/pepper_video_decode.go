@@ -55,7 +55,7 @@ func init() {
 			Name:              "h264_hw",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyLegacyVDAPathWasUsed},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
 			Fixture:           "chromeVideoNaCl",
 		}, {
 			Name:              "h264_hw_mojovd",
@@ -67,7 +67,7 @@ func init() {
 			Name:              "h264_hw_nopepper3dimage",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyLegacyVDAPathWasUsed},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithoutPepper3DImage",
 		}, {
 			Name:              "h264_hw_mojovd_nopepper3dimage",
