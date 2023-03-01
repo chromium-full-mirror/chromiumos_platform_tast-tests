@@ -29,6 +29,8 @@ const (
 	ChromePolicyLoggedIn = "chromePolicyLoggedIn"
 	// ChromePolicyLoggedInLockscreen is a fixture name.
 	ChromePolicyLoggedInLockscreen = "chromePolicyLoggedInLockscreen"
+	// ChromeEnrolledLoggedInShortMetricsInterval is a fixture name.
+	ChromeEnrolledLoggedInShortMetricsInterval = "chromeEnrolledLoggedInShortMetricsInterval"
 	// ChromePolicyLoggedInIsolatedApp is a fixture name.
 	ChromePolicyLoggedInIsolatedApp = "chromePolicyLoggedInIsolatedApp"
 	// ChromePolicyLoggedInFeatureJourneys is a fixture name.
@@ -57,6 +59,8 @@ const (
 const (
 	// LacrosPolicyLoggedIn is a fixture name.
 	LacrosPolicyLoggedIn = "lacrosPolicyLoggedIn"
+	// LacrosPolicyLoggedInShortMetricsInterval is a fixture name.
+	LacrosPolicyLoggedInShortMetricsInterval = "lacrosPolicyLoggedInShortMetricsInterval"
 	// LacrosPolicyLoggedInWithKeepAlive is a fixture name.
 	LacrosPolicyLoggedInWithKeepAlive = "lacrosPolicyLoggedInWithKeepAlive"
 	// LacrosPolicyLoggedInFeatureJourneys is a fixture name.

@@ -176,6 +176,27 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ChromeEnrolledLoggedInShortMetricsInterval,
+		Desc: "Logged into a user session and reports metric every second",
+		Contacts: []string{
+			"chrome-ess-engprod@google.com",
+			"vsavu@google.com",
+			"meyron@googl.com",
+		},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.KeepEnrollment(),
+					chrome.ExtraArgs("--metrics-upload-interval=1")}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 25 * time.Second,
+		Parent:          fixture.FakeDMSEnrolled,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeAdminDeskTemplatesLoggedIn,
 		Desc:     "Logged into a user session with admin desk templates",
 		Contacts: []string{"zhumatthew@google.com", "chromeos-commercial-remote-management@google.com"},
