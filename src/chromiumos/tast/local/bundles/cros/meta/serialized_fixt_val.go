@@ -49,7 +49,6 @@ func SerializedFixtVal(ctx context.Context, s *testing.State) {
 }
 
 func verifyDeserializedStringVal(s *testing.State) error {
-
 	strValue := ""
 	if err := s.FixtFillValue(&strValue); err != nil {
 		return errors.Wrap(err, "failed to deserialize string data with FixtFillValue")
@@ -61,7 +60,6 @@ func verifyDeserializedStringVal(s *testing.State) error {
 }
 
 func verifyDeserializedStructVal(s *testing.State) error {
-
 	structValue := meta.TestStruct{}
 	if err := s.FixtFillValue(&structValue); err != nil {
 		return errors.Wrap(err, "failed to deserialize struct data with FixtFillValue")

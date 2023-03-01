@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
+	"chromiumos/tast/common/meta"
 	"chromiumos/tast/framework/protocol"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/testing"
@@ -57,20 +58,37 @@ func init() {
 type fixtSerializedStringFixture struct{}
 
 func (fixtSerializedStringFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	return s.ParentValue()
+	v := ""
+	if err := s.ParentFillValue(&v); err != nil {
+		s.Fatal("Failed to get remote parent string value in Setup: ", err)
+	}
+	if v != meta.RemoteFixtureExpectedStringVal {
+		s.Errorf("Failed to get expected fixture value with FixtFillValue; got %q, want %q", v, meta.RemoteFixtureExpectedStringVal)
+	}
+	return v
 }
 func (fixtSerializedStringFixture) Reset(ctx context.Context) error {
 	return nil
 }
-func (fixtSerializedStringFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (fixtSerializedStringFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+
+}
 func (fixtSerializedStringFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 func (fixtSerializedStringFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
 
 type fixtSerializedStructFixture struct{}
 
 func (fixtSerializedStructFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	return s.ParentValue()
+	structValue := meta.TestStruct{}
+	if err := s.ParentFillValue(&structValue); err != nil {
+		s.Fatal("Failed to deserialize struct data with FixtFillValue: ", err)
+	}
+	if diff := cmp.Diff(&structValue, meta.RemoteFixtureExpectedStructVal); diff != "" {
+		s.Errorf("Failed to get expected fixture value with FixtFillValue; (-got +want): %s", diff)
+	}
+	return structValue
 }
+
 func (fixtSerializedStructFixture) Reset(ctx context.Context) error {
 	return nil
 }
