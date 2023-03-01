@@ -148,17 +148,20 @@ func init() {
 			Val:       newRoutineParams(croshealthd.RoutineAudioSetGain),
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "bluetooth_power",
-			Val:       newRoutineParams(croshealthd.RoutineBluetoothPower),
-			ExtraAttr: []string{"informational"},
+			Name:              "bluetooth_power",
+			Val:               newRoutineParams(croshealthd.RoutineBluetoothPower),
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name:      "bluetooth_discovery",
-			Val:       newRoutineParams(croshealthd.RoutineBluetoothDiscovery),
-			ExtraAttr: []string{"informational"},
+			Name:              "bluetooth_discovery",
+			Val:               newRoutineParams(croshealthd.RoutineBluetoothDiscovery),
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name:      "bluetooth_scanning",
-			Val:       newRoutineParams(croshealthd.RoutineBluetoothScanning),
-			ExtraAttr: []string{"informational"},
+			Name:              "bluetooth_scanning",
+			Val:               newRoutineParams(croshealthd.RoutineBluetoothScanning),
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}},
 	})
 }
