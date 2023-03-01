@@ -21,8 +21,7 @@ func init() {
 		Func:         GLAPICheck,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the OpenGL API requirements",
-		// TODO(syedfaaiz): Add to CQ once it is green and stable.
-		Attr:         []string{"group:graphics", "graphics_nightly"},
+		Attr:         []string{"group:mainline", "group:graphics", "graphics_nightly"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
@@ -64,7 +63,6 @@ func GLAPICheck(ctx context.Context, s *testing.State) {
 	if glMajor < 3 || (glMajor == 3 && glMinor < 1) {
 		s.Fatal("GLES version is older than 3.1")
 	}
-	//TODO(syedfaaiz): GPU user space drivers MUST support EGL 1.3
 	// verify the our devices are 1.3 and above and support the following
 	// extensions:
 	//EGL_EXT_image_dma_buf_import, EGL_EXT_image_dma_buf_import_modifiers,
