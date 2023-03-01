@@ -27,7 +27,8 @@ func init() {
 		Func:         PrivacyIndicators,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Check if the privacy indicators view show up when entering Google Meet",
-		Contacts:     []string{"leandre@chromium.org", "cros-status-area-eng@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org"},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{

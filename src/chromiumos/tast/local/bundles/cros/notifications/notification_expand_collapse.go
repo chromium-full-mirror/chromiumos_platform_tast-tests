@@ -27,7 +27,8 @@ func init() {
 		Func:         NotificationExpandCollapse,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the expand and collapse behavior of a notification",
-		Contacts:     []string{"leandre@chromium.org", "cros-status-area-eng@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-sw-engprod@google.com"},
+		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,

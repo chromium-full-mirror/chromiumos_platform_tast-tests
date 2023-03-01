@@ -27,6 +27,7 @@ func init() {
 			"cros-status-area-eng@google.com",
 			"newcomer@google.com",
 		},
+		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",

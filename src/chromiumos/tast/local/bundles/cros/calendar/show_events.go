@@ -24,9 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the event list on the calendar view",
 		Contacts: []string{
-			"jiamingc@chromium.org",
 			"cros-calendar@google.com",
+			"jiamingc@chromium.org",
 		},
+		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWithCalendarView",

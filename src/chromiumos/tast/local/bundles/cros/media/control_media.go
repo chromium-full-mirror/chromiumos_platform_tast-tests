@@ -25,8 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Controls the media bubble",
 		Contacts: []string{
+			"cros-status-area@google.com",
 			"jiamingc@chromium.org",
-			"cros-status-area@google.com"},
+		},
+		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      5 * time.Minute,

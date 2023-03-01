@@ -24,9 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the basic interacting with calendar view",
 		Contacts: []string{
-			"jiamingc@chromium.org",
 			"cros-calendar@google.com",
+			"jiamingc@chromium.org",
 		},
+		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},

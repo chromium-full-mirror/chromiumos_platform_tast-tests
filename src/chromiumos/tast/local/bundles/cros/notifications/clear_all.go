@@ -32,6 +32,7 @@ func init() {
 			"amehfooz@chromium.org",
 			"cros-system-ui-eng@google.com",
 		},
+		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

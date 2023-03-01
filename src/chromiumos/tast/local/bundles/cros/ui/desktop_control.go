@@ -30,11 +30,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if the performance around desktop UI components is good enough; see also go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
 		Contacts: []string{
+			"cros-system-ui-eng@google.com",
 			"newcomer@chromium.org",
 			"tbarzic@chromium.org",
 			"kaznacheev@chromium.org",
 			"mukai@chromium.org", // Tast author
 		},
+		BugComponent: "b:1288352", // ChromeOS > Software > System UI Surfaces > Shelf
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
