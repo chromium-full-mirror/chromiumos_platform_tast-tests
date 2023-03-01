@@ -56,6 +56,23 @@ func (s *Service) GetDevice(ctx context.Context) (*Device, error) {
 	return device, nil
 }
 
+// GetCurrentIPConfig returns the IPConfig for this Service.
+func (s *Service) GetCurrentIPConfig(ctx context.Context) (*IPConfig, error) {
+	serviceProps, err := s.GetProperties(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ipConfigObjPath, err := serviceProps.GetObjectPath(shillconst.ServicePropertyIPConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "no device associated with service")
+	}
+	ipConfig, err := NewIPConfig(ctx, ipConfigObjPath)
+	if err != nil {
+		return nil, err
+	}
+	return ipConfig, nil
+}
+
 // GetIPConfigs returns the IPConfig objects list of the associated Device. Note
 // that this is not the IPConfig object of the Service.
 func (s *Service) GetIPConfigs(ctx context.Context) ([]*IPConfig, error) {

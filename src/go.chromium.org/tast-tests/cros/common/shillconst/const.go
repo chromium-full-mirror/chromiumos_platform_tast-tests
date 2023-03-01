@@ -132,6 +132,7 @@ const (
 	ServicePropertyError             = "Error"
 	ServicePropertyName              = "Name"
 	ServicePropertyType              = "Type"
+	ServicePropertyIPConfig          = "IPConfig"
 	ServicePropertyIsConnected       = "IsConnected"
 	ServicePropertyMode              = "Mode"
 	ServicePropertyState             = "State"
