@@ -21,7 +21,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 )
 
@@ -34,7 +33,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr: []string{"group:mainline"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
@@ -146,8 +145,8 @@ func PtraceProcess(ctx context.Context, s *testing.State) {
 
 		var cmd *testexec.Cmd
 		if pidns {
-			cmd = testexec.CommandContext(ctx, "minijail0", "-p", "--", "/bin/su", "-c",
-				shutil.EscapeSlice(args), unprivUser)
+			cmd = testexec.CommandContext(ctx, "minijail0", append([]string{"-p", "--",
+				"/usr/bin/sudo", "-u", unprivUser, "--"}, args...)...)
 		} else {
 			cmd = userCmd(args[0], args[1:]...)
 		}
