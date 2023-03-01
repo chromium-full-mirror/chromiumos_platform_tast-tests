@@ -8,14 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
-	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -25,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -32,37 +30,27 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListFilesArc,
+		Func:         DataLeakPreventionRulesListFilesCrostini,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file ARC restriction",
-		Timeout:      20 * time.Minute,
+		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file Crostini restriction",
+		Timeout:      7 * time.Minute,
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",
 		},
-		BugComponent: "b:892101",
 		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
-		SoftwareDeps: []string{"chrome"},
-		// TODO(http://b/271146120): Test is disabled until DLP is fixed.
+		BugComponent: "b:892101",
+		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
+		HardwareDeps: crostini.CrostiniStable,
+		// TODO(b/272442908): Enable test when DLP is fixed.
 		// Attr: []string{
-		//	"group:mainline",
+		// 	"group:mainline",
 		// 	"informational",
 		// },
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
-			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),
 		},
-		Params: []testing.Param{
-			{
-				Name:              "arc_container",
-				Fixture:           fixture.ChromePolicyLoggedInARC,
-				ExtraSoftwareDeps: []string{"android_p"},
-			}, {
-				Name:              "arc_vm",
-				Fixture:           fixture.ChromePolicyLoggedInARC,
-				ExtraSoftwareDeps: []string{"android_vm"},
-			},
-		},
+		Fixture: "crostiniBusterPolicy",
 		Data: []string{
 			"download.html",
 			"data.txt",
@@ -70,32 +58,24 @@ func init() {
 	})
 }
 
-func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) {
-	const (
-		bootTimeout = 4 * time.Minute
-	)
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
+	fakeDMS := s.FixtValue().(crostini.FixtureData).FakeDMS
+	keyboard := s.FixtValue().(crostini.FixtureData).KB
+	tconnAsh := s.FixtValue().(crostini.FixtureData).Tconn
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	keyboard, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get keyboard: ", err)
-	}
-	defer keyboard.Close()
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	// Update the policy.
-	filesArcWarnPolicies := []policy.Policy{&policy.DataLeakPreventionRulesList{
+	filesCrostiniWarnPolicy := []policy.Policy{&policy.DataLeakPreventionRulesList{
 		Val: []*policy.DataLeakPreventionRulesListValue{
 			{
-				Name:        "Warn before transferring a confidential file to Play files",
-				Description: "User should be warned before transferring a confidential file to Play files",
+				Name:        "Warn before transferring a confidential file to Linux files",
+				Description: "User should be warned before transferring a confidential file to Linux files",
 				Sources: &policy.DataLeakPreventionRulesListValueSources{
 					Urls: []string{
 						"*",
@@ -103,7 +83,7 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 				},
 				Destinations: &policy.DataLeakPreventionRulesListValueDestinations{
 					Components: []string{
-						"ARC",
+						"CROSTINI",
 					},
 				},
 				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
@@ -115,34 +95,22 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 			},
 		},
 	},
-		&policy.ArcEnabled{Val: true, Stat: policy.StatusSet},
 	}
 
-	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, filesArcWarnPolicies); err != nil {
-		s.Fatal("Failed to serve and verify policies: ", err)
+	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, filesCrostiniWarnPolicy); err != nil {
+		s.Fatal("Failed to serve and verify policy: ", err)
 	}
 
 	if err := files.ClearDownloads(ctx, cr); err != nil {
-		s.Error("Failed to clear Downloads directory: ", err)
+		s.Fatal("Failed to clear Downloads directory: ", err)
 	}
 
-	tconnAsh, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
 	// Ensure that there are no windows open.
 	if err := ash.CloseAllWindows(ctx, tconnAsh); err != nil {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 	// Ensure that all windows are closed after test.
 	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
-
-	// Setup Arc.
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
-	if err != nil {
-		s.Fatal("Failed to start ARC by policy: ", err)
-	}
-	defer a.Close(cleanupCtx)
 
 	// Create Browser.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
@@ -187,19 +155,19 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	ui := uiauto.New(tconnAsh)
 
 	if err := files.IsFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, true); err != nil {
-		s.Error("File isn't managed when it should be: ", err)
+		s.Fatal("File isn't managed when it should be: ", err)
 	}
 
-	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
-		s.Fatal("Failed to paste the file to Play files: ", err)
+	if err := pasteFileToLinuxFiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to paste the file to Linux files: ", err)
 	}
 
 	if err := files.CancelWarningAndVerify(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to cancel the paste: ", err)
 	}
 
-	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
-		s.Fatal("Failed to paste the file to Play files: ", err)
+	if err := pasteFileToLinuxFiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to paste the file to Linux files: ", err)
 	}
 
 	if err := files.AcceptWarningAndVerify(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
@@ -207,22 +175,21 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 
 	if err := files.IsFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, false); err != nil {
-		s.Error("File is managed when it shouldn't be: ", err)
+		s.Fatal("File is managed when it shouldn't be: ", err)
 	}
 }
 
-// pasteFileToPlayfiles pastes a file to Play files/Pictures and checks that a DLP warning dialog appears.
-func pasteFileToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
+// pasteFileToLinuxFiles pastes a file to Linux files and checks that a DLP warning dialog appears.
+func pasteFileToLinuxFiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
 	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to existing Files app")
 	}
 
-	return uiauto.Combine("Paste the file to Play files/Pictures",
+	return uiauto.Combine("paste the file to Linux files",
 		filesApp.OpenDownloads(),
 		filesApp.CopyFileToClipboard(filename),
-		filesApp.OpenPlayfiles(),
-		filesApp.OpenFile("Pictures"),
+		filesApp.OpenLinuxFiles(),
 		filesApp.PasteFileFromClipboard(kb),
 		ui.WaitUntilExists(nodewith.Name("Copy confidential file?")),
 	)(ctx)

@@ -12,7 +12,9 @@ import (
 	"strconv"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -295,6 +297,21 @@ func init() {
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBusterPolicy",
+		Desc:            "Install Crostini with Buster, with Chrome logged in with policy",
+		Contacts:        []string{"clumptini+oncall@google.com", "aidazolic@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBuster},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          fixture.ChromePolicyLoggedIn,
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("buster", false), GetContainerRootfsArtifact("buster", false)},
+	})
+
 }
 
 // preTestData contains the data to set up the fixture.
@@ -328,6 +345,7 @@ type FixtureData struct {
 	StartupValues *perf.Values
 	Screendiffer  *Screendiffer
 	DownloadsPath string
+	FakeDMS       *fakedms.FakeDMS
 }
 
 var preTestDataBuster = &preTestData{
@@ -462,6 +480,12 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
+	var fakeDMS *fakedms.FakeDMS
+	hasFakeDMS, ok := s.ParentValue().(fakedms.HasFakeDMS)
+	if ok {
+		fakeDMS = hasFakeDMS.FakeDMS()
+	}
+
 	return FixtureData{
 		Chrome:        f.cr,
 		Tconn:         f.tconn,
@@ -471,6 +495,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		StartupValues: f.values,
 		Screendiffer:  nil,
 		DownloadsPath: downloadsPath,
+		FakeDMS:       fakeDMS,
 	}
 }
 

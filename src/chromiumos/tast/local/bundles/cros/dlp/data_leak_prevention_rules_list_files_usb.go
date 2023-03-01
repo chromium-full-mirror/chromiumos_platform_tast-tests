@@ -103,6 +103,7 @@ func init() {
 			"chromeos-dlp@google.com",
 			"poromov@google.com",
 		},
+		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(http://b/271146120): Test is disabled until DLP is fixed.

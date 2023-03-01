@@ -17,11 +17,15 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
 
@@ -90,5 +94,80 @@ func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Brows
 
 	testing.ContextLog(ctx, "Downloaded the file")
 
+	return nil
+}
+
+// IsFileManaged checks if a file is managed based on whether it has an "Admin policy" context menu item. Assumes that Files App is opened in the correct directory.
+func IsFileManaged(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string, isManaged bool) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to existing Files app")
+	}
+
+	// Open the context menu.
+	if err := filesApp.OpenContextMenu(filename)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open the context menu")
+	}
+
+	// Ensure the context menu will be closed.
+	defer kb.Accel(cleanupCtx, "Esc")
+
+	// Check the "Admin policy" menu item.
+	adminPolicyNode := nodewith.Name("Review admin policy").Role(role.MenuItem)
+	if isManaged {
+		if err := ui.WaitUntilExists(adminPolicyNode)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find admin policy for a file that should be managed")
+		}
+	} else {
+		if err := ui.WaitUntilGone(adminPolicyNode)(ctx); err != nil {
+			return errors.Wrap(err, "found admin policy for a file that shouldn't be managed")
+		}
+	}
+	return nil
+}
+
+// AcceptWarningAndVerify accepts the DLP warning dialog and verifies that the file was copied.
+// Assumes that Files App is opened in the correct directory.
+func AcceptWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to existing Files app")
+	}
+
+	// Proceed with the paste.
+	if err := kb.Accel(ctx, "Enter"); err != nil {
+		return errors.Wrap(err, "failed to hit Enter")
+	}
+
+	if err := uiauto.Combine("Ensure file was copied",
+		filesApp.WaitForFile(filename),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "file was not copied while it should")
+	}
+	return nil
+}
+
+// CancelWarningAndVerify cancels the DLP warning dialog and verifies that the file wasn't copied.
+// Assumes that Files App is opened in the correct directory.
+func CancelWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
+	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to existing Files app")
+	}
+
+	// Cancel the paste.
+	if err := kb.Accel(ctx, "Esc"); err != nil {
+		return errors.Wrap(err, "failed to hit Esc")
+	}
+
+	if err := uiauto.Combine("Ensure file wasn't copied",
+		filesApp.EnsureFileGone(filename, 10*time.Second),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "file was copied while it shouldn't")
+	}
 	return nil
 }

@@ -51,6 +51,7 @@ const (
 const (
 	Downloads   = "Downloads"
 	GoogleDrive = "Google Drive"
+	Linuxfiles  = "Linux files"
 	MyDrive     = "My Drive"
 	MyFiles     = "My files"
 	Playfiles   = "Play files"
@@ -221,7 +222,7 @@ func (f *FilesApp) OpenDrive() uiauto.Action {
 // OpenLinuxFiles returns a function that opens the Linux files folder in the Files App.
 // An error is returned if Linux files is not found or does not open.
 func (f *FilesApp) OpenLinuxFiles() uiauto.Action {
-	return f.OpenDir("Linux files", FilesTitlePrefix+"Linux files")
+	return f.OpenDir(Linuxfiles, FilesTitlePrefix+Linuxfiles)
 }
 
 // OpenTrash returns a function that opens the Trash folder in the Files App.

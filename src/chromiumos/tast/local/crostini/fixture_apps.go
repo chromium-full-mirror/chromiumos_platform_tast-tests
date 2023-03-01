@@ -145,7 +145,7 @@ func (f *crostiniAppsFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 	f.cont = p.Cont
 	f.kb = p.KB
 	f.screenDiffer = &Screendiffer{differ: nil, state: &screenDiffState{fixtState: s}}
-	return FixtureData{p.Chrome, p.Tconn, p.Cont, p.KB, p.PostData, p.StartupValues, f.screenDiffer, p.DownloadsPath}
+	return FixtureData{p.Chrome, p.Tconn, p.Cont, p.KB, p.PostData, p.StartupValues, f.screenDiffer, p.DownloadsPath, nil}
 }
 
 func (f *crostiniAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
