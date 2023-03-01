@@ -25,7 +25,7 @@ func init() {
 		Func:         VideoEncodeAccelPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures ARC++ and ARCVM hardware video encode performance by running the arcvideoencoder_test binary",
-		Contacts:     []string{"chromeos-video-eng@google.com", "mwojtas@google.com"},
+		Contacts:     []string{"chromeos-video-eng@google.com", "arc-performance@google.com", "mwojtas@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
@@ -39,7 +39,7 @@ func init() {
 				Params:      video.Crowd1080P,
 				PixelFormat: videotype.I420,
 			},
-			ExtraAttr:         []string{"group:arc-video"},
+			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
 		}, {
@@ -59,7 +59,7 @@ func init() {
 				Params:      video.Crowd1080P,
 				PixelFormat: videotype.I420,
 			},
-			ExtraAttr:         []string{"group:arc-video"},
+			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
@@ -80,7 +80,7 @@ func init() {
 				Params:      video.Crowd1080P,
 				PixelFormat: videotype.I420,
 			},
-			ExtraAttr:         []string{"group:arc-video"},
+			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP8},
 			ExtraHardwareDeps: hwdep.D(
@@ -103,7 +103,7 @@ func init() {
 				Params:      video.Crowd1080P,
 				PixelFormat: videotype.I420,
 			},
-			ExtraAttr:         []string{"group:arc-video"},
+			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP9},
 			ExtraHardwareDeps: hwdep.D(

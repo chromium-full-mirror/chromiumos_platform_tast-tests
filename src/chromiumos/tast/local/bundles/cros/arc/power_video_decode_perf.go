@@ -41,7 +41,7 @@ func init() {
 		Func:         PowerVideoDecodePerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the battery drain during hardware accelerated video playback",
-		Contacts:     []string{"chromeos-arc-video-eng@google.com"},
+		Contacts:     []string{"chromeos-arc-video-eng@google.com", "arc-performance@google.com"},
 		BugComponent: "b:632502",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
