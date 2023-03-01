@@ -38,6 +38,8 @@ type ShillSimulatedWiFi struct {
 	Chrome *chrome.Chrome
 }
 
+type parentFixtDataCallback func(s *testing.FixtState) ShillSimulatedWiFi
+
 type fixture struct {
 	// m is the Shill Manager interface.
 	m *shill.Manager
@@ -50,6 +52,8 @@ type fixture struct {
 	// claimedIfaces is the a set of interfaces claimed by the fixture to
 	// release before unloading the driver.
 	claimedIfaces []string
+	// cb is the callback to grab parent's fixture.
+	cb parentFixtDataCallback
 }
 
 func init() {
@@ -75,8 +79,31 @@ func init() {
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
-		Impl:            &fixture{},
 		Parent:          "arcBooted",
+		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
+			preData := s.ParentValue().(*arc.PreData)
+			return ShillSimulatedWiFi{
+				Chrome: preData.Chrome,
+				ARC:    preData.ARC,
+			}
+		}),
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "shillSimulatedWiFiWithChromeLoggedIn",
+		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Shill is configured correctly",
+		Contacts: []string{
+			"damiendejean@google.com", // fixture maintainer
+			"cros-networking@google.com",
+		},
+		SetUpTimeout:    hwsimTimeout,
+		TearDownTimeout: hwsimTimeout,
+		ResetTimeout:    hwsimTimeout,
+		Parent:          "chromeLoggedIn",
+		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
+			return ShillSimulatedWiFi{
+				Chrome: s.ParentValue().(*chrome.Chrome),
+			}
+		}),
 	})
 }
 
@@ -196,15 +223,17 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	f.claimedIfaces = claimedIfaces
 	success = true
-	fixt := &ShillSimulatedWiFi{
-		Client: []string{clientIface},
-		AP:     apIfaces,
+	fixt := f.cb(s)
+	fixt.Client = []string{clientIface}
+	fixt.AP = apIfaces
+	return &fixt
+}
+
+// NewShillSimulatedWiFiFixture returns new shill simulated WiFi fixture.
+func NewShillSimulatedWiFiFixture(cb parentFixtDataCallback) testing.FixtureImpl {
+	return &fixture{
+		cb: cb,
 	}
-	if s.ParentValue() != nil {
-		fixt.ARC = s.ParentValue().(*arc.PreData).ARC
-		fixt.Chrome = s.ParentValue().(*arc.PreData).Chrome
-	}
-	return fixt
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
