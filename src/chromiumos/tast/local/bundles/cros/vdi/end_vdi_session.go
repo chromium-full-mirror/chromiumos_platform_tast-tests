@@ -48,7 +48,7 @@ func init() {
 			"cros-engprod-muc@google.com",
 			"giovax@google.com", // Test author
 		},
-		BugComponent: "b:263382359", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Virtualization
+		BugComponent: "b:1198148", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Virtualization
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
