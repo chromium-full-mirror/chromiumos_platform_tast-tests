@@ -598,6 +598,15 @@ func (conf *GoogleMeetConference) changeLayout(mode string) action.Action {
 				if mode != "Tiled" {
 					return nil
 				}
+
+				showInATileButton := nodewith.Name("Show in a tile").Role(role.Button)
+				// Make sure it shows in a tile.
+				if err := uiauto.NamedAction("show in a tile",
+					uiauto.IfSuccessThen(ui.Exists(showInATileButton),
+						ui.DoDefaultUntil(showInATileButton,
+							ui.WithTimeout(shortUITimeout).WaitUntilGone(showInATileButton))))(ctx); err != nil {
+					return err
+				}
 				// Check if there is more than 1 grid after changing layout to Tiled.
 				expectedGrid := 1
 				if conf.roomType == ClassRoomSize {
