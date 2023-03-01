@@ -6,6 +6,7 @@ package cuj
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
@@ -29,6 +31,7 @@ import (
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 )
 
@@ -94,6 +97,15 @@ var EnableWaylandLoggingVar = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to enable Wayland logging into Lacros logs",
 )
 
+// DocsBlocker extension files.
+var docsBlockerFiles = []string{
+	"docs_blocker/background.js",
+	"docs_blocker/manifest.json",
+}
+
+// DocsBlocker extension ID.
+var docsBlockerExtensionID = "lanldddoamfhbgpgmmlckdklilaggblp"
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "prepareForCUJ",
@@ -141,6 +153,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -157,6 +170,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts:   []chrome.Option{chrome.ExtraArgs(webRTCEventLogCommandFlag)},
 			bt:                browser.TypeAsh,
@@ -177,6 +191,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeAsh,
@@ -198,7 +213,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            []string{fakeCameraFileName},
+		Data:            append(docsBlockerFiles, fakeCameraFileName),
 		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeAsh, fakeCamera: true},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -213,6 +228,7 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -229,6 +245,7 @@ func init() {
 			"xliu@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeLacros,
@@ -250,7 +267,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            []string{fakeCameraFileName},
+		Data:            append(docsBlockerFiles, fakeCameraFileName),
 		Impl:            &loggedInToCUJUserFixture{keepState: true, bt: browser.TypeLacros, fakeCamera: true},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -265,6 +282,7 @@ func init() {
 			"alston.huang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{},
 		Parent:          "cpuIdleForEnrolledCUJ",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
@@ -283,6 +301,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForEnrolledCUJ",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
@@ -301,6 +320,7 @@ func init() {
 			"amusbach@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(webRTCEventLogCommandFlag)},
 			bt:              browser.TypeAsh,
@@ -320,6 +340,7 @@ func init() {
 			"amusbach@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs(webRTCEventLogCommandFlag)},
 			bt:              browser.TypeLacros,
@@ -339,6 +360,7 @@ func init() {
 			"ramsaroop@google.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("OneGroupPerRenderer"),
@@ -362,6 +384,7 @@ func init() {
 			"youssefesmat@google.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
+		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("MainThreadCompositingPriority"),
@@ -377,6 +400,47 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+}
+
+func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
+	extDir, err := ioutil.TempDir("", "docs_blocker_extension")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create temporary directory for DocsBlockerExtension")
+	}
+
+	if err := os.Chown(extDir, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
+		return "", errors.Wrap(err, "failed to chown DocsBlockerExtension dir")
+	}
+
+	for _, file := range docsBlockerFiles {
+		dst := filepath.Join(extDir, filepath.Base(file))
+		if err := fsutil.CopyFile(s.DataPath(file), dst); err != nil {
+			return "", errors.Wrapf(err, "failed to copy %q file to %q", file, extDir)
+		}
+
+		if err := os.Chown(dst, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
+			return "", errors.Wrapf(err, "failed to chown %q", file)
+		}
+	}
+
+	return extDir, nil
+}
+
+// GetDocsBlockerConn returns a connection to the DocsBlocker background page
+// and waits for the background page to finish loading before it returns.
+func GetDocsBlockerConn(ctx context.Context, br *browser.Browser) (*browser.Conn, error) {
+	bgURL := "chrome-extension://" + docsBlockerExtensionID + "/_generated_background_page.html"
+
+	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	if err != nil {
+		return nil, errors.Wrap(err, "DocsBlocker extension not found")
+	}
+
+	if err = conn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+		conn.Close()
+		return nil, errors.Wrap(err, "failed to wait for DocsBlocker extension")
+	}
+	return conn, nil
 }
 
 func loginOption(s *testing.FixtState, useEnterprisePool bool) chrome.Option {
@@ -566,6 +630,11 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
 		defer cancel()
 
+		docsBlockerExtDir, err := prepareDocsBlockerExtension(s)
+		if err != nil {
+			s.Fatal("Failed to prepare DocsBlockerExtension: ", err)
+		}
+
 		opts := []chrome.Option{
 			loginOption(s, f.useEnterprisePool),
 			chrome.ARCSupported(),
@@ -577,7 +646,9 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 
-		var err error
+		if f.bt == browser.TypeAsh {
+			opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
+		}
 		if f.bt == browser.TypeLacros {
 			if strings.ToLower(EnableWaylandLoggingVar.Value()) == "true" {
 				opts = append(opts, chrome.ExtraArgs("--lacros-chrome-additional-env=WAYLAND_DEBUG=1"))
@@ -588,6 +659,8 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			if err != nil {
 				s.Fatal("Failed to get lacros options: ", err)
 			}
+
+			opts = append(opts, chrome.LacrosUnpackedExtension(docsBlockerExtDir))
 		}
 		if f.fakeCamera {
 			fakeCameraOpts := []string{

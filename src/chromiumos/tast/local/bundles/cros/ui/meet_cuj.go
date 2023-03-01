@@ -938,6 +938,25 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			collaborationRE = regexp.MustCompile(`\bJamboard\b`)
 		}
 
+		if meet.docs {
+			// Enable docs blocker extension to force Docs in offline mode after docs
+			// is loaded.
+			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, br)
+			if err != nil {
+				return errors.Wrap(err, "failed to get docs blocker conn")
+			}
+			defer docsBlockerConn.Close()
+
+			if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(true)", nil); err != nil {
+				return errors.Wrap(err, "failed to call docs blocker to block Docs")
+			}
+			defer func(ctx context.Context) {
+				if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(false)", nil); err != nil {
+					s.Log("Failed to call docs blocker to restore: ", err)
+				}
+			}(ctx)
+		}
+
 		var collaborationWindow *ash.Window
 		if meet.docs || meet.jamboard {
 			collaborationWindow, err = ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return collaborationRE.MatchString(w.Title) })
