@@ -214,10 +214,10 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 	switch op {
 	case installApp:
 		// Look for install button.
-		opButton = d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+installButtonText), ui.Enabled(true))
+		opButton = d.Object(ui.DescriptionMatches("(?i)"+installButtonText), ui.Enabled(true))
 	case updateApp:
 		// Look for update button.
-		opButton = d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+updateButtonText), ui.Enabled(true))
+		opButton = d.Object(ui.DescriptionMatches("(?i)"+updateButtonText), ui.Enabled(true))
 	default:
 		return errors.Errorf("operation %s is not supported", op)
 	}
