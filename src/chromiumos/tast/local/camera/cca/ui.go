@@ -171,7 +171,7 @@ var (
 	A11yCanvasNode = nodewith.Role(role.Canvas).Ancestor(A11yRootNode)
 	// DocumentScanAvailableToast is the toast message
 	// notifying user about new document scanning feature is available.
-	DocumentScanAvailableToast = nodewith.Name("Document scan available").Ancestor(A11yRootNode)
+	DocumentScanAvailableToast = nodewith.Name("Document scan available").Ancestor(A11yRootNode).First()
 )
 
 // Option is the option for toggling state.
