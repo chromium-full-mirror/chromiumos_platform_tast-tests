@@ -67,10 +67,10 @@ func (svc *ConnService) NewConn(ctx context.Context, req *pb.NewConnRequest) (*p
 	id := svc.idGenerator()
 	svc.conns[id] = conn
 
-	return &pb.NewConnResponse{Id: id}, nil
+	return &pb.NewConnResponse{Id: id, TargetId: string(conn.TargetID)}, nil
 }
 
-// NewConnForTarget creates a new Conn for an existing tab matching the url provided.
+// NewConnForTarget creates a new Conn for an existing tab matching the criteria provided.
 // Conns created should be deleted with a call to Close|CloseAll.
 func (svc *ConnService) NewConnForTarget(ctx context.Context, req *pb.NewConnForTargetRequest) (*pb.NewConnResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()
@@ -79,7 +79,15 @@ func (svc *ConnService) NewConnForTarget(ctx context.Context, req *pb.NewConnFor
 	if err != nil {
 		return nil, err
 	}
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(req.Url))
+
+	var conn *chrome.Conn
+	if req.TargetId != "" {
+		conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetID(chrome.TargetID(req.TargetId)))
+	} else if req.Url != "" {
+		conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetURL(req.Url))
+	} else {
+		return nil, errors.New("Please specify either Url or TargetId")
+	}
 	if err != nil {
 		return nil, err
 	}

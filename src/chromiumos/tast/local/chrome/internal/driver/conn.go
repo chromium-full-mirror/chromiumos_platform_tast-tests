@@ -25,7 +25,8 @@ type Conn struct {
 	lw        *jslog.Worker
 	chromeErr func(error) error // wraps Chrome.chromeErr
 
-	locked bool // if true, don't allow Close or CloseTarget to be called
+	locked   bool // if true, don't allow Close or CloseTarget to be called
+	TargetID TargetID
 }
 
 // NewConn starts a new session using sm for communicating with the supplied target.

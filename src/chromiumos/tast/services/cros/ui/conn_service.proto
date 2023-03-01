@@ -16,7 +16,7 @@ service ConnService {
   // NewConn opens a new tab with the provided url and creates a new Conn for it.
   rpc NewConn(NewConnRequest) returns (NewConnResponse) {}
 
-  // NewConnForTarget creates a new Conn for an existing tab matching the url provided.
+  // NewConnForTarget creates a new Conn for an existing tab matching the criteria provided.
   rpc NewConnForTarget(NewConnForTargetRequest) returns (NewConnResponse) {}
 
   // Close calls conn.Close.
@@ -49,11 +49,16 @@ message NewConnRequest {
 
 message NewConnResponse {
   uint32 id = 1;
+  // TargetID is an ID assigned to a Chrome DevTools target.
+  string target_id = 2;
 }
 
 message NewConnForTargetRequest {
   string url = 1;
   bool call_on_lacros = 2;
+  // TargetID is an ID assigned to a Chrome DevTools target.
+  // This ID stays the same throughout, even after suspend and chrome reconnect.
+  string target_id = 3;
 }
 
 message CloseRequest {

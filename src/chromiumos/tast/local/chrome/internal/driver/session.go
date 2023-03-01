@@ -119,6 +119,7 @@ func (s *Session) NewConn(ctx context.Context, url string, opts ...cdputil.Creat
 	if err != nil {
 		return nil, err
 	}
+	conn.TargetID = targetID
 	const blankURL = "about:blank"
 	if url != "" && url != blankURL {
 		if err := conn.WaitForExpr(ctx, fmt.Sprintf("location.href !== %q", blankURL)); err != nil {
