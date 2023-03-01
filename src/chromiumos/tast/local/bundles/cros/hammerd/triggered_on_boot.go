@@ -22,7 +22,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TriggeredOnBoot,
 		Desc:         "Hammerd smoke test to check if Hammerd is triggered on boot",
-		Contacts:     []string{"fshao@chromium.org"},
+		Contacts:     []string{
+			"cros-mtk-ec@google.com",
+			"fshao@chromium.org",
+			"phoenixshen@chromium.org",
+		},
 		BugComponent: "b:167114",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"hammerd"},
