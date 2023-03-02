@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p", "chrome"},
+			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},

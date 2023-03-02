@@ -39,11 +39,11 @@ func init() {
 		// 1 min max waiting for CPU is idle. Normally test takes ~2.5-3.5 minutes to complete.
 		Timeout: 5 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val:               browser.TypeLacros,
 		}, {
 			Name:              "vm",

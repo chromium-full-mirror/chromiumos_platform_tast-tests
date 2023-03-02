@@ -35,7 +35,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p", "no_tablet_form_factor"},
+			ExtraSoftwareDeps: []string{"android_container", "no_tablet_form_factor"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm", "no_tablet_form_factor"},
