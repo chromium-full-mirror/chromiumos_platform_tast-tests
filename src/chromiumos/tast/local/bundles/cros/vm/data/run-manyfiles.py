@@ -92,6 +92,26 @@ def test_create():
     command(['sync'])
 
 
+def test_open():
+    """Opens many files"""
+    f_gen = file_path_generator()
+    for f in f_gen:
+        # Use os.open() to avoid extra syscalls.
+        fd = os.open(f, os.O_RDONLY)
+        os.close(fd)
+
+def test_lookup_non_existent():
+    """Tries to open many non-existing files"""
+    f_gen = file_path_generator()
+    for f in f_gen:
+        fake = f'{f}-nonexistent'
+        try:
+            _ = os.open(fake, os.O_RDONLY)
+            assert False
+        except FileNotFoundError:
+            pass
+
+
 def test_remove():
     """Removes a directory with many files"""
     shutil.rmtree(OUT_DIR)
@@ -176,7 +196,10 @@ def main():
     os.mkdir(OUT_DIR)
 
     test_cases = [
-        'create', 'remove'
+        'create',
+        'open',
+        'lookup_non_existent',
+        'remove',
     ]
     results = {}
 
