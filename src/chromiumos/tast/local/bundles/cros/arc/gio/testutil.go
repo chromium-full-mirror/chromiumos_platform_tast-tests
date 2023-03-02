@@ -48,7 +48,7 @@ const (
 	// moveMode is the number of expected logcat lines from a press-release event.
 	moveMode mode = 3
 	// WaitForFocusUpdateTime reserves time for focus update on Android side.
-	WaitForFocusUpdateTime = 20 * time.Millisecond
+	WaitForFocusUpdateTime = 300 * time.Millisecond
 )
 
 var (
