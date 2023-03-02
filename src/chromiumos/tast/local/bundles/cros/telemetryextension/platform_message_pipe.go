@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/local/bundles/cros/telemetryextension/dep"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/fixture"
 	"chromiumos/tast/testing"
 )
@@ -29,28 +28,14 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name:              "stable",
-				Fixture:           fixture.TelemetryExtension,
-				ExtraAttr:         []string{"informational"},
-				ExtraHardwareDeps: dep.StableModels(),
+				Name:      "ash",
+				Fixture:   fixture.TelemetryExtensionOverrideOEMName,
+				ExtraAttr: []string{"informational"},
 			},
 			{
-				Name:              "non_stable",
-				Fixture:           fixture.TelemetryExtension,
-				ExtraAttr:         []string{"informational"},
-				ExtraHardwareDeps: dep.NonStableModels(),
-			},
-			{
-				Name:              "stable_lacros",
-				Fixture:           fixture.TelemetryExtensionLacros,
-				ExtraAttr:         []string{"informational"},
-				ExtraHardwareDeps: dep.StableModels(),
-			},
-			{
-				Name:              "non_stable_lacros",
-				Fixture:           fixture.TelemetryExtensionLacros,
-				ExtraAttr:         []string{"informational"},
-				ExtraHardwareDeps: dep.NonStableModels(),
+				Name:      "lacros",
+				Fixture:   fixture.TelemetryExtensionOverrideOEMNameLacros,
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})
