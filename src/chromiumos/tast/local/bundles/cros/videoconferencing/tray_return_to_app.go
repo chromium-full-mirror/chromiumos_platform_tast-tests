@@ -76,7 +76,7 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
 	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
 	if err != nil {

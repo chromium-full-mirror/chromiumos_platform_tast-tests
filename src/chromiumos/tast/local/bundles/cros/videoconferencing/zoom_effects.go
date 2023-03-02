@@ -96,7 +96,7 @@ func ZoomEffects(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
-	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
 	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
 	if err != nil {

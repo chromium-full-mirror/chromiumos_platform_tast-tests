@@ -7,32 +7,29 @@ package fixture
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/testing"
 )
 
 // List of fixture names for video conferencing testing.
 const (
-	LoggedIn       = "loggedInForVideoConferencing"
-	LoggedInLacros = "loggedInLacrosForVideoConferencing"
+	loggedIn       = "loggedInForVideoConferencing"
+	loggedInLacros = "loggedInLacrosForVideoConferencing"
 
-	GAIALoggedIn                = "gaiaLoggedInForVideoConferencing"
-	GAIALoggedInClamshell       = "gaiaLoggedInClamshellForVideoConferencing"
-	GAIALoggedInTablet          = "gaiaLoggedInTabletForVideoConferencing"
-	GAIALoggedInLacros          = "gaiaLoggedInLacrosForVideoConferencing"
-	GAIALoggedInLacrosClamshell = "gaiaLoggedInLacrosClamshellForVideoConferencing"
-	GAIALoggedInLacrosTablet    = "gaiaLoggedInLacrosTabletForVideoConferencing"
+	gaiaLoggedIn                = "gaiaLoggedInForVideoConferencing"
+	gaiaLoggedInClamshell       = "gaiaLoggedInClamshellForVideoConferencing"
+	gaiaLoggedInTablet          = "gaiaLoggedInTabletForVideoConferencing"
+	gaiaLoggedInLacros          = "gaiaLoggedInLacrosForVideoConferencing"
+	gaiaLoggedInLacrosClamshell = "gaiaLoggedInLacrosClamshellForVideoConferencing"
+	gaiaLoggedInLacrosTablet    = "gaiaLoggedInLacrosTabletForVideoConferencing"
 
-	NoLoggedIn = "noLoggedInForVideoConferencing"
+	noLoggedIn = "noLoggedInForVideoConferencing"
 )
 
 const (
@@ -43,7 +40,7 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: LoggedIn,
+		Name: loggedIn,
 		Desc: "A fixture with fake user logged in",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -58,7 +55,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedIn,
+		Name: gaiaLoggedIn,
 		Desc: "A fixture with GAIA user logged in",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -76,7 +73,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInClamshell,
+		Name: gaiaLoggedInClamshell,
 		Desc: "A fixture with GAIA user logged in forcing clamshell mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -97,7 +94,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInTablet,
+		Name: gaiaLoggedInTablet,
 		Desc: "A fixture with GAIA user logged in forcing tablet mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -118,7 +115,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: LoggedInLacros,
+		Name: loggedInLacros,
 		Desc: "A fixture with fake user logged in Lacros",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -133,7 +130,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacros,
+		Name: gaiaLoggedInLacros,
 		Desc: "A fixture with GAIA user logged in Lacros",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -153,7 +150,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacrosClamshell,
+		Name: gaiaLoggedInLacrosClamshell,
 		Desc: "A fixture with GAIA user logged in Lacros in clamshell mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -174,7 +171,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: GAIALoggedInLacrosTablet,
+		Name: gaiaLoggedInLacrosTablet,
 		Desc: "A fixture with GAIA user logged in Lacros in tablet mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -195,7 +192,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: NoLoggedIn,
+		Name: noLoggedIn,
 		Desc: "A fixture with no user logged in",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
@@ -220,19 +217,9 @@ func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) te
 }
 
 // BaseSetupFixtData is the data returned by SetUp and passed to tests.
-type BaseSetupFixtData struct {
+type baseSetupFixtData struct {
 	cr *chrome.Chrome
 	bt browser.Type
-}
-
-// Chrome returns Chrome. This adds support for chrome.HasChrome interface.
-func (fd BaseSetupFixtData) Chrome() *chrome.Chrome {
-	return fd.cr
-}
-
-// BrowserType returns the browser type setup in fixture.
-func (fd BaseSetupFixtData) BrowserType() browser.Type {
-	return fd.bt
 }
 
 // baseSetupFixtureImpl implements testing.FixtureImpl.
@@ -278,42 +265,14 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		}
 	}
 
-	return BaseSetupFixtData{f.cr, f.browserType}
+	return baseSetupFixtData{f.cr, f.browserType}
 }
 
-func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// Do not setup recorder if f.tconn is not created.
-	if f.tconn == nil {
-		return
-	}
+func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
-}
-
-func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// Do nothing if the recorder is not initialized.
-	if f.recorder != nil {
-		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
-	}
-}
+func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
-	// Check oauth2 token is still valid. If not, return an error to restart
-	// chrome and re-login.
-	if f.cr.LoginMode() == "GAIA" {
-		if st, err := loginstatus.GetLoginStatus(ctx, f.tconn); err != nil {
-			return errors.Wrap(err, "failed to get login status")
-		} else if !*st.HasValidOauth2Token {
-			return errors.New("invalid oauth2 token")
-		}
-	}
-
-	if err := f.cr.Responded(ctx); err != nil {
-		return errors.Wrap(err, "existing Chrome connection is unusable")
-	}
-	if err := f.cr.ResetState(ctx); err != nil {
-		return errors.Wrap(err, "failed resetting existing Chrome session")
-	}
 	return nil
 }
 

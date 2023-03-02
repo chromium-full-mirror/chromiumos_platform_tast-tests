@@ -26,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAEffects,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checks Video Effects in built-in Camera App",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",

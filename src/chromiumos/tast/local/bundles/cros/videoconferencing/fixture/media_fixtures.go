@@ -7,13 +7,17 @@ package fixture
 import (
 	"context"
 	"os"
+	"path/filepath"
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/input/voice"
+	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
@@ -29,6 +33,8 @@ const (
 
 // List of fixture names for ML service testing.
 const (
+	NoLogInWithInternalCameraAndEffectsEnabled = "noLogInWithInternalCameraAndEffectsEnabled"
+
 	// Fixtures with fake login.
 	LoggedInWithFakeHALAndEffectsEnabled       = "loggedInWithFakeHALAndEffectsEnabled"
 	LoggedInWithFakeHALAndEffectsDisabled      = "loggedInWithFakeHALAndEffectsDisabled"
@@ -80,6 +86,11 @@ var (
 		platformEffect:  platformEffectDisabled,
 		fakeCameraInput: fakeHALImageInput,
 	}
+
+	internalCameraWithPlatformEffectsEnabled = cameraConfig{
+		cameraType:     testutil.UseRealCamera,
+		platformEffect: platformEffectEnabled,
+	}
 )
 
 const (
@@ -98,7 +109,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          LoggedIn,
+		Parent:          loggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -115,7 +126,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsDisabled),
-		Parent:          LoggedIn,
+		Parent:          loggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -132,7 +143,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          LoggedInLacros,
+		Parent:          loggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -149,7 +160,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedIn,
+		Parent:          gaiaLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -166,7 +177,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsDisabled),
-		Parent:          GAIALoggedIn,
+		Parent:          gaiaLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -183,7 +194,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedInClamshell,
+		Parent:          gaiaLoggedInClamshell,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -200,7 +211,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedInTablet,
+		Parent:          gaiaLoggedInTablet,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -217,7 +228,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedInLacros,
+		Parent:          gaiaLoggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -234,7 +245,7 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedInLacrosClamshell,
+		Parent:          gaiaLoggedInLacrosClamshell,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -251,7 +262,23 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
-		Parent:          GAIALoggedInLacrosTablet,
+		Parent:          gaiaLoggedInLacrosTablet,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: NoLogInWithInternalCameraAndEffectsEnabled,
+		Desc: "A fixture with no user logged in using internal camera with platform effects enabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Impl:            mediaSetupFixture(internalMic, internalCameraWithPlatformEffectsEnabled),
+		Parent:          noLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -261,7 +288,7 @@ func init() {
 }
 
 func mediaSetupFixture(mic micType, camConfig cameraConfig) testing.FixtureImpl {
-	return &mediaFixtureImpl{mic, camConfig, nil}
+	return &mediaFixtureImpl{micType: mic, camConfig: camConfig}
 }
 
 // mediaFixtureImpl implements testing.FixtureImpl.
@@ -269,11 +296,41 @@ type mediaFixtureImpl struct {
 	micType   micType
 	camConfig cameraConfig
 	cleanup   []action.Action // A list of cleanup actions to be executed in teardown.
+	cr        *chrome.Chrome
+	tconn     *chrome.TestConn
+	recorder  *uiauto.ScreenRecorder
+}
+
+// FixtData is the data returned by SetUp and passed to tests.
+type FixtData struct {
+	cr *chrome.Chrome
+	bt browser.Type
+}
+
+// Chrome returns Chrome. This adds support for chrome.HasChrome interface.
+func (fd FixtData) Chrome() *chrome.Chrome {
+	return fd.cr
+}
+
+// BrowserType returns the browser type setup in fixture.
+func (fd FixtData) BrowserType() browser.Type {
+	return fd.bt
 }
 
 func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	parentVal := s.ParentValue()
-	cr := parentVal.(BaseSetupFixtData).Chrome()
+	f.cr = parentVal.(baseSetupFixtData).cr
+	bt := parentVal.(baseSetupFixtData).bt
+
+	if f.cr.LoginMode() != "NoLogin" {
+		// cr.TestAPIConn does not work on login page.
+		// It can be achieved via cr.SigninProfileTestAPIConn(ctx) but not necessary.
+		tconn, err := f.cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get test API connection: ", err)
+		}
+		f.tconn = tconn
+	}
 
 	f.cleanup = []action.Action{}
 
@@ -290,15 +347,10 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 		})
 	}
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get test API connection: ", err)
-	}
-
 	if f.micType == aloop {
 		testing.ContextLog(ctx, "Setting up Aloop for audio test")
 		// Setup CRAS Aloop for audio test.
-		cleanup, err := voice.EnableAloop(ctx, tconn)
+		cleanup, err := voice.EnableAloop(ctx, f.tconn)
 		if err != nil {
 			s.Fatal("Failed to enable Aloop: ", err)
 		}
@@ -315,17 +367,42 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 		s.Fatal("Failed to setup camera: ", err)
 	}
 
-	return s.ParentValue()
+	return FixtData{cr: f.cr, bt: bt}
 }
 
 func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Do not setup recorder if f.tconn is not created.
+	if f.tconn == nil {
+		return
+	}
+
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 }
 
 func (f *mediaFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-
+	// Do nothing if the recorder is not initialized.
+	if f.recorder != nil {
+		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
 }
 
 func (f *mediaFixtureImpl) Reset(ctx context.Context) error {
+	// Check oauth2 token is still valid. If not, return an error to restart
+	// chrome and re-login.
+	if f.cr.LoginMode() == "GAIA" {
+		if st, err := loginstatus.GetLoginStatus(ctx, f.tconn); err != nil {
+			return errors.Wrap(err, "failed to get login status")
+		} else if !*st.HasValidOauth2Token {
+			return errors.New("invalid oauth2 token")
+		}
+	}
+
+	if err := f.cr.Responded(ctx); err != nil {
+		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+	if err := f.cr.ResetState(ctx); err != nil {
+		return errors.Wrap(err, "failed resetting existing Chrome session")
+	}
 	return nil
 }
 

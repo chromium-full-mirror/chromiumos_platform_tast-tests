@@ -49,22 +49,22 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "pwa",
-				Fixture: fixture.GAIALoggedIn,
+				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "web",
-				Fixture: fixture.GAIALoggedIn,
+				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
 				Name:    "pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacros,
+				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInPWA,
 			},
 			{
 				Name:    "web_lacros",
-				Fixture: fixture.GAIALoggedInLacros,
+				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 				Val:     commontype.LaunchAppInWeb,
 			},
 		},
@@ -96,7 +96,7 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
 	}
 
-	browserType := s.FixtValue().(fixture.BaseSetupFixtData).BrowserType()
+	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
 	// Initialize a bond client.
 	creds := s.RequiredVar(credsVarName)
