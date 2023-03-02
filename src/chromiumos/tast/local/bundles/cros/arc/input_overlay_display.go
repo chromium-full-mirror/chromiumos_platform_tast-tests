@@ -13,9 +13,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/testing"
 )
 
@@ -29,7 +27,6 @@ func init() {
 		BugComponent: "b:767470",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{"input-overlay-menu-close.png", "input-overlay-menu-switch.png", "input-overlay-menu.png"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
@@ -52,10 +49,6 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 		defer kb.Close()
 		// Start up UIAutomator.
 		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
-		// Start up ACUITI.
-		uda := uidetection.NewDefault(params.TestConn).WithOptions(uidetection.Retries(3)).WithScreenshotStrategy(uidetection.ImmediateScreenshot).WithTimeout(time.Minute)
-
-		appWindow := nodewith.Name("ARC Input Overlay Test").Role(role.Window).HasClass("RootView")
 
 		// CUJ: Hide game overlay.
 		s.Log("Display CUJ #1: hide game overlay")
@@ -63,7 +56,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			// Close educational dialog.
 			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
 			// Open game controls.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			// Tap bottom menu switch.
 			ui.LeftClick(nodewith.Name("Show key mapping").HasClass("ToggleButton")),
 			// Exit out of menu.
@@ -74,12 +67,12 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.Gone(nodewith.Name("w").HasClass("LabelButtonLabel")),
 			gio.MoveOverlayButton(kb, "w", &params),
 			// Poll edits can still be done.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
 			ui.WaitUntilExists(nodewith.Name("m").HasClass("LabelButtonLabel")),
 			ui.WaitUntilExists(nodewith.Name("w").HasClass("LabelButtonLabel")),
 			// Exit out.
-			uda.Tap(uidetection.Word("Cancel").WithinA11yNode(appWindow)),
+			ui.LeftClick(nodewith.Name("Cancel").HasClass("LabelButtonLabel")),
 		)(ctx); err != nil {
 			s.Error("Failed to verify game overlay hidden: ", err)
 			// Reset activity.
@@ -92,7 +85,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 		s.Log("Display CUJ #2: disable game overlay")
 		if err := uiauto.Combine("disable game overlay",
 			// Open game controls.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			// Tap top menu switch.
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ToggleButton")),
 			// Exit out of menu.
@@ -103,7 +96,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.Gone(nodewith.Name("w").HasClass("LabelButtonLabel")),
 			not(gio.MoveOverlayButton(kb, "w", &params)),
 			// Check "Customize" button disabled.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
 			not(ui.Gone(nodewith.Name("Edit").HasClass("LabelButtonLabel"))),
 		)(ctx); err != nil {
