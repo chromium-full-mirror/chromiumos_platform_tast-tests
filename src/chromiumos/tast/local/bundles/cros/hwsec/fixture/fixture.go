@@ -882,6 +882,7 @@ func (f *backupFixtImpl) Reset(ctx context.Context) error {
 type crossVersionFixtImpl struct {
 	dataPrefix string
 	useCurrent bool
+	dataPath   string
 }
 
 // CrossVersionLoginFixture contains the config list for the login data used in cross version testing.
@@ -934,6 +935,8 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	if err := hwseclocal.LoadLoginData(ctx, daemonController, dataPath, true /*includeTpm*/); err != nil {
 		return errors.Wrap(err, "failed to load login data")
 	}
+
+	f.dataPath = dataPath
 	return &CrossVersionLoginFixture{
 		ConfigList: configList,
 	}
@@ -949,5 +952,14 @@ func (f *crossVersionFixtImpl) PostTest(ctx context.Context, s *testing.FixtTest
 }
 
 func (f *crossVersionFixtImpl) Reset(ctx context.Context) error {
+	cmdRunner := hwseclocal.NewCmdRunner()
+	helper, err := hwseclocal.NewHelper(cmdRunner)
+	if err != nil {
+		return errors.Wrap(err, "failed to create hwsec local helper")
+	}
+	daemonController := helper.DaemonController()
+	if err := hwseclocal.LoadLoginData(ctx, daemonController, f.dataPath, true /*includeTpm*/); err != nil {
+		return errors.Wrap(err, "failed to load login data")
+	}
 	return nil
 }
