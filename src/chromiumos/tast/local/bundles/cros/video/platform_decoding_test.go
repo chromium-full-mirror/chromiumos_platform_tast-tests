@@ -1347,6 +1347,24 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, param)
 	}
 
+	// Generates V4L2 Stateless H264 tests.
+	for _, group := range []string{"baseline", "main"} {
+		files := h264Files[group]
+
+		param := paramData{
+			Name:         fmt.Sprintf("v4l2_stateless_h264_%s", group),
+			Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
+			CmdBuilder:   "v4l2StatelessDecodeArgs",
+			Files:        files,
+			Timeout:      defaultTimeout,
+			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeH264},
+			HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), ",
+			Metadata:     genExtraData(files),
+			Attr:         []string{"graphics_video_h264"},
+		}
+		params = append(params, param)
+	}
+
 	// Generates VAAPI H264 tests.
 	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
 		files := h264Files[group]
