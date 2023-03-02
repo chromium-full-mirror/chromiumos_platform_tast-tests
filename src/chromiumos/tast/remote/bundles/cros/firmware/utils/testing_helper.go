@@ -1,0 +1,40 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package utils contains functionality shared by tests that
+// exercise firmware restoration.
+package utils
+
+// FirmwareTestingHelperDelegate facilitates FirmwareTestingHelper.
+type FirmwareTestingHelperDelegate interface {
+	Fatalf(format string, args ...interface{})
+}
+
+// FirmwareTestingHelper adds convenience functions for test execution.
+type FirmwareTestingHelper struct {
+	FirmwareTestingHelperDelegate
+}
+
+// MustSucceed aborts the test upon error.
+func (fs *FirmwareTestingHelper) MustSucceed(err error, format string, args ...interface{}) {
+	if err != nil {
+		fs.Fatalf(format+": %s", append(args, err)...)
+	}
+}
+
+// MustSucceedVal aborts the test upon error, otherwise returns val as-is.
+func (fs *FirmwareTestingHelper) MustSucceedVal(val interface{}, err error) interface{} {
+	if err != nil {
+		fs.Fatalf("MustSucceedVal: %s", err)
+	}
+	return val
+}
+
+// MustSucceedBool aborts the test upon error, otherwise returns val as-is for bools.
+func (fs *FirmwareTestingHelper) MustSucceedBool(val bool, err error) bool {
+	if err != nil {
+		fs.Fatalf("MustSucceedBool: %s", err)
+	}
+	return val
+}

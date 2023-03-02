@@ -37,27 +37,20 @@ func Ti50Tpm(ctx context.Context, s *testing.State) {
 	board := f.DevBoard()
 	i := ti50.NewCrOSImage(board)
 
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+
 	testing.ContextLog(ctx, "Restarting ti50 with SPI straps")
-	if err := board.GpioApplyStrap(ctx, ti50.TpmSpi); err != nil {
-		s.Fatalf("Failed to set TPM to SPI: %s", err)
-	}
-	if err := board.Reset(ctx); err != nil {
-		s.Fatal("Failed to reset: ", err)
-	}
-	if err := i.WaitUntilBooted(ctx); err != nil {
-		s.Fatal("Ti50 did revive after reboot: ", err)
-	}
+	th.MustSucceed(board.GpioApplyStrap(ctx, ti50.TpmSpi), "Set TPM to SPI")
+	th.MustSucceed(board.Reset(ctx), "Reset board")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
 	// TPM commands.
-	utils.MustSetGpio(ctx, board, s, ti50.GpioTi50PltRstL, true)
+	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50PltRstL, true), "Assert gpio Ti50PltRstL")
 
-	data, err := board.OpenTitanToolCommand(ctx, "spi", "tpm", "read-register", ti50.TpmRegDidVid)
-	if err != nil {
-		s.Fatal("OpenTitanToolCommand: ", err)
-	}
+	data := th.MustSucceedVal(board.OpenTitanToolCommand(ctx, "spi", "tpm", "read-register", ti50.TpmRegDidVid))
 
-	if data["hexdata"].(string) != ti50TpmDidVid {
-		s.Error("Unexpected TPM DID_VID: ", data["hexdata"])
+	if data.(map[string]interface{})["hexdata"].(string) != ti50TpmDidVid {
+		s.Error("Unexpected TPM DID_VID: ", data.(map[string]interface{})["hexdata"].(string))
 	}
 }

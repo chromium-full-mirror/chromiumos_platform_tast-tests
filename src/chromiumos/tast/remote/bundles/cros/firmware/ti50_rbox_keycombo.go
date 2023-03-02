@@ -36,39 +36,33 @@ func Ti50RboxKeycombo(ctx context.Context, s *testing.State) {
 	board := f.DevBoard()
 	i := ti50.NewCrOSImage(board)
 
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+
 	testing.ContextLog(ctx, "Restarting ti50 with clamshell straps")
-	if err := board.GpioApplyStrap(ctx, ti50.FfClamshell); err != nil {
-		s.Fatalf("Failed to set %s form factor: %s", ti50.FfClamshell, err)
-	}
-	if err := board.Reset(ctx); err != nil {
-		s.Fatal("Failed to reset: ", err)
-	}
-	if err := i.WaitUntilBooted(ctx); err != nil {
-		s.Fatal("Ti50 did revive after reboot: ", err)
-	}
+	th.MustSucceed(board.GpioApplyStrap(ctx, ti50.FfClamshell), "Set FfClamshell form factor")
+	th.MustSucceed(board.Reset(ctx), "Reset board")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	testing.ContextLog(ctx, "Verifying KSO is passed through when power button not pressed")
-	utils.MustSetGpio(ctx, board, s, ti50.GpioTi50PowerBtnL, true)
-	utils.MustSetGpio(ctx, board, s, ti50.GpioTi50EcKso2Inv, true)
-	if utils.MustGetGpio(ctx, board, s, ti50.GpioTi50Kso2) != false {
-		s.Error("GSC did not forward asserted GpioTi50EcKso2Inv")
+	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50PowerBtnL, true), "Assert GpioTi50PowerBtnL")
+	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50EcKso2Inv, true), "Assert GpioTi50EcKso2Inv")
+	if th.MustSucceedBool(board.GpioRead(ctx, ti50.GpioTi50Kso2)) != false {
+		s.Error("GSC should forward asserted GpioTi50EcKso2Inv")
 	}
 
-	utils.MustSetGpio(ctx, board, s, ti50.GpioTi50EcKso2Inv, false)
-	if utils.MustGetGpio(ctx, board, s, ti50.GpioTi50Kso2) != true {
-		s.Error("GSC did not forward de-asserted GpioTi50EcKso2Inv")
+	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50EcKso2Inv, false), "De-assert GpioTi50EcKso2Inv")
+	if th.MustSucceedBool(board.GpioRead(ctx, ti50.GpioTi50Kso2)) != true {
+		s.Error("GSC should forward de-asserted GpioTi50EcKso2Inv")
 	}
 
 	testing.ContextLog(ctx, "Pushing Power button")
-	utils.MustSetGpio(ctx, board, s, ti50.GpioTi50PowerBtnL, false)
-
-	// Ensure that that KSO is is low/asserted when power button is pressed
-	if utils.MustGetGpio(ctx, board, s, ti50.GpioTi50Kso2) != false {
-		s.Error("GSC is not asserting KSO low when power button is pressed")
+	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50PowerBtnL, false), "De-assert GpioTi50PowerBtnL")
+	if th.MustSucceedBool(board.GpioRead(ctx, ti50.GpioTi50Kso2)) != false {
+		s.Error("GSC should be asserting KSO low when power button is pressed")
 	}
 
 	testing.ContextLog(ctx, "Pushing Refresh key")
-	utils.MustSetGpio(ctx, board, s, ti50.GpioTi50KsiRefresh, false)
+	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50KsiRefresh, false), "De-assert GpioTi50KsiRefresh")
 
 	// TODO(b/262618201) ensure that EC_RST_L pulsed
 	// TODO(b/262618201) finish the rest of test for other form factors
