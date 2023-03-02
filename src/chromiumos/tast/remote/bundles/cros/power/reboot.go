@@ -15,7 +15,7 @@ func init() {
 		Func:         Reboot,
 		Desc:         "Verifies that system comes back after rebooting",
 		BugComponent: "b:167191",
-		Contacts:     []string{"tast-owners@google.com"},
+		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"reboot", "no_qemu"},
 		Attr:         []string{"group:mainline", "group:labqual"},
 	})

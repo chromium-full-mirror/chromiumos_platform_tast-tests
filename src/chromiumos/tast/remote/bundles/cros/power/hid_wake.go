@@ -34,7 +34,7 @@ func init() {
 		Func:         HidWake,
 		Desc:         "Checks that HID events correctly wake the DUT",
 		BugComponent: "b:167191",
-		Contacts:     []string{"jthies@google.com", "chromeos-power@google.com"},
+		Contacts:     []string{"chromeos-platform-power@google.com", "jthies@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"usb_hid_wake"},
 		Vars:         []string{"servo"},

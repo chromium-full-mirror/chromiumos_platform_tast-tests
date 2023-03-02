@@ -18,8 +18,8 @@ func init() {
 		Desc:         "Check that dptf loads correct thermal profile from override script",
 		BugComponent: "b:167191",
 		Contacts: []string{
-			"puthik@chromium.org",                // test author
 			"chromeos-platform-power@google.com", // CrOS platform power developers
+			"puthik@chromium.org",                // test author
 		},
 		// TODO(b/210921679): re-enable once failures are fixed.
 		Attr: []string{"group:mainline", "informational"},
