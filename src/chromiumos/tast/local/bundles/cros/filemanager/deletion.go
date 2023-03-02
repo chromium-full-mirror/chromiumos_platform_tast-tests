@@ -45,7 +45,7 @@ func init() {
 		},
 		// ChromeOS > Software > Files
 		BugComponent: "b:167289",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{testFile},
 		Fixture:      "chromeLoggedIn",

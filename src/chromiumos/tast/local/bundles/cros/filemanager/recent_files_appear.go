@@ -37,7 +37,7 @@ func init() {
 			"chromeos-files-syd@google.com",
 			"jinrongwu@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{testImage},
 		Fixture:      "chromeLoggedIn",
