@@ -3101,7 +3101,7 @@ func (s *ShillService) startSoftAP(ctx context.Context, request *wifi.TetheringR
 func (s *ShillService) startDHCPServer(ctx context.Context) (ret error) {
 	r := &cmd.LocalCmdRunner{}
 
-	_ = r.Run(ctx, "killall", "dnsmasq")
+	_ = r.Run(ctx, "killall", "-q", "dnsmasq")
 
 	ipr := ip.NewLocalRunner()
 	if err := ipr.AddIP(ctx, apIfName, net.ParseIP(softAPIPAddress), 24); err != nil {
@@ -3139,7 +3139,7 @@ func (s *ShillService) stopDHCPServer(ctx context.Context) error {
 	var firstErr error
 	r := &cmd.LocalCmdRunner{}
 
-	if err := r.Run(ctx, "killall", "dnsmasq"); err != nil {
+	if err := r.Run(ctx, "killall", "-q", "dnsmasq"); err != nil {
 		return errors.Wrap(err, "failed to kill dnsmasq")
 	}
 

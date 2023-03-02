@@ -17,6 +17,7 @@ import (
 
 	"chromiumos/tast/common/network/arping"
 	"chromiumos/tast/common/network/firewall"
+	commoniw "chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/common/network/protoutil"
 	"chromiumos/tast/common/network/wpacli"
@@ -2001,6 +2002,72 @@ func (tf *TestFixture) ReserveForDeconfigP2P(ctx context.Context) (context.Conte
 // ReserveForDeleteIPRoute returns a shorter ctx and cancel function for tf.P2PDeleteIPRoute().
 func (tf *TestFixture) ReserveForDeleteIPRoute(ctx context.Context) (context.Context, context.CancelFunc) {
 	return ctxutil.Shorten(ctx, 2*time.Second)
+}
+
+// SeedRegdomain sets up AP which broadcasts country information, so that all self-managed devices in the wificell get their regdomain seeded.
+func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) (*APIface, func(context.Context), error) {
+	// One AP is enough for all testcases.
+	ssid := hostapd.RandomSSID("SUPPORT_SSID")
+	apIface, err := tf.ConfigureAPOnRouterID(ctx, 0, []hostapd.Option{
+		hostapd.Mode(hostapd.Mode80211a),
+		hostapd.Channel(48),
+		hostapd.SSID(ssid),
+		hostapd.SpectrumManagement()}, nil, false, false)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to configure AP")
+	}
+
+	cancel := func(ctx context.Context) {
+		if err := tf.DeconfigAP(ctx, apIface); err != nil {
+			testing.ContextLog(ctx, "Failed to deconfig AP, err: ", err)
+		}
+	}
+
+	testing.ContextLog(ctx, "Supporting AP setup done. Waiting for the regdomain information to be propagated")
+
+	// Make sure we have the regdomain set.
+	ifName, err := tf.DUTWifiClient(DefaultDUT).Interface(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to read WiFi Interface name")
+	}
+	iwr := iw.NewRemoteRunner(tf.DUTConn(dutIdx))
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+
+		// Check if support SSID is present in scan results.
+		scanData, err := iwr.TimedScan(ctx, ifName, nil, nil)
+		if err != nil || scanData == nil {
+			return errors.Wrap(err, "failed to scan")
+		}
+		findSSID := func(d []*commoniw.BSSData, ssid string) bool {
+			for _, e := range d {
+				if e.SSID == ssid {
+					return true
+				}
+			}
+			return false
+		}
+		if !findSSID(scanData.BSSList, ssid) {
+			return errors.Errorf("SSID %s not found in scan, SSIDs: %v", ssid, scanData.BSSList)
+		}
+		// Make sure Regdomain is set now.
+		domain, err := iwr.PhyRegulatoryDomain(ctx, "phy0")
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read regulatory status"))
+		}
+		// We've set AP to the US country code. However, some drivers may implement subset of that domain (99).
+		// So we should be happy with regdomain that is just different than `00`.
+		if domain == "00" {
+			return errors.New("wrong domain, required != 00, got 00")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		cancel(ctx)
+		return nil, nil, errors.Wrap(err, "failed to get a correct regdomain")
+	}
+
+	return apIface, cancel, nil
 }
 
 // StartTethering configures the specific DUT to provide a tethering session with the options specified.

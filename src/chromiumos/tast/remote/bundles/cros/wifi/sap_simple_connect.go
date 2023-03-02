@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 
+	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
@@ -126,6 +127,16 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Test requires at least 2 DUTs to be declared. Only have ", tf.NumberOfDUTs())
 	}
 
+	// Setup AP to provide reference regulatory domain for all testcases.
+	apIface, cancelF, err := tf.SeedRegdomain(ctx, wificell.DefaultDUT)
+	if err != nil {
+		s.Fatal("Failed to configure ap, err: ", err)
+	}
+	defer cancelF(ctx)
+
+	ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
+	defer cancel()
+
 	testOnce := func(ctx context.Context, s *testing.State, options []tethering.Option, fac security.ConfigFactory) {
 		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, options, fac)
 		if err != nil {
@@ -170,7 +181,7 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to parse IP address %s: %v", addrsResp.Ipv4[0], err)
 		}
 
-		if _, err := tf.PingFromSpecificDUT(ctx, cdIdx, addr.String()); err != nil {
+		if _, err := tf.PingFromSpecificDUT(ctx, cdIdx, addr.String(), ping.Interval(0.1)); err != nil {
 			s.Fatal("Failed to ping from Companion DUT to DUT: ", err)
 		}
 	}
