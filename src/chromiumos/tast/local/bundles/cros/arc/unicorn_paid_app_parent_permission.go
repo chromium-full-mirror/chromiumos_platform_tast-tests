@@ -43,6 +43,7 @@ func init() {
 
 func UnicornPaidAppParentPermission(ctx context.Context, s *testing.State) {
 	const (
+		provisioningTimeout     = 3 * time.Minute
 		askYourParentDialogText = "Ask your parent"
 		gamesAppName            = "org.twisevictory.apps"
 	)
@@ -84,21 +85,20 @@ func UnicornPaidAppParentPermission(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(ctx)
 
+	if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
+		s.Fatal("Failed to wait for provisioning: ", err)
+	}
+
 	if err := playstore.OpenAppPage(ctx, a, gamesAppName); err != nil {
 		s.Fatal("Failed to open app page: ", err)
 	}
 
-	searchResult := d.Object(ui.ClassName("android.view.View"), ui.DescriptionContains("$"), ui.Index(1))
-	if err := searchResult.WaitForExists(ctx, 30*time.Second); err != nil {
-		s.Log("Search Result doesn't exist: ", err)
-	} else if err := searchResult.Click(ctx); err != nil {
-		s.Fatal("Failed to click on Search Result: ", err)
+	// The buy button shows price only when the app isn't purchased already.
+	installButton, err := playstore.FindActionButton(ctx, d, "\\$[0-9.]+", 30*time.Second)
+	if err != nil {
+		s.Fatal("Install Button doesn't exist: ", err)
 	}
 
-	installButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextContains("$"), ui.Enabled(true))
-	if err := installButton.WaitForExists(ctx, 10*time.Second); err != nil {
-		s.Fatal("Install Button doesn't exisit: ", err)
-	}
 	if err := installButton.Click(ctx); err != nil {
 		s.Fatal("Failed to click  installButton: ", err)
 	}

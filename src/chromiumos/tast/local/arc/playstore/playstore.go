@@ -52,29 +52,27 @@ type Options struct {
 
 // FindInstallButton finds the install button on app detail page.
 func FindInstallButton(ctx context.Context, d *ui.Device, timeout time.Duration) (*ui.Object, error) {
+	return FindActionButton(ctx, d, "install", timeout)
+}
+
+// FindActionButton finds the action button on app detail page.
+func FindActionButton(ctx context.Context, d *ui.Device, actionText string, timeout time.Duration) (*ui.Object, error) {
 	var result *ui.Object
 
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		const installText = "Install"
 		buttonClass := ui.ClassName("android.widget.Button")
-
-		installButton := d.Object(buttonClass, ui.Text(installText), ui.Enabled(true))
-		if err := installButton.WaitForExists(ctx, time.Second); err == nil {
+		actionButton := d.Object(buttonClass, ui.TextMatches("(?i)"+actionText), ui.Enabled(true))
+		if err := actionButton.WaitForExists(ctx, time.Second); err == nil {
 			testing.ContextLog(ctx, "Found the button")
-			result = installButton
+			result = actionButton
 			return nil
 		}
 
 		viewClass := ui.ClassName("android.view.View")
-		installView := d.Object(viewClass, ui.Index(5), ui.Enabled(true), ui.Clickable(true))
-		if err := installView.WaitForExists(ctx, time.Second); err != nil {
-			return errors.New("Did not find the wrapper")
-		}
-
-		hiddenBtn := d.Object(buttonClass, ui.Index(2), ui.Enabled(true))
-		if err := installView.GetChild(ctx, hiddenBtn); err == nil {
-			testing.ContextLog(ctx, "Found the wrapped button")
-			result = installView
+		actionView := d.Object(viewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
+		if err := actionView.WaitForExists(ctx, time.Second); err == nil {
+			testing.ContextLog(ctx, "Found the view")
+			result = actionView
 			return nil
 		}
 
