@@ -12,10 +12,10 @@ const (
 
 	// CnnAmericasURL specifies the URL for CNN's page covering news from Americas.
 	CnnAmericasURL = "https://edition.cnn.com/americas"
+	// CnnAsiaURL specifies the URL for CNN's page covering news from Asia.
+	CnnAsiaURL = "https://edition.cnn.com/asia"
 	// CnnAustraliaURL specifies the URL for CNN's page covering news from Australia.
 	CnnAustraliaURL = "https://edition.cnn.com/australia"
-	// CnnEuropeURL specifies the URL for CNN's page covering news from Europe.
-	CnnEuropeURL = "https://edition.cnn.com/europe"
 	// CnnMiddleEastURL specifies the URL for CNN's page covering news from Middle-East.
 	CnnMiddleEastURL = "https://edition.cnn.com/middle-east"
 	// CnnWorldURL specifies the URL for CNN's covering news from the world.

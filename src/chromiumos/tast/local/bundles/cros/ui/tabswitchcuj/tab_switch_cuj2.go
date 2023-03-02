@@ -341,7 +341,7 @@ var allTargets = []struct {
 	{cuj.CnnWorldURL, newPageInfo(cuj.Plus, cnn, `/world`, `/africa`)},
 	{cuj.CnnAmericasURL, newPageInfo(cuj.Plus, cnn, `/americas`, `/asia`)},
 	{cuj.CnnAustraliaURL, newPageInfo(cuj.Plus, cnn, `/australia`, `/china`)},
-	{cuj.CnnEuropeURL, newPageInfo(cuj.Premium, cnn, `/europe`, `/india`)},
+	{cuj.CnnAsiaURL, newPageInfo(cuj.Premium, cnn, `/asia`, `/india`)},
 	{cuj.CnnMiddleEastURL, newPageInfo(cuj.Premium, cnn, `/middle-east`, `/europe`, `/united-kingdom`)},
 
 	{cuj.EspnNflURL, newPageInfo(cuj.Plus, espn, `/nfl/scoreboard`, `/nfl/schedule`)},
@@ -746,7 +746,7 @@ func tabSwitchAction(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
 					return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
 				}
-				if err := prompts.ClearPotentialPrompts(tconn, 3*time.Second, prompts.ShowNotificationsPrompt)(ctx); err != nil {
+				if err := uiauto.Retry(3, prompts.ClearPotentialPrompts(tconn, 3*time.Second, prompts.ShowNotificationsPrompt))(ctx); err != nil {
 					return errors.Wrap(err, "failed to close alert dialog")
 				}
 			}

@@ -193,7 +193,7 @@ var externalWebsitesTargets = []tabTarget{
 	{cuj.CnnWorldURL, newPageInfo(cuj.Advanced, cnn, `/world`, `/africa`)},
 	{cuj.CnnAmericasURL, newPageInfo(cuj.Advanced, cnn, `/americas`, `/asia`)},
 	{cuj.CnnAustraliaURL, newPageInfo(cuj.Advanced, cnn, `/australia`, `/china`)},
-	{cuj.CnnEuropeURL, newPageInfo(cuj.Advanced, cnn, `/europe`, `/india`)},
+	{cuj.CnnAsiaURL, newPageInfo(cuj.Advanced, cnn, `/asia`, `/india`)},
 	{cuj.CnnMiddleEastURL, newPageInfo(cuj.Advanced, cnn, `/middle-east`, `/europe`, `/united-kingdom`)},
 
 	{cuj.EspnNflURL, newPageInfo(cuj.Advanced, espn, `/nfl/scoreboard`, `/nfl/schedule`)},

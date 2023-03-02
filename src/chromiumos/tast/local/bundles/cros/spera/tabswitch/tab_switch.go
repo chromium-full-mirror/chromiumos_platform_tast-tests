@@ -641,7 +641,7 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 				if err := webutil.WaitForQuiescence(ctx, tab.conn, plTimeout); err != nil {
 					return errors.Wrap(err, "failed to wait for tab to achieve quiescence")
 				}
-				if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
+				if err := uiauto.Retry(3, prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt))(ctx); err != nil {
 					return errors.Wrap(err, "failed to close alert dialog")
 				}
 			case wikipedia, googleHelp, localWebsite:
