@@ -53,6 +53,14 @@ func init() {
 		Data:     []string{},
 		Impl:     &fixtSerializedStructFixture{},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaLocalFixtureWithSameBundle",
+		Parent:   "metaLocalFixtureWithStringVal",
+		Desc:     "Used for verification of fixtures accessing string value from parent in the same bundle",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org", "yichiyan@chromium.org"},
+		Data:     []string{},
+		Impl:     &fixtSerializedSameBundleFixture{},
+	})
 }
 
 type fixtSerializedStringFixture struct{}
@@ -75,6 +83,31 @@ func (fixtSerializedStringFixture) PreTest(ctx context.Context, s *testing.FixtT
 }
 func (fixtSerializedStringFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 func (fixtSerializedStringFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+
+type fixtSerializedSameBundleFixture struct{}
+
+func (fixtSerializedSameBundleFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	v := ""
+	if err := s.ParentFillValue(&v); err != nil {
+		s.Fatal("Failed to get remote parent string value in Setup: ", err)
+	}
+	parentValue, ok := s.ParentValue().(string)
+	if !ok {
+		s.Fatal("Parent is not avaiable")
+	}
+	if v != parentValue {
+		s.Errorf("Failed to get expected fixture value with FixtFillValue; got %q, want %q", v, parentValue)
+	}
+	return v
+}
+func (fixtSerializedSameBundleFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (fixtSerializedSameBundleFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+
+}
+func (fixtSerializedSameBundleFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (fixtSerializedSameBundleFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
 
 type fixtSerializedStructFixture struct{}
 

@@ -33,6 +33,10 @@ func init() {
 			Name:    "access_struct_value_from_local_fixture",
 			Val:     verifyDeserializedStructVal,
 			Fixture: "metaLocalFixtureWithStructVal",
+		}, {
+			Name:    "access_string_value_from_same_bundle",
+			Val:     verifyDeserializedStringVal,
+			Fixture: "metaLocalFixtureWithSameBundle",
 		},
 		},
 		Desc:         "Ensure remote fixture values can be accessed local fixtures ",
