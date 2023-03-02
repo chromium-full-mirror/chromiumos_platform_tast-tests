@@ -30,7 +30,13 @@ func init() {
 		Desc:         "Checks that restrict features functionality of extension API works in kiosk mode",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr: []string{
+			"group:input-tools",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SearchFlags: append(
 			[]*testing.StringPair{
 				{
@@ -39,7 +45,7 @@ func init() {
 					Value: "screenplay-a9a646d9-a149-464f-a7de-4d51f47527c4",
 				}},
 			util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod})...),
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

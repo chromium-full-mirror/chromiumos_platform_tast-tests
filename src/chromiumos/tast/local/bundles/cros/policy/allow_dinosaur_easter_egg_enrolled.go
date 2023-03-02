@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		Attr:         []string{"group:golden_tier"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowDinosaurEasterEgg{}, pci.VerifiedFunctionalityJS),

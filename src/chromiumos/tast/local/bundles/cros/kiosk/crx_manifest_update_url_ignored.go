@@ -36,10 +36,10 @@ func init() {
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
-			"group:hardware",
 			"group:complementary",
-			"group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+			"group:hw_agnostic",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),

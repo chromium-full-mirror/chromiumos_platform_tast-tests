@@ -31,11 +31,16 @@ func init() {
 			"peletskyi@google.com", // Test author
 		},
 		BugComponent: "b:1311568", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Coralfish
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{"iwa/s7mlazhxvsqopg4kz6od3rpjl72s2xxihf5u6rswhbbog5gk27faaaic.swbn", "iwa/update_manifest.json"},
-		Fixture:      fixture.FakeDMSEnrolled,
-		Timeout:      time.Minute,
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Data:    []string{"iwa/s7mlazhxvsqopg4kz6od3rpjl72s2xxihf5u6rswhbbog5gk27faaaic.swbn", "iwa/update_manifest.json"},
+		Fixture: fixture.FakeDMSEnrolled,
+		Timeout: time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.IsolatedWebAppInstallForceList{}, pci.VerifiedFunctionalityUI),
 		},

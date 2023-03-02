@@ -22,11 +22,14 @@ func init() {
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Params: []testing.Param{{
-			Name:      "mainline",
-			ExtraAttr: []string{"group:mainline", "informational"},
-		}, {
 			Name:      "golden",
 			ExtraAttr: []string{"group:golden_tier"},
+		}, {
+			Name:      "medium",
+			ExtraAttr: []string{"group:medium_low_tier"},
+		}, {
+			Name:      "hardware",
+			ExtraAttr: []string{"group:hardware"},
 		}, {
 			Name:      "complementary",
 			ExtraAttr: []string{"group:complementary"},

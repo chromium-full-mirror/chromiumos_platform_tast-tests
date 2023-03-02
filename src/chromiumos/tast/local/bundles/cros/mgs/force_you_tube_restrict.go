@@ -28,12 +28,13 @@ func init() {
 			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary"},
+			"group:complementary",
+		},
 		Fixture: fixture.FakeDMSEnrolled,
 		// Loading two YouTube videos on slower devices can take a while (we observed subtests that took up to 40 seconds), thus give every subtest 1 minute to run.
 		Timeout: 4 * time.Minute,

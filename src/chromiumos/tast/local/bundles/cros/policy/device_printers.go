@@ -30,9 +30,14 @@ func init() {
 			"chromeos-commercial-printing@google.com",
 		},
 		BugComponent: "b:1111614", // ChromeOS > Software > Commercial (Enterprise) > Printing
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Fixture: fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DevicePrintersAccessMode{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DevicePrintersAllowlist{}, pci.VerifiedFunctionalityJS),

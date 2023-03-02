@@ -32,10 +32,15 @@ func init() {
 			"mpolzer@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{"pwa_manifest.json", "pwa_service.js", "pwa_index.html", "pwa_icon.png"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Data:    []string{"pwa_manifest.json", "pwa_service.js", "pwa_index.html", "pwa_icon.png"},
+		Fixture: fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Auto-launch MGS.

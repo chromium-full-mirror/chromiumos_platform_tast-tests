@@ -40,8 +40,9 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary"},
-		SoftwareDeps: []string{"chrome"},
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Params: []testing.Param{{
 			Name: "ash",
 			Val: kioskmode.TestData{

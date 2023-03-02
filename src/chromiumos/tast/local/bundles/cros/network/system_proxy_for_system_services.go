@@ -32,9 +32,14 @@ func init() {
 			"acostinas@google.com",                      // Test author
 		},
 		BugComponent: "b:1000044",
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "chromeEnrolledLoggedIn",
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Fixture: "chromeEnrolledLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",

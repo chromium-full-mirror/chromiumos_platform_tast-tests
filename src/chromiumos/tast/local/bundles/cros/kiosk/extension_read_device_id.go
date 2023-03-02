@@ -27,8 +27,13 @@ func init() {
 			"zubeil@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",

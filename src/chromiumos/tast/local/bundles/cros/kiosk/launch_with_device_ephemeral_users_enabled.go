@@ -29,8 +29,9 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary"},
-		SoftwareDeps: []string{"chrome"},
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),

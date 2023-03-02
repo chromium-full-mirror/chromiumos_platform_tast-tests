@@ -32,7 +32,7 @@ func init() {
 		},
 		Attr:         []string{"group:golden_tier"},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"chrome", "lacros"},
+		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),

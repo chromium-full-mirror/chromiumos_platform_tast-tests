@@ -26,9 +26,14 @@ func init() {
 		Desc:         "Test that VPN can correctly be configured from device and user policy",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		BugComponent: "b:156085",
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "chromeEnrolledLoggedIn",
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Fixture: "chromeEnrolledLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.OpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),

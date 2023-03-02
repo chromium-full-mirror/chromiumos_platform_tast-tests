@@ -47,8 +47,13 @@ func init() {
 			"yixie@google.com", // Test author
 		},
 		BugComponent: "b:892153",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "auto_update_stable"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		// TODO(b/230317245): Add variant with real DPanel server after go/tape-tast
 		//                    is implemented and available.

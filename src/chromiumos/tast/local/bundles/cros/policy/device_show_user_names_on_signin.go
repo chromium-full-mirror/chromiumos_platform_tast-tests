@@ -35,11 +35,12 @@ func init() {
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:complementary",
 			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      2*chrome.LoginTimeout + 10*time.Second,

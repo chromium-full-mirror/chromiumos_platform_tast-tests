@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		Attr:         []string{"group:golden_tier"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		Timeout:      6 * time.Minute, // Increased timeout as we need to wait for report uploads.
 		SearchFlags: []*testing.StringPair{

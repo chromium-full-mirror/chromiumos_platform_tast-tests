@@ -29,10 +29,15 @@ func init() {
 			"mpolzer@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.FakeDMSEnrolled,
-		Timeout:      5 * time.Minute,
+		SoftwareDeps: []string{"reboot", "chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Fixture: fixture.FakeDMSEnrolled,
+		Timeout: 5 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Verify that settings do not persist after MGS.

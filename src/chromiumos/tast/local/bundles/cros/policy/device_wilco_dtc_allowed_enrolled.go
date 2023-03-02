@@ -29,8 +29,13 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "vm_host", "wilco"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome", "vm_host", "wilco"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceWilcoDtcAllowed{}, pci.VerifiedFunctionalityOS),

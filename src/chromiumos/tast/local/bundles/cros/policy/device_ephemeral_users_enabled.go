@@ -28,7 +28,7 @@ func init() {
 			"rzakarian@google.com", // Original autotest author.
 		},
 		BugComponent: "b:1263917",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

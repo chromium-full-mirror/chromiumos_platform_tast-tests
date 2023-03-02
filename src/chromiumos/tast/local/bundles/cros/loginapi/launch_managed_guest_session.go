@@ -28,8 +28,13 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > Imprivata
 		BugComponent: "b:1253162",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceLoginScreenExtensions{}, pci.VerifiedFunctionalityJS),

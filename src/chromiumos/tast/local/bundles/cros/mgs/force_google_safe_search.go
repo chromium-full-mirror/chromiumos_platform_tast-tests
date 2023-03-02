@@ -28,12 +28,13 @@ func init() {
 			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary"},
+			"group:complementary",
+		},
 		Fixture: fixture.FakeDMSEnrolled,
 		// Give each subtest 1 minute to run
 		Timeout: 3 * time.Minute,

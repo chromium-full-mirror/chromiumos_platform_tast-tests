@@ -26,10 +26,15 @@ func init() {
 			"mpolzer@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Attr:         []string{"group:mainline", "informational"},
-		Data:         []string{"cca_ui.js"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		SoftwareDeps: []string{"reboot", "camera_app", "chrome", caps.BuiltinOrVividCamera},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Data:    []string{"cca_ui.js"},
+		Fixture: fixture.FakeDMSEnrolled,
 	})
 }
 

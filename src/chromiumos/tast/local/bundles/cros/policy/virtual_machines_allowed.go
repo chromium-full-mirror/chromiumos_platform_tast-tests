@@ -32,8 +32,13 @@ func init() {
 			"nverne@google.com",
 		},
 		BugComponent: "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.VirtualMachinesAllowed{}, pci.VerifiedFunctionalityUI),

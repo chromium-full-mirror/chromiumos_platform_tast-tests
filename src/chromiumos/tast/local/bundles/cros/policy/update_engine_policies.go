@@ -56,8 +56,13 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author
 		},
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{{

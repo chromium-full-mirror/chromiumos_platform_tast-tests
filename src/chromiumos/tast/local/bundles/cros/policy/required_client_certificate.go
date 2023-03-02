@@ -35,8 +35,13 @@ func init() {
 			"miersh@google.com",                         // Feature owner
 		},
 		BugComponent: "b:1000044",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{

@@ -36,8 +36,13 @@ func init() {
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		// Informational attribute can only be removed when
 		// https://crbug.com/1207293 is resolved.
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{

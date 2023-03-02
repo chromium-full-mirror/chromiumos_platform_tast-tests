@@ -29,19 +29,23 @@ func init() {
 		Desc:         "Checks that user can type in virtual keyboard in kiosk mode",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools"},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		Attr: []string{
+			"group:input-tools",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture:   fixture.KioskVK,
-				ExtraAttr: []string{"informational"},
+				Fixture: fixture.KioskVK,
 			},
 			{
-				Name:      "lacros",
-				Fixture:   fixture.LacrosKioskVK,
-				ExtraAttr: []string{"informational"},
+				Name:    "lacros",
+				Fixture: fixture.LacrosKioskVK,
 			},
 		},
 	})

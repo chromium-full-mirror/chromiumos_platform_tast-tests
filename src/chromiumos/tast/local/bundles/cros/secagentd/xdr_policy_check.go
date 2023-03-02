@@ -34,10 +34,15 @@ func init() {
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		Timeout:      3 * time.Minute,
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
-		SoftwareDeps: []string{"bpf", "chrome"},
+		SoftwareDeps: []string{"reboot", "bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceReportXDREvents{}, pci.VerifiedFunctionalityOS),
