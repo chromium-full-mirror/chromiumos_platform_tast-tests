@@ -34,7 +34,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WriteProtectProtectsFlash,
 		Desc:         "Verify that enabled hardware and software write protect prevent flash being written to",
-		Contacts:     []string{"cros-flashrom-team@google.com", "evanbenn@google.com"},
+		Contacts:     []string{"cros-flashrom-team@google.com", "nartemiev@google.com"},
 		Attr:         []string{}, // test disabled https://buganizer.corp.google.com/issues/255617349
 		BugComponent: "b:750299",
 		SoftwareDeps: []string{"crossystem", "flashrom"},
