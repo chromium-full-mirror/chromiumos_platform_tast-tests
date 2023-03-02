@@ -42,6 +42,12 @@ func (p *SharedDirParam) toArg() string {
 	return fmt.Sprintf("%s:%s:type=%s:cache=%s:timeout=%d:writeback=%t:dax=%t", p.Src, p.Tag, p.FsType, p.Cache, p.Timeout, p.Writeback, p.DAX)
 }
 
+// SerialIOPath contains file names used for serial input and output.
+type SerialIOPath struct {
+	ToGuest string
+	ToHost  string
+}
+
 // CrosvmParams - Parameters for starting a crosvm instance.
 type CrosvmParams struct {
 	vmKernel       string           // path to the VM kernel image
@@ -55,7 +61,7 @@ type CrosvmParams struct {
 	socketPath     string           // path to the VM control socket
 	kernelArgs     []string         // string arguments to be passed to the VM kernel
 	sharedDirs     []SharedDirParam // array of configuration of a directory to be shared with the VM
-	serialOutput   string           // path to a file where serial output will be written
+	serialIO       []SerialIOPath   // paths to files used for serial input and output
 	vhostUserNet   []string         // paths to sockets that vhost-user-net devices will use
 	disableSandbox bool             // whether or not the sandbox is disabled
 }
@@ -105,11 +111,16 @@ func SharedDir(param SharedDirParam) Option {
 	}
 }
 
-// SerialOutput sets a file that serial log will be written.
-func SerialOutput(file string) Option {
+// SerialIO sets files used for serial input and output.
+func SerialIO(toGuest, toHost string) Option {
 	return func(p *CrosvmParams) {
-		p.serialOutput = file
+		p.serialIO = append(p.serialIO, SerialIOPath{ToGuest: toGuest, ToHost: toHost})
 	}
+}
+
+// SerialOutput sets a file that serial log will be written.
+func SerialOutput(path string) Option {
+	return SerialIO("", path)
 }
 
 // VhostUserNet sets a socket to be used by a vhost-user net device.
@@ -202,8 +213,17 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, "--shared-dir", param.toArg())
 	}
 
-	if p.serialOutput != "" {
-		args = append(args, "--serial", fmt.Sprintf("type=file,num=1,console=true,path=%s", p.serialOutput))
+	for idx, pipes := range p.serialIO {
+		input := ""
+		if pipes.ToGuest != "" {
+			input = fmt.Sprintf(",input=%s", pipes.ToGuest)
+		}
+		output := ""
+		if pipes.ToHost != "" {
+			output = fmt.Sprintf(",path=%s", pipes.ToHost)
+		}
+
+		args = append(args, "--serial", fmt.Sprintf("type=file,num=%d%s%s", idx+1, input, output))
 	}
 
 	if p.disableSandbox {

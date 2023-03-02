@@ -15,6 +15,9 @@ import (
 	"chromiumos/tast/local/vm"
 )
 
+// VirtioFSCacheTimeoutSecond represents the duration of virtiofs device's cache.
+const VirtioFSCacheTimeoutSecond = 1
+
 // Option holds parameters for a guest storage.
 type Option struct {
 	Kind string
@@ -36,7 +39,7 @@ func NewOption(kind string) (Option, error) {
 }
 
 // GenCrosvmCmd constructs a new crosvm command using the given parameters.
-func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option, scriptArgs []string) (*vm.CrosvmParams, error) {
+func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option, scriptArgs []string) (crosvmParams *vm.CrosvmParams, err error) {
 	shared := filepath.Join(userDir, "shared")
 	if err := os.Mkdir(shared, 0755); err != nil {
 		return nil, errors.Wrap(err, "failed to create shared directory")
@@ -53,7 +56,10 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 		return nil, errors.Wrap(err, "failed to set block device file size")
 	}
 
-	logFile := filepath.Join(outDir, "serial.log")
+	logFilePath := filepath.Join(outDir, "serial.log")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a input file")
+	}
 
 	var storageOpt vm.Option
 
@@ -61,14 +67,13 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 		storageOpt = vm.RWDisks(block)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
-			Src: shared, Tag: opt.Tag, FsType: "fs", Cache: "auto", Timeout: 1, Writeback: true, DAX: opt.Kind == "virtiofs_dax"})
+			Src: shared, Tag: opt.Tag, FsType: "fs", Cache: "auto", Timeout: VirtioFSCacheTimeoutSecond, Writeback: true, DAX: opt.Kind == "virtiofs_dax"})
 	} else if opt.Kind == "p9" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
 			Src: shared, Tag: opt.Tag, FsType: "p9", Timeout: 5, Writeback: false, DAX: false})
 	} else {
 		return nil, errors.Wrap(err, "unknown storage device type")
 	}
-
 	kernelArgs := []string{
 		"root=root",
 		"rootfstype=virtiofs",
@@ -94,7 +99,7 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 				DAX:       false,
 			}),
 		vm.KernelArgs(kernelArgs...),
-		vm.SerialOutput(logFile),
+		vm.SerialOutput(logFilePath),
 		storageOpt,
 	), nil
 }
