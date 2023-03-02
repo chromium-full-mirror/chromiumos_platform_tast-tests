@@ -34,7 +34,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -46,7 +46,7 @@ func LaunchSystemWebAppsFromURL(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -128,6 +128,7 @@ func verifyAndLaunchSystemWebAppFromURL(ctx context.Context, cr *chrome.Chrome, 
 	if err := uiauto.Combine("open target "+appURL,
 		ui.LeftClick(omniboxFinder),
 		keyboard.AccelAction("ctrl+a"),
+		keyboard.AccelAction("Backspace"),
 		keyboard.TypeAction(appURL),
 		keyboard.AccelAction("Enter"))(ctxWithTimeout); err != nil {
 		return err
