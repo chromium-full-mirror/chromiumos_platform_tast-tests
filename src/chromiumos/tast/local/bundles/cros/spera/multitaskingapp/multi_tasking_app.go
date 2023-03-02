@@ -103,6 +103,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 	originalVolume, err := vh.GetVolume(ctx)
 	defer vh.SetVolume(cleanupCtx, originalVolume)
 
+	isMuted, err := vh.IsMuted(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the mute status")
+	}
+	if isMuted {
+		testing.ContextLog(ctx, "Press 'VolumeUp' to unmute")
+		if err := kb.Accel(ctx, topRow.VolumeUp); err != nil {
+			return errors.Wrap(err, "failed to press volumeUp key to unmute")
+		}
+		defer kb.Accel(cleanupCtx, topRow.VolumeMute)
+	}
+
 	// uiHandler will be assigned with different instances for clamshell and tablet mode.
 	var uiHandler cuj.UIActionHandler
 	if tabletMode {
