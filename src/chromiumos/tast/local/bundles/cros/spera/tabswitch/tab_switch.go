@@ -28,7 +28,6 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -448,13 +447,6 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 		// Total time used from beginning to load all pages.
 		timeElapsed = time.Since(timeTabsOpenStart)
 		testing.ContextLog(ctx, "All tabs opened Elapsed: ", timeElapsed)
-
-		// Maximize all windows to ensure a consistent state.
-		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
-		}); err != nil {
-			return errors.Wrap(err, "failed to maximize windows")
-		}
 
 		// Given time to close all tabs.
 		cleanupCtx := ctx

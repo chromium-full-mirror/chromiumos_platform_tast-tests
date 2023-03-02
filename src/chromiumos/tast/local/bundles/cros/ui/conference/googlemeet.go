@@ -87,10 +87,6 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur 
 		return CheckSignedOutError(ctx, tconn, errors.Wrap(err, "failed to join google meeting"))
 	}
 
-	if err := cuj.MaximizeBrowserWindow(ctx, tconn, conf.tabletMode, meetTitle); err != nil {
-		return err
-	}
-
 	// Default expected display is main display.
 	if err := cuj.SwitchWindowToDisplay(ctx, tconn, kb, conf.extendedDisplay)(ctx); err != nil {
 		if conf.extendedDisplay {

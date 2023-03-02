@@ -17,7 +17,6 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googledocs"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
@@ -169,12 +168,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 		setFramesData := func(ctx context.Context) error {
 			decodedFrames, droppedFrames, droppedFramesPer, err = video.FramesData(ctx)
 			return err
-		}
-		// Maximize all windows to ensure a consistent state.
-		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
-		}); err != nil {
-			return errors.Wrap(err, "failed to maximize windows")
 		}
 
 		return uiauto.NamedCombine("run and collect data",

@@ -717,9 +717,7 @@ func (app *MicrosoftWebOffice) openOneDrive(ctx context.Context) (*chrome.Conn, 
 	if err := webutil.WaitForQuiescence(ctx, conn, longerUIWaitTime); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for microsoft page to finish loading")
 	}
-	if err := cuj.MaximizeBrowserWindow(ctx, app.tconn, app.tabletMode, "Chrome"); err != nil {
-		return nil, errors.Wrap(err, "failed to maximize the microsoft page")
-	}
+
 	appLauncher := nodewith.Name("App launcher").Role(role.Button).Collapsed()
 	appLauncherOpened := nodewith.Name("App launcher opened").Role(role.GenericContainer)
 	closeAppLauncher := nodewith.Name("Close the app launcher").Role(role.Button).Ancestor(appLauncherOpened)

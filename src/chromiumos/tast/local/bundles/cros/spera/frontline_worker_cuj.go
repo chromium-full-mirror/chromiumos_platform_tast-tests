@@ -232,9 +232,7 @@ func FrontlineWorkerCUJ(ctx context.Context, s *testing.State) {
 		if err := openGoogleTabs(ctx, br, uiHdl, numberOfTabs); err != nil {
 			return errors.Wrap(err, "failed to open google tabs")
 		}
-		if err := cuj.MaximizeBrowserWindow(ctx, tconn, tabletMode, "Google"); err != nil {
-			return errors.Wrap(err, "failed to maximize the window")
-		}
+
 		if workload == browsering {
 			if len(searchTerms) > numberOfTabs {
 				return errors.New("the number of tabs is less than the search terms")

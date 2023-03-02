@@ -96,10 +96,6 @@ func (g *GooglePhotos) Open() uiauto.Action {
 			return errors.Wrapf(err, "failed to open URL: %s", cuj.GooglePhotosURL)
 		}
 
-		if err := cuj.MaximizeBrowserWindow(ctx, g.tconn, g.tabletMode, "Google Photos"); err != nil {
-			return err
-		}
-
 		nextButton := photosWebAreaFinder.Name("Next").Role(role.Button).Focusable()
 		checkIfLoggedIn := uiauto.NamedCombine("check if logged in",
 			// If logged in, it might pop up the "Verify it's you" heading as a reminder.

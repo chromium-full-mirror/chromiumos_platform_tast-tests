@@ -147,6 +147,13 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 		closeTabsFunc = browser.ReplaceAllTabsWithSingleNewTab
 	}
 
+	// Maximize all windows to ensure a consistent state.
+	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
+	}); err != nil {
+		return nil, -1, errors.Wrap(err, "failed to maximize windows")
+	}
+
 	// Depending on the settings, Chrome might open all left-off pages automatically from last session.
 	// Close all existing tabs and test can open new pages in the browser.
 	if closeTabs {

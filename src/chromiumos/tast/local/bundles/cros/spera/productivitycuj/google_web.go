@@ -61,9 +61,6 @@ func (app *GoogleDocs) CreateDocument(ctx context.Context) error {
 	if err := webutil.WaitForQuiescence(ctx, conn, longerUIWaitTime); err != nil {
 		return errors.Wrap(err, "failed to wait for page to finish loading")
 	}
-	if err := cuj.MaximizeBrowserWindow(ctx, app.tconn, app.tabletMode, docsTab); err != nil {
-		return errors.Wrap(err, "failed to maximize the Google Docs page")
-	}
 	docWebArea := nodewith.NameContaining(docsTab).Role(role.RootWebArea).First()
 	canvas := nodewith.Role(role.Canvas).Ancestor(docWebArea).First()
 	return uiauto.Combine("type word to document",

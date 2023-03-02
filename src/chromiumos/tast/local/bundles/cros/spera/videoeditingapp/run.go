@@ -149,10 +149,6 @@ func videoEditingScenario(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 	}
 	defer cleanup(cleanupCtx, tconn, cr, w, outDir, func() bool { return hasError })
 
-	if err := cuj.MaximizeBrowserWindow(ctx, tconn, tabletMode, weVideoTitle); err != nil {
-		return errors.Wrap(err, "failed to maximize the WeVideo page")
-	}
-
 	if err := uiauto.Combine("run the video editing scenario",
 		w.Login(account),
 		w.Create(),

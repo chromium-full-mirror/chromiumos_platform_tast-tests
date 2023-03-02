@@ -82,10 +82,6 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err er
 		return CheckSignedOutError(ctx, tconn, errors.Wrap(err, "failed to join google meeting"))
 	}
 
-	if err := cuj.MaximizeBrowserWindow(ctx, tconn, conf.tabletMode, meetTitle); err != nil {
-		return err
-	}
-
 	// checkParticipantsNum checks the number of meeting participants.
 	checkParticipantsNum := func(ctx context.Context) error {
 		// Each room type has a different number of participants:

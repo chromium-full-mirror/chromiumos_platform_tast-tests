@@ -20,7 +20,6 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
@@ -286,13 +285,6 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 					return errors.Wrapf(err, "failed to switch back to first tab with retryTimes %d", retryTimes)
 				}
 			}
-		}
-
-		// Maximize all windows to ensure a consistent state.
-		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
-		}); err != nil {
-			return errors.Wrap(err, "failed to maximize windows")
 		}
 
 		// After tabs are all opened, rotate tablet device while browsing,

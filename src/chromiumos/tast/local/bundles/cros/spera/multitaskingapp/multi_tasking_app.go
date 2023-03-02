@@ -334,9 +334,6 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 			}
 
 			if url == cuj.YoutubeMusicURL {
-				if err := cuj.MaximizeBrowserWindow(ctx, tconn, params.TabletMode, youtubeMusicAppName); err != nil {
-					return errors.Wrap(err, "failed to maximize the YouTube Music window")
-				}
 				if err := playYoutubeMusic(ctx, tconn); err != nil {
 					return errors.Wrap(err, "failed to play Youtube Music")
 				}
