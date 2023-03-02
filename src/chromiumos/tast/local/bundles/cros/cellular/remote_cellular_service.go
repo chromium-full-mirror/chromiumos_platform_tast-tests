@@ -209,7 +209,6 @@ func (s *RemoteCellularService) QueryService(ctx context.Context, _ *empty.Empty
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get service strength from properties")
 	}
-
 	return &cellular_pb.QueryServiceResponse{
 		Name:              name,
 		Device:            string(device),
@@ -391,4 +390,13 @@ func smsFromSignal(ctx context.Context, signal *dbus.Signal) (*cellular_pb.SmsMe
 	}
 
 	return &cellular_pb.SmsMessage{Text: text}, nil
+}
+
+// QueryModemType gets the modem variant on the dut from cros_config.
+func (s *RemoteCellularService) QueryModemType(ctx context.Context, _ *empty.Empty) (*cellular_pb.QueryModemTypeResponse, error) {
+	modemType, err := cellular.GetModemType(ctx)
+	if err != nil && err.Error() != "Process exited with status 1" {
+		return nil, errors.Wrap(err, "failed to run command cros_config on client host")
+	}
+	return &cellular_pb.QueryModemTypeResponse{ModemType: uint32(modemType)}, err
 }

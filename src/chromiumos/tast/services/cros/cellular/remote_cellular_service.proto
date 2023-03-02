@@ -50,6 +50,9 @@ service RemoteCellularService {
 
   // WaitForNextSms waits until a single sms added signal is received.
   rpc WaitForNextSms(google.protobuf.Empty) returns (WaitForNextSmsResponse) {}
+
+  // QueryModemType returns dut variant/model.
+  rpc QueryModemType(google.protobuf.Empty) returns (QueryModemTypeResponse) {}
 }
 
 message EnableResponse {
@@ -97,4 +100,8 @@ message SmsMessage {
 
 message WaitForNextSmsResponse {
   SmsMessage message = 1;
+}
+
+message QueryModemTypeResponse {
+   uint32 modem_type = 1;
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
@@ -97,11 +98,11 @@ func ShillCellularApn(ctx context.Context, s *testing.State) {
 	expectedLastAttachAPN := params.ExpectedLastAttachAPN
 
 	// Fail immediately if there is a known bug that will cause the test to run until it times out.
-	isL850, _ := cellular.IsModemType(ctx, cellular.ModemTypeL850)
-	isFM350, _ := cellular.IsModemType(ctx, cellular.ModemTypeFM350)
-	isFM101, _ := cellular.IsModemType(ctx, cellular.ModemTypeFM101)
+	isL850, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeL850)
+	isFM350, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeFM350)
+	isFM101, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeFM101)
 	if (isL850 || isFM350 || isFM101) && strings.HasSuffix(s.TestName(), "round_robin_connect_all_invalid_apn_errors") {
-		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellular.ModemType{cellular.ModemTypeFM350, cellular.ModemTypeL850, cellular.ModemTypeFM101})
+		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
 		s.Fatalf("Fail early to avoid wasting DUT time: %s", err)
 	}
 

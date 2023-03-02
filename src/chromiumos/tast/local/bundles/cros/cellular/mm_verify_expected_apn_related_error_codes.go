@@ -10,6 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
@@ -122,7 +123,7 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 			s.Fatalf("Expected error for authentication failed doesn't match:%s", errorCode)
 		}
 
-		isL850, _ := cellular.IsModemType(ctx, cellular.ModemTypeL850)
+		isL850, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeL850)
 		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "username", pass: "password", auth: mmconst.BearerAllowedAuthPAP, apnType: mmconst.BearerAPNTypeDefault})
 		if isL850 && errorCode == "" {
 			testing.ContextLog(ctx, "INFO: b/264796148 L850 connects with any authentication")
@@ -147,13 +148,13 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 	case ipErrors:
 		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4", ipType: mmconst.BearerIPFamilyIPv6, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv4OnlyAllowed" {
-			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellular.ModemType{cellular.ModemTypeFM350, cellular.ModemTypeL850, cellular.ModemTypeFM101})
+			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
 			s.Fatalf("Expected error for Ipv4OnlyAllowed doesn't match:%s: %s", errorCode, err)
 		}
 
 		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv6", ipType: mmconst.BearerIPFamilyIPv4, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv6OnlyAllowed" {
-			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellular.ModemType{cellular.ModemTypeFM350, cellular.ModemTypeL850, cellular.ModemTypeFM101})
+			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
 			s.Fatalf("Expected error for Ipv6OnlyAllowed doesn't match:%s: %s", errorCode, err)
 		}
 

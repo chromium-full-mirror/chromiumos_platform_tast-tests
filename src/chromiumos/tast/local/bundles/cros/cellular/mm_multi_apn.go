@@ -10,6 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
@@ -95,9 +96,9 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 		path, err := modemmanager.Connect(ctx, simpleModem, mmApnInfo)
 		if err != nil {
 			if len(bearerPaths) == 1 {
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249388479", []cellular.ModemType{cellular.ModemTypeNL668})
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/236295106", []cellular.ModemType{cellular.ModemTypeFM350})
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249387022", []cellular.ModemType{cellular.ModemTypeSC7180, cellular.ModemTypeSC7280})
+				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249388479", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
+				err = cellular.TagKnownBugOnModemType(ctx, err, "b/236295106", []cellularconst.ModemType{cellularconst.ModemTypeFM350})
+				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249387022", []cellularconst.ModemType{cellularconst.ModemTypeSC7180, cellularconst.ModemTypeSC7280})
 			}
 			s.Fatal("Modem connect failed with error: ", err)
 		}

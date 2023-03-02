@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"time"
 
+	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/ctxutil"
@@ -221,7 +222,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 			}
 			var err error = nil
 			if apn == "" {
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/245968064", []cellular.ModemType{cellular.ModemTypeL850})
+				err = cellular.TagKnownBugOnModemType(ctx, err, "b/245968064", []cellularconst.ModemType{cellularconst.ModemTypeL850})
 			}
 			s.Fatalf("Last Attach APN doesn't match: got %q, want %q. error: %q", apn, expectedAPN, err)
 		}

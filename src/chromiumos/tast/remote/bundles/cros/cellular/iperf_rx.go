@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/common/perf"
 	cbiperf "chromiumos/tast/remote/cellular/callbox/iperf"
 	"chromiumos/tast/remote/cellular/callbox/manager"
@@ -16,81 +18,67 @@ import (
 	"chromiumos/tast/testing"
 )
 
-type iperfTestCaseConfiguration struct {
+type iperfTestCaseConfiguration1 struct {
 	testType          cbiperf.TestType
 	additionalOptions []iperf.ConfigOption
 }
 
-type iperfTestCase struct {
-	callboxOpts         *manager.ConfigureCallboxRequestBody
-	iperfConfigurations []iperfTestCaseConfiguration
+type iperfTestCase1 struct {
+	iperfConfigurations []iperfTestCaseConfiguration1
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Iperf,
+		Func:         IperfRx,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Conducts cellular performance tests between DUT and callbox using Iperf to compare actual throughput results with expected for a given network configuration",
-		Contacts: []string{
-			"chromeos-cellular-team@google.com",
-			"jstanko@google.com",
-		},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:1108821",
-		Attr:         []string{"group:cellular", "cellular_callbox"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_unstable", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				// Establishes a mimo2x2 connection with the callbox and runs multiple iperf sessions with various configurations
-				Name: "mimo2x2",
-				Val: iperfTestCase{
-					callboxOpts: &manager.ConfigureCallboxRequestBody{
-						Hardware:     manager.CallboxHardwareCMW,
-						CellularType: manager.CellularTechnologyLTE,
-						Parameters: []manager.CellConfiguration{
-							manager.NewLteCellConfiguration(
-								manager.AntennaOption(manager.MimoMode2x2, manager.TransmissionMode3)),
-						},
-					},
-					iperfConfigurations: []iperfTestCaseConfiguration{
-						{
-							testType: cbiperf.TestTypeUDPTx,
-							// use lower bitrate for udp upload otherwise results can be very inconsistent
-							additionalOptions: []iperf.ConfigOption{iperf.MaxBandwidthOption(100 * iperf.Mbps)},
-						},
-						{
-							testType: cbiperf.TestTypeTCPTx,
-						},
-						{
-							testType: cbiperf.TestTypeUDPRx,
-						},
-						{
-							testType: cbiperf.TestTypeTCPRx,
-						},
-					},
-				},
+				// Establishes a LTE connection with the callbox and runs multiple tcp iperf sessions with TCPRx configuration for downlink.
+				Name: "tcp",
+				Val:  iperfTestCase1{iperfConfigurations: []iperfTestCaseConfiguration1{{testType: cbiperf.TestTypeTCPRx}}},
+			}, {
+				// Establishes a LTE connection with the callbox and runs multiple tcp iperf sessions with UDPRx configuration for downlink.
+				Name: "udp",
+				Val:  iperfTestCase1{iperfConfigurations: []iperfTestCaseConfiguration1{{testType: cbiperf.TestTypeUDPRx}}},
 			},
 		},
 	})
 }
 
-func Iperf(ctx context.Context, s *testing.State) {
-	tc := s.Param().(iperfTestCase)
+func IperfRx(ctx context.Context, s *testing.State) {
+	tc := s.Param().(iperfTestCase1)
 	tf := s.FixtValue().(*manager.TestFixture)
 	dutConn := s.DUT().Conn()
-
-	if err := tf.ConnectToCallbox(ctx, dutConn, tc.callboxOpts); err != nil {
+	// Get Modem type to apply throughput values accordingly.
+	resp, err := tf.RemoteCellularClient.QueryModemType(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get modemType: ", err)
+	}
+	s.Log("modemType is :", resp.ModemType)
+	max := manager.GetMaxLTERxThroughputInMbps(ctx, resp.ModemType)
+	// Run twice with two types of CA modes if modem supports!.
+	config := manager.GetCellConfiguration(ctx, manager.CallboxHardwareCMW, resp.ModemType)
+	if err := tf.ConnectToCallbox(ctx, dutConn, config); err != nil {
 		s.Fatal("Failed to initialize cellular connection: ", err)
 	}
 
 	testManager := cbiperf.NewTestManager(tf.Vars.Callbox, dutConn, tf.CallboxManagerClient)
 
+	additionalOptions := []iperf.ConfigOption{iperf.TestTimeOption(20 * time.Second), iperf.MaxBandwidthOption(iperf.BitRate(max) * iperf.Mbps), iperf.WindowSizeOption(1.4 * iperf.MB)}
+
+	// Test is Rx/Download so DUT is server and callbox is client.
 	perfValues := perf.NewValues()
 	for _, config := range tc.iperfConfigurations {
 		subTest := func(ctx context.Context, s *testing.State) {
-			history, err := testManager.RunOnce(ctx, config.testType, tf.InterfaceName, config.additionalOptions)
+			history, err := testManager.RunOnce(ctx, config.testType, tf.InterfaceName, additionalOptions)
 			if err != nil {
 				s.Fatal("Failed to run iperf session: ", err)
 			}
