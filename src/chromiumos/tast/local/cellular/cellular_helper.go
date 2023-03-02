@@ -1116,32 +1116,32 @@ func (h *Helper) SetAPN(ctx context.Context, apn map[string]string) error {
 	return nil
 }
 
-// SetUserAPNList sets the new APN revamp UI property `Cellular.UserAPNList`.
-func (h *Helper) SetUserAPNList(ctx context.Context, apns []map[string]string) error {
-	ctx, st := timing.Start(ctx, "Helper.SetUserAPNList")
+// SetCustomAPNList sets the new APN revamp UI property `Cellular.CustomAPNList`.
+func (h *Helper) SetCustomAPNList(ctx context.Context, apns []map[string]string) error {
+	ctx, st := timing.Start(ctx, "Helper.SetCustomAPNList")
 	defer st.End()
 
 	service, err := h.FindServiceForDevice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get Cellular Service")
 	}
-	if err := service.SetProperty(ctx, shillconst.ServicePropertyCellularUserAPNList, dbus.MakeVariant(apns)); err != nil {
-		return errors.Wrap(err, "failed to set Cellular.UserAPNList")
+	if err := service.SetProperty(ctx, shillconst.ServicePropertyCellularCustomAPNList, dbus.MakeVariant(apns)); err != nil {
+		return errors.Wrap(err, "failed to set Cellular.CustomAPNList")
 	}
 	return nil
 }
 
-// ClearUserAPNList clears the new APN revamp UI property `Cellular.UserAPNList`.
-func (h *Helper) ClearUserAPNList(ctx context.Context) error {
-	ctx, st := timing.Start(ctx, "Helper.ClearUserAPNList")
+// ClearCustomAPNList clears the new APN revamp UI property `Cellular.CustomAPNList`.
+func (h *Helper) ClearCustomAPNList(ctx context.Context) error {
+	ctx, st := timing.Start(ctx, "Helper.ClearCustomAPNList")
 	defer st.End()
 
 	service, err := h.FindServiceForDevice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get Cellular Service")
 	}
-	if err := service.ClearProperty(ctx, shillconst.ServicePropertyCellularUserAPNList); err != nil {
-		return errors.Wrap(err, "failed to clear Cellular.UserAPNList")
+	if err := service.ClearProperty(ctx, shillconst.ServicePropertyCellularCustomAPNList); err != nil {
+		return errors.Wrap(err, "failed to clear Cellular.CustomAPNList")
 	}
 	return nil
 }

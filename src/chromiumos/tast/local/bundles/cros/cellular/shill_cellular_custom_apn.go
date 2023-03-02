@@ -76,8 +76,8 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 		}
 
 		if testNewAPNUIRevamp {
-			if err := helper.ClearUserAPNList(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to clear cellular.UserAPNList: ", err)
+			if err := helper.ClearCustomAPNList(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to clear cellular.CustomAPNList: ", err)
 			}
 		}
 	}(clearAttachCtx)
@@ -147,7 +147,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err = helper.SetUserAPNList(ctx, apns); err != nil {
+			if err = helper.SetCustomAPNList(ctx, apns); err != nil {
 				s.Fatal("Unable to set the custom APN: ", err)
 			}
 		} else {
