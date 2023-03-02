@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
@@ -258,11 +259,22 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 }
 
 func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool) error {
+	var flashromConfig flashrom.Config
+	flash, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
 	enableStr := "enable"
-	apWPFunc := fwUtils.APSoftwareWriteProtectEnable
+	apWPFunc := flash.SoftwareWriteProtectEnable
 	if !enable {
 		enableStr = "disable"
-		apWPFunc = fwUtils.APSoftwareWriteProtectDisable
+		apWPFunc = flash.SoftwareWriteProtectDisable
 	}
 
 	// Make sure hardware wp is disabled for now so flashrom cmd can run.
@@ -284,8 +296,8 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 	}
 
 	if target == targetBIOS {
-		testing.ContextLog(ctx, "Enable AP write protect")
-		if err := apWPFunc(ctx, h.DUT.Conn()); err != nil {
+		testing.ContextLogf(ctx, "Set AP wp to %s", enableStr)
+		if _, err := apWPFunc(ctx); err != nil {
 			return errors.Wrapf(err, "failed to set AP wp to %s", enableStr)
 		}
 
