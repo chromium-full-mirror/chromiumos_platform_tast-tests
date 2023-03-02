@@ -208,14 +208,14 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		return err
 	}
 
-	var opButton *ui.Object // Operation button - install or update.
+	var btnText string // Action button text - install or update.
 	switch op {
 	case installApp:
 		// Look for install button.
-		opButton = d.Object(ui.DescriptionMatches("(?i)"+installButtonText), ui.Enabled(true))
+		btnText = installButtonText
 	case updateApp:
 		// Look for update button.
-		opButton = d.Object(ui.DescriptionMatches("(?i)"+updateButtonText), ui.Enabled(true))
+		btnText = updateButtonText
 	default:
 		return errors.Errorf("operation %s is not supported", op)
 	}
@@ -276,7 +276,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// If the install or update button is enabled, click it.
-		if err := opButton.Exists(ctx); err == nil {
+		if opButton, err := FindActionButton(ctx, d, btnText, 2*time.Second); err == nil {
 			// Limit number of tries to help mitigate Play Store rate limiting across test runs.
 			if tryLimit == -1 || tries < tryLimit {
 				tries++
