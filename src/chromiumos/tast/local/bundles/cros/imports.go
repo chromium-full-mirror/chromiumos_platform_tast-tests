@@ -14,6 +14,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/arc"
 	_ "chromiumos/tast/local/bundles/cros/assistant"
 	_ "chromiumos/tast/local/bundles/cros/audio"
+	_ "chromiumos/tast/local/bundles/cros/audioui"
 	_ "chromiumos/tast/local/bundles/cros/autoupdate"
 	_ "chromiumos/tast/local/bundles/cros/baserpc"
 	_ "chromiumos/tast/local/bundles/cros/benchmark"
