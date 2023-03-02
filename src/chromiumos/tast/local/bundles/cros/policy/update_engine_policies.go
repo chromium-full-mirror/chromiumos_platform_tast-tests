@@ -84,7 +84,9 @@ func init() {
 				checkVal:     true,
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
-				Key:   "feature_id",
+				Key: "feature_id",
+				// Configure "Target version" in Admin Console and ensure that affected devices stay on selected version.
+				// COM_FOUND_CUJ12_TASK4_WF1
 				Value: "screenplay-5f27f0ec-9865-4b66-babe-4114811d2617",
 			}},
 		}, {
@@ -96,7 +98,10 @@ func init() {
 				checkParam:   true,
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
-				Key:   "feature_id",
+				Key: "feature_id",
+				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
+				// channel-from-to=stable-to-lts
+				// COM_FOUND_CUJ11_TASK5_WF1
 				Value: "screenplay-6e042833-6078-4ca2-ae09-ff808c5db446",
 			}},
 		}, {
@@ -120,10 +125,16 @@ func init() {
 				policyParam: "track",
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
-				Key:   "feature_id",
+				Key: "feature_id",
+				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
+				// channel-from-to=beta-to-stable
+				// COM_FOUND_CUJ11_TASK5_WF1
 				Value: "screenplay-d3df997c-ae2f-471e-9d3b-b33d8df6cb92",
 			}, {
-				Key:   "feature_id",
+				Key: "feature_id",
+				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
+				// channel-from-to=ltc-to-stable
+				// COM_FOUND_CUJ11_TASK5_WF1
 				Value: "screenplay-fdbbf9e6-564f-4a6c-97d3-43c899c5d2e4",
 			}},
 		}, {
@@ -147,7 +158,10 @@ func init() {
 				policyParam: "track",
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
-				Key:   "feature_id",
+				Key: "feature_id",
+				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
+				// channel-from-to=stable-to-dev
+				// COM_FOUND_CUJ11_TASK5_WF1
 				Value: "screenplay-ffe64e90-9827-4dde-8f66-ac0143a9b71b",
 			}},
 		}, {

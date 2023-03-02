@@ -35,10 +35,20 @@ func init() {
 		},
 		Timeout: 10 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
-			Key:   "feature_id",
+			Key: "feature_id",
+			// Configure "Roll back to target version" in Admin Console
+			// policy and ensure that supported devices correctly roll
+			// back while preserving networks and enrollment.
+			// rollback_target=current-lts
+			// COM_FOUND_CUJ13_TASK4_WF1
 			Value: "screenplay-7e91d2bb-7abf-441f-a31f-72d2d49bf029",
 		}, {
-			Key:   "feature_id",
+			Key: "feature_id",
+			// Configure "Roll back to target version" in Admin Console
+			// policy and ensure that supported devices correctly roll
+			// back while preserving networks and enrollment.
+			// rollback_target=current-ltc
+			// COM_FOUND_CUJ13_TASK4_WF1
 			Value: "screenplay-0623ac53-18d4-46f2-b0fa-43850d93dd37",
 		}},
 	})

@@ -40,10 +40,11 @@ func init() {
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Enroll an unmanaged device to an OU to ensure that correct
-			//  policies are applied on the device and then move the same
+			// policies are applied on the device and then move the same
 			// device to another OU to ensure that policies are correctly
 			// updated on the device.
 			// enrollment_type = manual
+			// COM_FOUND_CUJ13_TASK3_WF1
 			Value: "screenplay-e3feb0c8-a73b-4974-acf6-310348498e62",
 		}},
 	})

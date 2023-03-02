@@ -46,8 +46,11 @@ func init() {
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
-				// Configure rollback on a device and ensure that it is correctly
-				// rolled back and data preserved (rollback_target: n-1).
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that supported devices correctly roll
+				// back while preserving networks and enrollment.
+				// rollback_target=n-1
+				// COM_FOUND_CUJ13_TASK4_WF1
 				Value: "screenplay-072c8c85-d280-472c-a99a-04cc689565ed",
 			}},
 		}, {
@@ -57,8 +60,11 @@ func init() {
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
-				// Configure rollback on a device and ensure that it is correctly
-				// rolled back and data preserved (rollback_target: n-2).
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that supported devices correctly roll
+				// back while preserving networks and enrollment.
+				// rollback_target=n-2
+				// COM_FOUND_CUJ13_TASK4_WF1
 				Value: "screenplay-6f3f655c-5fa3-4d04-b513-50c049a9d762",
 			}},
 		}, {
@@ -68,8 +74,11 @@ func init() {
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
-				// Configure rollback on a device and ensure that it is correctly
-				// rolled back and data preserved (rollback_target: n-3).
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that supported devices correctly roll
+				// back while preserving networks and enrollment.
+				// rollback_target=n-3
+				// COM_FOUND_CUJ13_TASK4_WF1
 				Value: "screenplay-02406ce4-6923-4d51-8a1d-cfbf5a07eb63",
 			}},
 		},
