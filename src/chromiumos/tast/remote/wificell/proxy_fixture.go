@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	// ProxyFixtBootToSigninScreen is a fixture name that will be registered to tast.
-	ProxyFixtBootToSigninScreen = "proxyFixtBootToSigninScreen"
+	// ProxyFixtBootToLoginScreen is a fixture name that will be registered to tast.
+	ProxyFixtBootToLoginScreen = "proxyFixtBootToLoginScreen"
+	// ProxyFixtBootToOOBEScreen is a fixture name that will be registered to tast.
+	ProxyFixtBootToOOBEScreen = "proxyFixtBootToOOBEScreen"
 
 	// ProxyFixtServiceDepsChromeBrowser is the service needed for proxyFixtureImpl.
 	ProxyFixtServiceDepsChromeBrowser = "tast.cros.browser.ChromeService"
@@ -34,12 +36,31 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: ProxyFixtBootToSigninScreen,
+		Name: ProxyFixtBootToLoginScreen,
 		Desc: "The fixture is for proxy tests; boot the DUT to log-in screen, configure an AP, connect the AP and initiate the proxy-settings service client",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
 		SetUpTimeout:    15*time.Second + 2*loginTimeout, // Boot the DUT to sign-in screen requires log-in, log-out and then no-log-in.
+		PreTestTimeout:  connectToNetworkTimeout,
+		PostTestTimeout: 15 * time.Second,
+		TearDownTimeout: 15 * time.Second,
+		Impl:            &proxyFixtureImpl{isLoginScreen: true},
+		ServiceDeps: []string{
+			ProxyFixtServiceDepsProxySetting,
+			ProxyFixtServiceDepsChromeBrowser,
+			TFServiceName,
+		},
+		Vars:   []string{"ui.signinProfileTestExtensionManifestKey", "router", "pcap", "routertype", "pcaptype"},
+		Parent: "wificellFixt",
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ProxyFixtBootToOOBEScreen,
+		Desc: "The fixture is for proxy tests; boot the DUT to log-in screen, configure an AP, connect the AP and initiate the proxy-settings service client",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
+		},
+		SetUpTimeout:    15 * time.Second,
 		PreTestTimeout:  connectToNetworkTimeout,
 		PostTestTimeout: 15 * time.Second,
 		TearDownTimeout: 15 * time.Second,
@@ -125,7 +146,8 @@ func (f *ProxyFixtureData) Reboot(ctx context.Context, manifestKey string) error
 // proxyFixtureImpl implements testing.FixtureImpl, it sets up the DUT for proxy tests by
 // start Chrome, configure an AP, connect to the AP and initiate the proxy-settings service client.
 type proxyFixtureImpl struct {
-	data *ProxyFixtureData
+	data          *ProxyFixtureData
+	isLoginScreen bool
 }
 
 // SetUp sets up the DUT by boot the DUT to sign-in screen.
@@ -136,21 +158,27 @@ func (f *proxyFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 	}
 
 	crSvc := ui.NewChromeServiceClient(tf.DUTRPC(DefaultDUT).Conn)
-	// At least one user profile must exist in order to logout and stay at the login screen.
-	if _, err := crSvc.New(ctx, &ui.NewRequest{}); err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+	startChromeRequest := &ui.NewRequest{
+		LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
+		SigninProfileTestExtensionId: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 	}
-	// Properly close the connection before starting a new one.
-	if _, err := crSvc.Close(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to close Chrome: ", err)
+
+	// Create user pod and keep user profile to boot to login screen.
+	if f.isLoginScreen {
+		// At least one user profile must exist in order to logout and stay at the login screen.
+		if _, err := crSvc.New(ctx, &ui.NewRequest{}); err != nil {
+			s.Fatal("Failed to start Chrome: ", err)
+		}
+		// Properly close the connection before starting a new one.
+		if _, err := crSvc.Close(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to close Chrome: ", err)
+		}
+		// Keep state to make sure an user profile exists at login screen.
+		startChromeRequest.KeepState = true
 	}
 
 	// Create a new Chrome connection without logging in.
-	if _, err := crSvc.New(ctx, &ui.NewRequest{
-		LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
-		SigninProfileTestExtensionId: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-		KeepState:                    true,
-	}); err != nil {
+	if _, err := crSvc.New(ctx, startChromeRequest); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 

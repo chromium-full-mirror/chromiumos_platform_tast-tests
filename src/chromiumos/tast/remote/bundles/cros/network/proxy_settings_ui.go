@@ -16,50 +16,82 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/services/cros/network"
+	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProxySettingsUILoginScreen,
+		Func:         ProxySettingsUI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the UI for proxy settings works on Login screen",
+		Desc:         "Verify the UI for proxy settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",
-			"cj.tsai@cienet.com",
 			"cienet-development@googlegroups.com",
+			"cj.tsai@cienet.com",
+			"bossan.fang@cienet.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,
 			wificell.ProxyFixtServiceDepsChromeBrowser,
 			wificell.TFServiceName,
+			"tast.cros.ui.ChromeUIService",
 		},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Fixture:      wificell.ProxyFixtBootToSigninScreen,
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "set_exception_and_same_for_all_proxy",
-				Val:  setExceptionAndSetUseSameForAllProxy,
+				Name:    "set_exception_and_same_for_all_proxy_login_screen",
+				Fixture: wificell.ProxyFixtBootToLoginScreen,
+				Val:     setExceptionAndSetUseSameForAllProxy,
 			}, {
-				Name: "set_http_proxy",
-				Val:  setHTTPProxyOnly,
+				Name:    "set_http_proxy_login_screen",
+				Fixture: wificell.ProxyFixtBootToLoginScreen,
+				Val:     setHTTPProxyOnly,
 			}, {
-				Name: "set_secure_http_proxy",
-				Val:  setSecureHTTPProxyOnly,
+				Name:    "set_secure_http_proxy_login_screen",
+				Fixture: wificell.ProxyFixtBootToLoginScreen,
+				Val:     setSecureHTTPProxyOnly,
 			}, {
-				Name: "forget_then_set_socks_proxy",
-				Val:  resetByForgettingNetwork,
+				Name:    "forget_then_set_socks_proxy_login_screen",
+				Fixture: wificell.ProxyFixtBootToLoginScreen,
+				Val:     resetByForgettingNetwork,
 			}, {
-				Name: "persistent_after_reboot",
-				Val:  persistentAfterReboot,
+				Name:    "persistent_after_reboot_login_screen",
+				Fixture: wificell.ProxyFixtBootToLoginScreen,
+				Val:     persistentAfterRebootLoginScreen,
 			}, {
-				Name: "persistent_after_suspend",
-				Val:  persistentAfterSuspend,
+				Name:    "persistent_after_suspend_login_screen",
+				Fixture: wificell.ProxyFixtBootToLoginScreen,
+				Val:     persistentAfterSuspendLoginScreen,
+			}, {
+				Name:    "set_exception_and_same_for_all_proxy_oobe",
+				Fixture: wificell.ProxyFixtBootToOOBEScreen,
+				Val:     setExceptionAndSetUseSameForAllProxy,
+			}, {
+				Name:    "set_http_proxy_oobe",
+				Fixture: wificell.ProxyFixtBootToOOBEScreen,
+				Val:     setHTTPProxyOnly,
+			}, {
+				Name:    "set_secure_http_proxy_oobe",
+				Fixture: wificell.ProxyFixtBootToOOBEScreen,
+				Val:     setSecureHTTPProxyOnly,
+			}, {
+				Name:    "forget_then_set_socks_proxy_oobe",
+				Fixture: wificell.ProxyFixtBootToOOBEScreen,
+				Val:     resetByForgettingNetwork,
+			}, {
+				Name:    "persistent_after_reboot_oobe",
+				Fixture: wificell.ProxyFixtBootToOOBEScreen,
+				Val:     persistentAfterRebootOOBE,
+			}, {
+				Name:    "persistent_after_suspend_oobe",
+				Fixture: wificell.ProxyFixtBootToOOBEScreen,
+				Val:     persistentAfterSuspendOOBE,
 			},
 		},
 	})
@@ -79,8 +111,8 @@ type proxySettingsUITestData struct {
 	manifestKey string
 }
 
-// ProxySettingsUILoginScreen verifies the UI for proxy settings works on login screen.
-func ProxySettingsUILoginScreen(ctx context.Context, s *testing.State) {
+// ProxySettingsUI verifies the UI for proxy settings.
+func ProxySettingsUI(ctx context.Context, s *testing.State) {
 	proxyFixtureData := s.FixtValue().(*wificell.ProxyFixtureData)
 
 	networkInfo := &network.NetworkInfo{Value: &network.NetworkInfo_WifiSsid{WifiSsid: proxyFixtureData.AP.Config().SSID}}
@@ -266,8 +298,8 @@ func resetByForgettingNetwork(ctx context.Context, data *proxySettingsUITestData
 	return reopenProxySettingsAndVerify(ctx, data, expectedProxy)
 }
 
-// persistentAfterReboot verifies that proxy settings is still remembered after rebooting.
-func persistentAfterReboot(ctx context.Context, data *proxySettingsUITestData) error {
+// setProxyAndReboot sets the proxy settings and reboots the DUT.
+func setProxyAndReboot(ctx context.Context, data *proxySettingsUITestData) error {
 	proxySettingsSvc := data.ProxySettingsSvc
 	if _, err := proxySettingsSvc.Setup(ctx, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid())); err != nil {
 		return err
@@ -277,11 +309,32 @@ func persistentAfterReboot(ctx context.Context, data *proxySettingsUITestData) e
 	if err := proxyFixture.Reboot(ctx, data.manifestKey); err != nil {
 		return errors.Wrap(err, "failed to reboot")
 	}
+	return nil
+}
+
+// persistentAfterRebootLoginScreen verifies that proxy settings is still remembered on login screen after rebooting.
+func persistentAfterRebootLoginScreen(ctx context.Context, data *proxySettingsUITestData) error {
+	if err := setProxyAndReboot(ctx, data); err != nil {
+		return errors.Wrap(err, "failed to set proxy and reboot")
+	}
 	return reopenProxySettingsAndVerify(ctx, data, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid()))
 }
 
-// persistentAfterSuspend verifies that proxy settings is still remembered after suspending.
-func persistentAfterSuspend(ctx context.Context, data *proxySettingsUITestData) error {
+// persistentAfterRebootOOBE verifies that proxy settings is still remembered on OOBE screen after rebooting.
+func persistentAfterRebootOOBE(ctx context.Context, data *proxySettingsUITestData) error {
+	if err := setProxyAndReboot(ctx, data); err != nil {
+		return errors.Wrap(err, "failed to set proxy and reboot")
+	}
+
+	crUISvc := ui.NewChromeUIServiceClient(data.WifiTestFixture.DUTRPC(wificell.DefaultDUT).Conn)
+	if _, err := crUISvc.WaitForWelcomeScreen(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to wait for OOBE screen to be ready")
+	}
+	return reopenProxySettingsAndVerify(ctx, data, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid()))
+}
+
+// setProxyAndSuspend sets the proxy settings, suspends and resumes the DUT.
+func setProxyAndSuspend(ctx context.Context, data *proxySettingsUITestData) error {
 	proxySettingsSvc := data.ProxySettingsSvc
 	if _, err := proxySettingsSvc.Setup(ctx, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid())); err != nil {
 		return errors.Wrap(err, "failed to set proxy")
@@ -293,6 +346,27 @@ func persistentAfterSuspend(ctx context.Context, data *proxySettingsUITestData) 
 
 	if _, err := data.CrSvc.Reconnect(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to Chrome session")
+	}
+	return nil
+}
+
+// persistentAfterSuspendLoginScreen verifies that proxy settings is still remembered on login screen after suspending.
+func persistentAfterSuspendLoginScreen(ctx context.Context, data *proxySettingsUITestData) error {
+	if err := setProxyAndSuspend(ctx, data); err != nil {
+		return errors.Wrap(err, "failed to set proxy, suspend and resume")
+	}
+	return reopenProxySettingsAndVerify(ctx, data, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid()))
+}
+
+// persistentAfterSuspendOOBE verifies that proxy settings is still remembered on OOBE screen after suspending.
+func persistentAfterSuspendOOBE(ctx context.Context, data *proxySettingsUITestData) error {
+	if err := setProxyAndSuspend(ctx, data); err != nil {
+		return errors.Wrap(err, "failed to set proxy, suspend and resume")
+	}
+
+	crUISvc := ui.NewChromeUIServiceClient(data.WifiTestFixture.DUTRPC(wificell.DefaultDUT).Conn)
+	if _, err := crUISvc.WaitForWelcomeScreen(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to wait for OOBE screen to be ready")
 	}
 	return reopenProxySettingsAndVerify(ctx, data, wificell.DefaultProxyConfig(data.networkInfo.GetWifiSsid()))
 }
