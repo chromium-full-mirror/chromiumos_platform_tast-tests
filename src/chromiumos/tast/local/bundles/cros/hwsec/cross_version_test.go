@@ -18,11 +18,11 @@ type crossVersionParam struct {
 }
 
 type milestoneConfig struct {
-	milestone int
-	critical  bool
+	critical bool
+	ignore   bool
 }
 
-var milestoneConfigs = []milestoneConfig{
+var milestoneConfigs = map[int]milestoneConfig{
 	// "interesting" versions that are tested in CQ:
 	// * the oldest snapshotted version - R88,
 	// * the first version that has non-empty password KeyData - R91,
@@ -31,43 +31,59 @@ var milestoneConfigs = []milestoneConfig{
 	// * Long-term Support (LTS) version - R102.
 	// * Long-term Support (LTS) version - R108.
 	// * the first version with USS enabled - R110.
-	{milestone: 88, critical: true},
-	{milestone: 91, critical: true},
-	{milestone: 93, critical: true},
-	{milestone: 96, critical: true},
-	{milestone: 102, critical: true},
-	{milestone: 108, critical: true},
-	{milestone: 110, critical: true},
+	88:  {critical: true},
+	91:  {critical: true},
+	93:  {critical: true},
+	96:  {critical: true},
+	102: {critical: true},
+	108: {critical: true},
+	110: {critical: true},
 	// Other versions that are not tested in CQ
-	{milestone: 89, critical: false},
-	{milestone: 90, critical: false},
-	{milestone: 92, critical: false},
-	{milestone: 94, critical: false},
-	{milestone: 97, critical: false},
-	{milestone: 98, critical: false},
-	{milestone: 99, critical: false},
-	{milestone: 100, critical: false},
-	{milestone: 101, critical: false},
-	{milestone: 103, critical: false},
-	{milestone: 104, critical: false},
-	{milestone: 105, critical: false},
-	{milestone: 106, critical: false},
-	{milestone: 107, critical: false},
-	{milestone: 109, critical: false},
+	89:  {critical: false},
+	90:  {critical: false},
+	92:  {critical: false},
+	94:  {critical: false},
+	97:  {critical: false},
+	98:  {critical: false},
+	99:  {critical: false},
+	100: {critical: false},
+	101: {critical: false},
+	103: {critical: false},
+	104: {critical: false},
+	105: {critical: false},
+	106: {critical: false},
+	107: {critical: false},
+	109: {critical: false},
+	112: {critical: false},
+	// There is no R95 for ChromeOS
+	95: {ignore: true},
 }
 
 type tpmVersion struct {
-	name         string
-	softwareDeps []string
+	name           string
+	softwareDeps   []string
+	milestoneBegin int
+	milestoneEnd   int
 }
 
 var tpmVersions = []tpmVersion{
-	{name: "tpm2", softwareDeps: []string{"no_tpm_dynamic"}},
-	{name: "tpm_dynamic", softwareDeps: []string{"tpm_dynamic"}},
+	{
+		name:           "ti50",
+		softwareDeps:   []string{"no_tpm_dynamic", "gsc"},
+		milestoneBegin: 112,
+		milestoneEnd:   112,
+	}, {
+		name:           "tpm2",
+		softwareDeps:   []string{"no_tpm_dynamic", "no_gsc"},
+		milestoneBegin: 88,
+		milestoneEnd:   110,
+	}, {
+		name:           "tpm_dynamic",
+		softwareDeps:   []string{"tpm_dynamic", "no_gsc"},
+		milestoneBegin: 96,
+		milestoneEnd:   110,
+	},
 }
-
-// The first milestone that tpm dynamic are supported in VM.
-var firstTpmDynamicMilestone = 96
 
 func toCamelCase(s string) string {
 	var ret []string
@@ -85,8 +101,10 @@ func TestCrossVersionParams(t *testing.T) {
 		ExtraAttr: []string{"group:mainline", "informational"},
 	})
 	for _, tpmVer := range tpmVersions {
-		for _, config := range milestoneConfigs {
-			if tpmVer.name == "tpm_dynamic" && config.milestone < firstTpmDynamicMilestone {
+		for milestone := tpmVer.milestoneBegin; milestone <= tpmVer.milestoneEnd; milestone++ {
+			config := milestoneConfigs[milestone]
+
+			if config.ignore {
 				continue
 			}
 
@@ -97,7 +115,7 @@ func TestCrossVersionParams(t *testing.T) {
 				attr = []string{"group:hwsec", "hwsec_nightly"}
 			}
 
-			name := fmt.Sprintf("%s_r%d", tpmVer.name, config.milestone)
+			name := fmt.Sprintf("%s_r%d", tpmVer.name, milestone)
 			fixture := "crossVersion" + toCamelCase(name)
 
 			param := crossVersionParam{

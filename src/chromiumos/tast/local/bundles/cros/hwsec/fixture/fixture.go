@@ -58,6 +58,28 @@ func init() {
 		},
 	})
 
+	// Fixtures of cross version with Ti50 emulator
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTi50R112",
+		Desc: "Loads the data of milestone R112 from the Ti50 emulator device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R112-15359.7.0_betty_20230302",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R112-15359.7.0_betty_20230302_config.json",
+			"cross_version_login/R112-15359.7.0_betty_20230302_data.tar.gz",
+		},
+	})
+
 	// Fixtures of cross version with TPM2.0
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossVersionTpm2R88",
