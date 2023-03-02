@@ -50,7 +50,7 @@ type TestParams struct {
 }
 
 var (
-	googleURLList   = []string{cuj.GoogleFinanceURL, cuj.GoogleNonprofitsURL, cuj.GooglePolicyURL, cuj.GoogleHelpChromeURL}
+	googleURLList   = []string{cuj.GoogleFinanceURL, cuj.GoogleWorkspaceURL, cuj.GooglePolicyURL, cuj.GoogleNonprofitsURL}
 	externalURLList = []string{cuj.HuluURL, cuj.CnnURL, cuj.WikipediaURL, cuj.RedditURL}
 
 	urlListMap = map[cuj.WebSourceType][]string{
@@ -66,6 +66,7 @@ type runResources struct {
 	vh         *audio.Helper
 	uiHandler  cuj.UIActionHandler
 	browserApp apps.App
+	bTconn     *chrome.TestConn
 }
 
 // Run runs the MultitaskingApp test.
@@ -216,18 +217,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 			vh:         vh,
 			uiHandler:  uiHandler,
 			browserApp: browserApp,
+			bTconn:     bTconn,
 		}
+
 		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
 			return errors.Wrap(err, "failed to open and switch chrome tabs")
 		}
-
 		if err := switchWindows(ctx, tconn, resources, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to switch windows")
 		}
 		if err := takePhotoAndVideo(ctx, cr, params.CCAScriptPaths, outDir); err != nil {
 			return errors.Wrap(err, "failed to take photo and video")
 		}
-
 		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to generate ADF")
 		}
@@ -269,6 +270,7 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 	vh := resources.vh
 	kb := resources.kb
 	topRow := resources.topRow
+	bTconn := resources.bTconn
 
 	webSource := params.WebSource
 	if _, ok := urlListMap[webSource]; !ok {
@@ -311,6 +313,12 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 					continue
 				}
 				return errors.Wrapf(err, "failed to wait for page to finish loading within %v [%s]", timeout, url)
+			}
+
+			if url == cuj.GoogleWorkspaceURL {
+				if err := cuj.WaitForPDFVideoHistogram(ctx, bTconn); err != nil {
+					testing.ContextLog(ctx, "Failed to wait for PDF histogram: ", err)
+				}
 			}
 
 			if url == cuj.YoutubeMusicURL {

@@ -31,7 +31,6 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
-	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -602,17 +601,9 @@ func tabSwitchAction(ctx context.Context, br *browser.Browser, tconn, bTconn *ch
 			}
 
 			// Google Workspace page plays the video automatically.
-			// Wait for the histogram Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video
-			// collected from the page.
 			if tab.url == cuj.GoogleWorkspaceURL {
-				const videoHistogramName = "Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video"
-
-				videoWaitStartTime := time.Now()
-				videoHistogram, err := metrics.WaitForHistogram(ctx, bTconn, videoHistogramName, shortUITimeout)
-				if err != nil {
-					testing.ContextLog(ctx, "Failed to wait for histogram: ", err)
-				} else {
-					testing.ContextLogf(ctx, "Collected %v in %v", videoHistogram, time.Since(videoWaitStartTime))
+				if err := cuj.WaitForPDFVideoHistogram(ctx, bTconn); err != nil {
+					testing.ContextLog(ctx, "Failed to wait for PDF histogram: ", err)
 				}
 			}
 
