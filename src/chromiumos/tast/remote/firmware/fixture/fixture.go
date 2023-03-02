@@ -44,7 +44,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -57,7 +57,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -70,7 +70,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -83,7 +83,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -96,7 +96,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -109,7 +109,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -122,7 +122,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -135,7 +135,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  12 * time.Minute,
+		PreTestTimeout:  14 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
@@ -608,7 +608,28 @@ func rebootToMode(ctx context.Context, h *firmware.Helper, mode common.BootMode,
 	}
 	if err := ms.RebootToMode(ctx, mode, opts...); err != nil {
 		powerState := checkPowerState()
-		return errors.Wrapf(err, "failed to reboot to mode %q, got power state %s", mode, powerState)
+		if powerState == "S0" {
+			// If the device was already in developer mode, it might be stuck at the
+			// "developer mode is already enabled" message. Rebooting with a warm reset helps.
+			testing.ContextLog(ctx, "Power-cycling DUT with a warm reset")
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+				return errors.Wrap(err, "failed to warm reset dut at S0")
+			}
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				return errors.Wrap(err, "failed to reconnect to dut")
+			}
+			currentMode, err := h.Reporter.CurrentBootMode(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to check for the boot mode")
+			}
+			if currentMode != mode {
+				return errors.Wrapf(err, "failed to reboot to mode %q after warm reset", mode)
+			}
+		} else {
+			return errors.Wrapf(err, "failed to reboot to mode %q, got power state %s", mode, powerState)
+		}
 	}
 
 	return nil
