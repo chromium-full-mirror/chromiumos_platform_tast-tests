@@ -155,10 +155,10 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// The 'SHIPPED' firmware IDs can be generated and exported to a json file
 	// by running the following bq command:
 	/*
-		bq query --use_legacy_sql=false --format json -n 3000 'SELECT DISTINCT id, board_name, model_name, firmware_build_cros_version
+		bq query --use_legacy_sql=false --format json -n 3000 'SELECT DISTINCT board_name, model_name, firmware_build_cros_version
 		FROM `google.com:cros-goldeneye.prod.FirmwareQuals`
 		WHERE ship_status="SHIPPED" AND firmware_type <> "TYPE_RW"
-		ORDER BY board_name, model_name, id' > ~/chromiumos/src/platform/tast-tests/src/chromiumos/tast/remote/bundles/cros/firmware/data/shipped-firmwares.json
+		ORDER BY board_name, model_name' | json_pp > ~/chromiumos/src/platform/tast-tests/src/chromiumos/tast/remote/bundles/cros/firmware/data/shipped-firmwares.json
 	*/
 	// The json file was manually deposited as internal data under 'firmware/data'.
 
