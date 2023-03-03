@@ -234,6 +234,12 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			s.Error("Test did not run")
 			s.Fatal("Failed to connect to servod: ", err)
 		}
+		connectTimeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
+		defer cancel()
+		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+			s.Error("Test did not run")
+			s.Fatal("Failed to connect to DUT: ", err)
+		}
 		skipFlashUSB := false
 		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
 			skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
