@@ -173,7 +173,7 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: fullChargeTimeout, Interval: fullChargeInterval}); err != nil {
-		s.Fatal("Failed to poll for fully charged battery level in DUT")
+		s.Fatal("Failed to poll for fully charged battery level in DUT: ", err)
 	}
 }
 
