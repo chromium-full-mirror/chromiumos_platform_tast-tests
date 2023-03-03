@@ -37,7 +37,8 @@ func init() {
 			"tast.cros.inputs.KeyboardService",
 			"tast.cros.ui.AutomationService",
 		},
-		SoftwareDeps: []string{"chrome"},
+		// The feedback dep excludes a few boards where this test failed frequently.
+		SoftwareDeps: []string{"chrome", "feedback"},
 		Vars:         []string{"servo"},
 		Timeout:      5 * time.Minute,
 	})
