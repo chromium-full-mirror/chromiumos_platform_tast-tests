@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/network/netconfigtypes"
-	nws "chromiumos/tast/local/bundles/cros/rollback/rollbacknetworks"
+	"chromiumos/tast/common/rollback"
 	"chromiumos/tast/local/chrome"
 	nc "chromiumos/tast/local/network/netconfig"
 	rpb "chromiumos/tast/services/cros/rollback"
@@ -54,7 +54,7 @@ func (e *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, request *
 
 	// Set up the supported networks.
 	var networks []*rpb.NetworkInformation
-	for _, nw := range nws.SupportedNetworks {
+	for _, nw := range rollback.SupportedNetworks {
 		nwInfo, err := setUpNetwork(ctx, api, nw.Config)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to set up %s network", nw.Type)
@@ -100,15 +100,15 @@ func verifyNetworks(ctx context.Context, networks []*rpb.NetworkInformation, api
 		// Retrieve corresponding supported network configuration.
 		// It is assumed that the guid are received in the same order they were set,
 		// so we use the idx to identify which is the corresponding network.
-		nwID := nws.ConfigID(idx)
-		preservedNw, err := nws.VerifyNetwork(ctx, nwID, managedProperties)
+		nwID := rollback.ConfigID(idx)
+		preservedNw, err := rollback.VerifyNetwork(ctx, nwID, managedProperties)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to verify network")
 		}
 
 		if !preservedNw {
 			response.Successful = false
-			response.VerificationDetails += nws.SupportedNetworks[nwID].Type + " network was not preserved;"
+			response.VerificationDetails += rollback.SupportedNetworks[nwID].Type + " network was not preserved;"
 		}
 	}
 
@@ -128,12 +128,6 @@ func (e *EnterpriseRollbackService) VerifyRollback(ctx context.Context, request 
 		return nil, errors.Wrap(err, "failed to restart Chrome for testing after rollback")
 	}
 	defer cr.Close(ctx)
-
-	oobeConn, err := cr.WaitForOOBEConnection(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create OOBE connection")
-	}
-	defer oobeConn.Close()
 
 	// Verify network configuration during OOBE.
 	apiOOBE, err := nc.CreateOobeCrosNetworkConfig(ctx, cr)
