@@ -10,23 +10,18 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/deskapi/constants"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchAndClose,
+		Func:         DeskSwitch,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks using desk API to launch and remove desk",
-		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
+		Desc:         "Checks using desk API to switch desk",
 		BugComponent: "b:1020793",
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
@@ -41,7 +36,7 @@ func init() {
 	})
 }
 
-func LaunchAndClose(ctx context.Context, s *testing.State) {
+func DeskSwitch(ctx context.Context, s *testing.State) {
 	// Reserve five seconds for various cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -73,7 +68,6 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 
-	ac := uiauto.New(tconn)
 	const url string = "https://continuous-sincere-relation.glitch.me"
 
 	// Create a new browser connection with target page opened.
@@ -83,28 +77,7 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
-	// Pin window to all-desks.
-	if err := conn.Eval(ctx, `new Promise((resolve, reject) => {
-		chrome.runtime.sendMessage(
-			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
-				"messageType": "SetWindowProperties",
-				"operands": {
-					"allDesks": true
-				}
-		    },
-		    (response) => {
-				if(response.errorMessage) {
-					reject(new Error(response.errorMessage));
-					return;
-				}
-				resolve();
-			});
-		})`, nil); err != nil {
-		s.Fatal("Failed to pin window to all desks: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for all desks animation to be completed: ", err)
-	}
+	// Should only have 1 valid desk at initialization time.
 	deskCount, err := ash.GetDeskCount(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get desk count: ", err)
@@ -113,15 +86,10 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unexpected desk cound: want 1, got %d", deskCount)
 	}
 
-	// Launch a new desk.
-	var deskID string
-	if err := conn.Eval(ctx, `new Promise((resolve, reject) => {
+	const getDeskFunc = `new Promise((resolve, reject) => {
 		chrome.runtime.sendMessage(
 			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
-				"messageType": "LaunchDesk",
-				"operands": {
-					"deskName": "test" // Specify desk name.
-				}
+				"messageType": "GetActiveDesk",
 			},
 			(response) => {
 				if(response.errorMessage) {
@@ -130,61 +98,67 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 				}
 				resolve(response.operands.deskUuid);
 			});
-		})`, &deskID); err != nil {
-		s.Fatal("Failed to launch new desks: ", err)
+		})`
+	// Get current active desk
+	var deskID string
+	if err := conn.Eval(ctx, getDeskFunc, &deskID); err != nil {
+		s.Fatal("Failed to get active desk: ", err)
+	}
+
+	if err := ash.CreateNewDesk(ctx, tconn); err != nil {
+		s.Fatal("Failed to launch a new desk: ", err)
+	}
+
+	if err := ash.ActivateDeskAtIndex(ctx, tconn, 1); err != nil {
+		s.Fatal("Failed to activate the new desk: ", err)
 	}
 
 	if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
 		s.Fatal("Failed to wait for launch desk animation: ", err)
 	}
 
-	deskCount, err = ash.GetDeskCount(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get desk count: ", err)
-	}
-	if deskCount != 2 {
-		s.Fatalf("Unexpected desk cound: want 2, got %d", deskCount)
+	var deskID1 string
+	if err := conn.Eval(ctx, getDeskFunc, &deskID1); err != nil {
+		s.Fatal("Failed to get active desk: ", err)
 	}
 
-	// Remove desk and skip confirmation window.
-	if err := conn.Call(ctx, nil, `async (deskId) => {
+	if deskID == deskID1 {
+		s.Fatal("Failed to move to new desk: ", err)
+	}
+
+	const switchDeskFunc = `async (deskId) => {
 		await new Promise((resolve, reject) => {
 			chrome.runtime.sendMessage(
 				"kflgdebkpepnpjobkdfeeipcjdahoomc", {
-					"messageType": "RemoveDesk",
+					"messageType": "SwitchDesk",
 					"operands": {
-						"deskId": deskId,
-						"skipConfirmation": true
+						"deskId": deskId
 					}
 				},
 				(response) => {
-					if (response.errorMessage) {
+					if(response.errorMessage) {
 						reject(new Error(response.errorMessage));
 						return;
 					}
 					resolve();
 				});
 			});
-		}`, deskID); err != nil {
-		s.Fatal("Failed to remove desk: ", err)
+		}`
+	if err := conn.Call(ctx, nil, switchDeskFunc, deskID); err != nil {
+		s.Fatal("Failed to switch desk: ", err)
 	}
 
 	if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
-		s.Fatal("Failed to wait for remove desk animation: ", err)
+		s.Fatal("Failed to wait for launch desk animation: ", err)
 	}
 
-	// Desk clean up is not synchronous. Wait before verify desk count.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		deskCount, err := ash.GetDeskCount(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get desks count"))
-		}
-		if deskCount == 1 {
-			return nil
-		}
-		return errors.New("desks are not being removed")
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to remove new desks")
+	var deskID2 string
+	if err := conn.Eval(ctx, getDeskFunc, &deskID2); err != nil {
+		s.Fatal("Failed to get active desk: ", err)
+	}
+
+	if deskID != deskID2 {
+		s.Fatalf("Failed to switch back to previous desk, want:%s, got %s", deskID, deskID2)
 	}
 
 }
