@@ -45,7 +45,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},

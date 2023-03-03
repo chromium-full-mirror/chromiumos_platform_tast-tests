@@ -28,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p", "chrome"},
+			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},

@@ -47,7 +47,7 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_p", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 			},
 			{
 				Name:              "vm",

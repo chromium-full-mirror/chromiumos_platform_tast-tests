@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               "/sys/fs/cgroup/cpu/session_manager_containers/cpu.shares",
 		}, {
 			Name:              "vm",

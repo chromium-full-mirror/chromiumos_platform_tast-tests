@@ -37,7 +37,7 @@ func init() {
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},

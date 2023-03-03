@@ -49,7 +49,7 @@ func init() {
 		},
 		Attr: []string{"group:mainline"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               cpuSetConfig{},
 		}, {
 			Name:              "vm",
