@@ -45,7 +45,7 @@ func init() {
 		BugComponent: "b:961455", // ChromeOS > Platform > Graphics > Gaming > Steam > Core Gfx
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		SoftwareDeps: []string{"no_qemu"},
+		SoftwareDeps: []string{"no_qemu", "borealis_host"},
 		Fixture:      "graphicsNoChrome",
 		Timeout:      5 * time.Minute,
 	})
