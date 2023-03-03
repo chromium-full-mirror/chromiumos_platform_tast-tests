@@ -127,6 +127,10 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		args = append(args, "--enterprise-enable-forced-re-enrollment=never", "--enterprise-enable-initial-enrollment=never")
 	}
 
+	if cfg.ForceManualEnrollment() {
+		args = append(args, "--enterprise-force-manual-enrollment")
+	}
+
 	// Enable verbose logging on gaia_auth_fetcher to help debug some login failures. See crbug.com/1166530
 	if cfg.LoginMode() == config.GAIALogin {
 		args = append(args, "--vmodule=gaia_auth_fetcher=1")

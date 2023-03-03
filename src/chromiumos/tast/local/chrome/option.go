@@ -291,6 +291,7 @@ func GAIAEnterpriseEnroll(creds Creds) Option {
 	return func(cfg *config.MutableConfig) error {
 		cfg.EnrollMode = config.GAIAEnroll
 		cfg.EnrollmentCreds = creds
+		cfg.ForceManualEnrollment = true
 		return nil
 	}
 }
