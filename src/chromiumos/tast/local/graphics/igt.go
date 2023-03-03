@@ -30,6 +30,15 @@ type igtResultSummary struct {
 	skipped int // number of skipped subtests
 }
 
+// IgtGpuAmd is a list of amdgpu boards.
+var IgtGpuAmd = []string{"zork", "grunt", "guybrush", "skyrim"}
+
+// IgtGpuQcom is a list of freedreno boards.
+var IgtGpuQcom = []string{"strongbad", "trogdor"}
+
+// IgtGpuMtk is a list of MTK boards.
+var IgtGpuMtk = []string{"kukui", "jacuzzi", "asurada", "cherry", "corsola", "geralt"}
+
 // IgtExecuteTests executes the IGT binary of the an IgtTest. If the test has a subtest, it executes it as well. Otherwise, it executes the entire test.
 func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *exec.ExitError, error) {
 	exePath := filepath.Join("/usr/local/libexec/igt-gpu-tools", testOpt.Exe)
