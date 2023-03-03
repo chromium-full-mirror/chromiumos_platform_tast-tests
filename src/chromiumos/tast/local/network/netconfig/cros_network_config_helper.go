@@ -4,9 +4,11 @@
 
 package netconfig
 
+import "chromiumos/tast/common/network/netconfigtypes"
+
 // This file contains helper functions for commonly used patterns that occur in connectivity tests using mojo.
 
 // NetworkStateIsConnectedOrOnline checks whether network is connected or online.
-func NetworkStateIsConnectedOrOnline(networkState NetworkStateProperties) bool {
-	return networkState.ConnectionState == ConnectedCST || networkState.ConnectionState == OnlineCST
+func NetworkStateIsConnectedOrOnline(networkState netconfigtypes.NetworkStateProperties) bool {
+	return networkState.ConnectionState == netconfigtypes.ConnectedCST || networkState.ConnectionState == netconfigtypes.OnlineCST
 }

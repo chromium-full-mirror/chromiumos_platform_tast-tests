@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"time"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -23,7 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/network/netconfig"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -145,7 +146,7 @@ type ProxySettings struct {
 // TODO(b/244330490): Update this method to open the network settings by
 // clicking the network in the network list in the Quick Settings.
 func CollectEthernet(ctx context.Context, tconn *chrome.TestConn, isLoggedIn bool) (*ProxySettings, error) {
-	return collectFromQuickSettings(ctx, tconn, netconfig.Ethernet, "", isLoggedIn)
+	return collectFromQuickSettings(ctx, tconn, netconfigtypes.Ethernet, "", isLoggedIn)
 }
 
 // CollectWifi launches the network settings for a particular WiFi network.
@@ -153,13 +154,13 @@ func CollectEthernet(ctx context.Context, tconn *chrome.TestConn, isLoggedIn boo
 // The network must be a remembered or opened.
 func CollectWifi(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
 	if isLoggedIn {
-		if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, wifiSsid, netconfig.WiFi); err != nil {
+		if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, wifiSsid, netconfigtypes.WiFi); err != nil {
 			return nil, errors.Wrap(err, "failed to open specific wifi setting")
 		}
 
 		return &ProxySettings{isLoggedIn: true}, expandProxyOption(ctx, tconn)
 	}
-	return collectFromQuickSettings(ctx, tconn, netconfig.WiFi, wifiSsid, isLoggedIn)
+	return collectFromQuickSettings(ctx, tconn, netconfigtypes.WiFi, wifiSsid, isLoggedIn)
 }
 
 // Close clears ProxySettings object and closes Settings app if applied.
@@ -177,16 +178,16 @@ func (ps *ProxySettings) Close(ctx context.Context, tconn *chrome.TestConn, kb *
 
 // collectFromQuickSettings launches the proxy setting page of the specified network.
 // Note that the network has to be connected to further collect the proxy settings.
-func collectFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfig.NetworkType, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
+func collectFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfigtypes.NetworkType, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to network detailed view")
 	}
 
 	var networkList *nodewith.Finder
 	switch networkType {
-	case netconfig.Ethernet:
+	case netconfigtypes.Ethernet:
 		networkList = quicksettings.NetworkListItemView.NameContaining("Ethernet")
-	case netconfig.WiFi:
+	case netconfigtypes.WiFi:
 		networkList = quicksettings.NetworkListItemView.NameContaining(wifiSsid)
 	default:
 		return nil, errors.Errorf("unsupported network type: %d", networkType)

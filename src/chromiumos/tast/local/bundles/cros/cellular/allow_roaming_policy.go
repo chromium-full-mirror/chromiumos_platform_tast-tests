@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
@@ -16,7 +17,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
-	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"go.chromium.org/tast/core/testing"
@@ -94,7 +94,7 @@ func AllowRoamingPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get a cellular network: ", err)
 	}
 
-	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfig.Cellular)
+	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfigtypes.Cellular)
 	if err != nil {
 		s.Fatal("Failed to open network detail page: ", networkName)
 	}

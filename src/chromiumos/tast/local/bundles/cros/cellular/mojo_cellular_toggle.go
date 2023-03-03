@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/netconfig"
@@ -56,7 +57,7 @@ func MojoCellularToggle(ctx context.Context, s *testing.State) {
 		enabled := i%2 != 0
 		s.Logf("Toggling Cellular state to %t (iteration %d of %d)", enabled, i+1, iterations)
 
-		if err := netConn.SetNetworkTypeEnabledState(ctx, netconfig.Cellular, enabled); err != nil {
+		if err := netConn.SetNetworkTypeEnabledState(ctx, netconfigtypes.Cellular, enabled); err != nil {
 			s.Fatal("Failed to set cellular state: ", err)
 		}
 

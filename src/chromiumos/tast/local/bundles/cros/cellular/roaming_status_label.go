@@ -8,10 +8,11 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
-	"chromiumos/tast/local/network/netconfig"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -79,7 +80,7 @@ func RoamingStatusLabel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get a cellular network: ", err)
 	}
 
-	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfig.Cellular)
+	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfigtypes.Cellular)
 	if err != nil {
 		s.Fatal("Failed to open network detail page: ", networkName)
 	}

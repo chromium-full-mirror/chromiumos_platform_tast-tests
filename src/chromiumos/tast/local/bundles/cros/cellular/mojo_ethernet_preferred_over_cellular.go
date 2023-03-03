@@ -8,10 +8,12 @@ import (
 	"context"
 	"time"
 
+	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/shill"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -77,9 +79,9 @@ func MojoEthernetPreferredOverCellular(ctx context.Context, s *testing.State) {
 	defer netConn.Close(ctx)
 
 	// Get state of all active networks.
-	filter := netconfig.NetworkFilter{
-		Filter:      netconfig.ActiveFT,
-		NetworkType: netconfig.All,
+	filter := types.NetworkFilter{
+		Filter:      types.ActiveFT,
+		NetworkType: types.All,
 		Limit:       0}
 
 	networkStates, err := netConn.GetNetworkStateList(ctx, filter)
@@ -95,13 +97,13 @@ func MojoEthernetPreferredOverCellular(ctx context.Context, s *testing.State) {
 		s.Logf("NetworkStateList is %+v", networkStates)
 		s.Fatal("Less than 2 networks in networkstatelist")
 	}
-	if networkStates[0].Type != netconfig.Ethernet {
+	if networkStates[0].Type != types.Ethernet {
 		s.Fatal("Wrong network in the second position expected: ethernet, got: ", networkStates[0].Type)
 	}
 	if !netconfig.NetworkStateIsConnectedOrOnline(networkStates[0]) {
 		s.Fatal("Ethernet not Online or Connected, got: ", networkStates[0].ConnectionState)
 	}
-	if networkStates[1].Type != netconfig.Cellular {
+	if networkStates[1].Type != types.Cellular {
 		s.Fatal("Wrong network in the second position expected: cellular, got: ", networkStates[1].Type)
 	}
 	if !netconfig.NetworkStateIsConnectedOrOnline(networkStates[1]) {

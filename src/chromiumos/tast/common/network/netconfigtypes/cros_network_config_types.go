@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package netconfig
+package netconfigtypes
 
 // A simplified version of the types in cros_network_config.mojom and
 // network_types.mojom to be used in tests. The JSON marshalling comments are

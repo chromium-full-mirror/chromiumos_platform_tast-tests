@@ -8,7 +8,9 @@ package netconfig
 import (
 	"context"
 
+	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/chrome"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -73,8 +75,8 @@ func (c *CrosNetworkConfig) Close(ctx context.Context) error {
 // GetManagedProperties returns the managed properties of the given network,
 // managed properties contain information on which values are set by policy or
 // user. Look at cros_network_config.mojom or onc_spec.md for more information.
-func (c *CrosNetworkConfig) GetManagedProperties(ctx context.Context, guid string) (*ManagedProperties, error) {
-	var result ManagedProperties
+func (c *CrosNetworkConfig) GetManagedProperties(ctx context.Context, guid string) (*types.ManagedProperties, error) {
+	var result types.ManagedProperties
 	if err := c.mojoRemote.Call(ctx, &result, "function(guid) {return this.getManagedProperties(guid)}", guid); err != nil {
 		return nil, errors.Wrap(err, "failed to call cros_network_config javascript wrapper")
 	}
@@ -84,7 +86,7 @@ func (c *CrosNetworkConfig) GetManagedProperties(ctx context.Context, guid strin
 
 // ConfigureNetwork either configures a new network or updates an existing
 // network configuration.
-func (c *CrosNetworkConfig) ConfigureNetwork(ctx context.Context, properties ConfigProperties, shared bool) (string, error) {
+func (c *CrosNetworkConfig) ConfigureNetwork(ctx context.Context, properties types.ConfigProperties, shared bool) (string, error) {
 	var result struct {
 		GUID         string
 		ErrorMessage string
@@ -113,7 +115,7 @@ func (c *CrosNetworkConfig) ForgetNetwork(ctx context.Context, guid string) (boo
 }
 
 // SetNetworkTypeEnabledState enables/disable a given Network_Type.
-func (c *CrosNetworkConfig) SetNetworkTypeEnabledState(ctx context.Context, networkType NetworkType, enable bool) error {
+func (c *CrosNetworkConfig) SetNetworkTypeEnabledState(ctx context.Context, networkType types.NetworkType, enable bool) error {
 	var result struct{ Success bool }
 	if err := c.mojoRemote.Call(ctx, &result,
 		"function(networkType, enable) { return this.setNetworkTypeEnabledState(networkType, enable)}", networkType, enable); err != nil {
@@ -127,8 +129,10 @@ func (c *CrosNetworkConfig) SetNetworkTypeEnabledState(ctx context.Context, netw
 }
 
 // GetNetworkStateList returns a array of states of networks based on the filter.
-func (c *CrosNetworkConfig) GetNetworkStateList(ctx context.Context, filter NetworkFilter) ([]NetworkStateProperties, error) {
-	var result struct{ Result []NetworkStateProperties }
+func (c *CrosNetworkConfig) GetNetworkStateList(ctx context.Context, filter types.NetworkFilter) ([]types.NetworkStateProperties, error) {
+	var result struct {
+		Result []types.NetworkStateProperties
+	}
 
 	if err := c.mojoRemote.Call(ctx, &result,
 		"function(filter) { return this.getNetworkStateList(filter)}", filter); err != nil {
@@ -139,8 +143,8 @@ func (c *CrosNetworkConfig) GetNetworkStateList(ctx context.Context, filter Netw
 }
 
 // GetDeviceStateList returns a array of Device states.
-func (c *CrosNetworkConfig) GetDeviceStateList(ctx context.Context) ([]DeviceStateProperties, error) {
-	var result struct{ Result []DeviceStateProperties }
+func (c *CrosNetworkConfig) GetDeviceStateList(ctx context.Context) ([]types.DeviceStateProperties, error) {
+	var result struct{ Result []types.DeviceStateProperties }
 
 	if err := c.mojoRemote.Call(ctx, &result,
 		"function(filter) { return this.getDeviceStateList()}"); err != nil {

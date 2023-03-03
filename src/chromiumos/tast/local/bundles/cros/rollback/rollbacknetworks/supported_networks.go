@@ -7,7 +7,8 @@ package rollbacknetworks
 import (
 	"context"
 
-	nc "chromiumos/tast/local/network/netconfig"
+	types "chromiumos/tast/common/network/netconfigtypes"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -15,7 +16,7 @@ import (
 // SupportedConfiguration contains the configuration of the network and its
 // type. Type are for debug purposes and informational logs.
 type SupportedConfiguration struct {
-	Config nc.ConfigProperties
+	Config types.ConfigProperties
 	Type   string
 }
 
@@ -45,19 +46,19 @@ var SupportedNetworks = []SupportedConfiguration{
 }
 
 // Simple PSK network configuration.
-var pskConfig = nc.ConfigProperties{
-	TypeConfig: nc.NetworkTypeConfigProperties{
-		Wifi: &nc.WiFiConfigProperties{
+var pskConfig = types.ConfigProperties{
+	TypeConfig: types.NetworkTypeConfigProperties{
+		Wifi: &types.WiFiConfigProperties{
 			Passphrase: "pass,pass,123",
 			Ssid:       "MyHomeWiFi",
-			Security:   nc.WpaPsk,
-			HiddenSsid: nc.Automatic}}}
+			Security:   types.WpaPsk,
+			HiddenSsid: types.Automatic}}}
 
 // PEAP wifi configuration without certificates.
-var peapWifiConfig = nc.ConfigProperties{
-	TypeConfig: nc.NetworkTypeConfigProperties{
-		Wifi: &nc.WiFiConfigProperties{
-			Eap: &nc.EAPConfigProperties{
+var peapWifiConfig = types.ConfigProperties{
+	TypeConfig: types.NetworkTypeConfigProperties{
+		Wifi: &types.WiFiConfigProperties{
+			Eap: &types.EAPConfigProperties{
 				AnonymousIdentity:   "anonymous_identity",
 				Identity:            "userIdentity",
 				Inner:               "Automatic",
@@ -66,26 +67,26 @@ var peapWifiConfig = nc.ConfigProperties{
 				SaveCredentials:     true,
 				ClientCertType:      "None",
 				DomainSuffixMatch:   []string{},
-				SubjectAltNameMatch: []nc.SubjectAltName{},
+				SubjectAltNameMatch: []types.SubjectAltName{},
 				UseSystemCAs:        false,
 			},
 			Ssid:       "wifiTestPEAP",
-			Security:   nc.WpaEap,
-			HiddenSsid: nc.Automatic}}}
+			Security:   types.WpaEap,
+			HiddenSsid: types.Automatic}}}
 
 // Open wifi
-var openWifiConfig = nc.ConfigProperties{
-	TypeConfig: nc.NetworkTypeConfigProperties{
-		Wifi: &nc.WiFiConfigProperties{
+var openWifiConfig = types.ConfigProperties{
+	TypeConfig: types.NetworkTypeConfigProperties{
+		Wifi: &types.WiFiConfigProperties{
 			Ssid:       "myOpenWifi",
-			Security:   nc.None,
-			HiddenSsid: nc.Automatic}}}
+			Security:   types.None,
+			HiddenSsid: types.Automatic}}}
 
 // PEAP ethernet configuration without certificates.
-var peapEthernetConfig = nc.ConfigProperties{
-	TypeConfig: nc.NetworkTypeConfigProperties{
-		Ethernet: &nc.EthernetConfigProperties{
-			Eap: &nc.EAPConfigProperties{
+var peapEthernetConfig = types.ConfigProperties{
+	TypeConfig: types.NetworkTypeConfigProperties{
+		Ethernet: &types.EthernetConfigProperties{
+			Eap: &types.EAPConfigProperties{
 				AnonymousIdentity:   "anonymous_identity_ethernet",
 				Identity:            "userIdentityEthernet",
 				Inner:               "Automatic",
@@ -94,7 +95,7 @@ var peapEthernetConfig = nc.ConfigProperties{
 				SaveCredentials:     true,
 				ClientCertType:      "None",
 				DomainSuffixMatch:   []string{},
-				SubjectAltNameMatch: []nc.SubjectAltName{},
+				SubjectAltNameMatch: []types.SubjectAltName{},
 				UseSystemCAs:        false,
 			},
 			Authentication: "8021X"}}}
@@ -102,7 +103,7 @@ var peapEthernetConfig = nc.ConfigProperties{
 // VerifyNetwork checks if the configuration set is the expected one. The
 // verification of the fields depends on the configuration set, so the
 // appropriate verification methods are called for each of them.
-func VerifyNetwork(ctx context.Context, nwID ConfigID, nwSet *nc.ManagedProperties) (bool, error) {
+func VerifyNetwork(ctx context.Context, nwID ConfigID, nwSet *types.ManagedProperties) (bool, error) {
 	var nwPreservation bool
 	switch nwID {
 	case Psk:
@@ -132,7 +133,7 @@ func VerifyNetwork(ctx context.Context, nwID ConfigID, nwSet *nc.ManagedProperti
 
 // wifiVerification verifies the elements of the wifi configuration that can be
 // compared without particular rules. Passphrase and Eap are not included.
-func wifiVerification(ctx context.Context, wifiExp *nc.WiFiConfigProperties, wifiSet *nc.ManagedWiFiProperties) bool {
+func wifiVerification(ctx context.Context, wifiExp *types.WiFiConfigProperties, wifiSet *types.ManagedWiFiProperties) bool {
 	if wifiSet.Security != wifiExp.Security ||
 		wifiSet.Ssid.ActiveValue != wifiExp.Ssid {
 		// Log details about set and expected configuration for debugging.
@@ -146,7 +147,7 @@ func wifiVerification(ctx context.Context, wifiExp *nc.WiFiConfigProperties, wif
 
 // wifiVerificationWithPassphrase verifies the configuration of a wifi including
 // the Passphrase.
-func wifiVerificationWithPassphrase(ctx context.Context, wifiExp *nc.WiFiConfigProperties, wifiSet *nc.ManagedWiFiProperties) bool {
+func wifiVerificationWithPassphrase(ctx context.Context, wifiExp *types.WiFiConfigProperties, wifiSet *types.ManagedWiFiProperties) bool {
 	verification := wifiVerification(ctx, wifiExp, wifiSet)
 	// Passphrase is not passed via cros_network_config, instead mojo passes a
 	// constant value if a password is configured. Only check for non-empty.
@@ -159,7 +160,7 @@ func wifiVerificationWithPassphrase(ctx context.Context, wifiExp *nc.WiFiConfigP
 
 // peapVerification verifies the elements of the supported PEAP configuration.
 // It works for both wifi and ethernet configurations.
-func peapVerification(ctx context.Context, peapExp *nc.EAPConfigProperties, peapSet *nc.ManagedEAPProperties) bool {
+func peapVerification(ctx context.Context, peapExp *types.EAPConfigProperties, peapSet *types.ManagedEAPProperties) bool {
 	// Password is not passed via cros_network_config, instead mojo passes a
 	// constant value if a password is configured. Only check for non-empty.
 	// TODO(b/256569126): Add check of Eap.ClientCertType when b/227734735 is
@@ -188,7 +189,7 @@ func peapVerification(ctx context.Context, peapExp *nc.EAPConfigProperties, peap
 
 // ethernetVerification verifies the elements of the ethernet configuration that
 // can be compared without particular rules. Eap is not included.
-func ethernetVerification(ctx context.Context, ethernetExp *nc.EthernetConfigProperties, ethernetSet *nc.ManagedEthernetProperties) bool {
+func ethernetVerification(ctx context.Context, ethernetExp *types.EthernetConfigProperties, ethernetSet *types.ManagedEthernetProperties) bool {
 	if ethernetSet.Authentication.ActiveValue != ethernetExp.Authentication {
 		// Log details about set and expected configuration for debugging.
 		testing.ContextLogf(ctx, "Ethernet set: %+v", ethernetSet)

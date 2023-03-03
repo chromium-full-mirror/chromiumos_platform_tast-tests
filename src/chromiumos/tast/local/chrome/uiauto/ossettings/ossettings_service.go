@@ -11,13 +11,14 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/common"
-	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/ossettings"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,12 +38,12 @@ type Service struct {
 	sharedObject *common.SharedObjectsForService
 }
 
-func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest_NetworkType) (netconfig.NetworkType, error) {
+func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest_NetworkType) (netconfigtypes.NetworkType, error) {
 	if networkType == pb.OpenNetworkDetailPageRequest_CELLULAR {
-		return netconfig.Cellular, nil
+		return netconfigtypes.Cellular, nil
 	}
 	if networkType == pb.OpenNetworkDetailPageRequest_WIFI {
-		return netconfig.WiFi, nil
+		return netconfigtypes.WiFi, nil
 	}
 	return 0, errors.New("Network type must be Cellular or WiFi")
 }

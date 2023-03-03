@@ -8,9 +8,11 @@ import (
 	"context"
 	"time"
 
+	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/shill"
 	f "chromiumos/tast/local/wifi"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -83,25 +85,25 @@ func HiddenNetworksAreMigrated(ctx context.Context, s *testing.State) {
 
 	isHidden := s.Param().(*testConfig).hidden
 
-	var wifiConfigProperties *netconfig.WiFiConfigProperties
+	var wifiConfigProperties *types.WiFiConfigProperties
 	if isHidden {
-		wifiConfigProperties = &netconfig.WiFiConfigProperties{
+		wifiConfigProperties = &types.WiFiConfigProperties{
 			Ssid:       networkSSID,
-			Security:   netconfig.None,
-			HiddenSsid: netconfig.Enabled,
+			Security:   types.None,
+			HiddenSsid: types.Enabled,
 		}
 	} else {
-		wifiConfigProperties = &netconfig.WiFiConfigProperties{
+		wifiConfigProperties = &types.WiFiConfigProperties{
 			Ssid:       networkSSID,
-			Security:   netconfig.None,
-			HiddenSsid: netconfig.Disabled,
+			Security:   types.None,
+			HiddenSsid: types.Disabled,
 		}
 	}
 
 	// One of the requirements for a network to be eligible to be migrated is that it must never have been connected to,
 	// so next we configure a network that does not actually exist.
-	if _, err := networkConfig.ConfigureNetwork(ctx, netconfig.ConfigProperties{
-		TypeConfig: netconfig.NetworkTypeConfigProperties{
+	if _, err := networkConfig.ConfigureNetwork(ctx, types.ConfigProperties{
+		TypeConfig: types.NetworkTypeConfigProperties{
 			Wifi: wifiConfigProperties,
 		}}, true /*shared*/); err != nil {
 		s.Fatal("Failed to configure network: ", err)

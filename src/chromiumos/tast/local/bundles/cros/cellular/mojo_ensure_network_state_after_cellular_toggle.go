@@ -8,10 +8,12 @@ import (
 	"context"
 	"time"
 
+	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/shill"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,22 +34,22 @@ func init() {
 
 // compareDeviceStatelist compares the device states with states before toggling cellular device.
 // cellular device state should match 'enabled' argument and Ethernet and WiFi should maintain the original state
-func compareDeviceStatelist(orgDeviceState, curDeviceState []netconfig.DeviceStateProperties, enabled bool) error {
+func compareDeviceStatelist(orgDeviceState, curDeviceState []types.DeviceStateProperties, enabled bool) error {
 	for _, cfg := range curDeviceState {
 		deviceType := cfg.Type
 		deviceState := cfg.DeviceState
 		// Check cellular device against the known status.
-		if deviceType == netconfig.Cellular {
-			if enabled && deviceState != netconfig.EnabledDST {
+		if deviceType == types.Cellular {
+			if enabled && deviceState != types.EnabledDST {
 				return errors.Errorf("unexpected Cellular state expected: enabled got: %d", deviceState)
 
-			} else if !enabled && deviceState != netconfig.DisabledDST {
+			} else if !enabled && deviceState != types.DisabledDST {
 				return errors.Errorf("unexpected Cellular state expected: disabled got: %d", deviceState)
 			}
 		}
 
 		// Checking only Ethernet and WiFi.
-		if deviceType != netconfig.Ethernet && deviceType != netconfig.WiFi {
+		if deviceType != types.Ethernet && deviceType != types.WiFi {
 			continue
 		}
 
@@ -99,7 +101,7 @@ func MojoEnsureNetworkStateAfterCellularToggle(ctx context.Context, s *testing.S
 		enabled := i%2 != 0
 		s.Logf("Toggling Cellular state to %t (iteration %d of %d)", enabled, i+1, iterations)
 
-		if err = netConn.SetNetworkTypeEnabledState(ctx, netconfig.Cellular, enabled); err != nil {
+		if err = netConn.SetNetworkTypeEnabledState(ctx, types.Cellular, enabled); err != nil {
 			s.Fatal("Failed to set cellular state: ", err)
 		}
 

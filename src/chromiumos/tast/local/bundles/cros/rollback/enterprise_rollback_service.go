@@ -9,10 +9,12 @@ import (
 
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	nws "chromiumos/tast/local/bundles/cros/rollback/rollbacknetworks"
 	"chromiumos/tast/local/chrome"
 	nc "chromiumos/tast/local/network/netconfig"
 	rpb "chromiumos/tast/services/cros/rollback"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,7 +35,7 @@ type EnterpriseRollbackService struct {
 // SetUpNetworks sets up a series of network configuration on the device that
 // are supported by rollback.
 // The device needs to be in a state so that chrome://network may be opened.
-func (r *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, request *rpb.SetUpNetworksRequest) (*rpb.SetUpNetworksResponse, error) {
+func (e *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, request *rpb.SetUpNetworksRequest) (*rpb.SetUpNetworksResponse, error) {
 	testing.ContextLog(ctx, "setting up networks supported by rollback")
 	// Open chrome and create a connection to the network configuration api.
 	// This is needed to set up each network without having to create a connection
@@ -69,7 +71,7 @@ func (r *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, request *
 }
 
 // setUpNetwork sets up a network configuration on the device.
-func setUpNetwork(ctx context.Context, api *nc.CrosNetworkConfig, properties nc.ConfigProperties) (*rpb.NetworkInformation, error) {
+func setUpNetwork(ctx context.Context, api *nc.CrosNetworkConfig, properties netconfigtypes.ConfigProperties) (*rpb.NetworkInformation, error) {
 	guid, err := api.ConfigureNetwork(ctx, properties, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure network")
@@ -117,7 +119,7 @@ func verifyNetworks(ctx context.Context, networks []*rpb.NetworkInformation, api
 // logs in as a normal user and verifies the networks again.
 // VerifyRollbackRequest needs to contain the unchanged NetworkInformation from
 // SetUpNetworksResponse.
-func (r *EnterpriseRollbackService) VerifyRollback(ctx context.Context, request *rpb.VerifyRollbackRequest) (*rpb.VerifyRollbackResponse, error) {
+func (e *EnterpriseRollbackService) VerifyRollback(ctx context.Context, request *rpb.VerifyRollbackRequest) (*rpb.VerifyRollbackResponse, error) {
 	// Chrome would send an auto re-enrollment request to the real DMServer
 	// which will fail because the device wasn't enrolled at all.
 	// Try to prevent that by setting DMServer URL to nonsense.

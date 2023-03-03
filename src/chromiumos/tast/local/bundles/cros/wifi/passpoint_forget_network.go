@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -15,7 +16,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
-	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -132,7 +132,7 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 	}
 
 	// Forget network.
-	if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, ap.SSID, netconfig.WiFi); err != nil {
+	if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, ap.SSID, netconfigtypes.WiFi); err != nil {
 		s.Fatal("Failed to oen WiFi network page: ", err)
 	}
 	forget := nodewith.Name("Forget").First()

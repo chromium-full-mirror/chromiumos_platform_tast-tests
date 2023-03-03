@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -21,7 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/network/netconfig"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -367,7 +368,7 @@ func (s *OSSettings) WaitUntilToggleOption(cr *chrome.Chrome, optionName string,
 }
 
 // OpenNetworkDetailPage navigates to the detail page for a particular Cellular or WiFi network.
-func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, networkName string, networkType netconfig.NetworkType) (*OSSettings, error) {
+func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, networkName string, networkType netconfigtypes.NetworkType) (*OSSettings, error) {
 	ui := uiauto.New(tconn)
 
 	app, err := Launch(ctx, tconn)
@@ -378,9 +379,9 @@ func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 	subpageArrowFinder := nodewith.Role(role.Button).HasClass("subpage-arrow")
 	subpageArrowFinderWithName, err := func() (*nodewith.Finder, error) {
 		var technology string
-		if networkType == netconfig.Cellular {
+		if networkType == netconfigtypes.Cellular {
 			technology = "Mobile data"
-		} else if networkType == netconfig.WiFi {
+		} else if networkType == netconfigtypes.WiFi {
 			technology = "Wi-Fi"
 		} else {
 			return nil, errors.New("Network technology must be Cellular or WiFi")

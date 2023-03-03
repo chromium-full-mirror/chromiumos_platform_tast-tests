@@ -8,9 +8,11 @@ import (
 	"context"
 	"time"
 
+	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/netconfig"
 	nc "chromiumos/tast/local/network/netconfig"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -87,12 +89,12 @@ func ConfigBaseline(ctx context.Context, s *testing.State) {
 	}
 	defer api.Close(cleanupCtx)
 
-	var configProperties = nc.ConfigProperties{
-		TypeConfig: nc.NetworkTypeConfigProperties{
-			Wifi: &nc.WiFiConfigProperties{
+	var configProperties = types.ConfigProperties{
+		TypeConfig: types.NetworkTypeConfigProperties{
+			Wifi: &types.WiFiConfigProperties{
 				Ssid:       "basicWifi",
-				Security:   nc.None,
-				HiddenSsid: nc.Automatic}}}
+				Security:   types.None,
+				HiddenSsid: types.Automatic}}}
 
 	guid, err := api.ConfigureNetwork(ctx, configProperties, true /*shared*/)
 	if err != nil {

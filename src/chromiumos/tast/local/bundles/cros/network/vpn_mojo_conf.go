@@ -8,6 +8,7 @@ import (
 	"context"
 	"reflect"
 
+	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/netconfig"
@@ -55,7 +56,7 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 
 	for _, tc := range []struct {
 		subtest        string
-		mojoProperties netconfig.ConfigProperties
+		mojoProperties types.ConfigProperties
 		// |providerProperties| contains all the expected properties in the Provider
 		// property, while |serviceProperties| contains all the expected properties
 		// except for Provider. Most VPN properties are held in the Provider
@@ -65,15 +66,15 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 	}{
 		{
 			subtest: "WireGuard",
-			mojoProperties: netconfig.ConfigProperties{
+			mojoProperties: types.ConfigProperties{
 				Name: "temp-wg1",
-				TypeConfig: netconfig.NetworkTypeConfigProperties{
-					VPN: &netconfig.VPNConfigProperties{
+				TypeConfig: types.NetworkTypeConfigProperties{
+					VPN: &types.VPNConfigProperties{
 						Host: "wireguard",
-						Type: netconfig.VPNTypeConfig{Value: netconfig.VPNTypeWireGuard},
-						WireGuard: &netconfig.WireGuardConfigProperties{
-							Peers: []netconfig.WireGuardPeerProperties{
-								netconfig.WireGuardPeerProperties{
+						Type: types.VPNTypeConfig{Value: types.VPNTypeWireGuard},
+						WireGuard: &types.WireGuardConfigProperties{
+							Peers: []types.WireGuardPeerProperties{
+								types.WireGuardPeerProperties{
 									PublicKey:    pubKey,
 									PresharedKey: &emptyStr,
 									Endpoint:     "2.2.2.2:30000",
@@ -100,15 +101,15 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 		},
 		{
 			subtest: "WireGuard-NoPrivateKey",
-			mojoProperties: netconfig.ConfigProperties{
+			mojoProperties: types.ConfigProperties{
 				Name: "temp-wg2",
-				TypeConfig: netconfig.NetworkTypeConfigProperties{
-					VPN: &netconfig.VPNConfigProperties{
+				TypeConfig: types.NetworkTypeConfigProperties{
+					VPN: &types.VPNConfigProperties{
 						Host: "wireguard",
-						Type: netconfig.VPNTypeConfig{Value: netconfig.VPNTypeWireGuard},
-						WireGuard: &netconfig.WireGuardConfigProperties{
-							Peers: []netconfig.WireGuardPeerProperties{
-								netconfig.WireGuardPeerProperties{
+						Type: types.VPNTypeConfig{Value: types.VPNTypeWireGuard},
+						WireGuard: &types.WireGuardConfigProperties{
+							Peers: []types.WireGuardPeerProperties{
+								types.WireGuardPeerProperties{
 									PublicKey:    pubKey,
 									PresharedKey: &emptyStr,
 									Endpoint:     "2.2.2.2:30000",
@@ -124,18 +125,18 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 		},
 		{
 			subtest: "L2TPIPsec-PSK",
-			mojoProperties: netconfig.ConfigProperties{
+			mojoProperties: types.ConfigProperties{
 				Name: "temp-l2tpipsec-psk",
-				TypeConfig: netconfig.NetworkTypeConfigProperties{
-					VPN: &netconfig.VPNConfigProperties{
+				TypeConfig: types.NetworkTypeConfigProperties{
+					VPN: &types.VPNConfigProperties{
 						Host: "host",
-						Type: netconfig.VPNTypeConfig{Value: netconfig.VPNTypeL2TPIPsec},
-						IPsec: &netconfig.IPsecConfigProperties{
+						Type: types.VPNTypeConfig{Value: types.VPNTypeL2TPIPsec},
+						IPsec: &types.IPsecConfigProperties{
 							AuthType:   "PSK",
 							IKEVersion: 1,
 							PSK:        "psk",
 						},
-						L2TP: &netconfig.L2TPConfigProperties{
+						L2TP: &types.L2TPConfigProperties{
 							Password: "password",
 							Username: "username",
 						},
@@ -150,22 +151,22 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 		},
 		{
 			subtest: "IKEv2-EAP",
-			mojoProperties: netconfig.ConfigProperties{
+			mojoProperties: types.ConfigProperties{
 				Name: "temp-ikev2-eap",
-				TypeConfig: netconfig.NetworkTypeConfigProperties{
-					VPN: &netconfig.VPNConfigProperties{
+				TypeConfig: types.NetworkTypeConfigProperties{
+					VPN: &types.VPNConfigProperties{
 						Host: "host",
-						Type: netconfig.VPNTypeConfig{Value: netconfig.VPNTypeIKEv2},
-						IPsec: &netconfig.IPsecConfigProperties{
+						Type: types.VPNTypeConfig{Value: types.VPNTypeIKEv2},
+						IPsec: &types.IPsecConfigProperties{
 							AuthType:     "EAP",
 							IKEVersion:   2,
 							ServerCAPEMs: []string{"1234"},
-							EAP: &netconfig.EAPConfigProperties{
+							EAP: &types.EAPConfigProperties{
 								DomainSuffixMatch:   []string{},
 								Identity:            "eap-identity",
 								Outer:               "MSCHAPv2",
 								Password:            "eap-password",
-								SubjectAltNameMatch: []netconfig.SubjectAltName{},
+								SubjectAltNameMatch: []types.SubjectAltName{},
 							},
 						},
 					},
@@ -184,13 +185,13 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 		},
 		{
 			subtest: "IKEv2-PSK",
-			mojoProperties: netconfig.ConfigProperties{
+			mojoProperties: types.ConfigProperties{
 				Name: "temp-ikev2-psk",
-				TypeConfig: netconfig.NetworkTypeConfigProperties{
-					VPN: &netconfig.VPNConfigProperties{
+				TypeConfig: types.NetworkTypeConfigProperties{
+					VPN: &types.VPNConfigProperties{
 						Host: "host",
-						Type: netconfig.VPNTypeConfig{Value: netconfig.VPNTypeIKEv2},
-						IPsec: &netconfig.IPsecConfigProperties{
+						Type: types.VPNTypeConfig{Value: types.VPNTypeIKEv2},
+						IPsec: &types.IPsecConfigProperties{
 							AuthType:   "PSK",
 							IKEVersion: 2,
 							PSK:        "psk",
@@ -210,13 +211,13 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 		},
 		{
 			subtest: "OpenVPN",
-			mojoProperties: netconfig.ConfigProperties{
+			mojoProperties: types.ConfigProperties{
 				Name: "temp-openvpn",
-				TypeConfig: netconfig.NetworkTypeConfigProperties{
-					VPN: &netconfig.VPNConfigProperties{
+				TypeConfig: types.NetworkTypeConfigProperties{
+					VPN: &types.VPNConfigProperties{
 						Host: "host",
-						Type: netconfig.VPNTypeConfig{Value: netconfig.VPNTypeOpenVPN},
-						OpenVPN: &netconfig.OpenVPNConfigProperties{
+						Type: types.VPNTypeConfig{Value: types.VPNTypeOpenVPN},
+						OpenVPN: &types.OpenVPNConfigProperties{
 							ClientCertType:         "PKCS11Id",
 							ClientCertPkcs11Id:     "1234",
 							ExtraHosts:             []string{"host1", "host2"},

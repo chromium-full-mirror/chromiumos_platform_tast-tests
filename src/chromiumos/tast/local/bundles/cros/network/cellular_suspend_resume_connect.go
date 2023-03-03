@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hermesconst"
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
@@ -17,7 +18,6 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -90,7 +90,7 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 		profileName = networkName
 	}
 
-	mdp, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfig.Cellular)
+	mdp, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfigtypes.Cellular)
 	defer mdp.Close(ctx)
 	if err != nil {
 		s.Fatal("Failed to open cellular details subpage: ", err)
@@ -124,7 +124,7 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open mobile data page: ", err)
 	}
 
-	mdp, err = ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfig.Cellular)
+	mdp, err = ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfigtypes.Cellular)
 	if err != nil {
 		s.Fatal("Failed to open cellular details subpage: ", err)
 	}
@@ -154,7 +154,7 @@ func CellularSuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open mobile data page: ", err)
 	}
 
-	mdp, err = ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfig.Cellular)
+	mdp, err = ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfigtypes.Cellular)
 	if err != nil {
 		s.Fatal("Failed to open cellular details subpage: ", err)
 	}

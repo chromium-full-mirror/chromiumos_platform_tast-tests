@@ -8,11 +8,12 @@ import (
 	"context"
 	"strings"
 
+	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
-	"chromiumos/tast/local/network/netconfig"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -80,7 +81,7 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	}
 
 	// Check if the PSim network appears disconnected in the network detail page
-	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfig.Cellular)
+	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfigtypes.Cellular)
 	if err != nil {
 		s.Fatal("Failed to open mobile network detail subpage: ", err)
 	}
