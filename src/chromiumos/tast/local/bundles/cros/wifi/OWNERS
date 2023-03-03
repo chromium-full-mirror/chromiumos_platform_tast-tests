@@ -1,2 +1,0 @@
-# Allow WiFi team to update documentation
-per-file *.md = file:chromiumos/third_party/autotest:/WIFI_OWNERS
