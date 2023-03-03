@@ -21,21 +21,40 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type psrInfoTestParams struct {
+	// Whether to check platform service record.
+	checkPsr bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ProbeSystemInfo,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that we can probe cros_healthd for system info",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Contacts: []string{"cros-tdm-tpe-eng@google.com",
+			"moises.veleta@intel.com"},
 		BugComponent: "b:982097",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			Val: psrInfoTestParams{
+				checkPsr: false,
+			},
+		}, {
+			Name:      "platform_service_record",
+			ExtraAttr: []string{"informational"},
+			Val: psrInfoTestParams{
+				checkPsr: true,
+			},
+		}},
 	})
 }
 
 func ProbeSystemInfo(ctx context.Context, s *testing.State) {
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategorySystem}
+	testParam := s.Param().(psrInfoTestParams)
+
 	var g systemInfo
 	if err := croshealthd.RunAndParseJSONTelem(ctx, params, s.OutDir(), &g); err != nil {
 		s.Fatal("Failed to get system info telemetry info: ", err)
@@ -44,8 +63,22 @@ func ProbeSystemInfo(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get expected system info: ", err)
 	}
-	if d := cmp.Diff(e, g); d != "" {
-		s.Fatal("SystemInfo validation failed (-expected + got): ", d)
+	if d := cmp.Diff(e.OSInfo, g.OSInfo); d != "" {
+		s.Fatal("Failed to get SystemInfo.OSInfo(-expected + got): ", d)
+	}
+	if d := cmp.Diff(e.VPDInfo, g.VPDInfo); d != "" {
+		s.Fatal("Failed to get SystemInfo.VPDInfo(-expected + got): ", d)
+	}
+	if d := cmp.Diff(e.DMIInfo, g.DMIInfo); d != "" {
+		s.Fatal("Failed to get SystemInfo.DMIInfo(-expected + got): ", d)
+	}
+	if testParam.checkPsr {
+		if g.PSRInfo == nil {
+			s.Fatal("PSR cros-healthd retrieval is not working")
+		}
+		if err := expectedPSRInfo(g.PSRInfo); err != nil {
+			s.Fatal("Failed to get expected system info: ", err)
+		}
 	}
 }
 
@@ -90,10 +123,35 @@ type dmiInfo struct {
 	SysVendor      *string           `json:"sys_vendor"`
 }
 
+type psrEvent struct {
+	Data      jsontypes.Uint32 `json:"data"`
+	Time      jsontypes.Uint32 `json:"time"`
+	EventType string           `json:"type"`
+}
+
+type psrInfo struct {
+	Events             []psrEvent        `json:"events"`
+	LogStartDate       *jsontypes.Uint32 `json:"log_start_date"`
+	LogState           *string           `json:"log_state"`
+	ManufactureCountry *string           `json:"manufacture_country"`
+	OEMData            *string           `json:"oem_data"`
+	OEMMake            *string           `json:"oem_make"`
+	OEMModel           *string           `json:"oem_model"`
+	OEMName            *string           `json:"oem_name"`
+	S3Counter          *jsontypes.Uint32 `json:"s3_counter"`
+	S4Counter          *jsontypes.Uint32 `json:"s4_counter"`
+	S5Counter          *jsontypes.Uint32 `json:"s5_counter"`
+	UPID               *string           `json:"upid"`
+	UptimeSeconds      *jsontypes.Uint32 `json:"uptime_seconds"`
+	UUID               *string           `json:"uuid"`
+	WarmResetCounter   *jsontypes.Uint32 `json:"warm_reset_counter"`
+}
+
 type systemInfo struct {
 	OSInfo  osInfo   `json:"os_info"`
 	VPDInfo *vpdInfo `json:"vpd_info"`
 	DMIInfo *dmiInfo `json:"dmi_info"`
+	PSRInfo *psrInfo `json:"psr_info"`
 }
 
 func expectedOSVersion(ctx context.Context) (osVersion, error) {
@@ -287,6 +345,55 @@ func expectedDMIInfo(ctx context.Context) (*dmiInfo, error) {
 		return nil, err
 	}
 	return &r, nil
+}
+
+// expectedPSRInfo - We can only get the values from an ioctl call to /dev/mei0
+func expectedPSRInfo(psr *psrInfo) error {
+
+	if psr.LogState == nil {
+		return errors.New("Missing LogState")
+	}
+	if psr.UUID == nil {
+		return errors.New("Missing UUID")
+	}
+	if psr.UPID == nil {
+		return errors.New("Missing UPID")
+	}
+	if psr.LogStartDate == nil {
+		return errors.New("Missing LogStartDate")
+	}
+	if psr.OEMName == nil {
+		return errors.New("Missing OEMName")
+	}
+	if psr.OEMMake == nil {
+		return errors.New("Missing OEMMake")
+	}
+	if psr.OEMModel == nil {
+		return errors.New("Missing OEMModel")
+	}
+	if psr.ManufactureCountry == nil {
+		return errors.New("Missing ManufactureCountry")
+	}
+	if psr.UptimeSeconds == nil {
+		return errors.New("Missing UptimeSeconds")
+	}
+	if psr.S5Counter == nil {
+		return errors.New("Missing S5Counter")
+	}
+	if psr.S4Counter == nil {
+		return errors.New("Missing S4Counter")
+	}
+	if psr.S3Counter == nil {
+		return errors.New("Missing S3Counter")
+	}
+	if psr.WarmResetCounter == nil {
+		return errors.New("Missing WarmResetCounter")
+	}
+	if psr.Events == nil {
+		return errors.New("Missing Events")
+	}
+
+	return nil
 }
 
 func expectedSystemInfo(ctx context.Context) (systemInfo, error) {
