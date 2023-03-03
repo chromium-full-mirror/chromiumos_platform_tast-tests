@@ -110,8 +110,7 @@ func TestCrossVersionParams(t *testing.T) {
 
 			var attr []string
 			if config.critical {
-				// Temporarily disable critical because of splitting tests.
-				attr = []string{"group:mainline", "informational"}
+				attr = []string{"group:mainline"}
 			} else {
 				attr = []string{"group:hwsec", "hwsec_nightly"}
 			}

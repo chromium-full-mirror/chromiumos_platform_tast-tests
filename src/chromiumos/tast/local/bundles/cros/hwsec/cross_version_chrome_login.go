@@ -43,7 +43,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r88",
 				Fixture:           "crossVersionTpm2R88",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r89",
@@ -58,7 +58,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r91",
 				Fixture:           "crossVersionTpm2R91",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r92",
@@ -68,7 +68,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r93",
 				Fixture:           "crossVersionTpm2R93",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r94",
@@ -78,7 +78,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r96",
 				Fixture:           "crossVersionTpm2R96",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r97",
@@ -108,7 +108,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r102",
 				Fixture:           "crossVersionTpm2R102",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r103",
@@ -138,7 +138,7 @@ func init() {
 			}, {
 				Name:              "tpm2_r108",
 				Fixture:           "crossVersionTpm2R108",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm2_r109",
@@ -148,12 +148,12 @@ func init() {
 			}, {
 				Name:              "tpm2_r110",
 				Fixture:           "crossVersionTpm2R110",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r96",
 				Fixture:           "crossVersionTpmDynamicR96",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r97",
@@ -183,7 +183,7 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r102",
 				Fixture:           "crossVersionTpmDynamicR102",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r103",
@@ -213,7 +213,7 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r108",
 				Fixture:           "crossVersionTpmDynamicR108",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			}, {
 				Name:              "tpm_dynamic_r109",
@@ -223,7 +223,7 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r110",
 				Fixture:           "crossVersionTpmDynamicR110",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},
 		},
