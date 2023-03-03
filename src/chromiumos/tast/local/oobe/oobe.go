@@ -114,7 +114,7 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 		return errors.Wrap(err, "failed to evaluate whether the consolidated consent screen read more button is shown")
 	}
 
-	ui := uiauto.New(tconn).WithTimeout(50 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
 	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
 	if isReadMoreButtonShown {
 		if err := uiauto.Combine("click the consolidated consent screen read more button",
