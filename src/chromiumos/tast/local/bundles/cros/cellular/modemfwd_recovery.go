@@ -1,0 +1,133 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cellular
+
+import (
+	"context"
+	"os"
+	"time"
+
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/cellular"
+	"chromiumos/tast/local/modemfwd"
+	"chromiumos/tast/local/modemmanager"
+	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
+)
+
+type recoveryTestParams struct {
+	iterations int
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         ModemfwdRecovery,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that modemfwd's recovery mechanism works properly",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
+		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Fixture:      "cellular",
+		Timeout:      10 * time.Minute,
+		// Run only on Vell, as FM350 is the leading device for recovery
+		HardwareDeps: hwdep.D(hwdep.Model("vell")),
+		SoftwareDeps: []string{"modemfwd"},
+		Params: []testing.Param{{
+			Name: "stress",
+			Val: recoveryTestParams{
+				iterations: 3,
+			},
+		}, {
+			Name: "",
+			Val: recoveryTestParams{
+				iterations: 1,
+			},
+		}},
+	})
+}
+
+func waitForFileState(ctx context.Context, path string, desiredExistenceState bool, timeout time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var fileExists bool = false
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			fileExists = true
+		}
+		if desiredExistenceState == fileExists {
+			return nil
+		}
+		return errors.New("File not in expected state")
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ModemfwdRecovery Test
+func ModemfwdRecovery(ctx context.Context, s *testing.State) {
+	const MaxRecoveryTime = 3 * time.Minute
+	params := s.Param().(recoveryTestParams)
+
+	// modemfwd is initially stopped in the fixture SetUp
+	if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
+		s.Fatal("modemfwd failed during initialization (precondition): ", err)
+	}
+
+	// Grab modem's primaryport to keep track of the modem's recovery progress.
+	// We expect that the modem endpoints will be refreshed by the kernel
+	// driver around recovery. We also expect the primaryport to be the same
+	// across recovery, so we only need to fetch it once when the test starts.
+	modem, err := modemmanager.NewModemWithSim(ctx)
+	if err != nil {
+		s.Fatal("Could not find MM dbus object (precondition): ", err)
+	}
+	props, err := modem.GetProperties(ctx)
+	if err != nil {
+		s.Fatal("Failed to call GetProperties on Modem (precondition): ", err)
+	}
+	primaryPort, err := props.GetString("PrimaryPort")
+	if err != nil {
+		s.Fatal("Missing PrimaryPort property (precondition): ", err)
+	}
+	devPort := "/dev/" + primaryPort
+
+	// Ensure initial connectivity
+	if _, err = cellular.NewHelperWithConnectedCellular(ctx); err != nil {
+		s.Fatal("Failed to connect to a cellular network (precondition): ", err)
+	}
+
+	for i := 0; i < params.iterations; i++ {
+		s.Logf("Iteration %d", i)
+
+		// Emulate broken communications to modem by freezing mbim-proxy. Wait
+		// until primary port goes away, indicating the kernel driver has torn
+		// down its state as part of recovery procedure.
+		if err := testexec.CommandContext(ctx, "killall", "-STOP", "mbim-proxy").Run(); err != nil {
+			s.Fatal("Failed to halt mbim-proxy: ", err)
+		}
+		if err := waitForFileState(ctx, devPort, false, MaxRecoveryTime); err != nil {
+			// Clean up our broken mbim-proxy before we abort the test
+			if err := testexec.CommandContext(ctx, "killall", "-CONT", "mbim-proxy").Run(); err != nil {
+				s.Log("Failed to bring back mbim-proxy: ", err)
+			}
+			s.Fatal("Modem didn't go away as expected")
+		}
+
+		// While modem is recovering, resume mbim-proxy to allow seamless
+		// communication once the modem comes back. Wait for primary port to
+		// come back, indicating the kernel driver has re-initialized.
+		if err := testexec.CommandContext(ctx, "killall", "-CONT", "mbim-proxy").Run(); err != nil {
+			s.Fatal("Failed to bring back mbim-proxy: ", err)
+		}
+		if err := waitForFileState(ctx, devPort, true, MaxRecoveryTime); err != nil {
+			s.Fatal("Modem didn't come back as expected")
+		}
+
+		// Ensure connectivity after recovery
+		if _, err = cellular.NewHelperWithConnectedCellular(ctx); err != nil {
+			s.Fatal("Failed to connect to a cellular network: ", err)
+		}
+	}
+}
