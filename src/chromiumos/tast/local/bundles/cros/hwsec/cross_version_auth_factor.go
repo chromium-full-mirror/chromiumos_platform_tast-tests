@@ -407,9 +407,53 @@ func prepareChallengeAuth(ctx context.Context, lf hwsec.LogFunc, config *util.Cr
 	return cleanup, nil
 }
 
-// testConfigViaCryptohome verifies the login functionality by making requests
-// via Cryptohome CLI.
-func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
+// testListAuthFactors tests that ListAuthFactors() works as expected and the listed auth factors is as same as the |expectedAuthFactors|.
+func testListAuthFactors(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username string, expectedAuthFactors []*uda.AuthFactorWithStatus) error {
+	reply, err := cryptohome.ListAuthFactors(ctx, username)
+	if err != nil {
+		return errors.Wrap(err, "failed to list auth factors")
+	}
+	if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(reply.ConfiguredAuthFactorsWithStatus, expectedAuthFactors); err != nil {
+		return errors.Wrap(err, "mismatch in configured auth factors (-got, +want)")
+	}
+	return nil
+}
+
+// testSmartCardAuth verifies the functionality of auth factors of smart card
+func testSmartCardAuth(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
+	authConfig := config.AuthConfig
+	keyLabel := config.KeyLabel
+	username := authConfig.Username
+
+	cleanup, err := prepareChallengeAuth(ctx, lf, config)
+	if err != nil {
+		return errors.Wrap(err, "failed to prepare challenge auth")
+	}
+	defer cleanup()
+	expectedConfiguredFactors := []*uda.AuthFactorWithStatus{{
+		AuthFactor: &uda.AuthFactor{
+			Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
+			Label: keyLabel,
+		},
+	}}
+
+	if err := testListAuthFactors(ctx, cryptohome, username, expectedConfiguredFactors); err != nil {
+		return errors.Wrap(err, "failed to properly list auth factors")
+	}
+	if err := cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		if _, err := cryptohome.AuthenticateSmartCardAuthFactor(ctx, authID, keyLabel, &authConfig); err != nil {
+			return errors.Wrap(err, "failed to authenticate smart card auth factor")
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// testPassAuth verifies the functionality of auth factors of password and pin
+func testPassAuth(ctx context.Context, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
 	const (
 		newPasswordLabel = "newPasswordLabel"
 		newPinLabel      = "newPinLabel"
@@ -432,39 +476,21 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 	if usedLabels := []string{newPasswordLabel, newPinLabel}; hasSharedElement(targetLabels, usedLabels) {
 		return errors.Errorf("Some labels in config are identical to the labels we would use: %q vs %q", targetLabels, usedLabels)
 	}
-	var expectedConfiguredFactors = []*uda.AuthFactorWithStatus{}
 
-	switch authConfig.AuthType {
-	case hwsec.ChallengeAuth:
-		cleanup, err := prepareChallengeAuth(ctx, lf, config)
-		if err != nil {
-			return errors.Wrap(err, "failed to prepare challenge auth")
-		}
-		defer cleanup()
-		expectedConfiguredFactors = append(expectedConfiguredFactors, &uda.AuthFactorWithStatus{
-			AuthFactor: &uda.AuthFactor{
-				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD,
-				Label: keyLabel,
-			},
-		})
-	case hwsec.PassAuth:
-		// Check if we accidentally use the same password for different purposes.
-		var targetPasswords = []string{password}
-		for _, vaultKey := range config.ExtraVaultKeys {
-			targetPasswords = append(targetPasswords, vaultKey.Password)
-		}
-		if usedPasswords := []string{changedPassword, newPassword, invalidPassword, invalidPin}; hasSharedElement(targetPasswords, usedPasswords) {
-			return errors.Errorf("some passwords in config are identical to the passwords we would use: %q vs %q", targetPasswords, usedPasswords)
-		}
-		expectedConfiguredFactors = append(expectedConfiguredFactors, &uda.AuthFactorWithStatus{
-			AuthFactor: &uda.AuthFactor{
-				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
-				Label: keyLabel,
-			},
-		})
-	default:
-		return errors.Errorf("unknown auth type %d", authConfig.AuthType)
+	// Check if we accidentally use the same password for different purposes.
+	var targetPasswords = []string{password}
+	for _, vaultKey := range config.ExtraVaultKeys {
+		targetPasswords = append(targetPasswords, vaultKey.Password)
 	}
+	if usedPasswords := []string{changedPassword, newPassword, invalidPassword, invalidPin}; hasSharedElement(targetPasswords, usedPasswords) {
+		return errors.Errorf("some passwords in config are identical to the passwords we would use: %q vs %q", targetPasswords, usedPasswords)
+	}
+	expectedConfiguredFactors := []*uda.AuthFactorWithStatus{{
+		AuthFactor: &uda.AuthFactor{
+			Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+			Label: keyLabel,
+		},
+	}}
 
 	for _, vaultKey := range config.ExtraVaultKeys {
 		factorType := uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD
@@ -479,60 +505,62 @@ func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *
 		})
 	}
 
-	// Common check
-	reply, err := cryptohome.ListAuthFactors(ctx, username)
-	if err != nil {
-		return errors.Wrap(err, "failed to list auth factors")
+	if err := testListAuthFactors(ctx, cryptohome, username, expectedConfiguredFactors); err != nil {
+		return errors.Wrap(err, "failed to properly list auth factors")
 	}
-	if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(reply.ConfiguredAuthFactorsWithStatus, expectedConfiguredFactors); err != nil {
-		return errors.Wrap(err, "mismatch in configured auth factors (-got, +want)")
+	if err := testAuthFactor(ctx, cryptohome, username, util.NewVaultKeyInfo(password, keyLabel, false), invalidPassword); err != nil {
+		return errors.Wrap(err, "failed to test preexisting AuthFactor")
 	}
 
-	// Auth-type specific check.
+	for _, vaultKey := range config.ExtraVaultKeys {
+		keyForm := "password"
+		invalidSecret := invalidPassword
+		if vaultKey.LowEntropy {
+			keyForm = "pin"
+			invalidSecret = invalidPin
+		}
+		if err := testAuthFactor(ctx, cryptohome, username, &vaultKey, invalidSecret); err != nil {
+			return errors.Wrapf(err, "failed to test extra AuthFactor %s", keyForm)
+		}
+		if err := testRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, &vaultKey); err != nil {
+			return errors.Wrapf(err, "failed to properly remove key with extra %s key", keyForm)
+		}
+	}
+
+	if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPassword, newPasswordLabel, false), invalidPassword); err != nil {
+		return errors.Wrap(err, "failed to properly add or remove password key")
+	}
+	if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPin, newPinLabel, true), invalidPin); err != nil {
+		return errors.Wrap(err, "failed to properly add or remove pin key")
+	}
+	if err := testUpdateAuthFactor(ctx, cryptohome, username, password, keyLabel, changedPassword, invalidPassword); err != nil {
+		return errors.Wrap(err, "failed to properly migrate key")
+	}
+
+	return nil
+}
+
+// testConfigViaCryptohome verifies the login functionality by making requests
+// via Cryptohome CLI.
+func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
+	authConfig := config.AuthConfig
 	switch authConfig.AuthType {
 	case hwsec.ChallengeAuth:
-		if err := cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
-			if _, err := cryptohome.AuthenticateSmartCardAuthFactor(ctx, authID, keyLabel, &authConfig); err != nil {
-				return errors.Wrap(err, "failed to authenticate smart card auth factor")
-			}
-			return nil
-		}); err != nil {
-			return err
+		if err := testSmartCardAuth(ctx, lf, cryptohome, config); err != nil {
+			return errors.Wrap(err, "failed to test smart card auth")
 		}
 	case hwsec.PassAuth:
-		if err := testAuthFactor(ctx, cryptohome, username, util.NewVaultKeyInfo(password, keyLabel, false), invalidPassword); err != nil {
-			return errors.Wrap(err, "failed to test preexisting AuthFactor")
+		if err := testPassAuth(ctx, cryptohome, config); err != nil {
+			return errors.Wrap(err, "failed to test pass auth")
 		}
-		for _, vaultKey := range config.ExtraVaultKeys {
-			keyForm := "password"
-			invalidSecret := invalidPassword
-			if vaultKey.LowEntropy {
-				keyForm = "pin"
-				invalidSecret = invalidPin
-			}
-			if err := testAuthFactor(ctx, cryptohome, username, &vaultKey, invalidSecret); err != nil {
-				return errors.Wrapf(err, "failed to test extra AuthFactor %s", keyForm)
-			}
-			if err := testRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, &vaultKey); err != nil {
-				return errors.Wrapf(err, "failed to properly remove key with extra %s key", keyForm)
-			}
-		}
-
-		if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPassword, newPasswordLabel, false), invalidPassword); err != nil {
-			return errors.Wrap(err, "failed to properly add or remove password key")
-		}
-		if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPin, newPinLabel, true), invalidPin); err != nil {
-			return errors.Wrap(err, "failed to properly add or remove pin key")
-		}
-		if err := testUpdateAuthFactor(ctx, cryptohome, username, password, keyLabel, changedPassword, invalidPassword); err != nil {
-			return errors.Wrap(err, "failed to properly migrate key")
-		}
+	default:
+		return errors.Errorf("unknown auth type %d", authConfig.AuthType)
 	}
 
 	if err := cryptohome.UnmountAll(ctx); err != nil {
 		return errors.Wrap(err, "failed to unmount vaults")
 	}
-	if _, err := cryptohome.RemoveVault(ctx, username); err != nil {
+	if _, err := cryptohome.RemoveVault(ctx, authConfig.Username); err != nil {
 		return errors.Wrap(err, "failed to remove vault")
 	}
 	return nil
@@ -549,7 +577,7 @@ func CrossVersionAuthFactor(ctx context.Context, s *testing.State) {
 	fixtureData := s.FixtValue().(*fixture.CrossVersionLoginFixture)
 	for _, config := range fixtureData.ConfigList {
 		if err := testConfigViaCryptohome(ctx, s.Logf, cryptohome, &config); err != nil {
-			s.Fatalf("Failed to test auth type %d: %v", config.AuthConfig.AuthType, err)
+			s.Error("Failed to test config: ", err)
 		}
 	}
 }
