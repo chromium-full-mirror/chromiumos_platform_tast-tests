@@ -107,8 +107,6 @@ var (
 	// DocumentCornerOverlay is the overlay that CCA used to draw document corners on.
 	DocumentCornerOverlay = UIComponent{"document corner overlay", []string{
 		"#preview-document-corner-overlay"}}
-	// DocumentDialogButton is the confirmation button of new feature dialog for document mode.
-	DocumentDialogButton = UIComponent{"document feature dialog button", []string{"#view-document-mode-dialog button[i18n-text=document_mode_dialog_got_it]"}}
 	// DocumentReview is the review view for multi-page document mode.
 	DocumentReview = UIComponent{"document review view", []string{"#view-document-review"}}
 	// DocumentPreviewModeImage is the preview image of preview mode in multi-page document mode.

@@ -69,13 +69,6 @@ func CCAUICameraBoxDocumentScanning(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch to scan mode: ", err)
 	}
 
-	// Dismiss document dialog.
-	if err := app.WaitForVisibleState(ctx, cca.DocumentDialogButton, true); err == nil {
-		if err := app.Click(ctx, cca.DocumentDialogButton); err != nil {
-			s.Fatal(err, "failed to click the document dialog button")
-		}
-	}
-
 	// Verify that document corners are shown in the preview.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		result, err := app.HasClass(ctx, cca.DocumentCornerOverlay, "show-corner-indicator")

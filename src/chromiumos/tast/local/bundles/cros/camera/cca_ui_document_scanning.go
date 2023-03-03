@@ -157,13 +157,6 @@ func enterDocumentMode(ctx context.Context, app *cca.App) error {
 		return errors.New("failed to land on document mode by default")
 	}
 
-	// TODO(b/239642965): Remove this check. Document dialog will always show after the fixes for b/238403258.
-	if err := app.WaitForVisibleState(ctx, cca.DocumentDialogButton, true); err == nil {
-		if err := app.Click(ctx, cca.DocumentDialogButton); err != nil {
-			return errors.Wrap(err, "failed to click the document dialog button")
-		}
-	}
-
 	return nil
 }
 
