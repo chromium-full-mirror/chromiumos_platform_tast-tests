@@ -20,40 +20,45 @@ func TestParseDiagOutput(t *testing.T) {
 		{
 			"\rProgress: 100\rProgress: 100\nStatus: Passed\nStatus message: Routine passed.\n",
 			RoutineResult{
-				Progress: 100,
-				Status:   StatusPassed,
+				Progress:      100,
+				Status:        StatusPassed,
+				StatusMessage: "Routine passed.",
 			},
 		},
 		// Report last progress.
 		{
 			"\rProgress: 0\rProgress: 100\rProgress: 100\nStatus: Passed\nStatus message: Routine passed.\n",
 			RoutineResult{
-				Progress: 100,
-				Status:   StatusPassed,
+				Progress:      100,
+				Status:        StatusPassed,
+				StatusMessage: "Routine passed.",
 			},
 		},
 		// Interactive routine.
 		{
 			"\rProgress: 25\nInteractive message.\n\rProgress: 100\rProgress: 100\nStatus: Passed\nStatus message: Routine passed.\n",
 			RoutineResult{
-				Progress: 100,
-				Status:   StatusPassed,
+				Progress:      100,
+				Status:        StatusPassed,
+				StatusMessage: "Routine passed.",
 			},
 		},
 		// Error.
 		{
 			"\rProgress: 0\rProgress: 20\nStatus: Error\nStatus message: Error message.\n",
 			RoutineResult{
-				Progress: 20,
-				Status:   StatusError,
+				Progress:      20,
+				Status:        StatusError,
+				StatusMessage: "Error message.",
 			},
 		},
 		// Unsupported routine.
 		{
-			"Status: Unsupported\nStatus Message: The routine is not supported by the device\n",
+			"Status: Unsupported\nStatus message: The routine is not supported by the device\n",
 			RoutineResult{
-				Progress: 0,
-				Status:   StatusUnsupported,
+				Progress:      0,
+				Status:        StatusUnsupported,
+				StatusMessage: "The routine is not supported by the device",
 			},
 		},
 	}

@@ -78,8 +78,9 @@ const (
 // RoutineResult contains the progress of the routine as a percentage and
 // the routine status.
 type RoutineResult struct {
-	Progress int
-	Status   string
+	Progress      int
+	Status        string
+	StatusMessage string
 }
 
 // RoutineParams are different configuration options for running a diagnostic
@@ -287,6 +288,7 @@ func getSupportedLED(ctx context.Context) (map[string][]string, error) {
 // "\rProgress: 25\nInteractive message.\n\rProgress: 100\rProgress: 100\nStatus: Passed\nStatus message: Routine passed.\n"
 func parseDiagOutput(ctx context.Context, raw string) (*RoutineResult, error) {
 	status := ""
+	statusMessage := ""
 	progress := 0
 	re := regexp.MustCompile(`([^:]+): (.*)`)
 	testing.ContextLog(ctx, raw)
@@ -311,7 +313,9 @@ func parseDiagOutput(ctx context.Context, raw string) (*RoutineResult, error) {
 			}
 			// Override the old value because only the last progress will be reported.
 			progress = i
+		case "Status message":
+			statusMessage = value
 		}
 	}
-	return &RoutineResult{progress, status}, nil
+	return &RoutineResult{progress, status, statusMessage}, nil
 }
