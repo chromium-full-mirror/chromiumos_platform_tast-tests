@@ -127,6 +127,19 @@ class AlignTimeoutError extends Error {
   }
 }
 
+class CheckOrientationTimeoutError extends Error {
+  /**
+   * @param {!Facing} facing
+   * @param {number} timeout
+   */
+  constructor(facing, timeout) {
+    super(`Can not get a correct orientation of ${
+        facing === Facing.BACK ? 'back' :
+                                 'front'} facing camera within ${timeout} ms`);
+    this.name = this.constructor.name;
+  }
+}
+
 /**
  * @suppress {strictMissingProperties}
  */
@@ -145,12 +158,12 @@ window.Tast = class Tast {
    * @return {!PatternChecker}
    * @private
    */
-     static get patternChecker_() {
-      if (!window.Tast.patternCheckerInstance) {
-        window.Tast.patternCheckerInstance = new PatternChecker();
-      }
-      return window.Tast.patternCheckerInstance;
+  static get patternChecker_() {
+    if (!window.Tast.patternCheckerInstance) {
+      window.Tast.patternCheckerInstance = new PatternChecker();
     }
+    return window.Tast.patternCheckerInstance;
+  }
   /**
    * @param {!Facing} facing
    * @param {!AspectRatio} aspectRatio
@@ -171,30 +184,68 @@ window.Tast = class Tast {
 
   /**
    * Checks the |aspectRatio| camera FOV of |facing| camera is aligned with
-   * pattern shown on chart tablet by capturing a frame from camera and
-   * verifying all pixels on the frame boundary lying in green area of chart
-   * pattern.
+   * pattern shown on chart tablet by opencv pattern match algorithm.
    * @param {!Facing} facing
    * @param {!AspectRatio} aspectRatio
    * @return {!Promise<boolean>}
    * @private
    */
-   static async checkAlign_(facing, aspectRatio) {
+  static async checkAlign_(facing, aspectRatio) {
     const frame = await Tast.getPreviewFrame_(facing, aspectRatio);
-    if (!cvIsReady){
+    if (!cvIsReady) {
       cv = await cv;
       cvIsReady = true;
     }
     const ctx =
-    /** @type {!CanvasRenderingContext2D} */ (frame.getContext('2d'));
+        /** @type {!CanvasRenderingContext2D} */ (frame.getContext('2d'));
     const imageData = ctx.getImageData(0, 0, frame.width, frame.height);
-    document.getElementById("debug").innerHTML = "Debug"
-    let result =
-        Tast.patternChecker_.checkAlign(patternImg,imageData,
-          /* canvas_debug = */ debugImg,
-          /* proportion = */ 0.4);
+    document.getElementById('debug').innerHTML = 'Debug'
+    // The H boundary are [-0.1, 0.3] and [1 - 0.3, 1 + 0.1].
+    // The V boundary are [-0.1, 0.3] and [1 - 0.3, 1 + 0.1].
+    // The vertices of the detected pattern should lay in the boundary.
+    Tast.patternChecker_.setCheckingBoundary(
+        /* h_bound_coef0 = */ 0.1,
+        /* h_bound_coef1 = */ 0.3,
+        /* v_bound_coef0 = */ 0.1,
+        /* v_bound_coef1 = */ 0.3);
+    let result = Tast.patternChecker_.checkAlign(
+        patternImg, imageData,
+        /* canvas_debug = */ debugImg,
+        /* proportion = */ 0.4);
     return result;
-   }
+  }
+
+  /**
+   * Checks the orientation of |facing| camera is correct or not.
+   * @param {!Facing} facing
+   * @return {!Promise<boolean>}
+   * @private
+   */
+  static async checkOrientationOnCurrentFrame_(facing) {
+    const frame = await Tast.getPreviewFrame_(facing, AspectRatio.AR4X3);
+    if (!cvIsReady) {
+      cv = await cv;
+      cvIsReady = true;
+    }
+    const ctx =
+        /** @type {!CanvasRenderingContext2D} */ (frame.getContext('2d'));
+    const imageData = ctx.getImageData(0, 0, frame.width, frame.height);
+    document.getElementById('debug').innerHTML = 'Debug'
+    // The H boundary are [-0.1, 0.35] and [1 - 0.35, 1 + 0.1].
+    // The V boundary are [-0.1, 0.45] and [1 - 0.45, 1 + 0.1].
+    // The vertices of the detected pattern should lay in the boundary.
+    Tast.patternChecker_.setCheckingBoundary(
+        /* h_bound_coef0 = */ 0.1,
+        /* h_bound_coef1 = */ 0.35,
+        /* v_bound_coef0 = */ 0.1,
+        /* v_bound_coef1 = */ 0.45);
+    let result = Tast.patternChecker_.checkAlign(
+        patternImg, imageData,
+        /* canvas_debug = */ debugImg,
+        /* proportion = */ 0.4,
+        /* allowRotation = * */ false);
+    return result;
+  }
 
   /**
    * Checks the |aspectRatio| camera FOV of |facing| camera is aligned with
@@ -266,6 +317,16 @@ window.Tast = class Tast {
   };
 
   /**
+   * @param {boolean} passed
+   * @param {string} message
+   * @private
+   */
+  static feedbackOrientation_(passed, message) {
+    document.body.classList.toggle('failed', !passed);
+    document.querySelector('.message').textContent = message;
+  };
+
+  /**
    * Waits for all sampled frames captured in last |passMs| milliseconds from
    * |facing| camera in |aspectRatio| FOV passing alignment check.
    * @param {!Facing} facing
@@ -300,6 +361,44 @@ window.Tast = class Tast {
       Tast.feedbackAlign_(
           true,
           `Pass check ${aspectRatioName} align ${duration / 1000} seconds`);
+      if (duration >= passMs) {
+        break;
+      }
+    }
+  }
+
+  /**
+   * Waits for all sampled frames captured in last |passMs| milliseconds from
+   * |facing| camera passing orientation check.
+   * @param {!Facing} facing
+   * @param {number} passMs
+   * @param {number=} timeoutMs Timeout for wait checking criteria pass.
+   * @return {!Promise}
+   * @private
+   */
+  static async waitForPassOrientationTest(
+      facing, passMs, timeoutMs = Infinity) {
+    let startCheckTime = Date.now();
+    let startPassTime = null;
+    while (true) {
+      await sleep(10);
+      const currentTime = Date.now();
+      if (currentTime - startCheckTime > timeoutMs) {
+        throw new CheckOrientationTimeoutError(facing, timeoutMs);
+      }
+      if (!await Tast.checkOrientationOnCurrentFrame_(facing)) {
+        Tast.feedbackOrientation_(false, `Check orientation failed`);
+        startPassTime = null;
+        continue;
+      }
+      if (startPassTime === null) {
+        startPassTime = currentTime;
+        Tast.feedbackOrientation_(true, `Check orientation passed`);
+        continue;
+      }
+      const duration = currentTime - startPassTime;
+      Tast.feedbackOrientation_(
+          true, `Check orientation passed for ${duration / 1000} seconds`);
       if (duration >= passMs) {
         break;
       }
@@ -382,5 +481,30 @@ window.Tast = class Tast {
       }
       throw e;
     }
+  }
+
+  /**
+   * @param {!Facing} facing
+   * @return {!Promise}
+   */
+  static async checkOrientation(facing) {
+    try {
+      await Tast.checkOrientation_(facing);
+    } catch (e) {
+      if (e instanceof CheckOrientationTimeoutError) {
+        await Tast.savePreviewFrame_(facing, AspectRatio.AR4X3);
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * @param {!Facing} facing
+   * @return {!Promise}
+   */
+  static async checkOrientation_(facing) {
+    await Tast.waitForPassOrientationTest(facing, 5000, 15000);
+    Tast.feedbackOrientation_(true, 'Orientation is correct');
+    Tast.patternChecker_.destructor();
   }
 };

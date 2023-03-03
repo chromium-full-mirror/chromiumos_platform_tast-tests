@@ -12,7 +12,11 @@ class PatternChecker {
     this.des2 = new cv.Mat();
     this.sift = new cv.SIFT();
     this.flann = new cv.FlannBasedMatcher();
-    this.dts = new cv.Mat()
+    this.dts = new cv.Mat();
+    this.h_bound_coef0 = 0.1;
+    this.h_bound_coef1 = 0.3;
+    this.v_bound_coef0 = 0.1;
+    this.v_bound_coef1 = 0.3;
   }
 
   destructor() {
@@ -30,29 +34,46 @@ class PatternChecker {
     this.flann.delete();
     this.dts.delete();
   }
-
-  /*
-   * Given a rectangle pattern with four vertice
-   * (A0,B0), (A1,B1), (A2,B2), (A3,B3),
-   * and its perspective transformed quadrilateral
-   * with four vertice (C0,D0), (C1,D1), (C2,D2), (C3,D3),
-   * for i in range(0,4) check
-   * all Ai*(1-H_BOUND_COEF0) < Ci < Ai*(1+H_BOUND_COEF1)
-   * all Bi*(1-V_BOUND_COEF0) < Di < Bi*(1+V_BOUND_COEF1)
-   * Checks the |aspectRatio| camera FOV of |facing| camera is aligned with
-   * pattern.
+  /**
+   * Set up the checking boundary for checkAlign(...)
+   * @param {number} h_bound_coef0
+   * @param {number} h_bound_coef1
+   * @param {number} v_bound_coef0
+   * @param {number} v_bound_coef1
+   * @private
+   */
+  setCheckingBoundary(
+      h_bound_coef0, h_bound_coef1, v_bound_coef0, v_bound_coef1) {
+    this.h_bound_coef0 = h_bound_coef0;
+    this.h_bound_coef1 = h_bound_coef1;
+    this.v_bound_coef0 = v_bound_coef0;
+    this.v_bound_coef1 = v_bound_coef1;
+  }
+  /**
+   * Given a pattern and an imageData,
+   * find the perspective transformed quadrilateral of the pattern
+   * with four vertice (X0,Y0), (X1,Y1), (X2,Y2), (X3,Y3) in counterclockwise
+   * order and the width and height of imageData.
+   * Return true if the following conditions are satisfied:
+   *  width * (h_bound_coef0 *-1) < X0 < width * (h_bound_coef1) and
+   *  width * (h_bound_coef0 *-1) < X1 < width * (h_bound_coef1) and
+   *  width * (1 - h_bound_coef1) < X2 < width * (1 + h_bound_coef0) and
+   *  width * (1 - h_bound_coef1) < X3 < width * (1 + h_bound_coef0) and
+   *  height * (v_bound_coef0 *-1) < Y0 < height * (v_bound_coef1) and
+   *  height * (1 - v_bound_coef1) < Y1 < height * (1 + v_bound_coef0) and
+   *  height * (1 - v_bound_coef1) < Y2 < height * (1 + v_bound_coef0) and
+   *  height * (v_bound_coef0 *-1) < Y3 < height * (v_bound_coef1)
    * @param {!ImageData} pattern
    * @param {!ImageData} imageData
    * @param {!Canvas} canvasDebug
    * @param {number} proportion
+   * @param {boolean} allowRotation
    * @return {boolean}
    * @private
    */
-  checkAlign(pattern, imageData, canvasDebug = null, proportion = 1) {
-    const H_BOUND_COEF0 = 0.1;
-    const H_BOUND_COEF1 = 0.30;
-    const V_BOUND_COEF0 = 0.1;
-    const V_BOUND_COEF1 = 0.30;
+  checkAlign(
+      pattern, imageData, canvasDebug = null, proportion = 1,
+      allowRotation = true) {
     const MIN_MATCH_COUNT = 20;
     const matches = new cv.DMatchVectorVector();
     const goodMatches = new cv.DMatchVector();
@@ -60,8 +81,8 @@ class PatternChecker {
     this.targetImg = cv.matFromImageData(imageData);
 
     // Find out keypoints and descriptor of pattern and target image by SIFT.
-    this.sift.detectAndCompute(
-        this.patternImg, new cv.Mat(), this.kp1, this.des1);
+        this.sift.detectAndCompute(
+            this.patternImg, new cv.Mat(), this.kp1, this.des1);
     this.sift.detectAndCompute(
         this.targetImg, new cv.Mat(), this.kp2, this.des2);
 
@@ -141,12 +162,12 @@ class PatternChecker {
       width = this.targetImg.size().width,
       height = this.targetImg.size().height;
       const hBound = [
-        width * H_BOUND_COEF0 * -1, width * H_BOUND_COEF1,
-        width * (1 - H_BOUND_COEF1), width * (1 + H_BOUND_COEF0)
+        width * this.h_bound_coef0 * -1, width * this.h_bound_coef1,
+        width * (1 - this.h_bound_coef1), width * (1 + this.h_bound_coef0)
       ];
       const vBound = [
-        height * V_BOUND_COEF0 * -1, height * V_BOUND_COEF1,
-        height * (1 - V_BOUND_COEF1), height * (1 + V_BOUND_COEF0)
+        height * this.v_bound_coef0 * -1, height * this.v_bound_coef1,
+        height * (1 - this.v_bound_coef1), height * (1 + this.v_bound_coef0)
       ];
       const bound = [
         [hBound[0], hBound[1], vBound[0], vBound[1]],
@@ -218,16 +239,20 @@ class PatternChecker {
       /* Check whether all the 4 vertices lays in the correct area or not
        * in the rotated case.
        */
-      let rotate = true;
-      for (let i = 0; i < 4; i++) {
-        const x = p[(i + 2) % 4][0];
-        const y = p[(i + 2) % 4][1];
-        if (x < bound[i][0] || x > bound[i][1] || y < bound[i][2] ||
-            y > bound[i][3]) {
-          rotate = false;
+      if (allowRotation) {
+        let rotate = true;
+        for (let i = 0; i < 4; i++) {
+          const x = p[(i + 2) % 4][0];
+          const y = p[(i + 2) % 4][1];
+          if (x < bound[i][0] || x > bound[i][1] || y < bound[i][2] ||
+              y > bound[i][3]) {
+            rotate = false;
+          }
         }
+        result = normal || rotate;
+      } else {
+        result = normal;
       }
-      result = normal || rotate;
     }
     h.delete();
     matches.delete();

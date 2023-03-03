@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- Copyright 2023 The Chromium Authors
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Camerabox Align</title>
+  <link rel="stylesheet" href="wfc_orientation.css">
+  <script async src="opencv.js"></script>
+  <script async src="pattern_checker.js"></script>
+  <script src="camerabox_align.js"></script>
+</head>
+
+<body>
+  <table>
+    <tr>
+      <th>All arrows should point up:</th>
+      <th id="debug">debug</th>
+    </tr>
+    <tr>
+      <th>
+        <video></video>
+        <div class="message"></div>
+        <div><button id="settled" hidden>Settled</button></div>
+      </th>
+      <th>
+        <div class="inputoutput">
+          <canvas id="debugImg"></canvas>
+          <div class="caption"></div>
+        </div>
+      </th>
+    </tr>
+    <tr>
+      <th>
+      </th>
+      <th>
+        <div class="inputoutput">
+          <img id="patternImg" src='wfc_pattern.png' alt="patternImg" hidden>
+        </div>
+      </th>
+    </tr>
+  </table>
+</body>
+
+</html>
