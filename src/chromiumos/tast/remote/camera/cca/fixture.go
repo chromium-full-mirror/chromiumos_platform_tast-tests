@@ -7,7 +7,6 @@ package cca
 
 import (
 	"context"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/user"
@@ -74,33 +73,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		s.Fatal("Failed to get map of the RSA files: ", err)
 	}
 
-	// It is a workaround since currently it is not supported to pass values from remote fixture to local one.
-	// TODO(b/268150785): Remove this workaround and pass the value directly to the local fixture.
-	tempFile, err := ioutil.TempFile("", "tabletIP")
-	if err != nil {
-		s.Fatal("Failed to create temp file to save tablet host: ", err)
-	}
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
-	tabletIP := tabletIP(ctx, s.DUT().HostName())
-	if n, err := tempFile.Write([]byte(tabletIP)); err != nil {
-		s.Fatal("Failed to write tablet host name to temporary file: ", err)
-	} else if n != len(tabletIP) {
-		s.Fatal("Failed to write to temporary file successfully")
-	}
-	filesMap[tempFile.Name()] = chart.TabletIPInfoPath
-
 	if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), filesMap, linuxssh.DereferenceSymlinks); err != nil {
 		s.Fatal("Failed to copy RSA files to the DUT: ", err)
 	}
-	return nil
+	return tabletIP(ctx, s.DUT().HostName())
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", "-rf", chart.TabletIPInfoPath).Output(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to remove tablet host info file: ", err)
-	}
-
 	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", "-rf", chart.SSHKeysDir).Output(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to remove ssh keys for camera box: ", err)
 	}

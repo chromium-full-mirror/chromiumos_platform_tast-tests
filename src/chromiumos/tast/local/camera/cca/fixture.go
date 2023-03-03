@@ -7,7 +7,6 @@ package cca
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -332,6 +331,7 @@ type fixture struct {
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
 	fieldTrialConfig       string
+	tabletIP               string
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -430,6 +430,12 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 				dutcontrol.CCARestoreBacklight(ctx, f.brightnessVal)
 			}
 		}()
+
+		tabletIP := ""
+		if err := s.ParentFillValue(&tabletIP); err != nil {
+			s.Fatal("Failed to get tabletIP from the remote fixture: ", err)
+		}
+		f.tabletIP = tabletIP
 	}
 
 	tb, err := testutil.NewTestBridge(ctx, cr, f.useCameraType)
@@ -661,13 +667,10 @@ func (f *fixture) runTestWithApp(ctx context.Context, testFunc TestWithAppFunc, 
 
 func (f *fixture) prepareChart(ctx context.Context, addr, contentPath string) (retErr error) {
 	if addr == "" {
-		if chartIP, err := tabletIP(ctx); err != nil {
-			return errors.Wrap(err, "failed to get tablet host")
-		} else if chartIP == "" {
+		if f.tabletIP == "" {
 			return errors.New("chart device is neither found nor specified")
-		} else {
-			addr = chartIP
 		}
+		addr = f.tabletIP
 	}
 
 	var sopt ssh.Options
@@ -704,20 +707,4 @@ func (f *fixture) cca() *App {
 
 func (f *fixture) setDebugParams(params DebugParams) {
 	f.debugParams = params
-}
-
-func tabletIP(ctx context.Context) (string, error) {
-	fileExists := func(file string) bool {
-		_, err := os.Stat(file)
-		return !os.IsNotExist(err)
-	}
-
-	if !fileExists(chart.TabletIPInfoPath) {
-		return "", errors.New("tablet host information file does not exist on DUT")
-	}
-	rawData, err := ioutil.ReadFile(chart.TabletIPInfoPath)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to read tablet host info")
-	}
-	return string(rawData), nil
 }
