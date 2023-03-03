@@ -62,10 +62,7 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Dump the UI tree to the service/faillog subdirectory.
-	// Don't dump directly into outDir
-	// because it might be overridden by the test faillog after pulled back to remote server.
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, filepath.Join(outDir, "service"), func() bool { return retErr != nil }, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

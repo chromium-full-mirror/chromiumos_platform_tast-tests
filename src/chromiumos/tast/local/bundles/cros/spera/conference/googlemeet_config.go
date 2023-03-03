@@ -23,7 +23,7 @@ type GoogleMeetConfig struct {
 }
 
 // GetGoogleMeetConfig returns an object that contains the Google meet configuration.
-func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState) (GoogleMeetConfig, error) {
+func GetGoogleMeetConfig(ctx context.Context, s *testing.State) (GoogleMeetConfig, error) {
 	const (
 		defaultMeetRetryTimeout  = 40 * time.Minute
 		defaultMeetRetryInterval = 2 * time.Minute
@@ -47,21 +47,19 @@ func GetGoogleMeetConfig(ctx context.Context, s *testing.ServiceState) (GoogleMe
 
 		return time.Duration(val) * time.Minute, nil
 	}
-
-	meetRetryTimeout, err := varToDuration("spera.meet_url_retry_timeout", defaultMeetRetryTimeout)
+	meetRetryTimeout, err := varToDuration("spera.meet_retry_timeout", defaultMeetRetryTimeout)
 	if err != nil {
 		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryTimeout)
 	}
-
-	meetRetryInterval, err := varToDuration("spera.meet_url_retry_interval", defaultMeetRetryInterval)
+	meetRetryInterval, err := varToDuration("spera.meet_retry_interval", defaultMeetRetryInterval)
 	if err != nil {
 		return GoogleMeetConfig{}, errors.Wrapf(err, "failed to parse %q to time duration", defaultMeetRetryInterval)
 	}
 	testing.ContextLogf(ctx, "Retry vars: meetRetryTimeout %v, meetRetryInterval %v", meetRetryTimeout, meetRetryInterval)
 
-	bondCreds, ok := s.Var("spera.GoogleMeetCUJ.bond_key")
+	bondCreds, ok := s.Var("spera.meet_bond_key")
 	if !ok || len(bondCreds) < 1 {
-		return GoogleMeetConfig{}, errors.New("spera.GoogleMeetCUJ.bond_key is not set")
+		return GoogleMeetConfig{}, errors.New("spera.meet_bond_key is not set")
 	}
 
 	return GoogleMeetConfig{
