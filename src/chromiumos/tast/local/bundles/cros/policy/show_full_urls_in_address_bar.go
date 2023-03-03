@@ -31,8 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of ShowFullUrlsInAddressBar policy on both Ash and Lacros browser",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"mpetrisor@chromium.org",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

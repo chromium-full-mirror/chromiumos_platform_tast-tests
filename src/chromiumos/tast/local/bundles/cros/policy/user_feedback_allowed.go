@@ -31,8 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of UserFeedbackAllowed policy on both Ash and Lacros browser",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"crisguerrero@chromium.org", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

@@ -23,9 +23,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Behavior of PolicyRefreshRate policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

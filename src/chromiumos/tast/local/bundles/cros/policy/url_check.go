@@ -35,10 +35,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the behavior of URL allow/deny-listing policies",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author
-			"kathrelkeld@chromium.org",
 			"gabormagda@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{

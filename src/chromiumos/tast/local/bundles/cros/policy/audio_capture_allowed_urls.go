@@ -36,10 +36,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checking if audio capture is allowed on websites or not, depending on the value of the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"cj.tsai@gmail.com",
 			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{captureAllowedTestHTML},

@@ -30,8 +30,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test the behavior of BookmarkBarEnabled policy: check if bookmark bar is shown based on the value of the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

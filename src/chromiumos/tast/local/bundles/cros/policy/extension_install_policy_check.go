@@ -38,8 +38,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks the behavior of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", //Test Author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:commercial_limited"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

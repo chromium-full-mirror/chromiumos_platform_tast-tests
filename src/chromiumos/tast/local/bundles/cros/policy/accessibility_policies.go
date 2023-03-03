@@ -31,8 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks set values for the Accessability polices in the chrome.accessibilityFeatures map",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author.
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		// autoclick case needs to be disabled.
 		Attr:    []string{},

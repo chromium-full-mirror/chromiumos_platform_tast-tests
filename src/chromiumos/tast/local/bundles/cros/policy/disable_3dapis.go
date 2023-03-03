@@ -26,9 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of the Disable3DAPIs policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author
-			"kathrelkeld@chromium.org",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

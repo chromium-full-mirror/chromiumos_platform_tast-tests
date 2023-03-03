@@ -23,9 +23,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies whether the ephemeral_users_enabled policy is set on the device or not",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"sergiyb@google.com",   // Migrated from autotest to tast.
 			"rzakarian@google.com", // Original autotest author.
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.FakeDMSEnrolled,

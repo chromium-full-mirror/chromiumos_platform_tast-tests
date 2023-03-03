@@ -24,8 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Behavior of the AlternateErrorPagesEnabled policy: check that an alternate set of error pages is shown based on the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"mpolzer@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

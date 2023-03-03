@@ -35,8 +35,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the behavior of 3rd part resources on pages whether it shows auth prompt or not",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"mohamedaomar@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

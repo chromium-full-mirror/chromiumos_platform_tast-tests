@@ -33,9 +33,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "This test is a sample test for checking traffic annotations. It doesn't verify that the policy works, it just checks for the correct logs. Proof of concept, to be modified later",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"rzakarian@google.com",
 			"ramyagopalan@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

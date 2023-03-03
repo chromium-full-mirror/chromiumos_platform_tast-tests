@@ -26,9 +26,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Notifications of DeviceMinimumVersion policy when device has reached auto update expiration",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:commercial_limited"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,

@@ -29,8 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of FullscreenAllowed policy: checking if fullscreen is allowed or not",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

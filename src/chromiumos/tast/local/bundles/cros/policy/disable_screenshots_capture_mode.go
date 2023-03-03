@@ -29,8 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of the DisableScreenshots policy, check whether screenshot can be taken from capture mode in quick settings",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"poromov@google.com", // Policy owner
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

@@ -29,8 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if AudioOutputAllowed forces the device to be muted",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Attr:         []string{"group:mainline", "informational"},

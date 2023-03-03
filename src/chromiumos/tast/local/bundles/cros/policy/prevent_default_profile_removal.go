@@ -25,8 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Attempts to remove the default user profile in Lacros",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"eariassoto@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		// TODO(b/229003599): This test is failing on tablets and Chromeboxes.
 		// We are disabling until the root cause is fixed.
 		// Attr:         []string{"group:mainline", "informational"},

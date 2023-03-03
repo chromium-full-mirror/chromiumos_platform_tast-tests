@@ -34,8 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DefaultGeolocationSetting policy, checking the location site settings after setting the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:commercial_limited"},
 		Params: []testing.Param{{

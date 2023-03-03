@@ -34,8 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DownloadRestrictions policy, check if a file is downloaded or not based on the value of the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

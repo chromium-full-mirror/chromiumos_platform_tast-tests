@@ -34,8 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of SavingBrowserHistoryDisabled policy, check if browsing history entries are shown based on the value of the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:commercial_limited"},
 		Params: []testing.Param{{

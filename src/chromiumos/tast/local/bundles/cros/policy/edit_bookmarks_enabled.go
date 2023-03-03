@@ -33,8 +33,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Behavior of EditBookmarksEnabled policy: check if you can create, edit and remove bookmarks based on the policy value",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:golden_tier",

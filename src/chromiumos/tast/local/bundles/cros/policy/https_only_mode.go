@@ -36,8 +36,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the HTTPSOnlyMode policy is properly applied",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"jityao@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		// Disabled due to <1% pass rate over 30 days. See b/246818601
 		//Attr:         []string{"group:mainline", "informational"},

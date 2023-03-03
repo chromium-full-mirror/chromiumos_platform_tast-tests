@@ -40,9 +40,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the behavior of images on URL with DefaultImagesSetting, ImagesAllowedForUrls and ImagesBlockedForUrls user policies",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Data:         []string{"images_for_url_check_index.html", "images_for_url_check_index_img.jpg"},

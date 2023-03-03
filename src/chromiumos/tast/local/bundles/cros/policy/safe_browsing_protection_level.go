@@ -31,8 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Google Chrome's Safe Browsing feature is enabled and the mode it operates in",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"mohamedaomar@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

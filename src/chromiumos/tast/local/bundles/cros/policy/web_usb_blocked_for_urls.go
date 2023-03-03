@@ -31,8 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of WebUsbBlockedForUrls policy, checking that blocked URLs don't request for access to a USB device",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"adikov@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

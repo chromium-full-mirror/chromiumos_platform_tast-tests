@@ -27,8 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Test the KeyboardDefaultToFunctionKeys policy: check that the behavior of function keys is swapped",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"mpolzer@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:commercial_limited"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

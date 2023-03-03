@@ -32,8 +32,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of BrowserLabsEnabled policy,checking the existence of the experimental features icon in the toolbar after setting the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"samicolon@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

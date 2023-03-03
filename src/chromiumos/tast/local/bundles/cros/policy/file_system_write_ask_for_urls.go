@@ -27,10 +27,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checking if file system writes are allowed depending on the value of this policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vivian.tsai@cienet.com",
 			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

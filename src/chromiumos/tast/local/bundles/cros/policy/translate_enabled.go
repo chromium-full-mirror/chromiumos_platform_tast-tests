@@ -33,10 +33,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of Translate policy, checking if the translate widget shows up or not dependent on the policy setting",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"marcgrimme@google.com", // Test author
-			"kathrelkeld@chromium.org",
 			"chromeos-commercial-managed-user-experience@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:commercial_limited"},
 		Params: []testing.Param{{

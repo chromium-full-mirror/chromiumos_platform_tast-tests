@@ -29,8 +29,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of NotificationsAllowedForUrls policy: checking if notifications are allowed for a specified url",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

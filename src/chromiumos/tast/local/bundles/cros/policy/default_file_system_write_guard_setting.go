@@ -27,10 +27,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests the DefaultFileSystemWriteGuardSetting policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"bob.yang@cienet.com",
 			"cienet-development@googlegroups.com",
 			"chromeos-sw-engprod@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

@@ -28,8 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check that the DefaultJavaScriptJitSetting policy blocks or allows the JIT compiler",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"eariassoto@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

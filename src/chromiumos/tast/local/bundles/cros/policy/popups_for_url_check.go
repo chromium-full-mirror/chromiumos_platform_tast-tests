@@ -41,10 +41,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the behavior of popups on URL allow/deny-listing user policies",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
 			"gabormagda@google.com",
 			"alexanderhartl@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Data:         []string{"popups_for_url_check_index.html", "popups_for_url_check_popup.html"},

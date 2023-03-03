@@ -32,9 +32,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of SystemTimezone policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vsavu@google.com",          // Test author
 			"alexanderhartl@google.com", // Original author of the remote test.
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,

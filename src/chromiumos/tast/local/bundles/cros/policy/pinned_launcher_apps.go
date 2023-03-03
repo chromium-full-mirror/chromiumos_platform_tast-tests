@@ -26,8 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the behavior of PinnedLauncherApps policy: apps in the policy are pinned on the shelf and cannot be unpinned",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

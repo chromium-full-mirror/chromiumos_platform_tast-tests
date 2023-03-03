@@ -31,8 +31,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DefaultSearchProviderKeyword policy: check if specified keyword triggers the search for search provider",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"anastasiian@chromium.org", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

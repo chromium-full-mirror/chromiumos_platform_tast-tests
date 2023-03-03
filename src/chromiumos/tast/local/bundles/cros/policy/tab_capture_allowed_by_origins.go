@@ -38,8 +38,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of TabCaptureAllowedByOrigins policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"dandrader@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

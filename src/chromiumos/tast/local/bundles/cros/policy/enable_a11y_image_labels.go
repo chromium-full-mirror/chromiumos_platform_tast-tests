@@ -35,8 +35,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that the AccessibilityImageLabels policy works as intended",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"eariassoto@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{

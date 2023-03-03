@@ -27,9 +27,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests timestamps in status boxes on chrome://policy page",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"sergiyb@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

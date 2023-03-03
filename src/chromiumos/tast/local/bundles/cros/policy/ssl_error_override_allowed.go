@@ -40,8 +40,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of SSlErrorOverrideAllowed and SSLErrorOverrideAllowedForOrigins policy on both Ash and Lacros browser",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"hendrich@chromium.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{serverKeyFile, serverCertFile},

@@ -32,9 +32,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checking if autoplay is allowed on a website or not, depending on the value of the AutoplayAllowlist policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"fbeaufort@chromium.org", // Owner of the policy
 			"chrome-media-ux@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

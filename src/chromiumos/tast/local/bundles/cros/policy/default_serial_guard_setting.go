@@ -30,8 +30,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests the behavior of the DefaultSerialGuardSetting policy by checking that it correctly configures access to the serial port selection prompt",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"cmfcmf@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{

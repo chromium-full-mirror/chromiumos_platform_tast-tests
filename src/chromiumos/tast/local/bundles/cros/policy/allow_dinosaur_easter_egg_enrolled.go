@@ -22,8 +22,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of AllowDinosaurEasterEgg policy on an enrolled device",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,

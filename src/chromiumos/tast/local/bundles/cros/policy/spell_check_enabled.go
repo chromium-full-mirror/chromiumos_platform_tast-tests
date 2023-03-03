@@ -34,8 +34,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the SpellCheckEnabled policy is correctly applied",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"jityao@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,

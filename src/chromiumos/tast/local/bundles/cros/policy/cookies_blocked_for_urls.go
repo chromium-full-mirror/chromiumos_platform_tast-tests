@@ -28,8 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check that the CookiesBlockedForUrls policy blocks setting cookies on the given sites",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"nikitapodguzov@chromium.org", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

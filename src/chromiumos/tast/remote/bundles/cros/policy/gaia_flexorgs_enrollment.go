@@ -30,9 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GAIA Enroll a device to FlexOrgs domain without checking policies",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"rzakarian@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{

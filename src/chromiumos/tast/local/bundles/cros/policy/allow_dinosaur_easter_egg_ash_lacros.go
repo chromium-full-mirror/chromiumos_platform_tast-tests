@@ -27,9 +27,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AllowDinosaurEasterEgg policy on both Ash and Lacros browser",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author
 			"mohamedaomar@google.com",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

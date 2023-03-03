@@ -28,8 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DictationEnabled policy: checking if dictation is enabled or not",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(crbug.com/1238027): Close dialog before the next test.
 		// Attr:         []string{"group:mainline", "informational"},

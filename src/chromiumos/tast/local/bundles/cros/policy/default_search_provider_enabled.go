@@ -30,8 +30,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DefaultSearchProviderEnabled policy: check if a search provider is being automatically used",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"anastasiian@chromium.org",
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

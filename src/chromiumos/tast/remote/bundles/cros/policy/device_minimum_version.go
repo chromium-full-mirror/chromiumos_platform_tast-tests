@@ -25,9 +25,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DeviceMinimumVersion policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
 			"marcgrimme@google.com",
 		},
+		BugComponent: "b:1263917",
 		Attr:         []string{"group:enrollment"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{

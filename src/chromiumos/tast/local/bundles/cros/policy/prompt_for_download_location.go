@@ -39,8 +39,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of PromptForDownloadLocation policy: checking if a prompt for the download location appears based on the value of the policy",
 		Contacts: []string{
+			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
+		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:commercial_limited"},
 		Params: []testing.Param{{
