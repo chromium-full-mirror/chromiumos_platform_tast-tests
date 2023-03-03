@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -46,7 +47,7 @@ const (
 	dlpPrintingAllowedPath        = "/allowed"
 	dlpPrintingWarnPath           = "/warn"
 	waitTimeSecNotificationAsh    = 10
-	waitTimeSecNotificationLacros = 10
+	waitTimeSecNotificationLacros = 15
 	waitTimeSecWarningAsh         = 4
 	waitTimeSecWarningLacros      = 5
 )
@@ -127,7 +128,7 @@ func init() {
 			Key: "feature_id",
 			// Warn users from sharing confidential information within company (printing): COM_DATPROT_CUJ4_TASK2_WF1.
 			Value: "screenplay-17b0e03a-7ba7-4c66-a81e-2bfcc470a5a4",
-		}},
+		}, pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI)},
 		Params: []testing.Param{{
 			Name:    "ash_blocked",
 			Fixture: fixture.ChromePolicyLoggedIn,
