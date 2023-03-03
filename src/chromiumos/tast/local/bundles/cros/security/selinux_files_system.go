@@ -240,6 +240,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/var/spool", Context: "cros_var_spool", Log: true},
 		{Path: "/var/spool/crash", Context: "cros_crash_spool", Recursive: true, IgnoreErrors: true, Log: true},
 		{Path: "/var/spool/cron-lite", Context: "cros_periodic_scheduler_cache_t", Recursive: true, Log: true},
+		{Path: "/var/spool/support", Context: "cros_var_spool_support", Recursive: true, Log: true},
 	}
 
 	selinux.FilesTestInternal(ctx, s, testArgs)
