@@ -29,16 +29,9 @@ func TurnOnDarkTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, 
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to enable dark theme")
 	}
-	return func(ctx context.Context) error {
-		if err := uiauto.Combine("Reset auto mode",
-			personalization.OpenPersonalizationHub(ui),
-			personalization.ToggleAutoMode(ui),
-			personalization.ClosePersonalizationHub(ui),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to reset auto theme")
-		}
-		return nil
-	}, nil
+	// TODO(b/267686390): Add CleanupCallback when more controls over dark theme scheduler
+	// are supported.
+	return nil, nil
 }
 
 // TurnOnLightTheme turns light theme on.
@@ -53,14 +46,7 @@ func TurnOnLightTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback,
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to enable light theme")
 	}
-	return func(ctx context.Context) error {
-		if err := uiauto.Combine("Reset auto mode",
-			personalization.OpenPersonalizationHub(ui),
-			personalization.ToggleAutoMode(ui),
-			personalization.ClosePersonalizationHub(ui),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to reset auto theme")
-		}
-		return nil
-	}, nil
+	// TODO(b/267686390): Add CleanupCallback when more controls over dark theme scheduler
+	// are supported.
+	return nil, nil
 }

@@ -87,7 +87,7 @@ func IdleUI(ctx context.Context, s *testing.State) {
 		setup.PowerTestOptions{
 			Wifi:       setup.DisableWifiInterfaces,
 			NightLight: setup.DisableNightLight,
-			// TODO(b/267686390): Set to Light theme when the API is fixed.
+			DarkTheme:  setup.EnableLightTheme,
 		},
 		setup.NewBatteryDischargeFromMode(dischargeMode),
 	))
