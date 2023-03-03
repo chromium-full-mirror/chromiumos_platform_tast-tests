@@ -266,6 +266,25 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	// lacrosWithArcBootedAndPlayStore is a fixture that combines the functionality of arcBootedWithPlayStore and lacros.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosWithArcBootedAndPlayStore",
+		Desc:     "Lacros Chrome from a pre-built image with ARC booted and the Play Store enabled",
+		Contacts: []string{"amusbach@chromium.org", "xiyuan@chromium.org"},
+		Vars:     []string{"ui.gaiaPoolDefault"},
+		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ARCEnabled(),
+				chrome.ExtraArgs(DisableSyncFlags()...),
+				chrome.UnRestrictARCCPU(),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	// arcBootedWithInputOverlay is a fixture similar to arcBooted but with the input overlay flag enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithInputOverlayAlphaV2",

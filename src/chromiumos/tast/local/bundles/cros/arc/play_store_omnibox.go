@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/arc/playstore"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -24,19 +26,32 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayStoreOmnibox,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Installs a TWA and WebAPK app via Omnibox in Play Store",
 		Contacts:     []string{"chromeos-apps-foundation-core@google.com", "tsergeant@chromium.org"},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
+			Fixture:           "arcBootedWithPlayStore",
+			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
+			Fixture:           "arcBootedWithPlayStore",
+			Val:               browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"android_container", "chrome", "lacros"},
+			Fixture:           "lacrosWithArcBootedAndPlayStore",
+			Val:               browser.TypeLacros,
+		}, {
+			Name:              "lacros_vm",
+			ExtraSoftwareDeps: []string{"android_vm", "chrome", "lacros"},
+			Fixture:           "lacrosWithArcBootedAndPlayStore",
+			Val:               browser.TypeLacros,
 		}},
-		Timeout: 10 * time.Minute,
-		Fixture: "arcBootedWithPlayStore",
+		Timeout: 5 * time.Minute,
 	})
 }
 
@@ -57,13 +72,11 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
-	// Navigate to URL
-	conn, err := cr.NewConn(ctx, "")
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 	if err != nil {
-		s.Fatal("Failed to create renderer: ", err)
+		s.Fatal("Failed to open browser: ", err)
 	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "play_store_omnibox")
 
 	// Jitsi Meet is a PWA which has manifest entries to prefer installation of the app through Play Store.
@@ -73,11 +86,12 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 		url       = "https://meet.jit.si"
 	)
 
-	s.Logf("Launching %s from %s via omnibox", title, url)
-
-	if err := conn.Navigate(ctx, url); err != nil {
+	// Navigate to URL
+	conn, err := br.NewConn(ctx, url)
+	if err != nil {
 		s.Fatalf("Failed to navigate to the url %s: %s", url, err)
 	}
+	defer conn.Close()
 
 	// Locate and click on the omnibox install button.
 	ui := uiauto.New(tconn)
