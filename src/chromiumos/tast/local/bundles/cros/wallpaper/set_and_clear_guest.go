@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -41,25 +42,37 @@ func init() {
 }
 
 func SetAndClearGuest(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.GuestLogin())
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
+	cr, err := chrome.New(ctx, chrome.GuestLogin())
 	if err != nil {
 		s.Fatal("Failed to create chrome instance: ", err)
 	}
-	defer cr.Close(ctx)
+	defer func(ctx context.Context) {
+		// If the second chrome.New call fails, cr can be nil.
+		if cr != nil {
+			cr.Close(ctx)
+		}
+	}(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get test api connection: ", err)
 	}
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer func(ctx context.Context) {
+		if cr != nil {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+		}
+	}(cleanupCtx)
 
 	// Force Chrome to be in clamshell mode to make sure wallpaper preview is not enabled.
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
 	}
-	defer cleanup(ctx)
+	defer cleanup(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 
@@ -80,11 +93,14 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to log out: ", err)
 	}
 
+	// Close Chrome to do some cleanup.
+	// It will log some errors, as the session is closed already.
+	cr.Close(ctx)
+
 	// KeepState is necessary because otherwise wallpaper is cleared even if it would not be on a real device.
 	if cr, err = chrome.New(ctx, chrome.KeepState(), chrome.GuestLogin()); err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)
 	}
-	defer cr.Close(ctx)
 
 	if tconn, err = cr.TestAPIConn(ctx); err != nil {
 		s.Fatal("Failed to re-establish test API connection: ", err)
