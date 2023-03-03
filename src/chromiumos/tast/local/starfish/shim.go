@@ -173,7 +173,7 @@ func parseOutputLine(line string) (string, string, bool, string) {
 	l := logPrefix
 	r := false
 	p := ""
-	re := regexp.MustCompile(`\[[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9],[0-9][0-9][0-9]\] `)
+	re := regexp.MustCompile(`\[[0-9][0-9][0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9],[0-9][0-9][0-9]\] `)
 	matches := re.FindAllString(line, -1)
 	for _, m := range matches {
 		line = strings.ReplaceAll(line, m, "")
