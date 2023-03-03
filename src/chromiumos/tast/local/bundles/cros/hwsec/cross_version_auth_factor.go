@@ -235,8 +235,7 @@ func init() {
 
 // authenticateAuthFactor authenticates the factor with the given label.
 func authenticateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username, label string, authConfig *hwsec.AuthConfig, lowEntropy bool) (bool, error) {
-	// TODO(b/262661359): after b/262661359 is fixed, change uda.AuthIntent_AUTH_INTENT_DECRYPT back to uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY.
-	_, authSessionID, err := cryptohome.StartAuthSession(ctx, username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	_, authSessionID, err := cryptohome.StartAuthSession(ctx, username, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to start auth session")
 	}
