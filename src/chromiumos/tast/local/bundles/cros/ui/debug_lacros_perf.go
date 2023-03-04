@@ -12,9 +12,11 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui/cujrecorder"
@@ -136,6 +138,21 @@ func DebugLacrosPerf(ctx context.Context, s *testing.State) {
 	}
 	defer closeBrowser(closeCtx)
 	defer conn.Close()
+
+	activeWindow, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get the active window: ", err)
+	}
+
+	if err := ash.SetWindowStateAndWait(ctx, tconn, activeWindow.ID, ash.WindowStateMaximized); err != nil {
+		s.Fatal("Failed to ensure that the window is maximized: ", err)
+	}
+
+	// Click at the center of the window to avoid showing the tab tooltip.
+	pc := pointer.NewMouse(tconn)
+	if err := pc.ClickAt(activeWindow.BoundsInRoot.CenterPoint())(ctx); err != nil {
+		s.Fatal("Failed to click at the window: ", err)
+	}
 
 	// Recorder with no additional config; it records and reports memory usage and
 	// CPU percents of browser/GPU processes.
