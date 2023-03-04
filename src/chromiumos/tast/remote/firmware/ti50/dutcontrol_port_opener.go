@@ -22,16 +22,18 @@ const (
 	ConsoleBaud = 115200
 
 	// qSize is the channel size for the data and write receive channels, it should be large enough to not ever block on writes so that one channel does not block the other.
-	qSize = 10000
+	qSize = 100000
 )
 
 // DUTControlRawUARTPortOpener opens a raw UART port through the dutcontrol grpc client.
 //
 // Example:
 // conn, err := grpc.DialContext(ctx, hostPort, grpc.WithInsecure())
-// if err != nil {
-//     return nil, err
-// }
+//
+//	if err != nil {
+//	    return nil, err
+//	}
+//
 // defer conn.Close(ctx)
 // client := dutcontrol.NewDutControlClient(conn)
 // opener := &DUTControlRawUARTPortOpener(client, "console", 115200, 1024, 200 * time.Millisecond)
@@ -79,8 +81,14 @@ func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, req *dutc
 			}
 			switch op := resp.Type.(type) {
 			case *dutcontrol.ConsoleResponse_SerialData:
+				if len(data) == qSize {
+					testing.ContextLog(stream.Context(), "WARNING: Dutcontrol data queue full, could block future operations")
+				}
 				data <- op.SerialData
 			case *dutcontrol.ConsoleResponse_SerialWrite:
+				if len(write) == qSize {
+					testing.ContextLog(stream.Context(), "WARNING: Dutcontrol write queue full, could block future operations")
+				}
 				write <- op.SerialWrite
 			default:
 				testing.ContextLog(stream.Context(), "Dutcontrol recv error, unknown message type: ", op)

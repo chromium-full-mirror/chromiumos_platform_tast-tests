@@ -128,7 +128,7 @@ func (i *impl) Reset(ctx context.Context) error {
 
 func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Starting OTT session")
-	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 10000, time.Second)
+	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 100000, time.Second)
 	// At this point, the plan is to start an opentitantool session, which could invove either
 	// starting a host emulation instance, or resetting a devboard and its debugger to a known
 	// state.

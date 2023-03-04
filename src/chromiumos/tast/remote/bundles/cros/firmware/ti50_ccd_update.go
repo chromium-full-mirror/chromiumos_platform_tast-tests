@@ -22,8 +22,11 @@ import (
 var consoleUpdateTooSoonRegexp = regexp.MustCompile("Attempted update too soon")
 var gsctoolUpdateTooSoonRegexp = regexp.MustCompile(`Error: status 0x9`)
 var gsctoolUpdateSuccessRegexp = regexp.MustCompile(`image updated`)
-var versionRwARegexp = regexp.MustCompile(`RW_A:  \* [0-9.]+/ti50_common:v.*[\r\n]+RW_B:    Empty`)
-var versionRwBRegexp = regexp.MustCompile(`RW_B:  \* [0-9.]+/ti50_common:v.*`)
+var activeTi50Version = `\* ([0-9.]+/ti50_common:v\S*)`
+var inactiveTi50Version = `  ([0-9.]+/ti50_common:v\S*)`
+var versionRwARegexp = regexp.MustCompile(`RW_A:  ` + activeTi50Version)
+var versionRwBRegexp = regexp.MustCompile(`RW_B:  ` + activeTi50Version)
+var versionRwAInactiveRegexp = regexp.MustCompile(`RW_A:  ` + inactiveTi50Version)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -70,15 +73,14 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Console version: ", err)
 	}
-	testing.ContextLog(ctx, "Version before gsctool update: ")
+	testing.ContextLog(ctx, "Version before 1st gsctool update: ")
 	testing.ContextLog(ctx, outStr)
 
-	// Before update should be running RW_A.
 	if !versionRwARegexp.MatchString(outStr) {
-		s.Fatal("Not running RW_A")
+		s.Fatal("Before 1st update, should be running RW_A")
 	}
 
-	// Wait one more second to ensure that USB is connected before running gsctool
+	// Wait one more second to ensure that USB is connected before running gsctool.
 	testing.Sleep(ctx, 1*time.Second)
 
 	out, err := board.GSCToolCommand(ctx, "", "--fwver")
@@ -93,24 +95,45 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read version: ", err, string(out))
 	}
 
-	// Ti50 will reject updates for 60 seconds.
+	// Update should succeed within 60 seconds of Power on Reset.
+	out, _ = board.GSCToolCommand(ctx, ccdImage)
+	if !gsctoolUpdateSuccessRegexp.Match(out) {
+		s.Fatalf("Wrong gsctool output for 1st update: %s", out)
+	}
+
+	// Wait for reboot output to finish before reading version.
+	testing.Sleep(ctx, 1*time.Second)
+
+	outStr, err = i.Command(ctx, "version")
+	if err != nil {
+		s.Fatal("Console version after 1st update: ", err)
+	}
+	testing.ContextLog(ctx, "Version after 1st gsctool update: ")
+	testing.ContextLog(ctx, outStr)
+
+	if !versionRwBRegexp.MatchString(outStr) {
+		s.Fatal("After 1st update, RW_B should be active")
+	}
+
+	// Ti50 will reject updates for 60 seconds after an update attempt.
 	testing.Sleep(ctx, 30*time.Second)
 
 	out, _ = board.GSCToolCommand(ctx, ccdImage)
 	if !gsctoolUpdateTooSoonRegexp.Match(out) {
-		s.Fatalf("Wrong gsctool output for update too soon: %s", out)
+		s.Fatalf("Wrong gsctool output for update too soon after 1st update: %s", out)
 	}
 
 	_, err = board.ReadSerialSubmatch(ctx, consoleUpdateTooSoonRegexp)
 	if err != nil {
-		s.Fatal("Wrong console message for update too soon: ", err)
+		s.Fatal("Wrong console message for update too soon after 1st update: ", err)
 	}
 
 	testing.Sleep(ctx, 30*time.Second)
 
+	// Ti50 should accept updates 60 seconds after the last update.
 	out, _ = board.GSCToolCommand(ctx, ccdImage)
 	if !gsctoolUpdateSuccessRegexp.Match(out) {
-		s.Fatalf("Wrong gsctool output for update: %s", out)
+		s.Fatalf("Wrong gsctool output for 2nd update: %s", out)
 	}
 
 	// Wait for reboot output to finish before reading version.
@@ -120,12 +143,20 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Console version: ", err)
 	}
-	testing.ContextLog(ctx, "Version after gsctool update: ")
+	testing.ContextLog(ctx, "Version after 2nd gsctool update: ")
 	testing.ContextLog(ctx, outStr)
 
-	// After update should be running RW_B.
-	if !versionRwBRegexp.MatchString(outStr) {
-		s.Fatal("Not running RW_B")
+	matchesB := versionRwBRegexp.FindStringSubmatch(outStr)
+	if matchesB == nil {
+		s.Fatal("After 2nd update, RW_B should still be active because both slots should have the same version")
+	}
+	matchesA := versionRwAInactiveRegexp.FindStringSubmatch(outStr)
+	if matchesA == nil {
+		s.Fatal("After 2nd update, RW_A should be inactive because both slots should have the same version")
+	}
+
+	if matchesA[1] != matchesB[1] {
+		s.Fatalf("After 2nd update, RW_A and RW_B should have the same version: %s != %s", matchesA[1], matchesB[1])
 	}
 }
 
