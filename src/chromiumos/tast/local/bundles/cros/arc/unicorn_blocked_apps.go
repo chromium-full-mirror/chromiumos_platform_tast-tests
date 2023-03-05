@@ -107,8 +107,12 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 			return rl.Retry("wait for provisioning", err)
 		}
 
+		defer a.DumpUIHierarchyOnError(ctx, s.OutDir(), func() bool {
+			return s.HasError() || retErr != nil
+		})
+
 		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
-			return retErr != nil
+			return s.HasError() || retErr != nil
 		}, a, filepath.Join(s.OutDir(), "bugreport.zip"))
 
 		d, err := a.NewUIDevice(ctx)
