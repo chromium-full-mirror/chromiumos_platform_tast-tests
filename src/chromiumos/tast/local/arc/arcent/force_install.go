@@ -188,7 +188,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 				return testing.PollBreak(errors.New("Play Store closed"))
 			}
 
-			if err := playstore.FindAndDismissServerErrorDialog(ctx, d); err != nil {
+			if err := playstore.FindAndDismissErrorDialog(ctx, d); err != nil {
 				return testing.PollBreak(err)
 			}
 

@@ -82,21 +82,67 @@ func FindActionButton(ctx context.Context, d *ui.Device, actionText string, time
 	return result, err
 }
 
-// FindAndDismissServerErrorDialog finds and dismisses server error dialog.
-func FindAndDismissServerErrorDialog(ctx context.Context, d *ui.Device) error {
+// FindAndDismissErrorDialog finds and dismisses all possible intermittent errors in Play Store.
+func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 	const (
-		serverErrorText    = "Server error|Error.*server.*|.*connection with the server."
-		tryAgainButtonText = "Try again|OK"
+		serverErrorText           = "Server busy.*|Server error|Error.*server.*|.*connection with the server.|Connection timed out."
+		cantDownloadText          = "Can.t download.*"
+		cantInstallText           = "Can.t install.*"
+		compatibleText            = "Your device is not compatible with this item."
+		openMyAppsText            = "Please open my apps.*"
+		termsOfServiceText        = "Terms of Service"
+		installAppsFromDeviceText = "Install apps from your devices"
+		internalProblemText       = "There.s an internal problem with your device.*"
+		itemNotFoundText          = ".*item.*could not be found.*"
+
+		acceptButtonText       = "accept"
+		gotItButtonText        = "got it"
+		okButtonText           = "ok"
+		noThanksButtonText     = "No thanks"
+		tryAgainOrOkButtonText = "Try again|OK"
 	)
-	return FindAndDismissDialog(ctx, d, serverErrorText, tryAgainButtonText, 2*time.Second)
+
+	for _, val := range []struct {
+		dialogText string
+		buttonText string
+	}{
+		// Due to timing of propagation of policy, the UI may be enabled but the item is not available.
+		{itemNotFoundText, okButtonText},
+		// These are intermittent server side errors that can happen under load.
+		{serverErrorText, tryAgainOrOkButtonText},
+		// Sometimes a dialog of "Can't download <app name>" pops up. Press "Got it" to
+		// dismiss the dialog. This check needs to be done before checking the
+		// install button since the install button exists underneath.
+		{cantDownloadText, gotItButtonText},
+		// Similarly, press "Got it" button if "Can't install <app name>" dialog pops up.
+		{cantInstallText, gotItButtonText},
+		// Also, press Ok to dismiss the dialog if "Please open my apps" dialog pops up.
+		{openMyAppsText, okButtonText},
+		// Also, press "NO THANKS" to dismiss the dialog if "Install apps from your devices" dialog pops up.
+		{installAppsFromDeviceText, noThanksButtonText},
+		// When Play Store hits the rate limit it sometimes show "Your device is not compatible with this item." error.
+		// This error is incorrect and should be ignored like the "Can't download <app name>" error.
+		{compatibleText, okButtonText},
+		// Somehow, playstore shows a ToS dialog upon opening even after playsore
+		// optin finishes. Click "accept" button to accept and dismiss.
+		{termsOfServiceText, acceptButtonText},
+		// Press Ok to dismiss the dialog if "There\'s an internal problem with your device" dialog pops up.
+		{internalProblemText, okButtonText},
+	} {
+		if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // FindAndDismissDialog finds a dialog containing text with a corresponding button and presses the button.
-func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonText string, timeout time.Duration) error {
-	if err := d.Object(ui.TextMatches("(?i)"+dialogText)).WaitForExists(ctx, time.Second); err == nil {
+func FindAndDismissDialog(ctx context.Context, d *ui.Device, dialogText, buttonText string) error {
+	if err := d.Object(ui.TextMatches("(?i)" + dialogText)).Exists(ctx); err == nil {
 		testing.ContextLogf(ctx, `%q popup found. Skipping`, dialogText)
 		okButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+buttonText))
-		if err := okButton.WaitForExists(ctx, timeout); err != nil {
+		if err := okButton.WaitForExists(ctx, time.Second); err != nil {
 			return err
 		}
 		if err := okButton.Click(ctx); err != nil {
@@ -152,25 +198,15 @@ func printPercentageOfAppInstalled(ctx context.Context, d *ui.Device) {
 // installOrUpdate uses the Play Store to install or update an application.
 func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string, opt *Options, op operation) error {
 	const (
-		accountSetupText          = "Complete account setup"
-		permissionsText           = "needs access to"
-		cantDownloadText          = "Can.t download.*"
-		cantInstallText           = "Can.t install.*"
-		versionText               = "Your device isn.t compatible with this version."
-		compatibleText            = "Your device is not compatible with this item."
-		openMyAppsText            = "Please open my apps.*"
-		termsOfServiceText        = "Terms of Service"
-		linkPaypalAccountText     = "Want to link your PayPal account.*"
-		installAppsFromDeviceText = "Install apps from your devices"
-		serverBusyText            = "Server busy, please try again later."
-		internalProblemText       = "There.s an internal problem with your device.*"
+		accountSetupText      = "Complete account setup"
+		permissionsText       = "needs access to"
+		versionText           = "Your device isn.t compatible with this version."
+		linkPaypalAccountText = "Want to link your PayPal account.*"
 
 		acceptButtonText   = "accept"
 		continueButtonText = "continue"
-		gotItButtonText    = "got it"
 		installButtonText  = "install"
 		updateButtonText   = "update"
-		okButtonText       = "ok"
 		openButtonText     = "open"
 		playButtonText     = "play"
 		retryButtonText    = "retry"
@@ -225,34 +261,8 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 	tries := 0
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		for _, val := range []struct {
-			dialogText string
-			buttonText string
-		}{
-			// Sometimes a dialog of "Can't download <app name>" pops up. Press "Got it" to
-			// dismiss the dialog. This check needs to be done before checking the
-			// install button since the install button exists underneath.
-			{cantDownloadText, gotItButtonText},
-			// Similarly, press "Got it" button if "Can't install <app name>" dialog pops up.
-			{cantInstallText, gotItButtonText},
-			// Also, press Ok to dismiss the dialog if "Please open my apps" dialog pops up.
-			{openMyAppsText, okButtonText},
-			// Also, press "NO THANKS" to dismiss the dialog if "Install apps from your devices" dialog pops up.
-			{installAppsFromDeviceText, noThanksButtonText},
-			// When Play Store hits the rate limit it sometimes show "Your device is not compatible with this item." error.
-			// This error is incorrect and should be ignored like the "Can't download <app name>" error.
-			{compatibleText, okButtonText},
-			// Somehow, playstore shows a ToS dialog upon opening even after playsore
-			// optin finishes. Click "accept" button to accept and dismiss.
-			{termsOfServiceText, acceptButtonText},
-			// Press "Try again" if "Server busy, please try again later." screen is shown.
-			{serverBusyText, tryAgainButtonText},
-			// Press Ok to dismiss the dialog if "There\'s an internal problem with your device" dialog pops up.
-			{internalProblemText, okButtonText},
-		} {
-			if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText, defaultUITimeout); err != nil {
-				return testing.PollBreak(err)
-			}
+		if err := FindAndDismissErrorDialog(ctx, d); err != nil {
+			return testing.PollBreak(err)
 		}
 
 		// If the version isn't compatible with the device, no install button will be available.
@@ -290,7 +300,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// Grant permissions if necessary.
-		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText, defaultUITimeout); err != nil {
+		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText); err != nil {
 			return testing.PollBreak(err)
 		}
 
@@ -335,7 +345,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// Grant permissions if necessary.
-		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText, defaultUITimeout); err != nil {
+		if err := FindAndDismissDialog(ctx, d, permissionsText, acceptButtonText); err != nil {
 			return testing.PollBreak(err)
 		}
 

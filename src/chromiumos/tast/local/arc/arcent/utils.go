@@ -92,11 +92,11 @@ func IncreaseLogcatBufferSize(ctx context.Context, a *arc.ARC) error {
 func ValidateBlockedAppInstall(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, blockedPackage string, timeout time.Duration) error {
 	testing.ContextLog(ctx, "Validating install attempt for a blocked app")
 	return PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
-		if err := playstore.FindAndDismissServerErrorDialog(ctx, d); err != nil {
+		if err := playstore.FindAndDismissErrorDialog(ctx, d); err != nil {
 			return errors.Wrap(err, "failed to dismiss server error dialog")
 		}
 
-		if err := WaitForAppUnavailableMessage(ctx, d, time.Second); err == nil {
+		if err := WaitForAppUnavailableMessage(ctx, d, 10*time.Second); err == nil {
 			testing.ContextLog(ctx, "App unavailable message found")
 			return nil
 		}
