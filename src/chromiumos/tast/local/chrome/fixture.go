@@ -117,6 +117,19 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInWithUpcomingCalendarEvents,
+		Desc:     "Logged into a session with Gaia user where there are upcoming events",
+		Contacts: []string{"cros-status-area-eng@google.com", "samcackett@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly")}, nil
+		}),
+		Vars:            []string{"calendar.upcomingEventsAccountPool"},
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithGaia,
 		Desc:     "Logged into a session with Gaia user",
 		Contacts: []string{"jinrongwu@google.com"},

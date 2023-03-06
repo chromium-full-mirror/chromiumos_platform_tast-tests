@@ -22,6 +22,8 @@ const (
 	ChromeLoggedInWithCalendarView = "chromeLoggedInWithCalendarView"
 	// Logged into a session with Gaia user where there are events set up to join Hangout meetings.
 	ChromeLoggedInWithCalendarEvents = "chromeLoggedInWithCalendarEvents"
+	// Logged into a session with Gaia user where there are upcoming events.
+	ChromeLoggedInWithUpcomingCalendarEvents = "chromeLoggedInWithUpcomingCalendarEvents"
 	// Logged into a session with Gaia user.
 	ChromeLoggedInWithGaia = "chromeLoggedInWithGaia"
 	// Logged into a user session to support thunderbolt devices.
