@@ -48,7 +48,7 @@ func init() {
 		Fixture:      "graphicsNoChrome",
 		Attr:         []string{"group:graphics"},
 		Params: []testing.Param{{
-			//TODO(ihf): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
+			//TODO(b:271158350): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
 			Name:      "gles2",
 			ExtraAttr: []string{"graphics_nightly"},
 			Timeout:   20 * time.Minute,
@@ -61,7 +61,7 @@ func init() {
 				shardCount: 1,
 			},
 		}, {
-			//TODO(ihf): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
+			//TODO(b:271158350): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
 			Name:    "gles3",
 			Timeout: 60 * time.Minute,
 			Val: deqpParms{
@@ -73,7 +73,7 @@ func init() {
 				shardCount: 1,
 			},
 		}, {
-			//TODO(ihf): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
+			//TODO(b:271158350): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
 			Name:    "gles31",
 			Timeout: 120 * time.Minute,
 			Val: deqpParms{
@@ -85,7 +85,7 @@ func init() {
 				shardCount: 1,
 			},
 		}, {
-			//TODO(syedfaaiz): split this test into gles2_smoke, gles3_smoke, gles31_smoke, vk_smoke
+			//TODO(b:271158350): split this test into gles2_smoke, gles3_smoke, gles31_smoke, vk_smoke
 			Name:      "smoke",
 			ExtraAttr: []string{"group:mainline"},
 			Val: deqpParms{
@@ -97,7 +97,7 @@ func init() {
 
 // deqpSmokeTests contains the names of the DEQP tests to run. Some may be skipped depending on the supported graphics APIs.
 var deqpSmokeTests = []string{
-	//TODO(syedfaaiz) : move these into a file deqp_gles2_smoke.txt under the data directory
+	//TODO(b:271158350) : move these into a file deqp_gles2_smoke.txt under the data directory
 	"dEQP-GLES2.info.vendor",
 	"dEQP-GLES2.info.renderer",
 	"dEQP-GLES2.info.version",
@@ -107,7 +107,7 @@ var deqpSmokeTests = []string{
 	"dEQP-GLES2.functional.prerequisite.state_reset",
 	"dEQP-GLES2.functional.prerequisite.clear_color",
 	"dEQP-GLES2.functional.prerequisite.read_pixels",
-	//TODO(syedfaaiz) : move these into a file deqp_gles3_smoke.txt under the data directory
+	//TODO(b:271158350) : move these into a file deqp_gles3_smoke.txt under the data directory
 	"dEQP-GLES3.info.vendor",
 	"dEQP-GLES3.info.renderer",
 	"dEQP-GLES3.info.version",
@@ -117,14 +117,14 @@ var deqpSmokeTests = []string{
 	"dEQP-GLES3.functional.prerequisite.state_reset",
 	"dEQP-GLES3.functional.prerequisite.clear_color",
 	"dEQP-GLES3.functional.prerequisite.read_pixels",
-	//TODO(syedfaaiz) : move these into a file deqp_gles31_smoke.txt under the data directory
+	//TODO(b:271158350) : move these into a file deqp_gles31_smoke.txt under the data directory
 	"dEQP-GLES31.info.vendor",
 	"dEQP-GLES31.info.renderer",
 	"dEQP-GLES31.info.version",
 	"dEQP-GLES31.info.shading_language_version",
 	"dEQP-GLES31.info.extensions",
 	"dEQP-GLES31.info.render_target",
-	//TODO(syedfaaiz) : move these into a file deqp_vk_smoke.txt under the data directory
+	//TODO(b:271158350) : move these into a file deqp_vk_smoke.txt under the data directory
 	"dEQP-VK.info.build",
 	"dEQP-VK.info.device",
 	"dEQP-VK.info.platform",
@@ -341,7 +341,10 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParms) {
 	s.Logf("Using environment: %q", deqpEnv)
 	command.Dir = filepath.Dir(deqpExe)
 	command.Env = deqpEnv
-	_, stderr, err := command.SeparatedOutput(testexec.DumpLogOnError)
+	stdout, stderr, err := command.SeparatedOutput(testexec.DumpLogOnError)
+	if stdout != nil {
+		s.Logf("DEQP output : %s ", string(stdout))
+	}
 	if err != nil {
 		s.Fatalf("Failed to run deqp-runner %s : %s ", string(stderr), err)
 	}
