@@ -97,7 +97,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	if err != nil {
 		s.Fatal("Failed to create the signin profile test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(clearUpCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(clearUpCtx, s.OutDir(), s.HasError, tconn, "oobe_failure")
 
 	ui := uiauto.New(tconn).WithTimeout(50 * time.Second)
 
