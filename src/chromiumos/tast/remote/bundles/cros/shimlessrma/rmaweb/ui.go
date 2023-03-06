@@ -338,7 +338,7 @@ func (uiHelper *UIHelper) VerifyLogIsSaved(ctx context.Context) error {
 	testing.ContextLog(ctx, "Found Shimless RMA log successfully")
 
 	// Remove log.
-	if err = uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("rm %s/rma-*", usbTempMountDir)).Run(); err != nil {
+	if err = uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("rm -r %s/rma-*", usbTempMountDir)).Run(); err != nil {
 		return errors.Wrap(err, "fail to delete Shimless RMA log")
 	}
 
@@ -461,7 +461,7 @@ func (uiHelper *UIHelper) deleteLogsIfExisting(ctx context.Context) error {
 	}
 
 	// Ignore the error since rma log may not exist at all.
-	if err = uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("rm %s/rma-*", usbTempMountDir)).Run(); err != nil {
+	if err = uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("rm -r %s/rma-*", usbTempMountDir)).Run(); err != nil {
 		testing.ContextLogf(ctx, "Fail to delete rma log because %s", err)
 	}
 
