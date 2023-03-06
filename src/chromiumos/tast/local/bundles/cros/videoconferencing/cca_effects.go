@@ -71,8 +71,8 @@ func CCAEffects(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	// The toast message is above the canvas, affecting the screenshot test.
 	if err := uiauto.IfSuccessThen(
-		ui.WithTimeout(3*time.Second).WaitUntilExists(cca.DocumentScanAvailableToast),
-		ui.WaitUntilGone(cca.DocumentScanAvailableToast),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(cca.ToastNode),
+		ui.WaitUntilGone(cca.ToastNode),
 	)(ctx); err != nil {
 		s.Fatal("Failed to handle toast message: ", err)
 	}

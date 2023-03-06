@@ -169,9 +169,8 @@ var (
 	A11yRootNode = nodewith.Name("Camera").Role(role.RootWebArea)
 	// A11yCanvasNode represents the canvas node in A11y tree.
 	A11yCanvasNode = nodewith.Role(role.Canvas).Ancestor(A11yRootNode)
-	// DocumentScanAvailableToast is the toast message
-	// notifying user about new document scanning feature is available.
-	DocumentScanAvailableToast = nodewith.Name("Document scan available").Ancestor(A11yRootNode).First()
+	// ToastNode is the toast message notifying user new feature is available.
+	ToastNode = nodewith.HasClass("custom-toast").Ancestor(A11yRootNode).First()
 )
 
 // Option is the option for toggling state.
