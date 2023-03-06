@@ -39,7 +39,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// Val is the property representing ARC boot type, which is different for container/VM.
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: buildPropertiesTestParameters{
 				arcBootType:  "ro.vendor.arc_boot_type",
 				hardwareType: "cheets",

@@ -33,7 +33,7 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {

@@ -28,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         inputlatency.AndroidData(),
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
 		}, {
 			Name:              "lacros",

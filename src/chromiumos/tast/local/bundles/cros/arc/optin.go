@@ -34,7 +34,7 @@ func init() {
 		},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:cq-minimal"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "container_r",
 			ExtraSoftwareDeps: []string{"android_container_r"},

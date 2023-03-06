@@ -35,7 +35,7 @@ func init() {
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:arc-functional"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:arc-functional"},
@@ -43,7 +43,7 @@ func init() {
 		}, {
 			Name:              "refresh",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "refresh_vm",
 			ExtraAttr:         []string{"informational"},

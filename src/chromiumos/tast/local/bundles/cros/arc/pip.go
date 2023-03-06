@@ -116,7 +116,7 @@ func init() {
 		Params: []testing.Param{{
 			Val:               pipContainerTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
 		}, {
 			Name:              "lacros",

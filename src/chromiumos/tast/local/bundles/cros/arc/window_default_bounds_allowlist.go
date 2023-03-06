@@ -34,8 +34,8 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
-			Name:              "pi",
-			ExtraSoftwareDeps: []string{"android_p"},
+			Name:              "container",
+			ExtraSoftwareDeps: []string{"android_container"},
 		}},
 	})
 }

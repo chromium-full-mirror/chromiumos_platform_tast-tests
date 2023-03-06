@@ -36,7 +36,7 @@ func init() {
 				Val: audio.TestParameters{
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name: "playback_vm",
@@ -51,7 +51,7 @@ func init() {
 					Permission: "android.permission.RECORD_AUDIO",
 					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name: "record_vm",

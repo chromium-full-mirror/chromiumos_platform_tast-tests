@@ -68,7 +68,7 @@ func init() {
 			{
 				Name:              "tablet_mode",
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				// TODO(b/251344622): Migrate to 'arcBooted'.
 				Fixture: "arcBootedInTabletMode",
 				Val: splitViewTestParams{
@@ -90,7 +90,7 @@ func init() {
 			{
 				Name:              "tablet_home_launcher",
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				// TODO(b/251344622): Migrate to 'arcBooted'.
 				Fixture: "arcBootedInTabletMode",
 				Val: splitViewTestParams{

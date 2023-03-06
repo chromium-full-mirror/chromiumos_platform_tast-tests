@@ -36,7 +36,7 @@ func init() {
 		Timeout:      4 * time.Minute,
 		VarDeps:      []string{"arc.SmartSelectionChrome.username", "arc.SmartSelectionChrome.password"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
@@ -44,7 +44,7 @@ func init() {
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val:               browser.TypeLacros,
 		}, {
 			Name:              "lacros_vm",

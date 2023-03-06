@@ -56,7 +56,7 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "unmanaged",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: optInTestParams{
 				username:   "arc.OptInAfterInterruption.unmanaged_username",
 				password:   "arc.OptInAfterInterruption.unmanaged_password",
@@ -74,7 +74,7 @@ func init() {
 			},
 		}, {
 			Name:              "managed",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: optInTestParams{
 				username:   "arc.OptInAfterInterruption.managed_username",
 				password:   "arc.OptInAfterInterruption.managed_password",

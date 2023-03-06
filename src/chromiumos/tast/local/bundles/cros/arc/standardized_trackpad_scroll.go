@@ -31,7 +31,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val:               standardizedtestutil.GetClamshellTest(runStandardizedTrackpadScrollTest),
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 			},
 			{

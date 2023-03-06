@@ -75,7 +75,7 @@ func init() {
 				1,     // Num test iterations.
 				clamshellWindowStateTests,
 			},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           4 * time.Minute,
 		}, {
 			Name: "clamshell_vm",
@@ -108,7 +108,7 @@ func init() {
 				clamshellWindowStateTests,
 			},
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           10 * time.Minute,
 		}, {
 			Name: "clamshell_stress_vm",
@@ -128,7 +128,7 @@ func init() {
 				tabletWindowStateTests,
 			},
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           4 * time.Minute,
 		}, {
 			Name: "tablet_vm",
@@ -148,7 +148,7 @@ func init() {
 				tabletWindowStateTests,
 			},
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           10 * time.Minute,
 		}, {
 			Name: "tablet_stress_vm",

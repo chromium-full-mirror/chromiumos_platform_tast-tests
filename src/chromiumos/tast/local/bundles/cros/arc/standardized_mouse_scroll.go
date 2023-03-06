@@ -40,7 +40,7 @@ func init() {
 					test:              standardizedtestutil.GetClamshellTest(runStandardizedMouseScrollTest),
 					resizeLockEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 			},
 			{

@@ -30,7 +30,7 @@ func init() {
 		Data:         []string{arcapp.CameraAppApk},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_nightly"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 			Val:               setup.ForceBatteryDischarge,
 		}, {

@@ -62,7 +62,7 @@ func init() {
 		Fixture:      "arcBootedInTabletMode",
 		Params: []testing.Param{{
 			Val:               stableVkTests,
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			Val:               stableVkTests,
@@ -70,7 +70,7 @@ func init() {
 		}, {
 			Name:              "unstable",
 			Val:               unstableVkTests,
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           8 * time.Minute,
 		}, {
 			Name:              "unstable_vm",
