@@ -499,6 +499,9 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 	if f.cont == nil {
 		return errors.New("There is no container")
 	}
+	if err := f.cont.Connect(ctx, f.cr.NormalizedUser()); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the running VM")
+	}
 
 	if f.snapshot {
 		// If snapshot is true, do the following:
