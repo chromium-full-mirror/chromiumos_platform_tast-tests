@@ -47,6 +47,7 @@ func init() {
 		Parent:          fixture.AloopLoaded,
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
+		PreTestTimeout:  20 * time.Second,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.StereoAloopLoadedWithoutUI,
@@ -56,6 +57,7 @@ func init() {
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
+		PreTestTimeout:  20 * time.Second,
 	})
 }
 
@@ -243,6 +245,11 @@ func (uiStoppedFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Restart CRAS to prevent CRAS state leakage between tests.
+	if _, err := RestartCras(ctx); err != nil {
+		s.Fatal("Cannot restart CRAS: ", err)
+	}
+}
 
 func (uiStoppedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
