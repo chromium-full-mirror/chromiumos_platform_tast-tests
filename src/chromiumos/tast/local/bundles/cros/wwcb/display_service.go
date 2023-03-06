@@ -531,3 +531,32 @@ func (ds *DisplayService) VerifyAfterLidClose(ctx context.Context, req *empty.Em
 
 	return &empty.Empty{}, nil
 }
+
+// GetDisplayIDs returns the display ID of all monitor from system information.
+func (ds *DisplayService) GetDisplayIDs(ctx context.Context, req *empty.Empty) (*wwcb.GetDisplayIDsResponse, error) {
+	cr := ds.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	infos, err := display.GetInfo(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get external display info")
+	}
+
+	var displayIDArray []string
+	for _, info := range infos {
+		displayIDArray = append(displayIDArray, info.ID)
+	}
+
+	var resp = &wwcb.GetDisplayIDsResponse{
+		DisplayIds: displayIDArray,
+	}
+
+	return resp, nil
+}

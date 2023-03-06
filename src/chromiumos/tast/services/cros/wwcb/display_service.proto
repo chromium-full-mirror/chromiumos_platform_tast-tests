@@ -36,6 +36,9 @@ service DisplayService {
 
   // VerifyAfterLidClose verifies that display resolution is still okay after lid close & windows are all still displayed.
   rpc VerifyAfterLidClose (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // GetDisplayIDs returns the display ID of all monitor from system information.
+  rpc GetDisplayIDs(google.protobuf.Empty) returns (GetDisplayIDsResponse) {}
 }
 
 message QueryRequest{
@@ -45,3 +48,7 @@ message QueryRequest{
   string window_title = 4;
 }
 
+message GetDisplayIDsResponse{
+	repeated string display_ids = 1;
+}
+  
