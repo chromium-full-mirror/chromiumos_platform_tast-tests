@@ -35,8 +35,8 @@ func init() {
 		Desc:         "Tests the adjustment of night light schedule",
 		Contacts: []string{
 			"chromeos-wmp@google.com",
-			"chromeos-sw-engprod@google.com",
-			"zxdan@chromium.org",
+			"zxdan@google.com",
+			"awendy@google.com",
 		},
 		// ChromeOS > Software > Nightlight
 		BugComponent: "b:1252585",

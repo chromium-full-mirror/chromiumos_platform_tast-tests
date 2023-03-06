@@ -35,9 +35,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "In clamshell mode, checks that snap in landscape and portrait works properly",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
-			"chromeos-sw-engprod@google.com",
-			"zxdan@chromium.org",
+			"chromeos-wmp@google.com",
+			"zxdan@google.com",
+			"awendy@google.com",
 		},
 		// ChromeOS > Software > Window Management > Splitscreen
 		BugComponent: "b:1252451",
