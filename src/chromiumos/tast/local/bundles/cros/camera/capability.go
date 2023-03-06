@@ -6,9 +6,11 @@ package camera
 
 import (
 	"context"
+	"fmt"
 
 	"chromiumos/tast/autocaps"
 	"chromiumos/tast/local/camera/testutil"
+	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
 )
 
@@ -35,13 +37,41 @@ func Capability(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get USB cameras: ", err)
 	}
-	hasUSB := len(usbCams) > 0
 
 	// Detect MIPI cameras.
 	mipiCams, err := testutil.MIPICamerasFromCrOSCameraTool(ctx)
 	if err != nil {
 		s.Fatal("Failed to get MIPI cameras: ", err)
 	}
+
+	builtInUsbCams := len(usbCams)
+
+	// Exclude detected usb camera with detachable flag true, this should
+	// not be treated as built_in camera.
+	for i := 0; ; i++ {
+		devicePath := fmt.Sprintf("/camera/devices/%v", i)
+		cameraType, err := crosconfig.Get(ctx, devicePath, "interface")
+		if crosconfig.IsNotFound(err) {
+			break
+		}
+		if err != nil {
+			s.Fatal("Failed to execute cros cros config: ", err)
+		}
+
+		isDetachable, err := crosconfig.Get(ctx, devicePath, "detachable")
+		if crosconfig.IsNotFound(err) {
+			continue
+		}
+		if err != nil {
+			s.Fatal("Failed to execute cros cros config: ", err)
+		}
+
+		if cameraType == "usb" && string(isDetachable) == "true" {
+			builtInUsbCams--
+		}
+	}
+
+	hasUSB := builtInUsbCams > 0
 	hasMIPI := len(mipiCams) > 0
 
 	hasVivid := testutil.IsVividDriverLoaded(ctx)
