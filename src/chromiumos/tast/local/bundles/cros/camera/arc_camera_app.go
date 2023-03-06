@@ -86,9 +86,11 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 			for _, facing := range []string{"0", "1"} {
 				testing.ContextLog(ctx, "Switch to camera ", facing)
 				if err := arcapp.SwitchCamera(ctx, a, facing); err != nil {
+					if _, ok := err.(arcapp.ErrorFacingNotSupported); ok {
+						testing.ContextLogf(ctx, "Skip camera with facing %v since it is not supported on the device", facing)
+						continue
+					}
 					s.Fatalf("Failed to switch to camera %v: %v", facing, err)
-				} else if _, ok := err.(arcapp.ErrorFacingNotSupported); ok {
-					continue
 				}
 
 				if err := tst.testFunc(ctx, cr, a); err != nil {
