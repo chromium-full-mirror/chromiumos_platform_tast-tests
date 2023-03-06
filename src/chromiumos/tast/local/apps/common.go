@@ -6,14 +6,22 @@
 package apps
 
 import (
+	"context"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/testing"
 )
 
 // AllowPagePermissions checks whether the page has been blocked.
@@ -35,4 +43,55 @@ func AllowPagePermissions(tconn *chrome.TestConn) action.Action {
 		ui.WaitUntilExists(accessButton),
 	)
 	return uiauto.IfSuccessThen(ui.WithTimeout(3*time.Second).WaitUntilExists(blockedButton), allowPermission)
+}
+
+// DownloadAppServiceInternals downloads app_service_internal.txt and upload it to the log.
+func DownloadAppServiceInternals(ctx context.Context, cr *chrome.Chrome, outDir string) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create test API connection")
+	}
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return errors.Wrap(err, "failed to get user's Download path")
+	}
+
+	// The browser is not closed in the end
+	// so that the ui tree dumpter, screenshot and screenrecorder could catch it.
+	_, err = browser.Launch(ctx, tconn, cr, "chrome://app-service-internals")
+	if err != nil {
+		return errors.Wrap(err, "failed to launch browser")
+	}
+
+	ui := uiauto.New(tconn)
+	saveAs := nodewith.Name("Save as .txt").Role(role.Button)
+	if err := ui.LeftClick(saveAs)(ctx); err != nil {
+		return errors.Wrap(err, "failed to save app services")
+	}
+
+	downloadFileName := "app-service-internals.txt"
+	downloadFilePath := filepath.Join(downloadsPath, downloadFileName)
+
+	// Check download file.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, err := os.Stat(downloadFilePath); os.IsNotExist(err) {
+			return errors.New("failed as file does not yet exist")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return err
+	}
+
+	// Copy the downloaded file to log dir.
+	input, err := ioutil.ReadFile(downloadFilePath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read downloaded app-service-internals.txt")
+	}
+
+	err = ioutil.WriteFile(filepath.Join(outDir, downloadFileName), input, 0644)
+	if err != nil {
+		return errors.Wrap(err, "failed to write to the out dir")
+	}
+	return nil
 }

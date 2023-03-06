@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -133,6 +134,16 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+
+	// Open chrome://app-service-internals to and download the installed apps.
+	// This is called for both succeeded cases and failed cases to compare.
+	// The whole process should not fail the test case.
+	// TODO (crbug/1416707): to remove this part once the bug crbug/1416707 is resolved.
+	defer func() {
+		if err := apps.DownloadAppServiceInternals(ctx, cr, s.OutDir()); err != nil {
+			s.Log("Failed to download app service internal: ", err)
+		}
+	}()
 
 	// Enable link capturing on the ARC side. Automatically verifying the link
 	// (as per https://developer.android.com/training/app-links/verify-site-associations)

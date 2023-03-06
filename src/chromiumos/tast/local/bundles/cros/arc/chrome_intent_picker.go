@@ -10,6 +10,7 @@ import (
 
 	arcui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -92,6 +93,16 @@ func ChromeIntentPicker(ctx context.Context, s *testing.State) {
 	if err := arcDevice.Install(ctx, arc.APKPath("ArcChromeIntentPickerTest.apk")); err != nil {
 		s.Fatal("Failed installing the APK: ", err)
 	}
+
+	// Open chrome://app-service-internals to and download the installed apps.
+	// This is called for both succeeded cases and failed cases to compare.
+	// The whole process should not fail the test case.
+	// TODO (crbug/1416707): to remove this part once the bug crbug/1416707 is resolved.
+	defer func() {
+		if err := apps.DownloadAppServiceInternals(ctx, cr, s.OutDir()); err != nil {
+			s.Log("Failed to download app service internal: ", err)
+		}
+	}()
 
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 	if err != nil {
