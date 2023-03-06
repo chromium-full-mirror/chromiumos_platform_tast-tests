@@ -34,21 +34,21 @@ const ti50TpmDidVid = "66664a50"
 func Ti50Tpm(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
-	board := f.DevBoard()
-	i := ti50.NewCrOSImage(board)
+	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	i := ti50.NewCrOSImage(b)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	testing.ContextLog(ctx, "Restarting ti50 with SPI straps")
-	th.MustSucceed(board.GpioApplyStrap(ctx, ti50.TpmSpi), "Set TPM to SPI")
-	th.MustSucceed(board.Reset(ctx), "Reset board")
+	s.Log("Restarting ti50 with SPI straps")
+	b.GpioApplyStrap(ctx, ti50.TpmSpi)
+	th.MustSucceed(b.Reset(ctx), "Reset board")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
 	// TPM commands.
-	th.MustSucceed(board.GpioWrite(ctx, ti50.GpioTi50PltRstL, true), "Assert gpio Ti50PltRstL")
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
-	data := th.MustSucceedVal(board.OpenTitanToolCommand(ctx, "spi", "tpm", "read-register", ti50.TpmRegDidVid))
+	data := th.MustSucceedVal(b.OpenTitanToolCommand(ctx, "spi", "tpm", "read-register", ti50.TpmRegDidVid))
 
 	if data.(map[string]interface{})["hexdata"].(string) != ti50TpmDidVid {
 		s.Error("Unexpected TPM DID_VID: ", data.(map[string]interface{})["hexdata"].(string))

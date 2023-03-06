@@ -39,16 +39,12 @@ type DevBoard interface {
 	FlashImage(ctx context.Context, imagePath string) error
 	// OpenTitanToolCommand runs an arbitrary OpenTitan tool command (without up-/downloading any files).
 	OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output map[string]interface{}, err error)
+	// PlainCommand executes a opentitantool subcommand that uses no file arguments.
+	PlainCommand(ctx context.Context, cmd string, args ...string) (output []byte, err error)
 	// Reset the DevBoard.
 	Reset(ctx context.Context) error
 	// Close closes the console port.
 	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
-	// GpioApplyStrap applies a known gpio strap setting
-	GpioApplyStrap(ctx context.Context, strap GpioStrap) error
-	// GpioWrite sets a known gpio pin value
-	GpioWrite(ctx context.Context, gpio GpioName, val bool) error
-	// GpioRead gets the value of a known gpio
-	GpioRead(ctx context.Context, gpio GpioName) (val bool, err error)
 }

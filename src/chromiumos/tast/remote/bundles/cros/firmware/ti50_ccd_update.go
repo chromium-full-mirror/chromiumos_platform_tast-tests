@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
+	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
 	"chromiumos/tast/testing"
 )
@@ -44,27 +45,25 @@ func init() {
 	})
 }
 
-// Ti50CCDUpdate requires HW setup with SuzyQ cable from Andreiboard to drone/workstation.
+// Ti50CCDUpdate requires HW setup with SuzyQ cable from Andreib to drone/workstation.
 func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
-	board := f.DevBoard()
+	b := utils.NewDevboardHelper(f.DevBoard(), s)
 
-	testing.ContextLog(ctx, "Simulating insertion of SuzyQ")
-	if err := board.GpioApplyStrap(ctx, ti50.CcdSuzyQ); err != nil {
-		s.Fatalf("Failed to apply SuzyQ strapping: %s", err)
-	}
+	s.Log("Simulating insertion of SuzyQ")
+	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 
 	ccdImage, err := prepareCcdImageFile(ctx, s, f.ImagePath)
 	if err != nil {
 		s.Fatal("Prepare file '", f.ImagePath, "': ", err)
 	}
 
-	if err = board.Reset(ctx); err != nil {
+	if err = b.Reset(ctx); err != nil {
 		s.Fatal("Failed to reset: ", err)
 	}
 
-	i := ti50.NewCrOSImage(board)
+	i := ti50.NewCrOSImage(b)
 
 	// Wait for reboot output to finish before reading version.
 	testing.Sleep(ctx, 1*time.Second)
@@ -73,8 +72,8 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Console version: ", err)
 	}
-	testing.ContextLog(ctx, "Version before 1st gsctool update: ")
-	testing.ContextLog(ctx, outStr)
+	s.Log("Version before 1st gsctool update: ")
+	s.Log(outStr)
 
 	if !versionRwARegexp.MatchString(outStr) {
 		s.Fatal("Before 1st update, should be running RW_A")
@@ -83,20 +82,19 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	// Wait one more second to ensure that USB is connected before running gsctool.
 	testing.Sleep(ctx, 1*time.Second)
 
-	out, err := board.GSCToolCommand(ctx, "", "--fwver")
+	out, err := b.GSCToolCommand(ctx, "", "--fwver")
 	if err != nil {
 		// Report the current usb connection state on failure.
 		usbOut, err2 := i.Command(ctx, "usb")
 		if err2 != nil {
 			s.Fatal("Getting usb state: ", err2)
 		}
-		testing.ContextLog(ctx, "USB state:")
-		testing.ContextLog(ctx, usbOut)
+		s.Log("USB state: ", usbOut)
 		s.Fatal("Failed to read version: ", err, string(out))
 	}
 
 	// Update should succeed within 60 seconds of Power on Reset.
-	out, _ = board.GSCToolCommand(ctx, ccdImage)
+	out, _ = b.GSCToolCommand(ctx, ccdImage)
 	if !gsctoolUpdateSuccessRegexp.Match(out) {
 		s.Fatalf("Wrong gsctool output for 1st update: %s", out)
 	}
@@ -108,30 +106,31 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Console version after 1st update: ", err)
 	}
-	testing.ContextLog(ctx, "Version after 1st gsctool update: ")
-	testing.ContextLog(ctx, outStr)
+	s.Log("Version after 1st gsctool update: ", outStr)
 
 	if !versionRwBRegexp.MatchString(outStr) {
 		s.Fatal("After 1st update, RW_B should be active")
 	}
 
 	// Ti50 will reject updates for 60 seconds after an update attempt.
+	s.Log("Sleep for 30 seconds to ensure rate limited")
 	testing.Sleep(ctx, 30*time.Second)
 
-	out, _ = board.GSCToolCommand(ctx, ccdImage)
+	out, _ = b.GSCToolCommand(ctx, ccdImage)
 	if !gsctoolUpdateTooSoonRegexp.Match(out) {
 		s.Fatalf("Wrong gsctool output for update too soon after 1st update: %s", out)
 	}
 
-	_, err = board.ReadSerialSubmatch(ctx, consoleUpdateTooSoonRegexp)
+	_, err = b.ReadSerialSubmatch(ctx, consoleUpdateTooSoonRegexp)
 	if err != nil {
 		s.Fatal("Wrong console message for update too soon after 1st update: ", err)
 	}
 
+	s.Log("Sleep for 30 seconds to ensure no longer rate limited")
 	testing.Sleep(ctx, 30*time.Second)
 
 	// Ti50 should accept updates 60 seconds after the last update.
-	out, _ = board.GSCToolCommand(ctx, ccdImage)
+	out, _ = b.GSCToolCommand(ctx, ccdImage)
 	if !gsctoolUpdateSuccessRegexp.Match(out) {
 		s.Fatalf("Wrong gsctool output for 2nd update: %s", out)
 	}
@@ -143,8 +142,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Console version: ", err)
 	}
-	testing.ContextLog(ctx, "Version after 2nd gsctool update: ")
-	testing.ContextLog(ctx, outStr)
+	s.Log("Version after 2nd gsctool update: ", outStr)
 
 	matchesB := versionRwBRegexp.FindStringSubmatch(outStr)
 	if matchesB == nil {

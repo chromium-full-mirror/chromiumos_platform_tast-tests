@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -138,39 +137,13 @@ func (a *DUTControlAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd st
 
 // Reset the chip by asking opentitantool to toggle the reset pin.
 func (a *DUTControlAndreiboard) Reset(ctx context.Context) error {
-	if err := a.GpioWrite(ctx, common.GpioTi50ResetL, false); err != nil {
+	if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "false"); err != nil {
 		return err
 	}
-	if err := a.GpioWrite(ctx, common.GpioTi50ResetL, true); err != nil {
+	if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "true"); err != nil {
 		return err
 	}
 	return nil
-}
-
-// GpioApplyStrap applies a known gpio strap setting
-func (a *DUTControlAndreiboard) GpioApplyStrap(ctx context.Context, strap common.GpioStrap) error {
-	_, err := a.PlainCommand(ctx, "gpio", "apply", string(strap))
-	return err
-}
-
-// GpioWrite sets a known gpio pin value
-func (a *DUTControlAndreiboard) GpioWrite(ctx context.Context, gpio common.GpioName, val bool) error {
-	_, err := a.PlainCommand(ctx, "gpio", "write", string(gpio), strconv.FormatBool(val))
-	return err
-}
-
-// GpioRead gets the value of a known gpio
-func (a *DUTControlAndreiboard) GpioRead(ctx context.Context, gpio common.GpioName) (val bool, err error) {
-	output, err := a.PlainCommand(ctx, "gpio", "read", string(gpio))
-	if err != nil {
-		return val, err
-	}
-
-	matches := gpioOutput.FindSubmatch(output)
-	if len(matches) != 2 {
-		return false, errors.Errorf("invalid gpio output: %s", string(output))
-	}
-	return strconv.ParseBool(string(matches[1]))
 }
 
 // GSCToolCommand executes gsctool via the DutControl service.
