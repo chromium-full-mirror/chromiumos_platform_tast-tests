@@ -9,8 +9,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -39,15 +42,23 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "ash",
-				Val:  chrome.ExtraArgs(""),
+				Val: kioskmode.TestData{
+					IsLacros: false,
+				},
 			},
 			{
-				Name:              "lacros",
-				Val:               chrome.ExtraArgs("--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore"),
+				Name: "lacros",
+				Val: kioskmode.TestData{
+					IsLacros: true,
+					Policies: []policy.Policy{
+						&policy.LacrosAvailability{Val: "lacros_only"},
+					},
+				},
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 			{
 				Key: "feature_id",
 				// Manually launch chrome app kiosk.
@@ -63,15 +74,15 @@ func init() {
 
 func StartAppFromSignInScreen(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	chromeOptions := s.Param().(chrome.Option)
+	param := s.Param().(kioskmode.TestData)
 	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),
 		kioskmode.ExtraChromeOptions(
 			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-			chromeOptions,
 		),
+		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 	)
 	if err != nil {
 		s.Error("Failed to start Chrome on Signin screen with set Kiosk apps: ", err)
@@ -130,5 +141,12 @@ func StartAppFromSignInScreen(ctx context.Context, s *testing.State) {
 
 	if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
 		s.Fatal("There was a problem while checking chrome logs for Kiosk related entries: ", err)
+	}
+
+	if param.IsLacros {
+		testing.ContextLog(ctx, "Checking if Kiosk started in Lacros mode")
+		if _, err := lacrosproc.Root(ctx, testConn); err != nil {
+			s.Fatal("Failed to get lacros proc: ", err)
+		}
 	}
 }

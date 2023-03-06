@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/inputs/inputactions"
 	"chromiumos/tast/local/bundles/cros/inputs/testserver"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/testing"
@@ -56,7 +57,10 @@ func init() {
 			"alt-modalities-stability@google.com",
 		},
 		Impl: &inputsKioskFixture{
-			extraOpts: []chrome.Option{chrome.ExtraArgs("--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore")},
+			extraPublicAccountPolicies: []policy.Policy{
+				&policy.LacrosAvailability{Val: "lacros_only"},
+			},
+			lacros: true,
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -86,7 +90,11 @@ func init() {
 			"alt-modalities-stability@google.com",
 		},
 		Impl: &inputsKioskFixture{
-			extraOpts: []chrome.Option{chrome.VKEnabled(), chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-features=LacrosSupport,WebKioskEnableLacros", "--lacros-availability-ignore")},
+			extraOpts: []chrome.Option{chrome.VKEnabled(), chrome.ExtraArgs("--force-tablet-mode=touch_view")},
+			extraPublicAccountPolicies: []policy.Policy{
+				&policy.LacrosAvailability{Val: "lacros_only"},
+			},
+			lacros: true,
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -100,8 +108,12 @@ type inputsKioskFixture struct {
 	testserver *httptest.Server
 	kiosk      *kioskmode.Kiosk
 	extraOpts  []chrome.Option
-	tconn      *chrome.TestConn
-	uc         *useractions.UserContext
+	// extraPublicAccountPolicies holds a policies that will be applied.
+	extraPublicAccountPolicies []policy.Policy
+	tconn                      *chrome.TestConn
+	uc                         *useractions.UserContext
+	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
+	lacros bool
 }
 
 // InputsKioskFixtData is the data returned by kiosk fixture SetUp and passed to tests.
@@ -153,16 +165,24 @@ func (k *inputsKioskFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		kioskmode.AutoLaunch(webKioskAccountID),
 		kioskmode.CustomLocalAccounts(localAccountsConfiguration),
 		kioskmode.ExtraChromeOptions(k.extraOpts...),
+		kioskmode.PublicAccountPolicies(webKioskAccountID, k.extraPublicAccountPolicies),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
+
 	k.cr = cr
 	k.kiosk = kiosk
 
 	k.tconn, err = k.cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test API connection")
+	}
+
+	if k.lacros {
+		if _, err = lacrosproc.Root(ctx, k.tconn); err != nil {
+			s.Fatal("Failed to get lacros proc: ", err)
+		}
 	}
 
 	uc, err := inputactions.NewInputsUserContextWithoutState(ctx, "", s.OutDir(), k.cr, k.tconn, nil)

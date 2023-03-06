@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -38,13 +40,23 @@ func init() {
 		},
 		Params: []testing.Param{{
 			Name: "ash",
-			Val:  chrome.ExtraArgs(""),
+			Val: kioskmode.TestData{
+				IsLacros: false,
+			},
 		}, {
-			Name:              "lacros",
-			Val:               chrome.ExtraArgs("--enable-features=LacrosSupport,ChromeKioskEnableLacros", "--lacros-availability-ignore"),
+			Name: "lacros",
+			Val: kioskmode.TestData{
+				IsLacros: true,
+				Policies: []policy.Policy{
+					&policy.LacrosAvailability{Val: "lacros_only"},
+				},
+			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 		Fixture: fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 
@@ -55,7 +67,8 @@ const (
 
 func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	chromeOptions := s.Param().(chrome.Option)
+	chromeOptions := chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60")
+	param := s.Param().(kioskmode.TestData)
 	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
@@ -64,6 +77,7 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 			chromeOptions,
 		),
+		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
@@ -94,14 +108,15 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
 	}
 
+	// No way to check if it's really a lacros/non-lacros launch, since the kiosk session is getting cancelled immediately.
+
 	// Sign-in profile extension is needed to check the error message on the UI.
 	cr, err = kiosk.CancelKioskLaunch(
 		ctx,
 		chrome.NoLogin(),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.KeepState(),
-		chromeOptions)
+		chrome.KeepState())
 	if err != nil {
 		s.Fatal("Failed to connect to new chrome instance: ", err)
 	}
@@ -125,8 +140,7 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 		ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}), // Required as refreshing policies require test API.
 		chrome.DMSPolicy(fdms.URL),
-		chrome.KeepState(),
-		chromeOptions); err != nil {
+		chrome.KeepState()); err != nil {
 		s.Fatal("Failed to prepare for cleanup: ", err)
 	}
 }
