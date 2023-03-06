@@ -10,6 +10,8 @@ This file implements functions to check or switch the DUT's boot mode.
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -1000,6 +1002,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	// were experiencing thermal shutdown. Match for the relevant
 	// texts and report in the returned error. If thermal shutdown
 	// is caught, attempt a few more retries to boot dut to recovery.
+	var ecStream string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		testing.ContextLog(ctx, "Capturing EC log")
 		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
@@ -1009,15 +1012,32 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 			if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
 				testing.ContextLog(ctx, "Failed to disable ec_uart_capture: ", err)
 			}
+			// Sometimes capturing thermal shutdown fails because of
+			// noise data, for example, "thermal SHU[TDOWN". Setting
+			// the 'chan' command before to hear from a particular channel
+			// would not work because sending servo.PowerStateRec later
+			// reverses this setting, and enables all channels back.
+			// Save and upload the uart log to Stainless for debugging purposes.
+			outDir, ok := testing.ContextOutDir(ctx)
+			if ok {
+				destPath := filepath.Join(outDir, "ecUart.log")
+				if err := ioutil.WriteFile(destPath, []byte(ecStream), 0666); err != nil {
+					testing.ContextLog(ctx, "Failed to write ecUart.log: ", err)
+				}
+			} else {
+				testing.ContextLog(ctx, "Failed to find test output directory")
+			}
+
 		}()
 
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
 			return errors.Wrapf(err, "setting power state to %s", servo.PowerStateRec)
 		}
-		ecStream, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+		out, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
 		if err != nil {
 			return errors.Wrap(err, "failed to read ec stream")
 		}
+		ecStream = out
 
 		var regexpThermalShutdown = `(?i)thermal shutdown`
 		thermalShutdown := regexp.MustCompile(regexpThermalShutdown).FindStringSubmatch(ecStream)
@@ -1032,7 +1052,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 			}
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 3 * time.Second}); err != nil {
 		return err
 	}
 

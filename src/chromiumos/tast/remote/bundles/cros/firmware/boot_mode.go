@@ -368,8 +368,8 @@ func BootMode(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		s.Log("Power-cycling DUT with a warm reset")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+		s.Log("Power-cycling DUT with a cold reset")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 			s.Fatal("Failed to reboot DUT by servo: ", err)
 		}
 
