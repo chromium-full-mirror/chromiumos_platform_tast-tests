@@ -146,9 +146,9 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Failed to set up an adb device: ", err)
 	}
 
-	// Allocate time for saving logs in case of failure.d
+	// Allocate time for saving logs in case of failure.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
 	// We want to ensure we have logs even if the Android device setup fails.
@@ -214,7 +214,7 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	if len(gmsVersions) < 2 {
 		s.Log("Single GMSCore version detected, phone was recently factory restored. Attempting GMSCore update")
 		defer func() {
-			if err := adbDevice.DumpUIOnError(ctx, s.OutDir(), s.HasError); err != nil {
+			if err := adbDevice.DumpUIOnError(cleanupCtx, s.OutDir(), s.HasError); err != nil {
 				s.Log("Failed to save UIAutomator dump: ", err)
 			}
 		}()
@@ -225,7 +225,7 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to the UI Automator server")
 		}
-		defer uiDevice.Close(ctx)
+		defer uiDevice.Close(cleanupCtx)
 		if err := adbDevice.ShowTouches(ctx, true); err != nil {
 			s.Log("Failed to enable show_touches setting: ", err)
 		}
