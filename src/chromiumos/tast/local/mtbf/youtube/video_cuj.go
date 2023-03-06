@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -80,28 +81,26 @@ type VideoApp interface {
 
 // VideoSrc struct defines video src for testing.
 type VideoSrc struct {
-	URL   string
-	Title string
-	// Quality is the string that test will look for in youtube
-	// "Settings / Quality" menu to change video playback quality.
-	Quality string
+	URL     string
+	Title   string
+	Quality Quality
 }
 
 var basicVideoSrc = []VideoSrc{
 	{
 		cuj.YoutubeGoogleTVVideoURL,
 		"Chris Paul | Watch With Me | Google TV",
-		"1080p",
+		Quality1080P,
 	},
 	{
 		cuj.YoutubeDeveloperKeynoteVideoURL,
 		"Developer Keynote (Google I/O '21) - American Sign Language",
-		"720p60",
+		Quality720P60,
 	},
 	{
 		cuj.YoutubeStadiaGDCVideoURL,
 		"Stadia GDC 2019 Gaming Announcement",
-		"1080p60",
+		Quality1080P60,
 	},
 }
 
@@ -109,7 +108,7 @@ var premiumVideoSrc = []VideoSrc{
 	{
 		cuj.YoutubeStadiaGDCVideoURL,
 		"Stadia GDC 2019 Gaming Announcement",
-		"2160p60",
+		Quality2160P60,
 	},
 }
 
@@ -213,7 +212,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	case YoutubeWeb:
 		videoApp = NewYtWeb(br, tconn, kb, extendedDisplay, ui, uiHandler)
 	case YoutubeApp:
-		videoApp = NewYtApp(tconn, kb, a, d, outDir, youtubeApkURL)
+		videoApp = NewYtApp(cr, tconn, kb, a, d, outDir, youtubeApkURL)
 		if err := videoApp.Install(ctx); err != nil {
 			return errors.Wrap(err, "failed to install Youtube app")
 		}

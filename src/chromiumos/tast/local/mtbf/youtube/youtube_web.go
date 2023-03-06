@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -163,11 +164,11 @@ func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 }
 
 // SwitchQuality switches youtube quality.
-func (y *YtWeb) SwitchQuality(resolution string) uiauto.Action {
+func (y *YtWeb) SwitchQuality(quality Quality) uiauto.Action {
 	return func(ctx context.Context) error {
-		testing.ContextLog(ctx, "Switch video quality to ", resolution)
+		testing.ContextLog(ctx, "Switch video quality to ", quality)
 		settings := nodewith.Name("Settings").Role(role.PopUpButton).Ancestor(videoPlayer)
-		quality := nodewith.NameStartingWith("Quality").Role(role.MenuItem).Ancestor(videoPlayer)
+		qualityFinder := nodewith.NameStartingWith("Quality").Role(role.MenuItem).Ancestor(videoPlayer)
 
 		if err := y.ui.WaitUntilExists(videoPlayer)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find 'YouTube Video Player'")
@@ -187,7 +188,7 @@ func (y *YtWeb) SwitchQuality(resolution string) uiauto.Action {
 			if err := y.ui.DoDefault(settings)(ctx); err != nil {
 				return errors.Wrap(err, "failed to call DoDefault on settings button")
 			}
-			if err := y.ui.WithTimeout(10 * time.Second).WaitUntilExists(quality)(ctx); err != nil {
+			if err := y.ui.WithTimeout(10 * time.Second).WaitUntilExists(qualityFinder)(ctx); err != nil {
 				if y.extendedDisplay {
 					return errors.Wrap(err, "failed to show the setting panel and click it on extended display")
 				}
@@ -201,13 +202,13 @@ func (y *YtWeb) SwitchQuality(resolution string) uiauto.Action {
 		}
 
 		// Use DoDefault to avoid fauilure on lacros (see bug b/229003599).
-		if err := y.ui.DoDefault(quality)(ctx); err != nil {
+		if err := y.ui.DoDefault(qualityFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click 'Quality'")
 		}
 
-		resolutionFinder := nodewith.NameStartingWith(resolution).Role(role.MenuItemRadio).Ancestor(videoPlayer)
+		resolutionFinder := nodewith.NameStartingWith(string(quality)).Role(role.MenuItemRadio).Ancestor(videoPlayer)
 		if err := y.ui.DoDefault(resolutionFinder)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to click %q", resolution)
+			return errors.Wrapf(err, "failed to click %q", quality)
 		}
 
 		if err := waitForYoutubeReadyState(ctx, y.ytConn); err != nil {
