@@ -51,7 +51,7 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 	if err := modemmanager.EnsureRegistered(ctx, modem, simpleModem); err != nil {
 		s.Fatal("Modem not registered: ", err)
 	}
-	operatorID, err := modem.GetOperatorIdentifierWithBestEffort(ctx)
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
 	if err != nil {
 		s.Fatal("Cannot get the OperatorIdentifier: ", err)
 	}

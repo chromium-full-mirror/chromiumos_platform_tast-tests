@@ -49,7 +49,7 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
-	operatorID, err := modem.GetOperatorIdentifierWithBestEffort(ctx)
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
 	if err != nil {
 		s.Fatal("Cannot get the OperatorIdentifier: ", err)
 	}

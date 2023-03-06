@@ -41,7 +41,7 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not get simplemodem object: ", err)
 	}
 
-	operatorID, err := modem.GetOperatorIdentifierWithBestEffort(ctx)
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
 	if err != nil {
 		s.Fatal("Cannot get the OperatorIdentifier: ", err)
 	}
