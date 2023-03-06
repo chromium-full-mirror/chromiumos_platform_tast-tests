@@ -19,4 +19,4 @@ var ShowPasswordButton = nodewith.Role(role.Button).ClassName("ToggleImageButton
 var SubmitButton = nodewith.Name("Submit").Role(role.Button)
 
 // SwitchToPasswordButton is the finder for the "Switch to password" button on Lock/Start screen.
-var SwitchToPasswordButton = nodewith.Role(role.Button).ClassName("LabelButton").Name("Switch to password")
+var SwitchToPasswordButton = nodewith.Role(role.Button).Name("Switch to password")
