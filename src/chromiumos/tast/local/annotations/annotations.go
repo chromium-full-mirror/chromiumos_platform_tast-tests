@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -24,34 +25,47 @@ import (
 func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		errors.Wrap(err, "failed to create Test API connection")
+		return errors.Wrap(err, "failed to create Test API connection")
 	}
 
 	netConn, err := br.NewConn(ctx, "chrome://net-export")
 	if err != nil {
-		errors.Wrap(err, "failed to load chrome://net-export")
+		return errors.Wrap(err, "failed to load chrome://net-export")
+	}
+
+	// This page can change state if a previous logging session was run. Here we
+	// click the "Start Over" button to always return to the original state
+	startOverBtn := `document.getElementById("startover")`
+	if err := netConn.Eval(ctx, startOverBtn+`.click()`, nil); err != nil {
+		return errors.Wrap(err, "failed to click the Start Over button")
 	}
 
 	// Click Start Log button.
 	startLoggingBtn := `document.getElementById("start-logging")`
 	if err := netConn.WaitForExpr(ctx, startLoggingBtn); err != nil {
-		errors.Wrap(err, "failed to wait for the Start Logging button to load")
+		return errors.Wrap(err, "failed to wait for the Start Logging button to load")
 
 	}
 	if err := netConn.Eval(ctx, startLoggingBtn+`.click()`, nil); err != nil {
-		errors.Wrap(err, "failed to click the Start Logging button")
+		return errors.Wrap(err, "failed to click the Start Logging button")
 	}
 
 	// Click Save button to choose the filename for log file.
 	ui := uiauto.New(tconn)
 	saveButton := nodewith.Name("Save").Role(role.Button)
+	okOverwriteButton := nodewith.Name("OK").Role(role.Button)
 	if err := uiauto.Combine("Click 'Save' button",
 		ui.WaitUntilExists(saveButton),
 		ui.WaitUntilEnabled(saveButton),
 		ui.DoDefault(saveButton),
+		// accepts the dialog to overwrite the existing log file, if shown
+		uiauto.IfSuccessThen(
+			ui.WithTimeout(5*time.Second).WaitUntilExists(okOverwriteButton),
+			ui.DoDefault(okOverwriteButton)),
+		ui.WaitUntilGone(okOverwriteButton),
 		ui.WaitUntilGone(saveButton),
 	)(ctx); err != nil {
-		errors.Wrap(err, "failed to click")
+		return errors.Wrap(err, "failed to complete save file steps")
 	}
 	return nil
 }
