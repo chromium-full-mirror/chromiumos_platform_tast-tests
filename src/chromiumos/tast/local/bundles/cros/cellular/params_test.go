@@ -66,6 +66,10 @@ func TestFixTestParams(t *testing.T) {
 			ExtraAttr: []string{"cellular_carrier_docomo"},
 		},
 		{
+			Name:      "fi",
+			ExtraAttr: []string{"cellular_carrier_fi"},
+		},
+		{
 			Name:      "verizon",
 			ExtraAttr: []string{"cellular_carrier_verizon"},
 		},`
