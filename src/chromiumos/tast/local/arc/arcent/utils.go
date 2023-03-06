@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
@@ -111,7 +112,10 @@ func ValidateBlockedAppInstall(ctx context.Context, tconn *chrome.TestConn, a *a
 			return errors.Wrap(err, "failed to click the install button")
 		}
 
-		if err := a.WaitForPackages(ctx, []string{blockedPackage}); err != nil {
+		// Leave time for download failure check.
+		installCtx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+		if err := a.WaitForPackages(installCtx, []string{blockedPackage}); err != nil {
 			// When the local view is cached and app shows as installable, Play Server rejects the
 			// install request. If that happens, then the flow is validated.
 			if err := d.Object(ui.TextMatches("(?i)Can.t download .*")).Exists(ctx); err == nil {
