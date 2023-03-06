@@ -330,14 +330,12 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 		if removeFiles {
 			args := append([]string{"-rf", "--"}, SystemStateFiles...)
 			if out, err := h.cmdRunner.Run(ctx, "rm", args...); err != nil {
-				// TODO(b/173189029): Ignore errors on failure. This is a workaround to prevent Permission denied when removing a fscrypt directory.
-				testing.ContextLog(ctx, "Failed to remove files to clear ownership: ", err, string(out))
+				return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
 			}
 
 			command := "rm " + strings.Join(SystemStateGlobs, " ")
 			if out, err := h.cmdRunner.Run(ctx, "bash", "-c", command); err != nil {
-				// TODO(b/173189029): Ignore errors on failure. This is a workaround to prevent Permission denied when removing a fscrypt directory.
-				testing.ContextLog(ctx, "Failed to remove files to clear ownership: ", err, string(out))
+				return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
 			}
 
 			if out, err := h.cmdRunner.Run(ctx, "bash", "-c", "vgchange -ay; lvremove -ff /dev/*/cryptohome*"); err != nil {
