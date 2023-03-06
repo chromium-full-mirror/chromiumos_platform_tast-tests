@@ -269,20 +269,25 @@ func (c *Container) Stop(ctx context.Context) error {
 		// In this case, the code moves on to the next part - LxdContainerStoppingSignal.
 		// It does not go to default.
 	default:
-		return errors.Errorf("failed to stop container: %v", resp.GetStatus())
+		return errors.Errorf("failed to stop container: %v and failure reason: %v", resp.GetStatus(), resp.GetFailureReason())
 	}
 
 	sigResult := &cpb.LxdContainerStoppingSignal{}
-	for sigResult.VmName != c.VM.name ||
-		sigResult.ContainerName != c.containerName ||
-		sigResult.OwnerId != c.VM.Concierge.ownerID {
-		if err := waitForDBusSignal(ctx, stopping, nil, sigResult); err != nil {
-			return err
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		for sigResult.VmName != c.VM.name ||
+			sigResult.ContainerName != c.containerName ||
+			sigResult.OwnerId != c.VM.Concierge.ownerID {
+			if err := waitForDBusSignal(ctx, stopping, nil, sigResult); err != nil {
+				return err
+			}
 		}
-	}
 
-	if sigResult.Status != cpb.LxdContainerStoppingSignal_STOPPED {
-		return errors.Errorf("failed to stop container: %v", resp.GetFailureReason())
+		if sigResult.Status != cpb.LxdContainerStoppingSignal_STOPPED {
+			return errors.Errorf("the current status %v is not STOPPED", resp.GetStatus())
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for D-Bus LxdContainerStoppingSignal_STOPPED signal: ", err)
 	}
 
 	testing.ContextLogf(ctx, "Stopped container %q in VM %q", c.containerName, c.VM.name)
