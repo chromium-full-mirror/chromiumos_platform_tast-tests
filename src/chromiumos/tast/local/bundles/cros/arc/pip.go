@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
@@ -141,6 +142,10 @@ func init() {
 }
 
 func PIP(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// For debugging, create a Chrome session with chrome.ExtraArgs("--show-taps")
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
@@ -156,12 +161,10 @@ func PIP(ctx context.Context, s *testing.State) {
 	if err := a.Install(ctx, arc.APKPath(apkName)); err != nil {
 		s.Fatal("Failed installing PIP app: ", err)
 	}
-	defer a.Uninstall(ctx, pipTestPkgName)
 
 	if err := a.Install(ctx, arc.APKPath(wm.APKNameArcWMTestApp24)); err != nil {
 		s.Fatal("Failed installing WM24 app: ", err)
 	}
-	defer a.Uninstall(ctx, wm.Pkg24)
 
 	pipAct, err := arc.NewActivity(a, pipTestPkgName, ".PipActivity")
 	if err != nil {
@@ -188,7 +191,7 @@ func PIP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set shelf alignment to Bottom: ", err)
 	}
 	// Be nice and restore shelf alignment to its original state on exit.
-	defer ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, origShelfAlignment)
+	defer ash.SetShelfAlignment(cleanupCtx, tconn, dispInfo.ID, origShelfAlignment)
 
 	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
 	if err != nil {
@@ -198,14 +201,14 @@ func PIP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
 	}
 	// Be nice and restore shelf behavior to its original state on exit.
-	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
+	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
 
 	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get tablet mode: ", err)
 	}
 	// Be nice and restore tablet mode to its original state on exit.
-	defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
+	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, tabletModeEnabled)
 
 	dispMode, err := ash.PrimaryDisplayMode(ctx, tconn)
 	if err != nil {
