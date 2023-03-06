@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
@@ -44,6 +45,10 @@ func init() {
 }
 
 func ResizeActivity(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -67,24 +72,19 @@ func ResizeActivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set shelf behavior to Always Auto Hide: ", err)
 	}
 	// Be nice and restore shelf behavior to its original state on exit.
-	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
+	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
 
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	// Make sure the device is clamshell mode.
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
+		s.Fatal("Failed to set tablet mode disabled: ", err)
 	}
-	if tabletModeEnabled {
-		// Be nice and restore tablet mode to its original state on exit.
-		defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-		if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
-			s.Fatal("Failed to set tablet mode disabled: ", err)
-		}
-		// TODO(crbug.com/1002958): Wait for "tablet mode animation is finished" in a reliable way.
-		// If an activity is launched while the tablet mode animation is active, the activity
-		// will be launched in un undefined state, making the test flaky.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
-		}
+	defer cleanup(cleanupCtx)
+	// TODO(b/187788935): Wait for "tablet mode animation is finished" in a reliable way.
+	// If an activity is launched while the tablet mode animation is active, the activity
+	// will be launched in un undefined state, making the test flaky.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
 	}
 
 	a := s.FixtValue().(*arc.PreData).ARC
@@ -100,7 +100,7 @@ func ResizeActivity(ctx context.Context, s *testing.State) {
 	}
 	// This is an issue to re-enable the tablet mode at the end of the test when
 	// there is a freeform app still open. See: https://crbug.com/1002666
-	defer act.Stop(ctx, tconn)
+	defer act.Stop(cleanupCtx, tconn)
 
 	if err := ash.WaitForVisible(ctx, tconn, act.PackageName()); err != nil {
 		s.Fatal("Failed to wait for Setting activity visible: ", err)
