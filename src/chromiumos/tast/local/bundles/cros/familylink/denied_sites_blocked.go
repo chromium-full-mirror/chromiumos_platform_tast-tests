@@ -30,7 +30,7 @@ func init() {
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-sw-engprod@google.com",
-			"danan@chromium.org",
+			"courtneywong@chromium.org",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
