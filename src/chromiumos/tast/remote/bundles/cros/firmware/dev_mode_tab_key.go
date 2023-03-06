@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -16,6 +17,7 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/testing"
@@ -40,11 +42,20 @@ func init() {
 		Fixture:      fixture.DevMode,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      10 * time.Minute,
+		Params: []testing.Param{{
+			Name:              "chromebox",
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox)),
+			Val:               true,
+		}, {
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebox)),
+			Val:               false,
+		}},
+		Timeout: 10 * time.Minute,
 	})
 }
 
 func DevModeTabKey(ctx context.Context, s *testing.State) {
+	ffIsChromebox := s.Param().(bool)
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireServo(ctx); err != nil {
@@ -133,6 +144,15 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	verifyScreenSeq, err := setVerifyScreenSequence(mainFwScreenID)
 	if err != nil {
 		s.Fatal("Failed to set fw screen verification sequence: ", err)
+	}
+	if ffIsChromebox {
+		hasExternalDisplay, err := checkExternalDisplay(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to check external display: ", err)
+		}
+		if !hasExternalDisplay {
+			s.Fatal("Cannot find an external display connected to the chromebox")
+		}
 	}
 	hasDebugInfoData := true
 	for _, targetScreen := range verifyScreenSeq {
@@ -396,4 +416,33 @@ func setVerifyScreenSequence(mainFwScreenID firmware.FwScreenID) ([]firmware.FwS
 		}, nil
 	}
 	return nil, errors.Errorf("Unable to identify the main dev screen: %q", mainFwScreenID)
+}
+
+func checkExternalDisplay(ctx context.Context, h *firmware.Helper) (bool, error) {
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to open RPC client")
+	}
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	drmPath := "/sys/class/drm"
+	cardDirs, err := fs.ReadDir(ctx, drmPath)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to read the card dirs in %s", drmPath)
+	}
+	// DP displays show up as card*-DP-*
+	// HDMI displays show up as card*-HDMI-*
+	cardMatch := regexp.MustCompile(`^card[0-9]-(DP|HDMI).*[0-9]$`)
+	for _, dir := range cardDirs {
+		cardDir := dir.Name()
+		if cardMatch.MatchString(cardDir) {
+			cardConnected, err := fs.ReadFile(ctx, path.Join(drmPath, cardDir, "status"))
+			if err != nil {
+				return false, errors.Wrap(err, "failed to read status")
+			}
+			if strings.HasPrefix(string(cardConnected), "connected") {
+				return true, nil
+			}
+		}
+	}
+	// No external display connected.
+	return false, nil
 }
