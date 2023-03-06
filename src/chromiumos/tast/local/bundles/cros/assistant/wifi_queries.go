@@ -32,11 +32,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "shill-wifi"},
 		Params: []testing.Param{
 			{
-				Name:              "libassistant_dlc",
-				Fixture:           "assistantWithDlc",
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
 				Name:              "libassistant_v2",
 				Fixture:           "assistantWithLibassistantV2",
 				ExtraSoftwareDeps: []string{"dlc"},

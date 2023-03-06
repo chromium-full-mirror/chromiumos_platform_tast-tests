@@ -26,11 +26,6 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 		Params: []testing.Param{
 			{
-				Name:              "libassistant_dlc",
-				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantDlc")},
-				ExtraSoftwareDeps: []string{"dlc"},
-			},
-			{
 				Name:              "libassistant_v2",
 				Val:               []chrome.Option{chrome.EnableFeatures("LibAssistantV2")},
 				ExtraSoftwareDeps: []string{"dlc"},

@@ -283,58 +283,27 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "assistantBaseWithDlc",
-		Desc: "Chrome session for assistant testing with LibAssistantDlc flag",
-		Contacts: []string{
-			"wutao@google.com",
-			"assitive-eng@google.com",
-		},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				VerboseLogging(),
-				ashNoNudgesExtraArg(),
-				chrome.EnableFeatures("LibAssistantDlc"),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "assistantBaseWithLibassistantV2",
 		Desc: "Chrome session for assistant testing with LibAssistantV2 flag",
 		Contacts: []string{
 			"wutao@google.com",
 			"assitive-eng@google.com",
 		},
+		Vars: []string{"assistant.username", "assistant.password"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
+				chrome.GAIALogin(chrome.Creds{
+					User: s.RequiredVar("assistant.username"),
+					Pass: s.RequiredVar("assistant.password"),
+				}),
 				VerboseLogging(),
 				ashNoNudgesExtraArg(),
-				chrome.EnableFeatures("LibAssistantDlc", "LibAssistantV2"),
+				chrome.EnableFeatures("LibAssistantV2"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "assistantWithDlc",
-		Desc: "Assistant is enabled with DLC feature",
-		Contacts: []string{
-			"wutao@google.com",
-			"assistive-eng@google.com",
-		},
-		Parent: "assistantBaseWithDlc",
-		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
-			return FixtData{
-				Chrome: s.ParentValue().(*chrome.Chrome),
-			}
-		}),
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
