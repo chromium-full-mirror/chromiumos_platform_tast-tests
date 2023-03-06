@@ -179,9 +179,9 @@ func TFHostUsers(hostUsers map[string]string) TFOption {
 }
 
 // TFCompanionDUT sets the companion DUT to use in the test fixture.
-func TFCompanionDUT(cd *dut.DUT) TFOption {
+func TFCompanionDUT(cd *dut.DUT, h *testing.RPCHint) TFOption {
 	return func(tf *TestFixture) {
-		tf.duts = append(tf.duts, &dutData{dut: cd})
+		tf.duts = append(tf.duts, &dutData{dut: cd, rpcHint: h})
 	}
 }
 
