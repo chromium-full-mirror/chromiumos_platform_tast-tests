@@ -101,22 +101,16 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 	}
 
 	// Make sure the device is clamshell mode.
-	tabletModeEnabled, err := ash.TabletModeEnabled(ctx, tconn)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to get tablet mode: ", err)
+		s.Fatal("Failed to set tablet mode disabled: ", err)
 	}
-	if tabletModeEnabled {
-		// Be nice and restore tablet mode to its original state on exit.
-		defer ash.SetTabletModeEnabled(ctx, tconn, tabletModeEnabled)
-		if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
-			s.Fatal("Failed to set tablet mode disabled: ", err)
-		}
-		// TODO(b/187788935): Wait for "tablet mode animation is finished" in a reliable way.
-		// If an activity is launched while the tablet mode animation is active, the activity
-		// will be launched in un undefined state, making the test flaky.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
-		}
+	defer cleanup(cleanupCtx)
+	// TODO(b/187788935): Wait for "tablet mode animation is finished" in a reliable way.
+	// If an activity is launched while the tablet mode animation is active, the activity
+	// will be launched in un undefined state, making the test flaky.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
 	}
 
 	// Install the gaming input overlay test application.
