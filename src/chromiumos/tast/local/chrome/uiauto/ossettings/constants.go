@@ -95,8 +95,8 @@ var (
 	AdditionalDetails = nodewith.Name("Additional details").Role(role.Link)
 	TermsOfService    = nodewith.Name("Terms of Service").Role(role.Link)
 
-	// OpenSourceSoftwares matches two links, needs specify when using.
-	OpenSourceSoftwares = nodewith.Name("open source software").Role(role.Link)
+	BrowserOpenSourceSoftware = nodewith.NameContaining("by other open source software").Role(role.Link)
+	OSOpenSourceSoftware      = nodewith.Name("open source software").Role(role.Link)
 
 	ChangeChannelBtn = nodewith.Name("Change channel").Role(role.Button)
 	BuildDetailsBtn  = nodewith.Name("Build details").Role(role.Button)

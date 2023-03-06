@@ -68,8 +68,7 @@ func ChromeOSPageInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open setting page: ", err)
 	}
 	defer settings.Close(cleanupCtx)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-	defer faillog.SaveScreenshotOnError(cleanupCtx, cr, s.OutDir(), s.HasError)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	chrome, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
@@ -173,16 +172,8 @@ func checkDetail(resource *chromeOSPageInfo) uiauto.Action {
 func checkOpenSources(resource *chromeOSPageInfo) uiauto.Action {
 	return func(ctx context.Context) error {
 		// Focus on the second link to ensure both links are on-screen.
-		if err := resource.settings.FocusAndWait(ossettings.OpenSourceSoftwares.Nth(1))(ctx); err != nil {
+		if err := resource.settings.FocusAndWait(ossettings.OSOpenSourceSoftware)(ctx); err != nil {
 			return errors.Wrap(err, "failed to focus on node")
-		}
-
-		infos, err := resource.ui.NodesInfo(ctx, ossettings.OpenSourceSoftwares)
-		if err != nil {
-			return errors.Wrap(err, "failed to get opensource nodes info")
-		}
-		if len(infos) != 2 {
-			return errors.Errorf("unexpected UI result: %+v", infos)
 		}
 
 		matchTargetCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
@@ -192,12 +183,12 @@ func checkOpenSources(resource *chromeOSPageInfo) uiauto.Action {
 			node *nodewith.Finder
 			url  string
 		}{
-			{node: ossettings.OpenSourceSoftwares.First(), url: "chrome://credits/"},
-			{node: ossettings.OpenSourceSoftwares.Nth(1), url: "chrome://os-credits/"},
+			{node: ossettings.BrowserOpenSourceSoftware, url: "chrome://credits/"},
+			{node: ossettings.OSOpenSourceSoftware, url: "chrome://os-credits/"},
 		} {
-			testing.ContextLogf(ctx, "Current opensourse link: %q", opensource.url)
-			if err := resource.ui.LeftClick(opensource.node)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click on opensource link")
+			testing.ContextLogf(ctx, "Current open source link: %q", opensource.url)
+			if err := resource.ui.DoDefault(opensource.node)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click on open source link")
 			}
 
 			conn, err := resource.cr.NewConnForTarget(matchTargetCtx, chrome.MatchTargetURL(opensource.url))
