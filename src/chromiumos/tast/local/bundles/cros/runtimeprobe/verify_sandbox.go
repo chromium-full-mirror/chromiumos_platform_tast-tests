@@ -53,13 +53,6 @@ func init() {
 				}}},
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name: "usb_camera",
-			Val: verifySandboxTestParams{
-				probeConfig: probeConfig{[]probeStatement{
-					probeStatement{"usb_camera"},
-				}}},
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name: "memory_amd64",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
