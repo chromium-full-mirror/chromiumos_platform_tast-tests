@@ -7,9 +7,13 @@ package graphics
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/syslog"
@@ -78,4 +82,46 @@ func checkHangs(ctx context.Context, reader *syslog.Reader) error {
 // And checkHangs would re-enable the flag for the next test run.
 func DisableHangCheck() {
 	disableHangCheck = true
+}
+
+// SetHangCheckTimer sets the hangcheck timer to d to allow longer gpu runtime before hangcheck kicks in.
+// Notice that it is expected to fail if running on older kernels or kernel which doesn't support hangcheck_period_ms.
+// Notice that the unit of hangcheck timer is millisecond and the function would fail if d is smaller or equal to 1 millisecond.
+func SetHangCheckTimer(ctx context.Context, d time.Duration) error {
+	if d < 1*time.Millisecond {
+		return errors.Errorf("invalid hangcheck timer parameter, %v, hangcheck timer must be greater or equal to 1 millisecond", d)
+	}
+	path, err := GetValidKernelDriverDebugFile(ctx, []string{"hangcheck_period_ms"})
+	if err != nil {
+		return errors.Wrap(err, "failed to get hangcheck file")
+	}
+	periodMs := int64(d / time.Millisecond)
+	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%d", periodMs)), 0600); err != nil {
+		return errors.Wrapf(err, "failed to write %d to %s", periodMs, path)
+	}
+	testing.ContextLogf(ctx, "Wrote %d to %s", periodMs, path)
+	return nil
+}
+
+// GetHangCheckTimer returns the current hangcheck duration timer.
+// Notice that it is expected to fail if running on older kernels or kernels which doesn't support hangcheck_period_ms.
+func GetHangCheckTimer(ctx context.Context) (time.Duration, error) {
+	p, err := GetValidKernelDriverDebugFile(ctx, []string{"hangcheck_period_ms"})
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to get hangcheck file")
+	}
+
+	b, err := ioutil.ReadFile(p)
+	if err != nil {
+		return -1, errors.Wrapf(err, "failed to read %s", p)
+	}
+	s := strings.TrimSpace(string(b))
+	if len(s) == 0 {
+		return -1, errors.Errorf("%s is empty", p)
+	}
+	d, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return -1, errors.Wrapf(err, "malformed content in %s: %s", p, s)
+	}
+	return time.Duration(d) * time.Millisecond, nil
 }

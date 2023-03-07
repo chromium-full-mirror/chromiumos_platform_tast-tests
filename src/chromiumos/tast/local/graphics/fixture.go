@@ -26,7 +26,7 @@ import (
 
 var (
 	disableFirmwareUpdater = chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp")
-	enablePassthrough = chrome.ExtraArgs("--enable-features=DefaultPassthroughCommandDecoder")
+	enablePassthrough      = chrome.ExtraArgs("--enable-features=DefaultPassthroughCommandDecoder")
 )
 
 func init() {
@@ -131,7 +131,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-
 	testing.AddFixture(&testing.Fixture{
 		Name:            "graphicsNoChrome",
 		Desc:            "Stop UI before tests, start UI after",
@@ -212,7 +211,7 @@ type gpuWatchHangsFixture struct {
 
 func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if hangCheckTimer, err := GetHangCheckTimer(ctx); err != nil {
-		testing.ContextLog(ctx, "Warning: failed to get hangcheck timer. This is normal for kernels older than 5.4: ", err)
+		testing.ContextLog(ctx, "Warning: failed to get hangcheck timer. This is normal for kernels that doesn't support hangcheck timer configuration: ", err)
 	} else {
 		testing.ContextLog(ctx, "Hangcheck timer: ", hangCheckTimer)
 		// Only tries to check the hangcheck timer if we successfully get the timer.
