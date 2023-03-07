@@ -107,10 +107,11 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:mainline",
-			"informational",
-		},
+		// TODO(http://b/271146120): Test is disabled until DLP is fixed.
+		// Attr: []string{
+		// 	"group:mainline",
+		//	"informational",
+		// },
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Block users from sharing confidential information (usb): COM_DATPROT_CUJ3_TASK1_WF1.
