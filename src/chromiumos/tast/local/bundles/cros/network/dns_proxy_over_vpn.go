@@ -15,17 +15,21 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/dns"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/local/multivm"
 	"chromiumos/tast/local/network/virtualnet/certs"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
+	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
 
 type dnsProxyOverVPNTestParams struct {
-	mode dns.DoHMode
+	mode     dns.DoHMode
+	chrome   bool
+	arc      bool
+	crostini bool
 }
 
 func init() {
@@ -37,26 +41,80 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "vm_host", "arc", "dlc", "no_kernel_upstream"},
-		Data:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
-		Pre:          multivm.ArcCrostiniStarted(),
-		HardwareDeps: crostini.CrostiniStable,
+		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      7 * time.Minute,
 		Params: []testing.Param{{
-			Name: "doh_off",
+			Name: "chrome_doh_off",
+			Val: dnsProxyOverVPNTestParams{
+				mode:   dns.DoHOff,
+				chrome: true,
+			},
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "chrome_doh_automatic",
+			Val: dnsProxyOverVPNTestParams{
+				mode:   dns.DoHAutomatic,
+				chrome: true,
+			},
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "chrome_doh_always_on",
+			Val: dnsProxyOverVPNTestParams{
+				mode:   dns.DoHAlwaysOn,
+				chrome: true,
+			},
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "arc_doh_off",
 			Val: dnsProxyOverVPNTestParams{
 				mode: dns.DoHOff,
+				arc:  true,
 			},
+			ExtraSoftwareDeps: []string{"arc"},
+			Fixture:           "arcBooted",
 		}, {
-			Name: "doh_automatic",
+			Name: "arc_doh_automatic",
 			Val: dnsProxyOverVPNTestParams{
 				mode: dns.DoHAutomatic,
+				arc:  true,
 			},
+			ExtraSoftwareDeps: []string{"arc"},
+			Fixture:           "arcBooted",
 		}, {
-			Name: "doh_always_on",
+			Name: "arc_doh_always_on",
 			Val: dnsProxyOverVPNTestParams{
 				mode: dns.DoHAlwaysOn,
+				arc:  true,
 			},
+			ExtraSoftwareDeps: []string{"arc"},
+			Fixture:           "arcBooted",
+		}, {
+			Name: "crostini_doh_off",
+			Val: dnsProxyOverVPNTestParams{
+				mode:     dns.DoHOff,
+				crostini: true,
+			},
+			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
+			Fixture:           "crostiniBuster",
+		}, {
+			Name: "crostini_doh_automatic",
+			Val: dnsProxyOverVPNTestParams{
+				mode:     dns.DoHAutomatic,
+				crostini: true,
+			},
+			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
+			Fixture:           "crostiniBuster",
+		}, {
+			Name: "crostini_doh_always_on",
+			Val: dnsProxyOverVPNTestParams{
+				mode:     dns.DoHAlwaysOn,
+				crostini: true,
+			},
+			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
+			Fixture:           "crostiniBuster",
 		}},
 	})
 }
@@ -73,11 +131,26 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	pre := s.PreValue().(*multivm.PreData)
-	cr := pre.Chrome
-	tconn := pre.TestAPIConn
-	a := multivm.ARCFromPre(pre)
-	cont := multivm.CrostiniFromPre(pre)
+	var (
+		cr   *chrome.Chrome
+		a    *arc.ARC
+		cont *vm.Container
+	)
+
+	params := s.Param().(dnsProxyOverVPNTestParams)
+	if params.chrome {
+		cr = s.FixtValue().(*chrome.Chrome)
+	} else if params.arc {
+		a = s.FixtValue().(*arc.PreData).ARC
+		cr = s.FixtValue().(*arc.PreData).Chrome
+	} else if params.crostini {
+		cr = s.FixtValue().(crostini.FixtureData).Chrome
+		cont = s.FixtValue().(crostini.FixtureData).Cont
+	}
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
 
 	// Ensure connectivity is available.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -86,28 +159,32 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ping 8.8.8.8: ", err)
 	}
 
-	// Ensure connectivity is available inside Crostini's container.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return cont.Command(ctx, "ping", "-c1", "-w1", "8.8.8.8").Run()
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to ping 8.8.8.8 from Crostini: ", err)
+	if params.crostini {
+		// Ensure connectivity is available inside Crostini's container.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return cont.Command(ctx, "ping", "-c1", "-w1", "8.8.8.8").Run()
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatal("Failed to ping 8.8.8.8 from Crostini: ", err)
+		}
+
+		// Install dig in container after the DoH mode is set up properly.
+		if err := dns.InstallDigInContainer(ctx, cont); err != nil {
+			s.Fatal("Failed to install dig in container: ", err)
+		}
 	}
 
-	// Install dig in container after the DoH mode is set up properly.
-	if err := dns.InstallDigInContainer(ctx, cont); err != nil {
-		s.Fatal("Failed to install dig in container: ", err)
+	if params.arc {
+		// Hide unused ethernet to avoid ARC's limitation.
+		m, err := shill.NewManager(ctx)
+		if err != nil {
+			s.Fatal("Failed to create shill client: ", err)
+		}
+		restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+		if err != nil {
+			s.Fatal("Failed to hide unused ethernet: ", err)
+		}
+		defer restoreEthernet(cleanupCtx)
 	}
-
-	// Hide unused ethernet to avoid ARC's limitation.
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create shill client: ", err)
-	}
-	restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
-	if err != nil {
-		s.Fatal("Failed to hide unused ethernet: ", err)
-	}
-	defer restoreEthernet(cleanupCtx)
 
 	// Set up virtualnet environment.
 	pool := subnet.NewPool()
@@ -137,11 +214,13 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// By default, DNS query should work over VPN.
-	var defaultTC = []dns.ProxyTestCase{
-		{Client: dns.System},
-		{Client: dns.User},
-		{Client: dns.Chrome},
-		{Client: dns.ARC},
+	var defaultTC []dns.ProxyTestCase
+	if params.chrome {
+		defaultTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chrome}}
+	} else if params.arc {
+		defaultTC = []dns.ProxyTestCase{{Client: dns.ARC}}
+	} else if params.crostini {
+		defaultTC = []dns.ProxyTestCase{{Client: dns.Crostini}}
 	}
 	if errs := dns.TestQueryDNSProxy(ctx, defaultTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
@@ -150,7 +229,6 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// Toggle plain-text DNS or secureDNS depending on test parameter.
-	params := s.Param().(dnsProxyOverVPNTestParams)
 	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider)
 	if err != nil {
 		s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
@@ -160,12 +238,15 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	// DNS queries that should be routed through VPN should fail if DNS queries on the VPN server are blocked.
 	// System traffic bypass VPN, this is to allow things such as updates and crash reports to always work.
 	// On the other hand, other traffic (Chrome, ARC, etc.) should always go through VPN.
-	vpnBlockedTC := []dns.ProxyTestCase{
-		{Client: dns.System},
-		{Client: dns.User, ExpectErr: true},
-		{Client: dns.Chrome, ExpectErr: true},
-		{Client: dns.Crostini, ExpectErr: true},
-		{Client: dns.ARC, ExpectErr: true}}
+	var vpnBlockedTC []dns.ProxyTestCase
+	if params.chrome {
+		vpnBlockedTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chrome, ExpectErr: true}}
+	} else if params.arc {
+		vpnBlockedTC = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
+	} else if params.crostini {
+		vpnBlockedTC = []dns.ProxyTestCase{{Client: dns.Crostini, ExpectErr: true}}
+	}
+
 	// Block DNS queries over VPN through iptables.
 	if errs := dns.NewVPNBlock(vpnServer.NetNSName).Run(ctx, func(ctx context.Context) {
 		if errs := dns.TestQueryDNSProxy(ctx, vpnBlockedTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
@@ -179,12 +260,14 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	secureDNSBlockedTC := []dns.ProxyTestCase{
-		{Client: dns.System},
-		{Client: dns.User},
-		{Client: dns.Chrome},
-		{Client: dns.Crostini},
-		{Client: dns.ARC}}
+	var secureDNSBlockedTC []dns.ProxyTestCase
+	if params.chrome {
+		secureDNSBlockedTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chrome}}
+	} else if params.arc {
+		secureDNSBlockedTC = []dns.ProxyTestCase{{Client: dns.ARC}}
+	} else if params.crostini {
+		secureDNSBlockedTC = []dns.ProxyTestCase{{Client: dns.Crostini}}
+	}
 	// Block DoH queries over VPN to verify that when a VPN is on, DoH is disabled and DNS will work.
 	// When a VPN is active, the default proxy and ARC proxy will disable secure DNS in order to have consistent behavior on different VPN types.
 	if errs := dns.NewDoHVPNBlock(vpnServer.NetNSName).Run(ctx, func(ctx context.Context) {
