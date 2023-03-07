@@ -584,6 +584,12 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 		if err := f.cont.RestoreSnapshot(ctx, snapshotName, f.logDir); err != nil {
 			return errors.Wrap(err, "failed to restore snapshot")
 		}
+		// Launching Terminal after storing snapshot by lxc is needed to ensure
+		// a bunch of things work, e.g., mouting files in FilesApp.
+		// See b/271947202.
+		if err := f.launchExitTerminal(ctx); err != nil {
+			return errors.Wrap(err, "failed to re-launch terminal and exit")
+		}
 
 	}
 
