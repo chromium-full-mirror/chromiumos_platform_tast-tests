@@ -19,6 +19,7 @@ import (
 	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
 	hwseclocal "chromiumos/tast/local/hwsec"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -447,7 +448,7 @@ func CheckKeyBackingStoreExists(ctx context.Context, keysetPath, userName string
 // TestPinCounterMechanism tests that PIN is locked out after too many wrong trials and can be reset by the correct password
 func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
 	const numberOfWrongAttemptToNotLock = 4
-	const numberOfWrongAttemptToLock = 6
+	const numberOfWrongAttemptToLock = 5
 
 	// Start an Auth session and get an authSessionID.
 	_, authSessionID, err := client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
@@ -469,7 +470,7 @@ func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userP
 		return errors.Wrap(err, "authenticating with correct PIN failed")
 	}
 
-	// Try authenticate with wrong PIN 6 times to lock out the PIN.
+	// Try authenticate with wrong PIN 5 times to lock out the PIN.
 	replyError := &uda.AuthenticateAuthFactorReply{}
 	for i := 0; i < numberOfWrongAttemptToLock; i++ {
 		replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
@@ -477,7 +478,7 @@ func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userP
 			return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
 		}
 	}
-	if replyError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
+	if replyError.Error != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_CREDENTIAL_LOCKED {
 		return errors.Errorf("PIN is not locked out after too many wrong attempts. The received wrong error message is: %v", replyError.Error)
 	}
 
