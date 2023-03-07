@@ -9,68 +9,117 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/bluetooth"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "bluetoothMojoJSObject",
-		Desc: "Get JS object for Bluetooth mojo interface via OS Settings App, with Bluetooth Revamp flag enabled",
+		Name: "bluetoothMojoJSObjectWithBlueZ",
+		Desc: "Fixture for tests that use the CrosNetworkConfig mojo API using BlueZ",
 		Contacts: []string{
-			"shijinabraham@google.com",
-			"cros-conn-test-team@google.com",
+			"cros-connectivity@google.com",
+			"chadduffin@google.com",
 		},
-		Impl:            &BTConn{},
-		Parent:          "chromeLoggedInWithBluetoothEnabled",
+		Impl:            &crosNetworkConfigConnection{},
+		Parent:          "bluetoothEnabledWithBlueZ",
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "bluetoothMojoJSObjectWithFloss",
+		Desc: "Fixture for tests that use the CrosNetworkConfig mojo API using Floss",
+		Contacts: []string{
+			"cros-connectivity@google.com",
+			"chadduffin@google.com",
+		},
+		Impl:            &crosNetworkConfigConnection{},
+		Parent:          "bluetoothEnabledWithFloss",
 		SetUpTimeout:    chrome.LoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 }
 
-// BTConn hold the chrome connection and the Mojo JS object
-type BTConn struct {
-	Crconn *chrome.Conn
-	Js     *chrome.JSObject
+// HasBluetoothImpl is an interface for fixture values that contain a Bluetooth implementation.
+// It allows retrieval of the underlying Bluetooth implementation.
+type HasBluetoothImpl interface {
+	BluetoothImpl() bluetooth.Bluetooth
 }
 
-func (m *BTConn) Reset(ctx context.Context) error {
+// HasConn is an interface for fixture values that contain a Chrome connection.
+// It allows retrieval of the underlying Chrome connection.
+type HasConn interface {
+	Conn() *chrome.Conn
+}
 
-	if err := m.Js.Release(ctx); err != nil {
-		return errors.Wrap(err, "failed to release Bluetooth Mojo JS object")
+// HasJSObject is an interface for fixture values that contain a JS object.
+// It allows retrieval of the underlying JS object.
+type HasJSObject interface {
+	JSObject() *chrome.JSObject
+}
+
+type crosNetworkConfigConnection struct {
+	btImpl bluetooth.Bluetooth
+	conn   *chrome.Conn
+	js     *chrome.JSObject
+}
+
+// BluetoothImpl returns the Bluetooth implementation.
+// It implements the HasBluetoothImpl interface.
+func (f *crosNetworkConfigConnection) BluetoothImpl() bluetooth.Bluetooth {
+	return f.btImpl
+}
+
+// Conn returns the Chrome connection.
+// It implements the HasConn interface.
+func (f *crosNetworkConfigConnection) Conn() *chrome.Conn {
+	return f.conn
+}
+
+// JSObject returns the JS object.
+// It implements the HasJSObject interface.
+func (f *crosNetworkConfigConnection) JSObject() *chrome.JSObject {
+	return f.js
+}
+
+func (f *crosNetworkConfigConnection) Reset(ctx context.Context) error {
+	if err := f.js.Release(ctx); err != nil {
+		return errors.Wrap(err, "failed to release Bluetooth mojo JS object")
 	}
 
-	if err := m.Crconn.Call(ctx, &(m.Js), BTConfigJS); err != nil {
+	if err := f.conn.Call(ctx, &(f.js), BTConfigJS); err != nil {
 		return errors.Wrap(err, "failed to create Bluetooth mojo JS")
 	}
 
-	if err := m.Js.Call(ctx, nil, `function init(){ this.initSysPropObs()}`); err != nil {
+	if err := f.js.Call(ctx, nil, `function init(){ this.initSysPropObs()}`); err != nil {
 		return errors.Wrap(err, "failed to initailize the observer")
 	}
 
 	return nil
 }
 
-func (*BTConn) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (*crosNetworkConfigConnection) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-func (*BTConn) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (*crosNetworkConfigConnection) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-func (m *BTConn) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr := s.ParentValue().(*chrome.Chrome)
+func (f *crosNetworkConfigConnection) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cr := s.ParentValue().(bluetooth.HasChrome).Chrome()
 
 	// Open OS settings App Bluetooth Subpage
 	const url = "chrome://os-settings/bluetooth"
-	crConn, err := apps.LaunchOSSettings(ctx, cr, url)
+	conn, err := apps.LaunchOSSettings(ctx, cr, url)
 	if err != nil {
 		s.Fatal("Failed to open settings app: ", err)
 	}
 
 	var js chrome.JSObject
 
-	if err := crConn.Call(ctx, &js, BTConfigJS); err != nil {
+	if err := conn.Call(ctx, &js, BTConfigJS); err != nil {
 		s.Fatal(errors.Wrap(err, "failed to create Bluetooth mojo JS"))
 	}
 
@@ -78,14 +127,14 @@ func (m *BTConn) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		s.Fatal(errors.Wrap(err, "failed to initailize the observer"))
 	}
 
-	m.Crconn = crConn
-	m.Js = &js
-	return m
+	f.btImpl = s.ParentValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
+	f.conn = conn
+	f.js = &js
+	return f
 }
 
-func (m *BTConn) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := m.Js.Release(ctx); err != nil {
-		s.Fatal(errors.Wrap(err, "failed to release Bluetooth Mojo JS object"))
+func (f *crosNetworkConfigConnection) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := f.js.Release(ctx); err != nil {
+		s.Fatal(errors.Wrap(err, "failed to release Bluetooth mojo JS object"))
 	}
-
 }

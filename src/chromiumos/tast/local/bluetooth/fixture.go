@@ -137,6 +137,12 @@ func fixtureImplWithFeatures(enableFeatures, disableFeatures []string, noLoginAn
 	})
 }
 
+// HasChrome is an interface for fixture values that contain a Chrome instance.
+// It allows retrieval of the underlying Chrome object.
+type HasChrome interface {
+	Chrome() *chrome.Chrome
+}
+
 // HasTconn is an interface for fixture values that contain a Test API connection instance.
 // It allows retrieval of the underlying Test API connection object.
 type HasTconn interface {

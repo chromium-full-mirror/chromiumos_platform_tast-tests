@@ -7,7 +7,6 @@ package bluetooth
 import (
 	"context"
 
-	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/bluetooth/mojo"
 	"chromiumos/tast/testing"
 )
@@ -25,17 +24,25 @@ func init() {
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "bluetoothMojoJSObject",
+		Params: []testing.Param{{
+			Name:      "floss_disabled",
+			Fixture:   "bluetoothMojoJSObjectWithBlueZ",
+			ExtraAttr: []string{"bluetooth_flaky"},
+		}, {
+			Name:      "floss_enabled",
+			Fixture:   "bluetoothMojoJSObjectWithFloss",
+			ExtraAttr: []string{"bluetooth_floss"},
+		}},
 	})
 }
 
-// ToggleBluetoothUsingMojo toggles Bluetooth state using Bluetooth
-// mojo API call and confirm the state change via platform API
-// and using state in mojo
+// ToggleBluetoothUsingMojo verifies that bluetooth can be toggled using the CrosBluetoothConfig mojo API.
 func ToggleBluetoothUsingMojo(ctx context.Context, s *testing.State) {
-	bluetoothMojo := s.FixtValue().(*mojo.BTConn).Js
+	bt := s.FixtValue().(mojo.HasBluetoothImpl).BluetoothImpl()
+	js := s.FixtValue().(mojo.HasJSObject).JSObject()
 
-	const iterations = 5
+	// Use an even number of iterations so that we end with bluetooth enabled.
+	const iterations = 6
 	for i := 0; i < iterations; i++ {
 
 		var isEnabled bool
@@ -51,15 +58,15 @@ func ToggleBluetoothUsingMojo(ctx context.Context, s *testing.State) {
 
 		s.Logf("Toggling Bluetooth state to %t (iteration %d of %d)", isEnabled, i+1, iterations)
 
-		if err := mojo.SetBluetoothEnabledState(ctx, *bluetoothMojo, isEnabled); err != nil {
+		if err := mojo.SetBluetoothEnabledState(ctx, *js, isEnabled); err != nil {
 			s.Fatal("Failed to toggle Bluetooth state via mojo: ", err)
 		}
 
-		if err := bluez.PollForAdapterState(ctx, isEnabled); err != nil {
+		if err := bt.PollForAdapterState(ctx, isEnabled); err != nil {
 			s.Fatal("Bluetooth state not as expected: ", err)
 		}
 
-		if err := mojo.PollForBluetoothSystemState(ctx, *bluetoothMojo, expectedState); err != nil {
+		if err := mojo.PollForBluetoothSystemState(ctx, *js, expectedState); err != nil {
 			s.Fatal("Failed to get SystemProperties: ", err)
 		}
 	}
