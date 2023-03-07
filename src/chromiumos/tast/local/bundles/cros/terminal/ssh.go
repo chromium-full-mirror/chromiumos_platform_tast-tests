@@ -7,6 +7,7 @@ package terminal
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -51,6 +52,8 @@ func SSH(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	// Open Terminal apps, first creating port forward for second to use.
 	ta1, err := terminalapp.LaunchSSH(ctx, tconn, "-L 8822:localhost:22")
