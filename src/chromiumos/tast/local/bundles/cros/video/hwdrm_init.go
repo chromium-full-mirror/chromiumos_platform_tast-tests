@@ -23,7 +23,7 @@ func init() {
 			"jkardatzke@google.com",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
-		SoftwareDeps: []string{"protected_content"},
+		SoftwareDeps: []string{"protected_content", "hwdrm_stable"},
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "gpuWatchHangs",
