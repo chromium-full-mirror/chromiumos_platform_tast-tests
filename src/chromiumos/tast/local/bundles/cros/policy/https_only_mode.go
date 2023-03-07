@@ -42,7 +42,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		// Disabled due to <1% pass rate over 30 days. See b/246818601
-		//Attr:         []string{"group:mainline", "informational"},
+		//Attr:         []string{"group:golden_tier"},
 		Fixture: fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.HttpsOnlyMode{}, pci.VerifiedFunctionalityUI),

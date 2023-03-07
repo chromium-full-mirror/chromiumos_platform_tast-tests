@@ -27,7 +27,7 @@ func init() {
 			"giovax@google.com", // Test owner
 		},
 		BugComponent: "TBA",
-		Attr:         []string{"group:commercial_limited", "group:hw_agnostic"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		VarDeps:      []string{"policy.ExtensionInstallForceList.username", "policy.ExtensionInstallForceList.password"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,

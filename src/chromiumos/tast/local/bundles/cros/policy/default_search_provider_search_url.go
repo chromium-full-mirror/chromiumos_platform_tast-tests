@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
@@ -47,6 +47,7 @@ func init() {
 			Val:               browser.TypeLacros,
 		}},
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DefaultSearchProviderSearchURL{}, pci.VerifiedFunctionalityUI),
 		},
 	})

@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{
 			{
 				Name:    "blocklist",
@@ -140,7 +140,6 @@ func init() {
 			{
 				Name:              "lacros_blocklist",
 				ExtraSoftwareDeps: []string{"lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: []blocklistTestTable{
 					{
@@ -176,7 +175,6 @@ func init() {
 			{
 				Name:              "lacros_allowlist",
 				ExtraSoftwareDeps: []string{"lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val: []blocklistTestTable{
 					{

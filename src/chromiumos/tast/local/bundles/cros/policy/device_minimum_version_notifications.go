@@ -31,7 +31,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:commercial_limited"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{

@@ -37,7 +37,7 @@ func init() {
 			"alexanderhartl@google.com", // Original author of the remote test.
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{

@@ -35,7 +35,7 @@ func init() {
 			"mohamedaomar@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
@@ -43,7 +43,6 @@ func init() {
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"informational"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},

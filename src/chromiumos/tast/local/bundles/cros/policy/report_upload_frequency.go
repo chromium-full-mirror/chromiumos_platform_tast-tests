@@ -29,7 +29,7 @@ func init() {
 			"zubeil@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		Timeout:      6 * time.Minute, // Increased timeout as we need to wait for report uploads.

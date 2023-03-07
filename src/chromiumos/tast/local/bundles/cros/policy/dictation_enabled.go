@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(crbug.com/1238027): Close dialog before the next test.
-		// Attr:         []string{"group:mainline", "informational"},
+		// Attr:         []string{"group:golden_tier"},
 		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DictationEnabled{}, pci.VerifiedFunctionalityUI),

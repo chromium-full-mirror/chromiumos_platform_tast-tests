@@ -34,7 +34,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		// no_qemu: VMs don't support brightness control.
 		SoftwareDeps: []string{"chrome", "no_qemu"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ScreenBrightnessPercent{}, pci.VerifiedFunctionalityUI),

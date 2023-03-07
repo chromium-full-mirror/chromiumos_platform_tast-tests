@@ -35,7 +35,7 @@ func init() {
 			"gabormagda@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{

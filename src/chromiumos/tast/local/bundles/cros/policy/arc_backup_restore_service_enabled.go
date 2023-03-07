@@ -29,8 +29,9 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		// TODO(http://b/172073846): Test is disabled until it can be fixed
-		// Attr:         []string{"group:mainline", "informational"},
+		// TODO(http://b/172073846): Test showed flakiness in the past. If
+		// keeps failing it should be fixed or removed.
+		Attr: []string{"group:golden_tier"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {

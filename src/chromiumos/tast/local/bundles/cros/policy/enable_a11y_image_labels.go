@@ -39,7 +39,7 @@ func init() {
 			"eariassoto@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{
 			"enable_a11y_image_labels_index.html",

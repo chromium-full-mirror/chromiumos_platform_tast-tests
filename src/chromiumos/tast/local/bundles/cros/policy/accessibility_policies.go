@@ -69,7 +69,7 @@ func init() {
 			},
 			{
 				Name:      "caret_highlight",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -96,7 +96,7 @@ func init() {
 			},
 			{
 				Name:      "cursor_highlight",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -123,7 +123,7 @@ func init() {
 			},
 			{
 				Name:      "docked_magnifier",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						// Value 1 for this policy is allowed but does not
@@ -159,7 +159,7 @@ func init() {
 			},
 			{
 				Name:      "focus_highlight",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -186,7 +186,7 @@ func init() {
 			},
 			{
 				Name:      "high_contrast",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -213,7 +213,7 @@ func init() {
 			},
 			{
 				Name:      "large_cursor",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -240,7 +240,7 @@ func init() {
 			},
 			{
 				Name:      "screen_magnifier",
-				ExtraAttr: []string{"group:mainline", "informational"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled-full-screen",
@@ -276,7 +276,7 @@ func init() {
 			},
 			{
 				Name:      "select_to_speak",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -303,7 +303,7 @@ func init() {
 			},
 			{
 				Name:      "spoken_feedback",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Timeout:   3 * time.Minute,
 				Val: []accessibilityTestCase{
 					{
@@ -331,7 +331,7 @@ func init() {
 			},
 			{
 				Name:      "sticky_keys",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Val: []accessibilityTestCase{
 					{
 						name:      "enabled",
@@ -358,7 +358,7 @@ func init() {
 			},
 			{
 				Name:      "virtual_keyboard",
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:golden_tier"},
 				Timeout:   3 * time.Minute,
 				Val: []accessibilityTestCase{
 					{

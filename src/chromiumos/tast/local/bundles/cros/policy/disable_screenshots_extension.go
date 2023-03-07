@@ -47,7 +47,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		Data:         append(extensionFiles, disableScreenshotsExtensionHTML),
 		// 2 minutes is the default local test timeout. Check localTestTimeout constant in tast/src/chromiumos/tast/internal/bundle/local.go.
 		Timeout: chrome.ManagedUserLoginTimeout + 2*time.Minute,

@@ -36,8 +36,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
 		},
 		Params: []testing.Param{
 			{

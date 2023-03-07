@@ -35,7 +35,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{
 			{
 				Fixture: fixture.ChromePolicyLoggedIn,
@@ -45,7 +45,6 @@ func init() {
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val:               browser.TypeLacros,
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"informational"},
 			},
 		},
 		Data: []string{serial.SerialTestPage},

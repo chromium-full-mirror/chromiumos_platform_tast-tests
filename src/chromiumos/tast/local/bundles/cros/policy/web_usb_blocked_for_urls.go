@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -36,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -47,6 +48,9 @@ func init() {
 			Val:     browser.TypeAsh,
 		}},
 		Data: []string{"web_usb_blocked.html"},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.WebUsbBlockedForUrls{}, pci.VerifiedFunctionalityUI),
+		},
 	})
 }
 

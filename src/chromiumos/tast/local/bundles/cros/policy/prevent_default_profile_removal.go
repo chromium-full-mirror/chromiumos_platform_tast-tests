@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1263917",
 		// TODO(b/229003599): This test is failing on tablets and Chromeboxes.
 		// We are disabling until the root cause is fixed.
-		// Attr:         []string{"group:mainline", "informational"},
+		// Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,
 	})
