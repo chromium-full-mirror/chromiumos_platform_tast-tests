@@ -21,7 +21,7 @@ var SpeedometerInfo = benchmarkInfo{
 	benchmarkURL:   "https://browserbench.org/Speedometer2.1/",
 	benchmarkRun:   RunSpeedometer,
 	benchmarkScore: RetrieveSpeedometerScore,
-	unit:           "runs/min",
+	unit:           "runs-per-min",
 	direction:      perf.BiggerIsBetter,
 }
 
