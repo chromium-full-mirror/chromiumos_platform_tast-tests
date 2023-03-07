@@ -7,6 +7,9 @@ package perf
 import (
 	"context"
 	"fmt"
+	"math"
+	"regexp"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -37,6 +40,7 @@ type FrameDataTracker struct {
 type FrameCountingPerSinkData struct {
 	SinkType        string `json:"sinkType"`
 	IsRoot          bool   `json:"isRoot"`
+	DebugLabel      string `json:"debugLabel"`
 	PresentedFrames []int  `json:"presentedFrames"`
 }
 
@@ -183,14 +187,25 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 	// properly label the metric name.
 	sinkTypeCounts := make(map[string]int)
 	var numBuckets int
+	r := regexp.MustCompile(`[a-zA-Z0-9]{1,50}`)
 	for _, sink := range t.frameCountData {
-		sinkName := "." + sink.SinkType
+		// Debug label might contain illegal characters (e.g. ",").
+		// Join the string by separator "-" because "-" is allowed
+		// in metric name.
+		matches := r.FindAllString(sink.DebugLabel, -1)
+		debugLabel := strings.Join(matches, "-")
+		var sinkName string
+		if debugLabel != "" {
+			sinkName = "." + sink.SinkType + "." + debugLabel[0:int(math.Min(50, float64(len(debugLabel))))]
+		} else {
+			sinkName = "." + sink.SinkType
+		}
 		if sink.IsRoot {
 			sinkName = ".root" + sinkName
 		}
 
 		// Metrics are named according to the following:
-		// "<prefix>FrameSink<optional .root>.<sink type>.<current number of that sink type>"
+		// "<prefix>FrameSink<optional .root>.<sink type>.<debug label>.<current number of that sink name>"
 		//
 		// i.e:
 		// TPS.FrameSink.root.layer-tree.0
