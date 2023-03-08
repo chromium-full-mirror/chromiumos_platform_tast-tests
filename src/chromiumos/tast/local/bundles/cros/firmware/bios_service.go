@@ -158,18 +158,7 @@ func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectio
 
 // SetAPSoftwareWriteProtect sets the AP software write protect.
 func (bs *BiosService) SetAPSoftwareWriteProtect(ctx context.Context, req *pb.WPRequest) (*empty.Empty, error) {
-	args := &bios.WPArgs{
-		WPRangeStart:  -1, // Fill with default values initially.
-		WPRangeLength: -1,
-		WPSection:     bios.EmptyImageSection,
-	}
-	if req.Range != nil {
-		args.WPRangeStart = req.Range.Start
-		args.WPRangeLength = req.Range.Length
-	} else if req.Section != pb.ImageSection_EmptyImageSection {
-		args.WPSection = sectionEnumToSection[req.Section]
-	}
-	if err := bios.SetAPSoftwareWriteProtect(ctx, req.Enable, args); err != nil {
+	if err := bios.SetAPSoftwareWriteProtect(ctx, req.Enable); err != nil {
 		return nil, err
 	}
 	return &empty.Empty{}, nil

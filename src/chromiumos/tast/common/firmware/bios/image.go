@@ -461,73 +461,39 @@ func (i *Image) GetLayout() []byte {
 	return []byte(strings.Join(data, "\n") + "\n")
 }
 
-// WPArgs struct holds the optional arguments to SetAPSoftwareWriteProtect.
-type WPArgs struct {
-	WPRangeStart  int64
-	WPRangeLength int64
-	WPSection     ImageSection
-}
-
 // SetAPSoftwareWriteProtect sets write protect using flashrom.
-func SetAPSoftwareWriteProtect(ctx context.Context, enable bool, args *WPArgs) error {
-	// If disabling, set range to start=0, len=0. Otherwise use args to determine enable range.
-	rangeStr := "--wp-range=0,0"
-	enableStr := "--wp-disable"
-	expState := "disabled"
-	if enable {
-		enableStr = "--wp-enable"
-		expState = "enabled"
+func SetAPSoftwareWriteProtect(ctx context.Context, enable bool) error {
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
-	wpCmd := []string{"-p", "host", enableStr}
 
-	if args != nil && args.WPRangeStart != -1 && args.WPRangeLength != -1 {
-		rangeStr = fmt.Sprintf("--wp-range=%x,%x", args.WPRangeStart, args.WPRangeLength)
-		wpCmd = append(wpCmd, rangeStr)
-	} else if args != nil && args.WPSection != EmptyImageSection {
-		regionName := string(args.WPSection)
-
-		tmpFile, err := ioutil.TempFile("/var/tmp", "")
-		if err != nil {
-			return errors.Wrap(err, "creating tmpfile to set read host region")
+	if enable { // Enable WP for whole flash.
+		if out, err := flashromInstance.SoftwareWriteProtectEnable(ctx); err != nil {
+			return errors.Wrapf(err, "unable to enable write protection setting with flashrom, got ouput: %s", string(out))
 		}
-		defer os.Remove(tmpFile.Name())
-
-		regionStr := fmt.Sprintf("%s:%s", regionName, tmpFile.Name())
-
-		// Check AP firmware WP range.
-		if out, err := testexec.CommandContext(ctx, "flashrom", "-p", "host", "-r", "-i", regionStr).CombinedOutput(); err != nil {
-			return errors.Wrapf(err, "failed to read the file, got output: %s", string(out))
-		}
-
-		wpCmd = append(wpCmd, "-i", regionStr, fmt.Sprintf("--wp-region=%s", regionName))
-	} else if enable { // No range or section provided, but enable requested so enable WP for whole flash.
-		out, err := testexec.CommandContext(ctx, "flashrom", "-p", "host", "--flash-size").CombinedOutput()
-		if err != nil {
-			return errors.Wrapf(err, "failed to read the flash size, got output: %s", string(out))
-		}
-
-		// Last line of output from flashrom -p host --flash-size is the size in base 10.
-		lastLineStart := bytes.LastIndexByte(out[:len(out)-1], '\n') + 1
-		size := strings.TrimSpace((string(out[lastLineStart : len(out)-1])))
-
-		rangeStr = fmt.Sprintf("--wp-range=0,%s", size)
-		wpCmd = append(wpCmd, rangeStr)
 
 	} else {
-		// If disabling and range not specified, add range 0x0,0x0
-		wpCmd = append(wpCmd, rangeStr)
-	}
-
-	if out, err := testexec.CommandContext(ctx, "flashrom", wpCmd...).CombinedOutput(); err != nil {
-		return errors.Wrapf(err, "unable to set write protection setting with flashrom, got ouput: %s", string(out))
+		if out, err := flashromInstance.SoftwareWriteProtectDisable(ctx); err != nil {
+			return errors.Wrapf(err, "unable to disable write protection setting with flashrom, got ouput: %s", string(out))
+		}
 	}
 
 	// Verify new wp status is as expected.
-	if out, err := testexec.CommandContext(ctx, "flashrom", "-p", "host", "--wp-status").CombinedOutput(); err != nil {
+	curWPStatus, out, err := flashromInstance.SoftwareWriteProtectStatus(ctx)
+	if err != nil {
 		return errors.Wrapf(err, "unable verify write protection status with flashrom, got output: %v", string(out))
-	} else if ok := strings.Contains(string(out), fmt.Sprintf("WP: write protect is %s.", expState)); !ok {
-		return errors.Errorf("expected wp status to be %q, but output was: %s", expState, string(out))
 	}
+
+	if enable != curWPStatus {
+		return errors.Errorf("expected wp status to be %t, but output was: %s", enable, string(out))
+	}
+
 	return nil
 }
 
