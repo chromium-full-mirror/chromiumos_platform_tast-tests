@@ -6,11 +6,10 @@ package firmware
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -224,7 +223,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 			s.Log("Disabling ec software write protect")
 			if err := s.DUT().Conn().CommandContext(ctx, "ectool", "flashprotect", "disable").Run(ssh.DumpLogOnError); err != nil {
 				s.Log("Error in running 'ectool flashprotect disable', got error: ", err)
-				if err := verifyECSoftwareWPStatus(ctx, s, "disabled"); err != nil {
+				if err := verifyECSoftwareWPStatus(ctx, s, false); err != nil {
 					s.Fatal("While verifying EC wp state: ", err)
 				}
 			}
@@ -233,18 +232,29 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 
 	// Check ec and ap software write protect status.
 	// Enable write protections before battery cutoff.
-	for _, programmer := range []string{"ec", "host"} {
-		wpStatus, err := s.DUT().Conn().CommandContext(ctx, "flashrom", "-p", programmer, "--wp-status").Output(ssh.DumpLogOnError)
+	for _, programmer := range []flashrom.Programmer{flashrom.ProgrammerEc, flashrom.ProgrammerHost} {
+		var flashromConfig flashrom.Config
+		flashromInstance, ctx, cleanup, _, err := flashromConfig.
+			FlashromInit("").
+			ProgrammerInit(programmer, "").
+			SetDut(s.DUT()).
+			Probe(ctx)
+		defer cleanup()
 		if err != nil {
-			s.Fatalf("Failed to check for %s write protection: %v", programmer, err)
+			s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 		}
-		if reWPEnabled := regexp.MustCompile(`WP: write protect is enabled`); !reWPEnabled.Match(wpStatus) {
+
+		wpStatus, out, err := flashromInstance.SoftwareWriteProtectStatus(ctx)
+		if err != nil {
+			s.Fatalf("Failed to check for %s write protection: %v. Output is %s", programmer, err, string(out))
+		}
+		if !wpStatus {
 			s.Logf("Enabling %s software write protect", programmer)
 			switch programmer {
 			case "ec":
 				if err := s.DUT().Conn().CommandContext(ctx, "ectool", "flashprotect", "enable").Run(ssh.DumpLogOnError); err != nil {
 					s.Log("Error in running 'ectool flashprotect enable', got error: ", err)
-					if err := verifyECSoftwareWPStatus(ctx, s, "enabled"); err != nil {
+					if err := verifyECSoftwareWPStatus(ctx, s, true); err != nil {
 						s.Fatal("While verifying EC wp state: ", err)
 					}
 				}
@@ -369,14 +379,24 @@ func wakeDUTS0(ctx context.Context, h *firmware.Helper) error {
 // verifyECSoftwareWPStatus checks that the ec write protection status is the
 // expected value using flashrom. Some DUTs, such as Nautilus and Nautiluslte,
 // failed the ectool command, but their wp status from flashrom showed otherwise.
-func verifyECSoftwareWPStatus(ctx context.Context, s *testing.State, expected string) error {
-	out, err := s.DUT().Conn().CommandContext(ctx, "flashrom", "-p", "ec", "--wp-status").Output(ssh.DumpLogOnError)
+func verifyECSoftwareWPStatus(ctx context.Context, s *testing.State, expected bool) error {
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(flashrom.ProgrammerEc, "").
+		SetDut(s.DUT()).
+		Probe(ctx)
+	defer cleanup()
 	if err != nil {
-		return errors.Wrap(err, "failed to collect the ec write protection status with flashrom")
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
-	re := fmt.Sprintf("(write protect is %s)", expected)
-	if reWPEnabled := regexp.MustCompile(re); !reWPEnabled.MatchString(string(out)) {
-		return errors.Wrapf(err, "EC software write protect not %s, got output: %s", expected, string(out))
+	wpStatus, out, err := flashromInstance.SoftwareWriteProtectStatus(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to collect the ec write protection status with flashrom. Output is %s", string(out))
+	}
+
+	if wpStatus != expected {
+		return errors.Wrapf(err, "EC software write protect not %t, got output: %s", expected, string(out))
 	}
 	testing.ContextLog(ctx, "WARNING: ectool returned a non-zero exit, but the wp status changed as expected")
 	return nil
