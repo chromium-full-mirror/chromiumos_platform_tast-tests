@@ -273,13 +273,6 @@ var (
 		preCondition: isVisible,
 		action:       clickNext,
 	}
-	// EulaScreen goes through EULA screen with clicking continue button.
-	EulaScreen = OOBEScreen{
-		oobeAPIName:  "EulaScreen",
-		shouldSkip:   shouldSkip,
-		preCondition: isReadyForTesting,
-		action:       clickNext,
-	}
 	// UserCreationScreen goes through a user creation screen with clicking next.
 	UserCreationScreen = OOBEScreen{
 		oobeAPIName:  "UserCreationScreen",

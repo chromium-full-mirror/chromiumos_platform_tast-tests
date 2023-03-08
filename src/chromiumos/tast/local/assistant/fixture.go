@@ -620,10 +620,6 @@ func (f *oobeFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to go through welcome screen: ", err)
 	}
 
-	if err := SkipOrGoThroughOOBEScreen(ctx, &EulaScreen, &oobeCtx); err != nil {
-		s.Fatal("Failed to go through eula screen: ", err)
-	}
-
 	if err := GoThroughOOBEScreen(ctx, &UserCreationScreen, &oobeCtx); err != nil {
 		s.Fatal("Failed to go through user creation screen: ", err)
 	}
