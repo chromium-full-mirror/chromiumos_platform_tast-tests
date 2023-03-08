@@ -850,6 +850,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
 	turnOffBlur := nodewith.Name("Turn off visual effects").Role(role.ToggleButton).Focusable()
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(nodewith.Name("Close").Role(role.GenericContainer))
 	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
 		return uiauto.Combine(
 			fmt.Sprintf("set effect with node %v", effect),
@@ -866,9 +867,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			ui.DoDefault(effect),
 			uiLongWait.WaitUntilExists(effect.Focused()),
 
-			// Use the keyboard to exit from the effects page, since there
-			// are many possible "Close" buttons visible within the UI tree.
-			kw.AccelAction("Esc"),
+			// Close the visual effects section.
+			ui.DoDefault(closeButton),
 			uiLongWait.WaitUntilGone(effect.Focused()),
 		)(ctx)
 	}
