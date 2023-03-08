@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
-	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
@@ -65,14 +64,8 @@ func LaunchSystemWebAppsFromURL(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	if downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser()); err != nil {
-		s.Fatal("Failed to get user's Downloads path: ", err)
-	} else {
-		if err := uiauto.StartRecordFromKB(ctx, tconn, kb, downloadsPath); err != nil {
-			s.Log("Failed to start recording: ", err)
-		}
-		defer uiauto.StopRecordFromKBAndSaveOnError(cleanupCtx, tconn, s.HasError, s.OutDir(), downloadsPath)
-	}
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	testAppInternalNames := map[string]struct{}{
 		// Link capture, stand alone app.
@@ -127,8 +120,21 @@ func verifyAndLaunchSystemWebAppFromURL(ctx context.Context, cr *chrome.Chrome, 
 	omniboxFinder := browserui.AddressBarFinder
 	if err := uiauto.Combine("open target "+appURL,
 		ui.LeftClick(omniboxFinder),
-		keyboard.AccelAction("ctrl+a"),
-		keyboard.AccelAction("Backspace"),
+		ui.RetrySilently(len("about:blank"), func(ctx context.Context) error {
+			expectedValue := ""
+			if err := uiauto.Combine("delete all text",
+				keyboard.AccelAction("ctrl+a"),
+				keyboard.AccelAction("Backspace"))(ctx); err != nil {
+				return err
+			}
+
+			if nodeInfo, err := ui.Info(ctx, omniboxFinder); err != nil {
+				return err
+			} else if nodeInfo.Value != expectedValue {
+				return errors.Errorf("failed to clean the address bar: got: %s; want: %s", nodeInfo.Value, expectedValue)
+			}
+			return nil
+		}),
 		keyboard.TypeAction(appURL),
 		keyboard.AccelAction("Enter"))(ctxWithTimeout); err != nil {
 		return err
