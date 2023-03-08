@@ -23,8 +23,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// const tapeURL = "https://tape-307412.ey.r.appspot.com/"
-const tapeURL = "https://additionaltargetkeys-dot-tape-307412.ey.r.appspot.com/"
+const tapeURL = "https://tape-307412.ey.r.appspot.com/"
 const tapeAudience = "770216225211-ihjn20dlehf94m9l4l5h0b0iilvd1vhc.apps.googleusercontent.com"
 
 // client is created with NewClient and holds a *http.Client struct with an oauth token
@@ -90,6 +89,7 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 	var err error
 	// Try to make the call 3 times as a call might fail occasionally.
 	var response *http.Response
+
 	for i := 0; i < 3; i++ {
 		// Create a request.
 		payload := bytes.NewReader(payloadBytes)
@@ -272,9 +272,10 @@ const MaxOwnedTestAccountTimeout = 60 * 60 * 6
 // OwnedTestAccount holds all data of an owned test account which can be used in tests.
 type OwnedTestAccount struct {
 	GenericAccount
-	GaiaID     string `json:"gaia_id"`
-	CustomerID string `json:"customer_id"`
-	OrgunitID  string `json:"orgunit_id"`
+	GaiaID      string `json:"gaia_id"`
+	CustomerID  string `json:"customer_id"`
+	OrgunitID   string `json:"orgunit_id"`
+	OrgUnitPath string `json:"orgunit_path"`
 }
 
 // requestOwnedTestAccountParams is a struct containing the necessary data to request an owned
@@ -391,4 +392,70 @@ func (c *client) Deprovision(ctx context.Context, deviceID, customerID string) e
 	}
 	defer response.Body.Close()
 	return nil
+}
+
+// listDevicesRequest is a struct containing the necessary data to list devices
+// in an organizational unit.
+type listDevicesRequest struct {
+	OrgUnitPath string `json:"orgunitpath"`
+	CustomerID  string `json:"customerid"`
+}
+
+// ListDevices calls TAPE to retrieve a list of devices in the provided organizational unit
+// corresponding to orgUnitPath.
+func (c *client) ListDevices(ctx context.Context, orgUnitPath, customerID string) (string, error) {
+	request := &listDevicesRequest{
+		OrgUnitPath: orgUnitPath,
+		CustomerID:  customerID,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/listDevices", 30*time.Second, payloadBytes)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read response")
+	}
+	return string(respBody), nil
+}
+
+// DeprovisionedRequest is a struct containing the necessary data to check if a
+// device is provisioned in an organizational unit.
+type DeprovisionedRequest struct {
+	DeviceID    string `json:"deviceid"`
+	OrgUnitPath string `json:"orgunitpath"`
+	CustomerID  string `json:"customerid"`
+}
+
+// Deprovisioned calls TAPE to check if a device with a specific deviceID is
+// provisioned in organizational unit corresponding to orgUnitPath.
+func (c *client) Deprovisioned(ctx context.Context, deviceID, orgUnitPath, customerID string) (bool, error) {
+	request := &DeprovisionedRequest{
+		DeviceID:    deviceID,
+		OrgUnitPath: orgUnitPath,
+		CustomerID:  customerID,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", 30*time.Second, payloadBytes)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to read response")
+	}
+	return string(respBody) == "Deprovisioned", nil
 }

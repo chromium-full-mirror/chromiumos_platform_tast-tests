@@ -126,18 +126,21 @@ func DeviceTrustInsession(ctx context.Context, s *testing.State) {
 	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
 	service := enterpriseconnectors.NewDeviceTrustServiceClient(cl.Conn)
+
+	// Deprovision the DUT at the end of the test. As devices might get
+	// provisioned even when the enrollment fails we need to defer the
+	// deprovisioning before enrolling.
+	defer func(ctx context.Context) {
+		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+			s.Fatal("Failed to deprovision device: ", err)
+		}
+	}(cleanupCtx)
+
 	s.Log("Enrolling device")
 	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password, ExpectedIdPURL: expectedIdPURL, SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
 		s.Fatal("Remote call Enroll() failed: ", err)
 	}
 	defer service.StopChrome(cleanupCtx, &empty.Empty{})
-
-	// Deprovision the DUT at the end of the test.
-	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID); err != nil {
-			s.Fatal("Failed to deprovision device: ", err)
-		}
-	}(cleanupCtx)
 
 	if _, err := service.ConnectToFakeIdP(ctx, &enterpriseconnectors.ConnectToFakeIdPRequest{User: acc.Username, Pass: acc.Password}); err != nil {
 		s.Fatal("Remote call ConnectToFakeIdP() failed: ", err)

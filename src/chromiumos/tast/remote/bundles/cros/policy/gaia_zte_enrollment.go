@@ -153,6 +153,15 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer accManager.CleanUp(cleanupCtx)
 
+	// Deprovision the DUT at the end of the test. As devices might get
+	// provisioned even when the enrollment fails we need to defer the
+	// deprovisioning before enrolling.
+	defer func(ctx context.Context) {
+		if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+			s.Fatal("Failed to deprovision device: ", err)
+		}
+	}(cleanupCtx)
+
 	if _, err := pc.GAIAZTEEnrollUsingChrome(ctx, &ps.GAIAZTEEnrollUsingChromeRequest{
 		DmserverURL: dmServerURL,
 		ManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
@@ -160,11 +169,4 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ZTE enroll using chrome: ", err)
 	}
 	defer pc.StopChrome(cleanupCtx, &empty.Empty{})
-
-	// Deprovision the DUT at the end of the test.
-	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID); err != nil {
-			s.Fatal("Failed to deprovision device: ", err)
-		}
-	}(cleanupCtx)
 }

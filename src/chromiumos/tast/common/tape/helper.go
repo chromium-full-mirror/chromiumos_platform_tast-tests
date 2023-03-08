@@ -6,10 +6,12 @@ package tape
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/rpc"
 	ts "chromiumos/tast/services/cros/tape"
+	"chromiumos/tast/testing"
 )
 
 // ServiceAccountVar holds the name of the variable which stores the service account credentials for TAPE.
@@ -181,7 +183,7 @@ func (ah *OwnedTestAccountManager) CleanUp(ctx context.Context) error {
 }
 
 // DeprovisionHelper is a helper function to deprovision a device in a managed domain.
-func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, customerID string) error {
+func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, customerID, orgUnitPath string) error {
 	tapeService := ts.NewServiceClient(rpcClient.Conn)
 	// Get the device ID of the DUT to deprovision it at the end of the test.
 	res, err := tapeService.GetDeviceID(ctx, &ts.GetDeviceIDRequest{CustomerID: customerID})
@@ -190,6 +192,23 @@ func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, c
 	}
 	if err = c.Deprovision(ctx, res.DeviceID, customerID); err != nil {
 		return errors.Wrapf(err, "failed to deprovision device %s", res.DeviceID)
+	}
+	if orgUnitPath == "" {
+		return nil
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		isDeprovisioned, err := c.Deprovisioned(ctx, res.DeviceID, orgUnitPath, customerID)
+		if err != nil {
+			return err
+		}
+		if !isDeprovisioned {
+			return errors.New("device was not deprovisioned yet")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: 10 * time.Second,
+	}); err != nil {
+		return err
 	}
 	return nil
 }

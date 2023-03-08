@@ -125,6 +125,15 @@ func GAIAEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer accManager.CleanUp(cleanupCtx)
 
+	// Deprovision the DUT at the end of the test. As devices might get
+	// provisioned even when the enrollment fails we need to defer the
+	// deprovisioning before enrolling.
+	defer func(ctx context.Context) {
+		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+			s.Fatal("Failed to deprovision device: ", err)
+		}
+	}(cleanupCtx)
+
 	if _, err := policyClient.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
 		Username:    acc.Username,
 		Password:    acc.Password,
@@ -133,11 +142,4 @@ func GAIAEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
-
-	// Deprovision the DUT at the end of the test.
-	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID); err != nil {
-			s.Fatal("Failed to deprovision device: ", err)
-		}
-	}(cleanupCtx)
 }
