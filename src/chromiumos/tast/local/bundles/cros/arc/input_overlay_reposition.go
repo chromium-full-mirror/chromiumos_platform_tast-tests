@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -50,6 +51,8 @@ type dragType int
 const (
 	mouseDrag dragType = 0
 	touchDrag dragType = 1
+	// errorMargin is the allowable error for drag testing.
+	errorMargin = 1.0
 )
 
 func InputOverlayReposition(ctx context.Context, s *testing.State) {
@@ -66,9 +69,9 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 
 		menuEntry := nodewith.Name("Game controls").HasClass("ImageButton")
 		editButton := nodewith.Name("Edit").HasClass("PillButton")
-		buttonGroup := nodewith.Name("View").Role(role.Group)
-		tapAction := nodewith.Name("touch point").Role(role.Group).First()
-		moveAction := nodewith.Name("touch point").Role(role.Group).Nth(2)
+		buttonGroup := nodewith.Name("Layout actions menu").Role(role.Group)
+		tapAction := nodewith.Name("Keymapping touch point").Role(role.Group).First()
+		moveAction := nodewith.Name("Keymapping D-pad").Role(role.Group)
 
 		// CUJ: Reposition various UI elements.
 		if err := uiauto.Combine("drag menu entry",
@@ -151,8 +154,8 @@ func testDrag(finder *nodewith.Finder, tconn *chrome.TestConn, drag dragType, xO
 			return errors.Wrap(err, "could not get initial node position")
 		}
 		currentLoc := currentRect.CenterPoint()
-		if (currentLoc.X != finalLoc.X) || (currentLoc.Y != finalLoc.Y) {
-			return errors.Errorf("wanted final location %v, got %v", finalLoc, currentLoc)
+		if !withinError(currentLoc, finalLoc) {
+			return errors.Errorf("wanted final location %v within error margin %v, got %v", finalLoc, errorMargin, currentLoc)
 		}
 
 		return nil
@@ -261,4 +264,10 @@ func testOffscreenDrag(finder *nodewith.Finder, tconn *chrome.TestConn) action.A
 
 		return nil
 	}
+}
+
+// withinError takes the difference between two points and ensures that it is
+// within the allowable error bounds.
+func withinError(p1, p2 coords.Point) bool {
+	return (math.Abs(float64(p1.X-p2.X)) <= errorMargin) && (math.Abs(float64(p1.Y-p2.Y)) <= errorMargin)
 }
