@@ -73,14 +73,20 @@ type meetTest struct {
 // videoCodecReport is used to report a video codec to a performance metric so that it is easy to find in places like TPS Dashboard.
 type videoCodecReport float64
 
-// Bigger values should represent "better" codecs in some sense, because these are reported with perf.BiggerIsBetter.
-// That is silly, of course, but every metric must specify either perf.SmallerIsBetter or perf.BiggerIsBetter.
+// Every metric must specify either perf.SmallerIsBetter or perf.BiggerIsBetter but it doesn't make sense here.
 const (
 	vp8 videoCodecReport = 0
 	vp9 videoCodecReport = 1
 )
 
 const defaultTestTimeout = 30 * time.Minute
+
+// minDevices is a limited subset of devices to reduce lab load for less important tests.
+func minDevices() hwdep.Condition {
+	return hwdep.Model("fleex", "barla", "hana", "redrix", "esche", "lillipup",
+		"atlas", "scarlet", "ezkinil", "robo", "syndra", "caroline", "blorb",
+		"vorticon", "treeya360", "akali360", "jinlon")
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -115,11 +121,11 @@ func init() {
 				cam:         true,
 				browserType: browser.TypeAsh,
 			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			Fixture:           "loggedInToCUJUserWithWebRTCEventLogging",
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
-			Name:      "2p_enterprise",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
+			Name:    "2p_enterprise",
+			Timeout: defaultTestTimeout,
 			Val: meetTest{
 				num:         1,
 				layout:      meetLayoutTiled,
@@ -139,6 +145,7 @@ func init() {
 			},
 			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
 			Name:      "4p",
 			Timeout:   defaultTestTimeout,
@@ -160,7 +167,8 @@ func init() {
 				cam:         true,
 				browserType: browser.TypeAsh,
 			},
-			Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			Fixture:           "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
 			// Small meeting.
 			Name:      "4p_present_notes_split",
@@ -177,9 +185,8 @@ func init() {
 			},
 			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 		}, {
-			Name:      "4p_present_notes_split_enterprise",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
+			Name:    "4p_present_notes_split_enterprise",
+			Timeout: defaultTestTimeout,
 			Val: meetTest{
 				num:         3,
 				layout:      meetLayoutTiled,
@@ -212,7 +219,8 @@ func init() {
 				cam:         true,
 				browserType: browser.TypeAsh,
 			},
-			Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			Fixture:           "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
 			// Even bigger meeting.
 			Name:      "49p",
@@ -381,7 +389,8 @@ func init() {
 				zoomOut:     true,
 				browserType: browser.TypeAsh,
 			},
-			Fixture: "loggedInToCUJUserWithOneGroupPerRenderer",
+			Fixture:           "loggedInToCUJUserWithOneGroupPerRenderer",
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
 			// 16p_present_notes_split variant with
 			// MainThreadCompositingPriority enabled.
@@ -399,7 +408,8 @@ func init() {
 				zoomOut:     true,
 				browserType: browser.TypeAsh,
 			},
-			Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
+			Fixture:           "loggedInToCUJUserWithMainThreadCompositingPriority",
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
 			// TODO(246324780): Remove when GPU hanging issue is fixed.
 			// This test is primarily to try to reproduce this issue in
@@ -418,6 +428,7 @@ func init() {
 			},
 			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraHardwareDeps: hwdep.D(minDevices()),
 		}, {
 			Name:    "4p_notes_effects",
 			Timeout: defaultTestTimeout,
