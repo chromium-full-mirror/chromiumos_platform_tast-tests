@@ -355,8 +355,8 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	}
 
 	v := fmt.Sprintf("%s_%s_%s", desc.CPUAbi, desc.BuildType, desc.BuildID)
-	vUreadahead := fmt.Sprintf("host_%s_%s_%s", desc.HostUreadaheadAbi, desc.BuildType, desc.BuildID)
-	s.Logf("Detected version %s(host %s)", v, desc.HostUreadaheadAbi)
+	vUreadahead := fmt.Sprintf("host_%s_%s_%s_%s", desc.HostUreadaheadAbi, desc.BinaryTranslationType, desc.BuildType, desc.BuildID)
+	s.Logf("Detected version %s(host %s_%s)", v, desc.HostUreadaheadAbi, desc.BinaryTranslationType)
 	if desc.BuildType != "user" {
 		s.Fatal("Data collector should only be run on a user build")
 	}
@@ -390,6 +390,17 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		ctx:             ctx,
 		androidPackage:  param.androidPackage,
 		androidVersion:  vUreadahead,
+		shouldUpload:    param.upload,
+		buildDescriptor: desc,
+	}
+
+	// TODO(b/271894843): Remove vUreadaheadLegacy once it's no longer used by Uprev script,
+	// otherwise could break PFQ if we don't upload ureadahead artifacts in the original format.
+	vUreadaheadLegacy := fmt.Sprintf("host_%s_%s_%s", desc.HostUreadaheadAbi, desc.BuildType, desc.BuildID)
+	duUreadaheadLegacy := dataUploader{
+		ctx:             ctx,
+		androidPackage:  param.androidPackage,
+		androidVersion:  vUreadaheadLegacy,
 		shouldUpload:    param.upload,
 		buildDescriptor: desc,
 	}
@@ -464,8 +475,16 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		if err = exec.Command("tar", "-cvpf", targetTar, "-C", targetDir, ".").Run(); err != nil {
 			s.Fatalf("Failed to compress %q: %v", targetDir, err)
 		}
-
 		if err := duUreadahead.uploadIfNeeded(targetTar, ureadaheadPack); err != nil {
+			s.Fatalf("Failed to upload %q: %v", ureadaheadPack, err)
+		}
+
+		// TODO(b/271894843): Remove this once it's no longer used by Uprev script.
+		targetTarLegacy := filepath.Join(targetDir, vUreadaheadLegacy+".tar")
+		if err := os.Rename(targetTar, targetTarLegacy); err != nil {
+			s.Fatalf("Failed to rename %q to %q: %v", targetTar, targetTarLegacy, err)
+		}
+		if err := duUreadaheadLegacy.uploadIfNeeded(targetTarLegacy, ureadaheadPack); err != nil {
 			s.Fatalf("Failed to upload %q: %v", ureadaheadPack, err)
 		}
 

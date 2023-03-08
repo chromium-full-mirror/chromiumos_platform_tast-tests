@@ -9,6 +9,7 @@ import (
 	"context"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
@@ -26,6 +27,8 @@ type BuildDescriptor struct {
 	BuildType string
 	// model type e.g. eve
 	ModelType string
+	// binary translation type e.g. houdini, ndk, native
+	BinaryTranslationType string
 	// Host ureadahead abi e.g. x86_64, arm, arm64
 	HostUreadaheadAbi string
 	// Guest cpu abi e.g. x86_64, x86, arm, arm64
@@ -66,6 +69,28 @@ func getHostUreadaheadAbi(ctx context.Context, dut *dut.DUT) (string, error) {
 	}
 
 	return abi, nil
+}
+
+func getBinaryTranslationType(ctx context.Context, dut *dut.DUT) (string, error) {
+	b, err := dut.Conn().CommandContext(ctx, "lscpu").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to check lscpu remotely")
+	}
+	lscpuResult := string(b)
+
+	vendorID := regexp.MustCompile(`(\n|^)Vendor ID:(.+)(\n|$)`).FindStringSubmatch(lscpuResult)
+	if vendorID == nil {
+		return "", errors.Errorf("Vendor ID field is not found in %q", lscpuResult)
+	}
+
+	switch strings.TrimSpace(vendorID[2]) {
+	case "GenuineIntel":
+		return "houdini", nil
+	case "AuthenticAMD":
+		return "ndk", nil
+	default:
+		return "native", nil
+	}
 }
 
 // GetBuildDescriptorRemotely gets ARC build properties from the device, parses for build ID, ABI,
@@ -158,16 +183,22 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		return nil, errors.Wrap(err, "failed to get host ureadahead ABI")
 	}
 
+	binaryTranslationType, err := getBinaryTranslationType(ctx, dut)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get binary translation type")
+	}
+
 	desc := BuildDescriptor{
-		Official:          official,
-		BuildID:           mBuildID[2],
-		BuildVersion:      buildVersion,
-		BuildType:         mBuildType[2],
-		ModelType:         mModelType[3],
-		HostUreadaheadAbi: hostUreadaheadAbi,
-		CPUAbi:            abi,
-		VersionRelease:    versionRelease,
-		Milestone:         milestone,
+		Official:              official,
+		BuildID:               mBuildID[2],
+		BuildVersion:          buildVersion,
+		BuildType:             mBuildType[2],
+		ModelType:             mModelType[3],
+		BinaryTranslationType: binaryTranslationType,
+		HostUreadaheadAbi:     hostUreadaheadAbi,
+		CPUAbi:                abi,
+		VersionRelease:        versionRelease,
+		Milestone:             milestone,
 	}
 
 	return &desc, nil
