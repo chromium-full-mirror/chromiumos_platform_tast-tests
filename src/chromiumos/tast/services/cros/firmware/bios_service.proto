@@ -162,8 +162,6 @@ message Range {
 // WPRequest provides args for enabling/disabling software write protect.
 message WPRequest {
   bool enable = 1;
-  Range range = 2;   // Skip instantiating this message to use default values.
-  ImageSection section = 3;  // Don't set to use default value.
 }
 
 // FMAP parses flash map to a map of image section to range (start, length).
