@@ -37,8 +37,7 @@ func init() {
 			"chromeos-wmp@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		// TODO(b/255632291): Remove crosbolt after M111.
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:cuj"},
+		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{

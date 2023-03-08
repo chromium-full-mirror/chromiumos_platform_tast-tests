@@ -35,7 +35,6 @@ func init() {
 			"amusbach@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"animation.html", "animation.js", cujrecorder.SystemTraceConfigFile},
 		Timeout:      15 * time.Minute,
