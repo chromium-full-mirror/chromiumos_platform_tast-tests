@@ -64,6 +64,7 @@ func init() {
 }
 
 var alsaSinksPattern = regexp.MustCompile("1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+var pipewireAlsaSinksPattern = regexp.MustCompile("31\talsa-sink\tPipeWire\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 
 func PulseAudioBasic(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
@@ -76,10 +77,11 @@ func PulseAudioBasic(ctx context.Context, s *testing.State) {
 	for _, stopOpt := range []string{"stop", "restart", "kill"} {
 		// Stops pulseaudio server by `stopOpt` and restarts the server by a playback stream.
 		s.Run(ctx, stopOpt, func(ctx context.Context, s *testing.State) {
-			s.Logf("%s pulseaudio service", stopOpt)
-			// Use systemctl to control pulseaudio service.
-			if err := cont.Command(ctx, "systemctl", " --user", stopOpt, "pulseaudio").Run(testexec.DumpLogOnError); err != nil {
-				s.Fatalf("Failed to %s pulseaudio: %v", stopOpt, err)
+			// Use systemctl to control audio server
+			s.Logf("%s audio server", stopOpt)
+			stopErr := cont.Command(ctx, "systemctl", " --user", stopOpt, "pulseaudio", "pipewire", "pipewire-pulse").Run()
+			if err := cont.Command(ctx, "systemctl", " --user", "--quiet", "is-active", "pulseaudio", "pipewire", "pipewire-pulse").Run(); (err == nil && stopOpt != "restart") || (err != nil && stopOpt == "restart") {
+				s.Fatalf("Failed to %s audio server: %v", stopOpt, stopErr)
 			}
 
 			testing.ContextLog(ctx, "Play zeros with ALSA device")
@@ -89,7 +91,7 @@ func PulseAudioBasic(ctx context.Context, s *testing.State) {
 
 			if out, err := cont.Command(ctx, "pactl", "list", "sinks", "short").Output(testexec.DumpLogOnError); err != nil {
 				s.Fatal("Failed to list pulseaudio sinks: ", err)
-			} else if !alsaSinksPattern.Match(out) {
+			} else if !alsaSinksPattern.Match(out) && !pipewireAlsaSinksPattern.Match(out) {
 				s.Fatalf("Failed to load ALSA device to pulseaudio: %q", string(out))
 			}
 		})

@@ -81,8 +81,8 @@ func AudioPlaybackConfigurations(ctx context.Context, s *testing.State) {
 
 	// Use systemctl to control audio server
 	s.Log("stop audio server")
-	stopErr := cont.Command(ctx, "systemctl", " --user", "stop", "pulseaudio", "pipewire", "pipewire-pulse")
-	if err := cont.Command(ctx, "systemctl", " --user", "--quiet", "is-active", "pulseaudio", "pipewire", "pipewire-pulse"); err == nil {
+	stopErr := cont.Command(ctx, "systemctl", " --user", "stop", "pulseaudio", "pipewire", "pipewire-pulse").Run()
+	if err := cont.Command(ctx, "systemctl", " --user", "--quiet", "is-active", "pulseaudio", "pipewire", "pipewire-pulse").Run(); err == nil {
 		s.Log("Failed to stop audio server: ", stopErr)
 	}
 
