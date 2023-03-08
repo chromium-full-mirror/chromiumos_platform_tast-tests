@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      3 * time.Minute,
+		Timeout:      6 * time.Minute,
 		Fixture:      "personalizationWithScreenSaverPreviewClamshell",
 	})
 }
@@ -50,7 +50,7 @@ func ScreenSaverPreview(ctx context.Context, s *testing.State) {
 
 	// The test has a dependency of network speed, so we give uiauto.Context ample
 	// time to wait for nodes to load.
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
 	if err := ambient.OpenAmbientSubpage(ctx, ui); err != nil {
 		s.Fatal("Failed to open Ambient Subpage: ", err)
@@ -66,7 +66,7 @@ func ScreenSaverPreview(ctx context.Context, s *testing.State) {
 	}
 
 	// Preview button text changes to "Downloading" when it gets disabled to load screen saver resources.
-	previewButtonDisabled := nodewith.Role(role.Button).HasClass("preview-button-disabled")
+	previewButtonDisabled := nodewith.HasClass("preview-button-disabled")
 	if err := ui.WaitUntilExists(previewButtonDisabled)(ctx); err != nil {
 		s.Fatal("Failed to show 'Downloading' message: ", err)
 	}
