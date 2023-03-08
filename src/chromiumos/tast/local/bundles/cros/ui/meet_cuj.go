@@ -684,7 +684,21 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
+	// Ensure that we close the Meet window at the end of the test in case
+	// the test fails. Closing the Meet window should occur after dumping
+	// the UI tree, so the UI dump actually contains the proper failure.
+	closedMeet := false
+	defer func() {
+		if closedMeet {
+			return
+		}
+		// Close the windows to finish the meeting.
+		if err := ash.CloseAllWindows(closeCtx, tconn); err != nil {
+			s.Error("Failed to close all windows: ", err)
+		}
+	}()
+
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Expand the Create Dump section of chrome://webrtc-internals. We will not need it
 	// until after the meeting, but we can expand the section much faster now while
@@ -748,17 +762,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find the Meet window: ", err)
 	}
-
-	closedMeet := false
-	defer func() {
-		if closedMeet {
-			return
-		}
-		// Close the Meet window to finish meeting.
-		if err := meetWindow.CloseWindow(closeCtx, tconn); err != nil {
-			s.Error("Failed to close the meeting: ", err)
-		}
-	}()
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
 	s.Logf("Is in tablet-mode: %t", inTabletMode)
