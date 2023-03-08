@@ -185,7 +185,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 							s.Fatal("Failed to sleep: ", err)
 						}
 						s.Log("Checking if DUT woke up from a press on power button")
-						if !h.DUT.Connected(ctx) {
+						if err := h.DUT.Connect(ctx); err != nil && strings.Contains(err.Error(), "no route to host") {
 							s.Log("Found DUT disconnected, continuing the test")
 							continue
 						}
