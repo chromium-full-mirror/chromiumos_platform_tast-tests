@@ -23,7 +23,7 @@ func AshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Apps.PaginationTransition.DragScroll.PresentationTime.TabletMode", "ms", perf.SmallerIsBetter),
 
 		// Smoothness.
-		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow2", "percent", perf.SmallerIsBetter),
 		NewSmoothnessMetricConfig("Apps.PaginationTransition.AnimationSmoothness.ClamshellMode"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness"),
 		NewSmoothnessMetricConfig("Apps.StateTransition.AnimationSmoothness.Close.ClamshellMode"),
