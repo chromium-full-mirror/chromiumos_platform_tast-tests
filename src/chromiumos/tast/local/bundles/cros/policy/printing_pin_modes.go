@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
@@ -99,11 +100,18 @@ func fetchPINModesValuesFromPrintPreview(ctx context.Context, s *testing.State, 
 		}
 	}
 
+	// Perform a "cleanup": select "Save as PDF" destination option.
+	// Otherwise we may open a print preview with an invalid selected set of options
+	// (for example, pin printing is selected, but the pin textbox is empty),
+	// and the print preview will never load.
+	if err := printpreview.SelectPrinter(ctx, tconn, "Save as PDF"); err != nil {
+		s.Fatal("Failed to select 'Save as PDF' destination: ", err)
+	}
+
 	return printingtest.SettingValues{
 		DefaultValue:    defaultEnabledUserPINValue,
 		AvailableValues: availableEnabledUserPINValue,
 	}
-
 }
 
 func PrintingPINModes(ctx context.Context, s *testing.State) {

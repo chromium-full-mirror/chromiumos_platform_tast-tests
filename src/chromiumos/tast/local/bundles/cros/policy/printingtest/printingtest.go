@@ -18,9 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/printing/usbprinter"
@@ -135,14 +133,7 @@ func RunFeatureRestrictionTest(
 			if err != nil {
 				s.Fatal("Failed to connect to chrome: ", err)
 			}
-			defer func() {
-				// We should manually close the print preview, as the "chrome://print" page
-				// doesn't exist, but it's stored in the context for some reason.
-				if err := uiauto.New(tconn).DoDefault(nodewith.Role(role.Button).NameStartingWith("Cancel"))(cleanupCtx); err != nil {
-					s.Error("Failed to close print preview: ", err)
-				}
-				conn.Close()
-			}()
+			defer conn.Close()
 			// The UI tree must be dumped before closing the browser.
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.TestName)
 
@@ -168,14 +159,6 @@ func RunFeatureRestrictionTest(
 			// Compare actual and expected sets of available values.
 			if diff := strcmp.SameList(param.ExpectedAvailableValues, settingValues.AvailableValues); diff != "" {
 				s.Fatal("Unexpected available values (-want +got) ", diff)
-			}
-
-			// Perform a "cleanup": select "Save as PDF" destination option.
-			// Otherwise we may open a print preview with an invalid selected set of options
-			// (for example, pin printing is selected, but the pin textbox is empty),
-			// and the print preview will never load.
-			if err := printpreview.SelectPrinter(ctx, tconn, "Save as PDF"); err != nil {
-				s.Fatal("Failed to select 'Save as PDF' destination: ", err)
 			}
 		})
 	}

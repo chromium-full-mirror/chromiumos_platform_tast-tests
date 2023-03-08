@@ -6,6 +6,7 @@ package policy
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
@@ -13,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/dropdown"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -27,7 +29,6 @@ func init() {
 		Data:         []string{"printing_color_modes_printer_attributes.json"},
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
-			"project-bolton@google.com",
 			"nedol@google.com", // Test author
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
@@ -35,8 +36,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:mainline",
-			"group:paper-io",
-			"paper-io_printing",
 			"informational",
 		},
 		Params: []testing.Param{{
@@ -47,6 +46,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           "virtualUsbPrinterModulesLoadedWithLacrosPolicyLoggedIn",
 			Val:               browser.TypeLacros,
+			Timeout:           4 * time.Minute,
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingColorDefault{}, pci.VerifiedFunctionalityUI),
@@ -66,7 +66,7 @@ func fetchColorModesFromPrintPreview(ctx context.Context, s *testing.State, tcon
 	colorSelection := nodewith.Role(role.ComboBoxSelect).Name("Color")
 	nodeInfo, err := ui.Info(ctx, colorSelection)
 	if err != nil {
-		s.Error("Failed to check the state of 'Color' selection: ", err)
+		s.Fatal("Failed to check the state of 'Color' selection: ", err)
 	}
 
 	defaultColor := nodeInfo.Value
@@ -76,28 +76,8 @@ func fetchColorModesFromPrintPreview(ctx context.Context, s *testing.State, tcon
 		// Color selection box is disabled, thus the only mode available is the one selected.
 		availableColors = append(availableColors, nodeInfo.Value)
 	} else if nodeInfo.Restriction == restriction.None {
-		// Click on the color selection box and wait for it to expand.
-		if err := uiauto.Combine("open color selection preview",
-			ui.DoDefault(colorSelection),
-			ui.WaitUntilExists(colorSelection.State("expanded", true)))(ctx); err != nil {
-			s.Error("Failed to expand color selection: ", err)
-		}
-
-		// Search for all available color mode nodes.
-		availableColorModeNodes, err := ui.NodesInfo(ctx, nodewith.Ancestor(colorSelection).Role(role.ListBoxOption))
-		if err != nil {
-			s.Error("Failed to fetch available color modes: ", err)
-		}
-		for _, availableColorModeNode := range availableColorModeNodes {
-			availableColors = append(availableColors, availableColorModeNode.Name)
-		}
-
-		// Click on the color selection box and wait for it to collide.
-		// Otherwise the expanded selection box may break some future UI interactions.
-		if err := uiauto.Combine("close color selection preview",
-			ui.DoDefault(colorSelection),
-			ui.WaitUntilExists(colorSelection.State("expanded", false)))(ctx); err != nil {
-			s.Error("Failed to close color selection: ", err)
+		if availableColors, err = dropdown.Values(ctx, tconn, colorSelection); err != nil {
+			s.Fatal("Failed to fetch available color modes: ", err)
 		}
 	}
 
