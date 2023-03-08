@@ -90,6 +90,13 @@ var ignoreFrameDataError = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to skipping the frame data collecting error",
 )
 
+// runPowertop controls whether to run `powertop` during tests.
+var runPowertop = testing.RegisterVarString(
+	"cujrecorder.runPowertop",
+	"",
+	"A boolean string (true/false) signifying whether to run powertop for the Recorder",
+)
+
 // MetricConfig is the configuration for the recorder.
 type MetricConfig struct {
 	// The name of the histogram to be recorded.
@@ -475,9 +482,12 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	if !ok || outDir == "" {
 		return nil, errors.New("failed to get the out directory")
 	}
-	r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx, 5*time.Second, filepath.Join(outDir, "powertop"))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create PowertopRecorder")
+
+	if strings.ToLower(runPowertop.Value()) == "true" {
+		r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx, 5*time.Second, filepath.Join(outDir, "powertop"))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create PowertopRecorder")
+		}
 	}
 
 	r.profilerRecorder, err = perfSrc.NewProfilerRecorder(ctx, tpsMetricPrefix, 5*time.Second, outDir)
@@ -852,8 +862,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		return nil, errors.Wrap(err, "failed to start recording memory data")
 	}
 
-	if err := r.powertopRecorder.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start powertop recorder")
+	if r.powertopRecorder != nil {
+		if err := r.powertopRecorder.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start powertop recorder")
+		}
 	}
 
 	if err := r.profilerRecorder.Start(ctx); err != nil {
@@ -1010,10 +1022,12 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		}
 	}
 
-	if err := r.powertopRecorder.Stop(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to stop powertop recorder: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop powertop recorder")
+	if r.powertopRecorder != nil {
+		if err := r.powertopRecorder.Stop(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop powertop recorder: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop powertop recorder")
+			}
 		}
 	}
 
