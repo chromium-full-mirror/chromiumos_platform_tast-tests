@@ -95,14 +95,18 @@ func CellularESimInstall(ctx context.Context, s *testing.State) {
 	if err := ossettings.AddESimWithActivationCode(ctx, tconn, string(activationCode)); err != nil {
 		s.Fatal("Failed to add esim profile with correct activation code: ", err)
 	}
+
+	// May see error at the end of user journey because the stork profile is not able to connect,
+	// and the entire installation process will attempt to connect to the newly installed profile
+	// after Hermes installation.
 	if err := uiauto.Combine("Exit add cellular eSIM flow after using correct activation code",
-		mdp.WithTimeout(3*time.Minute).WaitUntilExists(ossettings.NetworkAddedText),
-		mdp.LeftClick(ossettings.DoneButton.Focusable()),
+		mdp.WithTimeout(3*time.Minute).LeftClick(ossettings.DoneButton.Focusable()),
 	)(ctx); err != nil {
 		s.Fatal("Correct activation code user journey fails: ", err)
 	}
 
-	if err := ossettings.VerifyTestESimProfile(ctx, tconn); err != nil {
+	// Verify the newly installed profile appears in the network list
+	if err := ossettings.VerifyCelluarNetworkExistInList(ctx, tconn, "CarrierConfirmationCode"); err != nil {
 		s.Fatal("Failed to verify newly installed stork profile: ", err)
 	}
 }

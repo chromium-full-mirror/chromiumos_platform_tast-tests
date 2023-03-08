@@ -159,7 +159,8 @@ func AddESimWithActivationCode(ctx context.Context, tconn *chrome.TestConn, acti
 	defer kb.Close()
 
 	var setupNewProfile = nodewith.NameContaining("Set up new profile").Role(role.Button).Focusable()
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(setupNewProfile)(ctx); err == nil {
+	// 2 minute is the timeout that we used in production code for loading pending profiles.
+	if err := ui.WithTimeout(2 * time.Minute).WaitUntilExists(setupNewProfile)(ctx); err == nil {
 		// There are pending profiles, opt to set up a new profile instead.
 		if err := ui.LeftClick(setupNewProfile)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click set up new profile button")
@@ -167,7 +168,7 @@ func AddESimWithActivationCode(ctx context.Context, tconn *chrome.TestConn, acti
 	}
 
 	var activationCodeInput = nodewith.NameRegex(regexp.MustCompile("Activation code")).Focusable().First()
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(activationCodeInput)(ctx); err != nil {
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(activationCodeInput)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find activation code input field")
 	}
 
@@ -204,5 +205,22 @@ func VerifyTestESimProfile(ctx context.Context, tconn *chrome.TestConn) error {
 	if err := ui.LeftClick(testProfileDetailButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to left click Test Profile detail button")
 	}
+	return nil
+}
+
+// VerifyCelluarNetworkExistInList verifies thar the cellular network with |networkName| appears
+// in the mobile network list.
+func VerifyCelluarNetworkExistInList(ctx context.Context, tconn *chrome.TestConn, networkName string) error {
+	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until refresh profile complete")
+	}
+
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+
+	network := nodewith.NameContaining(networkName).Role(role.GenericContainer).First()
+	if err := ui.WaitUntilExists(network)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to find the %s network in the mobile network list", networkName)
+	}
+
 	return nil
 }
