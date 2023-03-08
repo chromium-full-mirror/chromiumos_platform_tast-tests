@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
@@ -29,8 +30,7 @@ func init() {
 		BugComponent: "b:767470",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{"input-overlay-menu.png"},
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedWithInputOverlayAlphaV2",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -50,6 +50,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
 		defer kb.Close()
+		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 		// Start up UIAutomator.
 		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
 		// Start up ACUITI.
@@ -95,7 +96,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		s.Log("Editor CUJ #2: key mappings changes canceled")
 		if err := uiauto.Combine("cancel changed mapping",
 			// Open game controls.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(editButton),
 			// Change mapping of "n" to "l".
 			ui.LeftClick(nodewith.Name("n").HasClass("LabelButtonLabel")),
@@ -115,15 +116,14 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		s.Log("Editor CUJ #3: key mapping changed to a non-existing key bind")
 		if err := uiauto.Combine("mapping unbound",
 			// Open game controls.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(editButton),
 			// Change mapping of "n" to "m"
 			ui.LeftClick(nodewith.Name("w").HasClass("LabelButtonLabel")),
 			kb.TypeAction("g"),
 			// Save binding.
 			uda.Tap(uidetection.Word("Save")),
-			// Waiting for focus update.
-			uiauto.Sleep(gio.WaitForFocusUpdateTime),
+			uda.WaitUntilGone(uidetection.Word("Save")),
 			// Verify original "m" binding doesn't exist anymore (i.e. the current "m"
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.MoveOverlayButton(kb, "g", &params),
@@ -135,15 +135,14 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		s.Log("Editor CUJ #4: key mapping changed to another existing key bind")
 		if err := uiauto.Combine("mapping unbound",
 			// Open game controls.
-			uda.Tap(uidetection.CustomIcon(s.DataPath("input-overlay-menu.png"))),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
 			ui.LeftClick(editButton),
 			// Change mapping of "n" to "m"
 			ui.LeftClick(nodewith.Name("n").HasClass("LabelButtonLabel")),
 			kb.TypeAction("m"),
 			// Save binding.
 			uda.Tap(uidetection.Word("Save")),
-			// Waiting for focus update.
-			uiauto.Sleep(gio.WaitForFocusUpdateTime),
+			uda.WaitUntilGone(uidetection.Word("Save")),
 			// Verify original "m" binding doesn't exist anymore (i.e. the current "m"
 			// binding taps at the bottom tap button, not the top tap button).
 			gio.TapOverlayButton(kb, "m", &params, gio.BotTap),

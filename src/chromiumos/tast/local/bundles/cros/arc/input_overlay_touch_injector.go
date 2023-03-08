@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:767470",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedWithInputOverlayAlphaV2",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},

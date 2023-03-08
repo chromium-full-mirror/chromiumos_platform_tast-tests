@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -27,7 +28,7 @@ func init() {
 		BugComponent: "b:767470",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedWithInputOverlayAlphaV2",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
@@ -47,6 +48,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
 		defer kb.Close()
+		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 		// Start up UIAutomator.
 		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)
 
@@ -61,6 +63,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.LeftClick(nodewith.Name("Show key mapping").HasClass("ToggleButton")),
 			// Exit out of menu.
 			ui.LeftClick(nodewith.Name("Close game controls").HasClass("ImageButton")),
+			ui.WaitUntilGone(nodewith.Name("Close game controls").HasClass("ImageButton")),
 			// Poll UI elements no longer exist, but overlay is still responsive.
 			ui.Gone(nodewith.Name("m").HasClass("LabelButtonLabel")),
 			gio.TapOverlayButton(kb, "m", &params, gio.TopTap),
@@ -90,6 +93,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ToggleButton")),
 			// Exit out of menu.
 			ui.LeftClick(nodewith.Name("Close game controls").HasClass("ImageButton")),
+			ui.WaitUntilGone(nodewith.Name("Close game controls").HasClass("ImageButton")),
 			// Poll UI elements no longer exist, and overlay is unresponsive.
 			ui.Gone(nodewith.Name("m").HasClass("LabelButtonLabel")),
 			not(gio.TapOverlayButton(kb, "m", &params, gio.TopTap)),
