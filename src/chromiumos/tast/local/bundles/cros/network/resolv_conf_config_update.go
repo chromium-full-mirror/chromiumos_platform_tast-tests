@@ -124,6 +124,9 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 			testing.ContextLog(cleanupCtx, "Failed to cleanup router: ", err)
 		}
 	}()
+	if err := m.WaitForDefaultService(ctx, svc); err != nil {
+		s.Fatal("Failed to wait for the base network to become the default network: ", err)
+	}
 
 	// Assert that /etc/resolv.conf is correct.
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.

@@ -70,7 +70,7 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 		IPv6Nameservers:      []string{"1111::1111", "1111::1112"},
 		IPv4DomainSearchList: []string{"test1-1.com", "test1-2.com"},
 	}
-	_, baseR, err := virtualnet.CreateRouterEnv(ctx, m, pool, virtualnet.EnvOptions{
+	baseSvc, baseR, err := virtualnet.CreateRouterEnv(ctx, m, pool, virtualnet.EnvOptions{
 		Priority:             dns.BasePriority,
 		NameSuffix:           "base",
 		IPv4DNSServers:       baseConfig.IPv4Nameservers,
@@ -87,6 +87,9 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 			testing.ContextLog(cleanupCtx, "Failed to cleanup base service: ", err)
 		}
 	}()
+	if err := m.WaitForDefaultService(ctx, baseSvc); err != nil {
+		s.Fatal("Failed to wait for the base network to become the default network: ", err)
+	}
 
 	// Assert that /etc/resolv.conf is populated with base config.
 	// DNS proxy should not be used on non-online networks.
@@ -104,7 +107,7 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 		IPv6Nameservers:      []string{"2222::2221", "2222::2222"},
 		IPv4DomainSearchList: []string{"test2-1.com", "test2-2.com"},
 	}
-	_, newR, err := virtualnet.CreateRouterEnv(ctx, m, pool, virtualnet.EnvOptions{
+	newSvc, newR, err := virtualnet.CreateRouterEnv(ctx, m, pool, virtualnet.EnvOptions{
 		Priority:             dns.HighPriority,
 		NameSuffix:           "new",
 		IPv4DNSServers:       newConfig.IPv4Nameservers,
@@ -121,6 +124,9 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 			testing.ContextLog(cleanupCtx, "Failed to cleanup the new service: ", err)
 		}
 	}()
+	if err := m.WaitForDefaultService(ctx, newSvc); err != nil {
+		s.Fatal("Failed to wait for the new network to become the default network: ", err)
+	}
 
 	// Assert /etc/resolv.conf content after the new network is added.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

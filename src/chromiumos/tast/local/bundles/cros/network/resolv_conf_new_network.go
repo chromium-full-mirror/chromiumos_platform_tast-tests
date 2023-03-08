@@ -115,7 +115,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 		IPv6Nameservers:      []string{"1111::1111", "1111::1112"},
 		IPv4DomainSearchList: []string{"test1-1.com", "test1-2.com"},
 	}
-	_, baseR, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(baseConfig, "base" /* nameSuffix */, dns.BasePriority), pool)
+	baseSvc, baseR, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(baseConfig, "base" /* nameSuffix */, dns.BasePriority), pool)
 	if err != nil {
 		s.Fatal("Failed to set up base network: ", err)
 	}
@@ -124,6 +124,9 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 			testing.ContextLog(cleanupCtx, "Failed to cleanup the base service: ", err)
 		}
 	}()
+	if err := m.WaitForDefaultService(ctx, baseSvc); err != nil {
+		s.Fatal("Failed to wait for the base network to become the default network: ", err)
+	}
 
 	// Assert that /etc/resolv.conf is correct.
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.
@@ -137,6 +140,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 		newConfig dns.Config
 		conn      *vpn.Connection
 		newR      *env.Env
+		newSvc    *shill.Service
 	)
 	cleanupVPN := func(ctx context.Context) {
 		if conn == nil {
@@ -186,11 +190,16 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 			IPv6Nameservers:      []string{"2222::2221", "2222::2222"},
 			IPv4DomainSearchList: []string{"test2-1.com", "test2-2.com"},
 		}
-		_, newR, err = dns.NewShillService(ctx, dns.EnvOptionsFromConfig(newConfig, "new" /* nameSuffix */, params.priority), pool)
+		newSvc, newR, err = dns.NewShillService(ctx, dns.EnvOptionsFromConfig(newConfig, "new" /* nameSuffix */, params.priority), pool)
 		if err != nil {
 			s.Fatal("Failed to set up a new network: ", err)
 		}
 		defer cleanupNewR(cleanupCtx)
+		if params.priority == dns.HighPriority {
+			if err := m.WaitForDefaultService(ctx, newSvc); err != nil {
+				s.Fatal("Failed to wait for the new network to become the default network: ", err)
+			}
+		}
 	}
 
 	// Assert /etc/resolv.conf content after the new network is added.
@@ -215,6 +224,9 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	// Cleanup the new service.
 	cleanupVPN(ctx)
 	cleanupNewR(ctx)
+	if err := m.WaitForDefaultService(ctx, baseSvc); err != nil {
+		s.Fatal("Failed to wait for the base network to become the default network: ", err)
+	}
 
 	// Assert /etc/resolv.conf content after the new network is removed.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

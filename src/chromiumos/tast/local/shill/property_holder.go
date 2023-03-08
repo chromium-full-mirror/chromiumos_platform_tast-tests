@@ -34,6 +34,11 @@ func NewPropertyHolder(ctx context.Context, service, iface string, path dbus.Obj
 	return &PropertyHolder{PropertyHolder: ph}, nil
 }
 
+// ObjectPath returns PropertyHolder's D-Bus object path.
+func (h *PropertyHolder) ObjectPath() dbus.ObjectPath {
+	return h.PropertyHolder.DBusObject.ObjectPath()
+}
+
 // ClearProperty calls ClearProperty method of shill to clear a property of the object.
 func (h *PropertyHolder) ClearProperty(ctx context.Context, prop string) error {
 	return h.Call(ctx, "ClearProperty", prop).Err

@@ -118,6 +118,7 @@ const (
 	ManagerPropertyScanAllowRoam          = "WiFi.ScanAllowRoam"
 	ManagerPropertyDOHProviders           = "DNSProxyDOHProviders"
 	ManagerPropertyPortalHTTPSURL         = "PortalHttpsUrl"
+	ManagerPropertyDefaultService         = "DefaultService"
 )
 
 // Service property names defined in dbus-constants.h .

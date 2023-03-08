@@ -760,3 +760,33 @@ func (m *Manager) WaitForUserProfile(ctx context.Context) (dbus.ObjectPath, erro
 	}
 	return path, nil
 }
+
+// GetDefaultService gets the current default shill service.
+func (m *Manager) GetDefaultService(ctx context.Context) (*Service, error) {
+	p, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, err
+	}
+	path, err := p.GetObjectPath(shillconst.ManagerPropertyDefaultService)
+	if err != nil {
+		return nil, err
+	}
+	return NewService(ctx, path)
+}
+
+// WaitForDefaultService waits until svc becomes the default service.
+func (m *Manager) WaitForDefaultService(ctx context.Context, svc *Service) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		dSvc, err := m.GetDefaultService(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get default service")
+		}
+		if dSvc.ObjectPath() != svc.ObjectPath() {
+			return errors.Errorf("default service mismatch got %v, want %v", dSvc, svc)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		return err
+	}
+	return nil
+}

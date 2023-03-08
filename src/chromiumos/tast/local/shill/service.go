@@ -34,6 +34,11 @@ func NewService(ctx context.Context, path dbus.ObjectPath) (*Service, error) {
 	return &Service{PropertyHolder: ph}, nil
 }
 
+// ObjectPath returns Service's D-Bus object path.
+func (s *Service) ObjectPath() dbus.ObjectPath {
+	return s.PropertyHolder.ObjectPath()
+}
+
 // GetDevice returns the Device object corresponding to the Service object
 func (s *Service) GetDevice(ctx context.Context) (*Device, error) {
 	serviceProps, err := s.GetProperties(ctx)
