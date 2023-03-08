@@ -70,8 +70,7 @@ func init() {
 		Desc:         "Resize different windows by dragging 4 corners and 4 sides",
 		Contacts: []string{
 			"chromeos-wmp@google.com",
-			"cienet-development@googlegroups.com",
-			"bossan.fang@cienet.com",
+			"awendy@google.com",
 		},
 		BugComponent: "b:1238037", // ChromeOS > Software > Window Management
 		Attr:         []string{"group:mainline", "informational"},
