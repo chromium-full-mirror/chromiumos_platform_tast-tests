@@ -47,6 +47,14 @@ func init() {
 					PoolID:   tape.ChromeosbytebotCom,
 				},
 			},
+			{
+				Name:      "live",
+				ExtraAttr: []string{"group:dmserver-enrollment-live"},
+				Val: gaiaenrollment.TestParams{
+					DMServer: "https://m.google.com/devicemanagement/data/api",
+					PoolID:   tape.ChromeosbytebotCom,
+				},
+			},
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
