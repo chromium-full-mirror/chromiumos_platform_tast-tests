@@ -333,7 +333,7 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 				return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
 			}
 
-			command := "rm " + strings.Join(SystemStateGlobs, " ")
+			command := "rm -rf " + strings.Join(SystemStateGlobs, " ")
 			if out, err := h.cmdRunner.Run(ctx, "bash", "-c", command); err != nil {
 				return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
 			}
