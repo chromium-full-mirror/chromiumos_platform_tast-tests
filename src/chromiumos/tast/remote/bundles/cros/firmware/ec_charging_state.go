@@ -23,7 +23,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECChargingState,
-		Desc: "Verify enabling and disabling write protect works as expected",
+		Desc: "Check charging state changes are captured when DUT is asleep",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"tij@google.com",
@@ -116,6 +116,9 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		s.Log("Unable to set dsleep")
 	}
 
+	// ----------- Test #1: Check removal of power --------
+	s.Log("Start out with power attached, suspending the DUT, and remove power")
+
 	s.Log("Set servo role to source to make sure suspendDUTAndCheckCharger switches")
 	if err := h.SetDUTPower(ctx, true); err != nil {
 		s.Fatal("Failed to set servo role to source: ", err)
@@ -142,6 +145,9 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		s.Fatal("Host and EC battery state mismatch: ", err)
 	}
 
+	// ----------- Test #2: Check addition of power while asleep -----------
+	s.Log("With power removed, suspend the DUT and then add power")
+
 	if err := suspendDUTAndCheckCharger(ctx, h, true); err != nil {
 		s.Fatal("Failed to suspend DUT and check if charger is attached: ", err)
 	}
@@ -163,6 +169,8 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 	fullChargeTimeout := 20 * time.Minute
 	fullChargeInterval := 1 * time.Minute
 
+	// This is an additional test to satisfy checking that charge reports
+	// correctly at 100%. See b/151181037
 	s.Logf("Wait for DUT to reach fully charged state up to %s minutes", fullChargeTimeout)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		battery, err = getECBatteryStatus(ctx, h)
@@ -214,6 +222,7 @@ func compareHostAndECBatteryStatus(ctx context.Context, h *firmware.Helper, ecBa
 }
 
 func getECBatteryStatus(ctx context.Context, h *firmware.Helper) (*ecBatteryState, error) {
+	// TODO: Move this to a central library to be shared amongst EC charging tests.
 	// Example ec battery output:
 	// Status:    0x00e7 FULL DCHG INIT
 	// Param flags:00000002
@@ -298,6 +307,12 @@ func getECBatteryStatus(ctx context.Context, h *firmware.Helper) (*ecBatteryStat
 func suspendDUTAndCheckCharger(ctx context.Context, h *firmware.Helper, expectChargerAttached bool) error {
 	// ecSuspendDelay := 3 * time.Second
 	testing.ContextLog(ctx, "Suspending DUT")
+
+	if err := h.DUT.Conn().CommandContext(ctx, "pgrep", "powerd").Run(); err != nil {
+		return errors.Wrap(err, "powerd is not running. Need that to run suspend cmds")
+	}
+
+	// Use Start because run will never return (we are suspending).
 	cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=3")
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to suspend DUT")
