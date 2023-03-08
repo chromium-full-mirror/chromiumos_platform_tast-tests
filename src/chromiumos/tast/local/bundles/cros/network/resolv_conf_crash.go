@@ -108,7 +108,7 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 		IPv6Nameservers:      []string{"1111::1111", "1111::1112"},
 		IPv4DomainSearchList: []string{"test1-1.com", "test1-2.com"},
 	}
-	_, baseR, err := dns.NewShillService(ctx, baseConfig, "base" /* nameSuffix */, dns.BasePriority, pool)
+	_, baseR, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(baseConfig, "base" /* nameSuffix */, dns.BasePriority), pool)
 	if err != nil {
 		s.Fatal("Failed to set up base network: ", err)
 	}
@@ -169,7 +169,7 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 		IPv6Nameservers:      []string{"2222::2221", "2222::2222"},
 		IPv4DomainSearchList: []string{"test2-1.com", "test2-2.com"},
 	}
-	_, newR, err := dns.NewShillService(ctx, newConfig, "new" /* nameSuffix */, dns.HighPriority, pool)
+	_, newR, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(newConfig, "new" /* nameSuffix */, dns.HighPriority), pool)
 	if err != nil {
 		s.Fatal("Failed to set up a new network: ", err)
 	}

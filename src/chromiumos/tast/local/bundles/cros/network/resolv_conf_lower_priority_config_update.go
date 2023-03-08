@@ -80,7 +80,7 @@ func ResolvConfLowerPriorityConfigUpdate(ctx context.Context, s *testing.State) 
 		IPv6Nameservers:      []string{"1111::1111", "1111::1112"},
 		IPv4DomainSearchList: []string{"test1-1.com", "test1-2.com"},
 	}
-	_, baseR, err := dns.NewShillService(ctx, baseConfig, "base" /* nameSuffix */, dns.HighPriority, pool)
+	_, baseR, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(baseConfig, "base" /* nameSuffix */, dns.HighPriority), pool)
 	if err != nil {
 		s.Fatal("Failed to set up base network: ", err)
 	}
@@ -96,7 +96,7 @@ func ResolvConfLowerPriorityConfigUpdate(ctx context.Context, s *testing.State) 
 		IPv6Nameservers:      []string{"2222::2221", "2222::2222"},
 		IPv4DomainSearchList: []string{"test2-1.com", "test2-2.com"},
 	}
-	lowSvc, lowR, err := dns.NewShillService(ctx, lowConfig, "low" /* nameSuffix */, dns.LowPriority, pool)
+	lowSvc, lowR, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(lowConfig, "low" /* nameSuffix */, dns.LowPriority), pool)
 	if err != nil {
 		s.Fatal("Failed to set up lower priority network: ", err)
 	}

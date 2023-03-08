@@ -115,7 +115,7 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 	if params.ipv6 {
 		baseConfig.IPv6Nameservers = []string{"1111::1111", "1111::1112"}
 	}
-	svc, r, err := dns.NewShillService(ctx, baseConfig, "base", dns.BasePriority, pool)
+	svc, r, err := dns.NewShillService(ctx, dns.EnvOptionsFromConfig(baseConfig, "base", dns.BasePriority), pool)
 	if err != nil {
 		s.Fatal("Failed to set up base network: ", err)
 	}

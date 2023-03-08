@@ -661,12 +661,8 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet, ipv6Subnet *net.
 	return server, nil
 }
 
-// NewShillService creates a shill service with a certain DNS configuration.
-func NewShillService(ctx context.Context, config Config, nameSuffix string, priority int, pool *subnet.Pool) (*shill.Service, *virtualnet.Env, error) {
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create manager proxy")
-	}
+// EnvOptionsFromConfig creates virtualnet.EnvOptions from DNS config, name suffix, and priority.
+func EnvOptionsFromConfig(config Config, nameSuffix string, priority int) virtualnet.EnvOptions {
 	opts := virtualnet.EnvOptions{
 		Priority:   priority,
 		NameSuffix: nameSuffix,
@@ -679,6 +675,15 @@ func NewShillService(ctx context.Context, config Config, nameSuffix string, prio
 	if len(config.IPv6Nameservers) > 0 {
 		opts.RAServer = true
 		opts.IPv6DNSServers = config.IPv6Nameservers
+	}
+	return opts
+}
+
+// NewShillService creates a shill service with a certain DNS configuration.
+func NewShillService(ctx context.Context, opts virtualnet.EnvOptions, pool *subnet.Pool) (*shill.Service, *virtualnet.Env, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to create manager proxy")
 	}
 	svc, r, err := virtualnet.CreateRouterEnv(ctx, m, pool, opts)
 	if err != nil {
