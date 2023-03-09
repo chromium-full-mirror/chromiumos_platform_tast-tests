@@ -39,13 +39,19 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 	var gpuTimes []float64
 	var gpuTotalTime float64
 
+	var cpuTimes []float64
+	var cpuTotalTime float64
+
 	f.Seek(0, io.SeekStart)
 	fileScanner := bufio.NewScanner(f)
 	fileScanner.Split(bufio.ScanLines)
 
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-		if strings.Contains(line, "frame") && strings.Contains(line, "gpu_elapsed_time") {
+		if !strings.Contains(line, "frame") {
+			continue
+		}
+		if strings.Contains(line, "gpu_elapsed_time") {
 			match := timeMsPattern.FindString(line)
 			if match != "" {
 				// We ignore the `time: ` portion of match and parse the float
@@ -58,17 +64,46 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 				gpuTotalTime = gpuTotalTime + gpuElapsedTime
 			}
 		}
+		if strings.Contains(line, "cpu_elapsed_time") {
+			match := timeMsPattern.FindString(line)
+			if match != "" {
+				// We ignore the `time: ` portion of match and parse the float
+				timeString := strings.Split(match, " ")[1]
+				cpuElapsedTime, err := strconv.ParseFloat(timeString, 64)
+				if err != nil {
+					return errors.Wrap(err, "error parsing test results")
+				}
+				cpuTimes = append(cpuTimes, cpuElapsedTime)
+				cpuTotalTime = cpuTotalTime + cpuElapsedTime
+			}
+		}
 	}
-	lenTimes := len(gpuTimes)
-	if lenTimes == 0 {
-		return nil
+
+	averageGap := 0.0
+	numGaps := len(cpuTimes)
+	lenGpuTimes := len(gpuTimes)
+	if lenGpuTimes < numGaps {
+		numGaps = lenGpuTimes
 	}
-	if lenTimes < 1000 {
-		testing.ContextLogf(ctx, "Warning: compositortest only recorded %d frames", lenTimes)
+	if numGaps == 0 {
+		return errors.New("no frame times were recorded to compositortest.log")
+	}
+	for i := 0; i < numGaps; i++ {
+		if cpuTimes[i] < gpuTimes[i] {
+			// This is a weird and unlikely scenario, so we log it.
+			testing.ContextLogf(ctx, "Frame %d spent more time in GPU (%f ms) than CPU (%f ms)", i, gpuTimes[i], cpuTimes[i])
+		} else {
+			averageGap = averageGap + (cpuTimes[i] - gpuTimes[i])
+		}
+	}
+	averageGap = averageGap / float64(numGaps)
+
+	if lenGpuTimes < 1000 {
+		testing.ContextLogf(ctx, "Warning: compositortest only recorded %d frames", lenGpuTimes)
 	} else {
-		testing.ContextLogf(ctx, "Scanned %d frames from compositortest", lenTimes)
+		testing.ContextLogf(ctx, "Scanned %d frames from compositortest", lenGpuTimes)
 	}
-	avg := gpuTotalTime / float64(lenTimes)
+	avg := gpuTotalTime / float64(lenGpuTimes)
 	sort.Float64s(gpuTimes)
 
 	perfValues := perf.NewValues()
@@ -78,8 +113,14 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 		Direction: perf.BiggerIsBetter,
 	}, avg)
 
-	if lenTimes >= 1000 {
-		nineNinetyNineIndex := int(math.Floor(float64(lenTimes) * float64(0.999)))
+	perfValues.Set(perf.Metric{
+		Name:      "Benchmark." + version + ".CPU_GPU_average_gap",
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, averageGap)
+
+	if lenGpuTimes >= 1000 {
+		nineNinetyNineIndex := int(math.Floor(float64(lenGpuTimes) * float64(0.999)))
 		nineNinetyNineValue := gpuTimes[nineNinetyNineIndex]
 		perfValues.Set(perf.Metric{
 			Name:      "Benchmark." + version + ".GPU_frame_time_999",
@@ -87,7 +128,7 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 			Direction: perf.BiggerIsBetter,
 		}, nineNinetyNineValue)
 
-		oneIndex := int(math.Floor(float64(lenTimes) * float64(0.001)))
+		oneIndex := int(math.Floor(float64(lenGpuTimes) * float64(0.001)))
 		oneValue := gpuTimes[oneIndex]
 		perfValues.Set(perf.Metric{
 			Name:      "Benchmark." + version + ".GPU_frame_time_001",
@@ -96,8 +137,8 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 		}, oneValue)
 	}
 
-	if lenTimes >= 100 {
-		nineNinetyIndex := int(math.Floor(float64(lenTimes) * float64(0.990)))
+	if lenGpuTimes >= 100 {
+		nineNinetyIndex := int(math.Floor(float64(lenGpuTimes) * float64(0.990)))
 		nineNinetyValue := gpuTimes[nineNinetyIndex]
 		perfValues.Set(perf.Metric{
 			Name:      "Benchmark." + version + ".GPU_frame_time_990",
@@ -105,7 +146,7 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 			Direction: perf.BiggerIsBetter,
 		}, nineNinetyValue)
 
-		tenIndex := int(math.Floor(float64(lenTimes) * float64(0.010)))
+		tenIndex := int(math.Floor(float64(lenGpuTimes) * float64(0.010)))
 		tenValue := gpuTimes[tenIndex]
 		perfValues.Set(perf.Metric{
 			Name:      "Benchmark." + version + ".GPU_frame_time_010",
@@ -114,16 +155,16 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 		}, tenValue)
 	}
 
-	if lenTimes >= 20 {
-		ninetyFiveIndex := int(math.Floor(float64(lenTimes) * float64(0.950)))
-		ninetyFiveValue := gpuTimes[ninetyFiveIndex]
+	if lenGpuTimes >= 20 {
+		nineFiftyIndex := int(math.Floor(float64(lenGpuTimes) * float64(0.950)))
+		nineFiftyValue := gpuTimes[nineFiftyIndex]
 		perfValues.Set(perf.Metric{
 			Name:      "Benchmark." + version + ".GPU_frame_time_950",
 			Unit:      "ms",
 			Direction: perf.BiggerIsBetter,
-		}, ninetyFiveValue)
+		}, nineFiftyValue)
 
-		fiveHundredIndex := int(math.Floor(float64(lenTimes) * float64(0.500)))
+		fiveHundredIndex := int(math.Floor(float64(lenGpuTimes) * float64(0.500)))
 		fiveHundredValue := gpuTimes[fiveHundredIndex]
 		perfValues.Set(perf.Metric{
 			Name:      "Benchmark." + version + ".GPU_frame_time_500",
