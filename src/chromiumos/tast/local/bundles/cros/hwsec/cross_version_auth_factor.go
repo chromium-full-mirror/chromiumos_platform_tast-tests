@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/fixture"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
+	cryptochrome "chromiumos/tast/local/cryptohome/chrome"
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
@@ -521,9 +522,6 @@ func testPassAuth(ctx context.Context, cryptohome *hwsec.CryptohomeClient, confi
 		if err := testAuthFactor(ctx, cryptohome, username, &vaultKey, invalidSecret); err != nil {
 			return errors.Wrapf(err, "failed to test extra AuthFactor %s", keyForm)
 		}
-		if err := testRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, &vaultKey); err != nil {
-			return errors.Wrapf(err, "failed to properly remove key with extra %s key", keyForm)
-		}
 	}
 
 	if err := testAddRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, util.NewVaultKeyInfo(newPassword, newPasswordLabel, false), invalidPassword); err != nil {
@@ -541,28 +539,53 @@ func testPassAuth(ctx context.Context, cryptohome *hwsec.CryptohomeClient, confi
 
 // testConfigViaCryptohome verifies the login functionality by making requests
 // via Cryptohome CLI.
-func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
+func testConfigViaCryptohome(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig, withUssMigration bool) error {
 	authConfig := config.AuthConfig
-	switch authConfig.AuthType {
-	case hwsec.ChallengeAuth:
-		if err := testSmartCardAuth(ctx, lf, cryptohome, config); err != nil {
-			return errors.Wrap(err, "failed to test smart card auth")
+	if err := cryptochrome.WithUssMigration(ctx, withUssMigration, func() error {
+		switch authConfig.AuthType {
+		case hwsec.ChallengeAuth:
+			if err := testSmartCardAuth(ctx, lf, cryptohome, config); err != nil {
+				return errors.Wrap(err, "failed to test smart card auth")
+			}
+		case hwsec.PassAuth:
+			if err := testPassAuth(ctx, cryptohome, config); err != nil {
+				return errors.Wrap(err, "failed to test pass auth")
+			}
+		default:
+			return errors.Errorf("unknown auth type %d", authConfig.AuthType)
 		}
-	case hwsec.PassAuth:
-		if err := testPassAuth(ctx, cryptohome, config); err != nil {
-			return errors.Wrap(err, "failed to test pass auth")
-		}
-	default:
-		return errors.Errorf("unknown auth type %d", authConfig.AuthType)
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	if err := cryptohome.UnmountAll(ctx); err != nil {
 		return errors.Wrap(err, "failed to unmount vaults")
 	}
-	if _, err := cryptohome.RemoveVault(ctx, authConfig.Username); err != nil {
-		return errors.Wrap(err, "failed to remove vault")
-	}
 	return nil
+}
+
+func testCleanup(ctx context.Context, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
+	authConfig := config.AuthConfig
+	keyLabel := config.KeyLabel
+	username := authConfig.Username
+	password := authConfig.Password
+	// TODO(b/273199287): Remove forcing USS migration once b/273199287 is fixed or obsolete.
+	return cryptochrome.WithUssMigration(ctx, true, func() error {
+		for _, vaultKey := range config.ExtraVaultKeys {
+			keyForm := "password"
+			if vaultKey.LowEntropy {
+				keyForm = "pin"
+			}
+			if err := testRemoveAuthFactor(ctx, cryptohome, username, password, keyLabel, &vaultKey); err != nil {
+				return errors.Wrapf(err, "failed to properly remove key with extra %s key", keyForm)
+			}
+		}
+		if _, err := cryptohome.RemoveVault(ctx, authConfig.Username); err != nil {
+			return errors.Wrap(err, "failed to remove vault")
+		}
+		return nil
+	})
 }
 
 func CrossVersionAuthFactor(ctx context.Context, s *testing.State) {
@@ -575,8 +598,14 @@ func CrossVersionAuthFactor(ctx context.Context, s *testing.State) {
 
 	fixtureData := s.FixtValue().(*fixture.CrossVersionLoginFixture)
 	for _, config := range fixtureData.ConfigList {
-		if err := testConfigViaCryptohome(ctx, s.Logf, cryptohome, &config); err != nil {
-			s.Error("Failed to test config: ", err)
+		if err := testConfigViaCryptohome(ctx, s.Logf, cryptohome, &config, false /* withUssMigration */); err != nil {
+			s.Error("Failed to test auth factor: ", err)
+		}
+		if err := testConfigViaCryptohome(ctx, s.Logf, cryptohome, &config, true /* withUssMigration */); err != nil {
+			s.Error("Failed to test auth factor with uss migration: ", err)
+		}
+		if err := testCleanup(ctx, cryptohome, &config); err != nil {
+			s.Error("Failed to test cleanup: ", err)
 		}
 	}
 }

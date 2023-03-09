@@ -231,7 +231,7 @@ func init() {
 }
 
 // testChromeLogin verifies the login functionality via Chrome Login Screen.
-func testChromeLogin(ctx context.Context, config *util.CrossVersionLoginConfig) error {
+func testChromeLogin(ctx context.Context, config *util.CrossVersionLoginConfig, withUssMigration bool) error {
 	authConfig := config.AuthConfig
 	username := authConfig.Username
 
@@ -241,9 +241,17 @@ func testChromeLogin(ctx context.Context, config *util.CrossVersionLoginConfig) 
 		return nil
 	}
 
+	const featureName = "CrOSLateBootMigrateToUserSecretStash"
+	var featureOption chrome.Option
+	if withUssMigration {
+		featureOption = chrome.EnableFeatures(featureName)
+	} else {
+		featureOption = chrome.DisableFeatures(featureName)
+	}
 	// Check password login.
 	opts := []chrome.Option{
 		chrome.FakeLogin(chrome.Creds{User: username, Pass: authConfig.Password}),
+		featureOption,
 		chrome.KeepState(),
 	}
 	cr, err := chrome.New(ctx, opts...)
@@ -266,8 +274,11 @@ func CrossVersionChromeLogin(ctx context.Context, s *testing.State) {
 		if config.VaultFSType == util.NoVaultFS {
 			continue
 		}
-		if err := testChromeLogin(ctx, &config); err != nil {
+		if err := testChromeLogin(ctx, &config, false /* withUssMigration */); err != nil {
 			s.Fatal("Failed to test chrome login: ", err)
+		}
+		if err := testChromeLogin(ctx, &config, true /* withUssMigration */); err != nil {
+			s.Fatal("Failed to test chrome login with USS migration: ", err)
 		}
 	}
 }
