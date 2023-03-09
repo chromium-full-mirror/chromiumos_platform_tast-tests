@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/screenshot"
@@ -67,15 +66,6 @@ func CCAEffects(ctx context.Context, s *testing.State) {
 	defer apps.Close(cleanupCtx, tconn, apps.Camera.ID)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
-
-	ui := uiauto.New(tconn)
-	// The toast message is above the canvas, affecting the screenshot test.
-	if err := uiauto.IfSuccessThen(
-		ui.WithTimeout(3*time.Second).WaitUntilExists(cca.ToastNode),
-		ui.WaitUntilGone(cca.ToastNode),
-	)(ctx); err != nil {
-		s.Fatal("Failed to handle toast message: ", err)
-	}
 
 	vcTray := vctray.New(ctx, tconn)
 
