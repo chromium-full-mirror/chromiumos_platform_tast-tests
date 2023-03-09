@@ -31,8 +31,9 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"servo"},
-		Attr:         []string{"group:firmware", "firmware_unstable"},
-		Fixture:      fixture.NormalMode,
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		Attr:    []string{"group:firmware", "firmware_unstable"},
+		Fixture: fixture.NormalMode,
 	})
 }
 

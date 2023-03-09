@@ -34,6 +34,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Vars:         []string{"firmware.suspendStressIters", "firmware.suspendStressFailFast"},
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.TPMService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

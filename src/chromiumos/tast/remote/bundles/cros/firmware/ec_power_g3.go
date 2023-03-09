@@ -58,14 +58,16 @@ func init() {
 				},
 			},
 			{
-				Name:      "power_state",
+				Name: "power_state",
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr: []string{"firmware_unstable", "firmware_bringup"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
 			},
 			{
-				Name:              "power_state_snk",
+				Name: "power_state_snk",
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr:         []string{"firmware_unstable", "firmware_bringup"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 				Val: powerG3Params{

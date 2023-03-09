@@ -26,6 +26,7 @@ func init() {
 		Contacts:     []string{"chromeos-platform-power@google.com", "timvp@google.com", "cros-fw-engprod@google.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		Vars:         []string{"servo"},

@@ -48,6 +48,7 @@ func init() {
 		Vars: []string{"servo",
 			"firmware.mode", // Optional. Expecting "tablet". By default firmware.mode will be "clamshell".
 		},
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:    []string{"group:firmware", "firmware_unstable"},
 		Fixture: fixture.NormalMode,
 		Params: []testing.Param{{

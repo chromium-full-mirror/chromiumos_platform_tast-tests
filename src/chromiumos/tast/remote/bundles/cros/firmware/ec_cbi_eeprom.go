@@ -27,9 +27,10 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
-		Fixture:      fixture.NormalMode,
-		Timeout:      15 * time.Minute,
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		Attr:    []string{"group:firmware", "firmware_unstable"},
+		Fixture: fixture.NormalMode,
+		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
 			"jax", // Fizz models

@@ -113,7 +113,8 @@ func init() {
 			},
 			// Test eventlog upon normal->rec reboot.
 			{
-				Name:      "normal_rec",
+				Name: "normal_rec",
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 				Fixture:   fixture.NormalMode,
 				Val: eventLogParams{
@@ -125,7 +126,8 @@ func init() {
 			},
 			// Test eventlog upon rec->normal reboot.
 			{
-				Name:      "rec_normal",
+				Name: "rec_normal",
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 				Fixture:   fixture.RecModeNoServices,
 				Val: eventLogParams{
@@ -142,7 +144,8 @@ func init() {
 			// eldrid: S0ix Enter, S0ix Exit, Wake Source | Power Button | 0, EC Event | Power Button
 			// hayato: Sleep, Wake
 			{
-				Name:      "suspend_resume",
+				Name: "suspend_resume",
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr: []string{"firmware_unstable"},
 				Fixture:   fixture.NormalMode,
 				Val: eventLogParams{

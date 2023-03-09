@@ -23,6 +23,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/194908031): Add back to firmware_unstable and firmware_bringup once this test actually works.
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

@@ -50,8 +50,8 @@ func init() {
 			"me@chromium.org",          // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: Move to firmware_unstable, then firmware_ec
-		Attr: []string{"group:firmware", "firmware_experimental"},
+		// TODO: When stable, move to firmware_ec and add linto@chromium.org to gerrit review.
+		Attr: []string{"group:firmware", "firmware_unstable"},
 	})
 }
 
@@ -78,7 +78,11 @@ Notice the `Attr` line in the above snippet. In previous Tast codelabs, we used 
 
 For those reasons, firmware tests have a separate group of attributes. The group is called `"group:firmware"`, and has a handful of sub-attributes. You can find all of those sub-attributes in [attr.go], and you can learn more about how we use them to run FAFT tests at [go/faft-tast-via-tauto].
 
-The `firmware_experimental` attribute is for tests that are particularly unstable. This mitigates the risk of accidentally putting a DUT into into a state that would cause other tests to fail. If we find that our test is stable enough, then we can promote it to another attribute, like `firmware_unstable` and eventually `firmware_ec` (or smoke, cr50, slow, ccd as appropriate). But for now, let's use `firmware_experimental`.
+The `firmware_experimental` attribute is for tests that are particularly unstable, but it only runs on 1-2 duts.
+This mitigates the risk of accidentally putting a DUT into into a state that would cause other tests to fail.
+`firmware_unstable` is similar, in that it won't be run as part of qualifications, but will run on all duts.
+If we find that our test is stable enough, then we can promote it to another attribute, like `firmware_ec` (or smoke, cr50, slow, ccd as appropriate).
+Please add linto@chromium.org to the gerrit review when moving to a stable suite.
 
 [attr.go]: https://chromium.googlesource.com/chromiumos/platform/tast/+/refs/heads/main/src/chromiumos/tast/internal/testing/attr.go
 [go/effective-cq]: http://goto.google.com/effective-cq

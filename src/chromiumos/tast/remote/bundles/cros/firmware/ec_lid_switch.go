@@ -58,15 +58,17 @@ func init() {
 				ExtraAttr: []string{"firmware_ec"},
 			},
 			{
-				Name:      "close_lid_to_shutdown",
-				Val:       shutdownWithLid,
+				Name: "close_lid_to_shutdown",
+				Val:  shutdownWithLid,
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr: []string{"firmware_unstable"},
 			},
 			{
 				// powerd_dbus_suspend is not very stable so leaving this in unstable.
 				// This wasn't a test case in autotest so it's hard to determine the expected amount of stability.
-				Name:      "open_lid_to_unsuspend",
-				Val:       unsuspendWithLid,
+				Name: "open_lid_to_unsuspend",
+				Val:  unsuspendWithLid,
+				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 				ExtraAttr: []string{"firmware_unstable"},
 			},
 		},

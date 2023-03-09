@@ -38,6 +38,7 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ScreenRecorderService"},

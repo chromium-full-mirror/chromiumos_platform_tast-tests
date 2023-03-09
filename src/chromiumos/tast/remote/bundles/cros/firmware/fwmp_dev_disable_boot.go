@@ -33,6 +33,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/235742217): This test might be leaving broken DUTS that can't be auto-repaired. Add attr firmware_unstable when fixed.
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:firmware"},
 		Timeout:      30 * time.Minute,
 		Fixture:      fixture.DevMode,

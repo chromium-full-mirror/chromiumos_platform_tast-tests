@@ -28,10 +28,11 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
-		Timeout:      20 * time.Minute,
-		Vars:         []string{"firmware.skipFlashUSB"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
+		Attr:        []string{"group:firmware", "firmware_unstable"},
+		Timeout:     20 * time.Minute,
+		Vars:        []string{"firmware.skipFlashUSB"},
+		ServiceDeps: []string{"tast.cros.firmware.BiosService"},
 		Params: []testing.Param{
 			{
 				Name:    "normal",

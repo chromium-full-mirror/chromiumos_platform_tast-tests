@@ -28,6 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesRebootECAP,
 		Desc: "Test to verify RebootECAP CCD capability by using `ecrst` and `sysrst` GSC commands",
+		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
 		Contacts: []string{
 			"chromeos-faft@google.com",
