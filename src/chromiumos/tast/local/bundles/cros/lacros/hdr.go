@@ -7,25 +7,25 @@ package lacros
 
 import (
 	"context"
-	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"regexp"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/audio"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/lacros"
-	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/mtbf/youtube"
+	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
 
-const testVol = 1
+const (
+	searchTimeout  = 20 * time.Second
+	searchInterval = 1 * time.Second
+)
 
 var pixelFormatPattern = regexp.MustCompile(`(?:format=)\w+`)
 
@@ -41,33 +41,19 @@ func init() {
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosHDR",
 		Timeout:      7 * time.Minute,
+		Data:         []string{"hdr_video_1.html", "hdr_scientist_4k_yuv420p10le_20230412.webm"},
 	})
 }
 
 func HDR(ctx context.Context, s *testing.State) {
+	// Setup server to serve video file.
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	hdrURL := server.URL + "/hdr_video_1.html"
 	// Ensure display is on to record ui performance correctly.
 	if err := power.TurnOnDisplay(ctx); err != nil {
 		s.Fatal("Failed to turn on display: ", err)
-	}
-	var videoSource = youtube.VideoSrc{
-		URL:     "https://www.youtube.com/watch?v=N1-Jmq7BLFE",
-		Title:   "Bulgaria 8K HDR 60P (FUHD)",
-		Quality: "1080p60",
-	}
-
-	// Reserve time to clean up other resources.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
-	defer cancel()
-
-	// Lower the volume.
-	vh, err := audio.NewVolumeHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create the volumeHelper: ", err)
-	}
-	s.Logf("Setting Output node volume to %d", testVol)
-	if err := vh.SetVolume(ctx, testVol); err != nil {
-		s.Errorf("Failed to set output node volume to %d: %v", testVol, err)
 	}
 
 	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
@@ -80,54 +66,43 @@ func HDR(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch lacros-chrome: ", err)
 	}
 
-	kb, err := input.VirtualKeyboard(ctx)
+	c, err := l.NewConn(ctx, hdrURL)
 	if err != nil {
-		s.Fatal("Failed to open the keyboard: ", err)
+		s.Fatalf("Failed to open Lacros with URL %s: %v", hdrURL, err)
 	}
-	defer kb.Close()
+	defer c.Close()
 
-	extendedDisplay := false
-	ui := uiauto.New(tconn)
-
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to create clamshell action handler: ", err)
-	}
-	defer uiHandler.Close()
-
-	videoApp := youtube.NewYtWeb(l.Browser(), tconn, kb, extendedDisplay, ui, uiHandler)
-	if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {
-		s.Fatalf("Failed to open %q: %v", videoSource.URL, err)
-	}
-	defer videoApp.Close(cleanupCtx)
-
-	var filePath string
-	for i := 0; ; i++ {
-		filePath = fmt.Sprintf("/sys/kernel/debug/dri/%d/state", i)
-		_, err := os.Stat(filePath)
-		if err == nil {
-			break
+	// Try for up to 20 seconds to detect a 30-bit buffer, sleeping for 1s
+	// after each attempt.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		statePath, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{"state"})
+		if err != nil {
+			return errors.New("no dri debug file exists")
 		}
-		if !os.IsNotExist(err) {
-			s.Fatalf("Failed to stat %q: %v", filePath, err)
-		}
-		if i == 2 {
-			s.Fatal("No dri debug file exists")
-		}
-	}
 
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		s.Fatal("Could not read dri debug file")
-	}
-	matches := pixelFormatPattern.FindStringSubmatch(string(data))
-	for _, match := range matches {
-		if match == "format=AR30" ||
-			match == "format=AB30" ||
-			match == "format=XR30" ||
-			match == "format=XB30" {
-			return
+		data, err := os.ReadFile(statePath)
+		if err != nil {
+			return errors.New("could not read dri debug file")
 		}
+		matches := pixelFormatPattern.FindStringSubmatch(string(data))
+		found30bpp := false
+		for _, match := range matches {
+			if match == "format=AR30" ||
+				match == "format=AB30" ||
+				match == "format=XR30" ||
+				match == "format=XB30" {
+				// We want to log all buffers that were found so don't return just yet.
+				found30bpp = true
+				testing.ContextLogf(ctx, "30-bit buffer detected: %s", match)
+			} else {
+				testing.ContextLogf(ctx, "Other buffer detected: %s", match)
+			}
+		}
+		if found30bpp {
+			return nil
+		}
+		return errors.New("did not find 30-bit buffer")
+	}, &testing.PollOptions{Timeout: searchTimeout, Interval: searchInterval}); err != nil {
+		s.Error("Did not find 30-bit buffer")
 	}
-	s.Error("Did not find 30-bit buffer")
 }

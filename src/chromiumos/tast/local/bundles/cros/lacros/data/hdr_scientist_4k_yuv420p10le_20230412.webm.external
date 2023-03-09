@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/lacros/hdr_scientist_4k_yuv420p10le_20230412.webm",
+  "size": 51225079,
+  "sha256sum": "530d001a26b990d842b07202d5cc00fd143c77c2ea44c8c3adf75febc0b9a4be"
+}
