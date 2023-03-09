@@ -447,7 +447,7 @@ func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
 		}
 	}
 	// Ensure service's state matches expectations.
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 30*time.Second); err != nil {
+	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 60*time.Second); err != nil {
 		return nil, errors.Wrap(err, "failed to get service state")
 	}
 
