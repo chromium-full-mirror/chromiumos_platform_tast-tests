@@ -111,7 +111,7 @@ func ECCbiEeprom(ctx context.Context, s *testing.State) {
 
 	// Test writing data to new tag with WP enabled.
 	if err := writeTagToEeprom(ctx, h, testTag2, testData1, writeSize); err == nil {
-		s.Fatal("Expected write to fail: ", err)
+		s.Fatal("Expected write to fail")
 	}
 
 	if out, err := readTagFromEeprom(ctx, h, testTag2); err == nil {
